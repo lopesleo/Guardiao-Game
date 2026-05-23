@@ -23,7 +23,7 @@ export const ENEMY = {
   // wave = floor(t / 30); a cada 30s sobe a wave
   HP:   wave => 8 + 2.5 * wave,
   DMG:  wave => 1 + 0.3 * wave,
-  SPEED_WOLF: 75,
+  SPEED_WOLF: 90,    // Morcego: rápido e errático (era "lobo")
   SPEED_CROW: 130,
   SPEED_GOBLIN: 55,
   // Curva mais suave: 0.5/s no início, ~3/s aos 5min, ~5/s aos 7min

@@ -2,9 +2,10 @@
 import { ENEMY, GAME } from '../config.js';
 
 // Frames do creatures_packed (10 cols, 180 frames). Mapeados via labeled preview.
+// Tema "mata ao crepúsculo" — morcegos > lobos.
 const FRAMES = {
-  WOLF:   132,   // lobo cinza
-  CROW:   140,   // pássaro pequeno escuro
+  WOLF:   132,   // MORCEGO (rebatizado: visual do pack é melhor que "lobo")
+  CROW:   140,   // pássaro pequeno
   GOBLIN: 10,    // goblin verde
   BOSS:   65,    // ent / criatura-árvore grande
 };

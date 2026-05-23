@@ -63,58 +63,68 @@ export class GameScene extends Phaser.Scene {
   }
 
   _drawGround() {
-    // Background: grama base (TileSprite — 1 draw call), depois decorações esparsas.
-    // Não usar tint, deixa cor original do sprite.
+    // Background limpo: 1 TileSprite de grama + decorações desenhadas (não tiles).
+    // Não usamos tiles multi-frame do town pack (árvores são 2 tiles colados, ficam quebradas).
     const r = GAME.WORLD_RADIUS;
-    const TS = 16 * GAME.PIXEL_SCALE;
 
-    // Cor de fundo da câmera (visível quando sai da grama)
-    this.cameras.main.setBackgroundColor(0x2a3a25);
+    // Cor base da câmera (mesma tonalidade da grama p/ disfarçar borda)
+    this.cameras.main.setBackgroundColor(0x4a7a3a);
 
-    // Grama base — uma TileSprite enorme, repete frame 0 (grama lisa).
+    // Grama tilada (1 draw call)
     this.add.tileSprite(0, 0, r * 2, r * 2, 'town_tiles', 0)
             .setOrigin(0.5).setScale(GAME.PIXEL_SCALE).setDepth(-100);
 
-    // Tufos/flores espalhados (frame 1, 2, 12, 13)
-    const TUFT_FRAMES = [1, 2, 12, 13, 14];
-    for (let i = 0; i < 200; i++) {
+    // Decorações 100% drawn — moitas/arbustos
+    const g = this.add.graphics().setDepth(-50);
+    for (let i = 0; i < 220; i++) {
       const x = (Math.random() - 0.5) * r * 2;
       const y = (Math.random() - 0.5) * r * 2;
-      const f = TUFT_FRAMES[Math.floor(Math.random() * TUFT_FRAMES.length)];
-      this.add.image(x, y, 'town_tiles', f)
-              .setScale(GAME.PIXEL_SCALE).setDepth(-90);
+      const size = 14 + Math.random() * 22;
+      const dark = Phaser.Display.Color.GetColor(
+        40 + Math.floor(Math.random() * 25),
+        80 + Math.floor(Math.random() * 30),
+        35 + Math.floor(Math.random() * 20)
+      );
+      g.fillStyle(dark, 0.55);
+      g.fillCircle(x, y, size);
     }
 
-    // Patches de terra (frames 24-26, 36-38)
-    const DIRT_FRAMES = [24, 25, 26];
-    for (let i = 0; i < 30; i++) {
+    // Algumas pedras cinza (graphics)
+    const gs = this.add.graphics().setDepth(-45);
+    for (let i = 0; i < 40; i++) {
       const x = (Math.random() - 0.5) * r * 1.7;
       const y = (Math.random() - 0.5) * r * 1.7;
-      const f = DIRT_FRAMES[Math.floor(Math.random() * DIRT_FRAMES.length)];
-      this.add.image(x, y, 'town_tiles', f)
-              .setScale(GAME.PIXEL_SCALE * 1.3).setDepth(-95).setAlpha(0.85);
+      if (x * x + y * y < 150 * 150) continue;
+      const grey = Phaser.Display.Color.GetColor(80 + Math.random() * 50, 80 + Math.random() * 50, 90);
+      gs.fillStyle(grey, 0.9);
+      gs.fillEllipse(x, y, 14 + Math.random() * 20, 9 + Math.random() * 12);
+      gs.fillStyle(0x000000, 0.25);
+      gs.fillEllipse(x + 3, y + 4, 14 + Math.random() * 18, 4);
     }
 
-    // Árvores (frames 3-11 e 15-23 são árvores variadas)
-    const TREE_FRAMES = [3, 4, 5, 6, 7, 15, 16, 18, 27, 28, 30, 31];
-    for (let i = 0; i < 60; i++) {
-      const ang = Math.random() * Math.PI * 2;
-      const rad = 220 + Math.random() * (r - 280);
-      const x = Math.cos(ang) * rad;
-      const y = Math.sin(ang) * rad;
-      const f = TREE_FRAMES[Math.floor(Math.random() * TREE_FRAMES.length)];
-      this.add.image(x, y, 'town_tiles', f)
-              .setScale(GAME.PIXEL_SCALE).setDepth(y);
+    // Pequenas flores brancas pontilhadas
+    const gf = this.add.graphics().setDepth(-40);
+    for (let i = 0; i < 300; i++) {
+      const x = (Math.random() - 0.5) * r * 2;
+      const y = (Math.random() - 0.5) * r * 2;
+      gf.fillStyle(0xfff5b8, 0.85);
+      gf.fillCircle(x, y, 1.5);
     }
 
-    // Vinheta sutil: escurece bordas da câmera.
+    // Vinheta forte: foca atenção no centro da tela
     const vw = GAME.WIDTH, vh = GAME.HEIGHT;
     const vig = this.add.graphics().setScrollFactor(0).setDepth(900);
-    vig.fillStyle(0x000000, 0.45);
-    vig.fillRect(0, 0, vw, 50);
-    vig.fillRect(0, vh - 50, vw, 50);
-    vig.fillRect(0, 50, 50, vh - 100);
-    vig.fillRect(vw - 50, 50, 50, vh - 100);
+    vig.fillStyle(0x000000, 0.55);
+    vig.fillRect(0, 0, vw, 60);
+    vig.fillRect(0, vh - 60, vw, 60);
+    vig.fillRect(0, 60, 60, vh - 120);
+    vig.fillRect(vw - 60, 60, 60, vh - 120);
+    // gradiente suave nos cantos via mais retângulos com alpha menor
+    vig.fillStyle(0x000000, 0.30);
+    vig.fillRect(0, 60, 90, vh - 120);
+    vig.fillRect(vw - 90, 60, 90, vh - 120);
+    vig.fillRect(60, 0, vw - 120, 90);
+    vig.fillRect(60, vh - 90, vw - 120, 90);
   }
 
   update(time, dt) {
