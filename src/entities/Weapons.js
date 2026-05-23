@@ -179,12 +179,22 @@ export class Staff extends Weapon {
   _fire() {
     const target = this._nearestEnemyInRange();
     if (!target) return false;
-    const proj = this.scene.projectilePool.acquire();
     const dx = target.x - this.owner.x, dy = target.y - this.owner.y;
     const len = Math.hypot(dx, dy) || 1;
     const sp = this.def.projSpeed;
-    proj.fire(this.owner.x, this.owner.y, (dx / len) * sp, (dy / len) * sp,
-              this.damage, 'fire', 2000, COLORS.FIRE);
+    const baseAng = Math.atan2(dy, dx);
+
+    // 1 projétil + extraProj (passiva +Projétil) com leve spread
+    const total = 1 + (this.owner?.extraProj ?? 0);
+    const spread = 0.18; // ~10 graus por projétil extra
+    for (let i = 0; i < total; i++) {
+      const offset = (i - (total - 1) / 2) * spread;
+      const a = baseAng + offset;
+      const proj = this.scene.projectilePool.acquire();
+      proj.fire(this.owner.x, this.owner.y,
+                Math.cos(a) * sp, Math.sin(a) * sp,
+                this.damage, 'fire', 2000, COLORS.FIRE);
+    }
     return true;
   }
 }
@@ -239,6 +249,9 @@ export class ChainLightning extends Weapon {
     const start = this._nearestEnemyInRange();
     if (!start) return false;
     const jumps = (this.def.jumps ?? 3) + (this.owner?.extraProj ?? 0);
+    // Distância máx entre saltos amplificada pela passiva de Área
+    const areaMult = this.owner?.areaMult ?? 1;
+    const jumpMaxSq = (220 * areaMult) * (220 * areaMult);
     const visited = new Set();
     let prev = this.owner;
     let cur = start;
@@ -249,8 +262,7 @@ export class ChainLightning extends Weapon {
       this.scene.elemental.applyStatus(cur, 'bolt');
       visited.add(cur);
       if (died) this.scene._onEnemyDeath(cur);
-      // Próximo alvo: inimigo mais próximo de cur que ainda não foi atingido
-      let next = null, bestSq = 220 * 220;
+      let next = null, bestSq = jumpMaxSq;
       this.scene.enemyPool.forEachActive(e => {
         if (visited.has(e)) return;
         const dx = e.x - cur.x, dy = e.y - cur.y;

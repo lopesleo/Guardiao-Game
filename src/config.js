@@ -78,8 +78,8 @@ export const PASSIVES = [
   { id: 'hp',       name: '+20% HP Máximo',         apply: p => p.maxHp *= 1.20 },
   { id: 'speed',    name: '+15% Velocidade',         apply: p => p.speed  *= 1.15 },
   { id: 'cooldown', name: '-15% Recarga de armas',   apply: p => p.cdMult *= 0.85 },
-  { id: 'area',     name: '+20% Área de efeito',     apply: p => p.areaMult *= 1.20 },
-  { id: 'proj',     name: '+1 Projétil',             apply: p => p.extraProj += 1 },
+  { id: 'area',     name: '+25% Área (Aura/Reações/Raio)', apply: p => p.areaMult *= 1.25 },
+  { id: 'proj',     name: '+1 Projétil (Cajado/Raio)',     apply: p => p.extraProj += 1 },
 ];
 
 // Meta-progressão (D5 reduzido)

@@ -84,24 +84,25 @@ export class ElementalSystem {
     // Screenshake leve
     scene.cameras.main.shake(120, 0.005);
 
-    if (reactionKey === 'VAPOR')     this._vapor(enemy, def);
-    else if (reactionKey === 'CRYSTAL')  this._crystal(enemy, def);
-    else if (reactionKey === 'OVERLOAD') this._overload(enemy, def);
+    // Área é amplificada pelo modificador de área do player (passiva)
+    const areaMult = this.scene.player?.areaMult ?? 1;
+    if (reactionKey === 'VAPOR')     this._vapor(enemy, def, areaMult);
+    else if (reactionKey === 'CRYSTAL')  this._crystal(enemy, def, areaMult);
+    else if (reactionKey === 'OVERLOAD') this._overload(enemy, def, areaMult);
   }
 
-  _vapor(enemy, def) {
-    // Nuvem que lentifica inimigos na área por 3s
+  _vapor(enemy, def, areaMult = 1) {
     const scene = this.scene;
     const cx = enemy.x, cy = enemy.y;
-    const cloud = scene.add.circle(cx, cy, def.radius, def.color, 0.35).setDepth(50);
+    const radius = def.radius * areaMult;
+    const cloud = scene.add.circle(cx, cy, radius, def.color, 0.35).setDepth(50);
     scene.tweens.add({ targets: cloud, alpha: 0, scale: 1.2, duration: def.duration, onComplete: () => cloud.destroy() });
 
-    // Aplica slow temporário nos inimigos dentro
     const expireAt = scene.time.now + def.duration;
     const apply = () => {
       scene.enemyPool.forEachActive(e => {
         const dx = e.x - cx, dy = e.y - cy;
-        if (dx * dx + dy * dy <= def.radius * def.radius) {
+        if (dx * dx + dy * dy <= radius * radius) {
           e._vaporUntil = Math.max(e._vaporUntil || 0, expireAt);
         }
       });
@@ -110,30 +111,31 @@ export class ElementalSystem {
     scene.time.addEvent({ delay: 200, repeat: Math.floor(def.duration / 200), callback: apply });
   }
 
-  _crystal(enemy, def) {
+  _crystal(enemy, def, areaMult = 1) {
     const scene = this.scene;
     const cx = enemy.x, cy = enemy.y;
+    const radius = def.radius * areaMult;
     const ring = scene.add.circle(cx, cy, 6, def.color, 0).setStrokeStyle(4, def.color, 1).setDepth(60);
     scene.tweens.add({
-      targets: ring, radius: def.radius, alpha: 0, duration: 350,
+      targets: ring, radius, alpha: 0, duration: 350,
       onComplete: () => ring.destroy(),
     });
-    // Dano em área
     scene.enemyPool.forEachActive(e => {
       const dx = e.x - cx, dy = e.y - cy;
-      if (dx * dx + dy * dy <= def.radius * def.radius) {
+      if (dx * dx + dy * dy <= radius * radius) {
         const died = e.takeDamage(def.dmg, null);
         if (died) scene._onEnemyDeath(e);
       }
     });
   }
 
-  _overload(enemy, def) {
+  _overload(enemy, def, areaMult = 1) {
     const scene = this.scene;
     const visited = new Set([enemy]);
     let prev = enemy;
+    const jumpMaxSq = (200 * areaMult) * (200 * areaMult);
     for (let i = 0; i < def.jumps; i++) {
-      let best = null, bestSq = 200 * 200; // raio máx do salto
+      let best = null, bestSq = jumpMaxSq;
       scene.enemyPool.forEachActive(e => {
         if (visited.has(e)) return;
         const dx = e.x - prev.x, dy = e.y - prev.y;
