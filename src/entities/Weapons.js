@@ -11,9 +11,9 @@ export class Projectile extends Phaser.GameObjects.Container {
     scene.add.existing(this);
 
     // Glow externo (círculo grande com alpha)
-    this.glow = scene.add.circle(0, 0, 14, 0xffffff, 0.25);
+    this.glow = scene.add.circle(0, 0, 22, 0xff7a3c, 0.4);
     // Núcleo brilhante
-    this.core = scene.add.circle(0, 0, 6, 0xffffff, 1.0);
+    this.core = scene.add.circle(0, 0, 10, 0xffe6b8, 1.0);
     this.add([this.glow, this.core]);
 
     // Physics

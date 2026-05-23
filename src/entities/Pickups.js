@@ -6,10 +6,10 @@ export class XPGem extends Phaser.GameObjects.Container {
     super(scene, -9999, -9999);
     scene.add.existing(this);
 
-    // Glow
-    this.glow = scene.add.circle(0, 0, 10, COLORS.XP, 0.3);
-    // Diamante (rectangle rotacionado)
-    this.gem = scene.add.rectangle(0, 0, 8, 8, COLORS.XP).setStrokeStyle(1, 0xffffff, 0.7);
+    // Glow grande
+    this.glow = scene.add.circle(0, 0, 18, COLORS.XP, 0.45);
+    // Diamante (rectangle rotacionado) — bem visível
+    this.gem = scene.add.rectangle(0, 0, 14, 14, COLORS.XP).setStrokeStyle(2, 0xffffff, 1);
     this.gem.setAngle(45);
     this.add([this.glow, this.gem]);
 
