@@ -68,6 +68,54 @@ export class GameScene extends Phaser.Scene {
       this.scene.start('MenuScene');
     });
 
+    // ====== DEBUG KEYS (remover antes da entrega final se quiser) ======
+    this.input.keyboard.on('keydown-NINE', () => {
+      // Enche Despertar
+      this.player.awakenMeter = PLAYER.AWAKEN_METER_MAX;
+      this._toast('★ Despertar cheio');
+    });
+    this.input.keyboard.on('keydown-EIGHT', () => {
+      // +50 XP (level up rápido pra ver as cartas)
+      this.player.gainXp(50);
+      this._toast('+50 XP');
+    });
+    this.input.keyboard.on('keydown-SEVEN', () => {
+      // Adiciona +20s ao timer (acelera spawn + aproxima boss)
+      this.elapsedMs += 20000;
+      this._toast(`+20s (agora ${Math.floor(this.elapsedMs / 1000)}s)`);
+    });
+    this.input.keyboard.on('keydown-ZERO', () => {
+      // Spawna boss agora
+      if (!this.boss) {
+        this.elapsedMs = GAME.RUN_DURATION_S * 1000;
+        this._spawnBoss();
+        this._toast('BOSS spawned');
+      } else {
+        this._toast('Boss já está vivo');
+      }
+    });
+    this.input.keyboard.on('keydown-G', () => {
+      // God mode toggle
+      this._god = !this._god;
+      this._toast(`GOD MODE: ${this._god ? 'ON' : 'OFF'}`);
+    });
+    this.input.keyboard.on('keydown-K', () => {
+      // Kill all enemies
+      let n = 0;
+      this.enemyPool.forEachActive(e => { e.hp = 0; this._onEnemyDeath(e); n++; });
+      this._toast(`Killed ${n} enemies`);
+    });
+    this.input.keyboard.on('keydown-H', () => {
+      // Heal full
+      this.player.hp = this.player.maxHp;
+      this._toast('HP full');
+    });
+    this.input.keyboard.on('keydown-T', () => {
+      // Mostrar lista de teclas de debug
+      this._toast('9=Awaken 8=+50XP 7=+20s 0=Boss G=God K=KillAll H=Heal', 4500);
+    });
+    // =================================================================
+
     // Level-up
     this.events.on('player:levelup', () => {
       const cards = this.upgrades.generateCards(this.player);
@@ -148,8 +196,10 @@ export class GameScene extends Phaser.Scene {
       const dx = e.x - this.player.x, dy = e.y - this.player.y;
       if (dx * dx + dy * dy < 26 * 26 && time - e.lastTouchAt > e.contactCooldownMs) {
         e.lastTouchAt = time;
-        this.player.takeDamage(e.dmg);
-        if (this.player.isDead()) this._onGameOver(false);
+        if (!this._god) {
+          this.player.takeDamage(e.dmg);
+          if (this.player.isDead()) this._onGameOver(false);
+        }
       }
     });
 
@@ -239,6 +289,15 @@ export class GameScene extends Phaser.Scene {
         this.coinPool.release(c);
       }
     });
+  }
+
+  _toast(msg, ms = 1500) {
+    const t = this.add.text(GAME.WIDTH / 2, GAME.HEIGHT - 80, msg, {
+      fontFamily: 'Press Start 2P, monospace', fontSize: '12px',
+      color: '#ffd96b', stroke: '#000', strokeThickness: 3,
+      backgroundColor: '#000000', padding: { x: 10, y: 6 },
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+    this.tweens.add({ targets: t, alpha: 0, delay: ms - 300, duration: 300, onComplete: () => t.destroy() });
   }
 
   _showDmg(x, y, dmg, element) {
