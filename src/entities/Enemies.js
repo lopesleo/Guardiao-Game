@@ -1,12 +1,12 @@
 // Inimigos: base + Wolf (D1). Crow/Goblin/Boss virão em D2/D3.
 import { ENEMY, GAME } from '../config.js';
 
-// Frames do tilemap creatures_packed (16x16). Tunar visualmente em D3.
+// Frames do creatures_packed (10 cols, 180 frames). Mapeados via labeled preview.
 const FRAMES = {
-  WOLF:   1,
-  CROW:   30,
-  GOBLIN: 50,
-  BOSS:   90,
+  WOLF:   132,   // lobo cinza
+  CROW:   140,   // pássaro pequeno escuro
+  GOBLIN: 10,    // goblin verde
+  BOSS:   65,    // ent / criatura-árvore grande
 };
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {

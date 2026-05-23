@@ -2,15 +2,23 @@
 // Aura/Bumerangue/Raio Encadeado + evoluções em D2.
 import { WEAPONS, WEAPON_LEVEL_DMG, COLORS, GAME } from '../config.js';
 
-// ------------- Projétil reutilizável (pool) -------------
+// ------------- Projétil desenhado (graphics + physics body manual) -------------
+// Não usa spritesheet: bola colorida com glow, mais bonito e flexível.
 
-export class Projectile extends Phaser.Physics.Arcade.Sprite {
+export class Projectile extends Phaser.GameObjects.Container {
   constructor(scene) {
-    super(scene, -9999, -9999, 'dungeon_tiles', 117); // frame arbitrário "gem-ish"
+    super(scene, -9999, -9999);
     scene.add.existing(this);
+
+    // Glow externo (círculo grande com alpha)
+    this.glow = scene.add.circle(0, 0, 14, 0xffffff, 0.25);
+    // Núcleo brilhante
+    this.core = scene.add.circle(0, 0, 6, 0xffffff, 1.0);
+    this.add([this.glow, this.core]);
+
+    // Physics
     scene.physics.add.existing(this);
-    this.setScale(GAME.PIXEL_SCALE * 0.6);
-    this.body.setCircle(5, 3, 3);
+    this.body.setCircle(10, -10, -10);
     this.setActive(false).setVisible(false);
     this.body.enable = false;
 
@@ -19,26 +27,33 @@ export class Projectile extends Phaser.Physics.Arcade.Sprite {
     this.lifeUntil = 0;
   }
 
-  fire(x, y, vx, vy, dmg, element, lifeMs = 2000, tint = 0xffffff) {
+  fire(x, y, vx, vy, dmg, element, lifeMs = 2000, color = 0xff7a3c) {
     this.setPosition(x, y);
     this.setActive(true).setVisible(true);
     this.body.enable = true;
-    this.setVelocity(vx, vy);
+    this.body.setVelocity(vx, vy);
     this.dmg = dmg;
     this.element = element;
     this.lifeUntil = this.scene.time.now + lifeMs;
-    this.setTint(tint);
+    this.glow.setFillStyle(color, 0.35);
+    this.core.setFillStyle(0xffffff, 1.0);
+    // Toque elemental no núcleo
+    if (element === 'ice')  this.core.setFillStyle(0xc8e6ff, 1);
+    if (element === 'bolt') this.core.setFillStyle(0xf0d4ff, 1);
   }
 
   kill() {
     this.setActive(false).setVisible(false);
     this.body.enable = false;
-    this.setVelocity(0, 0);
+    this.body.setVelocity(0, 0);
   }
 
   update(time) {
     if (!this.active) return;
     if (time >= this.lifeUntil) this.kill();
+    // Pulsação leve do glow
+    const s = 1 + Math.sin(time / 60) * 0.12;
+    this.glow.setScale(s);
   }
 }
 

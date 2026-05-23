@@ -63,18 +63,58 @@ export class GameScene extends Phaser.Scene {
   }
 
   _drawGround() {
-    // D1: fundo procedural simples (grid de "grama" do tiny-town).
-    // D2/D3: pode virar Tilemap real.
+    // Background: grama base (TileSprite — 1 draw call), depois decorações esparsas.
+    // Não usar tint, deixa cor original do sprite.
     const r = GAME.WORLD_RADIUS;
-    const tileSize = 16 * GAME.PIXEL_SCALE;
-    // Frame 0 do town_tiles é grama base; fica repetido em TileSprite.
-    this.add.tileSprite(0, 0, r * 2, r * 2, 'town_tiles', 0)
-            .setOrigin(0.5).setScale(1).setDepth(-100).setTint(0x9ac892);
+    const TS = 16 * GAME.PIXEL_SCALE;
 
-    // Vinheta circular escurecendo as bordas (efeito mata densa)
-    const g = this.add.graphics().setDepth(-50);
-    g.fillStyle(0x000000, 0.0);
-    // (mantemos simples por ora)
+    // Cor de fundo da câmera (visível quando sai da grama)
+    this.cameras.main.setBackgroundColor(0x2a3a25);
+
+    // Grama base — uma TileSprite enorme, repete frame 0 (grama lisa).
+    this.add.tileSprite(0, 0, r * 2, r * 2, 'town_tiles', 0)
+            .setOrigin(0.5).setScale(GAME.PIXEL_SCALE).setDepth(-100);
+
+    // Tufos/flores espalhados (frame 1, 2, 12, 13)
+    const TUFT_FRAMES = [1, 2, 12, 13, 14];
+    for (let i = 0; i < 200; i++) {
+      const x = (Math.random() - 0.5) * r * 2;
+      const y = (Math.random() - 0.5) * r * 2;
+      const f = TUFT_FRAMES[Math.floor(Math.random() * TUFT_FRAMES.length)];
+      this.add.image(x, y, 'town_tiles', f)
+              .setScale(GAME.PIXEL_SCALE).setDepth(-90);
+    }
+
+    // Patches de terra (frames 24-26, 36-38)
+    const DIRT_FRAMES = [24, 25, 26];
+    for (let i = 0; i < 30; i++) {
+      const x = (Math.random() - 0.5) * r * 1.7;
+      const y = (Math.random() - 0.5) * r * 1.7;
+      const f = DIRT_FRAMES[Math.floor(Math.random() * DIRT_FRAMES.length)];
+      this.add.image(x, y, 'town_tiles', f)
+              .setScale(GAME.PIXEL_SCALE * 1.3).setDepth(-95).setAlpha(0.85);
+    }
+
+    // Árvores (frames 3-11 e 15-23 são árvores variadas)
+    const TREE_FRAMES = [3, 4, 5, 6, 7, 15, 16, 18, 27, 28, 30, 31];
+    for (let i = 0; i < 60; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      const rad = 220 + Math.random() * (r - 280);
+      const x = Math.cos(ang) * rad;
+      const y = Math.sin(ang) * rad;
+      const f = TREE_FRAMES[Math.floor(Math.random() * TREE_FRAMES.length)];
+      this.add.image(x, y, 'town_tiles', f)
+              .setScale(GAME.PIXEL_SCALE).setDepth(y);
+    }
+
+    // Vinheta sutil: escurece bordas da câmera.
+    const vw = GAME.WIDTH, vh = GAME.HEIGHT;
+    const vig = this.add.graphics().setScrollFactor(0).setDepth(900);
+    vig.fillStyle(0x000000, 0.45);
+    vig.fillRect(0, 0, vw, 50);
+    vig.fillRect(0, vh - 50, vw, 50);
+    vig.fillRect(0, 50, 50, vh - 100);
+    vig.fillRect(vw - 50, 50, 50, vh - 100);
   }
 
   update(time, dt) {

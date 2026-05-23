@@ -1,29 +1,32 @@
-// XPGem: dropa quando inimigo morre, segue o player quando próximo.
-import { ENEMY, COLORS, GAME } from '../config.js';
+// XPGem: diamante verde rotativo. Magnetiza quando próximo do player.
+import { ENEMY, COLORS } from '../config.js';
 
-// Frame de "gem" no tilemap_packed do Tiny Dungeon (16x16).
-const GEM_FRAME = 60;
-
-export class XPGem extends Phaser.Physics.Arcade.Sprite {
+export class XPGem extends Phaser.GameObjects.Container {
   constructor(scene) {
-    super(scene, -9999, -9999, 'dungeon_tiles', GEM_FRAME);
+    super(scene, -9999, -9999);
     scene.add.existing(this);
+
+    // Glow
+    this.glow = scene.add.circle(0, 0, 10, COLORS.XP, 0.3);
+    // Diamante (rectangle rotacionado)
+    this.gem = scene.add.rectangle(0, 0, 8, 8, COLORS.XP).setStrokeStyle(1, 0xffffff, 0.7);
+    this.gem.setAngle(45);
+    this.add([this.glow, this.gem]);
+
     scene.physics.add.existing(this);
-    this.setScale(GAME.PIXEL_SCALE * 0.7);
-    this.setTint(COLORS.XP);
-    this.body.setCircle(4, 4, 4);
+    this.body.setCircle(8, -8, -8);
     this.setActive(false).setVisible(false);
     this.body.enable = false;
 
     this.xpValue = ENEMY.XP_VALUE;
-    this.magnetSpeed = 320;
+    this.magnetSpeed = 380;
   }
 
   spawn(x, y) {
     this.setPosition(x, y);
     this.setActive(true).setVisible(true);
     this.body.enable = true;
-    this.setVelocity(0, 0);
+    this.body.setVelocity(0, 0);
   }
 
   pickup() {
@@ -32,15 +35,21 @@ export class XPGem extends Phaser.Physics.Arcade.Sprite {
   }
 
   update(time, dt, player) {
-    if (!this.active || !player?.active) return;
+    if (!this.active) return;
+    // Rotação visual
+    this.gem.angle = (this.gem.angle + 1.5) % 360;
+    const s = 1 + Math.sin(time / 200) * 0.2;
+    this.glow.setScale(s);
+
+    // Magnetismo
+    if (!player?.active) return;
     const dx = player.x - this.x, dy = player.y - this.y;
     const d  = Math.hypot(dx, dy);
     if (d < player.pickupRadius * 4) {
-      // magnet: acelera em direção ao player conforme se aproxima
-      const sp = this.magnetSpeed * (1 - Math.min(1, d / (player.pickupRadius * 4)) * 0.5);
-      this.setVelocity((dx / (d || 1)) * sp, (dy / (d || 1)) * sp);
+      const sp = this.magnetSpeed * (1 - Math.min(1, d / (player.pickupRadius * 4)) * 0.4);
+      this.body.setVelocity((dx / (d || 1)) * sp, (dy / (d || 1)) * sp);
     } else {
-      this.setVelocity(0, 0);
+      this.body.setVelocity(0, 0);
     }
   }
 }
