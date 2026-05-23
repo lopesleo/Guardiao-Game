@@ -87,38 +87,38 @@ Commits `56cc9d3` → `08f2582`
 
 ---
 
-## ⏳ D3 — Boss + Meta + Polish (26/05)
+## 🟡 D3 — Boss + Meta + Polish (26/05)
 
 **Marco:** jogo completo do início ao boss final.
 
 ### Boss
-- ⏳ `BossEnt` em `Enemies.js` (frame 65) com 2 fases
-- ⏳ Fase 1: melee + AOE periódico
-- ⏳ Fase 2 (50% HP): invoca trash + projéteis retos
-- ⏳ Aviso visual aos 6:30, spawn aos 7:00
-- ⏳ Arena lock (overlay sutil)
-- ⏳ Música/SFX de boss-roar
+- ✅ `BossEnt` em `Enemies.js` (frame 65) com 2 fases
+- ✅ Fase 1: melee + AOE periódico
+- ✅ Fase 2 (50% HP): invoca trash + projéteis retos
+- ✅ Aviso visual aos 6:30, spawn aos 7:00
+- ⏳ Arena lock (overlay sutil) — adiado, hordas pausam durante boss
+- ✅ Música/SFX de boss-roar
 
 ### Meta-progressão
-- ⏳ `src/systems/MetaProgression.js` com `localStorage`
-- ⏳ Salvar: moedas totais, high score, armas desbloqueadas
-- ⏳ Drop de moeda por inimigo (5%)
-- ⏳ Bônus de vitória do boss (50 moedas)
-- ⏳ Desbloqueio progressivo: AURA (100), CHAIN (60), BOOMER (30)
-- ⏳ Detecção de modo privado → toast de aviso
+- ✅ `src/systems/MetaProgression.js` com `localStorage`
+- ✅ Salvar: moedas totais, high score, armas desbloqueadas
+- ✅ Drop de moeda por inimigo (5%)
+- ✅ Bônus de vitória do boss (50 moedas)
+- ✅ Desbloqueio progressivo: AURA (100), CHAIN (60), BOOMER (30)
+- ✅ Detecção de modo privado → toast de aviso
 
 ### GameOver narrativo
-- ⏳ Stats: tempo sobrevivido, kills, dano, moedas ganhas, desbloqueios novos
-- ⏳ Botão "Jogar Novamente" + "Menu"
+- ✅ Stats: tempo sobrevivido, kills, dano, moedas ganhas, desbloqueios novos
+- ✅ Botão "Jogar Novamente" + "Menu"
 
 ### Onboarding
-- ⏳ Overlay 5s na primeira run: "WASD pra mover, ataque é automático"
+- ✅ Overlay 5s na primeira run: "WASD pra mover, ataque é automático"
 
 ### Polish funcional
-- ⏳ Damage numbers (pooled)
-- ⏳ Screenshake leve no hit
-- ⏳ Tela de pausa básica
-- ⏳ Mute toggle (M) com ícone visual
+- ✅ Damage numbers (pooled)
+- ✅ Screenshake leve no hit
+- ⏳ Tela de pausa básica — adiado (ESC já volta ao menu, suficiente)
+- ✅ Mute toggle (M) — funcional, sem ícone HUD
 
 ### Balanceamento (2h dedicadas — fim do D3)
 - ⏳ Run vencível com Cajado puro em ~70% das tentativas
@@ -150,6 +150,28 @@ Commits `56cc9d3` → `08f2582`
 - Testes automatizados (só smoke checklist manual)
 - i18n (PT-BR único)
 - Polish visual de bg pesado — só essencial
+
+---
+
+## 🎨 Visual Polish (D4 manhã, se houver tempo)
+
+Lista de coisas que estão funcionais mas feias/discretas — melhorar SÓ depois de tudo o mais estar pronto.
+
+### Reações elementais
+- ⏳ **VAPOR**: nuvem mais "desenhada" — múltiplas partículas/poofs em vez de 1 círculo plano; rastro de vapor saindo do inimigo origem; cor com gradiente; talvez pequeno dano contínuo (3/s) pra equilibrar com Cristal/Sobrecarga
+- ⏳ **CRISTAL**: estilhaços girando para fora do centro além do anel; partículas azul-claro persistindo 0.5s
+- ⏳ **SOBRECARGA**: raio mais grosso, com brilho extra nos vértices do zigzag; flash branco breve em cada inimigo atingido
+
+### Player / armas
+- ⏳ **Projétil do Cajado**: trilha curta atrás (3 círculos com alpha decrescente)
+- ⏳ **Aura Gélida**: pulsação radial em vez de círculo estático
+- ⏳ **Bumerangue**: trail de chamas atrás
+
+### Background
+- ⏳ Definir sprites corretos com ajuda do usuário (frames de árvores, pedras, etc do dungeon pack)
+
+### Outros
+- ⏳ Sprite do player: trocar pra um do Tiny Creatures se houver melhor (frame 113 witch-staff? 114 druid?)
 
 ---
 

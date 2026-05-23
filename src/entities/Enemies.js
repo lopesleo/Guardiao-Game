@@ -131,6 +131,119 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 }
 
+// ============================================================================
+// BOSS — Ent (criatura-árvore), 2 fases
+// ============================================================================
+
+export class BossEnt extends Phaser.Physics.Arcade.Sprite {
+  constructor(scene, x, y) {
+    super(scene, x, y, 'creatures', FRAMES.BOSS);
+    scene.add.existing(this);
+    scene.physics.add.existing(this);
+    this.setScale(GAME.PIXEL_SCALE * 2.5);
+    this.body.setCircle(7, 1, 1);
+    this.maxHp = 0; this.hp = 0;
+    this.dmg = 12;
+    this.speed = 60;
+    this.statuses = {};
+    this._vaporUntil = 0;
+    this.phase = 1;
+    this.lastSpecialAt = 0;
+    this.lastTouchAt = 0;
+    this.contactCooldownMs = 700;
+    this._kind = 'boss';
+  }
+
+  activate(maxHp) {
+    this.maxHp = maxHp; this.hp = maxHp;
+    this.statuses = {};
+    this.phase = 1;
+    this.lastSpecialAt = 0;
+    this.lastTouchAt = 0;
+    this.clearTint();
+    this.setActive(true).setVisible(true);
+    this.body.enable = true;
+  }
+
+  takeDamage(dmg) {
+    const iceAmp = this.statuses.ice ? 1.35 : 1;
+    this.hp -= dmg * iceAmp;
+    this.setTintFill(0xffffff);
+    this.scene.time.delayedCall(50, () => {
+      if (!this.active) return;
+      this.scene.elemental?._updateTint(this);
+    });
+    if (this.hp <= 0) return true;
+    // Transição de fase
+    if (this.phase === 1 && this.hp <= this.maxHp * 0.5) {
+      this.phase = 2;
+      this.speed = 90;
+      this.scene.cameras.main.shake(400, 0.012);
+      this.scene.sound.play('sfx_boss_roar', { volume: 0.7 });
+    }
+    return false;
+  }
+
+  update(time, dt, target) {
+    if (!this.active || !target?.active) return;
+    let slow = 1;
+    if (this.statuses.ice) slow *= 0.5;
+    if (time < this._vaporUntil) slow *= 0.5;
+    const dx = target.x - this.x, dy = target.y - this.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const sp = this.speed * slow;
+    this.setVelocity((dx / len) * sp, (dy / len) * sp);
+    this.setFlipX(dx < 0);
+
+    // Especiais
+    if (this.phase === 1 && time - this.lastSpecialAt > 4000) {
+      this.lastSpecialAt = time;
+      this._aoeSlam();
+    } else if (this.phase === 2 && time - this.lastSpecialAt > 2500) {
+      this.lastSpecialAt = time;
+      this._volley();
+      // Invoca 2 morcegos
+      this._summon('wolf', 2);
+    }
+  }
+
+  _aoeSlam() {
+    const scene = this.scene;
+    const r = 180;
+    const ring = scene.add.circle(this.x, this.y, 10, 0xff7a3c, 0).setStrokeStyle(5, 0xff7a3c, 1).setDepth(60);
+    scene.tweens.add({ targets: ring, radius: r, alpha: 0, duration: 600, onComplete: () => ring.destroy() });
+    scene.time.delayedCall(600, () => {
+      const dx = scene.player.x - this.x, dy = scene.player.y - this.y;
+      if (dx * dx + dy * dy <= r * r) {
+        scene.player.takeDamage(this.dmg);
+        if (scene.player.isDead()) scene._onGameOver();
+      }
+    });
+  }
+
+  _volley() {
+    const scene = this.scene;
+    const target = scene.player;
+    for (let i = -1; i <= 1; i++) {
+      const ang = Math.atan2(target.y - this.y, target.x - this.x) + i * 0.25;
+      const proj = scene.enemyProjPool.acquire();
+      const sp = 220;
+      proj.fire(this.x, this.y, Math.cos(ang) * sp, Math.sin(ang) * sp, 8);
+    }
+  }
+
+  _summon(kind, count) {
+    const scene = this.scene;
+    const wave = Math.floor(scene.elapsedMs / 30000);
+    for (let i = 0; i < count; i++) {
+      if (scene.enemyPool.size >= GAME.MAX_ENEMIES_ALIVE) break;
+      const ang = Math.random() * Math.PI * 2;
+      const e = scene.enemyPool.acquire();
+      e.activate(this.x + Math.cos(ang) * 80, this.y + Math.sin(ang) * 80, kind, wave);
+    }
+  }
+}
+
 // Projétil simples de inimigo (goblin)
 export class EnemyProjectile extends Phaser.GameObjects.Container {
   constructor(scene) {
