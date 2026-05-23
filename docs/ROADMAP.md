@@ -39,18 +39,18 @@ Commits `56cc9d3` → `08f2582`
 
 ---
 
-## 🟡 D2 — Sistemas core (25/05, hoje/amanhã)
+## ✅ D2 — Sistemas core (25/05)
 
 **Marco:** 5 minutos de gameplay com level-ups e reações elementais visíveis.
 
 ### Armas (a implementar todas em `src/entities/Weapons.js`)
-- ⏳ **Aura Gélida** (`AURA`, ❄️) — dano contínuo em raio ao redor do player
-- ⏳ **Bumerangue** (`BOOMER`, 🔥) — projétil que volta
-- ⏳ **Raio Encadeado** (`CHAIN`, ⚡) — salta entre até 3 inimigos
+- ✅ **Aura Gélida** (`AURA`, ❄️) — dano contínuo em raio ao redor do player
+- ✅ **Bumerangue** (`BOOMER`, 🔥) — projétil que volta
+- ✅ **Raio Encadeado** (`CHAIN`, ⚡) — salta entre até 3 inimigos
 
 ### Inimigos (adicionar em `src/entities/Enemies.js`)
-- ⏳ **Crow** (frame 140) — rápido, baixo HP, pode flanquear
-- ⏳ **Goblin** (frame 10) — atira projétil; mantém distância
+- ✅ **Crow** (frame 140) — rápido, baixo HP, pode flanquear
+- ✅ **Goblin** (frame 10) — atira projétil; mantém distância
 
 ### Sistema Elemental ★ DIFERENCIAL
 - ⏳ `src/systems/ElementalSystem.js`

@@ -1,4 +1,4 @@
-// Spawna inimigos ao longo do tempo. D1: só wolves; D2: crows/goblins; D3: boss.
+// Variação por wave: morcego sempre, crow após wave 2, goblin após wave 4.
 import { GAME, ENEMY } from '../config.js';
 
 export class SpawnDirector {
@@ -7,14 +7,12 @@ export class SpawnDirector {
     this.pool  = enemyPool;
     this.target = target;
     this.elapsedMs = 0;
-    this.spawnAcc = 0;   // acumulador de "fração de inimigo" por frame
+    this.spawnAcc = 0;
   }
 
   update(time, dt) {
     this.elapsedMs += dt;
     const tSec = this.elapsedMs / 1000;
-
-    // Acumula spawn por segundo conforme ENEMY.SPAWN_RATE
     const rate = ENEMY.SPAWN_RATE(tSec);
     this.spawnAcc += (rate * dt) / 1000;
 
@@ -27,10 +25,12 @@ export class SpawnDirector {
 
   _spawnOne(tSec) {
     const wave = Math.floor(tSec / 30);
-    // D1: só wolf. D2 vai destravar outros tipos.
-    const kind = 'wolf';
+    const roll = Math.random();
+    let kind;
+    if (wave >= 4 && roll < 0.18) kind = 'goblin';
+    else if (wave >= 2 && roll < 0.45) kind = 'crow';
+    else kind = 'wolf';
 
-    // Spawna em raio fora da câmera, ao redor do player
     const cam = this.scene.cameras.main;
     const radius = Math.max(cam.width, cam.height) * 0.6 + 40;
     const angle = Math.random() * Math.PI * 2;
