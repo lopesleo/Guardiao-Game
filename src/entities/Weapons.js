@@ -17,24 +17,17 @@ export class Projectile extends Phaser.GameObjects.Container {
     this.setActive(false).setVisible(false);
     this.body.enable = false;
     this.dmg = 0; this.element = null; this.lifeUntil = 0;
-    this.behavior = 'straight';
-    this.spawnX = 0; this.spawnY = 0;
-    this.travelMs = 0;
   }
 
-  fire(x, y, vx, vy, dmg, element, lifeMs = 2000, color = COLORS.FIRE, behavior = 'straight') {
+  fire(x, y, vx, vy, dmg, element, lifeMs = 2000, color = COLORS.FIRE) {
     this.setPosition(x, y);
-    this.spawnX = x; this.spawnY = y;
     this.setActive(true).setVisible(true);
     this.body.enable = true;
     this.body.setVelocity(vx, vy);
     this.dmg = dmg;
     this.element = element;
     this.lifeUntil = this.scene.time.now + lifeMs;
-    this.behavior = behavior;
-    this.travelMs = 0;
 
-    // Cor por elemento
     if (element === 'ice')      { this.glow.setFillStyle(COLORS.ICE, 0.45); this.core.setFillStyle(0xeaf6ff, 1); }
     else if (element === 'bolt'){ this.glow.setFillStyle(COLORS.BOLT, 0.45); this.core.setFillStyle(0xf5e6ff, 1); }
     else                        { this.glow.setFillStyle(color, 0.4);        this.core.setFillStyle(0xffe6b8, 1); }
@@ -46,28 +39,98 @@ export class Projectile extends Phaser.GameObjects.Container {
     this.body.setVelocity(0, 0);
   }
 
-  update(time, dt) {
+  update(time) {
     if (!this.active) return;
     if (time >= this.lifeUntil) this.kill();
     const s = 1 + Math.sin(time / 60) * 0.12;
     this.glow.setScale(s);
+  }
+}
 
-    if (this.behavior === 'boomerang') {
-      this.travelMs += dt;
-      const totalMs = 1100;
-      const t = this.travelMs / totalMs;
-      if (t >= 1) { this.kill(); return; }
-      // Trajetória vai-volta: nos primeiros 50% acelera pra frente, depois inverte
-      if (t > 0.5) {
-        // inverte gradualmente
-        const owner = this.scene.player;
-        const dx = owner.x - this.x, dy = owner.y - this.y;
-        const len = Math.hypot(dx, dy) || 1;
-        const sp = 320;
-        this.body.setVelocity((dx / len) * sp, (dy / len) * sp);
+// ============================================================================
+// BoomerangProj — visual de "L" girando, fase out + retorno até tocar o player
+// ============================================================================
+
+export class BoomerangProj extends Phaser.GameObjects.Container {
+  constructor(scene) {
+    super(scene, -9999, -9999);
+    scene.add.existing(this);
+    // Forma de L: 2 retângulos perpendiculares, com bordas escuras
+    const w = 4, l = 18;
+    this.armA = scene.add.rectangle(-2, 0, l, w, COLORS.FIRE).setStrokeStyle(1, 0x6a3010, 1);
+    this.armB = scene.add.rectangle(0, -2, w, l, COLORS.FIRE).setStrokeStyle(1, 0x6a3010, 1);
+    // Glow externo discreto
+    this.glow = scene.add.circle(0, 0, 14, COLORS.FIRE, 0.25);
+    this.add([this.glow, this.armA, this.armB]);
+
+    scene.physics.add.existing(this);
+    this.body.setCircle(12, -12, -12);
+    this.setActive(false).setVisible(false);
+    this.body.enable = false;
+
+    this.dmg = 0;
+    this.element = 'fire';
+    this.behavior = 'boomerang';
+    this.phase = 'out';      // 'out' | 'back'
+    this.outSpeed = 320;
+    this.deadline = 0;
+    this.lastHit = new Map();   // enemy -> time (evita re-hit instantâneo)
+  }
+
+  fire(x, y, dirX, dirY, dmg) {
+    this.setPosition(x, y);
+    this.setActive(true).setVisible(true);
+    this.body.enable = true;
+    this.dmg = dmg;
+    this.phase = 'out';
+    this.deadline = this.scene.time.now + 2200;
+    this.body.setVelocity(dirX * this.outSpeed, dirY * this.outSpeed);
+    this.lastHit.clear();
+  }
+
+  kill() {
+    this.setActive(false).setVisible(false);
+    this.body.enable = false;
+    this.body.setVelocity(0, 0);
+  }
+
+  // Re-hit no mesmo inimigo só depois de 250ms (passada de ida + volta)
+  canHit(enemy, time) {
+    const last = this.lastHit.get(enemy) ?? 0;
+    if (time - last < 250) return false;
+    this.lastHit.set(enemy, time);
+    return true;
+  }
+
+  update(time, dt) {
+    if (!this.active) return;
+    // Rotação visual
+    this.rotation += dt * 0.03;
+
+    const owner = this.scene.player;
+    if (!owner) { this.kill(); return; }
+
+    if (this.phase === 'out') {
+      // Desacelera. Quando velocidade fica baixa, vira pra fase 'back'.
+      const vx = this.body.velocity.x, vy = this.body.velocity.y;
+      const speed = Math.hypot(vx, vy);
+      if (speed > 0) {
+        const decel = 600 * (dt / 1000);
+        const newSp = Math.max(0, speed - decel);
+        this.body.setVelocity((vx / speed) * newSp, (vy / speed) * newSp);
       }
-      this.rotation += dt * 0.02;
+      if (speed < 60) this.phase = 'back';
+    } else {
+      // Persegue player com aceleração crescente
+      const dx = owner.x - this.x, dy = owner.y - this.y;
+      const d  = Math.hypot(dx, dy) || 1;
+      const sp = Math.min(520, 240 + (this.scene.time.now - (this.deadline - 2200)) * 0.25);
+      this.body.setVelocity((dx / d) * sp, (dy / d) * sp);
+      // Tocou no player → morre
+      if (d < 26) this.kill();
     }
+
+    if (time >= this.deadline) this.kill();
   }
 }
 
@@ -161,12 +224,10 @@ export class Boomerang extends Weapon {
   _fire() {
     const target = this._nearestEnemyInRange();
     if (!target) return false;
-    const proj = this.scene.projectilePool.acquire();
+    const proj = this.scene.boomerPool.acquire();
     const dx = target.x - this.owner.x, dy = target.y - this.owner.y;
     const len = Math.hypot(dx, dy) || 1;
-    const sp = this.def.projSpeed;
-    proj.fire(this.owner.x, this.owner.y, (dx / len) * sp, (dy / len) * sp,
-              this.damage, 'fire', 1200, COLORS.FIRE, 'boomerang');
+    proj.fire(this.owner.x, this.owner.y, dx / len, dy / len, this.damage);
     return true;
   }
 }

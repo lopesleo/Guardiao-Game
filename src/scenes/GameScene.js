@@ -8,7 +8,7 @@ import { UpgradeSystem } from '../systems/UpgradeSystem.js';
 import { MetaProgression } from '../systems/MetaProgression.js';
 import { Player } from '../entities/Player.js';
 import { Enemy, EnemyProjectile, BossEnt } from '../entities/Enemies.js';
-import { Projectile, Staff, AuraWeapon, Boomerang, ChainLightning, WEAPON_CLASSES } from '../entities/Weapons.js';
+import { Projectile, BoomerangProj, Staff, AuraWeapon, Boomerang, ChainLightning, WEAPON_CLASSES } from '../entities/Weapons.js';
 import { XPGem, CoinPickup } from '../entities/Pickups.js';
 import { DamageNumber } from '../entities/DamageNumber.js';
 import { HUD } from '../ui/HUD.js';
@@ -33,6 +33,7 @@ export class GameScene extends Phaser.Scene {
     // Pools
     this.enemyPool      = new Pool(() => { const e = new Enemy(this, -9999, -9999); e.deactivate(); return e; }, 30);
     this.projectilePool = new Pool(() => new Projectile(this), 30);
+    this.boomerPool     = new Pool(() => new BoomerangProj(this), 8);
     this.enemyProjPool  = new Pool(() => new EnemyProjectile(this), 12);
     this.xpPool         = new Pool(() => new XPGem(this), 50);
     this.coinPool       = new Pool(() => new CoinPickup(this), 20);
@@ -152,21 +153,17 @@ export class GameScene extends Phaser.Scene {
       }
     });
 
-    // Projéteis do player
+    // Projéteis retos do player (Cajado etc) — somem no impacto
     this.projectilePool.forEachActive(p => {
-      p.update(time, dt);
+      p.update(time);
       if (!p.active) { this.projectilePool.release(p); return; }
-      // Boss
       if (this.boss && this.boss.active) {
         const dx = this.boss.x - p.x, dy = this.boss.y - p.y;
         if (dx * dx + dy * dy < 40 * 40) {
           const died = this.boss.takeDamage(p.dmg);
           this._showDmg(this.boss.x, this.boss.y, p.dmg, p.element);
           if (p.element) this.elemental.applyStatus(this.boss, p.element);
-          if (p.behavior !== 'boomerang') {
-            p.kill();
-            this.projectilePool.release(p);
-          }
+          p.kill(); this.projectilePool.release(p);
           if (died) this._onBossDeath();
           return;
         }
@@ -177,10 +174,31 @@ export class GameScene extends Phaser.Scene {
         if (dx * dx + dy * dy < 22 * 22) {
           const died = e.takeDamage(p.dmg, p.element);
           this._showDmg(e.x, e.y, p.dmg, p.element);
-          if (p.behavior !== 'boomerang') {
-            p.kill();
-            this.projectilePool.release(p);
-          }
+          p.kill(); this.projectilePool.release(p);
+          if (died) this._onEnemyDeath(e);
+        }
+      });
+    });
+
+    // Bumerangues — atravessam inimigos, podem re-hit após cooldown
+    this.boomerPool.forEachActive(p => {
+      p.update(time, dt);
+      if (!p.active) { this.boomerPool.release(p); return; }
+      if (this.boss && this.boss.active) {
+        const dx = this.boss.x - p.x, dy = this.boss.y - p.y;
+        if (dx * dx + dy * dy < 40 * 40 && p.canHit(this.boss, time)) {
+          const died = this.boss.takeDamage(p.dmg);
+          this._showDmg(this.boss.x, this.boss.y, p.dmg, 'fire');
+          this.elemental.applyStatus(this.boss, 'fire');
+          if (died) this._onBossDeath();
+        }
+      }
+      this.enemyPool.forEachActive(e => {
+        if (!p.active || !e.active) return;
+        const dx = e.x - p.x, dy = e.y - p.y;
+        if (dx * dx + dy * dy < 22 * 22 && p.canHit(e, time)) {
+          const died = e.takeDamage(p.dmg, 'fire');
+          this._showDmg(e.x, e.y, p.dmg, 'fire');
           if (died) this._onEnemyDeath(e);
         }
       });
