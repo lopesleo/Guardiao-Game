@@ -1,11 +1,7 @@
 // Player — Guardião da Floresta.
-// D1: movimento + sprite. Sistema de armas adicionado via player.addWeapon().
-
+// Diferenciais: Despertar (R) e Dash (Shift/Space).
 import { PLAYER, GAME, COLORS } from '../config.js';
 
-// Frame do sprite no tilemap_packed do Tiny Dungeon (16x16, 12 cols).
-// Linha de personagens humanóides começa por volta do frame 84.
-// Ajuste se quiser outro look (vamos tunar visualmente no D3).
 const PLAYER_FRAME = 84;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
@@ -16,10 +12,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.setScale(GAME.PIXEL_SCALE);
     this.setCollideWorldBounds(false);
-    this.body.setCircle(7, 1, 1);              // hitbox circular 14px
-    this.body.setMaxSpeed(PLAYER.SPEED_BASE * 2);
+    this.body.setCircle(7, 1, 1);
+    this.body.setMaxSpeed(PLAYER.SPEED_BASE * 6); // permitir dash
 
-    // Stats (mutáveis por upgrades)
+    // Stats
     this.maxHp     = PLAYER.HP_BASE;
     this.hp        = this.maxHp;
     this.speed     = PLAYER.SPEED_BASE;
@@ -28,16 +24,22 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.extraProj = 0;
     this.pickupRadius = PLAYER.PICKUP_RADIUS;
 
-    // Progressão dentro da run
     this.level = 1;
     this.xp    = 0;
 
-    // Estado
     this.invulnUntil = 0;
-    this.weapons = [];     // instâncias de Weapon
-
-    // Indicador de direção (pra escolher orientação do sprite)
+    this.weapons = [];
     this.facingX = 1;
+
+    // Despertar
+    this.awakenMeter = 0;
+    this.awakenedUntil = 0;
+    this.awakenLockUntil = 0;
+
+    // Dash
+    this.dashUntil = 0;
+    this.dashCdUntil = 0;
+    this.dashDirX = 1; this.dashDirY = 0;
   }
 
   addWeapon(weapon) {
@@ -51,9 +53,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.hp = Math.max(0, this.hp - dmg);
     this.invulnUntil = now + PLAYER.INVULN_MS;
     this.scene.sound.play('sfx_player_hit', { volume: 0.7 });
-    // flash vermelho rápido
     this.setTint(0xff5a6e);
-    this.scene.time.delayedCall(120, () => this.clearTint());
+    this.scene.time.delayedCall(120, () => {
+      if (this.isAwakened()) this.setTint(0xffd96b);
+      else this.clearTint();
+    });
     return true;
   }
 
@@ -68,17 +72,96 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
-  update(time, dt, input) {
-    // Movimento
-    const vx = input.move.x * this.speed;
-    const vy = input.move.y * this.speed;
-    this.setVelocity(vx, vy);
+  // --- Despertar ---
+  isAwakened() { return this.scene.time.now < this.awakenedUntil; }
+  awakenReady() {
+    const now = this.scene.time.now;
+    return this.awakenMeter >= PLAYER.AWAKEN_METER_MAX && now >= this.awakenLockUntil && !this.isAwakened();
+  }
+  addAwakenMeter(amount) {
+    if (this.scene.time.now < this.awakenLockUntil) return;
+    this.awakenMeter = Math.min(PLAYER.AWAKEN_METER_MAX, this.awakenMeter + amount);
+  }
+  tryActivateAwaken() {
+    if (!this.awakenReady()) return false;
+    const now = this.scene.time.now;
+    this.awakenedUntil = now + PLAYER.AWAKEN_DURATION_MS;
+    this.awakenMeter = 0;
+    this.awakenLockUntil = this.awakenedUntil + PLAYER.AWAKEN_CD_AFTER_MS;
+    // Feedback
+    this.setTint(0xffd96b);
+    this.scene.cameras.main.shake(300, 0.012);
+    this.scene.cameras.main.flash(180, 240, 200, 80);
+    this.scene.sound.play('sfx_boss_roar', { volume: 0.55, rate: 1.25 });
+    return true;
+  }
+  _endAwakenedIfNeeded() {
+    if (this.awakenedUntil && this.scene.time.now >= this.awakenedUntil && this.awakenedUntil > 0) {
+      this.awakenedUntil = -1; // sentinel: já encerrou
+      this.clearTint();
+    }
+  }
 
-    if (input.move.x !== 0) this.facingX = Math.sign(input.move.x);
+  // --- Dash ---
+  isDashing() { return this.scene.time.now < this.dashUntil; }
+  dashReady() { return this.scene.time.now >= this.dashCdUntil; }
+  tryDash(dirX, dirY) {
+    if (!this.dashReady()) return false;
+    const now = this.scene.time.now;
+    let dx = dirX, dy = dirY;
+    if (Math.abs(dx) + Math.abs(dy) < 0.05) { dx = this.facingX; dy = 0; }
+    const len = Math.hypot(dx, dy) || 1;
+    this.dashDirX = dx / len; this.dashDirY = dy / len;
+    this.dashUntil = now + PLAYER.DASH_DURATION_MS;
+    this.dashCdUntil = now + PLAYER.DASH_CD_MS;
+    this.invulnUntil = Math.max(this.invulnUntil, now + PLAYER.DASH_INVULN_MS);
+    // trilha
+    this._dashTrail();
+    return true;
+  }
+
+  _dashTrail() {
+    const scene = this.scene;
+    for (let i = 0; i < 4; i++) {
+      scene.time.delayedCall(i * 30, () => {
+        const ghost = scene.add.sprite(this.x, this.y, 'dungeon_tiles', PLAYER_FRAME)
+                          .setScale(this.scale).setAlpha(0.5).setTint(0xffffff).setDepth(this.depth - 1);
+        ghost.setFlipX(this.flipX);
+        scene.tweens.add({ targets: ghost, alpha: 0, duration: 250, onComplete: () => ghost.destroy() });
+      });
+    }
+  }
+
+  update(time, dt, input) {
+    // Despertar trigger
+    if (input.consumeAwaken()) this.tryActivateAwaken();
+    this._endAwakenedIfNeeded();
+
+    // Dash trigger
+    if (input.consumeDash()) this.tryDash(input.move.x, input.move.y);
+
+    // Movimento
+    let speedMult = 1;
+    if (this.isAwakened()) speedMult *= PLAYER.AWAKEN_SPEED_MULT;
+
+    if (this.isDashing()) {
+      const sp = this.speed * PLAYER.DASH_SPEED_MULT;
+      this.setVelocity(this.dashDirX * sp, this.dashDirY * sp);
+    } else {
+      const vx = input.move.x * this.speed * speedMult;
+      const vy = input.move.y * this.speed * speedMult;
+      this.setVelocity(vx, vy);
+      if (input.move.x !== 0) this.facingX = Math.sign(input.move.x);
+    }
     this.setFlipX(this.facingX < 0);
 
-    // Atualiza armas (auto-attack)
+    // Armas (cooldown reduzido durante despertar)
     for (const w of this.weapons) w.update(time, dt);
+  }
+
+  // Multiplicador de cooldown final (usado por Weapon.cooldown)
+  get effectiveCdMult() {
+    return this.cdMult * (this.isAwakened() ? PLAYER.AWAKEN_CD_MULT : 1);
   }
 
   isDead() { return this.hp <= 0; }

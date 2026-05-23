@@ -1,5 +1,6 @@
 // HUD: HP, XP, level, timer, kills, moedas, ícones de arma + alerta de boss.
 import { COLORS, GAME, PLAYER, WEAPONS } from '../config.js';
+const AW = PLAYER.AWAKEN_METER_MAX;
 import { formatTime } from '../utils.js';
 
 export class HUD {
@@ -17,6 +18,18 @@ export class HUD {
     this.hpFill = scene.add.rectangle(23, 23, 234, 16, COLORS.DANGER).setOrigin(0, 0).setScrollFactor(0).setDepth(1001);
     this.hpText = scene.add.text(140, 22, '', { fontFamily: 'Press Start 2P, monospace', fontSize: '10px', color: '#fff' })
                        .setOrigin(0.5, 0).setScrollFactor(0).setDepth(1002);
+
+    // Despertar (★) — barra logo abaixo do HP
+    this.awBg   = scene.add.rectangle(20, 48, 240, 14, 0x000000, 0.7).setOrigin(0, 0).setScrollFactor(0).setDepth(1000);
+    this.awFill = scene.add.rectangle(23, 51, 0, 8, 0xffd96b).setOrigin(0, 0).setScrollFactor(0).setDepth(1001);
+    this.awLabel= scene.add.text(140, 48, 'DESPERTAR', { fontFamily: 'Press Start 2P, monospace', fontSize: '8px', color: '#ffd96b' })
+                       .setOrigin(0.5, 0).setScrollFactor(0).setDepth(1002);
+
+    // Dash — ícone com cooldown radial (canto inferior direito)
+    this.dashIcon = scene.add.text(GAME.WIDTH - 20, GAME.HEIGHT - 30, 'SHIFT', {
+      fontFamily: 'Press Start 2P, monospace', fontSize: '10px',
+      color: '#e8f0e6', backgroundColor: '#1a2a1a', padding: { x: 8, y: 6 },
+    }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(1002);
 
     // XP bar (topo)
     this.xpBg   = scene.add.rectangle(0, 0, W, 8, 0x000000, 0.7).setOrigin(0, 0).setScrollFactor(0).setDepth(1000);
@@ -110,6 +123,33 @@ export class HUD {
     if (this.boss && this.boss.active) {
       const pct = Math.max(0, this.boss.hp / this.boss.maxHp);
       this.bossHpFill.width = 594 * pct;
+    }
+
+    // Despertar
+    const now = this.scene.time.now;
+    const aw = this.player.awakenMeter / AW;
+    this.awFill.width = 234 * aw;
+    if (this.player.isAwakened()) {
+      const remain = Math.max(0, this.player.awakenedUntil - now);
+      this.awFill.fillColor = 0xffd96b;
+      this.awLabel.setText(`DESPERTADO (${(remain / 1000).toFixed(1)}s)`).setColor('#ffd96b');
+    } else if (this.player.awakenReady()) {
+      this.awFill.fillColor = 0xffd96b;
+      this.awLabel.setText('★ DESPERTAR — R').setColor('#ffe88a');
+    } else if (now < this.player.awakenLockUntil) {
+      this.awFill.fillColor = 0x6a4a10;
+      this.awLabel.setText('recarregando…').setColor('#93a89a');
+    } else {
+      this.awFill.fillColor = 0xd9b25c;
+      this.awLabel.setText('DESPERTAR').setColor('#d9b25c');
+    }
+
+    // Dash
+    if (this.player.dashReady()) {
+      this.dashIcon.setText('⚡ DASH').setColor('#ffd96b');
+    } else {
+      const remain = Math.max(0, this.player.dashCdUntil - now);
+      this.dashIcon.setText(`DASH ${(remain / 1000).toFixed(1)}s`).setColor('#93a89a');
     }
   }
 }

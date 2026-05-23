@@ -1,6 +1,6 @@
 // ★ DIFERENCIAL ★ — Status elementais e reações automáticas.
 // 3 status: fire, ice, bolt. Quando 2+ coexistem no mesmo inimigo, dispara reação.
-import { STATUS, REACTION, COLORS } from '../config.js';
+import { STATUS, REACTION, COLORS, PLAYER } from '../config.js';
 
 const REACTION_MAP = {
   'fire+ice':  'VAPOR',
@@ -83,6 +83,9 @@ export class ElementalSystem {
 
     // Screenshake leve
     scene.cameras.main.shake(120, 0.005);
+
+    // Alimenta o medidor de Despertar
+    scene.player?.addAwakenMeter(PLAYER.AWAKEN_GAIN_REACTION);
 
     // Área é amplificada pelo modificador de área do player (passiva)
     const areaMult = this.scene.player?.areaMult ?? 1;

@@ -17,6 +17,19 @@ export const PLAYER = {
   XP_PER_LEVEL: lvl => Math.floor(10 + lvl * 8 + lvl * lvl * 1.5),
   PICKUP_RADIUS: 36,
   INVULN_MS: 600,
+  // Despertar (★ DIFERENCIAL)
+  AWAKEN_METER_MAX: 100,
+  AWAKEN_GAIN_REACTION: 25,   // por reação elemental disparada
+  AWAKEN_GAIN_KILL: 1,        // por inimigo morto
+  AWAKEN_DURATION_MS: 6000,   // duração do modo ativo
+  AWAKEN_CD_AFTER_MS: 1000,   // tempo após despertar antes de poder encher de novo
+  AWAKEN_CD_MULT: 0.4,        // multiplicador de cooldown durante despertar
+  AWAKEN_SPEED_MULT: 1.4,
+  // Dash
+  DASH_SPEED_MULT: 4.5,
+  DASH_DURATION_MS: 180,
+  DASH_INVULN_MS: 280,
+  DASH_CD_MS: 4000,
 };
 
 export const ENEMY = {

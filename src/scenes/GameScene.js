@@ -1,5 +1,5 @@
 // Arena (D3: boss, meta, dmg numbers, screenshake, onboarding).
-import { GAME, COLORS, BOSS, META, ENEMY, WEAPONS } from '../config.js';
+import { GAME, COLORS, BOSS, META, ENEMY, WEAPONS, PLAYER } from '../config.js';
 import { InputManager } from '../systems/InputManager.js';
 import { Pool } from '../systems/Pool.js';
 import { SpawnDirector } from '../systems/SpawnDirector.js';
@@ -250,8 +250,8 @@ export class GameScene extends Phaser.Scene {
   _onEnemyDeath(enemy) {
     if (!enemy.active) return;
     this.hud.addKill();
+    this.player.addAwakenMeter(PLAYER.AWAKEN_GAIN_KILL);
     this.sound.play('sfx_death', { volume: 0.15 });
-    // Screenshake mini
     this.cameras.main.shake(40, 0.002);
     // Drop XP
     const g = this.xpPool.acquire();
