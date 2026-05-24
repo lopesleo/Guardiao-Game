@@ -373,7 +373,7 @@ export class GameScene extends Phaser.Scene {
       if (dx * dx + dy * dy < this.player.pickupRadius * this.player.pickupRadius) {
         this._coinsGainedThisRun += META.COIN_VALUE;
         this.hud.addCoin(META.COIN_VALUE);
-        this.sound.play('sfx_pickup', { volume: 0.22, rate: 1.3 });
+        this.sound.play('sfx_coin', { volume: 0.35, rate: 1.2 });
         c.pickup();
         this.coinPool.release(c);
       }
@@ -501,16 +501,19 @@ export class GameScene extends Phaser.Scene {
     if (!result) return;
     const { kind, x, y } = result;
 
-    // CAÇA-NÍQUEL: "reels" — 3 sinos ascendentes (suspense)
+    // Som de abertura imediato
+    this.sound.play('sfx_chest_open', { volume: 0.7 });
+
+    // CAÇA-NÍQUEL: "reels" — 3 ticks de ficha ascendentes (suspense)
     const reelRates = [1.0, 1.15, 1.30];
     reelRates.forEach((rate, i) => {
-      this.time.delayedCall(i * 110, () => {
-        this.sound.play('sfx_pickup', { volume: 0.5, rate, detune: i * 200 });
+      this.time.delayedCall(150 + i * 130, () => {
+        this.sound.play('sfx_chest_reel', { volume: 0.7, rate });
       });
     });
 
-    // Burst de partículas douradas no momento do "click" final
-    const burstDelay = reelRates.length * 110;
+    // Burst de partículas + reveal SFX
+    const burstDelay = 150 + reelRates.length * 130;
     this.time.delayedCall(burstDelay, () => this._chestBurst(x, y, kind));
 
     // Loot spawnado DEPOIS dos reels (caça-níquel revela)
@@ -538,13 +541,16 @@ export class GameScene extends Phaser.Scene {
     });
 
     if (kind === 'golden') {
-      // JACKPOT: cascata de moedas + chime de vitória
+      // JACKPOT: chips colliding + level-up + coin cascade
       this.time.delayedCall(burstDelay, () => {
-        this.sound.play('sfx_levelup', { volume: 0.7, rate: 1.0 });
-        // 6 chimes em cascata
-        for (let i = 0; i < 6; i++) {
-          this.time.delayedCall(i * 90, () => {
-            this.sound.play('sfx_pickup', { volume: 0.5, rate: 1.0 + i * 0.12 });
+        this.sound.play('sfx_chest_jackpot', { volume: 0.9 });
+        this.sound.play('sfx_levelup', { volume: 0.6, rate: 1.1 });
+      });
+      this.time.delayedCall(burstDelay + 300, () => {
+        // Cascata de moedas de verdade
+        for (let i = 0; i < 5; i++) {
+          this.time.delayedCall(i * 130, () => {
+            this.sound.play('sfx_coin_cascade', { volume: 0.55, rate: 1.0 + i * 0.08 });
           });
         }
       });
@@ -563,10 +569,10 @@ export class GameScene extends Phaser.Scene {
       // Carta extra grátis
       this.time.delayedCall(burstDelay + 1200, () => this.events.emit('player:levelup', this.player.level));
     } else if (kind === 'trap') {
-      // ALARME: rugido grave + shake
+      // ALARME: creak sinistro + rugido + shake
       this.time.delayedCall(burstDelay, () => {
-        this.sound.play('sfx_boss_roar', { volume: 0.6, rate: 0.7 });
-        this.sound.play('sfx_player_hit', { volume: 0.5, rate: 0.8 });
+        this.sound.play('sfx_chest_trap', { volume: 0.8 });
+        this.sound.play('sfx_boss_roar', { volume: 0.5, rate: 0.7 });
         this.cameras.main.shake(280, 0.018);
       });
       this._toast('⚠ ARMADILHA!', 1500);
@@ -582,9 +588,9 @@ export class GameScene extends Phaser.Scene {
         e.activate(sx, sy, kind, wave, true);
       }
     } else {
-      // Normal: dingdong de prêmio modesto
+      // Normal: pequeno dingdong de moedas
       this.time.delayedCall(burstDelay, () => {
-        this.sound.play('sfx_pickup', { volume: 0.6, rate: 1.4 });
+        this.sound.play('sfx_coin', { volume: 0.7 });
       });
     }
   }

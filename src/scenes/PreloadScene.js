@@ -21,6 +21,15 @@ export class PreloadScene extends Phaser.Scene {
     this.load.audio('sfx_levelup',     'assets/audio/sfx/level_up.ogg');
     this.load.audio('sfx_player_hit',  'assets/audio/sfx/player_hit.ogg');
     this.load.audio('sfx_boss_roar',   'assets/audio/sfx/boss_roar.ogg');
+    // Novos (chest + UI + coin)
+    this.load.audio('sfx_chest_open',    'assets/audio/sfx/chest_open.ogg');
+    this.load.audio('sfx_chest_reel',    'assets/audio/sfx/chest_reel.ogg');
+    this.load.audio('sfx_chest_jackpot', 'assets/audio/sfx/chest_jackpot.ogg');
+    this.load.audio('sfx_chest_trap',    'assets/audio/sfx/chest_trap.ogg');
+    this.load.audio('sfx_coin',          'assets/audio/sfx/coin.ogg');
+    this.load.audio('sfx_coin_cascade',  'assets/audio/sfx/coin_cascade.ogg');
+    this.load.audio('sfx_ui_click',      'assets/audio/sfx/ui_click.ogg');
+    this.load.audio('sfx_ui_hover',      'assets/audio/sfx/ui_hover.ogg');
   }
 
   create() {

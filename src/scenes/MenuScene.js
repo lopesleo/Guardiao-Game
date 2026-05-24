@@ -57,9 +57,9 @@ export class MenuScene extends Phaser.Scene {
       fontFamily: 'Press Start 2P, monospace', fontSize: '18px', color: '#e8f0e6',
       backgroundColor: '#1a2a1a', padding: { x: 20, y: 10 },
     }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    txt.on('pointerover', () => txt.setColor('#d9b25c'));
+    txt.on('pointerover', () => { txt.setColor('#d9b25c'); this.sound.play('sfx_ui_hover', { volume: 0.3 }); });
     txt.on('pointerout',  () => txt.setColor('#e8f0e6'));
-    txt.on('pointerdown', onClick);
+    txt.on('pointerdown', () => { this.sound.play('sfx_ui_click', { volume: 0.5 }); onClick(); });
     return txt;
   }
 
