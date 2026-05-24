@@ -95,6 +95,7 @@ export const PASSIVES = [
   { id: 'proj',      name: '+1 Projétil (Cajado/Raio)',       apply: p => p.extraProj += 1 },
   { id: 'lifesteal', name: '+5% Roubo de Vida',               apply: p => p.lifestealPct += 0.05 },
   { id: 'regen',     name: 'Regenera 1 HP/s',                 apply: p => p.regenPerSec += 1 },
+  { id: 'crit',      name: '+8% Chance Crítica (knockback)',  apply: p => p.critChance += 0.08 },
 ];
 
 // Drops aleatórios no chão (chance por kill)
@@ -125,6 +126,7 @@ export const BLESSINGS = [
   { id: 'awaken1', name: 'Eco do Despertar',  desc: 'Despertar enche 30% mais rápido', cost: 80,  apply: p => { p._awakenGainMult = (p._awakenGainMult || 1) * 1.30; } },
   { id: 'dash1',   name: 'Sopro do Vento',    desc: 'Dash recarrega 30% mais rápido',  cost: 70,  apply: p => { p._dashCdMult = (p._dashCdMult || 1) * 0.70; } },
   { id: 'xp1',     name: 'Sabedoria',         desc: '+20% XP de inimigos',             cost: 100, apply: p => { p._xpMult = (p._xpMult || 1) * 1.20; } },
+  { id: 'crit1',   name: 'Olhar do Caçador',  desc: '+12% chance de crítico',          cost: 90,  apply: p => { p.critChance += 0.12; } },
 ];
 
 export const COLORS = {

@@ -147,33 +147,9 @@ export class GameScene extends Phaser.Scene {
   _drawGround() {
     const r = GAME.WORLD_RADIUS;
     this.cameras.main.setBackgroundColor(0x4a7a3a);
-
-    // Gera uma textura misturada de grama (frames 0, 1, 2) e usa como tile.
-    // Resultado: variação natural sem 4500 sprites individuais.
-    const GRASS_FRAMES = [0, 0, 0, 1, 1, 2]; // peso: 50% liso, 33% mato, 17% flores
-    const blendSize = 16; // tiles 16x16 na textura
-    const texPx = blendSize * 16;
-    const rt = this.add.renderTexture(0, 0, texPx, texPx).setVisible(false);
-    for (let row = 0; row < blendSize; row++) {
-      for (let col = 0; col < blendSize; col++) {
-        const f = GRASS_FRAMES[Math.floor(Math.random() * GRASS_FRAMES.length)];
-        rt.drawFrame('town_tiles', f, col * 16, row * 16);
-      }
-    }
-    if (!this.textures.exists('grass_blend')) rt.saveTexture('grass_blend');
-    rt.destroy();
-
-    this.add.tileSprite(0, 0, r * 2, r * 2, 'grass_blend')
+    // Grama base (frame 1 = grama com tufos, mais textura que frame 0)
+    this.add.tileSprite(0, 0, r * 2, r * 2, 'town_tiles', 1)
             .setOrigin(0.5).setScale(GAME.PIXEL_SCALE).setDepth(-100);
-
-    // Vinheta muito sutil
-    const vw = GAME.WIDTH, vh = GAME.HEIGHT;
-    const vig = this.add.graphics().setScrollFactor(0).setDepth(900);
-    vig.fillStyle(0x000000, 0.25);
-    vig.fillRect(0, 0, vw, 36);
-    vig.fillRect(0, vh - 36, vw, 36);
-    vig.fillRect(0, 36, 36, vh - 72);
-    vig.fillRect(vw - 36, 36, 36, vh - 72);
   }
 
   _showOnboarding() {
@@ -243,9 +219,9 @@ export class GameScene extends Phaser.Scene {
       if (this.boss && this.boss.active) {
         const dx = this.boss.x - p.x, dy = this.boss.y - p.y;
         if (dx * dx + dy * dy < 40 * 40) {
-          const died = this.boss.takeDamage(p.dmg);
+          const died = this.boss.takeDamage(p.dmg, null, p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
-          this._showDmg(this.boss.x, this.boss.y, p.dmg, p.element);
+          this._showDmg(this.boss.x, this.boss.y, p.dmg, p.element, p.crit);
           if (p.element) this.elemental.applyStatus(this.boss, p.element);
           p.kill(); this.projectilePool.release(p);
           if (died) this._onBossDeath();
@@ -256,9 +232,9 @@ export class GameScene extends Phaser.Scene {
         if (!p.active || !e.active) return;
         const dx = e.x - p.x, dy = e.y - p.y;
         if (dx * dx + dy * dy < 22 * 22) {
-          const died = e.takeDamage(p.dmg, p.element, p.x, p.y);
+          const died = e.takeDamage(p.dmg, p.element, p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
-          this._showDmg(e.x, e.y, p.dmg, p.element);
+          this._showDmg(e.x, e.y, p.dmg, p.element, p.crit);
           p.kill(); this.projectilePool.release(p);
           if (died) this._onEnemyDeath(e);
         }
@@ -272,9 +248,9 @@ export class GameScene extends Phaser.Scene {
       if (this.boss && this.boss.active) {
         const dx = this.boss.x - p.x, dy = this.boss.y - p.y;
         if (dx * dx + dy * dy < 40 * 40 && p.canHit(this.boss, time)) {
-          const died = this.boss.takeDamage(p.dmg);
+          const died = this.boss.takeDamage(p.dmg, null, p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
-          this._showDmg(this.boss.x, this.boss.y, p.dmg, 'fire');
+          this._showDmg(this.boss.x, this.boss.y, p.dmg, 'fire', p.crit);
           this.elemental.applyStatus(this.boss, 'fire');
           if (died) this._onBossDeath();
         }
@@ -283,9 +259,9 @@ export class GameScene extends Phaser.Scene {
         if (!p.active || !e.active) return;
         const dx = e.x - p.x, dy = e.y - p.y;
         if (dx * dx + dy * dy < 22 * 22 && p.canHit(e, time)) {
-          const died = e.takeDamage(p.dmg, 'fire', p.x, p.y);
+          const died = e.takeDamage(p.dmg, 'fire', p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
-          this._showDmg(e.x, e.y, p.dmg, 'fire');
+          this._showDmg(e.x, e.y, p.dmg, 'fire', p.crit);
           if (died) this._onEnemyDeath(e);
         }
       });
@@ -360,14 +336,17 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: t, alpha: 0, delay: ms - 300, duration: 300, onComplete: () => t.destroy() });
   }
 
-  _showDmg(x, y, dmg, element) {
+  _showDmg(x, y, dmg, element, crit = false) {
     const n = this.dmgNumberPool.acquire();
-    const color = element === 'ice'  ? '#9ad4ff'
-                : element === 'bolt' ? '#d8a8ff'
-                : element === 'fire' ? '#ff9966'
-                : element === 'heal' ? '#6fcf6f'
-                : '#ffffff';
-    n.show(x, y, element === 'heal' ? `+${dmg}` : dmg, color);
+    let color;
+    if (crit)                       color = '#ffd96b';
+    else if (element === 'ice')     color = '#9ad4ff';
+    else if (element === 'bolt')    color = '#d8a8ff';
+    else if (element === 'fire')    color = '#ff9966';
+    else if (element === 'heal')    color = '#6fcf6f';
+    else                            color = '#ffffff';
+    const text = element === 'heal' ? `+${dmg}` : (crit ? `${Math.ceil(dmg)}!` : dmg);
+    n.show(x, y, text, color, crit);
   }
 
   _onEnemyDeath(enemy) {

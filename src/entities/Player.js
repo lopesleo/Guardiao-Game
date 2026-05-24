@@ -45,6 +45,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.lifestealPct = 0;
     this.regenPerSec = 0;
     this._regenAcc = 0;
+    this.critChance = 0.08;   // 8% base
+    this.critMult = 2.0;      // 2x dano
 
     // Multiplicadores de bênçãos (setados via BLESSINGS.apply)
     this._xpMult = 1;

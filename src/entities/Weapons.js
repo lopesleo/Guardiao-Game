@@ -16,16 +16,17 @@ export class Projectile extends Phaser.GameObjects.Container {
     this.body.setCircle(10, -10, -10);
     this.setActive(false).setVisible(false);
     this.body.enable = false;
-    this.dmg = 0; this.element = null; this.lifeUntil = 0;
+    this.dmg = 0; this.element = null; this.lifeUntil = 0; this.crit = false;
   }
 
-  fire(x, y, vx, vy, dmg, element, lifeMs = 2000, color = COLORS.FIRE) {
+  fire(x, y, vx, vy, dmg, element, lifeMs = 2000, color = COLORS.FIRE, crit = false) {
     this.setPosition(x, y);
     this.setActive(true).setVisible(true);
     this.body.enable = true;
     this.body.setVelocity(vx, vy);
     this.dmg = dmg;
     this.element = element;
+    this.crit = crit;
     this.lifeUntil = this.scene.time.now + lifeMs;
 
     if (element === 'ice')      { this.glow.setFillStyle(COLORS.ICE, 0.45); this.core.setFillStyle(0xeaf6ff, 1); }
@@ -72,17 +73,19 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     this.element = 'fire';
     this.behavior = 'boomerang';
     this.phase = 'out';
-    this.outSpeed = 520;     // alcance maior (era 320)
-    this.decel = 320;        // desacelera mais devagar (era 600)
+    this.outSpeed = 520;
+    this.decel = 320;
     this.deadline = 0;
+    this.crit = false;
     this.lastHit = new Map();
   }
 
-  fire(x, y, dirX, dirY, dmg) {
+  fire(x, y, dirX, dirY, dmg, crit = false) {
     this.setPosition(x, y);
     this.setActive(true).setVisible(true);
     this.body.enable = true;
     this.dmg = dmg;
+    this.crit = crit;
     this.phase = 'out';
     // Alcance escala com passiva de Area do player
     const areaMult = this.scene.player?.areaMult ?? 1;
@@ -153,6 +156,13 @@ export class Weapon {
   get cooldown() { return this.def.cooldown * (this.owner?.effectiveCdMult ?? this.owner?.cdMult ?? 1); }
   get damage()   { return WEAPON_LEVEL_DMG(this.def.baseDmg, this.level) * (this.owner?._blessingDmgMult ?? 1); }
 
+  // Rola crítico: retorna { dmg, crit }
+  rollHit() {
+    const base = this.damage;
+    const isCrit = Math.random() < (this.owner?.critChance ?? 0);
+    return { dmg: isCrit ? base * (this.owner?.critMult ?? 2) : base, crit: isCrit };
+  }
+
   update(time, dt) {
     if (time - this.lastFireAt < this.cooldown) return;
     if (this._fire(time)) this.lastFireAt = time;
@@ -195,16 +205,16 @@ export class Staff extends Weapon {
     const sp = this.def.projSpeed;
     const baseAng = Math.atan2(dy, dx);
 
-    // 1 projétil + extraProj (passiva +Projétil) com leve spread
     const total = 1 + (this.owner?.extraProj ?? 0);
-    const spread = 0.18; // ~10 graus por projétil extra
+    const spread = 0.18;
     for (let i = 0; i < total; i++) {
       const offset = (i - (total - 1) / 2) * spread;
       const a = baseAng + offset;
       const proj = this.scene.projectilePool.acquire();
+      const { dmg, crit } = this.rollHit();
       proj.fire(this.owner.x, this.owner.y,
                 Math.cos(a) * sp, Math.sin(a) * sp,
-                this.damage, 'fire', 2000, COLORS.FIRE);
+                dmg, 'fire', 2000, COLORS.FIRE, crit);
     }
     return true;
   }
@@ -230,8 +240,10 @@ export class AuraWeapon extends Weapon {
     this.scene.enemyPool.forEachActive(e => {
       const dx = e.x - this.owner.x, dy = e.y - this.owner.y;
       if (dx * dx + dy * dy <= r2) {
-        const died = e.takeDamage(this.damage, null, this.owner.x, this.owner.y);
-        this.owner.lifestealFrom(this.damage);
+        const { dmg, crit } = this.rollHit();
+        const died = e.takeDamage(dmg, null, this.owner.x, this.owner.y, crit);
+        this.owner.lifestealFrom(dmg);
+        this.scene._showDmg(e.x, e.y, dmg, 'ice', crit);
         this.scene.elemental.applyStatus(e, 'ice');
         if (died) this.scene._onEnemyDeath(e);
         hits++;
@@ -241,8 +253,10 @@ export class AuraWeapon extends Weapon {
     if (boss && boss.active) {
       const dx = boss.x - this.owner.x, dy = boss.y - this.owner.y;
       if (dx * dx + dy * dy <= r2) {
-        const died = boss.takeDamage(this.damage);
-        this.owner.lifestealFrom(this.damage);
+        const { dmg, crit } = this.rollHit();
+        const died = boss.takeDamage(dmg, null, this.owner.x, this.owner.y, crit);
+        this.owner.lifestealFrom(dmg);
+        this.scene._showDmg(boss.x, boss.y, dmg, 'ice', crit);
         this.scene.elemental.applyStatus(boss, 'ice');
         if (died) this.scene._onBossDeath();
         hits++;
@@ -260,7 +274,8 @@ export class Boomerang extends Weapon {
     const proj = this.scene.boomerPool.acquire();
     const dx = target.x - this.owner.x, dy = target.y - this.owner.y;
     const len = Math.hypot(dx, dy) || 1;
-    proj.fire(this.owner.x, this.owner.y, dx / len, dy / len, this.damage);
+    const { dmg, crit } = this.rollHit();
+    proj.fire(this.owner.x, this.owner.y, dx / len, dy / len, dmg, crit);
     return true;
   }
 }
@@ -282,8 +297,11 @@ export class ChainLightning extends Weapon {
       this.scene.elemental._drawBolt(prev.x, prev.y, cur.x, cur.y, COLORS.BOLT);
       const isBoss = cur === this.scene.boss;
       const hit = dmg * (1 - i * 0.15);
-      const died = cur.takeDamage(hit, isBoss ? undefined : null, prev.x, prev.y);
-      this.owner.lifestealFrom(hit);
+      const isCrit = Math.random() < (this.owner?.critChance ?? 0);
+      const finalDmg = isCrit ? hit * this.owner.critMult : hit;
+      const died = cur.takeDamage(finalDmg, isBoss ? undefined : null, prev.x, prev.y, isCrit);
+      this.owner.lifestealFrom(finalDmg);
+      this.scene._showDmg(cur.x, cur.y, finalDmg, 'bolt', isCrit);
       this.scene.elemental.applyStatus(cur, 'bolt');
       visited.add(cur);
       if (died) {

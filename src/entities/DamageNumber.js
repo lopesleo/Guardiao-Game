@@ -11,9 +11,11 @@ export class DamageNumber extends Phaser.GameObjects.Text {
     this.setActive(false).setVisible(false);
     this._tween = null;
   }
-  show(x, y, value, color = '#ffffff') {
+  show(x, y, value, color = '#ffffff', big = false) {
     this.setText(typeof value === 'string' ? value : String(Math.ceil(value)));
     this.setColor(color);
+    this.setFontSize(big ? 16 : 10);
+    this.setStroke('#000000', big ? 4 : 3);
     this.setPosition(x + (Math.random() - 0.5) * 16, y - 10);
     this.setActive(true).setVisible(true);
     this.setAlpha(1).setScale(1);

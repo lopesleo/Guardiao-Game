@@ -68,32 +68,33 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.setVelocity(0, 0);
   }
 
-  // Aplicar dano. `element` opcional: se vier, o ElementalSystem aplica status.
-  takeDamage(dmg, element = null, fromX = null, fromY = null) {
+  // Aplicar dano. crit = true ativa BONK (knockback + squash forte + flash dourado).
+  takeDamage(dmg, element = null, fromX = null, fromY = null, crit = false) {
     const iceAmp = this.statuses.ice ? 1.35 : 1;
     this.hp -= dmg * iceAmp;
 
-    // FLASH branco intenso
-    this.setTintFill(0xffffff);
-    this.scene.time.delayedCall(70, () => {
+    // FLASH: branco normal, DOURADO se crit
+    this.setTintFill(crit ? 0xffd96b : 0xffffff);
+    this.scene.time.delayedCall(crit ? 110 : 60, () => {
       if (!this.active) return;
       this.scene.elemental?._updateTint(this);
     });
 
-    // SQUASH visual (encolhe e volta)
-    this.scene.tweens.add({
-      targets: this,
-      scaleX: GAME.PIXEL_SCALE * 1.15, scaleY: GAME.PIXEL_SCALE * 0.85,
-      duration: 60, yoyo: true,
-    });
-
-    // KNOCKBACK pequeno na direção oposta ao atacante
-    if (fromX != null && fromY != null && this.body?.enable) {
-      const dx = this.x - fromX, dy = this.y - fromY;
-      const len = Math.hypot(dx, dy) || 1;
-      const k = 200;
-      this.body.setVelocity(this.body.velocity.x + (dx / len) * k,
-                            this.body.velocity.y + (dy / len) * k);
+    if (crit) {
+      // SQUASH forte
+      this.scene.tweens.add({
+        targets: this,
+        scaleX: GAME.PIXEL_SCALE * 1.30, scaleY: GAME.PIXEL_SCALE * 0.75,
+        duration: 80, yoyo: true,
+      });
+      // KNOCKBACK
+      if (fromX != null && fromY != null && this.body?.enable) {
+        const dx = this.x - fromX, dy = this.y - fromY;
+        const len = Math.hypot(dx, dy) || 1;
+        const k = 320;
+        this.body.setVelocity(this.body.velocity.x + (dx / len) * k,
+                              this.body.velocity.y + (dy / len) * k);
+      }
     }
 
     if (element) this.scene.elemental?.applyStatus(this, element);
