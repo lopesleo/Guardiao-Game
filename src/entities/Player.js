@@ -11,7 +11,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     scene.physics.add.existing(this);
 
     this.setScale(GAME.PIXEL_SCALE);
-    this.setCollideWorldBounds(false);
+    this.setCollideWorldBounds(true);
     this.body.setCircle(7, 1, 1);
     this.body.setMaxSpeed(PLAYER.SPEED_BASE * 6); // permitir dash
 

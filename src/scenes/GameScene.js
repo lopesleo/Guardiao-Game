@@ -57,8 +57,9 @@ export class GameScene extends Phaser.Scene {
     // Spawner
     this.spawnDirector = new SpawnDirector(this, this.enemyPool, this.player);
 
-    // Câmera
+    // Câmera — segue player mas trava nas bordas do mundo
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+    this.cameras.main.setBounds(-GAME.WORLD_RADIUS, -GAME.WORLD_RADIUS, WS, WS);
 
     // HUD
     this.hud = new HUD(this, this.player);
