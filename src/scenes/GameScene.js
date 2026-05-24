@@ -149,16 +149,17 @@ export class GameScene extends Phaser.Scene {
     const TS = 16 * GAME.PIXEL_SCALE;
     this.cameras.main.setBackgroundColor(0x4a7a3a);
 
-    // Grama base (frame 1 = grama com tufos)
-    this.add.tileSprite(0, 0, r * 2, r * 2, 'town_tiles', 1)
+    // Grama base limpa (frame 0)
+    this.add.tileSprite(0, 0, r * 2, r * 2, 'town_tiles', 0)
             .setOrigin(0.5).setScale(GAME.PIXEL_SCALE).setDepth(-100);
 
-    // Single-tile decorações (IDs verificados pelo catálogo do user)
+    // Single-tile decorações (limpas, standalone)
     const SINGLE = [
-      { f: 28,  weight: 5 },   // cogumelos vermelhos
-      { f: 41,  weight: 3 },   // calçamento de pedra (praça)
-      { f: 118, weight: 2 },   // tora de madeira cortada
-      { f: 119, weight: 2 },   // saco/pote de grãos
+      { f: 1,   weight: 6 },   // graminha com flores
+      { f: 28,  weight: 3 },   // par de cogumelos vermelhos grandes
+      { f: 29,  weight: 3 },   // cogumelo vermelho pequeno
+      { f: 41,  weight: 2 },   // calçamento de pedra
+      { f: 118, weight: 1 },   // tora de madeira cortada
     ];
     const pickWeighted = arr => {
       const total = arr.reduce((s, x) => s + x.weight, 0);
@@ -179,12 +180,11 @@ export class GameScene extends Phaser.Scene {
               .setScale(GAME.PIXEL_SCALE).setDepth(y);
     }
 
-    // Árvores 2-tile finas (top + bottom colados; pé fica em y).
-    // Aglomerados (5-11 / 18-23) são multi-tile 3x3 e ficam pra depois.
+    // Árvores 2-tile standalone (top + bottom; pé fica em y)
     const TREES = [
-      [2, 15],  // árvore outono fina
-      [3, 16],  // pinheiro fino
-      [4, 17],  // arbusto pequeno (mini-bush 2-tile)
+      [4, 16],  // Árvore de outono (laranja)
+      [5, 17],  // Pinheiro (verde)
+      [6, 18],  // Arbusto redondo grande (topiária)
     ];
     for (let i = 0; i < 60; i++) {
       const ang = Math.random() * Math.PI * 2;
