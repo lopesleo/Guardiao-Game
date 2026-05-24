@@ -89,9 +89,17 @@ export class ElementalSystem {
 
     // Área é amplificada pelo modificador de área do player (passiva)
     const areaMult = this.scene.player?.areaMult ?? 1;
-    if (reactionKey === 'VAPOR')     this._vapor(enemy, def, areaMult);
-    else if (reactionKey === 'CRYSTAL')  this._crystal(enemy, def, areaMult);
-    else if (reactionKey === 'OVERLOAD') this._overload(enemy, def, areaMult);
+    // SFX distintos por reação (re-uso impacts existentes com pitch diferente)
+    if (reactionKey === 'VAPOR') {
+      scene.sound.play('sfx_hit', { volume: 0.4, rate: 0.6, detune: -600 });    // hiss grave
+      this._vapor(enemy, def, areaMult);
+    } else if (reactionKey === 'CRYSTAL') {
+      scene.sound.play('sfx_pickup', { volume: 0.5, rate: 1.6, detune: 400 });  // estilhaço agudo
+      this._crystal(enemy, def, areaMult);
+    } else if (reactionKey === 'OVERLOAD') {
+      scene.sound.play('sfx_levelup', { volume: 0.5, rate: 1.4, detune: 300 }); // zap eletrico
+      this._overload(enemy, def, areaMult);
+    }
   }
 
   _vapor(enemy, def, areaMult = 1) {

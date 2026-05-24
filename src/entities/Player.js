@@ -140,8 +140,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.dashUntil = now + PLAYER.DASH_DURATION_MS;
     this.dashCdUntil = now + PLAYER.DASH_CD_MS * this._dashCdMult;
     this.invulnUntil = Math.max(this.invulnUntil, now + PLAYER.DASH_INVULN_MS);
-    // trilha
+    // trilha + SFX (whoosh = impactSoft com pitch alto)
     this._dashTrail();
+    this.scene.sound.play('sfx_hit', { volume: 0.25, rate: 1.8, detune: 600 });
     return true;
   }
 

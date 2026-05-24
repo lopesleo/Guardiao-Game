@@ -147,8 +147,33 @@ export class GameScene extends Phaser.Scene {
   _drawGround() {
     const r = GAME.WORLD_RADIUS;
     this.cameras.main.setBackgroundColor(0x4a7a3a);
-    this.add.tileSprite(0, 0, r * 2, r * 2, 'town_tiles', 0)
+
+    // Gera uma textura misturada de grama (frames 0, 1, 2) e usa como tile.
+    // Resultado: variação natural sem 4500 sprites individuais.
+    const GRASS_FRAMES = [0, 0, 0, 1, 1, 2]; // peso: 50% liso, 33% mato, 17% flores
+    const blendSize = 16; // tiles 16x16 na textura
+    const texPx = blendSize * 16;
+    const rt = this.add.renderTexture(0, 0, texPx, texPx).setVisible(false);
+    for (let row = 0; row < blendSize; row++) {
+      for (let col = 0; col < blendSize; col++) {
+        const f = GRASS_FRAMES[Math.floor(Math.random() * GRASS_FRAMES.length)];
+        rt.drawFrame('town_tiles', f, col * 16, row * 16);
+      }
+    }
+    if (!this.textures.exists('grass_blend')) rt.saveTexture('grass_blend');
+    rt.destroy();
+
+    this.add.tileSprite(0, 0, r * 2, r * 2, 'grass_blend')
             .setOrigin(0.5).setScale(GAME.PIXEL_SCALE).setDepth(-100);
+
+    // Vinheta muito sutil
+    const vw = GAME.WIDTH, vh = GAME.HEIGHT;
+    const vig = this.add.graphics().setScrollFactor(0).setDepth(900);
+    vig.fillStyle(0x000000, 0.25);
+    vig.fillRect(0, 0, vw, 36);
+    vig.fillRect(0, vh - 36, vw, 36);
+    vig.fillRect(0, 36, 36, vh - 72);
+    vig.fillRect(vw - 36, 36, 36, vh - 72);
   }
 
   _showOnboarding() {
@@ -231,7 +256,7 @@ export class GameScene extends Phaser.Scene {
         if (!p.active || !e.active) return;
         const dx = e.x - p.x, dy = e.y - p.y;
         if (dx * dx + dy * dy < 22 * 22) {
-          const died = e.takeDamage(p.dmg, p.element);
+          const died = e.takeDamage(p.dmg, p.element, p.x, p.y);
           this.player.lifestealFrom(p.dmg);
           this._showDmg(e.x, e.y, p.dmg, p.element);
           p.kill(); this.projectilePool.release(p);
@@ -258,7 +283,7 @@ export class GameScene extends Phaser.Scene {
         if (!p.active || !e.active) return;
         const dx = e.x - p.x, dy = e.y - p.y;
         if (dx * dx + dy * dy < 22 * 22 && p.canHit(e, time)) {
-          const died = e.takeDamage(p.dmg, 'fire');
+          const died = e.takeDamage(p.dmg, 'fire', p.x, p.y);
           this.player.lifestealFrom(p.dmg);
           this._showDmg(e.x, e.y, p.dmg, 'fire');
           if (died) this._onEnemyDeath(e);

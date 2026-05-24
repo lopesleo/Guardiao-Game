@@ -69,16 +69,33 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 
   // Aplicar dano. `element` opcional: se vier, o ElementalSystem aplica status.
-  takeDamage(dmg, element = null) {
+  takeDamage(dmg, element = null, fromX = null, fromY = null) {
     const iceAmp = this.statuses.ice ? 1.35 : 1;
     this.hp -= dmg * iceAmp;
-    // flash branco
+
+    // FLASH branco intenso
     this.setTintFill(0xffffff);
-    this.scene.time.delayedCall(50, () => {
+    this.scene.time.delayedCall(70, () => {
       if (!this.active) return;
-      // restaura tint elemental se ainda houver status
       this.scene.elemental?._updateTint(this);
     });
+
+    // SQUASH visual (encolhe e volta)
+    this.scene.tweens.add({
+      targets: this,
+      scaleX: GAME.PIXEL_SCALE * 1.15, scaleY: GAME.PIXEL_SCALE * 0.85,
+      duration: 60, yoyo: true,
+    });
+
+    // KNOCKBACK pequeno na direção oposta ao atacante
+    if (fromX != null && fromY != null && this.body?.enable) {
+      const dx = this.x - fromX, dy = this.y - fromY;
+      const len = Math.hypot(dx, dy) || 1;
+      const k = 200;
+      this.body.setVelocity(this.body.velocity.x + (dx / len) * k,
+                            this.body.velocity.y + (dy / len) * k);
+    }
+
     if (element) this.scene.elemental?.applyStatus(this, element);
     return this.hp <= 0;
   }
