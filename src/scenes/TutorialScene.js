@@ -470,16 +470,16 @@ export class TutorialScene extends Phaser.Scene {
     c.add(reactionDesc);
 
     // Setup demo arena REAL com player
-    const heroX = ax - 280, heroY = ay + 20;
+    const heroX = ax - 200, heroY = ay + 20;
     this._setupDemoArena(heroX, heroY);
 
-    // Posições iniciais — inimigos começam longe e CAMINHAM até o player
-    // (entram no raio da Aura ~110px naturalmente conforme se aproximam)
+    // Posições — DENTRO do raio da Aura (110px) pra reações dispararem
+    // imediatamente. Distâncias do player: ~65-100px.
     const enemyPositions = [
-      { x: heroX + 350, y: ay - 60 },
-      { x: heroX + 400, y: ay + 30 },
-      { x: heroX + 450, y: ay - 20 },
-      { x: heroX + 380, y: ay + 60 },
+      { x: heroX + 60,  y: ay - 50 },
+      { x: heroX + 95,  y: ay + 35 },
+      { x: heroX + 75,  y: ay - 25 },
+      { x: heroX + 85,  y: ay + 65 },
     ];
 
     // Helper: troca as armas do player
@@ -511,27 +511,26 @@ export class TutorialScene extends Phaser.Scene {
         reactionDesc.setText('Cajado dispara projétil · Aura é círculo persistente ao redor do player');
         arenaBorder.setStrokeStyle(3, 0x9ad4ff, 0.8);
         setWeapons([Staff, AuraWeapon]);
-        this._spawnDemoEnemies(enemyPositions);
+        this._spawnDemoEnemies(enemyPositions, 0, { chase: false });
       },
       () => {
         reactionLbl.setText('Aura ❄️  +  Raio ⚡  =  CRISTAL').setColor('#5cc8ff');
         reactionDesc.setText('Aura ao redor + Raio Encadeado salta entre inimigos');
         arenaBorder.setStrokeStyle(3, 0x5cc8ff, 0.8);
         setWeapons([AuraWeapon, ChainLightning]);
-        this._spawnDemoEnemies(enemyPositions);
+        this._spawnDemoEnemies(enemyPositions, 0, { chase: false });
       },
       () => {
         reactionLbl.setText('Cajado 🔥  +  Raio ⚡  =  SOBRECARGA').setColor('#d98cff');
         reactionDesc.setText('Cajado dispara · Raio Encadeado adiciona o segundo elemento');
         arenaBorder.setStrokeStyle(3, 0xd98cff, 0.8);
         setWeapons([Staff, ChainLightning]);
-        this._spawnDemoEnemies(enemyPositions);
+        this._spawnDemoEnemies(enemyPositions, 0, { chase: false });
       },
     ];
 
     let demoIdx = 0;
     const runNext = () => {
-      // limpa inimigos + força reset visual
       this.enemyPool.forEachActive(e => {
         e.deactivate();
         this.enemyPool.release(e);
@@ -540,8 +539,7 @@ export class TutorialScene extends Phaser.Scene {
       demoIdx = (demoIdx + 1) % demos.length;
     };
     runNext();
-    // Cycle mais longo (6s) pra dar tempo dos inimigos chegarem na aura + reação rolar
-    this._demoTimers.push(this.time.addEvent({ delay: 6000, loop: true, callback: runNext }));
+    this._demoTimers.push(this.time.addEvent({ delay: 5500, loop: true, callback: runNext }));
 
     // Tick handler real
     this._demoTickHandler = (time, dt) => this._runDemoTick(time, dt);
