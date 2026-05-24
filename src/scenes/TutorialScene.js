@@ -367,12 +367,15 @@ export class TutorialScene extends Phaser.Scene {
     const barLbl = sharp(this, cx, aY + 100, '', { fontFamily: F, fontSize: '11px', fontStyle: 'bold', color: '#ffffff', stroke: '#000', strokeThickness: 2 }).setOrigin(0.5);
     c.add(barBg); c.add(barFill); c.add(barLbl);
 
-    // Posições — inimigos vêm de longe e caminham até o player
+    // Posições — DENTRO do raio do Cajado (range 280) pra ele encontrar alvo!
+    // heroX = cx - 280, então enemy ~heroX+220 fica a ~220px (em range).
     const enemyPositions = [
-      { x: cx + 200, y: aY - 40 }, { x: cx + 260, y: aY + 30 },
-      { x: cx + 320, y: aY - 30 }, { x: cx + 280, y: aY + 60 },
+      { x: heroX + 180, y: aY - 50 },
+      { x: heroX + 220, y: aY + 40 },
+      { x: heroX + 200, y: aY - 30 },
+      { x: heroX + 240, y: aY + 30 },
     ];
-    let currentEnemies = this._spawnDemoEnemies(enemyPositions, 0, { chase: true, speed: 25 });
+    let currentEnemies = this._spawnDemoEnemies(enemyPositions, 0, { chase: true, speed: 45 });
 
     // Tick handler
     const tick = (time, dt) => {
@@ -383,7 +386,7 @@ export class TutorialScene extends Phaser.Scene {
       if (aliveCount === 0 && !this._awaitingRespawn) {
         this._awaitingRespawn = true;
         this.time.delayedCall(800, () => {
-          currentEnemies = this._spawnDemoEnemies(enemyPositions, 0, { chase: true, speed: 25 });
+          currentEnemies = this._spawnDemoEnemies(enemyPositions, 0, { chase: true, speed: 45 });
           this._awaitingRespawn = false;
         });
       }
