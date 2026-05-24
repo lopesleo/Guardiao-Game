@@ -425,51 +425,65 @@ export class TutorialScene extends Phaser.Scene {
       return list;
     };
 
-    // === ARMAS REAIS DO JOGO ===
+    // === ARMAS REAIS DO JOGO (visuais exatos) ===
 
-    // CAJADO (🔥): projétil único no inimigo mais próximo (=primeiro)
+    // CAJADO (🔥): mesma forma do Projectile real (glow 22 + core 10 brilhante)
     const useStaff = (enemies, onHit) => {
       const target = enemies[0];
-      const glow = this.add.circle(heroX, heroY, 14, elemColors.fire, 0.4);
-      const core = this.add.circle(heroX, heroY, 7, 0xffe6b8, 1);
+      const glow = this.add.circle(heroX, heroY, 22, elemColors.fire, 0.4);
+      const core = this.add.circle(heroX, heroY, 10, 0xffe6b8, 1);
       const proj = this.add.container(heroX, heroY, [glow, core]);
       c.add(proj);
+      // pulsa glow durante o trajeto
+      this.tweens.add({ targets: glow, scale: 1.2, duration: 100, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       this.tweens.add({
-        targets: proj, x: target.x, y: target.y, duration: 250, ease: 'Linear',
-        onComplete: () => { proj.destroy(); enemies.forEach(e => e.setTint(elemTints.fire)); if (onHit) onHit(); },
+        targets: proj, x: target.x, y: target.y, duration: 280, ease: 'Linear',
+        onComplete: () => {
+          proj.destroy();
+          // status fogo só no alvo (não em todos — o cajado é single target)
+          if (target.active) target.setTint(elemTints.fire);
+          if (onHit) onHit();
+        },
       });
     };
 
-    // AURA GÉLIDA (❄️): círculo ao redor do player, hit em TODOS na área
+    // AURA GÉLIDA (❄️): círculo PERSISTENTE ao redor do player que pulsa.
+    // Igual à AuraWeapon do jogo: stays around player, ticks damage continuously.
     const useAura = (enemies, onHit) => {
-      const ring = this.add.circle(heroX, heroY, 30, elemColors.ice, 0.3).setStrokeStyle(3, elemColors.ice, 0.9);
+      const auraRadius = 200; // raio visível grande pra cobrir os inimigos do demo
+      const ring  = this.add.circle(heroX, heroY, auraRadius, elemColors.ice, 0.15)
+                         .setStrokeStyle(3, elemColors.ice, 0.7).setDepth(2);
       c.add(ring);
-      this.tweens.add({
-        targets: ring, radius: 280, alpha: 0, duration: 600, ease: 'Cubic.easeOut',
-        onComplete: () => { ring.destroy(); if (onHit) onHit(); },
+      // Pulso de alpha enquanto ativa (~1.2s)
+      const pulse = this.tweens.add({
+        targets: ring, alpha: 0.32, duration: 350, yoyo: true, repeat: 2, ease: 'Sine.easeInOut',
       });
-      // Aplica ice nos inimigos progressivamente conforme aura cresce
+      this._demoTweens.push(pulse);
+      // Aplica status ice nos inimigos DENTRO do raio (todos no demo) com um pequeno flash
       enemies.forEach((e, i) => {
-        const dist = Math.hypot(e.x - heroX, e.y - heroY);
-        const delay = (dist / 280) * 600;
-        this.time.delayedCall(delay, () => {
+        this.time.delayedCall(150 + i * 40, () => {
           if (!e.active) return;
           e.setTint(elemTints.ice);
-          // pequeno flash gelo no ponto do inimigo
-          const fl = this.add.circle(e.x, e.y, 12, 0xffffff, 0.7);
+          const fl = this.add.circle(e.x, e.y, 10, elemColors.ice, 0.8);
           c.add(fl);
-          this.tweens.add({ targets: fl, alpha: 0, radius: 22, duration: 250, onComplete: () => fl.destroy() });
+          this.tweens.add({ targets: fl, alpha: 0, radius: 22, duration: 320, onComplete: () => fl.destroy() });
         });
+      });
+      // Aura some no final
+      this.time.delayedCall(1300, () => {
+        this.tweens.add({ targets: ring, alpha: 0, duration: 250, onComplete: () => ring.destroy() });
+        if (onHit) onHit();
       });
     };
 
-    // RAIO ENCADEADO (⚡): bolts saltam do player ao 1º, depois entre inimigos
+    // RAIO ENCADEADO (⚡): bolts saltam do player ao primeiro, depois cadeia entre inimigos
     const useChain = (enemies, onHit) => {
       const order = [{ x: heroX, y: heroY }, ...enemies];
       for (let i = 0; i < order.length - 1; i++) {
         this.time.delayedCall(i * 90, () => {
           const a = order[i], b = order[i + 1];
           this._drawBolt(a.x, a.y, b.x, b.y, elemColors.bolt);
+          // flash + status no destino
           if (i > 0 && enemies[i - 1].active) {
             enemies[i - 1].setTint(elemTints.bolt);
             const fl = this.add.circle(enemies[i - 1].x, enemies[i - 1].y, 14, 0xffffff, 0.8);
@@ -478,10 +492,9 @@ export class TutorialScene extends Phaser.Scene {
           }
         });
       }
-      // último flash
       this.time.delayedCall((order.length - 1) * 90, () => {
         const last = enemies[enemies.length - 1];
-        if (last.active) {
+        if (last && last.active) {
           last.setTint(elemTints.bolt);
           const fl = this.add.circle(last.x, last.y, 14, 0xffffff, 0.8);
           c.add(fl);
