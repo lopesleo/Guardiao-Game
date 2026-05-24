@@ -175,6 +175,11 @@ export class TutorialScene extends Phaser.Scene {
     return list;
   }
 
+  // ⚠ CRÍTICO: AuraWeapon e ChainLightning chamam scene._showDmg ao acertar.
+  // Sem este no-op, javascript trava nessa linha e NÃO aplica o status,
+  // o que impede as reações de dispararem.
+  _showDmg() { /* no-op no tutorial */ }
+
   // Callback usado por ElementalSystem (Cristal, Sobrecarga, Aura) quando matam
   _onEnemyDeath(enemy) {
     if (!enemy || !enemy.active) return;
