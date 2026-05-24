@@ -6,6 +6,7 @@ const DEFAULT = {
   totalCoins: 0,
   highScoreSeconds: 0,
   unlockedWeapons: ['STAFF'],
+  ownedBlessings: [],
 };
 
 export class MetaProgression {
@@ -59,6 +60,18 @@ export class MetaProgression {
     if (this.data.totalCoins < cost) return false;
     this.data.totalCoins -= cost;
     this.data.unlockedWeapons.push(weaponKey);
+    this._save();
+    return true;
+  }
+
+  // Bênçãos
+  ownsBlessing(id) { return this.data.ownedBlessings.includes(id); }
+  ownedBlessings() { return this.data.ownedBlessings.slice(); }
+  buyBlessing(blessing) {
+    if (this.ownsBlessing(blessing.id)) return false;
+    if (this.data.totalCoins < blessing.cost) return false;
+    this.data.totalCoins -= blessing.cost;
+    this.data.ownedBlessings.push(blessing.id);
     this._save();
     return true;
   }

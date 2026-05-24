@@ -95,15 +95,26 @@ export const PASSIVES = [
   { id: 'proj',     name: '+1 Projétil (Cajado/Raio)',     apply: p => p.extraProj += 1 },
 ];
 
-// Meta-progressão (D5 reduzido)
+// Meta-progressão
 export const META = {
   STORAGE_KEY: 'guardiao_save_v1',
-  COIN_VALUE: 1,           // moedas por inimigo (chance)
+  COIN_VALUE: 1,
   COIN_BOSS_WIN: 50,
   COIN_BOSS_LOSS: 0,
   WEAPON_UNLOCK_COST: { BOOMER: 30, CHAIN: 60, AURA: 100 },
-  // STAFF começa desbloqueada
 };
+
+// Bênçãos persistentes — compradas no menu com moedas, aplicadas em toda run futura.
+// `apply(player)` é chamado uma vez no início da GameScene.
+export const BLESSINGS = [
+  { id: 'hp1',     name: 'Vigor da Mata',     desc: '+20 HP máximo',                   cost: 40,  apply: p => { p.maxHp += 20; p.hp = p.maxHp; } },
+  { id: 'spd1',    name: 'Pés Ligeiros',      desc: '+10% velocidade',                 cost: 60,  apply: p => { p.speed *= 1.10; } },
+  { id: 'dmg1',    name: 'Cólera Antiga',     desc: 'Armas começam com +15% dano',     cost: 90,  apply: p => { p._blessingDmgMult = (p._blessingDmgMult || 1) * 1.15; } },
+  { id: 'pickup',  name: 'Olhar de Coruja',   desc: '+50% raio de coleta',             cost: 50,  apply: p => { p.pickupRadius *= 1.50; } },
+  { id: 'awaken1', name: 'Eco do Despertar',  desc: 'Despertar enche 30% mais rápido', cost: 80,  apply: p => { p._awakenGainMult = (p._awakenGainMult || 1) * 1.30; } },
+  { id: 'dash1',   name: 'Sopro do Vento',    desc: 'Dash recarrega 30% mais rápido',  cost: 70,  apply: p => { p._dashCdMult = (p._dashCdMult || 1) * 0.70; } },
+  { id: 'xp1',     name: 'Sabedoria',         desc: '+20% XP de inimigos',             cost: 100, apply: p => { p._xpMult = (p._xpMult || 1) * 1.20; } },
+];
 
 export const COLORS = {
   FIRE:  0xff7a3c,

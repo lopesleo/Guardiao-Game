@@ -40,6 +40,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.dashUntil = 0;
     this.dashCdUntil = 0;
     this.dashDirX = 1; this.dashDirY = 0;
+
+    // Multiplicadores de bênçãos (setados via BLESSINGS.apply)
+    this._xpMult = 1;
+    this._awakenGainMult = 1;
+    this._dashCdMult = 1;
+    this._blessingDmgMult = 1;
   }
 
   addWeapon(weapon) {
@@ -62,7 +68,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   gainXp(amount) {
-    this.xp += amount;
+    this.xp += amount * this._xpMult;
     const need = PLAYER.XP_PER_LEVEL(this.level);
     if (this.xp >= need) {
       this.xp -= need;
@@ -81,7 +87,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
   addAwakenMeter(amount) {
     if (this.scene.time.now < this.awakenLockUntil) return;
-    this.awakenMeter = Math.min(this.awakenMax, this.awakenMeter + amount);
+    this.awakenMeter = Math.min(this.awakenMax, this.awakenMeter + amount * this._awakenGainMult);
   }
   tryActivateAwaken() {
     if (!this.awakenReady()) return false;
@@ -114,7 +120,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const len = Math.hypot(dx, dy) || 1;
     this.dashDirX = dx / len; this.dashDirY = dy / len;
     this.dashUntil = now + PLAYER.DASH_DURATION_MS;
-    this.dashCdUntil = now + PLAYER.DASH_CD_MS;
+    this.dashCdUntil = now + PLAYER.DASH_CD_MS * this._dashCdMult;
     this.invulnUntil = Math.max(this.invulnUntil, now + PLAYER.DASH_INVULN_MS);
     // trilha
     this._dashTrail();

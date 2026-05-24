@@ -151,7 +151,7 @@ export class Weapon {
     this.owner = null;
   }
   get cooldown() { return this.def.cooldown * (this.owner?.effectiveCdMult ?? this.owner?.cdMult ?? 1); }
-  get damage()   { return WEAPON_LEVEL_DMG(this.def.baseDmg, this.level); }
+  get damage()   { return WEAPON_LEVEL_DMG(this.def.baseDmg, this.level) * (this.owner?._blessingDmgMult ?? 1); }
 
   update(time, dt) {
     if (time - this.lastFireAt < this.cooldown) return;

@@ -1,5 +1,5 @@
 // Arena (D3: boss, meta, dmg numbers, screenshake, onboarding).
-import { GAME, COLORS, BOSS, META, ENEMY, WEAPONS, PLAYER } from '../config.js';
+import { GAME, COLORS, BOSS, META, ENEMY, WEAPONS, PLAYER, BLESSINGS } from '../config.js';
 import { InputManager } from '../systems/InputManager.js';
 import { Pool } from '../systems/Pool.js';
 import { SpawnDirector } from '../systems/SpawnDirector.js';
@@ -45,6 +45,11 @@ export class GameScene extends Phaser.Scene {
 
     // Player
     this.player = new Player(this, 0, 0);
+    // Aplica bênçãos compradas ANTES de criar armas (afetam stats base)
+    const owned = this.meta.ownedBlessings();
+    for (const b of BLESSINGS) {
+      if (owned.includes(b.id)) b.apply(this.player);
+    }
     this.player.addWeapon(new Staff(this));
 
     // Spawner
