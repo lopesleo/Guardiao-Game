@@ -181,9 +181,11 @@ export class TutorialScene extends Phaser.Scene {
     });
   }
 
-  // Tick do update: roda projéteis + colisões + elemental tick
+  // Tick do update: roda PLAYER (posiciona aura gfx + auto-fire) + projéteis + colisões + elemental tick
   _runDemoTick(time, dt) {
     if (!this.player || !this.projectilePool) return;
+    // PLAYER update (override no setup: roda weapons.update que move a Aura gfx e auto-fire)
+    this.player.update(time, dt);
     // Projéteis e colisões
     this.projectilePool.forEachActive(p => {
       p.update(time);
@@ -488,39 +490,28 @@ export class TutorialScene extends Phaser.Scene {
       w._fire(this.time.now);
     };
 
-    // Ciclo de demos
+    // Ciclo de demos — armas auto-disparam na cooldown delas (igual jogo real)
     const demos = [
-      // VAPOR — Staff (Cajado fire) + Aura Gelida (ice)
       () => {
         reactionLbl.setText('Cajado 🔥  +  Aura ❄️  =  VAPOR').setColor('#9ad4ff');
         reactionDesc.setText('Cajado dispara projétil · Aura é círculo persistente ao redor do player');
         arenaBorder.setStrokeStyle(3, 0x9ad4ff, 0.8);
         setWeapons([Staff, AuraWeapon]);
         this._spawnDemoEnemies(enemyPositions);
-        // Cajado primeiro
-        this.time.delayedCall(600, () => fireWeapon(0));
-        // Depois aura (vai applicar ice nos próximos -> reação dispara nos hits da aura)
-        this.time.delayedCall(1300, () => fireWeapon(1));
       },
-      // CRISTAL — Aura (ice) + Chain Lightning (bolt)
       () => {
         reactionLbl.setText('Aura ❄️  +  Raio ⚡  =  CRISTAL').setColor('#5cc8ff');
         reactionDesc.setText('Aura ao redor + Raio Encadeado salta entre inimigos');
         arenaBorder.setStrokeStyle(3, 0x5cc8ff, 0.8);
         setWeapons([AuraWeapon, ChainLightning]);
         this._spawnDemoEnemies(enemyPositions);
-        this.time.delayedCall(600, () => fireWeapon(0));
-        this.time.delayedCall(1300, () => fireWeapon(1));
       },
-      // SOBRECARGA — Staff (fire) + Chain Lightning (bolt)
       () => {
         reactionLbl.setText('Cajado 🔥  +  Raio ⚡  =  SOBRECARGA').setColor('#d98cff');
         reactionDesc.setText('Cajado dispara · Raio Encadeado adiciona o segundo elemento');
         arenaBorder.setStrokeStyle(3, 0xd98cff, 0.8);
         setWeapons([Staff, ChainLightning]);
         this._spawnDemoEnemies(enemyPositions);
-        this.time.delayedCall(600, () => fireWeapon(0));
-        this.time.delayedCall(1300, () => fireWeapon(1));
       },
     ];
 
