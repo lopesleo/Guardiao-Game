@@ -478,80 +478,92 @@ export class TutorialScene extends Phaser.Scene {
     }).setOrigin(0.5);
     c.add(reactionDesc);
 
-    // Setup demo arena REAL com player
-    const heroX = ax - 200, heroY = ay + 20;
+    // ARENA bounds — inimigos só spawnam DENTRO da área verde
+    const arenaMinX = ax - 380, arenaMaxX = ax + 380;
+    const arenaMinY = ay - 130, arenaMaxY = ay + 130;
+
+    // PLAYER NO CENTRO da arena (como jogo real)
+    const heroX = ax, heroY = ay + 10;
     this._setupDemoArena(heroX, heroY);
 
-    // Posições — DENTRO do raio da Aura (110px) pra reações dispararem
-    // imediatamente. Distâncias do player: ~65-100px.
-    const enemyPositions = [
-      { x: heroX + 60,  y: ay - 50 },
-      { x: heroX + 95,  y: ay + 35 },
-      { x: heroX + 75,  y: ay - 25 },
-      { x: heroX + 85,  y: ay + 65 },
-    ];
-
-    // Helper: troca as armas do player
+    // Helper: troca armas do player
     const setWeapons = (weaponClasses) => {
-      // Remove armas atuais (e seus gfx)
       for (const w of this.player.weapons) {
         if (w.gfx) w.gfx.destroy();
       }
       this.player.weapons = [];
-      // Adiciona novas
       for (const WClass of weaponClasses) {
         this.player.addWeapon(new WClass(this));
       }
     };
 
-    // Helper: dispara as armas em sequência manualmente
-    const fireWeapon = (idx) => {
-      const w = this.player.weapons[idx];
-      if (!w) return;
-      // Força disparo ignorando cooldown
-      w.lastFireAt = 0;
-      w._fire(this.time.now);
+    // SPAWN CONTÍNUO — horda chegando dos lados (como jogo real)
+    const MAX_ALIVE = 5;
+    const spawnEnemy = () => {
+      if (!this.enemyPool || this.enemyPool.size >= MAX_ALIVE) return;
+      // Spawna em ring 150-200px do player, dentro da arena
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 150 + Math.random() * 50;
+      let x = heroX + Math.cos(angle) * dist;
+      let y = heroY + Math.sin(angle) * dist;
+      x = Math.max(arenaMinX + 20, Math.min(arenaMaxX - 20, x));
+      y = Math.max(arenaMinY + 20, Math.min(arenaMaxY - 20, y));
+      const e = this.enemyPool.acquire();
+      this.tweens.killTweensOf(e);
+      e.setAlpha(1).setScale(GAME.PIXEL_SCALE);
+      e.activate(x, y, 'wolf', 0);
+      e.speed = 35; // chase lento pra demo
     };
 
-    // Ciclo de demos — armas auto-disparam na cooldown delas (igual jogo real)
+    // 4 iniciais + timer contínuo
+    for (let i = 0; i < 4; i++) spawnEnemy();
+    this._demoTimers.push(this.time.addEvent({ delay: 900, loop: true, callback: spawnEnemy }));
+
+    // Ciclo de combos de armas (não mexe nos inimigos!)
     const demos = [
       () => {
         reactionLbl.setText('Cajado 🔥  +  Aura ❄️  =  VAPOR').setColor('#9ad4ff');
-        reactionDesc.setText('Cajado dispara projétil · Aura é círculo persistente ao redor do player');
+        reactionDesc.setText('Cajado projétil + Aura círculo no player');
         arenaBorder.setStrokeStyle(3, 0x9ad4ff, 0.8);
         setWeapons([Staff, AuraWeapon]);
-        this._spawnDemoEnemies(enemyPositions, 0, { chase: false });
       },
       () => {
         reactionLbl.setText('Aura ❄️  +  Raio ⚡  =  CRISTAL').setColor('#5cc8ff');
-        reactionDesc.setText('Aura ao redor + Raio Encadeado salta entre inimigos');
+        reactionDesc.setText('Aura + Raio Encadeado salta entre inimigos');
         arenaBorder.setStrokeStyle(3, 0x5cc8ff, 0.8);
         setWeapons([AuraWeapon, ChainLightning]);
-        this._spawnDemoEnemies(enemyPositions, 0, { chase: false });
       },
       () => {
         reactionLbl.setText('Cajado 🔥  +  Raio ⚡  =  SOBRECARGA').setColor('#d98cff');
-        reactionDesc.setText('Cajado dispara · Raio Encadeado adiciona o segundo elemento');
+        reactionDesc.setText('Cajado dispara · Raio adiciona o segundo elemento');
         arenaBorder.setStrokeStyle(3, 0xd98cff, 0.8);
         setWeapons([Staff, ChainLightning]);
-        this._spawnDemoEnemies(enemyPositions, 0, { chase: false });
       },
     ];
 
     let demoIdx = 0;
     const runNext = () => {
-      this.enemyPool.forEachActive(e => {
-        e.deactivate();
-        this.enemyPool.release(e);
-      });
+      // Não destrói inimigos — só limpa status antigos e troca armas
+      this.enemyPool.forEachActive(e => { e.statuses = {}; e.clearTint(); });
       demos[demoIdx]();
       demoIdx = (demoIdx + 1) % demos.length;
     };
     runNext();
-    this._demoTimers.push(this.time.addEvent({ delay: 5500, loop: true, callback: runNext }));
+    this._demoTimers.push(this.time.addEvent({ delay: 6000, loop: true, callback: runNext }));
 
-    // Tick handler real
-    this._demoTickHandler = (time, dt) => this._runDemoTick(time, dt);
+    // Tick handler — clamp inimigos dentro da arena (se sairem perseguindo)
+    this._demoTickHandler = (time, dt) => {
+      this._runDemoTick(time, dt);
+      // Clamp pos pra não vazarem da arena
+      if (this.enemyPool) {
+        this.enemyPool.forEachActive(e => {
+          if (e.x < arenaMinX) e.x = arenaMinX;
+          if (e.x > arenaMaxX) e.x = arenaMaxX;
+          if (e.y < arenaMinY) e.y = arenaMinY;
+          if (e.y > arenaMaxY) e.y = arenaMaxY;
+        });
+      }
+    };
     this.events.on('update', this._demoTickHandler);
   }
 
