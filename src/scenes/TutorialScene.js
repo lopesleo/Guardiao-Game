@@ -156,14 +156,20 @@ export class TutorialScene extends Phaser.Scene {
     if (this._awakenGlow) { this._awakenGlow.destroy(); this._awakenGlow = null; }
   }
 
-  // Spawna inimigos parados em posições fixas
-  _spawnDemoEnemies(positions, wave = 0) {
+  // Spawna inimigos que CAMINHAM lentamente até o player (realismo do jogo)
+  _spawnDemoEnemies(positions, wave = 0, opts = {}) {
+    const { chase = true, speed = 30 } = opts;
     const list = [];
     for (const pos of positions) {
       const e = this.enemyPool.acquire();
       e.activate(pos.x, pos.y, 'wolf', wave);
-      e.body.enable = false; // não move
-      e.update = () => {};   // sem perseguir
+      if (chase) {
+        e.speed = speed; // bem devagar pra demo controlado
+        // mantém o update padrão do Enemy (chase player)
+      } else {
+        e.body.enable = false;
+        e.update = () => {};
+      }
       list.push(e);
     }
     return list;
@@ -181,11 +187,14 @@ export class TutorialScene extends Phaser.Scene {
     });
   }
 
-  // Tick do update: roda PLAYER (posiciona aura gfx + auto-fire) + projéteis + colisões + elemental tick
+  // Tick do update: roda PLAYER (aura/auto-fire) + ENEMIES (chase) + projéteis + colisões + elemental
   _runDemoTick(time, dt) {
     if (!this.player || !this.projectilePool) return;
-    // PLAYER update (override no setup: roda weapons.update que move a Aura gfx e auto-fire)
     this.player.update(time, dt);
+    // Inimigos chasing
+    this.enemyPool.forEachActive(e => {
+      if (e.update && typeof e.update === 'function') e.update(time, dt, this.player);
+    });
     // Projéteis e colisões
     this.projectilePool.forEachActive(p => {
       p.update(time);
@@ -201,7 +210,6 @@ export class TutorialScene extends Phaser.Scene {
         }
       });
     });
-    // Elemental tick (status expiration + DoT)
     this.elemental.tick(time);
   }
 
@@ -354,12 +362,12 @@ export class TutorialScene extends Phaser.Scene {
     const barLbl = sharp(this, cx, aY + 100, '', { fontFamily: F, fontSize: '11px', fontStyle: 'bold', color: '#ffffff', stroke: '#000', strokeThickness: 2 }).setOrigin(0.5);
     c.add(barBg); c.add(barFill); c.add(barLbl);
 
-    // Posições dos inimigos no demo
+    // Posições — inimigos vêm de longe e caminham até o player
     const enemyPositions = [
-      { x: cx + 60,  y: aY - 30 }, { x: cx + 140, y: aY + 30 },
-      { x: cx + 220, y: aY - 30 }, { x: cx + 300, y: aY + 30 },
+      { x: cx + 200, y: aY - 40 }, { x: cx + 260, y: aY + 30 },
+      { x: cx + 320, y: aY - 30 }, { x: cx + 280, y: aY + 60 },
     ];
-    let currentEnemies = this._spawnDemoEnemies(enemyPositions);
+    let currentEnemies = this._spawnDemoEnemies(enemyPositions, 0, { chase: true, speed: 25 });
 
     // Tick handler
     const tick = (time, dt) => {
@@ -370,7 +378,7 @@ export class TutorialScene extends Phaser.Scene {
       if (aliveCount === 0 && !this._awaitingRespawn) {
         this._awaitingRespawn = true;
         this.time.delayedCall(800, () => {
-          currentEnemies = this._spawnDemoEnemies(enemyPositions);
+          currentEnemies = this._spawnDemoEnemies(enemyPositions, 0, { chase: true, speed: 25 });
           this._awaitingRespawn = false;
         });
       }
@@ -457,15 +465,16 @@ export class TutorialScene extends Phaser.Scene {
     c.add(reactionDesc);
 
     // Setup demo arena REAL com player
-    const heroX = ax - 320, heroY = ay + 20;
+    const heroX = ax - 280, heroY = ay + 20;
     this._setupDemoArena(heroX, heroY);
 
-    // Posições dos inimigos próximos do player pra aura alcançar
+    // Posições iniciais — inimigos começam longe e CAMINHAM até o player
+    // (entram no raio da Aura ~110px naturalmente conforme se aproximam)
     const enemyPositions = [
-      { x: heroX + 150, y: ay - 40 },
-      { x: heroX + 200, y: ay + 30 },
-      { x: heroX + 280, y: ay - 20 },
-      { x: heroX + 340, y: ay + 40 },
+      { x: heroX + 350, y: ay - 60 },
+      { x: heroX + 400, y: ay + 30 },
+      { x: heroX + 450, y: ay - 20 },
+      { x: heroX + 380, y: ay + 60 },
     ];
 
     // Helper: troca as armas do player
@@ -517,7 +526,7 @@ export class TutorialScene extends Phaser.Scene {
 
     let demoIdx = 0;
     const runNext = () => {
-      // limpa inimigos restantes
+      // limpa inimigos + força reset visual
       this.enemyPool.forEachActive(e => {
         e.deactivate();
         this.enemyPool.release(e);
@@ -526,7 +535,8 @@ export class TutorialScene extends Phaser.Scene {
       demoIdx = (demoIdx + 1) % demos.length;
     };
     runNext();
-    this._demoTimers.push(this.time.addEvent({ delay: 4500, loop: true, callback: runNext }));
+    // Cycle mais longo (6s) pra dar tempo dos inimigos chegarem na aura + reação rolar
+    this._demoTimers.push(this.time.addEvent({ delay: 6000, loop: true, callback: runNext }));
 
     // Tick handler real
     this._demoTickHandler = (time, dt) => this._runDemoTick(time, dt);
