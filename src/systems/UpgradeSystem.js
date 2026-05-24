@@ -60,13 +60,15 @@ export class UpgradeSystem {
       }
     }
 
-    // 4) Passivos
+    // 4) Passivos — cada um rola valor aleatório DENTRO de uma faixa
     for (const p of PASSIVES) {
+      const rolled = p.roll();
       cards.push({
         type: 'passive',
         passiveId: p.id,
-        title: p.name,
+        title: rolled.name,
         desc: 'Modificador permanente',
+        _apply: rolled.apply,
       });
     }
 
@@ -103,8 +105,7 @@ export class UpgradeSystem {
       const w = player.weapons.find(w => w.key === card.weaponKey);
       if (w) w.level += 1;
     } else if (card.type === 'passive') {
-      const p = PASSIVES.find(p => p.id === card.passiveId);
-      if (p) p.apply(player);
+      if (card._apply) card._apply(player);
     } else if (card.type === 'evolution') {
       // Remove armas-ingrediente, adiciona evolução
       const evoDef = WEAPONS[card.weaponKey];

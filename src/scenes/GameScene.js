@@ -168,34 +168,43 @@ export class GameScene extends Phaser.Scene {
       return arr[0].f;
     };
 
-    // Áreas de exclusão: centro (spawn do player) e raio de spawn de inimigos
-    const isClear = (x, y) => (x * x + y * y) > (200 * 200);
+    // Áreas de exclusão (centro = spawn do player)
+    const isClear = (x, y) => (x * x + y * y) > (220 * 220);
 
-    for (let i = 0; i < 220; i++) {
-      const x = (Math.random() - 0.5) * r * 1.85;
-      const y = (Math.random() - 0.5) * r * 1.85;
-      if (!isClear(x, y)) continue;
-      const f = pickWeighted(SINGLE);
-      this.add.image(x, y, 'town_tiles', f)
-              .setScale(GAME.PIXEL_SCALE).setDepth(-50); // sempre atrás do player
+    // === Decoração procedural via GRID + JITTER ===
+    // Cobre o mapa inteiro com densidade uniforme.
+
+    // Single-tile decorações: célula 192px (4 tiles), 75% chance por célula
+    const decoCell = 192;
+    for (let cy = -r; cy < r; cy += decoCell) {
+      for (let cx = -r; cx < r; cx += decoCell) {
+        if (Math.random() > 0.75) continue;
+        const x = cx + Math.random() * decoCell;
+        const y = cy + Math.random() * decoCell;
+        if (!isClear(x, y)) continue;
+        const f = pickWeighted(SINGLE);
+        this.add.image(x, y, 'town_tiles', f)
+                .setScale(GAME.PIXEL_SCALE).setDepth(-50);
+      }
     }
 
-    // Árvores 2-tile standalone (top + bottom; pé fica em y)
+    // Árvores 2-tile: célula 384px (8 tiles), 45% chance por célula
     const TREES = [
       [3, 15],  // árvore outono laranja
       [4, 16],  // pinheiro verde
       [5, 17],  // arbusto redondo
     ];
-    for (let i = 0; i < 60; i++) {
-      const ang = Math.random() * Math.PI * 2;
-      const rad = 280 + Math.random() * (r - 360);
-      const x = Math.cos(ang) * rad;
-      const y = Math.sin(ang) * rad;
-      if (!isClear(x, y)) continue;
-      const [top, bot] = TREES[Math.floor(Math.random() * TREES.length)];
-      // bottom em y, top acima. Mesmo offset +10000 do player pra sort consistente.
-      this.add.image(x, y,        'town_tiles', bot).setScale(GAME.PIXEL_SCALE).setDepth(y + 10000);
-      this.add.image(x, y - TS,   'town_tiles', top).setScale(GAME.PIXEL_SCALE).setDepth(y + 10000);
+    const treeCell = 384;
+    for (let cy = -r; cy < r; cy += treeCell) {
+      for (let cx = -r; cx < r; cx += treeCell) {
+        if (Math.random() > 0.45) continue;
+        const x = cx + Math.random() * treeCell;
+        const y = cy + Math.random() * treeCell;
+        if (!isClear(x, y)) continue;
+        const [top, bot] = TREES[Math.floor(Math.random() * TREES.length)];
+        this.add.image(x, y,      'town_tiles', bot).setScale(GAME.PIXEL_SCALE).setDepth(y + 10000);
+        this.add.image(x, y - TS, 'town_tiles', top).setScale(GAME.PIXEL_SCALE).setDepth(y + 10000);
+      }
     }
   }
 

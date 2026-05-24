@@ -6,7 +6,7 @@ export const GAME = {
   HEIGHT: 720,
   TILE: 16,
   PIXEL_SCALE: 3,        // sprite 16x16 renderizado como 48x48
-  WORLD_RADIUS: 1600,    // arena circular
+  WORLD_RADIUS: 2400,    // arena circular (era 1600)
   MAX_ENEMIES_ALIVE: 80, // cap de pooling (D18)
   RUN_DURATION_S: 420,   // 7 min até boss spawnar
 };
@@ -86,16 +86,33 @@ export const WEAPONS = {
 export const WEAPON_LEVEL_DMG = (base, lvl) => base * (1 + 0.25 * (lvl - 1));
 export const MAX_WEAPON_LEVEL = 5;
 
-// Upgrades passivos (level-up)
+// Upgrades passivos (level-up). roll() retorna { name, apply } com valor aleatório.
+const r = (min, max) => Math.floor(min + Math.random() * (max - min + 1));
+const rf = (min, max) => +(min + Math.random() * (max - min)).toFixed(2);
+
 export const PASSIVES = [
-  { id: 'hp',        name: '+20% HP Máximo',                  apply: p => { p.maxHp *= 1.20; p.hp = Math.min(p.maxHp, p.hp + 20); } },
-  { id: 'speed',     name: '+15% Velocidade',                 apply: p => p.speed  *= 1.15 },
-  { id: 'cooldown',  name: '-15% Recarga de armas',           apply: p => p.cdMult *= 0.85 },
-  { id: 'area',      name: '+25% Área (Aura/Reações/Raio)',   apply: p => p.areaMult *= 1.25 },
-  { id: 'proj',      name: '+1 Projétil (Cajado/Raio)',       apply: p => p.extraProj += 1 },
-  { id: 'lifesteal', name: '+5% Roubo de Vida',               apply: p => p.lifestealPct += 0.05 },
-  { id: 'regen',     name: 'Regenera 1 HP/s',                 apply: p => p.regenPerSec += 1 },
-  { id: 'crit',      name: '+8% Chance Crítica (knockback)',  apply: p => p.critChance += 0.08 },
+  { id: 'hp', roll: () => { const v = r(10, 25);
+    return { name: `+${v}% HP Máximo`, apply: p => { p.maxHp *= 1 + v/100; p.hp = Math.min(p.maxHp, p.hp + v/2); } };
+  }},
+  { id: 'speed', roll: () => { const v = r(8, 18);
+    return { name: `+${v}% Velocidade`, apply: p => { p.speed *= 1 + v/100; } };
+  }},
+  { id: 'cooldown', roll: () => { const v = r(8, 20);
+    return { name: `-${v}% Recarga`, apply: p => { p.cdMult *= 1 - v/100; } };
+  }},
+  { id: 'area', roll: () => { const v = r(10, 30);
+    return { name: `+${v}% Área`, apply: p => { p.areaMult *= 1 + v/100; } };
+  }},
+  { id: 'proj', roll: () => ({ name: '+1 Projétil (Cajado/Raio)', apply: p => { p.extraProj += 1; } })},
+  { id: 'lifesteal', roll: () => { const v = r(3, 8);
+    return { name: `+${v}% Roubo de Vida`, apply: p => { p.lifestealPct += v/100; } };
+  }},
+  { id: 'regen', roll: () => { const v = rf(0.5, 2.0);
+    return { name: `+${v} HP/s`, apply: p => { p.regenPerSec += v; } };
+  }},
+  { id: 'crit', roll: () => { const v = r(5, 12);
+    return { name: `+${v}% Chance Crítica`, apply: p => { p.critChance += v/100; } };
+  }},
 ];
 
 // Drops aleatórios no chão (chance por kill)
