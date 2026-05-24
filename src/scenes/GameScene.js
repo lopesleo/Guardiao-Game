@@ -252,6 +252,17 @@ export class GameScene extends Phaser.Scene {
     this.elemental.tick(time);
     this.hud.update(time, dt);
 
+    // Baús: glow/prompt + interação E
+    let chestPressed = this.inputMgr.consumeInteract();
+    for (const c of this.chests) {
+      if (c.opened) continue;
+      c.update(time, this.player);
+      if (chestPressed && c.playerNear) {
+        chestPressed = false;
+        this._openChest(c);
+      }
+    }
+
     // Boss update
     if (this.boss && this.boss.active) {
       this.boss.update(time, dt, this.player);
@@ -489,43 +500,75 @@ export class GameScene extends Phaser.Scene {
     const result = chest.open();
     if (!result) return;
     const { kind, x, y } = result;
-    this.sound.play('sfx_pickup', { volume: 0.6, rate: 0.9 });
 
-    // Loot base (sempre)
-    const ngems = Phaser.Math.Between(CHEST.GEMS_MIN, CHEST.GEMS_MAX);
-    const ncoins = Phaser.Math.Between(CHEST.COINS_MIN, CHEST.COINS_MAX);
-    for (let i = 0; i < ngems; i++) {
-      const g = this.xpPool.acquire();
-      const ang = Math.random() * Math.PI * 2;
-      const d = 8 + Math.random() * 18;
-      g.spawn(x + Math.cos(ang) * d, y + Math.sin(ang) * d);
-    }
-    for (let i = 0; i < ncoins; i++) {
-      const c = this.coinPool.acquire();
-      const ang = Math.random() * Math.PI * 2;
-      const d = 8 + Math.random() * 18;
-      c.spawn(x + Math.cos(ang) * d, y + Math.sin(ang) * d);
-    }
-    if (Math.random() < CHEST.HEART_CHANCE_OPEN) {
-      const h = this.heartPool.acquire(); h.spawn(x - 20, y);
-    }
-    if (Math.random() < CHEST.AWAKEN_CHANCE_OPEN) {
-      const o = this.awakenOrbPool.acquire(); o.spawn(x + 20, y);
-    }
+    // CAÇA-NÍQUEL: "reels" — 3 sinos ascendentes (suspense)
+    const reelRates = [1.0, 1.15, 1.30];
+    reelRates.forEach((rate, i) => {
+      this.time.delayedCall(i * 110, () => {
+        this.sound.play('sfx_pickup', { volume: 0.5, rate, detune: i * 200 });
+      });
+    });
 
-    if (kind === 'golden') {
-      // Bonus de moedas + carta grátis
-      for (let i = 0; i < CHEST.GOLDEN_EXTRA_COINS; i++) {
+    // Burst de partículas douradas no momento do "click" final
+    const burstDelay = reelRates.length * 110;
+    this.time.delayedCall(burstDelay, () => this._chestBurst(x, y, kind));
+
+    // Loot spawnado DEPOIS dos reels (caça-níquel revela)
+    this.time.delayedCall(burstDelay + 50, () => {
+      const ngems = Phaser.Math.Between(CHEST.GEMS_MIN, CHEST.GEMS_MAX);
+      const ncoins = Phaser.Math.Between(CHEST.COINS_MIN, CHEST.COINS_MAX);
+      for (let i = 0; i < ngems; i++) {
+        const g = this.xpPool.acquire();
+        const ang = Math.random() * Math.PI * 2;
+        const d = 8 + Math.random() * 22;
+        g.spawn(x + Math.cos(ang) * d, y + Math.sin(ang) * d);
+      }
+      for (let i = 0; i < ncoins; i++) {
         const c = this.coinPool.acquire();
         const ang = Math.random() * Math.PI * 2;
-        const d = 12 + Math.random() * 30;
+        const d = 8 + Math.random() * 22;
         c.spawn(x + Math.cos(ang) * d, y + Math.sin(ang) * d);
       }
-      this._toast('★ BAÚ DOURADO! ★', 2000);
+      if (Math.random() < CHEST.HEART_CHANCE_OPEN) {
+        const h = this.heartPool.acquire(); h.spawn(x - 22, y);
+      }
+      if (Math.random() < CHEST.AWAKEN_CHANCE_OPEN) {
+        const o = this.awakenOrbPool.acquire(); o.spawn(x + 22, y);
+      }
+    });
+
+    if (kind === 'golden') {
+      // JACKPOT: cascata de moedas + chime de vitória
+      this.time.delayedCall(burstDelay, () => {
+        this.sound.play('sfx_levelup', { volume: 0.7, rate: 1.0 });
+        // 6 chimes em cascata
+        for (let i = 0; i < 6; i++) {
+          this.time.delayedCall(i * 90, () => {
+            this.sound.play('sfx_pickup', { volume: 0.5, rate: 1.0 + i * 0.12 });
+          });
+        }
+      });
+      // Bonus de moedas
+      this.time.delayedCall(burstDelay + 200, () => {
+        for (let i = 0; i < CHEST.GOLDEN_EXTRA_COINS; i++) {
+          this.time.delayedCall(i * 20, () => {
+            const c = this.coinPool.acquire();
+            const ang = Math.random() * Math.PI * 2;
+            const d = 12 + Math.random() * 36;
+            c.spawn(x + Math.cos(ang) * d, y + Math.sin(ang) * d);
+          });
+        }
+      });
+      this._toast('★ BAÚ DOURADO! ★', 2200);
       // Carta extra grátis
-      this.time.delayedCall(600, () => this.events.emit('player:levelup', this.player.level));
+      this.time.delayedCall(burstDelay + 1200, () => this.events.emit('player:levelup', this.player.level));
     } else if (kind === 'trap') {
-      // Armadilha: spawna inimigos elite ao redor
+      // ALARME: rugido grave + shake
+      this.time.delayedCall(burstDelay, () => {
+        this.sound.play('sfx_boss_roar', { volume: 0.6, rate: 0.7 });
+        this.sound.play('sfx_player_hit', { volume: 0.5, rate: 0.8 });
+        this.cameras.main.shake(280, 0.018);
+      });
       this._toast('⚠ ARMADILHA!', 1500);
       const wave = Math.floor(this.elapsedMs / 30000);
       const types = ['wolf', 'crow', 'goblin'];
@@ -536,9 +579,40 @@ export class GameScene extends Phaser.Scene {
         const sy = y + Math.sin(ang) * 60;
         const e = this.enemyPool.acquire();
         const kind = types[Math.floor(Math.random() * types.length)];
-        e.activate(sx, sy, kind, wave, true); // true = ELITE
+        e.activate(sx, sy, kind, wave, true);
       }
+    } else {
+      // Normal: dingdong de prêmio modesto
+      this.time.delayedCall(burstDelay, () => {
+        this.sound.play('sfx_pickup', { volume: 0.6, rate: 1.4 });
+      });
     }
+  }
+
+  _chestBurst(x, y, kind) {
+    const color = kind === 'trap' ? 0xff5a6e : (kind === 'golden' ? 0xffe88a : 0xffd96b);
+    // 14 partículas pequenas voando pra fora
+    for (let i = 0; i < 14; i++) {
+      const ang = (i / 14) * Math.PI * 2 + Math.random() * 0.3;
+      const p = this.add.circle(x, y, 4, color, 1).setDepth(y + 10500);
+      const dist = 50 + Math.random() * 40;
+      this.tweens.add({
+        targets: p,
+        x: x + Math.cos(ang) * dist,
+        y: y + Math.sin(ang) * dist,
+        alpha: 0,
+        scale: 0.2,
+        duration: 600,
+        ease: 'Cubic.easeOut',
+        onComplete: () => p.destroy(),
+      });
+    }
+    // Flash radial breve
+    const ring = this.add.circle(x, y, 8, color, 0).setStrokeStyle(4, color, 1).setDepth(y + 10500);
+    this.tweens.add({
+      targets: ring, radius: 60, alpha: 0, duration: 400,
+      onComplete: () => ring.destroy(),
+    });
   }
 
   _onGameOver(won) {
