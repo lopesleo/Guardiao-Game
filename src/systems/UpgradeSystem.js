@@ -64,25 +64,23 @@ export class UpgradeSystem {
       if (w.key.startsWith('VAPOR') || w.key.startsWith('OVERLOAD_X')) continue;
       const pool = weaponMods[w.key] || ['dmg'];
       const mod = pool[Math.floor(Math.random() * pool.length)];
-      let title, desc, apply;
+      const wName = WEAPONS[w.key].name;
+      const lvlTxt = `Lv ${w.level} → ${w.level + 1}`;
+      let title = wName, desc = '', apply;
       if (mod === 'dmg') {
         const v = rInt(15, 30);
-        title = `${WEAPONS[w.key].name} +${v}% dano`;
-        desc  = `Lv ${w.level} → ${w.level + 1}`;
+        desc = `+${v}% Dano · ${lvlTxt}`;
         apply = () => { w.dmgMult *= 1 + v / 100; w.level += 1; };
       } else if (mod === 'cd') {
         const v = rInt(10, 22);
-        title = `${WEAPONS[w.key].name} −${v}% recarga`;
-        desc  = `Lv ${w.level} → ${w.level + 1}`;
+        desc = `−${v}% Recarga · ${lvlTxt}`;
         apply = () => { w.cdMult *= 1 - v / 100; w.level += 1; };
       } else if (mod === 'range') {
         const v = rInt(10, 20);
-        title = `${WEAPONS[w.key].name} +${v}% alcance`;
-        desc  = `Lv ${w.level} → ${w.level + 1}`;
+        desc = `+${v}% Alcance · ${lvlTxt}`;
         apply = () => { w.rangeMult *= 1 + v / 100; w.level += 1; };
       } else if (mod === 'proj') {
-        title = `${WEAPONS[w.key].name} +1 projétil`;
-        desc  = `Lv ${w.level} → ${w.level + 1}`;
+        desc = `+1 Projétil · ${lvlTxt}`;
         apply = () => { w.extraProj += 1; w.level += 1; };
       }
       cards.push({ type: 'upgrade', weaponKey: w.key, title, desc, _apply: apply });

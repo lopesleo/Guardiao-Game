@@ -194,26 +194,34 @@ export class HUD {
       this.bossHpFill.width = 714 * pct;
     }
 
-    // Despertar
+    // Despertar (mostra cadeado se não comprado)
     const now = this.scene.time.now;
-    const aw = this.player.awakenMeter / this.player.awakenMax;
-    this.awFill.width = (PW - 40) * aw;
-    if (this.player.isAwakened()) {
-      const remain = Math.max(0, this.player.awakenedUntil - now);
-      this.awFill.fillColor = 0xffe88a;
-      this.awHint.setText(`${(remain / 1000).toFixed(1)}s`).setColor('#ffe88a');
-    } else if (this.player.awakenReady()) {
-      this.awFill.fillColor = 0xffd96b;
-      this.awHint.setText('PRESSIONE R').setColor('#ffe88a');
-    } else if (now < this.player.awakenLockUntil) {
-      this.awFill.fillColor = 0x6a4a10;
-      this.awHint.setText('recarregando').setColor('#93a89a');
+    if (!this.player.awakenUnlocked) {
+      this.awFill.width = 0;
+      this.awFill.fillColor = 0x333333;
+      this.awHint.setText('🔒 NÃO COMPRADO').setColor('#666666');
     } else {
-      this.awFill.fillColor = 0xd9b25c;
-      this.awHint.setText('').setColor('#d9b25c');
+      const aw = this.player.awakenMeter / this.player.awakenMax;
+      this.awFill.width = (PW - 40) * aw;
+      if (this.player.isAwakened()) {
+        const remain = Math.max(0, this.player.awakenedUntil - now);
+        this.awFill.fillColor = 0xffe88a;
+        this.awHint.setText(`${(remain / 1000).toFixed(1)}s`).setColor('#ffe88a');
+      } else if (this.player.awakenReady()) {
+        this.awFill.fillColor = 0xffd96b;
+        this.awHint.setText('PRESSIONE R').setColor('#ffe88a');
+      } else if (now < this.player.awakenLockUntil) {
+        this.awFill.fillColor = 0x6a4a10;
+        this.awHint.setText('recarregando').setColor('#93a89a');
+      } else {
+        this.awFill.fillColor = 0xd9b25c;
+        this.awHint.setText('').setColor('#d9b25c');
+      }
     }
 
-    if (this.player.dashReady()) {
+    if (!this.player.dashUnlocked) {
+      this.dashIcon.setText('🔒 DASH').setColor('#666666');
+    } else if (this.player.dashReady()) {
       this.dashIcon.setText('⚡ DASH').setColor('#ffd96b');
     } else {
       const remain = Math.max(0, this.player.dashCdUntil - now);
