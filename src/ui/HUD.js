@@ -1,6 +1,5 @@
 // HUD: HP, XP, level, timer, kills, moedas, ícones de arma + alerta de boss.
 import { COLORS, GAME, PLAYER, WEAPONS } from '../config.js';
-const AW = PLAYER.AWAKEN_METER_MAX;
 import { formatTime } from '../utils.js';
 
 export class HUD {
@@ -127,7 +126,7 @@ export class HUD {
 
     // Despertar
     const now = this.scene.time.now;
-    const aw = this.player.awakenMeter / AW;
+    const aw = this.player.awakenMeter / this.player.awakenMax;
     this.awFill.width = 234 * aw;
     if (this.player.isAwakened()) {
       const remain = Math.max(0, this.player.awakenedUntil - now);

@@ -73,14 +73,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   // --- Despertar ---
+  get awakenMax() { return PLAYER.AWAKEN_METER_MAX(this.level); }
   isAwakened() { return this.scene.time.now < this.awakenedUntil; }
   awakenReady() {
     const now = this.scene.time.now;
-    return this.awakenMeter >= PLAYER.AWAKEN_METER_MAX && now >= this.awakenLockUntil && !this.isAwakened();
+    return this.awakenMeter >= this.awakenMax && now >= this.awakenLockUntil && !this.isAwakened();
   }
   addAwakenMeter(amount) {
     if (this.scene.time.now < this.awakenLockUntil) return;
-    this.awakenMeter = Math.min(PLAYER.AWAKEN_METER_MAX, this.awakenMeter + amount);
+    this.awakenMeter = Math.min(this.awakenMax, this.awakenMeter + amount);
   }
   tryActivateAwaken() {
     if (!this.awakenReady()) return false;
