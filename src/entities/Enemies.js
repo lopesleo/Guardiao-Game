@@ -195,15 +195,20 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this.setVelocity((dx / len) * sp, (dy / len) * sp);
     this.setFlipX(dx < 0);
 
-    // Especiais
-    if (this.phase === 1 && time - this.lastSpecialAt > 4000) {
+    // Especiais alternados
+    if (this.phase === 1 && time - this.lastSpecialAt > 3500) {
       this.lastSpecialAt = time;
-      this._aoeSlam();
-    } else if (this.phase === 2 && time - this.lastSpecialAt > 2500) {
+      // Alterna entre AoE slam e invocação
+      this._specialCount = (this._specialCount || 0) + 1;
+      if (this._specialCount % 2 === 1) this._aoeSlam();
+      else                              this._summon('wolf', 3);
+    } else if (this.phase === 2 && time - this.lastSpecialAt > 2200) {
       this.lastSpecialAt = time;
-      this._volley();
-      // Invoca 2 morcegos
-      this._summon('wolf', 2);
+      this._specialCount = (this._specialCount || 0) + 1;
+      // Fase 2: sempre invoca + alterna volley/slam
+      this._summon(this._specialCount % 2 === 0 ? 'crow' : 'wolf', 3);
+      if (this._specialCount % 2 === 0) this._volley();
+      else                              this._aoeSlam();
     }
   }
 
@@ -235,11 +240,21 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
   _summon(kind, count) {
     const scene = this.scene;
     const wave = Math.floor(scene.elapsedMs / 30000);
+    // Aviso visual do próprio boss: pulso roxo
+    const pulse = scene.add.circle(this.x, this.y, 30, 0xd98cff, 0.5).setDepth(55);
+    scene.tweens.add({ targets: pulse, radius: 70, alpha: 0, duration: 500, onComplete: () => pulse.destroy() });
+
     for (let i = 0; i < count; i++) {
       if (scene.enemyPool.size >= GAME.MAX_ENEMIES_ALIVE) break;
-      const ang = Math.random() * Math.PI * 2;
+      const ang = (i / count) * Math.PI * 2 + Math.random() * 0.5;
+      const sx = this.x + Math.cos(ang) * 90;
+      const sy = this.y + Math.sin(ang) * 90;
+      // Marca visual no ponto de spawn
+      const spawn = scene.add.circle(sx, sy, 8, 0xd98cff, 0.7).setDepth(55);
+      scene.tweens.add({ targets: spawn, radius: 24, alpha: 0, duration: 350, onComplete: () => spawn.destroy() });
+
       const e = scene.enemyPool.acquire();
-      e.activate(this.x + Math.cos(ang) * 80, this.y + Math.sin(ang) * 80, kind, wave);
+      e.activate(sx, sy, kind, wave);
     }
   }
 }
