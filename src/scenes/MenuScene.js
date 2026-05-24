@@ -1,9 +1,10 @@
-// Menu LIMPO. Sem caos. Tipografia única, hierarquia clara, bg simples.
+// Menu LIMPO com fonte system-ui (legível em projetor) — só título em pixel font.
 import { COLORS, GAME, META, BLESSINGS } from '../config.js';
 import { MetaProgression } from '../systems/MetaProgression.js';
 import { formatTime } from '../utils.js';
 
-const F = '"Press Start 2P", monospace';
+const F  = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const FP = '"Press Start 2P", monospace';
 
 function sharp(scene, x, y, str, opts) {
   return scene.add.text(Math.round(x), Math.round(y), str, opts).setResolution(2);
@@ -17,18 +18,14 @@ export class MenuScene extends Phaser.Scene {
     const cx = W / 2;
     this.meta = new MetaProgression();
 
-    // === BG: gradiente escuro suave ===
+    // === BG gradiente escuro ===
     this.cameras.main.setBackgroundColor(0x0a1410);
     const grad = this.add.graphics();
-    // simula gradiente com 3 retângulos
-    grad.fillStyle(0x152820, 1);
-    grad.fillRect(0, 0, W, H);
-    grad.fillStyle(0x0a1410, 0.6);
-    grad.fillRect(0, H * 0.5, W, H * 0.5);
-    grad.fillStyle(0x000000, 0.5);
-    grad.fillRect(0, H - 120, W, 120);
+    grad.fillStyle(0x152820, 1); grad.fillRect(0, 0, W, H);
+    grad.fillStyle(0x0a1410, 0.6); grad.fillRect(0, H * 0.5, W, H * 0.5);
+    grad.fillStyle(0x000000, 0.5); grad.fillRect(0, H - 120, W, 120);
 
-    // === FIREFLIES sutis (só 12) ===
+    // === Fireflies sutis ===
     this.fireflies = [];
     for (let i = 0; i < 12; i++) {
       const ff = this.add.circle(Math.random() * W, H + Math.random() * 200, 2, 0xfff5b8, 0.7).setDepth(5);
@@ -38,56 +35,53 @@ export class MenuScene extends Phaser.Scene {
       this.fireflies.push(ff);
     }
 
-    // === TÍTULO — Press Start 2P em tamanho grande ===
-    // Sombra
-    sharp(this, cx + 4, 124, 'GUARDIÃO', {
-      fontFamily: F, fontSize: '72px', color: '#000000',
-    }).setOrigin(0.5).setAlpha(0.7);
-    // Principal
-    sharp(this, cx, 120, 'GUARDIÃO', {
-      fontFamily: F, fontSize: '72px', color: '#d9b25c',
+    // === TÍTULO — Press Start 2P só pra ter cara de jogo, mas grande pra ler ===
+    sharp(this, cx + 4, 134, 'GUARDIÃO', { fontFamily: FP, fontSize: '54px', color: '#000000' })
+      .setOrigin(0.5).setAlpha(0.7);
+    sharp(this, cx, 130, 'GUARDIÃO', {
+      fontFamily: FP, fontSize: '54px', color: '#d9b25c',
     }).setOrigin(0.5);
 
-    // Subtítulo
-    sharp(this, cx, 180, 'DA FLORESTA', {
-      fontFamily: F, fontSize: '28px', color: '#d9b25c',
+    sharp(this, cx, 190, 'DA FLORESTA', {
+      fontFamily: FP, fontSize: '22px', color: '#d9b25c',
     }).setOrigin(0.5);
 
-    // Tagline
-    sharp(this, cx, 220, 'DESPERTAR', {
-      fontFamily: F, fontSize: '12px', color: '#6fcf6f',
+    // Tagline em sans-serif legível
+    sharp(this, cx, 232, '— DESPERTAR —', {
+      fontFamily: F, fontSize: '18px', fontStyle: 'bold', color: '#6fcf6f',
     }).setOrigin(0.5);
 
-    // === HERO SPRITE (pequeno, acima dos botões) ===
-    this.hero = this.add.image(cx, 290, 'dungeon_tiles', 84)
-                       .setScale(GAME.PIXEL_SCALE * 1.3);
-    this.tweens.add({ targets: this.hero, y: 282, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    // === HERO ===
+    this.hero = this.add.image(cx, 310, 'dungeon_tiles', 84).setScale(GAME.PIXEL_SCALE * 1.3);
+    this.tweens.add({ targets: this.hero, y: 302, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
-    // === STATS CARD (topo direito, simples) ===
-    const sx = W - 240, sy = 20, sw = 220, sh = 60;
-    this.add.rectangle(sx, sy, sw, sh, 0x000000, 0.7).setOrigin(0, 0).setStrokeStyle(2, 0xd9b25c, 0.7);
-    sharp(this, sx + 14,  sy + 14, '💰', { fontFamily: F, fontSize: '16px' });
-    sharp(this, sx + 40,  sy + 16, `${this.meta.coins}`, { fontFamily: F, fontSize: '16px', color: '#d9b25c' });
-    sharp(this, sx + 14,  sy + 38, '🏆', { fontFamily: F, fontSize: '16px' });
-    sharp(this, sx + 40,  sy + 40, formatTime(this.meta.data.highScoreSeconds * 1000), { fontFamily: F, fontSize: '14px', color: '#e8f0e6' });
+    // === STATS CARD ===
+    const sx = W - 260, sy = 24, sw = 240, sh = 80;
+    this.add.rectangle(sx, sy, sw, sh, 0x000000, 0.7).setOrigin(0, 0).setStrokeStyle(2, 0xd9b25c, 0.8);
+    sharp(this, sx + 14, sy + 12, '💰  MOEDAS', { fontFamily: F, fontSize: '12px', color: '#93a89a' });
+    sharp(this, sx + 14, sy + 30, `${this.meta.coins}`, { fontFamily: F, fontSize: '22px', fontStyle: 'bold', color: '#d9b25c' });
+    sharp(this, sx + 130, sy + 12, '🏆  MELHOR', { fontFamily: F, fontSize: '12px', color: '#93a89a' });
+    sharp(this, sx + 130, sy + 32, formatTime(this.meta.data.highScoreSeconds * 1000), {
+      fontFamily: F, fontSize: '20px', fontStyle: 'bold', color: '#e8f0e6',
+    });
 
     if (!this.meta.available) {
-      sharp(this, cx, H - 70, '⚠ modo privado - progresso não será salvo', {
-        fontFamily: F, fontSize: '10px', color: '#ff5a6e',
+      sharp(this, cx, H - 70, '⚠ Modo privado — progresso não será salvo', {
+        fontFamily: F, fontSize: '13px', color: '#ff5a6e',
       }).setOrigin(0.5);
     }
 
-    // === BOTÕES (vertical, bem espaçados, sem ícones brigando) ===
-    const bx = cx, by = 400, bgap = 60;
-    this._button(bx, by,            'JOGAR',       '#ffd96b', 22, () => this.scene.start('GameScene'));
-    this._button(bx, by + bgap,     'BÊNÇÃOS',     '#e8f0e6', 16, () => this._showBlessingsMenu());
-    this._button(bx, by + bgap * 2, 'DESBLOQUEAR', '#e8f0e6', 16, () => this._showUnlockMenu());
-    this._button(bx, by + bgap * 3, 'CRÉDITOS',    '#93a89a', 14, () => this.scene.start('CreditsScene'));
+    // === BOTÕES — sans-serif grande e legível ===
+    const by = 410, bgap = 64;
+    this._button(cx, by,            'JOGAR',       '#ffd96b', 26, true,  () => this.scene.start('GameScene'));
+    this._button(cx, by + bgap,     'BÊNÇÃOS',     '#e8f0e6', 20, false, () => this._showBlessingsMenu());
+    this._button(cx, by + bgap * 2, 'DESBLOQUEAR', '#e8f0e6', 20, false, () => this._showUnlockMenu());
+    this._button(cx, by + bgap * 3, 'CRÉDITOS',    '#93a89a', 18, false, () => this.scene.start('CreditsScene'));
 
     // === HINT ===
-    sharp(this, cx, H - 30,
-      'WASD mover · R despertar · SHIFT dash · E abrir baú',
-      { fontFamily: F, fontSize: '10px', color: '#6a7a6a' }
+    sharp(this, cx, H - 28,
+      'WASD mover  ·  R despertar  ·  SHIFT dash  ·  E abrir baú  ·  M mute',
+      { fontFamily: F, fontSize: '13px', color: '#93a89a' }
     ).setOrigin(0.5);
 
     // === MÚSICA ===
@@ -109,21 +103,25 @@ export class MenuScene extends Phaser.Scene {
     }
   }
 
-  _button(x, y, label, color, fontSize, onClick) {
-    const w = 360, h = 46;
-    const bg = this.add.rectangle(x, y, w, h, 0x0a1410, 0.95)
-                    .setStrokeStyle(2, 0xd9b25c, 0.8).setInteractive({ useHandCursor: true });
+  _button(x, y, label, color, fontSize, primary, onClick) {
+    const w = 400, h = 52;
+    const bgColor = primary ? 0x1a3a20 : 0x0a1410;
+    const strokeColor = primary ? 0xffe88a : 0xd9b25c;
+    const bg = this.add.rectangle(x, y, w, h, bgColor, 0.95)
+                    .setStrokeStyle(3, strokeColor, primary ? 1 : 0.7).setInteractive({ useHandCursor: true });
     const txt = sharp(this, x, y, label, {
-      fontFamily: F, fontSize: `${fontSize}px`, color,
+      fontFamily: F, fontSize: `${fontSize}px`, fontStyle: 'bold', color,
     }).setOrigin(0.5);
 
     bg.on('pointerover', () => {
-      bg.setFillStyle(0x1a2a20); bg.setStrokeStyle(3, 0xffe88a, 1);
+      bg.setFillStyle(primary ? 0x2a5a30 : 0x1a3a20);
+      bg.setStrokeStyle(3, 0xffe88a, 1);
       this.tweens.add({ targets: [bg, txt], scaleX: 1.04, scaleY: 1.04, duration: 90 });
       this.sound.play('sfx_ui_hover', { volume: 0.22 });
     });
     bg.on('pointerout', () => {
-      bg.setFillStyle(0x0a1410); bg.setStrokeStyle(2, 0xd9b25c, 0.8);
+      bg.setFillStyle(bgColor);
+      bg.setStrokeStyle(3, strokeColor, primary ? 1 : 0.7);
       this.tweens.add({ targets: [bg, txt], scaleX: 1, scaleY: 1, duration: 90 });
     });
     bg.on('pointerdown', () => { this.sound.play('sfx_ui_click', { volume: 0.4 }); onClick(); });
@@ -134,27 +132,31 @@ export class MenuScene extends Phaser.Scene {
     const W = GAME.WIDTH, H = GAME.HEIGHT;
     const overlay = this.add.rectangle(0, 0, W, H, 0x000000, 0.92).setOrigin(0).setInteractive().setDepth(500);
     const panel = this.add.container(W / 2, H / 2).setDepth(501);
-    panel.add(this.add.rectangle(0, 0, 620, 440, 0x0a1410, 1).setStrokeStyle(3, 0xd9b25c, 1));
-    panel.add(sharp(this, 0, -180, 'DESBLOQUEAR', { fontFamily: F, fontSize: '22px', color: '#d9b25c' }).setOrigin(0.5));
-    panel.add(sharp(this, 0, -140, `${this.meta.coins} moedas`, { fontFamily: F, fontSize: '12px', color: '#e8f0e6' }).setOrigin(0.5));
+    panel.add(this.add.rectangle(0, 0, 640, 460, 0x0a1410, 1).setStrokeStyle(3, 0xd9b25c, 1));
+    panel.add(sharp(this, 0, -190, 'DESBLOQUEAR ARMAS', { fontFamily: F, fontSize: '26px', fontStyle: 'bold', color: '#d9b25c' }).setOrigin(0.5));
+    panel.add(sharp(this, 0, -150, `${this.meta.coins} moedas disponíveis`, { fontFamily: F, fontSize: '14px', color: '#e8f0e6' }).setOrigin(0.5));
 
     const items = [
       { key: 'BOOMER', name: 'Bumerangue',     cost: META.WEAPON_UNLOCK_COST.BOOMER, ico: '🔥' },
       { key: 'CHAIN',  name: 'Raio Encadeado', cost: META.WEAPON_UNLOCK_COST.CHAIN,  ico: '⚡' },
       { key: 'AURA',   name: 'Aura Gélida',    cost: META.WEAPON_UNLOCK_COST.AURA,   ico: '❄' },
     ];
-    let y = -70;
+    let y = -80;
     for (const it of items) {
       const has = this.meta.isUnlocked(it.key);
       const canBuy = !has && this.meta.coins >= it.cost;
       const row = this.add.container(0, y);
-      const bg = this.add.rectangle(0, 0, 540, 50, has ? 0x1a3a1a : (canBuy ? 0x1a2820 : 0x141414), 1)
+      const bg = this.add.rectangle(0, 0, 560, 56, has ? 0x1a3a1a : (canBuy ? 0x1a2820 : 0x141414), 1)
                        .setStrokeStyle(2, has ? 0x6fcf6f : (canBuy ? 0xd9b25c : 0x333333), 1);
       row.add(bg);
-      row.add(sharp(this, -250, 0, `${it.ico}  ${it.name}`, { fontFamily: F, fontSize: '13px',
-        color: has ? '#6fcf6f' : (canBuy ? '#e8f0e6' : '#666') }).setOrigin(0, 0.5));
-      row.add(sharp(this, 250, 0, has ? 'COMPRADA' : `${it.cost} 💰`, { fontFamily: F, fontSize: '12px',
-        color: has ? '#6fcf6f' : (canBuy ? '#d9b25c' : '#666') }).setOrigin(1, 0.5));
+      row.add(sharp(this, -260, 0, `${it.ico}  ${it.name}`, {
+        fontFamily: F, fontSize: '18px', fontStyle: 'bold',
+        color: has ? '#6fcf6f' : (canBuy ? '#e8f0e6' : '#777'),
+      }).setOrigin(0, 0.5));
+      row.add(sharp(this, 260, 0, has ? 'COMPRADA' : `${it.cost} 💰`, {
+        fontFamily: F, fontSize: '16px', fontStyle: 'bold',
+        color: has ? '#6fcf6f' : (canBuy ? '#d9b25c' : '#666'),
+      }).setOrigin(1, 0.5));
       panel.add(row);
       if (canBuy) {
         bg.setInteractive({ useHandCursor: true });
@@ -167,9 +169,9 @@ export class MenuScene extends Phaser.Scene {
           this.scene.restart();
         });
       }
-      y += 60;
+      y += 66;
     }
-    const close = sharp(this, 0, 180, 'FECHAR', { fontFamily: F, fontSize: '13px', color: '#d9b25c' })
+    const close = sharp(this, 0, 195, 'FECHAR', { fontFamily: F, fontSize: '16px', fontStyle: 'bold', color: '#d9b25c' })
                   .setOrigin(0.5).setInteractive({ useHandCursor: true });
     close.on('pointerdown', () => { overlay.destroy(); panel.destroy(); });
     panel.add(close);
@@ -179,24 +181,28 @@ export class MenuScene extends Phaser.Scene {
     const W = GAME.WIDTH, H = GAME.HEIGHT;
     const overlay = this.add.rectangle(0, 0, W, H, 0x000000, 0.92).setOrigin(0).setInteractive().setDepth(500);
     const panel = this.add.container(W / 2, H / 2).setDepth(501);
-    panel.add(this.add.rectangle(0, 0, 760, 580, 0x0a1410, 1).setStrokeStyle(3, 0xd9b25c, 1));
-    panel.add(sharp(this, 0, -250, 'BÊNÇÃOS', { fontFamily: F, fontSize: '24px', color: '#d9b25c' }).setOrigin(0.5));
-    panel.add(sharp(this, 0, -218, 'Buffs permanentes para todas as runs', { fontFamily: F, fontSize: '10px', color: '#93a89a' }).setOrigin(0.5));
-    panel.add(sharp(this, 0, -195, `${this.meta.coins} moedas`, { fontFamily: F, fontSize: '12px', color: '#e8f0e6' }).setOrigin(0.5));
+    panel.add(this.add.rectangle(0, 0, 780, 600, 0x0a1410, 1).setStrokeStyle(3, 0xd9b25c, 1));
+    panel.add(sharp(this, 0, -260, 'BÊNÇÃOS', { fontFamily: F, fontSize: '30px', fontStyle: 'bold', color: '#d9b25c' }).setOrigin(0.5));
+    panel.add(sharp(this, 0, -224, 'Buffs permanentes para todas as runs', { fontFamily: F, fontSize: '13px', color: '#93a89a' }).setOrigin(0.5));
+    panel.add(sharp(this, 0, -200, `${this.meta.coins} moedas disponíveis`, { fontFamily: F, fontSize: '14px', color: '#e8f0e6' }).setOrigin(0.5));
 
-    let y = -140;
+    let y = -150;
     for (const b of BLESSINGS) {
       const has = this.meta.ownsBlessing(b.id);
       const canBuy = !has && this.meta.coins >= b.cost;
       const row = this.add.container(0, y);
-      const bg = this.add.rectangle(0, 0, 700, 54, has ? 0x1a3a1a : (canBuy ? 0x1a2820 : 0x141414), 1)
+      const bg = this.add.rectangle(0, 0, 720, 58, has ? 0x1a3a1a : (canBuy ? 0x1a2820 : 0x141414), 1)
                        .setStrokeStyle(2, has ? 0x6fcf6f : (canBuy ? 0xd9b25c : 0x333333), 1);
       row.add(bg);
-      row.add(sharp(this, -330, -12, b.name, { fontFamily: F, fontSize: '12px',
-        color: has ? '#6fcf6f' : (canBuy ? '#e8f0e6' : '#777') }).setOrigin(0, 0.5));
-      row.add(sharp(this, -330, 12, b.desc, { fontFamily: F, fontSize: '9px', color: '#93a89a' }).setOrigin(0, 0.5));
-      row.add(sharp(this, 330, 0, has ? 'COMPRADA' : `${b.cost} 💰`, { fontFamily: F, fontSize: '12px',
-        color: has ? '#6fcf6f' : (canBuy ? '#d9b25c' : '#666') }).setOrigin(1, 0.5));
+      row.add(sharp(this, -340, -12, b.name, {
+        fontFamily: F, fontSize: '15px', fontStyle: 'bold',
+        color: has ? '#6fcf6f' : (canBuy ? '#e8f0e6' : '#777'),
+      }).setOrigin(0, 0.5));
+      row.add(sharp(this, -340, 12, b.desc, { fontFamily: F, fontSize: '12px', color: '#93a89a' }).setOrigin(0, 0.5));
+      row.add(sharp(this, 340, 0, has ? 'COMPRADA' : `${b.cost} 💰`, {
+        fontFamily: F, fontSize: '15px', fontStyle: 'bold',
+        color: has ? '#6fcf6f' : (canBuy ? '#d9b25c' : '#666'),
+      }).setOrigin(1, 0.5));
       panel.add(row);
       if (canBuy) {
         bg.setInteractive({ useHandCursor: true });
@@ -210,9 +216,9 @@ export class MenuScene extends Phaser.Scene {
           }
         });
       }
-      y += 60;
+      y += 66;
     }
-    const close = sharp(this, 0, 245, 'FECHAR', { fontFamily: F, fontSize: '13px', color: '#d9b25c' })
+    const close = sharp(this, 0, 260, 'FECHAR', { fontFamily: F, fontSize: '16px', fontStyle: 'bold', color: '#d9b25c' })
                   .setOrigin(0.5).setInteractive({ useHandCursor: true });
     close.on('pointerdown', () => {
       overlay.destroy(); panel.destroy();
