@@ -71,10 +71,11 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     this.dmg = 0;
     this.element = 'fire';
     this.behavior = 'boomerang';
-    this.phase = 'out';      // 'out' | 'back'
-    this.outSpeed = 320;
+    this.phase = 'out';
+    this.outSpeed = 520;     // alcance maior (era 320)
+    this.decel = 320;        // desacelera mais devagar (era 600)
     this.deadline = 0;
-    this.lastHit = new Map();   // enemy -> time (evita re-hit instantâneo)
+    this.lastHit = new Map();
   }
 
   fire(x, y, dirX, dirY, dmg) {
@@ -83,8 +84,11 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     this.body.enable = true;
     this.dmg = dmg;
     this.phase = 'out';
-    this.deadline = this.scene.time.now + 2200;
-    this.body.setVelocity(dirX * this.outSpeed, dirY * this.outSpeed);
+    // Alcance escala com passiva de Area do player
+    const areaMult = this.scene.player?.areaMult ?? 1;
+    const sp = this.outSpeed * Math.sqrt(areaMult);
+    this.deadline = this.scene.time.now + 3800;
+    this.body.setVelocity(dirX * sp, dirY * sp);
     this.lastHit.clear();
   }
 
@@ -111,15 +115,14 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     if (!owner) { this.kill(); return; }
 
     if (this.phase === 'out') {
-      // Desacelera. Quando velocidade fica baixa, vira pra fase 'back'.
       const vx = this.body.velocity.x, vy = this.body.velocity.y;
       const speed = Math.hypot(vx, vy);
       if (speed > 0) {
-        const decel = 600 * (dt / 1000);
-        const newSp = Math.max(0, speed - decel);
+        const d = this.decel * (dt / 1000);
+        const newSp = Math.max(0, speed - d);
         this.body.setVelocity((vx / speed) * newSp, (vy / speed) * newSp);
       }
-      if (speed < 60) this.phase = 'back';
+      if (speed < 80) this.phase = 'back';
     } else {
       // Persegue player com aceleração crescente
       const dx = owner.x - this.x, dy = owner.y - this.y;
