@@ -372,28 +372,46 @@ export class TutorialScene extends Phaser.Scene {
     const barLbl = sharp(this, cx, aY + 100, '', { fontFamily: F, fontSize: '11px', fontStyle: 'bold', color: '#ffffff', stroke: '#000', strokeThickness: 2 }).setOrigin(0.5);
     c.add(barBg); c.add(barFill); c.add(barLbl);
 
-    // Spawn CONTÍNUO de inimigos no demo (igual horda real)
+    // ARENA bounds — inimigos só dentro da área verde do despertar
+    const aMinX = cx - 380, aMaxX = cx + 380;
+    const aMinY = aY - 110, aMaxY = aY + 110;
+
+    // Spawn CONTÍNUO no semicírculo à direita do player, CLAMPED na arena
     const MAX_ALIVE = 6;
     const SPAWN_EVERY_MS = 700;
     const spawnOne = () => {
       if (!this.enemyPool) return;
       if (this.enemyPool.size >= MAX_ALIVE) return;
-      // Spawna em arco à direita do player, dentro do raio do Cajado
-      const angle = (Math.random() - 0.5) * Math.PI * 0.9; // -80° a +80° à direita
-      const dist = 200 + Math.random() * 60;
-      const x = heroX + Math.cos(angle) * dist;
-      const y = heroY + Math.sin(angle) * dist;
-      const e = this.enemyPool.acquire();
-      e.activate(x, y, 'wolf', 0);
-      e.speed = 45;
+      // Tenta até 8x achar uma posição dentro da arena
+      for (let tries = 0; tries < 8; tries++) {
+        const angle = (Math.random() - 0.5) * Math.PI * 0.9;
+        const dist = 200 + Math.random() * 60;
+        const x = heroX + Math.cos(angle) * dist;
+        const y = heroY + Math.sin(angle) * dist;
+        if (x >= aMinX + 20 && x <= aMaxX - 20 && y >= aMinY + 20 && y <= aMaxY - 20) {
+          const e = this.enemyPool.acquire();
+          this.tweens.killTweensOf(e);
+          e.setAlpha(1).setScale(GAME.PIXEL_SCALE);
+          e.activate(x, y, 'wolf', 0);
+          e.speed = 45;
+          return;
+        }
+      }
     };
-    // Spawn 3 imediatos pra demo começar rapido
     for (let i = 0; i < 3; i++) spawnOne();
     this._demoTimers.push(this.time.addEvent({ delay: SPAWN_EVERY_MS, loop: true, callback: spawnOne }));
 
-    // Tick handler
+    // Tick handler com clamp dos inimigos dentro da arena
     const tick = (time, dt) => {
       this._runDemoTick(time, dt);
+      if (this.enemyPool) {
+        this.enemyPool.forEachActive(e => {
+          if (e.x < aMinX) e.x = aMinX;
+          if (e.x > aMaxX) e.x = aMaxX;
+          if (e.y < aMinY) e.y = aMinY;
+          if (e.y > aMaxY) e.y = aMaxY;
+        });
+      }
 
       // (spawn é via timer; não precisa respawn aqui)
 
@@ -497,27 +515,31 @@ export class TutorialScene extends Phaser.Scene {
       }
     };
 
-    // SPAWN CONTÍNUO — horda chegando dos lados (como jogo real)
-    const MAX_ALIVE = 5;
+    // SPAWN CONTÍNUO — mais inimigos (era 5, vai pra 9)
+    const MAX_ALIVE = 9;
     const spawnEnemy = () => {
       if (!this.enemyPool || this.enemyPool.size >= MAX_ALIVE) return;
-      // Spawna em ring 150-200px do player, dentro da arena
-      const angle = Math.random() * Math.PI * 2;
-      const dist = 150 + Math.random() * 50;
-      let x = heroX + Math.cos(angle) * dist;
-      let y = heroY + Math.sin(angle) * dist;
-      x = Math.max(arenaMinX + 20, Math.min(arenaMaxX - 20, x));
-      y = Math.max(arenaMinY + 20, Math.min(arenaMaxY - 20, y));
-      const e = this.enemyPool.acquire();
-      this.tweens.killTweensOf(e);
-      e.setAlpha(1).setScale(GAME.PIXEL_SCALE);
-      e.activate(x, y, 'wolf', 0);
-      e.speed = 35; // chase lento pra demo
+      // Tenta até 10x achar posição válida na arena
+      for (let tries = 0; tries < 10; tries++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 140 + Math.random() * 70;
+        const x = heroX + Math.cos(angle) * dist;
+        const y = heroY + Math.sin(angle) * dist;
+        if (x >= arenaMinX + 20 && x <= arenaMaxX - 20 &&
+            y >= arenaMinY + 20 && y <= arenaMaxY - 20) {
+          const e = this.enemyPool.acquire();
+          this.tweens.killTweensOf(e);
+          e.setAlpha(1).setScale(GAME.PIXEL_SCALE);
+          e.activate(x, y, 'wolf', 0);
+          e.speed = 38;
+          return;
+        }
+      }
     };
 
-    // 4 iniciais + timer contínuo
-    for (let i = 0; i < 4; i++) spawnEnemy();
-    this._demoTimers.push(this.time.addEvent({ delay: 900, loop: true, callback: spawnEnemy }));
+    // 6 iniciais + timer mais rápido (600ms)
+    for (let i = 0; i < 6; i++) spawnEnemy();
+    this._demoTimers.push(this.time.addEvent({ delay: 600, loop: true, callback: spawnEnemy }));
 
     // Ciclo de combos de armas (não mexe nos inimigos!)
     const demos = [
