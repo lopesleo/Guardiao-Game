@@ -1,11 +1,12 @@
 // Inimigos: Morcego, Corvo, Goblin (atira) + Boss (D3).
 import { ENEMY, GAME, COLORS } from '../config.js';
 
+// Frames mapeados pelo catálogo Pimen Tiny Creatures (10 cols, 180 frames).
 const FRAMES = {
-  WOLF:   132,   // Morcego
-  CROW:   140,   // pássaro pequeno
-  GOBLIN: 10,    // goblin verde
-  BOSS:   65,    // ent
+  WOLF:   130,   // Morcego Gigante
+  CROW:   136,   // Corvo voando
+  GOBLIN: 10,    // Goblin verde
+  BOSS:   114,   // Ent Carvalho - árvore-criatura ancestral
 };
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
