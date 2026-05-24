@@ -146,10 +146,60 @@ export class GameScene extends Phaser.Scene {
 
   _drawGround() {
     const r = GAME.WORLD_RADIUS;
+    const TS = 16 * GAME.PIXEL_SCALE;
     this.cameras.main.setBackgroundColor(0x4a7a3a);
-    // Grama base (frame 1 = grama com tufos, mais textura que frame 0)
+
+    // Grama base (frame 1 = grama com tufos)
     this.add.tileSprite(0, 0, r * 2, r * 2, 'town_tiles', 1)
             .setOrigin(0.5).setScale(GAME.PIXEL_SCALE).setDepth(-100);
+
+    // Single-tile decorações: arbustos, cogumelos, pedras, saco, colmeia, tora
+    const SINGLE = [
+      { f: 5,  weight: 4 },   // arbusto pequeno verde
+      { f: 17, weight: 4 },   // arbusto mini
+      { f: 29, weight: 3 },   // cogumelos vermelhos
+      { f: 43, weight: 2 },   // laje pedra
+      { f: 93, weight: 1 },   // saco
+      { f: 129, weight: 1 },  // tora
+    ];
+    const pickWeighted = arr => {
+      const total = arr.reduce((s, x) => s + x.weight, 0);
+      let r2 = Math.random() * total;
+      for (const x of arr) { r2 -= x.weight; if (r2 <= 0) return x.f; }
+      return arr[0].f;
+    };
+
+    // Áreas de exclusão: centro (spawn do player) e raio de spawn de inimigos
+    const isClear = (x, y) => (x * x + y * y) > (200 * 200);
+
+    for (let i = 0; i < 220; i++) {
+      const x = (Math.random() - 0.5) * r * 1.85;
+      const y = (Math.random() - 0.5) * r * 1.85;
+      if (!isClear(x, y)) continue;
+      const f = pickWeighted(SINGLE);
+      this.add.image(x, y, 'town_tiles', f)
+              .setScale(GAME.PIXEL_SCALE).setDepth(y);
+    }
+
+    // Árvores 2-tile (top + bottom colados; pé fica em y)
+    const TREES = [
+      [3, 15],  // laranja A
+      [4, 16],  // laranja B
+      [6, 18],  // pinheiro
+      [7, 19],  // carvalho
+      [9, 21],  // laranja grande
+    ];
+    for (let i = 0; i < 60; i++) {
+      const ang = Math.random() * Math.PI * 2;
+      const rad = 280 + Math.random() * (r - 360);
+      const x = Math.cos(ang) * rad;
+      const y = Math.sin(ang) * rad;
+      if (!isClear(x, y)) continue;
+      const [top, bot] = TREES[Math.floor(Math.random() * TREES.length)];
+      // bottom em y, top acima
+      this.add.image(x, y,        'town_tiles', bot).setScale(GAME.PIXEL_SCALE).setDepth(y);
+      this.add.image(x, y - TS,   'town_tiles', top).setScale(GAME.PIXEL_SCALE).setDepth(y);
+    }
   }
 
   _showOnboarding() {
