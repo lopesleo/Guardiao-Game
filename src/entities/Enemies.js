@@ -1,5 +1,5 @@
 // Inimigos: Morcego, Corvo, Goblin (atira) + Boss (D3).
-import { ENEMY, GAME, COLORS, ELITE } from '../config.js';
+import { ENEMY, GAME, COLORS, ELITE, MIMIC } from '../config.js';
 
 // Frames mapeados pelo catálogo Pimen Tiny Creatures (10 cols, 180 frames).
 // IMPORTANTE: Phaser usa 0-indexed. Catálogo do pack é 1-indexed -> subtrai 1.
@@ -63,8 +63,14 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.speed = ENEMY.SPEED_WOLF;
     }
 
-    // Elite: maior, mais HP, tint vermelho
-    if (elite) {
+    // Elite ('elite' string) ou mimic ('mimic')
+    if (elite === 'mimic') {
+      this.setScale(GAME.PIXEL_SCALE * MIMIC.SCALE_MULT);
+      this.maxHp *= MIMIC.HP_MULT;
+      this.hp = this.maxHp;
+      this.dmg *= MIMIC.DMG_MULT;
+      this.setTint(MIMIC.TINT);
+    } else if (elite) {
       this.setScale(GAME.PIXEL_SCALE * ELITE.SCALE_MULT);
       this.maxHp *= ELITE.HP_MULT;
       this.hp = this.maxHp;

@@ -124,16 +124,20 @@ export const DROPS = {
   AWAKEN_REFILL: 25,
 };
 
-// Baús (lootboxes)
+// Baús (lootboxes) — animação real entre frames + mecânica mimic
 export const CHEST = {
   SPRITE_TEXTURE: 'dungeon_tiles',
-  SPRITE_FRAME_CLOSED: 41,     // frame do dungeon (baú vermelho com gema)
+  SPRITE_FRAME_CLOSED: 89,     // baú fechado
+  SPRITE_FRAME_HALF:   90,     // semi-aberto (frame intermediário)
+  SPRITE_FRAME_OPEN:   91,     // totalmente aberto
+  SPRITE_FRAME_MIMIC:  92,     // baú-mímico (com língua)
   INTERACT_RADIUS: 50,
-  STARTING_COUNT: 5,           // spawnam no início da run
-  KILL_DROP_EVERY: 50,         // a cada 50 kills, 1 baú extra aparece
-  // chances de tipo de loot
-  TRAP_CHANCE: 0.15,
-  GOLDEN_CHANCE: 0.05,
+  STARTING_COUNT: 5,
+  KILL_DROP_EVERY: 50,
+  // chances de tipo de loot (somam até 100%, resto = normal)
+  TRAP_CHANCE: 0.12,           // 12% — 4 inimigos elite
+  GOLDEN_CHANCE: 0.06,         // 6% — jackpot
+  MIMIC_CHANCE: 0.07,          // 7% — 1 mímico super forte
   // base loot (sempre)
   GEMS_MIN: 4, GEMS_MAX: 8,
   COINS_MIN: 2, COINS_MAX: 5,
@@ -150,6 +154,14 @@ export const ELITE = {
   HP_MULT: 2.0,
   SCALE_MULT: 1.4,
   TINT: 0xff6666,
+};
+
+// Mímico (chest com língua) — inimigo único super forte
+export const MIMIC = {
+  HP_MULT: 4.0,        // 4x HP
+  SCALE_MULT: 1.7,
+  DMG_MULT: 2.0,
+  TINT: 0xff3333,
 };
 
 // Meta-progressão

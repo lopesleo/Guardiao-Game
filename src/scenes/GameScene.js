@@ -569,7 +569,6 @@ export class GameScene extends Phaser.Scene {
       // Carta extra grátis
       this.time.delayedCall(burstDelay + 1200, () => this.events.emit('player:levelup', this.player.level));
     } else if (kind === 'trap') {
-      // ALARME: creak sinistro + rugido + shake
       this.time.delayedCall(burstDelay, () => {
         this.sound.play('sfx_chest_trap', { volume: 0.8 });
         this.sound.play('sfx_boss_roar', { volume: 0.5, rate: 0.7 });
@@ -584,9 +583,26 @@ export class GameScene extends Phaser.Scene {
         const sx = x + Math.cos(ang) * 60;
         const sy = y + Math.sin(ang) * 60;
         const e = this.enemyPool.acquire();
-        const kind = types[Math.floor(Math.random() * types.length)];
-        e.activate(sx, sy, kind, wave, true);
+        const k = types[Math.floor(Math.random() * types.length)];
+        e.activate(sx, sy, k, wave, true);
       }
+    } else if (kind === 'mimic') {
+      // MÍMICO: 1 inimigo super forte spawna no LOCAL do baú
+      this.time.delayedCall(burstDelay, () => {
+        this.sound.play('sfx_chest_trap', { volume: 1.0, rate: 0.6 });
+        this.sound.play('sfx_boss_roar', { volume: 0.7, rate: 0.85 });
+        this.cameras.main.shake(450, 0.025);
+        this.cameras.main.flash(150, 200, 40, 40);
+      });
+      this._toast('☠ MÍMICO! ☠', 1800);
+      const wave = Math.floor(this.elapsedMs / 30000);
+      const types = ['goblin', 'wolf'];
+      this.time.delayedCall(burstDelay + 200, () => {
+        if (this.enemyPool.size >= GAME.MAX_ENEMIES_ALIVE) return;
+        const e = this.enemyPool.acquire();
+        const k = types[Math.floor(Math.random() * types.length)];
+        e.activate(x, y, k, wave, 'mimic');
+      });
     } else {
       // Normal: pequeno dingdong de moedas
       this.time.delayedCall(burstDelay, () => {

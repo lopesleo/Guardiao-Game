@@ -1,4 +1,4 @@
-// Baú lootbox. Encosta no player → fica destacado → E abre.
+// Baú lootbox com animação real (closed → half → open) e mecânica mímico.
 import { CHEST, COLORS, GAME } from '../config.js';
 
 export class Chest extends Phaser.GameObjects.Container {
@@ -6,12 +6,9 @@ export class Chest extends Phaser.GameObjects.Container {
     super(scene, x, y);
     scene.add.existing(this);
 
-    // Glow dourado pulsante (só visível quando player perto)
     this.glow = scene.add.circle(0, 0, 28, COLORS.GOLD, 0.4).setVisible(false);
-    // Sprite do baú
     this.sprite = scene.add.image(0, 0, CHEST.SPRITE_TEXTURE, CHEST.SPRITE_FRAME_CLOSED)
                        .setScale(GAME.PIXEL_SCALE);
-    // Prompt "[E] ABRIR" acima do baú (escondido por padrão)
     this.prompt = scene.add.text(0, -38, '[E] ABRIR', {
       fontFamily: 'Press Start 2P, monospace',
       fontSize: '10px', color: '#ffd96b',
@@ -19,7 +16,7 @@ export class Chest extends Phaser.GameObjects.Container {
     }).setOrigin(0.5).setVisible(false);
 
     this.add([this.glow, this.sprite, this.prompt]);
-    this.setDepth(y + 9500); // logo abaixo de entidades pra não cobrir player
+    this.setDepth(y + 9500);
 
     this.opened = false;
     this.playerNear = false;
@@ -44,36 +41,37 @@ export class Chest extends Phaser.GameObjects.Container {
     if (this.opened) return null;
     this.opened = true;
     this.prompt.setVisible(false);
+    this.glow.setVisible(false);
 
-    // Determina tipo de loot
+    // Determina tipo
     const r = Math.random();
     let kind;
-    if (r < CHEST.GOLDEN_CHANCE)                       kind = 'golden';
-    else if (r < CHEST.GOLDEN_CHANCE + CHEST.TRAP_CHANCE) kind = 'trap';
-    else                                                kind = 'normal';
+    if (r < CHEST.GOLDEN_CHANCE)                                                   kind = 'golden';
+    else if (r < CHEST.GOLDEN_CHANCE + CHEST.MIMIC_CHANCE)                         kind = 'mimic';
+    else if (r < CHEST.GOLDEN_CHANCE + CHEST.MIMIC_CHANCE + CHEST.TRAP_CHANCE)     kind = 'trap';
+    else                                                                           kind = 'normal';
 
-    // Animação: escala yoyo + flash branco
     const sc = this.scene;
-    sc.tweens.add({ targets: this.sprite, scaleX: GAME.PIXEL_SCALE * 1.5, scaleY: GAME.PIXEL_SCALE * 0.6, duration: 120, yoyo: true });
 
-    if (kind === 'golden') {
-      // halo dourado intenso
-      const halo = sc.add.circle(this.x, this.y, 12, COLORS.GOLD, 0.9).setDepth(this.depth);
-      sc.tweens.add({ targets: halo, radius: 120, alpha: 0, duration: 700, onComplete: () => halo.destroy() });
-      sc.cameras.main.flash(250, 240, 200, 80);
-    } else if (kind === 'trap') {
-      // halo vermelho de aviso
-      const halo = sc.add.circle(this.x, this.y, 12, 0xff5a6e, 0.9).setDepth(this.depth);
-      sc.tweens.add({ targets: halo, radius: 100, alpha: 0, duration: 500, onComplete: () => halo.destroy() });
-      sc.cameras.main.shake(200, 0.015);
+    if (kind === 'mimic') {
+      // Mímico! Sprite vira chest com língua imediatamente, scale jump
+      this.sprite.setFrame(CHEST.SPRITE_FRAME_MIMIC);
+      sc.tweens.add({
+        targets: this.sprite,
+        scaleX: GAME.PIXEL_SCALE * 1.8, scaleY: GAME.PIXEL_SCALE * 1.4,
+        duration: 250, yoyo: true,
+      });
+      sc.cameras.main.shake(350, 0.022);
     } else {
-      // halo dourado leve
-      const halo = sc.add.circle(this.x, this.y, 12, COLORS.GOLD, 0.7).setDepth(this.depth);
-      sc.tweens.add({ targets: halo, radius: 80, alpha: 0, duration: 500, onComplete: () => halo.destroy() });
+      // Animação real: 89 → 90 → 91
+      sc.time.delayedCall(120, () => this.sprite.setFrame(CHEST.SPRITE_FRAME_HALF));
+      sc.time.delayedCall(240, () => this.sprite.setFrame(CHEST.SPRITE_FRAME_OPEN));
+      sc.tweens.add({
+        targets: this.sprite,
+        scaleX: GAME.PIXEL_SCALE * 1.2, scaleY: GAME.PIXEL_SCALE * 0.95,
+        duration: 120, yoyo: true,
+      });
     }
-
-    // Fade do baú vazio
-    sc.tweens.add({ targets: [this.sprite, this.glow], alpha: 0.3, duration: 200 });
 
     return { kind, x: this.x, y: this.y };
   }
