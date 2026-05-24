@@ -73,10 +73,12 @@ export class TutorialScene extends Phaser.Scene {
     if (this.pageContainer) {
       if (this._demoTimers) this._demoTimers.forEach(t => t.remove());
       if (this._demoTweens) this._demoTweens.forEach(t => t.stop());
+      if (this._demoTickHandler) this.events.off('update', this._demoTickHandler);
       this.pageContainer.destroy(true);
     }
     this._demoTimers = [];
     this._demoTweens = [];
+    this._demoTickHandler = null;
     this.pageContainer = this.add.container(0, 0);
     this.pages[this.pageIdx]();
   }
@@ -177,7 +179,7 @@ export class TutorialScene extends Phaser.Scene {
   }
 
   // ============================================================
-  // PÁGINA 2 — Despertar + DASH com demo animado
+  // PÁGINA 2 — Despertar (player atacando + berserker) + Dash
   // ============================================================
   _pageAwakenDash() {
     const c = this.pageContainer;
@@ -187,81 +189,189 @@ export class TutorialScene extends Phaser.Scene {
       fontFamily: F, fontSize: '22px', fontStyle: 'bold', color: '#ffd96b',
     }).setOrigin(0.5));
 
-    // ===== DESPERTAR (barra enchendo) =====
-    c.add(this.add.rectangle(cx, 175, 800, 90, 0x0a1410, 0.85).setStrokeStyle(2, 0xd9b25c, 0.6));
-    c.add(sharp(this, cx - 380, 150, '★  R · DESPERTAR', {
-      fontFamily: F, fontSize: '17px', fontStyle: 'bold', color: '#ffd96b',
+    // ===== DASH DEMO (faixa superior) =====
+    const dashY = 160;
+    c.add(this.add.rectangle(cx, dashY, 800, 95, 0x0a1410, 0.85).setStrokeStyle(2, 0xd9b25c, 0.6));
+    c.add(this.add.tileSprite(cx - 220, dashY, 360, 75, 'town_tiles', 0).setOrigin(0.5).setAlpha(0.45));
+    c.add(sharp(this, cx + 30, dashY - 22, '⚡ SHIFT · DASH', {
+      fontFamily: F, fontSize: '16px', fontStyle: 'bold', color: '#ffd96b',
     }));
-    c.add(sharp(this, cx - 380, 178,
-      'Enche matando inimigos e disparando reações. Cheio → R = berserker 6s.',
-      { fontFamily: F, fontSize: '13px', color: '#e8f0e6', wordWrap: { width: 760 } }
-    ));
-    const awBg = this.add.rectangle(cx, 210, 600, 18, 0x000000, 0.6).setStrokeStyle(1, 0xd9b25c, 0.7);
-    const awFill = this.add.rectangle(cx - 298, 210, 0, 12, 0xd9b25c).setOrigin(0, 0.5);
-    c.add(awBg); c.add(awFill);
-    const tw1 = this.tweens.add({ targets: awFill, width: 594, duration: 2000, repeat: -1, yoyo: false,
-      onUpdate: () => { awFill.fillColor = awFill.width > 580 ? 0xffe88a : 0xd9b25c; },
-      onRepeat: () => { awFill.width = 0; },
-    });
-    this._demoTweens.push(tw1);
+    c.add(sharp(this, cx + 30, dashY + 2, 'Esquiva 280ms invul · CD 4s', { fontFamily: F, fontSize: '12px', color: '#e8f0e6' }));
+    c.add(sharp(this, cx + 30, dashY + 22, 'Use SHIFT ou SPACE', { fontFamily: F, fontSize: '11px', color: '#93a89a' }));
 
-    // ===== DASH (demo real com trilha) =====
-    c.add(this.add.rectangle(cx, 360, 800, 180, 0x0a1410, 0.85).setStrokeStyle(2, 0xd9b25c, 0.6));
-    c.add(this.add.tileSprite(cx, 360, 780, 160, 'town_tiles', 0).setOrigin(0.5).setAlpha(0.5));
-
-    c.add(sharp(this, cx - 380, 290, '⚡  SHIFT · DASH', {
-      fontFamily: F, fontSize: '17px', fontStyle: 'bold', color: '#ffd96b',
-    }));
-    c.add(sharp(this, cx - 380, 318,
-      'Esquiva rápida com 280ms de invulnerabilidade. CD 4s.',
-      { fontFamily: F, fontSize: '13px', color: '#e8f0e6' }
-    ));
-
-    // Hero que dasha repetidamente
-    const dashHero = this.add.image(cx - 250, 380, 'dungeon_tiles', 84).setScale(GAME.PIXEL_SCALE * 1.4);
+    const dashHero = this.add.image(cx - 360, dashY, 'dungeon_tiles', 84).setScale(GAME.PIXEL_SCALE * 1.3);
     c.add(dashHero);
-
-    // Tecla SHIFT pisca durante o dash
-    const shiftBox = this.add.rectangle(cx - 250, 330, 88, 30, 0x1a2820, 1).setStrokeStyle(2, 0xd9b25c, 0.6);
-    const shiftLbl = sharp(this, cx - 250, 330, 'SHIFT', { fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: '#e8f0e6' }).setOrigin(0.5);
+    const shiftBox = this.add.rectangle(cx - 220, dashY - 28, 70, 24, 0x1a2820, 1).setStrokeStyle(2, 0xd9b25c, 0.6);
+    const shiftLbl = sharp(this, cx - 220, dashY - 28, 'SHIFT', { fontFamily: F, fontSize: '12px', fontStyle: 'bold', color: '#e8f0e6' }).setOrigin(0.5);
     c.add(shiftBox); c.add(shiftLbl);
 
     const dashStep = () => {
-      // pisca SHIFT
       shiftBox.setFillStyle(0xffd96b); shiftLbl.setColor('#0a1410');
       this.time.delayedCall(150, () => { shiftBox.setFillStyle(0x1a2820); shiftLbl.setColor('#e8f0e6'); });
-      // ghosts trail
       for (let i = 0; i < 4; i++) {
         this.time.delayedCall(i * 35, () => {
           const ghost = this.add.image(dashHero.x, dashHero.y, 'dungeon_tiles', 84)
-                            .setScale(GAME.PIXEL_SCALE * 1.4).setAlpha(0.5);
-          ghost.setFlipX(dashHero.flipX);
+                            .setScale(GAME.PIXEL_SCALE * 1.3).setAlpha(0.5);
           c.add(ghost);
           this.tweens.add({ targets: ghost, alpha: 0, duration: 250, onComplete: () => ghost.destroy() });
         });
       }
-      // movimenta hero rápido pra direita
       this._demoTweens.push(this.tweens.add({
-        targets: dashHero, x: cx + 250, duration: 180, ease: 'Cubic.easeOut',
-        onComplete: () => {
-          this.time.delayedCall(800, () => {
-            dashHero.x = cx - 250; // reset
-          });
-        },
+        targets: dashHero, x: cx - 100, duration: 180, ease: 'Cubic.easeOut',
+        onComplete: () => this.time.delayedCall(800, () => { dashHero.x = cx - 360; }),
       }));
     };
     dashStep();
     this._demoTimers.push(this.time.addEvent({ delay: 2200, loop: true, callback: dashStep }));
 
-    // Rodapé
-    c.add(sharp(this, cx, 470,
-      'Bênção "Sopro do Vento" reduz cooldown do dash em 30%.',
-      { fontFamily: F, fontSize: '12px', color: '#93a89a', align: 'center' }
-    ).setOrigin(0.5));
+    // ===== DESPERTAR DEMO REAL (faixa principal) =====
+    const aY = 360;
+    c.add(this.add.rectangle(cx, aY, 800, 240, 0x0a1410, 0.85).setStrokeStyle(2, 0xffd96b, 0.7));
+    c.add(this.add.tileSprite(cx, aY, 780, 220, 'town_tiles', 0).setOrigin(0.5).setAlpha(0.45));
+
+    c.add(sharp(this, cx - 380, aY - 105, '★  R · DESPERTAR', {
+      fontFamily: F, fontSize: '16px', fontStyle: 'bold', color: '#ffd96b',
+    }));
+    c.add(sharp(this, cx - 380, aY - 85, 'Encha o medidor matando. R = berserker 6s (2.5× ataque).', {
+      fontFamily: F, fontSize: '12px', color: '#e8f0e6',
+    }));
+
+    // Player na esquerda
+    const heroX = cx - 280, heroY = aY + 20;
+    const hero = this.add.image(heroX, heroY, 'dungeon_tiles', 84).setScale(GAME.PIXEL_SCALE * 1.4);
+    const heroGlow = this.add.circle(heroX, heroY, 32, 0xffd96b, 0).setDepth(hero.depth - 1);
+    c.add(heroGlow); c.add(hero);
+
+    // Tecla R
+    const rBox = this.add.rectangle(heroX, heroY - 50, 36, 36, 0x1a2820, 1).setStrokeStyle(2, 0xd9b25c, 0.6);
+    const rLbl = sharp(this, heroX, heroY - 50, 'R', { fontFamily: F, fontSize: '16px', fontStyle: 'bold', color: '#e8f0e6' }).setOrigin(0.5);
+    c.add(rBox); c.add(rLbl);
+
+    // Bar de Despertar abaixo da arena
+    const barW = 600;
+    const barBg = this.add.rectangle(cx, aY + 100, barW, 14, 0x000000, 0.7).setStrokeStyle(1, 0xd9b25c, 0.7);
+    const barFill = this.add.rectangle(cx - barW/2 + 2, aY + 100, 0, 10, 0xd9b25c).setOrigin(0, 0.5);
+    const barLbl = sharp(this, cx, aY + 100, '', { fontFamily: F, fontSize: '11px', fontStyle: 'bold', color: '#ffffff', stroke: '#000', strokeThickness: 2 }).setOrigin(0.5);
+    c.add(barBg); c.add(barFill); c.add(barLbl);
+
+    // Estado do demo
+    const state = { meter: 0, awakening: false, awakenUntil: 0, attackCd: 800, lastAttack: 0, enemies: [] };
+
+    const respawnEnemies = () => {
+      // limpa
+      state.enemies.forEach(e => e.sprite?.destroy());
+      state.enemies = [];
+      for (let i = 0; i < 4; i++) {
+        const ex = cx + 60 + (i % 2) * 80;
+        const ey = aY - 30 + Math.floor(i / 2) * 60;
+        const sp = this.add.image(ex + 100, ey, 'creatures', 139).setScale(GAME.PIXEL_SCALE * 1.0).setAlpha(0);
+        c.add(sp);
+        this.tweens.add({ targets: sp, x: ex, alpha: 1, duration: 350, delay: i * 60 });
+        // bobbing
+        const tw = this.tweens.add({ targets: sp, y: ey - 4, duration: 700 + i * 100, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        this._demoTweens.push(tw);
+        state.enemies.push({ sprite: sp, hp: 2 });
+      }
+    };
+    respawnEnemies();
+
+    // Função: player ataca o inimigo vivo mais próximo
+    const attackNearest = () => {
+      const alive = state.enemies.filter(e => e.hp > 0 && e.sprite.active);
+      if (alive.length === 0) {
+        // todos mortos → respawna
+        this.time.delayedCall(400, () => respawnEnemies());
+        return;
+      }
+      const t = alive[0];
+      // pequeno projétil laranja
+      const p = this.add.circle(heroX, heroY, 6, 0xff7a3c, 1).setStrokeStyle(2, 0xffe6b8, 1);
+      c.add(p);
+      this.tweens.add({
+        targets: p, x: t.sprite.x, y: t.sprite.y, duration: 220, ease: 'Linear',
+        onComplete: () => {
+          p.destroy();
+          t.hp -= 1;
+          // hit flash
+          t.sprite.setTintFill(0xffffff);
+          this.time.delayedCall(60, () => t.sprite.active && t.sprite.clearTint());
+          if (t.hp <= 0) {
+            // morre
+            this.tweens.add({ targets: t.sprite, alpha: 0, scale: GAME.PIXEL_SCALE * 0.4, duration: 180,
+              onComplete: () => t.sprite.destroy() });
+            // enche medidor
+            state.meter = Math.min(100, state.meter + 28);
+          }
+        },
+      });
+    };
+
+    // Tick de update do demo (usa scene events update event)
+    const tickHandler = () => {
+      const now = this.time.now;
+      if (now - state.lastAttack >= state.attackCd) {
+        state.lastAttack = now;
+        attackNearest();
+      }
+      if (state.awakening) {
+        if (now >= state.awakenUntil) {
+          // termina despertar
+          state.awakening = false;
+          state.attackCd = 800;
+          state.meter = 0;
+          hero.clearTint();
+          heroGlow.setFillStyle(0xffd96b, 0);
+        }
+      } else if (state.meter >= 100) {
+        // ativa despertar
+        state.awakening = true;
+        state.attackCd = 280;
+        state.awakenUntil = now + 3000;
+        hero.setTint(0xffd96b);
+        heroGlow.setFillStyle(0xffd96b, 0.45);
+        // pisca R
+        rBox.setFillStyle(0xffd96b); rLbl.setColor('#0a1410');
+        this.time.delayedCall(400, () => { rBox.setFillStyle(0x1a2820); rLbl.setColor('#e8f0e6'); });
+        // flash e shake
+        this.cameras.main.shake(150, 0.005);
+        // texto DESPERTAR
+        const txt = sharp(this, heroX, heroY - 80, '★ DESPERTAR ★', {
+          fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: '#ffd96b',
+          stroke: '#000', strokeThickness: 3,
+        }).setOrigin(0.5);
+        c.add(txt);
+        this.tweens.add({ targets: txt, y: heroY - 110, alpha: 0, duration: 800, onComplete: () => txt.destroy() });
+      }
+      // atualiza bar
+      const pct = Math.max(0, Math.min(1, state.meter / 100));
+      barFill.width = (barW - 4) * pct;
+      if (state.awakening) {
+        const remain = Math.max(0, state.awakenUntil - now);
+        barFill.fillColor = 0xffe88a;
+        barFill.width = (barW - 4) * (remain / 3000);
+        barLbl.setText(`DESPERTADO  ${(remain / 1000).toFixed(1)}s`).setColor('#ffe88a');
+      } else if (state.meter >= 100) {
+        barFill.fillColor = 0xffd96b;
+        barLbl.setText('PRESSIONE R').setColor('#ffe88a');
+      } else {
+        barFill.fillColor = 0xd9b25c;
+        barLbl.setText('').setColor('#fff');
+      }
+      // pulsa glow se acordado
+      if (state.awakening) {
+        const s = 1 + Math.sin(now / 100) * 0.2;
+        heroGlow.setScale(s);
+      } else {
+        heroGlow.setScale(1);
+      }
+    };
+
+    this._demoTickHandler = tickHandler;
+    this.events.on('update', tickHandler);
   }
 
   // ============================================================
-  // PÁGINA 3 — Reações com SOBRECARGA demo ao vivo
+  // PÁGINA 3 — TODAS as reações em ciclo (Vapor → Cristal → Sobrecarga)
   // ============================================================
   _pageReactions() {
     const c = this.pageContainer;
@@ -270,95 +380,183 @@ export class TutorialScene extends Phaser.Scene {
     c.add(sharp(this, cx, 95, '3 · Reações Elementais ★', {
       fontFamily: F, fontSize: '22px', fontStyle: 'bold', color: '#ffd96b',
     }).setOrigin(0.5));
-
     c.add(sharp(this, cx, 128,
-      'Combinar 2 elementos no mesmo inimigo = REAÇÃO automática',
-      { fontFamily: F, fontSize: '14px', color: '#e8f0e6', align: 'center' }
+      '2 elementos diferentes no mesmo inimigo = REAÇÃO automática',
+      { fontFamily: F, fontSize: '13px', color: '#e8f0e6', align: 'center' }
     ).setOrigin(0.5));
 
-    // Lista das 3 reações compacta
-    const reactions = [
-      { a: '🔥', b: '❄️', name: 'VAPOR',      desc: 'Lentifica área 3s', color: '#9ad4ff' },
-      { a: '❄️', b: '⚡', name: 'CRISTAL',    desc: 'Explosão + congela', color: '#5cc8ff' },
-      { a: '🔥', b: '⚡', name: 'SOBRECARGA', desc: 'Corrente entre 4',  color: '#d98cff' },
-    ];
-    reactions.forEach((r, i) => {
-      const y = 165 + i * 30;
-      c.add(sharp(this, cx - 280, y, `${r.a} + ${r.b}  =`, { fontFamily: F, fontSize: '14px', color: '#e8f0e6' }).setOrigin(0, 0.5));
-      c.add(sharp(this, cx - 140, y, r.name, { fontFamily: F, fontSize: '15px', fontStyle: 'bold', color: r.color }).setOrigin(0, 0.5));
-      c.add(sharp(this, cx + 50, y, r.desc, { fontFamily: F, fontSize: '12px', color: '#93a89a' }).setOrigin(0, 0.5));
-    });
+    // ARENA principal
+    const ax = cx, ay = 340;
+    const arenaBorder = this.add.rectangle(ax, ay, 820, 320, 0x0a1410, 0.88).setStrokeStyle(3, 0xd9b25c, 0.7);
+    c.add(arenaBorder);
+    c.add(this.add.tileSprite(ax, ay, 800, 300, 'town_tiles', 0).setOrigin(0.5).setAlpha(0.5));
 
-    // === DEMO ARENA: Sobrecarga ao vivo ===
-    const ax = cx, ay = 360;
-    c.add(this.add.rectangle(ax, ay, 760, 220, 0x0a1410, 0.85).setStrokeStyle(2, 0xd98cff, 0.7));
-    c.add(this.add.tileSprite(ax, ay, 740, 200, 'town_tiles', 0).setOrigin(0.5).setAlpha(0.5));
-    c.add(sharp(this, ax - 360, ay - 95, 'DEMO AO VIVO: SOBRECARGA (🔥 + ⚡)', {
-      fontFamily: F, fontSize: '13px', fontStyle: 'bold', color: '#d98cff',
-    }));
+    // Label da reação atual (topo da arena)
+    const reactionLbl = sharp(this, ax, ay - 130, '', {
+      fontFamily: F, fontSize: '18px', fontStyle: 'bold', color: '#ffd96b',
+      stroke: '#000', strokeThickness: 3,
+    }).setOrigin(0.5);
+    c.add(reactionLbl);
+    const reactionDesc = sharp(this, ax, ay - 108, '', {
+      fontFamily: F, fontSize: '12px', color: '#e8f0e6',
+    }).setOrigin(0.5);
+    c.add(reactionDesc);
 
-    // Player na esquerda do demo
-    const heroX = ax - 280, heroY = ay + 10;
-    const hero = this.add.image(heroX, heroY, 'dungeon_tiles', 84).setScale(GAME.PIXEL_SCALE * 1.2);
+    // Player na esquerda
+    const heroX = ax - 320, heroY = ay + 20;
+    const hero = this.add.image(heroX, heroY, 'dungeon_tiles', 84).setScale(GAME.PIXEL_SCALE * 1.3);
     c.add(hero);
 
-    // Função que roda um ciclo: spawn enemies → atira fogo → atira raio → trigger SOBRECARGA → reset
-    const runDemo = () => {
-      // limpa inimigos anteriores se existirem
-      if (this._demoEnemies) this._demoEnemies.forEach(e => e.destroy());
-      this._demoEnemies = [];
+    // Helpers
+    const elemColors = { fire: 0xff7a3c, ice: 0x5cc8ff, bolt: 0xd98cff };
+    const elemTints  = { fire: 0xff9966, ice: 0x9ad4ff, bolt: 0xd8a8ff };
 
-      // spawna 4 inimigos em arco
-      const enemies = [];
-      for (let i = 0; i < 4; i++) {
-        const ex = ax + 50 + i * 70;
-        const ey = ay + (i % 2 ? 30 : -30);
-        const e = this.add.image(ex + 200, ey, 'creatures', 139).setScale(GAME.PIXEL_SCALE * 1.1).setAlpha(0);
-        c.add(e); enemies.push(e);
-        // fade-in + slide-in
-        this._demoTweens.push(this.tweens.add({ targets: e, x: ex, alpha: 1, duration: 400, delay: i * 80 }));
+    const spawnEnemies = (count) => {
+      const list = [];
+      for (let i = 0; i < count; i++) {
+        const angle = (i / count) * Math.PI - Math.PI / 2;
+        const ex = ax + 60 + Math.cos(angle) * 80;
+        const ey = ay + Math.sin(angle) * 60;
+        const sp = this.add.image(ex + 150, ey, 'creatures', 139).setScale(GAME.PIXEL_SCALE * 1.1).setAlpha(0);
+        c.add(sp);
+        this.tweens.add({ targets: sp, x: ex, alpha: 1, duration: 350, delay: i * 60 });
+        list.push(sp);
       }
-      this._demoEnemies = enemies;
+      return list;
+    };
 
-      // Após 600ms: primeiro projétil de FOGO no primeiro inimigo
-      this.time.delayedCall(700, () => {
-        const target = enemies[0];
-        this._shootProjectile(heroX, heroY, target.x, target.y, 0xff7a3c, () => {
-          // status fogo: tinta laranja
-          enemies.forEach(e => e.setTint(0xff9966));
-        });
-      });
-
-      // 1100ms: projétil de RAIO no primeiro inimigo
-      this.time.delayedCall(1200, () => {
-        const target = enemies[0];
-        this._shootProjectile(heroX, heroY, target.x, target.y, 0xd98cff, () => {
-          // SOBRECARGA! desenha bolts entre todos
-          for (let i = 0; i < enemies.length - 1; i++) {
-            const a = enemies[i], b = enemies[i + 1];
-            this._drawBolt(a.x, a.y, b.x, b.y, 0xd98cff);
-          }
-          // texto SOBRECARGA flutuante
-          const txt = sharp(this, target.x, target.y - 40, 'SOBRECARGA!', {
-            fontFamily: F, fontSize: '18px', fontStyle: 'bold', color: '#ffffff',
-            stroke: '#000', strokeThickness: 4,
-          }).setOrigin(0.5).setDepth(100);
-          c.add(txt);
-          this.tweens.add({ targets: txt, y: target.y - 80, alpha: 0, duration: 900, onComplete: () => txt.destroy() });
-          // shake leve
-          this.cameras.main.shake(150, 0.005);
-          this.sound.play('sfx_levelup', { volume: 0.3, rate: 1.4, detune: 300 });
-          // inimigos somem
-          enemies.forEach((e, i) => {
-            this.time.delayedCall(i * 80, () => {
-              this.tweens.add({ targets: e, alpha: 0, scale: GAME.PIXEL_SCALE * 0.5, duration: 250 });
-            });
+    const shootAtAll = (enemies, color, onAllHit) => {
+      let hits = 0;
+      enemies.forEach((e, i) => {
+        this.time.delayedCall(i * 80, () => {
+          const p = this.add.circle(heroX, heroY, 7, color, 1).setStrokeStyle(2, 0xffe6b8, 0.8);
+          c.add(p);
+          this.tweens.add({
+            targets: p, x: e.x, y: e.y, duration: 220, ease: 'Linear',
+            onComplete: () => {
+              p.destroy();
+              hits++;
+              if (hits === enemies.length && onAllHit) onAllHit();
+            },
           });
         });
       });
     };
-    runDemo();
-    this._demoTimers.push(this.time.addEvent({ delay: 4200, loop: true, callback: runDemo }));
+
+    const reactionText = (x, y, label, color) => {
+      const t = sharp(this, x, y - 40, label, {
+        fontFamily: F, fontSize: '22px', fontStyle: 'bold', color,
+        stroke: '#000', strokeThickness: 5,
+      }).setOrigin(0.5);
+      c.add(t);
+      this.tweens.add({ targets: t, y: y - 80, alpha: 0, duration: 1000, onComplete: () => t.destroy() });
+    };
+
+    const killEnemies = (enemies) => {
+      enemies.forEach((e, i) => {
+        this.time.delayedCall(i * 70, () => {
+          if (!e.active) return;
+          this.tweens.add({ targets: e, alpha: 0, scale: GAME.PIXEL_SCALE * 0.4, duration: 220,
+            onComplete: () => e.destroy() });
+        });
+      });
+    };
+
+    // ===== Ciclo de demos =====
+    const demos = [
+      // VAPOR (fire + ice)
+      () => {
+        reactionLbl.setText('🔥 + ❄️  =  VAPOR').setColor('#9ad4ff');
+        reactionDesc.setText('Nuvem que lentifica área 3s (sem dano direto)');
+        arenaBorder.setStrokeStyle(3, 0x9ad4ff, 0.8);
+        const enemies = spawnEnemies(4);
+        this.time.delayedCall(600, () => {
+          shootAtAll(enemies, elemColors.fire, () => {
+            enemies.forEach(e => e.setTint(elemTints.fire));
+          });
+        });
+        this.time.delayedCall(1400, () => {
+          shootAtAll(enemies, elemColors.ice, () => {
+            // VAPOR: nuvem azul-clara expandindo
+            const center = enemies[Math.floor(enemies.length / 2)];
+            const cloud = this.add.circle(center.x, center.y, 30, 0xb8d4ff, 0.5).setDepth(50);
+            c.add(cloud);
+            this.tweens.add({ targets: cloud, radius: 120, alpha: 0, duration: 1500, onComplete: () => cloud.destroy() });
+            reactionText(center.x, center.y, 'VAPOR!', '#b8d4ff');
+            this.sound.play('sfx_hit', { volume: 0.35, rate: 0.6, detune: -600 });
+            // inimigos ficam azul-claros (efeito de lentidão visual)
+            enemies.forEach(e => e.setTint(0x9ad4ff));
+            // tween de wobble lento
+            enemies.forEach((e, i) => {
+              this.tweens.add({ targets: e, scaleX: GAME.PIXEL_SCALE * 0.95, scaleY: GAME.PIXEL_SCALE * 1.1,
+                                duration: 600, yoyo: true, repeat: 1, ease: 'Sine.easeInOut' });
+            });
+            this.time.delayedCall(1800, () => killEnemies(enemies));
+          });
+        });
+      },
+      // CRISTAL (ice + bolt)
+      () => {
+        reactionLbl.setText('❄️ + ⚡  =  CRISTAL ESTILHAÇADO').setColor('#5cc8ff');
+        reactionDesc.setText('Explosão em anel + congela inimigos 1s');
+        arenaBorder.setStrokeStyle(3, 0x5cc8ff, 0.8);
+        const enemies = spawnEnemies(4);
+        this.time.delayedCall(600, () => {
+          shootAtAll(enemies, elemColors.ice, () => enemies.forEach(e => e.setTint(elemTints.ice)));
+        });
+        this.time.delayedCall(1400, () => {
+          shootAtAll(enemies, elemColors.bolt, () => {
+            const center = enemies[Math.floor(enemies.length / 2)];
+            // anel expansivo
+            const ring = this.add.circle(center.x, center.y, 8, 0x5cc8ff, 0).setStrokeStyle(5, 0x5cc8ff, 1).setDepth(60);
+            c.add(ring);
+            this.tweens.add({ targets: ring, radius: 130, alpha: 0, duration: 450, onComplete: () => ring.destroy() });
+            reactionText(center.x, center.y, 'CRISTAL!', '#5cc8ff');
+            this.sound.play('sfx_pickup', { volume: 0.5, rate: 1.6, detune: 400 });
+            // congelados = tint azul forte + paradinhos
+            enemies.forEach(e => { e.setTint(0x4a9eff); this.tweens.killTweensOf(e); });
+            this.cameras.main.shake(120, 0.006);
+            this.time.delayedCall(1500, () => killEnemies(enemies));
+          });
+        });
+      },
+      // SOBRECARGA (fire + bolt)
+      () => {
+        reactionLbl.setText('🔥 + ⚡  =  SOBRECARGA').setColor('#d98cff');
+        reactionDesc.setText('Corrente elétrica salta entre 4 inimigos');
+        arenaBorder.setStrokeStyle(3, 0xd98cff, 0.8);
+        const enemies = spawnEnemies(4);
+        this.time.delayedCall(600, () => {
+          shootAtAll(enemies, elemColors.fire, () => enemies.forEach(e => e.setTint(elemTints.fire)));
+        });
+        this.time.delayedCall(1400, () => {
+          shootAtAll(enemies, elemColors.bolt, () => {
+            // SOBRECARGA: bolts entre inimigos em sequência
+            for (let i = 0; i < enemies.length - 1; i++) {
+              this.time.delayedCall(i * 100, () => {
+                this._drawBolt(enemies[i].x, enemies[i].y, enemies[i + 1].x, enemies[i + 1].y, 0xd98cff);
+                if (enemies[i + 1].active) {
+                  enemies[i + 1].setTintFill(0xffffff);
+                  this.time.delayedCall(80, () => enemies[i + 1].active && enemies[i + 1].clearTint());
+                }
+              });
+            }
+            reactionText(enemies[Math.floor(enemies.length / 2)].x, enemies[0].y, 'SOBRECARGA!', '#d98cff');
+            this.sound.play('sfx_levelup', { volume: 0.35, rate: 1.4, detune: 300 });
+            this.cameras.main.shake(150, 0.007);
+            this.time.delayedCall(900, () => killEnemies(enemies));
+          });
+        });
+      },
+    ];
+
+    let demoIdx = 0;
+    const runNext = () => {
+      demos[demoIdx]();
+      demoIdx = (demoIdx + 1) % demos.length;
+    };
+    runNext();
+    this._demoTimers.push(this.time.addEvent({ delay: 4500, loop: true, callback: runNext }));
   }
 
   _shootProjectile(fromX, fromY, toX, toY, color, onHit) {
