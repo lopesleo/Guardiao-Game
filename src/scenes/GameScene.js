@@ -192,9 +192,9 @@ export class GameScene extends Phaser.Scene {
       const y = Math.sin(ang) * rad;
       if (!isClear(x, y)) continue;
       const [top, bot] = TREES[Math.floor(Math.random() * TREES.length)];
-      // bottom em y, top acima
-      this.add.image(x, y,        'town_tiles', bot).setScale(GAME.PIXEL_SCALE).setDepth(y);
-      this.add.image(x, y - TS,   'town_tiles', top).setScale(GAME.PIXEL_SCALE).setDepth(y);
+      // bottom em y, top acima. Mesmo offset +10000 do player pra sort consistente.
+      this.add.image(x, y,        'town_tiles', bot).setScale(GAME.PIXEL_SCALE).setDepth(y + 10000);
+      this.add.image(x, y - TS,   'town_tiles', top).setScale(GAME.PIXEL_SCALE).setDepth(y + 10000);
     }
   }
 

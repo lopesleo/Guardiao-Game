@@ -77,7 +77,7 @@ export const WEAPONS = {
   STAFF:    { name: 'Cajado',           element: 'fire', baseDmg: 8,  cooldown: 800,  range: 280, projSpeed: 320 },
   AURA:     { name: 'Aura Gélida',      element: 'ice',  baseDmg: 3,  cooldown: 600,  range: 120 },
   BOOMER:   { name: 'Bumerangue',       element: 'fire', baseDmg: 6,  cooldown: 1400, range: 240, projSpeed: 280 },
-  CHAIN:    { name: 'Raio Encadeado',   element: 'bolt', baseDmg: 7,  cooldown: 1200, range: 220, jumps: 3 },
+  CHAIN:    { name: 'Raio Encadeado',   element: 'bolt', baseDmg: 8,  cooldown: 2200, range: 200, jumps: 3 },
   // evoluções (D12)
   VAPOR_STORM: { name: 'Tempestade de Vapor', evolvesFrom: ['STAFF','AURA'],   baseDmg: 14, cooldown: 700 },
   OVERLOAD_X:  { name: 'Sobrecarga Eterna',   evolvesFrom: ['STAFF','CHAIN'],  baseDmg: 16, cooldown: 900 },

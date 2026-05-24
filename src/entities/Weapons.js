@@ -288,7 +288,7 @@ export class ChainLightning extends Weapon {
     if (!start) return false;
     const jumps = (this.def.jumps ?? 3) + (this.owner?.extraProj ?? 0);
     const areaMult = this.owner?.areaMult ?? 1;
-    const jumpMaxSq = (220 * areaMult) * (220 * areaMult);
+    const jumpMaxSq = (140 * areaMult) * (140 * areaMult);  // saltos só em inimigos próximos
     const visited = new Set();
     let prev = this.owner;
     let cur = start;

@@ -139,7 +139,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     }
 
     this.setFlipX(dx < 0);
-    this.setDepth(this.y); // sort com player e cenário
+    this.setDepth(this.y + 10000); // sort com player e cenário
   }
 
   _shoot(target) {
@@ -215,7 +215,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     const sp = this.speed * slow;
     this.setVelocity((dx / len) * sp, (dy / len) * sp);
     this.setFlipX(dx < 0);
-    this.setDepth(this.y);
+    this.setDepth(this.y + 10000);
 
     // Especiais alternados
     if (this.phase === 1 && time - this.lastSpecialAt > 3500) {

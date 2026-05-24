@@ -15,7 +15,10 @@ export class ElementalSystem {
   constructor(scene) {
     this.scene = scene;
     this.lastTickAt = 0;
-    this.tickInterval = 100; // ms; granularidade do DoT
+    this.tickInterval = 100;
+    // Cooldown global por tipo de reação (evita spam visual quando muitas armas)
+    this.lastReactionAt = { VAPOR: 0, CRYSTAL: 0, OVERLOAD: 0 };
+    this.reactionCdMs = 350; // 1 reação do mesmo tipo a cada 350ms
   }
 
   // Chamado quando uma arma atinge um inimigo.
@@ -65,6 +68,21 @@ export class ElementalSystem {
   _trigger(enemy, reactionKey) {
     const def = REACTION[reactionKey];
     const scene = this.scene;
+
+    // Anti-spam: cooldown por TIPO de reação (não mostra texto se foi disparado <350ms atrás)
+    const now = scene.time.now;
+    const onCd = now - this.lastReactionAt[reactionKey] < this.reactionCdMs;
+    this.lastReactionAt[reactionKey] = now;
+
+    // Aplica efeito mecânico SEMPRE (dano continua), mas suprime visual se em CD
+    if (onCd) {
+      // Aplica só o efeito mecânico, sem texto/shake/SFX
+      const areaMult = scene.player?.areaMult ?? 1;
+      if      (reactionKey === 'VAPOR')    this._vapor(enemy, def, areaMult);
+      else if (reactionKey === 'CRYSTAL')  this._crystal(enemy, def, areaMult);
+      else if (reactionKey === 'OVERLOAD') this._overload(enemy, def, areaMult);
+      return;
+    }
 
     // Texto flutuante BIG (D21)
     const txt = scene.add.text(enemy.x, enemy.y - 30, def.label, {
@@ -131,13 +149,25 @@ export class ElementalSystem {
       targets: ring, radius, alpha: 0, duration: 350,
       onComplete: () => ring.destroy(),
     });
+    // Dano em área + CONGELAR (status ice 1s) os inimigos atingidos
+    const freezeUntil = scene.time.now + 1000;
     scene.enemyPool.forEachActive(e => {
       const dx = e.x - cx, dy = e.y - cy;
       if (dx * dx + dy * dy <= radius * radius) {
         const died = e.takeDamage(def.dmg, null);
-        if (died) scene._onEnemyDeath(e);
+        if (died) { scene._onEnemyDeath(e); return; }
+        // Aplica/extende ice como freeze
+        e.statuses.ice = { until: freezeUntil, def: STATUS.ICE, lastTickAt: scene.time.now };
+        this._updateTint(e);
       }
     });
+    // Boss também
+    if (scene.boss?.active) {
+      const dx = scene.boss.x - cx, dy = scene.boss.y - cy;
+      if (dx * dx + dy * dy <= radius * radius) {
+        scene.boss.statuses.ice = { until: freezeUntil, def: STATUS.ICE, lastTickAt: scene.time.now };
+      }
+    }
   }
 
   _overload(enemy, def, areaMult = 1) {

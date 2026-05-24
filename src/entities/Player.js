@@ -196,8 +196,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     // Armas (cooldown reduzido durante despertar)
     for (const w of this.weapons) w.update(time, dt);
 
-    // Depth-sort por Y (passa atrás de árvores acima dele, na frente das abaixo)
-    this.setDepth(this.y);
+    // Depth-sort por Y (offset +10000 garante sempre acima do floor deco)
+    this.setDepth(this.y + 10000);
   }
 
   // Multiplicador de cooldown final (usado por Weapon.cooldown)
