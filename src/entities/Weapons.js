@@ -152,11 +152,20 @@ export class Weapon {
     this.level = 1;
     this.lastFireAt = 0;
     this.owner = null;
+    // Modificadores acumulativos por upgrades (não só dano)
+    this.dmgMult   = 1.0;   // +X% dano
+    this.cdMult    = 1.0;   // -X% cooldown
+    this.rangeMult = 1.0;   // +X% alcance
+    this.extraProj = 0;     // +N projéteis (Staff, Chain)
   }
-  get cooldown() { return this.def.cooldown * (this.owner?.effectiveCdMult ?? this.owner?.cdMult ?? 1); }
-  get damage()   { return WEAPON_LEVEL_DMG(this.def.baseDmg, this.level) * (this.owner?._blessingDmgMult ?? 1); }
+  get cooldown() {
+    return this.def.cooldown * this.cdMult * (this.owner?.effectiveCdMult ?? this.owner?.cdMult ?? 1);
+  }
+  get damage() {
+    return this.def.baseDmg * this.dmgMult * (this.owner?._blessingDmgMult ?? 1);
+  }
+  get range() { return (this.def.range ?? 9999) * this.rangeMult; }
 
-  // Rola crítico: retorna { dmg, crit }
   rollHit() {
     const base = this.damage;
     const isCrit = Math.random() < (this.owner?.critChance ?? 0);
@@ -170,7 +179,7 @@ export class Weapon {
   _fire() { return false; }
 
   _nearestEnemyInRange() {
-    const range = this.def.range ?? 9999;
+    const range = this.range;
     const rangeSq = range * range;
     let best = null, bestSq = Infinity;
     // Inimigos normais
@@ -205,7 +214,7 @@ export class Staff extends Weapon {
     const sp = this.def.projSpeed;
     const baseAng = Math.atan2(dy, dx);
 
-    const total = 1 + (this.owner?.extraProj ?? 0);
+    const total = 1 + (this.owner?.extraProj ?? 0) + this.extraProj;
     const spread = 0.18;
     for (let i = 0; i < total; i++) {
       const offset = (i - (total - 1) / 2) * spread;
@@ -228,7 +237,8 @@ export class AuraWeapon extends Weapon {
     this.gfx = scene.add.circle(0, 0, this.def.range, COLORS.ICE, 0.15)
                     .setStrokeStyle(2, COLORS.ICE, 0.5).setDepth(40);
   }
-  get range() { return this.def.range * (this.owner?.areaMult ?? 1); }
+  // AuraWeapon sobrescreve range pra incluir areaMult do player
+  get range() { return this.def.range * this.rangeMult * (this.owner?.areaMult ?? 1); }
   update(time, dt) {
     if (this.owner) { this.gfx.setPosition(this.owner.x, this.owner.y); this.gfx.setRadius(this.range); }
     super.update(time, dt);
@@ -286,7 +296,7 @@ export class ChainLightning extends Weapon {
   _fire() {
     const start = this._nearestEnemyInRange();
     if (!start) return false;
-    const jumps = (this.def.jumps ?? 3) + (this.owner?.extraProj ?? 0);
+    const jumps = (this.def.jumps ?? 3) + (this.owner?.extraProj ?? 0) + this.extraProj;
     const areaMult = this.owner?.areaMult ?? 1;
     const jumpMaxSq = (140 * areaMult) * (140 * areaMult);  // saltos só em inimigos próximos
     const visited = new Set();

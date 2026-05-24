@@ -72,12 +72,13 @@ export class MenuScene extends Phaser.Scene {
     }
 
     // === BOTÕES — sans-serif grande e legível ===
-    const by = 390, bgap = 60;
+    const by = 380, bgap = 56;
     this._button(cx, by,            'JOGAR',         '#ffd96b', 26, true,  () => this.scene.start('GameScene'));
     this._button(cx, by + bgap,     'COMO JOGAR',    '#e8f0e6', 20, false, () => this.scene.start('TutorialScene'));
     this._button(cx, by + bgap * 2, 'BÊNÇÃOS',       '#e8f0e6', 20, false, () => this._showBlessingsMenu());
     this._button(cx, by + bgap * 3, 'DESBLOQUEAR',   '#e8f0e6', 20, false, () => this._showUnlockMenu());
     this._button(cx, by + bgap * 4, 'CRÉDITOS',      '#93a89a', 18, false, () => this.scene.start('CreditsScene'));
+    this._button(cx, by + bgap * 5, 'NOVO JOGO',     '#ff8898', 14, false, () => this._showResetConfirm());
 
     // === HINT ===
     sharp(this, cx, H - 28,
@@ -138,24 +139,27 @@ export class MenuScene extends Phaser.Scene {
     panel.add(sharp(this, 0, -150, `${this.meta.coins} moedas disponíveis`, { fontFamily: F, fontSize: '14px', color: '#e8f0e6' }).setOrigin(0.5));
 
     const items = [
-      { key: 'BOOMER', name: 'Bumerangue',     cost: META.WEAPON_UNLOCK_COST.BOOMER, ico: '🔥' },
-      { key: 'CHAIN',  name: 'Raio Encadeado', cost: META.WEAPON_UNLOCK_COST.CHAIN,  ico: '⚡' },
-      { key: 'AURA',   name: 'Aura Gélida',    cost: META.WEAPON_UNLOCK_COST.AURA,   ico: '❄' },
+      { kind: 'weapon',  key: 'BOOMER', name: 'Bumerangue',     cost: META.WEAPON_UNLOCK_COST.BOOMER,  ico: '🔥' },
+      { kind: 'weapon',  key: 'CHAIN',  name: 'Raio Encadeado', cost: META.WEAPON_UNLOCK_COST.CHAIN,   ico: '⚡' },
+      { kind: 'weapon',  key: 'AURA',   name: 'Aura Gélida',    cost: META.WEAPON_UNLOCK_COST.AURA,    ico: '❄' },
+      { kind: 'ability', key: 'DASH',   name: 'Dash (SHIFT)',   cost: META.ABILITY_UNLOCK_COST.DASH,   ico: '⚡' },
+      { kind: 'ability', key: 'AWAKEN', name: 'Despertar (R)',  cost: META.ABILITY_UNLOCK_COST.AWAKEN, ico: '★' },
     ];
-    let y = -80;
+    let y = -130;
     for (const it of items) {
-      const has = this.meta.isUnlocked(it.key);
+      const has = it.kind === 'weapon' ? this.meta.isUnlocked(it.key) : this.meta.hasAbility(it.key);
       const canBuy = !has && this.meta.coins >= it.cost;
       const row = this.add.container(0, y);
-      const bg = this.add.rectangle(0, 0, 560, 56, has ? 0x1a3a1a : (canBuy ? 0x1a2820 : 0x141414), 1)
+      const bg = this.add.rectangle(0, 0, 560, 50, has ? 0x1a3a1a : (canBuy ? 0x1a2820 : 0x141414), 1)
                        .setStrokeStyle(2, has ? 0x6fcf6f : (canBuy ? 0xd9b25c : 0x333333), 1);
       row.add(bg);
-      row.add(sharp(this, -260, 0, `${it.ico}  ${it.name}`, {
-        fontFamily: F, fontSize: '18px', fontStyle: 'bold',
+      const tag = it.kind === 'ability' ? ' [HAB]' : '';
+      row.add(sharp(this, -260, 0, `${it.ico}  ${it.name}${tag}`, {
+        fontFamily: F, fontSize: '16px', fontStyle: 'bold',
         color: has ? '#6fcf6f' : (canBuy ? '#e8f0e6' : '#777'),
       }).setOrigin(0, 0.5));
       row.add(sharp(this, 260, 0, has ? 'COMPRADA' : `${it.cost} 💰`, {
-        fontFamily: F, fontSize: '16px', fontStyle: 'bold',
+        fontFamily: F, fontSize: '14px', fontStyle: 'bold',
         color: has ? '#6fcf6f' : (canBuy ? '#d9b25c' : '#666'),
       }).setOrigin(1, 0.5));
       panel.add(row);
@@ -165,17 +169,51 @@ export class MenuScene extends Phaser.Scene {
         bg.on('pointerout',  () => bg.setFillStyle(0x1a2820));
         bg.on('pointerdown', () => {
           this.sound.play('sfx_ui_click', { volume: 0.5 });
-          this.meta.unlock(it.key);
+          if (it.kind === 'weapon') this.meta.unlock(it.key);
+          else                       this.meta.unlockAbility(it.key, it.cost);
           overlay.destroy(); panel.destroy();
           this.scene.restart();
         });
       }
-      y += 66;
+      y += 58;
     }
-    const close = sharp(this, 0, 195, 'FECHAR', { fontFamily: F, fontSize: '16px', fontStyle: 'bold', color: '#d9b25c' })
+    const close = sharp(this, 0, 200, 'FECHAR', { fontFamily: F, fontSize: '16px', fontStyle: 'bold', color: '#d9b25c' })
                   .setOrigin(0.5).setInteractive({ useHandCursor: true });
     close.on('pointerdown', () => { overlay.destroy(); panel.destroy(); });
     panel.add(close);
+  }
+
+  _showResetConfirm() {
+    const W = GAME.WIDTH, H = GAME.HEIGHT;
+    const overlay = this.add.rectangle(0, 0, W, H, 0x000000, 0.92).setOrigin(0).setInteractive().setDepth(500);
+    const panel = this.add.container(W / 2, H / 2).setDepth(501);
+    panel.add(this.add.rectangle(0, 0, 520, 280, 0x2a0a0a, 1).setStrokeStyle(3, 0xff5a6e, 1));
+    panel.add(sharp(this, 0, -100, '⚠  NOVO JOGO  ⚠', { fontFamily: F, fontSize: '24px', fontStyle: 'bold', color: '#ff5a6e' }).setOrigin(0.5));
+    panel.add(sharp(this, 0, -60, 'Isto vai APAGAR TODO seu progresso:', { fontFamily: F, fontSize: '14px', color: '#e8f0e6' }).setOrigin(0.5));
+    panel.add(sharp(this, 0, -32, '· Moedas acumuladas', { fontFamily: F, fontSize: '12px', color: '#93a89a' }).setOrigin(0.5));
+    panel.add(sharp(this, 0, -12, '· Armas e habilidades desbloqueadas', { fontFamily: F, fontSize: '12px', color: '#93a89a' }).setOrigin(0.5));
+    panel.add(sharp(this, 0,   8, '· Bênçãos compradas', { fontFamily: F, fontSize: '12px', color: '#93a89a' }).setOrigin(0.5));
+    panel.add(sharp(this, 0,  28, '· Recorde de tempo', { fontFamily: F, fontSize: '12px', color: '#93a89a' }).setOrigin(0.5));
+
+    // Botões
+    const yesBg = this.add.rectangle(-120, 80, 200, 44, 0x3a0a0a, 1).setStrokeStyle(2, 0xff5a6e, 1).setInteractive({ useHandCursor: true });
+    panel.add(yesBg);
+    panel.add(sharp(this, -120, 80, 'SIM, APAGAR', { fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: '#ff8898' }).setOrigin(0.5));
+    yesBg.on('pointerover', () => yesBg.setFillStyle(0x5a1a1a));
+    yesBg.on('pointerout',  () => yesBg.setFillStyle(0x3a0a0a));
+    yesBg.on('pointerdown', () => {
+      this.sound.play('sfx_ui_click', { volume: 0.5 });
+      this.meta.reset();
+      overlay.destroy(); panel.destroy();
+      this.scene.restart();
+    });
+
+    const noBg = this.add.rectangle(120, 80, 200, 44, 0x0a1410, 1).setStrokeStyle(2, 0xd9b25c, 1).setInteractive({ useHandCursor: true });
+    panel.add(noBg);
+    panel.add(sharp(this, 120, 80, 'CANCELAR', { fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: '#e8f0e6' }).setOrigin(0.5));
+    noBg.on('pointerover', () => noBg.setFillStyle(0x1a3a20));
+    noBg.on('pointerout',  () => noBg.setFillStyle(0x0a1410));
+    noBg.on('pointerdown', () => { overlay.destroy(); panel.destroy(); });
   }
 
   _showBlessingsMenu() {

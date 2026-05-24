@@ -51,16 +51,41 @@ export class UpgradeSystem {
       }
     }
 
-    // 3) Upgrades de armas existentes
+    // 3) Upgrades de armas existentes — rola modificador aleatório por arma
+    const weaponMods = {
+      STAFF:  ['dmg', 'cd', 'range', 'proj'],
+      AURA:   ['dmg', 'cd', 'range'],
+      BOOMER: ['dmg', 'cd', 'range'],
+      CHAIN:  ['dmg', 'cd', 'range', 'proj'],
+    };
+    const rInt = (min, max) => Math.floor(min + Math.random() * (max - min + 1));
     for (const w of player.weapons) {
-      if (w.level < MAX_WEAPON_LEVEL && !w.key.startsWith('VAPOR') && !w.key.startsWith('OVERLOAD_X')) {
-        cards.push({
-          type: 'upgrade',
-          weaponKey: w.key,
-          title: `${WEAPONS[w.key].name} Lv ${w.level + 1}`,
-          desc: '+25% dano',
-        });
+      if (w.level >= MAX_WEAPON_LEVEL) continue;
+      if (w.key.startsWith('VAPOR') || w.key.startsWith('OVERLOAD_X')) continue;
+      const pool = weaponMods[w.key] || ['dmg'];
+      const mod = pool[Math.floor(Math.random() * pool.length)];
+      let title, desc, apply;
+      if (mod === 'dmg') {
+        const v = rInt(15, 30);
+        title = `${WEAPONS[w.key].name} +${v}% dano`;
+        desc  = `Lv ${w.level} → ${w.level + 1}`;
+        apply = () => { w.dmgMult *= 1 + v / 100; w.level += 1; };
+      } else if (mod === 'cd') {
+        const v = rInt(10, 22);
+        title = `${WEAPONS[w.key].name} −${v}% recarga`;
+        desc  = `Lv ${w.level} → ${w.level + 1}`;
+        apply = () => { w.cdMult *= 1 - v / 100; w.level += 1; };
+      } else if (mod === 'range') {
+        const v = rInt(10, 20);
+        title = `${WEAPONS[w.key].name} +${v}% alcance`;
+        desc  = `Lv ${w.level} → ${w.level + 1}`;
+        apply = () => { w.rangeMult *= 1 + v / 100; w.level += 1; };
+      } else if (mod === 'proj') {
+        title = `${WEAPONS[w.key].name} +1 projétil`;
+        desc  = `Lv ${w.level} → ${w.level + 1}`;
+        apply = () => { w.extraProj += 1; w.level += 1; };
       }
+      cards.push({ type: 'upgrade', weaponKey: w.key, title, desc, _apply: apply });
     }
 
     // 4) Passivos — cada um rola valor aleatório DENTRO de uma faixa
@@ -105,8 +130,11 @@ export class UpgradeSystem {
         if (cls) player.addWeapon(new cls(this.scene));
       });
     } else if (card.type === 'upgrade') {
-      const w = player.weapons.find(w => w.key === card.weaponKey);
-      if (w) w.level += 1;
+      if (card._apply) card._apply();
+      else {
+        const w = player.weapons.find(w => w.key === card.weaponKey);
+        if (w) { w.level += 1; w.dmgMult *= 1.25; }
+      }
     } else if (card.type === 'passive') {
       if (card._apply) card._apply(player);
     } else if (card.type === 'evolution') {

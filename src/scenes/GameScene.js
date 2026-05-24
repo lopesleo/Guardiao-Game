@@ -53,6 +53,9 @@ export class GameScene extends Phaser.Scene {
     for (const b of BLESSINGS) {
       if (owned.includes(b.id)) b.apply(this.player);
     }
+    // Locks de habilidades: bloqueia se não comprou
+    this.player.dashUnlocked   = this.meta.hasAbility('DASH');
+    this.player.awakenUnlocked = this.meta.hasAbility('AWAKEN');
     this.player.addWeapon(new Staff(this));
 
     // Spawner

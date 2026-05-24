@@ -6,6 +6,7 @@ const DEFAULT = {
   totalCoins: 0,
   highScoreSeconds: 0,
   unlockedWeapons: ['STAFF'],
+  unlockedAbilities: [],   // 'DASH', 'AWAKEN'
   ownedBlessings: [],
 };
 
@@ -74,5 +75,25 @@ export class MetaProgression {
     this.data.ownedBlessings.push(blessing.id);
     this._save();
     return true;
+  }
+
+  // Habilidades (DASH, AWAKEN)
+  hasAbility(id) { return this.data.unlockedAbilities.includes(id); }
+  abilities() { return this.data.unlockedAbilities.slice(); }
+  unlockAbility(id, cost) {
+    if (this.hasAbility(id)) return false;
+    if (this.data.totalCoins < cost) return false;
+    this.data.totalCoins -= cost;
+    this.data.unlockedAbilities.push(id);
+    this._save();
+    return true;
+  }
+
+  // RESET completo
+  reset() {
+    this.data = { ...DEFAULT };
+    if (this.available) {
+      try { localStorage.removeItem(META.STORAGE_KEY); } catch {}
+    }
   }
 }

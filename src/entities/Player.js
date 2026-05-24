@@ -31,12 +31,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.weapons = [];
     this.facingX = 1;
 
-    // Despertar
+    // Despertar (default DESTRAVADO até GameScene checar)
+    this.awakenUnlocked = true;
     this.awakenMeter = 0;
     this.awakenedUntil = 0;
     this.awakenLockUntil = 0;
 
-    // Dash
+    // Dash (default DESTRAVADO até GameScene checar)
+    this.dashUnlocked = true;
     this.dashUntil = 0;
     this.dashCdUntil = 0;
     this.dashDirX = 1; this.dashDirY = 0;
@@ -102,6 +104,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   get awakenMax() { return PLAYER.AWAKEN_METER_MAX(this.level); }
   isAwakened() { return this.scene.time.now < this.awakenedUntil; }
   awakenReady() {
+    if (!this.awakenUnlocked) return false;
     const now = this.scene.time.now;
     return this.awakenMeter >= this.awakenMax && now >= this.awakenLockUntil && !this.isAwakened();
   }
@@ -131,8 +134,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   // --- Dash ---
   isDashing() { return this.scene.time.now < this.dashUntil; }
-  dashReady() { return this.scene.time.now >= this.dashCdUntil; }
+  dashReady() { return this.dashUnlocked && this.scene.time.now >= this.dashCdUntil; }
   tryDash(dirX, dirY) {
+    if (!this.dashUnlocked) return false;
     if (!this.dashReady()) return false;
     const now = this.scene.time.now;
     let dx = dirX, dy = dirY;
@@ -142,9 +146,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.dashUntil = now + PLAYER.DASH_DURATION_MS;
     this.dashCdUntil = now + PLAYER.DASH_CD_MS * this._dashCdMult;
     this.invulnUntil = Math.max(this.invulnUntil, now + PLAYER.DASH_INVULN_MS);
-    // trilha + SFX (whoosh = impactSoft com pitch alto)
+    // trilha + SFX whoosh real
     this._dashTrail();
-    this.scene.sound.play('sfx_hit', { volume: 0.25, rate: 1.8, detune: 600 });
+    this.scene.sound.play('sfx_dash', { volume: 0.5 });
     return true;
   }
 

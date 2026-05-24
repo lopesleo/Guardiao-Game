@@ -34,13 +34,13 @@ export const PLAYER = {
 
 export const ENEMY = {
   // wave = floor(t / 30); a cada 30s sobe a wave
-  HP:   wave => 8 + 2.5 * wave,
-  DMG:  wave => 1 + 0.3 * wave,
-  SPEED_WOLF: 90,    // Morcego: rápido e errático (era "lobo")
-  SPEED_CROW: 130,
-  SPEED_GOBLIN: 55,
-  // Curva mais suave: 0.5/s no início, ~3/s aos 5min, ~5/s aos 7min
-  SPAWN_RATE: t => 0.5 + t / 90,
+  // Difficulty: HP +50% e DMG +120% pra evitar player imortal em late game
+  HP:   wave => 10 + 4 * wave,
+  DMG:  wave => 2 + 0.7 * wave,
+  SPEED_WOLF: 95,
+  SPEED_CROW: 140,
+  SPEED_GOBLIN: 60,
+  SPAWN_RATE: t => 0.6 + t / 75,
   XP_VALUE: 1,
   COIN_DROP_CHANCE: 0.05,
 };
@@ -75,7 +75,7 @@ export const REACTION = {
 // Armas base + evoluções (D14)
 export const WEAPONS = {
   STAFF:    { name: 'Cajado',           element: 'fire', baseDmg: 8,  cooldown: 800,  range: 280, projSpeed: 320 },
-  AURA:     { name: 'Aura Gélida',      element: 'ice',  baseDmg: 3,  cooldown: 600,  range: 120 },
+  AURA:     { name: 'Aura Gélida',      element: 'ice',  baseDmg: 2,  cooldown: 1100, range: 110 },
   BOOMER:   { name: 'Bumerangue',       element: 'fire', baseDmg: 6,  cooldown: 1400, range: 240, projSpeed: 280 },
   CHAIN:    { name: 'Raio Encadeado',   element: 'bolt', baseDmg: 8,  cooldown: 2200, range: 200, jumps: 3 },
   // evoluções (D12)
@@ -171,6 +171,7 @@ export const META = {
   COIN_BOSS_WIN: 50,
   COIN_BOSS_LOSS: 0,
   WEAPON_UNLOCK_COST: { BOOMER: 30, CHAIN: 60, AURA: 100 },
+  ABILITY_UNLOCK_COST: { DASH: 50, AWAKEN: 80 },
 };
 
 // Bênçãos persistentes — compradas no menu com moedas, aplicadas em toda run futura.

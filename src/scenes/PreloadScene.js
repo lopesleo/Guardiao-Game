@@ -30,6 +30,7 @@ export class PreloadScene extends Phaser.Scene {
     this.load.audio('sfx_coin_cascade',  'assets/audio/sfx/coin_cascade.ogg');
     this.load.audio('sfx_ui_click',      'assets/audio/sfx/ui_click.ogg');
     this.load.audio('sfx_ui_hover',      'assets/audio/sfx/ui_hover.ogg');
+    this.load.audio('sfx_dash',          'assets/audio/sfx/dash.wav');
   }
 
   create() {
