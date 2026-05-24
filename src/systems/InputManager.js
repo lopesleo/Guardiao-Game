@@ -16,14 +16,17 @@ export class InputManager {
       awaken: 'R',
       dash: 'SHIFT',
       dashAlt: 'SPACE',
+      interact: 'E',
     });
 
     // Edge triggers
     this.awakenPressed = false;
     this.dashPressed = false;
+    this.interactPressed = false;
     kb.on('keydown-R', () => { this.awakenPressed = true; });
     kb.on('keydown-SHIFT', () => { this.dashPressed = true; });
     kb.on('keydown-SPACE', () => { this.dashPressed = true; });
+    kb.on('keydown-E', () => { this.interactPressed = true; });
 
     // Joystick virtual (criado externamente em D2; placeholder por ora)
     this.joystickVec = { x: 0, y: 0 };
@@ -52,6 +55,7 @@ export class InputManager {
   }
 
   // Consumir flags de edge (uma chamada zera).
-  consumeAwaken() { const v = this.awakenPressed; this.awakenPressed = false; return v; }
-  consumeDash()   { const v = this.dashPressed;   this.dashPressed   = false; return v; }
+  consumeAwaken()   { const v = this.awakenPressed;   this.awakenPressed   = false; return v; }
+  consumeDash()     { const v = this.dashPressed;     this.dashPressed     = false; return v; }
+  consumeInteract() { const v = this.interactPressed; this.interactPressed = false; return v; }
 }

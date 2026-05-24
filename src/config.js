@@ -118,10 +118,37 @@ export const PASSIVES = [
 // Drops aleatórios no chão (chance por kill)
 export const DROPS = {
   COIN_CHANCE:   0.05,
-  HEART_CHANCE:  0.012,   // recupera HP
-  AWAKEN_CHANCE: 0.018,   // recupera medidor
+  HEART_CHANCE:  0.012,
+  AWAKEN_CHANCE: 0.018,
   HEART_HEAL:    20,
   AWAKEN_REFILL: 25,
+};
+
+// Baús (lootboxes)
+export const CHEST = {
+  SPRITE_FRAME_CLOSED: 119,    // frame do town_tiles (saco) — ajustar se quiser
+  INTERACT_RADIUS: 50,
+  STARTING_COUNT: 5,           // spawnam no início da run
+  KILL_DROP_EVERY: 50,         // a cada 50 kills, 1 baú extra aparece
+  // chances de tipo de loot
+  TRAP_CHANCE: 0.15,
+  GOLDEN_CHANCE: 0.05,
+  // base loot (sempre)
+  GEMS_MIN: 4, GEMS_MAX: 8,
+  COINS_MIN: 2, COINS_MAX: 5,
+  HEART_CHANCE_OPEN: 0.30,
+  AWAKEN_CHANCE_OPEN: 0.30,
+  // golden bonus
+  GOLDEN_EXTRA_COINS: 30,
+  // trap
+  TRAP_ENEMY_COUNT: 4,
+};
+
+// Inimigos elite (spawnam da armadilha de baú)
+export const ELITE = {
+  HP_MULT: 2.0,
+  SCALE_MULT: 1.4,
+  TINT: 0xff6666,
 };
 
 // Meta-progressão

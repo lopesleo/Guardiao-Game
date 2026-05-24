@@ -1,5 +1,5 @@
 // Arena (D3: boss, meta, dmg numbers, screenshake, onboarding).
-import { GAME, COLORS, BOSS, META, ENEMY, WEAPONS, PLAYER, BLESSINGS, DROPS } from '../config.js';
+import { GAME, COLORS, BOSS, META, ENEMY, WEAPONS, PLAYER, BLESSINGS, DROPS, CHEST } from '../config.js';
 import { InputManager } from '../systems/InputManager.js';
 import { Pool } from '../systems/Pool.js';
 import { SpawnDirector } from '../systems/SpawnDirector.js';
@@ -10,6 +10,7 @@ import { Player } from '../entities/Player.js';
 import { Enemy, EnemyProjectile, BossEnt } from '../entities/Enemies.js';
 import { Projectile, BoomerangProj, Staff, AuraWeapon, Boomerang, ChainLightning, WEAPON_CLASSES } from '../entities/Weapons.js';
 import { XPGem, CoinPickup, HeartPickup, AwakenOrb } from '../entities/Pickups.js';
+import { Chest } from '../entities/Chest.js';
 import { DamageNumber } from '../entities/DamageNumber.js';
 import { HUD } from '../ui/HUD.js';
 import { VirtualJoystick } from '../ui/VirtualJoystick.js';
@@ -56,6 +57,14 @@ export class GameScene extends Phaser.Scene {
 
     // Spawner
     this.spawnDirector = new SpawnDirector(this, this.enemyPool, this.player);
+
+    // Baús — STARTING_COUNT espalhados aleatoriamente fora do spawn do player
+    this.chests = [];
+    for (let i = 0; i < CHEST.STARTING_COUNT; i++) {
+      const pos = this._randomChestPos();
+      this.chests.push(new Chest(this, pos.x, pos.y));
+    }
+    this._killsSinceLastChest = 0;
 
     // Câmera — segue player mas trava nas bordas do mundo
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
@@ -409,6 +418,12 @@ export class GameScene extends Phaser.Scene {
     if (!enemy.active) return;
     this.hud.addKill();
     this.player.addAwakenMeter(PLAYER.AWAKEN_GAIN_KILL);
+    this._killsSinceLastChest = (this._killsSinceLastChest || 0) + 1;
+    if (this._killsSinceLastChest >= CHEST.KILL_DROP_EVERY) {
+      this._killsSinceLastChest = 0;
+      const pos = this._randomChestPos();
+      this.chests.push(new Chest(this, pos.x, pos.y));
+    }
     this.sound.play('sfx_death', { volume: 0.15 });
     this.cameras.main.shake(40, 0.002);
     // Drop XP sempre
@@ -457,6 +472,73 @@ export class GameScene extends Phaser.Scene {
     this.hud.addCoin(META.COIN_BOSS_WIN);
     this.cameras.main.shake(600, 0.02);
     this.time.delayedCall(800, () => this._onGameOver(true));
+  }
+
+  _randomChestPos() {
+    const r = GAME.WORLD_RADIUS - 100;
+    for (let i = 0; i < 30; i++) {
+      const x = (Math.random() - 0.5) * r * 2;
+      const y = (Math.random() - 0.5) * r * 2;
+      const dx = x - (this.player?.x ?? 0), dy = y - (this.player?.y ?? 0);
+      if (dx * dx + dy * dy > 250 * 250) return { x, y };
+    }
+    return { x: 0, y: 300 };
+  }
+
+  _openChest(chest) {
+    const result = chest.open();
+    if (!result) return;
+    const { kind, x, y } = result;
+    this.sound.play('sfx_pickup', { volume: 0.6, rate: 0.9 });
+
+    // Loot base (sempre)
+    const ngems = Phaser.Math.Between(CHEST.GEMS_MIN, CHEST.GEMS_MAX);
+    const ncoins = Phaser.Math.Between(CHEST.COINS_MIN, CHEST.COINS_MAX);
+    for (let i = 0; i < ngems; i++) {
+      const g = this.xpPool.acquire();
+      const ang = Math.random() * Math.PI * 2;
+      const d = 8 + Math.random() * 18;
+      g.spawn(x + Math.cos(ang) * d, y + Math.sin(ang) * d);
+    }
+    for (let i = 0; i < ncoins; i++) {
+      const c = this.coinPool.acquire();
+      const ang = Math.random() * Math.PI * 2;
+      const d = 8 + Math.random() * 18;
+      c.spawn(x + Math.cos(ang) * d, y + Math.sin(ang) * d);
+    }
+    if (Math.random() < CHEST.HEART_CHANCE_OPEN) {
+      const h = this.heartPool.acquire(); h.spawn(x - 20, y);
+    }
+    if (Math.random() < CHEST.AWAKEN_CHANCE_OPEN) {
+      const o = this.awakenOrbPool.acquire(); o.spawn(x + 20, y);
+    }
+
+    if (kind === 'golden') {
+      // Bonus de moedas + carta grátis
+      for (let i = 0; i < CHEST.GOLDEN_EXTRA_COINS; i++) {
+        const c = this.coinPool.acquire();
+        const ang = Math.random() * Math.PI * 2;
+        const d = 12 + Math.random() * 30;
+        c.spawn(x + Math.cos(ang) * d, y + Math.sin(ang) * d);
+      }
+      this._toast('★ BAÚ DOURADO! ★', 2000);
+      // Carta extra grátis
+      this.time.delayedCall(600, () => this.events.emit('player:levelup', this.player.level));
+    } else if (kind === 'trap') {
+      // Armadilha: spawna inimigos elite ao redor
+      this._toast('⚠ ARMADILHA!', 1500);
+      const wave = Math.floor(this.elapsedMs / 30000);
+      const types = ['wolf', 'crow', 'goblin'];
+      for (let i = 0; i < CHEST.TRAP_ENEMY_COUNT; i++) {
+        if (this.enemyPool.size >= GAME.MAX_ENEMIES_ALIVE) break;
+        const ang = (i / CHEST.TRAP_ENEMY_COUNT) * Math.PI * 2 + Math.random() * 0.5;
+        const sx = x + Math.cos(ang) * 60;
+        const sy = y + Math.sin(ang) * 60;
+        const e = this.enemyPool.acquire();
+        const kind = types[Math.floor(Math.random() * types.length)];
+        e.activate(sx, sy, kind, wave, true); // true = ELITE
+      }
+    }
   }
 
   _onGameOver(won) {
