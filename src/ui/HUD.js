@@ -13,55 +13,55 @@ export class HUD {
     const W = GAME.WIDTH, H = GAME.HEIGHT;
 
     // HP
-    this.hpBg   = scene.add.rectangle(20, 20, 240, 22, 0x000000, 0.7).setOrigin(0, 0).setScrollFactor(0).setDepth(1000);
-    this.hpFill = scene.add.rectangle(23, 23, 234, 16, COLORS.DANGER).setOrigin(0, 0).setScrollFactor(0).setDepth(1001);
+    this.hpBg   = scene.add.rectangle(20, 20, 240, 22, 0x000000, 0.7).setOrigin(0, 0).setScrollFactor(0).setDepth(50000);
+    this.hpFill = scene.add.rectangle(23, 23, 234, 16, COLORS.DANGER).setOrigin(0, 0).setScrollFactor(0).setDepth(50001);
     this.hpText = scene.add.text(140, 22, '', { fontFamily: 'Press Start 2P, monospace', fontSize: '10px', color: '#fff' })
-                       .setOrigin(0.5, 0).setScrollFactor(0).setDepth(1002);
+                       .setOrigin(0.5, 0).setScrollFactor(0).setDepth(50002);
 
     // Despertar (★) — barra logo abaixo do HP
-    this.awBg   = scene.add.rectangle(20, 48, 240, 14, 0x000000, 0.7).setOrigin(0, 0).setScrollFactor(0).setDepth(1000);
-    this.awFill = scene.add.rectangle(23, 51, 0, 8, 0xffd96b).setOrigin(0, 0).setScrollFactor(0).setDepth(1001);
+    this.awBg   = scene.add.rectangle(20, 48, 240, 14, 0x000000, 0.7).setOrigin(0, 0).setScrollFactor(0).setDepth(50000);
+    this.awFill = scene.add.rectangle(23, 51, 0, 8, 0xffd96b).setOrigin(0, 0).setScrollFactor(0).setDepth(50001);
     this.awLabel= scene.add.text(140, 48, 'DESPERTAR', { fontFamily: 'Press Start 2P, monospace', fontSize: '8px', color: '#ffd96b' })
-                       .setOrigin(0.5, 0).setScrollFactor(0).setDepth(1002);
+                       .setOrigin(0.5, 0).setScrollFactor(0).setDepth(50002);
 
     // Dash — ícone com cooldown radial (canto inferior direito)
     this.dashIcon = scene.add.text(GAME.WIDTH - 20, GAME.HEIGHT - 30, 'SHIFT', {
       fontFamily: 'Press Start 2P, monospace', fontSize: '10px',
       color: '#e8f0e6', backgroundColor: '#1a2a1a', padding: { x: 8, y: 6 },
-    }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(1002);
+    }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(50002);
 
     // XP bar (topo)
-    this.xpBg   = scene.add.rectangle(0, 0, W, 8, 0x000000, 0.7).setOrigin(0, 0).setScrollFactor(0).setDepth(1000);
-    this.xpFill = scene.add.rectangle(0, 0, 0, 8, COLORS.XP).setOrigin(0, 0).setScrollFactor(0).setDepth(1001);
+    this.xpBg   = scene.add.rectangle(0, 0, W, 8, 0x000000, 0.7).setOrigin(0, 0).setScrollFactor(0).setDepth(50000);
+    this.xpFill = scene.add.rectangle(0, 0, 0, 8, COLORS.XP).setOrigin(0, 0).setScrollFactor(0).setDepth(50001);
 
     // Level
     this.lvlText = scene.add.text(W / 2, 14, 'LV 1', { fontFamily: 'Press Start 2P, monospace', fontSize: '12px', color: '#d9b25c' })
-                        .setOrigin(0.5, 0).setScrollFactor(0).setDepth(1002);
+                        .setOrigin(0.5, 0).setScrollFactor(0).setDepth(50002);
 
     // Timer
     this.timerText = scene.add.text(W - 20, 22, '00:00', { fontFamily: 'Press Start 2P, monospace', fontSize: '16px', color: '#e8f0e6' })
-                          .setOrigin(1, 0).setScrollFactor(0).setDepth(1002);
+                          .setOrigin(1, 0).setScrollFactor(0).setDepth(50002);
     // Kills + coins
     this.killText = scene.add.text(W - 20, 48, 'KILLS 0', { fontFamily: 'Press Start 2P, monospace', fontSize: '10px', color: '#93a89a' })
-                         .setOrigin(1, 0).setScrollFactor(0).setDepth(1002);
+                         .setOrigin(1, 0).setScrollFactor(0).setDepth(50002);
     this.coinText = scene.add.text(W - 20, 68, '💰 0', { fontFamily: 'Press Start 2P, monospace', fontSize: '10px', color: '#d9b25c' })
-                         .setOrigin(1, 0).setScrollFactor(0).setDepth(1002);
+                         .setOrigin(1, 0).setScrollFactor(0).setDepth(50002);
 
     // Painel de armas (canto inferior esquerdo)
-    this.weaponPanel = scene.add.container(20, H - 50).setScrollFactor(0).setDepth(1002);
+    this.weaponPanel = scene.add.container(20, H - 50).setScrollFactor(0).setDepth(50002);
 
     // Banner de boss (oculto)
     this.bossBanner = scene.add.text(W / 2, 60, '', {
       fontFamily: 'Press Start 2P, monospace', fontSize: '20px', color: '#ff5a6e',
       stroke: '#000', strokeThickness: 4,
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(1500).setVisible(false);
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(50500).setVisible(false);
 
     // HP bar do boss (oculto)
-    this.bossHpBg   = scene.add.rectangle(W / 2, 100, 600, 16, 0x000000, 0.8).setScrollFactor(0).setDepth(1500).setVisible(false);
-    this.bossHpFill = scene.add.rectangle(W / 2 - 297, 100, 0, 12, 0xff5a6e).setOrigin(0, 0.5).setScrollFactor(0).setDepth(1501).setVisible(false);
+    this.bossHpBg   = scene.add.rectangle(W / 2, 100, 600, 16, 0x000000, 0.8).setScrollFactor(0).setDepth(50500).setVisible(false);
+    this.bossHpFill = scene.add.rectangle(W / 2 - 297, 100, 0, 12, 0xff5a6e).setOrigin(0, 0.5).setScrollFactor(0).setDepth(50501).setVisible(false);
     this.bossLabel  = scene.add.text(W / 2, 130, '', {
       fontFamily: 'Press Start 2P, monospace', fontSize: '10px', color: '#fff', stroke: '#000', strokeThickness: 3,
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(1501).setVisible(false);
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(50501).setVisible(false);
   }
 
   addKill()       { this.kills += 1; }

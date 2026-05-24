@@ -126,7 +126,8 @@ export const DROPS = {
 
 // Baús (lootboxes)
 export const CHEST = {
-  SPRITE_FRAME_CLOSED: 119,    // frame do town_tiles (saco) — ajustar se quiser
+  SPRITE_TEXTURE: 'dungeon_tiles',
+  SPRITE_FRAME_CLOSED: 41,     // frame do dungeon (baú vermelho com gema)
   INTERACT_RADIUS: 50,
   STARTING_COUNT: 5,           // spawnam no início da run
   KILL_DROP_EVERY: 50,         // a cada 50 kills, 1 baú extra aparece

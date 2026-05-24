@@ -9,7 +9,7 @@ export class Chest extends Phaser.GameObjects.Container {
     // Glow dourado pulsante (só visível quando player perto)
     this.glow = scene.add.circle(0, 0, 28, COLORS.GOLD, 0.4).setVisible(false);
     // Sprite do baú
-    this.sprite = scene.add.image(0, 0, 'town_tiles', CHEST.SPRITE_FRAME_CLOSED)
+    this.sprite = scene.add.image(0, 0, CHEST.SPRITE_TEXTURE, CHEST.SPRITE_FRAME_CLOSED)
                        .setScale(GAME.PIXEL_SCALE);
     // Prompt "[E] ABRIR" acima do baú (escondido por padrão)
     this.prompt = scene.add.text(0, -38, '[E] ABRIR', {

@@ -408,7 +408,7 @@ export class GameScene extends Phaser.Scene {
       fontFamily: 'Press Start 2P, monospace', fontSize: '12px',
       color: '#ffd96b', stroke: '#000', strokeThickness: 3,
       backgroundColor: '#000000', padding: { x: 10, y: 6 },
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(60000);
     this.tweens.add({ targets: t, alpha: 0, delay: ms - 300, duration: 300, onComplete: () => t.destroy() });
   }
 
