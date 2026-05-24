@@ -1,5 +1,10 @@
-// Tutorial COMO JOGAR — páginas com DEMOS animados reais (não mockups).
-import { COLORS, GAME } from '../config.js';
+// Tutorial COMO JOGAR — páginas com DEMOS usando as CLASSES REAIS do jogo.
+import { COLORS, GAME, PLAYER } from '../config.js';
+import { Player } from '../entities/Player.js';
+import { Enemy } from '../entities/Enemies.js';
+import { Projectile, Staff, AuraWeapon, ChainLightning, BoomerangProj } from '../entities/Weapons.js';
+import { Pool } from '../systems/Pool.js';
+import { ElementalSystem } from '../systems/ElementalSystem.js';
 
 const F = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
@@ -42,6 +47,8 @@ export class TutorialScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-LEFT',  () => this._goto(this.pageIdx - 1));
     this.input.keyboard.on('keydown-RIGHT', () => this._goto(this.pageIdx + 1));
     this.input.keyboard.on('keydown-ESC',   () => this.scene.start('MenuScene'));
+
+    this.events.on('shutdown', () => this._teardownDemoArena());
   }
 
   _goto(i) {
@@ -57,7 +64,6 @@ export class TutorialScene extends Phaser.Scene {
     this.prevBtn.txt.setVisible(this.pageIdx > 0);
     this.nextBtn.bg.setVisible(this.pageIdx < this.pages.length - 1);
     this.nextBtn.txt.setVisible(this.pageIdx < this.pages.length - 1);
-
     this.pageDots.removeAll(true);
     const dotGap = 20;
     const startX = -(this.pages.length - 1) * dotGap / 2;
@@ -69,11 +75,11 @@ export class TutorialScene extends Phaser.Scene {
   }
 
   _renderPage() {
-    // Cleanup
     if (this.pageContainer) {
       if (this._demoTimers) this._demoTimers.forEach(t => t.remove());
       if (this._demoTweens) this._demoTweens.forEach(t => t.stop());
       if (this._demoTickHandler) this.events.off('update', this._demoTickHandler);
+      this._teardownDemoArena();
       this.pageContainer.destroy(true);
     }
     this._demoTimers = [];
@@ -97,7 +103,108 @@ export class TutorialScene extends Phaser.Scene {
   }
 
   // ============================================================
-  // PÁGINA 1 — WASD movimento real (sprite anda em quadrado)
+  // DEMO ARENA — instancia as classes REAIS do jogo
+  // ============================================================
+  _setupDemoArena(cx, cy) {
+    // World bounds locais (não interferem com nada)
+    this.physics.world.setBounds(cx - 1000, cy - 1000, 2000, 2000);
+
+    // Pools (this.scene.enemyPool / projectilePool etc. referenciados pelas armas)
+    this.enemyPool = new Pool(() => {
+      const e = new Enemy(this, -9999, -9999);
+      e.deactivate();
+      return e;
+    }, 8);
+    this.projectilePool = new Pool(() => new Projectile(this), 12);
+    this.boomerPool     = new Pool(() => new BoomerangProj(this), 4);
+    this.elemental      = new ElementalSystem(this);
+
+    // Player real
+    this.player = new Player(this, cx, cy);
+    this.player.setDepth(20);
+    // Substitui update do player: não lê input, só atualiza armas + depth
+    const self = this;
+    this.player.update = function(time, dt) {
+      // Despertar pode terminar
+      if (this.awakenedUntil > 0 && time >= this.awakenedUntil) {
+        this.awakenedUntil = -1;
+        this.clearTint();
+        if (self._awakenGlow) self._awakenGlow.setAlpha(0);
+      }
+      for (const w of this.weapons) w.update(time, dt);
+      this.setDepth(20);
+    };
+
+    // Glow opcional pro Despertar (criado quando ativa)
+    this._awakenGlow = null;
+  }
+
+  _teardownDemoArena() {
+    if (!this.player) return;
+    // Destrói player + armas
+    try { this.player.weapons.forEach(w => { if (w.gfx) w.gfx.destroy(); }); } catch (e) {}
+    try { this.player.destroy(); } catch (e) {}
+    this.player = null;
+    // Limpa pools (destrói todos os objetos)
+    [this.enemyPool, this.projectilePool, this.boomerPool].forEach(pool => {
+      if (!pool) return;
+      pool.available.forEach(o => o.destroy?.());
+      pool.inUse.forEach(o => o.destroy?.());
+    });
+    this.enemyPool = null; this.projectilePool = null; this.boomerPool = null;
+    this.elemental = null;
+    if (this._awakenGlow) { this._awakenGlow.destroy(); this._awakenGlow = null; }
+  }
+
+  // Spawna inimigos parados em posições fixas
+  _spawnDemoEnemies(positions, wave = 0) {
+    const list = [];
+    for (const pos of positions) {
+      const e = this.enemyPool.acquire();
+      e.activate(pos.x, pos.y, 'wolf', wave);
+      e.body.enable = false; // não move
+      e.update = () => {};   // sem perseguir
+      list.push(e);
+    }
+    return list;
+  }
+
+  // Callback usado por ElementalSystem (Cristal, Sobrecarga, Aura) quando matam
+  _onEnemyDeath(enemy) {
+    if (!enemy || !enemy.active) return;
+    this.tweens.add({
+      targets: enemy, alpha: 0, scale: GAME.PIXEL_SCALE * 0.4, duration: 200,
+      onComplete: () => {
+        enemy.deactivate();
+        this.enemyPool.release(enemy);
+      },
+    });
+  }
+
+  // Tick do update: roda projéteis + colisões + elemental tick
+  _runDemoTick(time, dt) {
+    if (!this.player || !this.projectilePool) return;
+    // Projéteis e colisões
+    this.projectilePool.forEachActive(p => {
+      p.update(time);
+      if (!p.active) { this.projectilePool.release(p); return; }
+      this.enemyPool.forEachActive(e => {
+        if (!p.active || !e.active) return;
+        const dx = e.x - p.x, dy = e.y - p.y;
+        if (dx * dx + dy * dy < 22 * 22) {
+          e.takeDamage(p.dmg, p.element, p.x, p.y);
+          p.kill();
+          this.projectilePool.release(p);
+          if (e.hp <= 0) this._onEnemyDeath(e);
+        }
+      });
+    });
+    // Elemental tick (status expiration + DoT)
+    this.elemental.tick(time);
+  }
+
+  // ============================================================
+  // PÁGINA 1 — Movimento (animação simples, sem classes reais)
   // ============================================================
   _pageMovement() {
     const c = this.pageContainer;
@@ -107,23 +214,19 @@ export class TutorialScene extends Phaser.Scene {
       fontFamily: F, fontSize: '22px', fontStyle: 'bold', color: '#ffd96b',
     }).setOrigin(0.5));
 
-    // Arena de demo (retângulo bordado)
     const demoCx = cx, demoCy = 280;
     c.add(this.add.rectangle(demoCx, demoCy, 480, 280, 0x0a1410, 0.85).setStrokeStyle(2, 0xd9b25c, 0.6));
-    // Grama dentro
-    c.add(this.add.tileSprite(demoCx, demoCy, 460, 260, 'town_tiles', 0).setOrigin(0.5).setScale(1).setAlpha(0.7));
+    c.add(this.add.tileSprite(demoCx, demoCy, 460, 260, 'town_tiles', 0).setOrigin(0.5).setAlpha(0.7));
 
-    // Player sprite
     const hero = this.add.image(demoCx, demoCy, 'dungeon_tiles', 84).setScale(GAME.PIXEL_SCALE * 1.5);
     c.add(hero);
 
-    // Keys WASD na direita do demo
     const keysX = cx + 320;
     const keyDefs = [
-      { k: 'W', dx: 0,   dy: -1, kx: keysX,      ky: demoCy - 30 },
-      { k: 'A', dx: -1,  dy: 0,  kx: keysX - 30, ky: demoCy },
-      { k: 'S', dx: 0,   dy: 1,  kx: keysX,      ky: demoCy + 30 },
-      { k: 'D', dx: 1,   dy: 0,  kx: keysX + 30, ky: demoCy },
+      { k: 'W', dx: 0,  dy: -1, kx: keysX,      ky: demoCy - 30 },
+      { k: 'A', dx: -1, dy: 0,  kx: keysX - 30, ky: demoCy },
+      { k: 'S', dx: 0,  dy: 1,  kx: keysX,      ky: demoCy + 30 },
+      { k: 'D', dx: 1,  dy: 0,  kx: keysX + 30, ky: demoCy },
     ];
     const keyBoxes = {};
     for (const def of keyDefs) {
@@ -135,30 +238,23 @@ export class TutorialScene extends Phaser.Scene {
       keyBoxes[def.k] = { box, lbl };
     }
 
-    // Animação: percorre WASD em loop, hero anda na arena
     const moveRange = 90;
     const seq = ['W', 'D', 'S', 'A'];
     let idx = 0;
     const step = () => {
       const k = seq[idx];
       const def = keyDefs.find(d => d.k === k);
-      // Highlight key
       for (const kk of Object.keys(keyBoxes)) {
         keyBoxes[kk].box.setFillStyle(0x1a2820); keyBoxes[kk].lbl.setColor('#e8f0e6');
       }
       keyBoxes[k].box.setFillStyle(0xffd96b); keyBoxes[k].lbl.setColor('#0a1410');
-      // Move hero
       if (def.dx !== 0) hero.setFlipX(def.dx < 0);
       this._demoTweens.push(this.tweens.add({
-        targets: hero,
-        x: demoCx + def.dx * moveRange,
-        y: demoCy + def.dy * moveRange,
+        targets: hero, x: demoCx + def.dx * moveRange, y: demoCy + def.dy * moveRange,
         duration: 600, ease: 'Sine.easeInOut',
         onComplete: () => {
           this._demoTweens.push(this.tweens.add({
-            targets: hero,
-            x: demoCx, y: demoCy,
-            duration: 400, ease: 'Sine.easeInOut',
+            targets: hero, x: demoCx, y: demoCy, duration: 400, ease: 'Sine.easeInOut',
           }));
         },
       }));
@@ -167,7 +263,6 @@ export class TutorialScene extends Phaser.Scene {
     step();
     this._demoTimers.push(this.time.addEvent({ delay: 1200, loop: true, callback: step }));
 
-    // Texto explicativo abaixo
     c.add(sharp(this, cx, 440,
       'WASD ou setas para mover. Ataque é AUTOMÁTICO no inimigo mais próximo.',
       { fontFamily: F, fontSize: '15px', color: '#e8f0e6', align: 'center', wordWrap: { width: 800 } }
@@ -179,7 +274,7 @@ export class TutorialScene extends Phaser.Scene {
   }
 
   // ============================================================
-  // PÁGINA 2 — Despertar (player atacando + berserker) + Dash
+  // PÁGINA 2 — Despertar com PLAYER REAL atacando
   // ============================================================
   _pageAwakenDash() {
     const c = this.pageContainer;
@@ -189,7 +284,7 @@ export class TutorialScene extends Phaser.Scene {
       fontFamily: F, fontSize: '22px', fontStyle: 'bold', color: '#ffd96b',
     }).setOrigin(0.5));
 
-    // ===== DASH DEMO (faixa superior) =====
+    // DASH demo compacto em cima
     const dashY = 160;
     c.add(this.add.rectangle(cx, dashY, 800, 95, 0x0a1410, 0.85).setStrokeStyle(2, 0xd9b25c, 0.6));
     c.add(this.add.tileSprite(cx - 220, dashY, 360, 75, 'town_tiles', 0).setOrigin(0.5).setAlpha(0.45));
@@ -224,7 +319,7 @@ export class TutorialScene extends Phaser.Scene {
     dashStep();
     this._demoTimers.push(this.time.addEvent({ delay: 2200, loop: true, callback: dashStep }));
 
-    // ===== DESPERTAR DEMO REAL (faixa principal) =====
+    // DESPERTAR — usa classes REAIS
     const aY = 360;
     c.add(this.add.rectangle(cx, aY, 800, 240, 0x0a1410, 0.85).setStrokeStyle(2, 0xffd96b, 0.7));
     c.add(this.add.tileSprite(cx, aY, 780, 220, 'town_tiles', 0).setOrigin(0.5).setAlpha(0.45));
@@ -236,105 +331,88 @@ export class TutorialScene extends Phaser.Scene {
       fontFamily: F, fontSize: '12px', color: '#e8f0e6',
     }));
 
-    // Player na esquerda
+    // Setup demo arena REAL
     const heroX = cx - 280, heroY = aY + 20;
-    const hero = this.add.image(heroX, heroY, 'dungeon_tiles', 84).setScale(GAME.PIXEL_SCALE * 1.4);
-    const heroGlow = this.add.circle(heroX, heroY, 32, 0xffd96b, 0).setDepth(hero.depth - 1);
-    c.add(heroGlow); c.add(hero);
+    this._setupDemoArena(heroX, heroY);
+    this.player.addWeapon(new Staff(this));
+
+    // Glow para o Despertar
+    this._awakenGlow = this.add.circle(heroX, heroY, 32, 0xffd96b, 0).setDepth(19);
+    c.add(this._awakenGlow);
 
     // Tecla R
     const rBox = this.add.rectangle(heroX, heroY - 50, 36, 36, 0x1a2820, 1).setStrokeStyle(2, 0xd9b25c, 0.6);
     const rLbl = sharp(this, heroX, heroY - 50, 'R', { fontFamily: F, fontSize: '16px', fontStyle: 'bold', color: '#e8f0e6' }).setOrigin(0.5);
     c.add(rBox); c.add(rLbl);
 
-    // Bar de Despertar abaixo da arena
+    // Bar de Despertar visual
     const barW = 600;
     const barBg = this.add.rectangle(cx, aY + 100, barW, 14, 0x000000, 0.7).setStrokeStyle(1, 0xd9b25c, 0.7);
     const barFill = this.add.rectangle(cx - barW/2 + 2, aY + 100, 0, 10, 0xd9b25c).setOrigin(0, 0.5);
     const barLbl = sharp(this, cx, aY + 100, '', { fontFamily: F, fontSize: '11px', fontStyle: 'bold', color: '#ffffff', stroke: '#000', strokeThickness: 2 }).setOrigin(0.5);
     c.add(barBg); c.add(barFill); c.add(barLbl);
 
-    // Estado do demo
-    const state = { meter: 0, awakening: false, awakenUntil: 0, attackCd: 800, lastAttack: 0, enemies: [] };
+    // Posições dos inimigos no demo
+    const enemyPositions = [
+      { x: cx + 60,  y: aY - 30 }, { x: cx + 140, y: aY + 30 },
+      { x: cx + 220, y: aY - 30 }, { x: cx + 300, y: aY + 30 },
+    ];
+    let currentEnemies = this._spawnDemoEnemies(enemyPositions);
 
-    const respawnEnemies = () => {
-      // limpa
-      state.enemies.forEach(e => e.sprite?.destroy());
-      state.enemies = [];
-      for (let i = 0; i < 4; i++) {
-        const ex = cx + 60 + (i % 2) * 80;
-        const ey = aY - 30 + Math.floor(i / 2) * 60;
-        const sp = this.add.image(ex + 100, ey, 'creatures', 139).setScale(GAME.PIXEL_SCALE * 1.0).setAlpha(0);
-        c.add(sp);
-        this.tweens.add({ targets: sp, x: ex, alpha: 1, duration: 350, delay: i * 60 });
-        // bobbing
-        const tw = this.tweens.add({ targets: sp, y: ey - 4, duration: 700 + i * 100, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-        this._demoTweens.push(tw);
-        state.enemies.push({ sprite: sp, hp: 2 });
-      }
-    };
-    respawnEnemies();
+    // Tick handler
+    const tick = (time, dt) => {
+      this._runDemoTick(time, dt);
 
-    // Função: player ataca o inimigo vivo mais próximo
-    const attackNearest = () => {
-      const alive = state.enemies.filter(e => e.hp > 0 && e.sprite.active);
-      if (alive.length === 0) {
-        // todos mortos → respawna
-        this.time.delayedCall(400, () => respawnEnemies());
-        return;
+      // Se todos morreram, espera + respawna
+      const aliveCount = currentEnemies.filter(e => e.active).length;
+      if (aliveCount === 0 && !this._awaitingRespawn) {
+        this._awaitingRespawn = true;
+        this.time.delayedCall(800, () => {
+          currentEnemies = this._spawnDemoEnemies(enemyPositions);
+          this._awaitingRespawn = false;
+        });
       }
-      const t = alive[0];
-      // pequeno projétil laranja
-      const p = this.add.circle(heroX, heroY, 6, 0xff7a3c, 1).setStrokeStyle(2, 0xffe6b8, 1);
-      c.add(p);
-      this.tweens.add({
-        targets: p, x: t.sprite.x, y: t.sprite.y, duration: 220, ease: 'Linear',
-        onComplete: () => {
-          p.destroy();
-          t.hp -= 1;
-          // hit flash
-          t.sprite.setTintFill(0xffffff);
-          this.time.delayedCall(60, () => t.sprite.active && t.sprite.clearTint());
-          if (t.hp <= 0) {
-            // morre
-            this.tweens.add({ targets: t.sprite, alpha: 0, scale: GAME.PIXEL_SCALE * 0.4, duration: 180,
-              onComplete: () => t.sprite.destroy() });
-            // enche medidor
-            state.meter = Math.min(100, state.meter + 28);
-          }
-        },
-      });
-    };
 
-    // Tick de update do demo (usa scene events update event)
-    const tickHandler = () => {
-      const now = this.time.now;
-      if (now - state.lastAttack >= state.attackCd) {
-        state.lastAttack = now;
-        attackNearest();
-      }
-      if (state.awakening) {
-        if (now >= state.awakenUntil) {
-          // termina despertar
-          state.awakening = false;
-          state.attackCd = 800;
-          state.meter = 0;
-          hero.clearTint();
-          heroGlow.setFillStyle(0xffd96b, 0);
+      // Atualiza barra visual
+      const pct = this.player.awakenMeter / this.player.awakenMax;
+      barFill.width = (barW - 4) * pct;
+      if (this.player.isAwakened()) {
+        const remain = Math.max(0, this.player.awakenedUntil - time);
+        barFill.fillColor = 0xffe88a;
+        barFill.width = (barW - 4) * (remain / PLAYER.AWAKEN_DURATION_MS);
+        barLbl.setText(`DESPERTADO  ${(remain / 1000).toFixed(1)}s`).setColor('#ffe88a');
+        // glow pulsante
+        if (this._awakenGlow) {
+          this._awakenGlow.setAlpha(0.45 + Math.sin(time / 100) * 0.2);
+          this._awakenGlow.setScale(1 + Math.sin(time / 100) * 0.15);
         }
-      } else if (state.meter >= 100) {
-        // ativa despertar
-        state.awakening = true;
-        state.attackCd = 280;
-        state.awakenUntil = now + 3000;
-        hero.setTint(0xffd96b);
-        heroGlow.setFillStyle(0xffd96b, 0.45);
-        // pisca R
+      } else if (this.player.awakenReady()) {
+        barFill.fillColor = 0xffd96b;
+        barLbl.setText('PRESSIONE R').setColor('#ffe88a');
+      } else {
+        barFill.fillColor = 0xd9b25c;
+        barLbl.setText('').setColor('#fff');
+      }
+    };
+    this._demoTickHandler = tick;
+    this.events.on('update', tick);
+
+    // A cada kill de inimigo, addAwakenMeter já é chamado pelo Player? NÃO!
+    // No GameScene é o _onEnemyDeath que faz this.player.addAwakenMeter(...).
+    // Vou hookar isso aqui também:
+    const origOnDeath = this._onEnemyDeath.bind(this);
+    this._onEnemyDeath = (e) => {
+      origOnDeath(e);
+      if (this.player) this.player.addAwakenMeter(28); // ganho forte pra demo encher rápido
+    };
+
+    // Quando bar enche, ativa Despertar + pisca R
+    const checkAwaken = () => {
+      if (this.player && this.player.awakenReady()) {
+        this.player.tryActivateAwaken();
         rBox.setFillStyle(0xffd96b); rLbl.setColor('#0a1410');
         this.time.delayedCall(400, () => { rBox.setFillStyle(0x1a2820); rLbl.setColor('#e8f0e6'); });
-        // flash e shake
-        this.cameras.main.shake(150, 0.005);
-        // texto DESPERTAR
+        // Texto flutuante
         const txt = sharp(this, heroX, heroY - 80, '★ DESPERTAR ★', {
           fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: '#ffd96b',
           stroke: '#000', strokeThickness: 3,
@@ -342,36 +420,12 @@ export class TutorialScene extends Phaser.Scene {
         c.add(txt);
         this.tweens.add({ targets: txt, y: heroY - 110, alpha: 0, duration: 800, onComplete: () => txt.destroy() });
       }
-      // atualiza bar
-      const pct = Math.max(0, Math.min(1, state.meter / 100));
-      barFill.width = (barW - 4) * pct;
-      if (state.awakening) {
-        const remain = Math.max(0, state.awakenUntil - now);
-        barFill.fillColor = 0xffe88a;
-        barFill.width = (barW - 4) * (remain / 3000);
-        barLbl.setText(`DESPERTADO  ${(remain / 1000).toFixed(1)}s`).setColor('#ffe88a');
-      } else if (state.meter >= 100) {
-        barFill.fillColor = 0xffd96b;
-        barLbl.setText('PRESSIONE R').setColor('#ffe88a');
-      } else {
-        barFill.fillColor = 0xd9b25c;
-        barLbl.setText('').setColor('#fff');
-      }
-      // pulsa glow se acordado
-      if (state.awakening) {
-        const s = 1 + Math.sin(now / 100) * 0.2;
-        heroGlow.setScale(s);
-      } else {
-        heroGlow.setScale(1);
-      }
     };
-
-    this._demoTickHandler = tickHandler;
-    this.events.on('update', tickHandler);
+    this._demoTimers.push(this.time.addEvent({ delay: 200, loop: true, callback: checkAwaken }));
   }
 
   // ============================================================
-  // PÁGINA 3 — TODAS as reações em ciclo (Vapor → Cristal → Sobrecarga)
+  // PÁGINA 3 — Reações com ARMAS REAIS (Staff + Aura + Chain)
   // ============================================================
   _pageReactions() {
     const c = this.pageContainer;
@@ -385,13 +439,11 @@ export class TutorialScene extends Phaser.Scene {
       { fontFamily: F, fontSize: '13px', color: '#e8f0e6', align: 'center' }
     ).setOrigin(0.5));
 
-    // ARENA principal
     const ax = cx, ay = 340;
     const arenaBorder = this.add.rectangle(ax, ay, 820, 320, 0x0a1410, 0.88).setStrokeStyle(3, 0xd9b25c, 0.7);
     c.add(arenaBorder);
     c.add(this.add.tileSprite(ax, ay, 800, 300, 'town_tiles', 0).setOrigin(0.5).setAlpha(0.5));
 
-    // Label da reação atual (topo da arena)
     const reactionLbl = sharp(this, ax, ay - 130, '', {
       fontFamily: F, fontSize: '18px', fontStyle: 'bold', color: '#ffd96b',
       stroke: '#000', strokeThickness: 3,
@@ -402,234 +454,96 @@ export class TutorialScene extends Phaser.Scene {
     }).setOrigin(0.5);
     c.add(reactionDesc);
 
-    // Player na esquerda
+    // Setup demo arena REAL com player
     const heroX = ax - 320, heroY = ay + 20;
-    const hero = this.add.image(heroX, heroY, 'dungeon_tiles', 84).setScale(GAME.PIXEL_SCALE * 1.3);
-    c.add(hero);
+    this._setupDemoArena(heroX, heroY);
 
-    // Helpers
-    const elemColors = { fire: 0xff7a3c, ice: 0x5cc8ff, bolt: 0xd98cff };
-    const elemTints  = { fire: 0xff9966, ice: 0x9ad4ff, bolt: 0xd8a8ff };
+    // Posições dos inimigos próximos do player pra aura alcançar
+    const enemyPositions = [
+      { x: heroX + 150, y: ay - 40 },
+      { x: heroX + 200, y: ay + 30 },
+      { x: heroX + 280, y: ay - 20 },
+      { x: heroX + 340, y: ay + 40 },
+    ];
 
-    const spawnEnemies = (count) => {
-      const list = [];
-      for (let i = 0; i < count; i++) {
-        const angle = (i / count) * Math.PI - Math.PI / 2;
-        const ex = ax + 60 + Math.cos(angle) * 80;
-        const ey = ay + Math.sin(angle) * 60;
-        const sp = this.add.image(ex + 150, ey, 'creatures', 139).setScale(GAME.PIXEL_SCALE * 1.1).setAlpha(0);
-        c.add(sp);
-        this.tweens.add({ targets: sp, x: ex, alpha: 1, duration: 350, delay: i * 60 });
-        list.push(sp);
+    // Helper: troca as armas do player
+    const setWeapons = (weaponClasses) => {
+      // Remove armas atuais (e seus gfx)
+      for (const w of this.player.weapons) {
+        if (w.gfx) w.gfx.destroy();
       }
-      return list;
-    };
-
-    // === ARMAS REAIS DO JOGO (visuais exatos) ===
-
-    // CAJADO (🔥): mesma forma do Projectile real (glow 22 + core 10 brilhante)
-    const useStaff = (enemies, onHit) => {
-      const target = enemies[0];
-      const glow = this.add.circle(heroX, heroY, 22, elemColors.fire, 0.4);
-      const core = this.add.circle(heroX, heroY, 10, 0xffe6b8, 1);
-      const proj = this.add.container(heroX, heroY, [glow, core]);
-      c.add(proj);
-      // pulsa glow durante o trajeto
-      this.tweens.add({ targets: glow, scale: 1.2, duration: 100, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-      this.tweens.add({
-        targets: proj, x: target.x, y: target.y, duration: 280, ease: 'Linear',
-        onComplete: () => {
-          proj.destroy();
-          // status fogo só no alvo (não em todos — o cajado é single target)
-          if (target.active) target.setTint(elemTints.fire);
-          if (onHit) onHit();
-        },
-      });
-    };
-
-    // AURA GÉLIDA (❄️): círculo PERSISTENTE ao redor do player que pulsa.
-    // Igual à AuraWeapon do jogo: stays around player, ticks damage continuously.
-    const useAura = (enemies, onHit) => {
-      const auraRadius = 200; // raio visível grande pra cobrir os inimigos do demo
-      const ring  = this.add.circle(heroX, heroY, auraRadius, elemColors.ice, 0.15)
-                         .setStrokeStyle(3, elemColors.ice, 0.7).setDepth(2);
-      c.add(ring);
-      // Pulso de alpha enquanto ativa (~1.2s)
-      const pulse = this.tweens.add({
-        targets: ring, alpha: 0.32, duration: 350, yoyo: true, repeat: 2, ease: 'Sine.easeInOut',
-      });
-      this._demoTweens.push(pulse);
-      // Aplica status ice nos inimigos DENTRO do raio (todos no demo) com um pequeno flash
-      enemies.forEach((e, i) => {
-        this.time.delayedCall(150 + i * 40, () => {
-          if (!e.active) return;
-          e.setTint(elemTints.ice);
-          const fl = this.add.circle(e.x, e.y, 10, elemColors.ice, 0.8);
-          c.add(fl);
-          this.tweens.add({ targets: fl, alpha: 0, radius: 22, duration: 320, onComplete: () => fl.destroy() });
-        });
-      });
-      // Aura some no final
-      this.time.delayedCall(1300, () => {
-        this.tweens.add({ targets: ring, alpha: 0, duration: 250, onComplete: () => ring.destroy() });
-        if (onHit) onHit();
-      });
-    };
-
-    // RAIO ENCADEADO (⚡): bolts saltam do player ao primeiro, depois cadeia entre inimigos
-    const useChain = (enemies, onHit) => {
-      const order = [{ x: heroX, y: heroY }, ...enemies];
-      for (let i = 0; i < order.length - 1; i++) {
-        this.time.delayedCall(i * 90, () => {
-          const a = order[i], b = order[i + 1];
-          this._drawBolt(a.x, a.y, b.x, b.y, elemColors.bolt);
-          // flash + status no destino
-          if (i > 0 && enemies[i - 1].active) {
-            enemies[i - 1].setTint(elemTints.bolt);
-            const fl = this.add.circle(enemies[i - 1].x, enemies[i - 1].y, 14, 0xffffff, 0.8);
-            c.add(fl);
-            this.tweens.add({ targets: fl, alpha: 0, radius: 24, duration: 200, onComplete: () => fl.destroy() });
-          }
-        });
+      this.player.weapons = [];
+      // Adiciona novas
+      for (const WClass of weaponClasses) {
+        this.player.addWeapon(new WClass(this));
       }
-      this.time.delayedCall((order.length - 1) * 90, () => {
-        const last = enemies[enemies.length - 1];
-        if (last && last.active) {
-          last.setTint(elemTints.bolt);
-          const fl = this.add.circle(last.x, last.y, 14, 0xffffff, 0.8);
-          c.add(fl);
-          this.tweens.add({ targets: fl, alpha: 0, radius: 24, duration: 200, onComplete: () => fl.destroy() });
-        }
-        if (onHit) onHit();
-      });
     };
 
-    const reactionText = (x, y, label, color) => {
-      const t = sharp(this, x, y - 40, label, {
-        fontFamily: F, fontSize: '22px', fontStyle: 'bold', color,
-        stroke: '#000', strokeThickness: 5,
-      }).setOrigin(0.5);
-      c.add(t);
-      this.tweens.add({ targets: t, y: y - 80, alpha: 0, duration: 1000, onComplete: () => t.destroy() });
+    // Helper: dispara as armas em sequência manualmente
+    const fireWeapon = (idx) => {
+      const w = this.player.weapons[idx];
+      if (!w) return;
+      // Força disparo ignorando cooldown
+      w.lastFireAt = 0;
+      w._fire(this.time.now);
     };
 
-    const killEnemies = (enemies) => {
-      enemies.forEach((e, i) => {
-        this.time.delayedCall(i * 70, () => {
-          if (!e.active) return;
-          this.tweens.add({ targets: e, alpha: 0, scale: GAME.PIXEL_SCALE * 0.4, duration: 220,
-            onComplete: () => e.destroy() });
-        });
-      });
-    };
-
-    // ===== Ciclo de demos usando AS ARMAS REAIS =====
+    // Ciclo de demos
     const demos = [
-      // VAPOR (Cajado 🔥 + Aura ❄️)
+      // VAPOR — Staff (Cajado fire) + Aura Gelida (ice)
       () => {
         reactionLbl.setText('Cajado 🔥  +  Aura ❄️  =  VAPOR').setColor('#9ad4ff');
-        reactionDesc.setText('Cajado dispara projétil · Aura é círculo ao redor do player');
+        reactionDesc.setText('Cajado dispara projétil · Aura é círculo persistente ao redor do player');
         arenaBorder.setStrokeStyle(3, 0x9ad4ff, 0.8);
-        const enemies = spawnEnemies(4);
-        // Cajado primeiro (projétil)
-        this.time.delayedCall(700, () => useStaff(enemies));
-        // Aura depois (círculo)
-        this.time.delayedCall(1500, () => useAura(enemies, () => {
-          // VAPOR triggera
-          const center = enemies[Math.floor(enemies.length / 2)];
-          const cloud = this.add.circle(center.x, center.y, 30, 0xb8d4ff, 0.55).setDepth(50);
-          c.add(cloud);
-          this.tweens.add({ targets: cloud, radius: 110, alpha: 0, duration: 1500, onComplete: () => cloud.destroy() });
-          reactionText(center.x, center.y, 'VAPOR!', '#b8d4ff');
-          this.sound.play('sfx_hit', { volume: 0.35, rate: 0.6, detune: -600 });
-          // wobble lento (slow)
-          enemies.forEach(e => {
-            this.tweens.add({ targets: e, scaleX: GAME.PIXEL_SCALE * 0.95, scaleY: GAME.PIXEL_SCALE * 1.1,
-                              duration: 700, yoyo: true, repeat: 1, ease: 'Sine.easeInOut' });
-          });
-          this.time.delayedCall(1800, () => killEnemies(enemies));
-        }));
+        setWeapons([Staff, AuraWeapon]);
+        this._spawnDemoEnemies(enemyPositions);
+        // Cajado primeiro
+        this.time.delayedCall(600, () => fireWeapon(0));
+        // Depois aura (vai applicar ice nos próximos -> reação dispara nos hits da aura)
+        this.time.delayedCall(1300, () => fireWeapon(1));
       },
-      // CRISTAL (Aura ❄️ + Raio Encadeado ⚡)
+      // CRISTAL — Aura (ice) + Chain Lightning (bolt)
       () => {
         reactionLbl.setText('Aura ❄️  +  Raio ⚡  =  CRISTAL').setColor('#5cc8ff');
         reactionDesc.setText('Aura ao redor + Raio Encadeado salta entre inimigos');
         arenaBorder.setStrokeStyle(3, 0x5cc8ff, 0.8);
-        const enemies = spawnEnemies(4);
-        // Aura primeiro (círculo)
-        this.time.delayedCall(600, () => useAura(enemies));
-        // Raio depois (chain)
-        this.time.delayedCall(1500, () => useChain(enemies, () => {
-          // CRISTAL triggera (explosão)
-          const center = enemies[Math.floor(enemies.length / 2)];
-          const ring = this.add.circle(center.x, center.y, 8, 0x5cc8ff, 0).setStrokeStyle(5, 0x5cc8ff, 1).setDepth(60);
-          c.add(ring);
-          this.tweens.add({ targets: ring, radius: 130, alpha: 0, duration: 450, onComplete: () => ring.destroy() });
-          reactionText(center.x, center.y, 'CRISTAL!', '#5cc8ff');
-          this.sound.play('sfx_pickup', { volume: 0.5, rate: 1.6, detune: 400 });
-          // congelados
-          enemies.forEach(e => { e.setTint(0x4a9eff); this.tweens.killTweensOf(e); });
-          this.cameras.main.shake(120, 0.006);
-          this.time.delayedCall(1500, () => killEnemies(enemies));
-        }));
+        setWeapons([AuraWeapon, ChainLightning]);
+        this._spawnDemoEnemies(enemyPositions);
+        this.time.delayedCall(600, () => fireWeapon(0));
+        this.time.delayedCall(1300, () => fireWeapon(1));
       },
-      // SOBRECARGA (Cajado 🔥 + Raio Encadeado ⚡)
+      // SOBRECARGA — Staff (fire) + Chain Lightning (bolt)
       () => {
         reactionLbl.setText('Cajado 🔥  +  Raio ⚡  =  SOBRECARGA').setColor('#d98cff');
         reactionDesc.setText('Cajado dispara · Raio Encadeado adiciona o segundo elemento');
         arenaBorder.setStrokeStyle(3, 0xd98cff, 0.8);
-        const enemies = spawnEnemies(4);
-        // Cajado primeiro (projétil)
-        this.time.delayedCall(700, () => useStaff(enemies));
-        // Raio depois (chain)
-        this.time.delayedCall(1500, () => useChain(enemies, () => {
-          // SOBRECARGA já é a corrente do raio, mas reforça com texto + shake
-          reactionText(enemies[Math.floor(enemies.length / 2)].x, enemies[0].y, 'SOBRECARGA!', '#d98cff');
-          this.sound.play('sfx_levelup', { volume: 0.35, rate: 1.4, detune: 300 });
-          this.cameras.main.shake(150, 0.007);
-          this.time.delayedCall(900, () => killEnemies(enemies));
-        }));
+        setWeapons([Staff, ChainLightning]);
+        this._spawnDemoEnemies(enemyPositions);
+        this.time.delayedCall(600, () => fireWeapon(0));
+        this.time.delayedCall(1300, () => fireWeapon(1));
       },
     ];
 
     let demoIdx = 0;
     const runNext = () => {
+      // limpa inimigos restantes
+      this.enemyPool.forEachActive(e => {
+        e.deactivate();
+        this.enemyPool.release(e);
+      });
       demos[demoIdx]();
       demoIdx = (demoIdx + 1) % demos.length;
     };
     runNext();
     this._demoTimers.push(this.time.addEvent({ delay: 4500, loop: true, callback: runNext }));
-  }
 
-  _shootProjectile(fromX, fromY, toX, toY, color, onHit) {
-    const p = this.add.circle(fromX, fromY, 8, color, 1).setStrokeStyle(2, 0xffffff, 0.7);
-    this.pageContainer.add(p);
-    this.tweens.add({
-      targets: p, x: toX, y: toY, duration: 250, ease: 'Linear',
-      onComplete: () => {
-        p.destroy();
-        if (onHit) onHit();
-      },
-    });
-  }
-
-  _drawBolt(x1, y1, x2, y2, color) {
-    const g = this.add.graphics();
-    this.pageContainer.add(g);
-    g.lineStyle(3, color, 1);
-    const segs = 6;
-    g.beginPath(); g.moveTo(x1, y1);
-    for (let i = 1; i < segs; i++) {
-      const t = i / segs;
-      g.lineTo(x1 + (x2 - x1) * t + (Math.random() - 0.5) * 12,
-               y1 + (y2 - y1) * t + (Math.random() - 0.5) * 12);
-    }
-    g.lineTo(x2, y2); g.strokePath();
-    this.tweens.add({ targets: g, alpha: 0, duration: 350, onComplete: () => g.destroy() });
+    // Tick handler real
+    this._demoTickHandler = (time, dt) => this._runDemoTick(time, dt);
+    this.events.on('update', this._demoTickHandler);
   }
 
   // ============================================================
-  // PÁGINA 4 — Baús com 4 tipos
+  // PÁGINA 4 — Baús
   // ============================================================
   _pageChests() {
     const c = this.pageContainer;
@@ -659,7 +573,6 @@ export class TutorialScene extends Phaser.Scene {
       c.add(sharp(this, t.x, 340, t.desc,  { fontFamily: F, fontSize: '11px', color: '#e8f0e6', align: 'center', wordWrap: { width: 200 } }).setOrigin(0.5, 0));
     }
 
-    // Demo abrindo um baú (mímico)
     c.add(sharp(this, cx, 440, '⚠  Mímico vira sprite com língua e libera 1 monstro super forte.',
       { fontFamily: F, fontSize: '13px', color: '#ff8898', align: 'center' }).setOrigin(0.5));
     c.add(sharp(this, cx, 465, 'Bônus: tocar baú DOURADO = 8-bit win jingle.',
@@ -694,4 +607,7 @@ export class TutorialScene extends Phaser.Scene {
       { fontFamily: F, fontSize: '18px', fontStyle: 'bold', color: '#6fcf6f', align: 'center' }
     ).setOrigin(0.5));
   }
+
+  // Phaser chama isso automaticamente
+  _drawBolt() { /* não usado mais */ }
 }
