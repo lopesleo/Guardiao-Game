@@ -75,9 +75,10 @@ export class GameScene extends Phaser.Scene {
       this._toast('★ Despertar cheio');
     });
     this.input.keyboard.on('keydown-EIGHT', () => {
-      // +50 XP (level up rápido pra ver as cartas)
-      this.player.gainXp(50);
-      this._toast('+50 XP');
+      // Level up imediato
+      const need = PLAYER.XP_PER_LEVEL(this.player.level) - this.player.xp;
+      this.player.gainXp(need);
+      this._toast(`LV ${this.player.level}`);
     });
     this.input.keyboard.on('keydown-SEVEN', () => {
       // Adiciona +20s ao timer (acelera spawn + aproxima boss)
