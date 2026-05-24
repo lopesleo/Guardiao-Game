@@ -79,10 +79,12 @@ export class GameScene extends Phaser.Scene {
     this.boss = null;
     this.bossWarned = false;
 
-    // ESC
+    // ESC → pausa (não sai mais direto)
     this.input.keyboard.on('keydown-ESC', () => {
       if (this.scene.isActive('LevelUpScene')) return;
-      this.scene.start('MenuScene');
+      if (this.scene.isActive('PauseScene')) return;
+      this.scene.pause();
+      this.scene.launch('PauseScene');
     });
 
     // ====== DEBUG KEYS (remover antes da entrega final se quiser) ======

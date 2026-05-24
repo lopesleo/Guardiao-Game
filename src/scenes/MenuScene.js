@@ -72,11 +72,12 @@ export class MenuScene extends Phaser.Scene {
     }
 
     // === BOTÕES — sans-serif grande e legível ===
-    const by = 410, bgap = 64;
-    this._button(cx, by,            'JOGAR',       '#ffd96b', 26, true,  () => this.scene.start('GameScene'));
-    this._button(cx, by + bgap,     'BÊNÇÃOS',     '#e8f0e6', 20, false, () => this._showBlessingsMenu());
-    this._button(cx, by + bgap * 2, 'DESBLOQUEAR', '#e8f0e6', 20, false, () => this._showUnlockMenu());
-    this._button(cx, by + bgap * 3, 'CRÉDITOS',    '#93a89a', 18, false, () => this.scene.start('CreditsScene'));
+    const by = 390, bgap = 60;
+    this._button(cx, by,            'JOGAR',         '#ffd96b', 26, true,  () => this.scene.start('GameScene'));
+    this._button(cx, by + bgap,     'COMO JOGAR',    '#e8f0e6', 20, false, () => this.scene.start('TutorialScene'));
+    this._button(cx, by + bgap * 2, 'BÊNÇÃOS',       '#e8f0e6', 20, false, () => this._showBlessingsMenu());
+    this._button(cx, by + bgap * 3, 'DESBLOQUEAR',   '#e8f0e6', 20, false, () => this._showUnlockMenu());
+    this._button(cx, by + bgap * 4, 'CRÉDITOS',      '#93a89a', 18, false, () => this.scene.start('CreditsScene'));
 
     // === HINT ===
     sharp(this, cx, H - 28,

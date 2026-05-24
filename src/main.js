@@ -10,6 +10,8 @@ import { HUDScene } from './scenes/HUDScene.js';
 import { LevelUpScene } from './scenes/LevelUpScene.js';
 import { GameOverScene } from './scenes/GameOverScene.js';
 import { CreditsScene } from './scenes/CreditsScene.js';
+import { PauseScene } from './scenes/PauseScene.js';
+import { TutorialScene } from './scenes/TutorialScene.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -37,6 +39,8 @@ const config = {
     LevelUpScene,
     GameOverScene,
     CreditsScene,
+    PauseScene,
+    TutorialScene,
   ],
 };
 
