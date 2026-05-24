@@ -176,7 +176,7 @@ export class GameScene extends Phaser.Scene {
       if (!isClear(x, y)) continue;
       const f = pickWeighted(SINGLE);
       this.add.image(x, y, 'town_tiles', f)
-              .setScale(GAME.PIXEL_SCALE).setDepth(y);
+              .setScale(GAME.PIXEL_SCALE).setDepth(-50); // sempre atrás do player
     }
 
     // Árvores 2-tile standalone (top + bottom; pé fica em y)
