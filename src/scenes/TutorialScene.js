@@ -367,29 +367,30 @@ export class TutorialScene extends Phaser.Scene {
     const barLbl = sharp(this, cx, aY + 100, '', { fontFamily: F, fontSize: '11px', fontStyle: 'bold', color: '#ffffff', stroke: '#000', strokeThickness: 2 }).setOrigin(0.5);
     c.add(barBg); c.add(barFill); c.add(barLbl);
 
-    // Posições — DENTRO do raio do Cajado (range 280) pra ele encontrar alvo!
-    // heroX = cx - 280, então enemy ~heroX+220 fica a ~220px (em range).
-    const enemyPositions = [
-      { x: heroX + 180, y: aY - 50 },
-      { x: heroX + 220, y: aY + 40 },
-      { x: heroX + 200, y: aY - 30 },
-      { x: heroX + 240, y: aY + 30 },
-    ];
-    let currentEnemies = this._spawnDemoEnemies(enemyPositions, 0, { chase: true, speed: 45 });
+    // Spawn CONTÍNUO de inimigos no demo (igual horda real)
+    const MAX_ALIVE = 6;
+    const SPAWN_EVERY_MS = 700;
+    const spawnOne = () => {
+      if (!this.enemyPool) return;
+      if (this.enemyPool.size >= MAX_ALIVE) return;
+      // Spawna em arco à direita do player, dentro do raio do Cajado
+      const angle = (Math.random() - 0.5) * Math.PI * 0.9; // -80° a +80° à direita
+      const dist = 200 + Math.random() * 60;
+      const x = heroX + Math.cos(angle) * dist;
+      const y = heroY + Math.sin(angle) * dist;
+      const e = this.enemyPool.acquire();
+      e.activate(x, y, 'wolf', 0);
+      e.speed = 45;
+    };
+    // Spawn 3 imediatos pra demo começar rapido
+    for (let i = 0; i < 3; i++) spawnOne();
+    this._demoTimers.push(this.time.addEvent({ delay: SPAWN_EVERY_MS, loop: true, callback: spawnOne }));
 
     // Tick handler
     const tick = (time, dt) => {
       this._runDemoTick(time, dt);
 
-      // Se todos morreram, espera + respawna
-      const aliveCount = currentEnemies.filter(e => e.active).length;
-      if (aliveCount === 0 && !this._awaitingRespawn) {
-        this._awaitingRespawn = true;
-        this.time.delayedCall(800, () => {
-          currentEnemies = this._spawnDemoEnemies(enemyPositions, 0, { chase: true, speed: 45 });
-          this._awaitingRespawn = false;
-        });
-      }
+      // (spawn é via timer; não precisa respawn aqui)
 
       // Atualiza barra visual
       const pct = this.player.awakenMeter / this.player.awakenMax;
