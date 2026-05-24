@@ -153,13 +153,12 @@ export class GameScene extends Phaser.Scene {
     this.add.tileSprite(0, 0, r * 2, r * 2, 'town_tiles', 0)
             .setOrigin(0.5).setScale(GAME.PIXEL_SCALE).setDepth(-100);
 
-    // Single-tile decorações (limpas, standalone)
+    // Single-tile decorações verificadas no PNG
     const SINGLE = [
-      { f: 1,   weight: 6 },   // graminha com flores
-      { f: 28,  weight: 3 },   // par de cogumelos vermelhos grandes
-      { f: 29,  weight: 3 },   // cogumelo vermelho pequeno
-      { f: 41,  weight: 2 },   // calçamento de pedra
-      { f: 118, weight: 1 },   // tora de madeira cortada
+      { f: 1,  weight: 6 },   // grama com flores discretas
+      { f: 2,  weight: 4 },   // grama com flores mais marcadas
+      { f: 29, weight: 3 },   // cogumelos vermelhos
+      { f: 43, weight: 2 },   // calçamento de pedra cinza
     ];
     const pickWeighted = arr => {
       const total = arr.reduce((s, x) => s + x.weight, 0);
@@ -182,9 +181,9 @@ export class GameScene extends Phaser.Scene {
 
     // Árvores 2-tile standalone (top + bottom; pé fica em y)
     const TREES = [
-      [4, 16],  // Árvore de outono (laranja)
-      [5, 17],  // Pinheiro (verde)
-      [6, 18],  // Arbusto redondo grande (topiária)
+      [3, 15],  // árvore outono laranja
+      [4, 16],  // pinheiro verde
+      [5, 17],  // arbusto redondo
     ];
     for (let i = 0; i < 60; i++) {
       const ang = Math.random() * Math.PI * 2;
