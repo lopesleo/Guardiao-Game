@@ -153,14 +153,12 @@ export class GameScene extends Phaser.Scene {
     this.add.tileSprite(0, 0, r * 2, r * 2, 'town_tiles', 1)
             .setOrigin(0.5).setScale(GAME.PIXEL_SCALE).setDepth(-100);
 
-    // Single-tile decorações: arbustos, cogumelos, pedras, saco, colmeia, tora
+    // Single-tile decorações (só os que eu CONFIRMEI visualmente)
     const SINGLE = [
-      { f: 5,  weight: 4 },   // arbusto pequeno verde
-      { f: 17, weight: 4 },   // arbusto mini
+      { f: 5,  weight: 5 },   // arbusto pequeno verde claro
+      { f: 17, weight: 5 },   // arbusto mini verde escuro
       { f: 29, weight: 3 },   // cogumelos vermelhos
-      { f: 43, weight: 2 },   // laje pedra
-      { f: 93, weight: 1 },   // saco
-      { f: 129, weight: 1 },  // tora
+      { f: 43, weight: 2 },   // laje de pedra
     ];
     const pickWeighted = arr => {
       const total = arr.reduce((s, x) => s + x.weight, 0);
