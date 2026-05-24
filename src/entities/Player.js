@@ -41,11 +41,29 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.dashCdUntil = 0;
     this.dashDirX = 1; this.dashDirY = 0;
 
+    // Passivas acumuláveis
+    this.lifestealPct = 0;
+    this.regenPerSec = 0;
+    this._regenAcc = 0;
+
     // Multiplicadores de bênçãos (setados via BLESSINGS.apply)
     this._xpMult = 1;
     this._awakenGainMult = 1;
     this._dashCdMult = 1;
     this._blessingDmgMult = 1;
+  }
+
+  // Cura por roubo de vida — chamado nos sites de dano em GameScene.
+  lifestealFrom(dmg) {
+    if (this.lifestealPct <= 0) return;
+    this.hp = Math.min(this.maxHp, this.hp + dmg * this.lifestealPct);
+  }
+
+  // Cura/refill direto (usado por pickups).
+  healHp(amount) { this.hp = Math.min(this.maxHp, this.hp + amount); }
+  refillAwaken(amount) {
+    if (this.scene.time.now < this.awakenLockUntil) return;
+    this.awakenMeter = Math.min(this.awakenMax, this.awakenMeter + amount);
   }
 
   addWeapon(weapon) {
@@ -140,6 +158,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   update(time, dt, input) {
+    // Regen passivo (acumula frações de HP por dt)
+    if (this.regenPerSec > 0 && this.hp < this.maxHp) {
+      this._regenAcc += this.regenPerSec * (dt / 1000);
+      if (this._regenAcc >= 1) {
+        const amt = Math.floor(this._regenAcc);
+        this.hp = Math.min(this.maxHp, this.hp + amt);
+        this._regenAcc -= amt;
+      }
+    }
+
     // Despertar trigger
     if (input.consumeAwaken()) this.tryActivateAwaken();
     this._endAwakenedIfNeeded();

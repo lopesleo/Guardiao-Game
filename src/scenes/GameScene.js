@@ -1,5 +1,5 @@
 // Arena (D3: boss, meta, dmg numbers, screenshake, onboarding).
-import { GAME, COLORS, BOSS, META, ENEMY, WEAPONS, PLAYER, BLESSINGS } from '../config.js';
+import { GAME, COLORS, BOSS, META, ENEMY, WEAPONS, PLAYER, BLESSINGS, DROPS } from '../config.js';
 import { InputManager } from '../systems/InputManager.js';
 import { Pool } from '../systems/Pool.js';
 import { SpawnDirector } from '../systems/SpawnDirector.js';
@@ -9,7 +9,7 @@ import { MetaProgression } from '../systems/MetaProgression.js';
 import { Player } from '../entities/Player.js';
 import { Enemy, EnemyProjectile, BossEnt } from '../entities/Enemies.js';
 import { Projectile, BoomerangProj, Staff, AuraWeapon, Boomerang, ChainLightning, WEAPON_CLASSES } from '../entities/Weapons.js';
-import { XPGem, CoinPickup } from '../entities/Pickups.js';
+import { XPGem, CoinPickup, HeartPickup, AwakenOrb } from '../entities/Pickups.js';
 import { DamageNumber } from '../entities/DamageNumber.js';
 import { HUD } from '../ui/HUD.js';
 import { VirtualJoystick } from '../ui/VirtualJoystick.js';
@@ -37,6 +37,8 @@ export class GameScene extends Phaser.Scene {
     this.enemyProjPool  = new Pool(() => new EnemyProjectile(this), 12);
     this.xpPool         = new Pool(() => new XPGem(this), 50);
     this.coinPool       = new Pool(() => new CoinPickup(this), 20);
+    this.heartPool      = new Pool(() => new HeartPickup(this), 10);
+    this.awakenOrbPool  = new Pool(() => new AwakenOrb(this), 10);
     this.dmgNumberPool  = new Pool(() => new DamageNumber(this), 30);
 
     // Sistemas
@@ -76,7 +78,7 @@ export class GameScene extends Phaser.Scene {
     // ====== DEBUG KEYS (remover antes da entrega final se quiser) ======
     this.input.keyboard.on('keydown-NINE', () => {
       // Enche Despertar
-      this.player.awakenMeter = PLAYER.AWAKEN_METER_MAX;
+      this.player.awakenMeter = this.player.awakenMax;
       this._toast('★ Despertar cheio');
     });
     this.input.keyboard.on('keydown-EIGHT', () => {
@@ -217,6 +219,7 @@ export class GameScene extends Phaser.Scene {
         const dx = this.boss.x - p.x, dy = this.boss.y - p.y;
         if (dx * dx + dy * dy < 40 * 40) {
           const died = this.boss.takeDamage(p.dmg);
+          this.player.lifestealFrom(p.dmg);
           this._showDmg(this.boss.x, this.boss.y, p.dmg, p.element);
           if (p.element) this.elemental.applyStatus(this.boss, p.element);
           p.kill(); this.projectilePool.release(p);
@@ -229,6 +232,7 @@ export class GameScene extends Phaser.Scene {
         const dx = e.x - p.x, dy = e.y - p.y;
         if (dx * dx + dy * dy < 22 * 22) {
           const died = e.takeDamage(p.dmg, p.element);
+          this.player.lifestealFrom(p.dmg);
           this._showDmg(e.x, e.y, p.dmg, p.element);
           p.kill(); this.projectilePool.release(p);
           if (died) this._onEnemyDeath(e);
@@ -244,6 +248,7 @@ export class GameScene extends Phaser.Scene {
         const dx = this.boss.x - p.x, dy = this.boss.y - p.y;
         if (dx * dx + dy * dy < 40 * 40 && p.canHit(this.boss, time)) {
           const died = this.boss.takeDamage(p.dmg);
+          this.player.lifestealFrom(p.dmg);
           this._showDmg(this.boss.x, this.boss.y, p.dmg, 'fire');
           this.elemental.applyStatus(this.boss, 'fire');
           if (died) this._onBossDeath();
@@ -254,6 +259,7 @@ export class GameScene extends Phaser.Scene {
         const dx = e.x - p.x, dy = e.y - p.y;
         if (dx * dx + dy * dy < 22 * 22 && p.canHit(e, time)) {
           const died = e.takeDamage(p.dmg, 'fire');
+          this.player.lifestealFrom(p.dmg);
           this._showDmg(e.x, e.y, p.dmg, 'fire');
           if (died) this._onEnemyDeath(e);
         }
@@ -295,6 +301,29 @@ export class GameScene extends Phaser.Scene {
         this.coinPool.release(c);
       }
     });
+    // Corações
+    this.heartPool.forEachActive(h => {
+      h.update(time, dt, this.player);
+      const dx = h.x - this.player.x, dy = h.y - this.player.y;
+      if (dx * dx + dy * dy < this.player.pickupRadius * this.player.pickupRadius) {
+        this.player.healHp(DROPS.HEART_HEAL);
+        this.sound.play('sfx_pickup', { volume: 0.3, rate: 0.85 });
+        this._showDmg(this.player.x, this.player.y - 10, DROPS.HEART_HEAL, 'heal');
+        h.pickup();
+        this.heartPool.release(h);
+      }
+    });
+    // Orbes de Despertar
+    this.awakenOrbPool.forEachActive(o => {
+      o.update(time, dt, this.player);
+      const dx = o.x - this.player.x, dy = o.y - this.player.y;
+      if (dx * dx + dy * dy < this.player.pickupRadius * this.player.pickupRadius) {
+        this.player.refillAwaken(DROPS.AWAKEN_REFILL);
+        this.sound.play('sfx_pickup', { volume: 0.3, rate: 1.6 });
+        o.pickup();
+        this.awakenOrbPool.release(o);
+      }
+    });
   }
 
   _toast(msg, ms = 1500) {
@@ -308,8 +337,12 @@ export class GameScene extends Phaser.Scene {
 
   _showDmg(x, y, dmg, element) {
     const n = this.dmgNumberPool.acquire();
-    const color = element === 'ice' ? '#9ad4ff' : element === 'bolt' ? '#d8a8ff' : element === 'fire' ? '#ff9966' : '#ffffff';
-    n.show(x, y, dmg, color);
+    const color = element === 'ice'  ? '#9ad4ff'
+                : element === 'bolt' ? '#d8a8ff'
+                : element === 'fire' ? '#ff9966'
+                : element === 'heal' ? '#6fcf6f'
+                : '#ffffff';
+    n.show(x, y, element === 'heal' ? `+${dmg}` : dmg, color);
   }
 
   _onEnemyDeath(enemy) {
@@ -318,13 +351,20 @@ export class GameScene extends Phaser.Scene {
     this.player.addAwakenMeter(PLAYER.AWAKEN_GAIN_KILL);
     this.sound.play('sfx_death', { volume: 0.15 });
     this.cameras.main.shake(40, 0.002);
-    // Drop XP
+    // Drop XP sempre
     const g = this.xpPool.acquire();
     g.spawn(enemy.x, enemy.y);
-    // Chance de moeda
-    if (Math.random() < ENEMY.COIN_DROP_CHANCE) {
+    // Drops aleatórios
+    const r = Math.random();
+    if (r < DROPS.COIN_CHANCE) {
       const c = this.coinPool.acquire();
       c.spawn(enemy.x + (Math.random() - 0.5) * 10, enemy.y + (Math.random() - 0.5) * 10);
+    } else if (r < DROPS.COIN_CHANCE + DROPS.HEART_CHANCE) {
+      const h = this.heartPool.acquire();
+      h.spawn(enemy.x, enemy.y);
+    } else if (r < DROPS.COIN_CHANCE + DROPS.HEART_CHANCE + DROPS.AWAKEN_CHANCE) {
+      const o = this.awakenOrbPool.acquire();
+      o.spawn(enemy.x, enemy.y);
     }
     enemy.deactivate();
     this.enemyPool.release(enemy);

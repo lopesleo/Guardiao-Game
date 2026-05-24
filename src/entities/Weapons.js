@@ -231,17 +231,18 @@ export class AuraWeapon extends Weapon {
       const dx = e.x - this.owner.x, dy = e.y - this.owner.y;
       if (dx * dx + dy * dy <= r2) {
         const died = e.takeDamage(this.damage, null);
+        this.owner.lifestealFrom(this.damage);
         this.scene.elemental.applyStatus(e, 'ice');
         if (died) this.scene._onEnemyDeath(e);
         hits++;
       }
     });
-    // Boss também sofre da aura
     const boss = this.scene.boss;
     if (boss && boss.active) {
       const dx = boss.x - this.owner.x, dy = boss.y - this.owner.y;
       if (dx * dx + dy * dy <= r2) {
         const died = boss.takeDamage(this.damage);
+        this.owner.lifestealFrom(this.damage);
         this.scene.elemental.applyStatus(boss, 'ice');
         if (died) this.scene._onBossDeath();
         hits++;
@@ -280,7 +281,9 @@ export class ChainLightning extends Weapon {
     for (let i = 0; i < jumps && cur; i++) {
       this.scene.elemental._drawBolt(prev.x, prev.y, cur.x, cur.y, COLORS.BOLT);
       const isBoss = cur === this.scene.boss;
-      const died = cur.takeDamage(dmg * (1 - i * 0.15), isBoss ? undefined : null);
+      const hit = dmg * (1 - i * 0.15);
+      const died = cur.takeDamage(hit, isBoss ? undefined : null);
+      this.owner.lifestealFrom(hit);
       this.scene.elemental.applyStatus(cur, 'bolt');
       visited.add(cur);
       if (died) {

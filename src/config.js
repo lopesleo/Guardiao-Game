@@ -86,14 +86,25 @@ export const WEAPONS = {
 export const WEAPON_LEVEL_DMG = (base, lvl) => base * (1 + 0.25 * (lvl - 1));
 export const MAX_WEAPON_LEVEL = 5;
 
-// Upgrades passivos (D8 final)
+// Upgrades passivos (level-up)
 export const PASSIVES = [
-  { id: 'hp',       name: '+20% HP Máximo',         apply: p => p.maxHp *= 1.20 },
-  { id: 'speed',    name: '+15% Velocidade',         apply: p => p.speed  *= 1.15 },
-  { id: 'cooldown', name: '-15% Recarga de armas',   apply: p => p.cdMult *= 0.85 },
-  { id: 'area',     name: '+25% Área (Aura/Reações/Raio)', apply: p => p.areaMult *= 1.25 },
-  { id: 'proj',     name: '+1 Projétil (Cajado/Raio)',     apply: p => p.extraProj += 1 },
+  { id: 'hp',        name: '+20% HP Máximo',                  apply: p => { p.maxHp *= 1.20; p.hp = Math.min(p.maxHp, p.hp + 20); } },
+  { id: 'speed',     name: '+15% Velocidade',                 apply: p => p.speed  *= 1.15 },
+  { id: 'cooldown',  name: '-15% Recarga de armas',           apply: p => p.cdMult *= 0.85 },
+  { id: 'area',      name: '+25% Área (Aura/Reações/Raio)',   apply: p => p.areaMult *= 1.25 },
+  { id: 'proj',      name: '+1 Projétil (Cajado/Raio)',       apply: p => p.extraProj += 1 },
+  { id: 'lifesteal', name: '+5% Roubo de Vida',               apply: p => p.lifestealPct += 0.05 },
+  { id: 'regen',     name: 'Regenera 1 HP/s',                 apply: p => p.regenPerSec += 1 },
 ];
+
+// Drops aleatórios no chão (chance por kill)
+export const DROPS = {
+  COIN_CHANCE:   0.05,
+  HEART_CHANCE:  0.012,   // recupera HP
+  AWAKEN_CHANCE: 0.018,   // recupera medidor
+  HEART_HEAL:    20,
+  AWAKEN_REFILL: 25,
+};
 
 // Meta-progressão
 export const META = {
