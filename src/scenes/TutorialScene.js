@@ -425,21 +425,69 @@ export class TutorialScene extends Phaser.Scene {
       return list;
     };
 
-    const shootAtAll = (enemies, color, onAllHit) => {
-      let hits = 0;
+    // === ARMAS REAIS DO JOGO ===
+
+    // CAJADO (🔥): projétil único no inimigo mais próximo (=primeiro)
+    const useStaff = (enemies, onHit) => {
+      const target = enemies[0];
+      const glow = this.add.circle(heroX, heroY, 14, elemColors.fire, 0.4);
+      const core = this.add.circle(heroX, heroY, 7, 0xffe6b8, 1);
+      const proj = this.add.container(heroX, heroY, [glow, core]);
+      c.add(proj);
+      this.tweens.add({
+        targets: proj, x: target.x, y: target.y, duration: 250, ease: 'Linear',
+        onComplete: () => { proj.destroy(); enemies.forEach(e => e.setTint(elemTints.fire)); if (onHit) onHit(); },
+      });
+    };
+
+    // AURA GÉLIDA (❄️): círculo ao redor do player, hit em TODOS na área
+    const useAura = (enemies, onHit) => {
+      const ring = this.add.circle(heroX, heroY, 30, elemColors.ice, 0.3).setStrokeStyle(3, elemColors.ice, 0.9);
+      c.add(ring);
+      this.tweens.add({
+        targets: ring, radius: 280, alpha: 0, duration: 600, ease: 'Cubic.easeOut',
+        onComplete: () => { ring.destroy(); if (onHit) onHit(); },
+      });
+      // Aplica ice nos inimigos progressivamente conforme aura cresce
       enemies.forEach((e, i) => {
-        this.time.delayedCall(i * 80, () => {
-          const p = this.add.circle(heroX, heroY, 7, color, 1).setStrokeStyle(2, 0xffe6b8, 0.8);
-          c.add(p);
-          this.tweens.add({
-            targets: p, x: e.x, y: e.y, duration: 220, ease: 'Linear',
-            onComplete: () => {
-              p.destroy();
-              hits++;
-              if (hits === enemies.length && onAllHit) onAllHit();
-            },
-          });
+        const dist = Math.hypot(e.x - heroX, e.y - heroY);
+        const delay = (dist / 280) * 600;
+        this.time.delayedCall(delay, () => {
+          if (!e.active) return;
+          e.setTint(elemTints.ice);
+          // pequeno flash gelo no ponto do inimigo
+          const fl = this.add.circle(e.x, e.y, 12, 0xffffff, 0.7);
+          c.add(fl);
+          this.tweens.add({ targets: fl, alpha: 0, radius: 22, duration: 250, onComplete: () => fl.destroy() });
         });
+      });
+    };
+
+    // RAIO ENCADEADO (⚡): bolts saltam do player ao 1º, depois entre inimigos
+    const useChain = (enemies, onHit) => {
+      const order = [{ x: heroX, y: heroY }, ...enemies];
+      for (let i = 0; i < order.length - 1; i++) {
+        this.time.delayedCall(i * 90, () => {
+          const a = order[i], b = order[i + 1];
+          this._drawBolt(a.x, a.y, b.x, b.y, elemColors.bolt);
+          if (i > 0 && enemies[i - 1].active) {
+            enemies[i - 1].setTint(elemTints.bolt);
+            const fl = this.add.circle(enemies[i - 1].x, enemies[i - 1].y, 14, 0xffffff, 0.8);
+            c.add(fl);
+            this.tweens.add({ targets: fl, alpha: 0, radius: 24, duration: 200, onComplete: () => fl.destroy() });
+          }
+        });
+      }
+      // último flash
+      this.time.delayedCall((order.length - 1) * 90, () => {
+        const last = enemies[enemies.length - 1];
+        if (last.active) {
+          last.setTint(elemTints.bolt);
+          const fl = this.add.circle(last.x, last.y, 14, 0xffffff, 0.8);
+          c.add(fl);
+          this.tweens.add({ targets: fl, alpha: 0, radius: 24, duration: 200, onComplete: () => fl.destroy() });
+        }
+        if (onHit) onHit();
       });
     };
 
@@ -462,91 +510,72 @@ export class TutorialScene extends Phaser.Scene {
       });
     };
 
-    // ===== Ciclo de demos =====
+    // ===== Ciclo de demos usando AS ARMAS REAIS =====
     const demos = [
-      // VAPOR (fire + ice)
+      // VAPOR (Cajado 🔥 + Aura ❄️)
       () => {
-        reactionLbl.setText('🔥 + ❄️  =  VAPOR').setColor('#9ad4ff');
-        reactionDesc.setText('Nuvem que lentifica área 3s (sem dano direto)');
+        reactionLbl.setText('Cajado 🔥  +  Aura ❄️  =  VAPOR').setColor('#9ad4ff');
+        reactionDesc.setText('Cajado dispara projétil · Aura é círculo ao redor do player');
         arenaBorder.setStrokeStyle(3, 0x9ad4ff, 0.8);
         const enemies = spawnEnemies(4);
-        this.time.delayedCall(600, () => {
-          shootAtAll(enemies, elemColors.fire, () => {
-            enemies.forEach(e => e.setTint(elemTints.fire));
+        // Cajado primeiro (projétil)
+        this.time.delayedCall(700, () => useStaff(enemies));
+        // Aura depois (círculo)
+        this.time.delayedCall(1500, () => useAura(enemies, () => {
+          // VAPOR triggera
+          const center = enemies[Math.floor(enemies.length / 2)];
+          const cloud = this.add.circle(center.x, center.y, 30, 0xb8d4ff, 0.55).setDepth(50);
+          c.add(cloud);
+          this.tweens.add({ targets: cloud, radius: 110, alpha: 0, duration: 1500, onComplete: () => cloud.destroy() });
+          reactionText(center.x, center.y, 'VAPOR!', '#b8d4ff');
+          this.sound.play('sfx_hit', { volume: 0.35, rate: 0.6, detune: -600 });
+          // wobble lento (slow)
+          enemies.forEach(e => {
+            this.tweens.add({ targets: e, scaleX: GAME.PIXEL_SCALE * 0.95, scaleY: GAME.PIXEL_SCALE * 1.1,
+                              duration: 700, yoyo: true, repeat: 1, ease: 'Sine.easeInOut' });
           });
-        });
-        this.time.delayedCall(1400, () => {
-          shootAtAll(enemies, elemColors.ice, () => {
-            // VAPOR: nuvem azul-clara expandindo
-            const center = enemies[Math.floor(enemies.length / 2)];
-            const cloud = this.add.circle(center.x, center.y, 30, 0xb8d4ff, 0.5).setDepth(50);
-            c.add(cloud);
-            this.tweens.add({ targets: cloud, radius: 120, alpha: 0, duration: 1500, onComplete: () => cloud.destroy() });
-            reactionText(center.x, center.y, 'VAPOR!', '#b8d4ff');
-            this.sound.play('sfx_hit', { volume: 0.35, rate: 0.6, detune: -600 });
-            // inimigos ficam azul-claros (efeito de lentidão visual)
-            enemies.forEach(e => e.setTint(0x9ad4ff));
-            // tween de wobble lento
-            enemies.forEach((e, i) => {
-              this.tweens.add({ targets: e, scaleX: GAME.PIXEL_SCALE * 0.95, scaleY: GAME.PIXEL_SCALE * 1.1,
-                                duration: 600, yoyo: true, repeat: 1, ease: 'Sine.easeInOut' });
-            });
-            this.time.delayedCall(1800, () => killEnemies(enemies));
-          });
-        });
+          this.time.delayedCall(1800, () => killEnemies(enemies));
+        }));
       },
-      // CRISTAL (ice + bolt)
+      // CRISTAL (Aura ❄️ + Raio Encadeado ⚡)
       () => {
-        reactionLbl.setText('❄️ + ⚡  =  CRISTAL ESTILHAÇADO').setColor('#5cc8ff');
-        reactionDesc.setText('Explosão em anel + congela inimigos 1s');
+        reactionLbl.setText('Aura ❄️  +  Raio ⚡  =  CRISTAL').setColor('#5cc8ff');
+        reactionDesc.setText('Aura ao redor + Raio Encadeado salta entre inimigos');
         arenaBorder.setStrokeStyle(3, 0x5cc8ff, 0.8);
         const enemies = spawnEnemies(4);
-        this.time.delayedCall(600, () => {
-          shootAtAll(enemies, elemColors.ice, () => enemies.forEach(e => e.setTint(elemTints.ice)));
-        });
-        this.time.delayedCall(1400, () => {
-          shootAtAll(enemies, elemColors.bolt, () => {
-            const center = enemies[Math.floor(enemies.length / 2)];
-            // anel expansivo
-            const ring = this.add.circle(center.x, center.y, 8, 0x5cc8ff, 0).setStrokeStyle(5, 0x5cc8ff, 1).setDepth(60);
-            c.add(ring);
-            this.tweens.add({ targets: ring, radius: 130, alpha: 0, duration: 450, onComplete: () => ring.destroy() });
-            reactionText(center.x, center.y, 'CRISTAL!', '#5cc8ff');
-            this.sound.play('sfx_pickup', { volume: 0.5, rate: 1.6, detune: 400 });
-            // congelados = tint azul forte + paradinhos
-            enemies.forEach(e => { e.setTint(0x4a9eff); this.tweens.killTweensOf(e); });
-            this.cameras.main.shake(120, 0.006);
-            this.time.delayedCall(1500, () => killEnemies(enemies));
-          });
-        });
+        // Aura primeiro (círculo)
+        this.time.delayedCall(600, () => useAura(enemies));
+        // Raio depois (chain)
+        this.time.delayedCall(1500, () => useChain(enemies, () => {
+          // CRISTAL triggera (explosão)
+          const center = enemies[Math.floor(enemies.length / 2)];
+          const ring = this.add.circle(center.x, center.y, 8, 0x5cc8ff, 0).setStrokeStyle(5, 0x5cc8ff, 1).setDepth(60);
+          c.add(ring);
+          this.tweens.add({ targets: ring, radius: 130, alpha: 0, duration: 450, onComplete: () => ring.destroy() });
+          reactionText(center.x, center.y, 'CRISTAL!', '#5cc8ff');
+          this.sound.play('sfx_pickup', { volume: 0.5, rate: 1.6, detune: 400 });
+          // congelados
+          enemies.forEach(e => { e.setTint(0x4a9eff); this.tweens.killTweensOf(e); });
+          this.cameras.main.shake(120, 0.006);
+          this.time.delayedCall(1500, () => killEnemies(enemies));
+        }));
       },
-      // SOBRECARGA (fire + bolt)
+      // SOBRECARGA (Cajado 🔥 + Raio Encadeado ⚡)
       () => {
-        reactionLbl.setText('🔥 + ⚡  =  SOBRECARGA').setColor('#d98cff');
-        reactionDesc.setText('Corrente elétrica salta entre 4 inimigos');
+        reactionLbl.setText('Cajado 🔥  +  Raio ⚡  =  SOBRECARGA').setColor('#d98cff');
+        reactionDesc.setText('Cajado dispara · Raio Encadeado adiciona o segundo elemento');
         arenaBorder.setStrokeStyle(3, 0xd98cff, 0.8);
         const enemies = spawnEnemies(4);
-        this.time.delayedCall(600, () => {
-          shootAtAll(enemies, elemColors.fire, () => enemies.forEach(e => e.setTint(elemTints.fire)));
-        });
-        this.time.delayedCall(1400, () => {
-          shootAtAll(enemies, elemColors.bolt, () => {
-            // SOBRECARGA: bolts entre inimigos em sequência
-            for (let i = 0; i < enemies.length - 1; i++) {
-              this.time.delayedCall(i * 100, () => {
-                this._drawBolt(enemies[i].x, enemies[i].y, enemies[i + 1].x, enemies[i + 1].y, 0xd98cff);
-                if (enemies[i + 1].active) {
-                  enemies[i + 1].setTintFill(0xffffff);
-                  this.time.delayedCall(80, () => enemies[i + 1].active && enemies[i + 1].clearTint());
-                }
-              });
-            }
-            reactionText(enemies[Math.floor(enemies.length / 2)].x, enemies[0].y, 'SOBRECARGA!', '#d98cff');
-            this.sound.play('sfx_levelup', { volume: 0.35, rate: 1.4, detune: 300 });
-            this.cameras.main.shake(150, 0.007);
-            this.time.delayedCall(900, () => killEnemies(enemies));
-          });
-        });
+        // Cajado primeiro (projétil)
+        this.time.delayedCall(700, () => useStaff(enemies));
+        // Raio depois (chain)
+        this.time.delayedCall(1500, () => useChain(enemies, () => {
+          // SOBRECARGA já é a corrente do raio, mas reforça com texto + shake
+          reactionText(enemies[Math.floor(enemies.length / 2)].x, enemies[0].y, 'SOBRECARGA!', '#d98cff');
+          this.sound.play('sfx_levelup', { volume: 0.35, rate: 1.4, detune: 300 });
+          this.cameras.main.shake(150, 0.007);
+          this.time.delayedCall(900, () => killEnemies(enemies));
+        }));
       },
     ];
 
