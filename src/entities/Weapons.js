@@ -163,12 +163,20 @@ export class Weapon {
     const range = this.def.range ?? 9999;
     const rangeSq = range * range;
     let best = null, bestSq = Infinity;
+    // Inimigos normais
     this.scene.enemyPool.forEachActive(e => {
       if (!e.active) return;
       const dx = e.x - this.owner.x, dy = e.y - this.owner.y;
       const d2 = dx * dx + dy * dy;
       if (d2 < bestSq && d2 <= rangeSq) { bestSq = d2; best = e; }
     });
+    // Boss (não está no pool — checado separado)
+    const boss = this.scene.boss;
+    if (boss && boss.active) {
+      const dx = boss.x - this.owner.x, dy = boss.y - this.owner.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 < bestSq && d2 <= rangeSq) { bestSq = d2; best = boss; }
+    }
     return best;
   }
 }
@@ -228,7 +236,18 @@ export class AuraWeapon extends Weapon {
         hits++;
       }
     });
-    return hits > 0; // se nao tem ninguem, nao "esfria" o cooldown
+    // Boss também sofre da aura
+    const boss = this.scene.boss;
+    if (boss && boss.active) {
+      const dx = boss.x - this.owner.x, dy = boss.y - this.owner.y;
+      if (dx * dx + dy * dy <= r2) {
+        const died = boss.takeDamage(this.damage);
+        this.scene.elemental.applyStatus(boss, 'ice');
+        if (died) this.scene._onBossDeath();
+        hits++;
+      }
+    }
+    return hits > 0;
   }
 }
 
@@ -252,7 +271,6 @@ export class ChainLightning extends Weapon {
     const start = this._nearestEnemyInRange();
     if (!start) return false;
     const jumps = (this.def.jumps ?? 3) + (this.owner?.extraProj ?? 0);
-    // Distância máx entre saltos amplificada pela passiva de Área
     const areaMult = this.owner?.areaMult ?? 1;
     const jumpMaxSq = (220 * areaMult) * (220 * areaMult);
     const visited = new Set();
@@ -261,10 +279,15 @@ export class ChainLightning extends Weapon {
     const dmg = this.damage;
     for (let i = 0; i < jumps && cur; i++) {
       this.scene.elemental._drawBolt(prev.x, prev.y, cur.x, cur.y, COLORS.BOLT);
-      const died = cur.takeDamage(dmg * (1 - i * 0.15), null);
+      const isBoss = cur === this.scene.boss;
+      const died = cur.takeDamage(dmg * (1 - i * 0.15), isBoss ? undefined : null);
       this.scene.elemental.applyStatus(cur, 'bolt');
       visited.add(cur);
-      if (died) this.scene._onEnemyDeath(cur);
+      if (died) {
+        if (isBoss) this.scene._onBossDeath();
+        else this.scene._onEnemyDeath(cur);
+      }
+      // Próximo alvo: enemies do pool OU boss (se ainda não visitado)
       let next = null, bestSq = jumpMaxSq;
       this.scene.enemyPool.forEachActive(e => {
         if (visited.has(e)) return;
@@ -272,6 +295,12 @@ export class ChainLightning extends Weapon {
         const d2 = dx * dx + dy * dy;
         if (d2 < bestSq) { bestSq = d2; next = e; }
       });
+      const boss = this.scene.boss;
+      if (boss && boss.active && !visited.has(boss)) {
+        const dx = boss.x - cur.x, dy = boss.y - cur.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < bestSq) { bestSq = d2; next = boss; }
+      }
       prev = cur;
       cur = next;
     }

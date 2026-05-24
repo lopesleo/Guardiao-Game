@@ -80,7 +80,7 @@ export class HUD {
   setBossActive(boss) {
     this.boss = boss;
     [this.bossHpBg, this.bossHpFill, this.bossLabel].forEach(o => o.setVisible(true));
-    this.bossLabel.setText('BOITATÁ');
+    this.bossLabel.setText('O ANCIÃO');
   }
 
   clearBoss() {

@@ -17,7 +17,7 @@ export class GameOverScene extends Phaser.Scene {
       color: won ? '#6fcf6f' : '#ff5a6e',
     }).setOrigin(0.5);
 
-    this.add.text(cx, 140, won ? 'O Boitatá foi derrotado!' : 'Você caiu na floresta…', {
+    this.add.text(cx, 140, won ? 'O Ancião foi derrotado!' : 'Você caiu na floresta…', {
       fontFamily: 'Press Start 2P, monospace', fontSize: '12px', color: '#93a89a',
     }).setOrigin(0.5);
 
