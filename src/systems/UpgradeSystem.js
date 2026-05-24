@@ -6,8 +6,9 @@
 import { WEAPONS, MAX_WEAPON_LEVEL, PASSIVES } from '../config.js';
 import { pick, shuffle } from '../utils.js';
 
-// Armas iniciais disponíveis para esta run (subset do META.unlockedWeapons no D3)
-const RUN_WEAPONS = ['STAFF', 'AURA', 'BOOMER', 'CHAIN'];
+// Armas disponíveis para a run = APENAS as desbloqueadas na MetaProgression.
+// Filtrado dinamicamente em generateCards() lendo this.scene.meta.unlocked.
+const ALL_WEAPONS = ['STAFF', 'AURA', 'BOOMER', 'CHAIN'];
 
 // Evoluções: requerem (arma A, arma B) ambas em max-level.
 const EVOLUTIONS = [
@@ -35,9 +36,11 @@ export class UpgradeSystem {
       }
     }
 
-    // 2) Novas armas
+    // 2) Novas armas — APENAS as desbloqueadas na meta-progressão
+    const unlocked = this.scene.meta?.unlocked() || ['STAFF'];
+    const runWeapons = ALL_WEAPONS.filter(w => unlocked.includes(w));
     const have = new Set(player.weapons.map(w => w.key));
-    for (const key of RUN_WEAPONS) {
+    for (const key of runWeapons) {
       if (!have.has(key)) {
         cards.push({
           type: 'new',
