@@ -31,6 +31,11 @@ Mantemos esta lista atualizada conforme novos assets são adicionados.
 | Pack | Autor | Licença | URL |
 |---|---|---|---|
 | Impact Sounds | Kenney | CC0 1.0 | <https://kenney.nl/assets/impact-sounds> |
+| Casino Audio | Kenney | CC0 1.0 | <https://kenney.nl/assets/casino-audio> |
+| RPG Audio | Kenney | CC0 1.0 | <https://kenney.nl/assets/rpg-audio> |
+| UI Audio | Kenney | CC0 1.0 | <https://kenney.nl/assets/ui-audio> |
+| 100 CC0 SFX (chest_open, chest_reel) | rubberduck | CC0 1.0 | <https://opengameart.org/content/100-cc0-sfx> |
+| 8-Bit Sound Effects Library (chest_jackpot, chest_trap) | Little Robot Sound Factory | CC-BY 3.0 | <https://opengameart.org/content/8-bit-sound-effects-library> |
 
 **Sons selecionados deste pack (renomeados para clareza):**
 
