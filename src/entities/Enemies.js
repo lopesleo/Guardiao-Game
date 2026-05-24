@@ -2,11 +2,12 @@
 import { ENEMY, GAME, COLORS } from '../config.js';
 
 // Frames mapeados pelo catálogo Pimen Tiny Creatures (10 cols, 180 frames).
+// IMPORTANTE: Phaser usa 0-indexed. Catálogo do pack é 1-indexed -> subtrai 1.
 const FRAMES = {
-  WOLF:   130,   // Morcego Gigante
-  CROW:   136,   // Corvo voando
-  GOBLIN: 10,    // Goblin verde
-  BOSS:   114,   // Ent Carvalho - árvore-criatura ancestral
+  WOLF:   139,   // Morcego Gigante Sombrio (catalogo pos 140)
+  CROW:   136,   // Corvo voando (catalogo pos 137)
+  GOBLIN: 10,    // Goblin (catalogo pos 11)
+  BOSS:   114,   // Ent Carvalho (catalogo pos 115)
 };
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
