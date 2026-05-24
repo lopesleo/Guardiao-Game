@@ -162,10 +162,13 @@ export class TutorialScene extends Phaser.Scene {
     const list = [];
     for (const pos of positions) {
       const e = this.enemyPool.acquire();
+      // ⚠ Mata tweens leftover (alpha=0 do death anterior) e reseta visual
+      this.tweens.killTweensOf(e);
+      e.setAlpha(1);
+      e.setScale(GAME.PIXEL_SCALE);
       e.activate(pos.x, pos.y, 'wolf', wave);
       if (chase) {
-        e.speed = speed; // bem devagar pra demo controlado
-        // mantém o update padrão do Enemy (chase player)
+        e.speed = speed;
       } else {
         e.body.enable = false;
         e.update = () => {};
@@ -183,13 +186,15 @@ export class TutorialScene extends Phaser.Scene {
   // Callback usado por ElementalSystem (Cristal, Sobrecarga, Aura) quando matam
   _onEnemyDeath(enemy) {
     if (!enemy || !enemy.active) return;
-    this.tweens.add({
-      targets: enemy, alpha: 0, scale: GAME.PIXEL_SCALE * 0.4, duration: 200,
-      onComplete: () => {
-        enemy.deactivate();
-        this.enemyPool.release(enemy);
-      },
-    });
+    // Flash branco + scale punch IMEDIATO, depois desativa direto
+    // (sem tween de alpha=0 que ficaria stuck no proximo respawn)
+    enemy.setTintFill(0xffffff);
+    const x = enemy.x, y = enemy.y;
+    enemy.deactivate();
+    this.enemyPool.release(enemy);
+    // Mini puff visual no local
+    const puff = this.add.circle(x, y, 16, 0xffffff, 0.7);
+    this.tweens.add({ targets: puff, radius: 28, alpha: 0, duration: 250, onComplete: () => puff.destroy() });
   }
 
   // Tick do update: roda PLAYER (aura/auto-fire) + ENEMIES (chase) + projéteis + colisões + elemental
