@@ -437,7 +437,7 @@ export class ChainLightning extends Weapon {
     super(scene, "CHAIN");
   }
   _fire() {
-    const targets = this._nearestTargets(
+    const targets = this._priorityTargets(
       1 + (this.owner?.extraProj ?? 0) + this.extraProj,
     );
     if (!targets.length) return false;
@@ -472,27 +472,36 @@ export class ChainLightning extends Weapon {
     return true;
   }
 
-  // Retorna até `n` inimigos mais próximos dentro do alcance (inclui boss).
-  _nearestTargets(n) {
+  // Até `n` alvos no alcance, PRIORIZANDO inimigos já afetados por outros efeitos
+  // (congelado → Cristal, fogo → Sobrecarga, qualquer status > nada). Empate = mais próximo.
+  _priorityTargets(n) {
+    const now = this.scene.time.now;
     const range = this.range,
       rangeSq = range * range;
     const list = [];
-    this.scene.enemyPool.forEachActive((e) => {
-      if (!e.active) return;
+    const consider = (e) => {
       const dx = e.x - this.owner.x,
         dy = e.y - this.owner.y;
       const d2 = dx * dx + dy * dy;
-      if (d2 <= rangeSq) list.push({ e, d2 });
+      if (d2 <= rangeSq) list.push({ e, d2, prio: this._affinity(e, now) });
+    };
+    this.scene.enemyPool.forEachActive((e) => {
+      if (e.active) consider(e);
     });
     const boss = this.scene.boss;
-    if (boss && boss.active) {
-      const dx = boss.x - this.owner.x,
-        dy = boss.y - this.owner.y;
-      const d2 = dx * dx + dy * dy;
-      if (d2 <= rangeSq) list.push({ e: boss, d2 });
-    }
-    list.sort((a, b) => a.d2 - b.d2);
+    if (boss && boss.active) consider(boss);
+    // prioridade desc, depois distância asc
+    list.sort((a, b) => b.prio - a.prio || a.d2 - b.d2);
     return list.slice(0, n).map((o) => o.e);
+  }
+
+  // Quanto o Raio "quer" acertar este alvo (gera reação ou aproveita controle)
+  _affinity(e, now) {
+    if (e.isFrozen?.(now)) return 3; // congelado + raio → CRISTAL (estilhaça)
+    const s = e.statuses || {};
+    if (s.fire) return 2; // fogo + raio → SOBRECARGA
+    if (s.ice || s.bolt) return 1; // já afetado por algum status
+    return 0;
   }
 }
 
