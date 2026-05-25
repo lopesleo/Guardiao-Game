@@ -1,5 +1,5 @@
 // Arena (D3: boss, meta, dmg numbers, screenshake, onboarding).
-import { GAME, COLORS, BOSS, META, ENEMY, WEAPONS, PLAYER, BLESSINGS, DROPS, CHEST } from '../config.js';
+import { GAME, COLORS, BOSS, META, ENEMY, WEAPONS, PLAYER, BLESSINGS, DROPS, CHEST, ELEMENT } from '../config.js';
 import { InputManager } from '../systems/InputManager.js';
 import { Pool } from '../systems/Pool.js';
 import { SpawnDirector } from '../systems/SpawnDirector.js';
@@ -338,8 +338,8 @@ export class GameScene extends Phaser.Scene {
         if (dx * dx + dy * dy < 40 * 40 && p.canHit(this.boss, time)) {
           const died = this.boss.takeDamage(p.dmg, null, p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
-          this._showDmg(this.boss.x, this.boss.y, p.dmg, 'fire', p.crit);
-          this.elemental.applyStatus(this.boss, 'fire');
+          this._showDmg(this.boss.x, this.boss.y, p.dmg, ELEMENT.FIRE, p.crit);
+          this.elemental.applyStatus(this.boss, ELEMENT.FIRE);
           if (died) this._onBossDeath();
         }
       }
@@ -347,9 +347,9 @@ export class GameScene extends Phaser.Scene {
         if (!p.active || !e.active) return;
         const dx = e.x - p.x, dy = e.y - p.y;
         if (dx * dx + dy * dy < 22 * 22 && p.canHit(e, time)) {
-          const died = e.takeDamage(p.dmg, 'fire', p.x, p.y, p.crit);
+          const died = e.takeDamage(p.dmg, ELEMENT.FIRE, p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
-          this._showDmg(e.x, e.y, p.dmg, 'fire', p.crit);
+          this._showDmg(e.x, e.y, p.dmg, ELEMENT.FIRE, p.crit);
           if (died) this._onEnemyDeath(e);
         }
       });
@@ -428,9 +428,9 @@ export class GameScene extends Phaser.Scene {
     const n = this.dmgNumberPool.acquire();
     let color;
     if (crit)                       color = '#ffd96b';
-    else if (element === 'ice')     color = '#9ad4ff';
-    else if (element === 'bolt')    color = '#d8a8ff';
-    else if (element === 'fire')    color = '#ff9966';
+    else if (element === ELEMENT.ICE)     color = '#9ad4ff';
+    else if (element === ELEMENT.BOLT)    color = '#d8a8ff';
+    else if (element === ELEMENT.FIRE)    color = '#ff9966';
     else if (element === 'heal')    color = '#6fcf6f';
     else                            color = '#ffffff';
     const text = element === 'heal' ? `+${dmg}` : (crit ? `${Math.ceil(dmg)}!` : dmg);

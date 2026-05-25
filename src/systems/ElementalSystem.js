@@ -1,6 +1,6 @@
 // ★ DIFERENCIAL ★ — Status elementais e reações automáticas.
 // 3 status: fire, ice, bolt. Quando 2+ coexistem no mesmo inimigo, dispara reação.
-import { STATUS, REACTION, COLORS, PLAYER } from "../config.js";
+import { STATUS, REACTION, COLORS, PLAYER, ELEMENT } from "../config.js";
 
 // Reações por COEXISTÊNCIA de status. (gelo+bolt NÃO está aqui: CRISTAL agora é
 // "inimigo CONGELADO leva raio → estilhaça", tratado em applyStatus.)
@@ -38,7 +38,7 @@ export class ElementalSystem {
     this._updateTint(enemy);
 
     // CRISTAL: raio (bolt) num inimigo CONGELADO → estilhaça (quebra + lascas curtas)
-    if (element === "bolt" && enemy.isFrozen?.(now)) {
+    if (element === ELEMENT.BOLT && enemy.isFrozen?.(now)) {
       this._shatter(enemy, REACTION.CRYSTAL);
       return;
     }
