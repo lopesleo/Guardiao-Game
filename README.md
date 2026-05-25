@@ -4,6 +4,9 @@ Survivor-like top-down em arena fixa: o Guardião enfrenta hordas crescentes dur
 
 Construído em **JavaScript + Phaser 3** para navegador web. Tudo offline (libs + assets no `.zip`).
 
+🎮 **Jogue online:** <https://lopesleo.github.io/guardiao-jogo-p2/>
+👤 **Aluno responsável pela entrega:** Leonardo Lopes
+
 ---
 
 ## ▶️ Como rodar
@@ -36,8 +39,13 @@ Instale a extensão **Live Server** → clique direito em `index.html` → *Open
 | Tecla | Ação |
 |---|---|
 | `W A S D` / setas | Mover |
+| `SHIFT` | Dash (esquiva — sai de área de raízes, desvia de tiros) |
+| `R` | Despertar (modo fúria temporário) |
+| `E` | Abrir baú próximo |
 | `M` | Mute/unmute |
 | `ESC` | Voltar / Pausar |
+
+> 🔊 No menu há **slider de volume** e botão **⛶ tela cheia** (ambos também úteis no mobile).
 
 ### Mobile
 - **Joystick virtual** (canto inferior esquerdo) para mover.
@@ -52,15 +60,17 @@ Cada arma carrega um elemento fixo. Cada elemento aplica um **status** no inimig
 
 | Status 1 | Status 2 | Reação | Efeito |
 |---|---|---|---|
-| 🔥 Fogo | ❄️ Gelo | 💨 **VAPOR** | Nuvem 3s lentifica área |
-| ❄️ Gelo | ⚡ Raio | 💎 **CRISTAL** | Explosão em anel (dano em área) |
-| 🔥 Fogo | ⚡ Raio | ⚡ **SOBRECARGA** | Corrente elétrica entre 4 inimigos |
+| 🔥 Fogo | ❄️ Gelo | 💨 **VAPOR** | Nuvem escaldante: dano contínuo na área |
+| ❄️ Congelado | ⚡ Raio | 💎 **CRISTAL** | Inimigo congelado **estilhaça** em lascas (dano em área) |
+| 🔥 Fogo | ⚡ Raio | ⚡ **SOBRECARGA** | Corrente elétrica salta entre vários inimigos |
+
+> A **Aura Gélida** congela inimigos que ficam tempo demais no seu campo — e um inimigo **congelado** atingido pelo Raio é quem dispara o **Cristal**.
 
 ### Evoluções de arma
 Quando duas armas atingem o nível máximo, uma combinação específica desbloqueia uma **evolução** na próxima carta de level-up:
 
 - **Cajado** 🔥 + **Aura Gélida** ❄️ → 🌪️ **Tempestade de Vapor**
-- **Cajado** 🔥 + **Raio Encadeado** ⚡ → ⚡ **Sobrecarga Eterna**
+- **Cajado** 🔥 + **Raio Concentrado** ⚡ → ⚡ **Sobrecarga Eterna**
 
 ---
 
@@ -99,3 +109,4 @@ Lista completa em [`docs/CREDITS.md`](docs/CREDITS.md) e acessível **dentro do 
 ---
 
 **Apresentação:** 27/05/2026 — Disciplina P2, Prof. Dalmo.
+**Aluno responsável pela entrega:** Leonardo Lopes
