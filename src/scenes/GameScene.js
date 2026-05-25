@@ -706,5 +706,7 @@ export class GameScene extends Phaser.Scene {
   shutdown() {
     this.bgMusic?.stop();
     this.bgMusic = null;
+    this.joystick?.destroy?.();
+    this.joystick = null;
   }
 }
