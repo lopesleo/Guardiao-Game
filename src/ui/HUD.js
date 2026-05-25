@@ -127,6 +127,27 @@ export class HUD {
       backgroundColor: '#0a1410', padding: { x: 14, y: 8 },
     }).setOrigin(1, 0.5).setScrollFactor(0).setDepth(D_TEXT);
 
+    // ===== BOTÕES TOUCH (mobile): Interagir / Despertar / Dash =====
+    // No celular não há teclado — estes botões acionam as mesmas flags do InputManager.
+    const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    if (isTouch) {
+      const mkBtn = (x, label, color, onTap) => {
+        const c = scene.add.circle(x, H - 100, 36, 0x0a1410, 0.85)
+          .setStrokeStyle(3, color, 0.9).setScrollFactor(0).setDepth(D_TEXT)
+          .setInteractive({ useHandCursor: true });
+        sharp(scene, x, H - 100, label, {
+          fontFamily: F, fontSize: '24px', fontStyle: 'bold', color: '#e8f0e6',
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(D_TEXT + 1);
+        const reset = () => c.setFillStyle(0x0a1410, 0.85);
+        c.on('pointerdown', (p, lx, ly, ev) => { ev?.stopPropagation?.(); onTap(); c.setFillStyle(color, 0.5); });
+        c.on('pointerup', reset);
+        c.on('pointerout', reset);
+      };
+      mkBtn(W - 74,  '⚡', 0xffd96b, () => { scene.inputMgr.dashPressed = true; });
+      mkBtn(W - 162, '★', 0xffe88a, () => { scene.inputMgr.awakenPressed = true; });
+      mkBtn(W - 250, '📦', 0xd9b25c, () => { scene.inputMgr.interactPressed = true; });
+    }
+
     // ===== BOSS UI =====
     this.bossBanner = sharp(scene, W / 2, 84, '', {
       fontFamily: F, fontSize: '28px', fontStyle: 'bold', color: '#ff5a6e',
