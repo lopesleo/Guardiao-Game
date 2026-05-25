@@ -40,6 +40,7 @@ Mantemos esta lista atualizada conforme novos assets são adicionados.
 | Electricity Game Sound Pack (raio + sobrecarga) | faxcorp | CC0 1.0 | <https://opengameart.org/content/electricity-game-sound-pack> |
 | Ice spells (gelo + cristal) | bart (Bart Kelsey) | CC0 1.0 | <https://opengameart.org/content/ice-spells> |
 | Steam release sounds (vapor) | bart (Bart Kelsey) | CC0 1.0 | <https://opengameart.org/content/steam-release-sounds> |
+| Fireball (ataque do Cajado) | Julien Matthey | CC0 1.0 | <https://opengameart.org/content/fireball-1> |
 
 **Sons selecionados deste pack (renomeados para clareza):**
 
@@ -56,6 +57,7 @@ Mantemos esta lista atualizada conforme novos assets são adicionados.
 
 | Nome no jogo | Arquivo original | Pack / Autor |
 |---|---|---|
+| `fire_attack.wav` (ataque Cajado) | `jm-fx-fireball-01.wav` | Fireball / Julien Matthey |
 | `bolt_attack.wav` (ataque Raio) | `hit.wav` | Electricity Game Sound Pack / faxcorp |
 | `react_overload.wav` (Sobrecarga) | `crackleelectricityloop.wav` | Electricity Game Sound Pack / faxcorp |
 | `ice_attack.wav` (ataque Aura/gelo) | `ice.wav` | Ice spells / bart |

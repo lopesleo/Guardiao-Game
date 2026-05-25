@@ -266,6 +266,7 @@ export class Staff extends Weapon {
   _fire() {
     const target = this._nearestEnemyInRange();
     if (!target) return false;
+    this.scene.sound.play("sfx_fire_attack", { volume: 0.3 });
     const dx = target.x - this.owner.x,
       dy = target.y - this.owner.y;
     const len = Math.hypot(dx, dy) || 1;
