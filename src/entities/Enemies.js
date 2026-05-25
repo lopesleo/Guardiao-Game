@@ -317,6 +317,8 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this.lastTouchAt = 0;
     this.contactCooldownMs = 450; // boss bate um pouco mais lento que os comuns
     this._kind = "boss";
+    this._lungeUntil = 0;
+    this._lungeVX = 0; this._lungeVY = 0;
   }
 
   activate(maxHp) {
@@ -326,6 +328,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this.phase = 1;
     this.lastSpecialAt = 0;
     this.lastTouchAt = 0;
+    this._lungeUntil = 0;
     this.clearTint();
     this.setActive(true).setVisible(true);
     this.body.enable = true;
@@ -352,6 +355,15 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
 
   update(time, dt, target) {
     if (!this.active || !target?.active) return;
+
+    // INVESTIDA: durante a lunge, voa em linha reta (não persegue, não usa especial)
+    if (time < this._lungeUntil) {
+      this.setVelocity(this._lungeVX, this._lungeVY);
+      this.setFlipX(this._lungeVX < 0);
+      this.setDepth(this.y + 10000);
+      return;
+    }
+
     let slow = 1;
     if (this.statuses.ice) slow *= 0.5;
     const dx = target.x - this.x,
@@ -362,28 +374,34 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this.setFlipX(dx < 0);
     this.setDepth(this.y + 10000);
 
-    // Especiais alternados
-    if (this.phase === 1 && time - this.lastSpecialAt > 3500) {
+    // Especiais — rotação por fase
+    const interval = this.phase === 1 ? 3500 : 2000;
+    if (time - this.lastSpecialAt > interval) {
       this.lastSpecialAt = time;
-      // Alterna entre AoE slam e invocação
-      this._specialCount = (this._specialCount || 0) + 1;
-      if (this._specialCount % 2 === 1) this._aoeSlam();
-      else this._summon("wolf", 3);
-    } else if (this.phase === 2 && time - this.lastSpecialAt > 2200) {
-      this.lastSpecialAt = time;
-      this._specialCount = (this._specialCount || 0) + 1;
-      // Fase 2: sempre invoca + alterna volley/slam
-      this._summon(this._specialCount % 2 === 0 ? "crow" : "wolf", 3);
-      if (this._specialCount % 2 === 0) this._volley();
-      else this._aoeSlam();
+      const c = (this._specialCount = (this._specialCount || 0) + 1);
+      if (this.phase === 1) {
+        // slam → invoca → RAÍZES (prende o player)
+        const pick = c % 3;
+        if (pick === 0) this._aoeSlam();
+        else if (pick === 1) this._summon("wolf", 3);
+        else this._roots();
+      } else {
+        // Fase 2: mais agressivo — leque, raízes (com combo), investida, slam
+        const pick = c % 5;
+        if (pick === 0) { this._summon("crow", 3); this._fanVolley(); }
+        else if (pick === 1) this._aoeSlam();
+        else if (pick === 2) this._roots();
+        else if (pick === 3) this._lunge();
+        else { this._summon("wolf", 2); this._fanVolley(); }
+      }
     }
   }
 
-  _aoeSlam() {
+  _aoeSlam(cx = this.x, cy = this.y) {
     const scene = this.scene;
     const r = 180;
     const ring = scene.add
-      .circle(this.x, this.y, 10, 0xff7a3c, 0)
+      .circle(cx, cy, 10, 0xff7a3c, 0)
       .setStrokeStyle(5, 0xff7a3c, 1)
       .setDepth(60);
     scene.tweens.add({
@@ -394,8 +412,8 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
       onComplete: () => ring.destroy(),
     });
     scene.time.delayedCall(600, () => {
-      const dx = scene.player.x - this.x,
-        dy = scene.player.y - this.y;
+      const dx = scene.player.x - cx,
+        dy = scene.player.y - cy;
       if (dx * dx + dy * dy <= r * r) {
         scene.player.takeDamage(this.dmg);
         if (scene.player.isDead()) scene._onGameOver();
@@ -412,6 +430,90 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
       const sp = 220;
       proj.fire(this.x, this.y, Math.cos(ang) * sp, Math.sin(ang) * sp, 8);
     }
+  }
+
+  // Fase 2: LEQUE de tiros — arco largo de 7 projéteis mirado no player
+  _fanVolley() {
+    const scene = this.scene;
+    const target = scene.player;
+    const base = Math.atan2(target.y - this.y, target.x - this.x);
+    const n = 7, spread = 0.16;
+    for (let i = 0; i < n; i++) {
+      const ang = base + (i - (n - 1) / 2) * spread;
+      const proj = scene.enemyProjPool.acquire();
+      const sp = 230;
+      proj.fire(this.x, this.y, Math.cos(ang) * sp, Math.sin(ang) * sp, 8);
+    }
+  }
+
+  // CONTROLE: telegrafa uma área na posição do player; se ele ficar, RAÍZES prendem.
+  // Escapa saindo da área durante o aviso OU usando o DASH depois de preso.
+  _roots() {
+    const scene = this.scene;
+    const px = scene.player.x, py = scene.player.y;
+    const r = 95;
+    const tel = scene.add.circle(px, py, r, 0x6a4a10, 0.22)
+      .setStrokeStyle(3, 0x9a6a2a, 0.9).setDepth(55);
+    scene.tweens.add({
+      targets: tel, alpha: 0.5, yoyo: true, repeat: 2, duration: 230,
+      onComplete: () => tel.destroy(),
+    });
+    // Durante o aviso, quem está na área é AGARRADO (anda devagar) — dasha pra sair!
+    const r2 = r * r;
+    scene.time.addEvent({
+      delay: 80, repeat: 8,
+      callback: () => {
+        const dx = scene.player.x - px, dy = scene.player.y - py;
+        if (dx * dx + dy * dy <= r2) scene.player.grabSlow(160);
+      },
+    });
+    scene.time.delayedCall(720, () => {
+      const dx = scene.player.x - px, dy = scene.player.y - py;
+      if (dx * dx + dy * dy <= r2) {
+        const dur = 1300;
+        const lx = scene.player.x, ly = scene.player.y;
+        scene.player.root(dur);
+        scene.sound.play("sfx_boss_roar", { volume: 0.4, rate: 1.5 });
+        this._rootVisual(lx, ly, dur);
+        // COMBO Raiz→Baque: preso, leva o slam no local (devia ter desviado a tempo!)
+        scene.time.delayedCall(400, () => this._aoeSlam(lx, ly));
+      }
+    });
+  }
+
+  _rootVisual(x, y, dur) {
+    const scene = this.scene;
+    const g = scene.add.graphics().setDepth(y + 10001);
+    g.lineStyle(4, 0x7a4a1a, 1);
+    const n = 7;
+    for (let i = 0; i < n; i++) {
+      const ang = (i / n) * Math.PI * 2;
+      const r1 = 12, r2 = 30 + Math.random() * 10;
+      const x1 = x + Math.cos(ang) * r1, y1 = y + Math.sin(ang) * r1;
+      const mx = x + Math.cos(ang) * (r2 * 0.6) + (Math.random() - 0.5) * 8;
+      const my = y + Math.sin(ang) * (r2 * 0.6) - 8;
+      const x2 = x + Math.cos(ang) * r2, y2 = y + Math.sin(ang) * r2 - 16;
+      g.beginPath(); g.moveTo(x1, y1); g.lineTo(mx, my); g.lineTo(x2, y2); g.strokePath();
+    }
+    scene.tweens.add({ targets: g, alpha: 0, duration: dur, onComplete: () => g.destroy() });
+  }
+
+  // INVESTIDA: telegrafa uma linha na direção do player e avança rápido — desvie de lado!
+  _lunge() {
+    const scene = this.scene;
+    const target = scene.player;
+    const ang = Math.atan2(target.y - this.y, target.x - this.x);
+    const ind = scene.add.rectangle(this.x, this.y, 340, 12, 0xff7a3c, 0.5)
+      .setOrigin(0, 0.5).setDepth(56).setRotation(ang);
+    scene.tweens.add({ targets: ind, alpha: 0, duration: 600, onComplete: () => ind.destroy() });
+    scene.time.delayedCall(600, () => {
+      if (!this.active) return;
+      const sp = 620;
+      this._lungeVX = Math.cos(ang) * sp;
+      this._lungeVY = Math.sin(ang) * sp;
+      this._lungeUntil = scene.time.now + 420;
+      scene.sound.play("sfx_boss_roar", { volume: 0.5, rate: 1.1 });
+    });
   }
 
   _summon(kind, count) {

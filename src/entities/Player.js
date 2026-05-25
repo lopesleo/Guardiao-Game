@@ -43,6 +43,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.dashUntil = 0;
     this.dashCdUntil = 0;
     this.dashDirX = 1; this.dashDirY = 0;
+    this._rootedUntil = 0;   // preso por raízes (imóvel) — dash não quebra
+    this._grabSlowUntil = 0; // área de raízes agarrando: anda devagar, precisa dashar pra sair
 
     // Passivas acumuláveis
     this.lifestealPct = 0;
@@ -151,11 +153,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
+  // --- Raízes (controle do boss) ---
+  isRooted() { return this.scene.time.now < this._rootedUntil; }
+  root(durMs) { this._rootedUntil = this.scene.time.now + durMs; }
+  isGrabbed() { return this.scene.time.now < this._grabSlowUntil; }
+  grabSlow(durMs) { this._grabSlowUntil = this.scene.time.now + durMs; }
+
   // --- Dash ---
   isDashing() { return this.scene.time.now < this.dashUntil; }
   dashReady() { return this.dashUnlocked && this.scene.time.now >= this.dashCdUntil; }
   tryDash(dirX, dirY) {
     if (!this.dashUnlocked) return false;
+    if (this.isRooted()) return false; // preso pelas raízes — o dash é pra DESVIAR antes, não quebrar
     if (!this.dashReady()) return false;
     const now = this.scene.time.now;
     let dx = dirX, dy = dirY;
@@ -208,9 +217,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.isDashing()) {
       const sp = this.speed * PLAYER.DASH_SPEED_MULT;
       this.setVelocity(this.dashDirX * sp, this.dashDirY * sp);
+    } else if (this.isRooted()) {
+      this.setVelocity(0, 0); // preso — devia ter desviado da área com o dash a tempo
+      if (input.move.x !== 0) this.facingX = Math.sign(input.move.x);
     } else {
-      const vx = input.move.x * this.speed * speedMult;
-      const vy = input.move.y * this.speed * speedMult;
+      // Raízes agarrando: anda muito devagar (o dash ignora o slow e te tira a tempo)
+      const mv = speedMult * (this.isGrabbed() ? 0.32 : 1);
+      const vx = input.move.x * this.speed * mv;
+      const vy = input.move.y * this.speed * mv;
       this.setVelocity(vx, vy);
       if (input.move.x !== 0) this.facingX = Math.sign(input.move.x);
     }
