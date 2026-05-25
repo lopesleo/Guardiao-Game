@@ -1,32 +1,51 @@
 // Inimigos: Morcego, Corvo, Goblin (atira) + Boss (D3).
-import { ENEMY, GAME, COLORS, ELITE, MIMIC } from '../config.js';
+import { ENEMY, GAME, COLORS, ELITE, MIMIC } from "../config.js";
 
 // Frames mapeados pelo catálogo Pimen Tiny Creatures (10 cols, 180 frames).
 // IMPORTANTE: Phaser usa 0-indexed. Catálogo do pack é 1-indexed -> subtrai 1.
 const FRAMES = {
-  WOLF:   139,   // Morcego Gigante Sombrio (catalogo pos 140)
-  CROW:   136,   // Corvo voando (catalogo pos 137)
-  GOBLIN: 10,    // Goblin (catalogo pos 11)
-  BOSS:   114,   // Ent Carvalho (catalogo pos 115)
+  WOLF: 24, // Morcego Gigante Sombrio (catalogo pos 140)
+  CROW: 136, // Corvo voando (catalogo pos 137)
+  GOBLIN: 10, // Goblin (catalogo pos 11)
+  BOSS: 114, // Ent Carvalho (catalogo pos 115)
 };
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, frame = FRAMES.WOLF) {
-    super(scene, x, y, 'creatures', frame);
+    super(scene, x, y, "creatures", frame);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setScale(GAME.PIXEL_SCALE);
     this.body.setCircle(7, 1, 1);
 
-    this.hp = 1; this.maxHp = 1; this.dmg = 1; this.speed = 60;
-    this.statuses = {};      // { fire: {until,def,lastTickAt}, ... }
+    this.hp = 1;
+    this.maxHp = 1;
+    this.dmg = 1;
+    this.speed = 60;
+    this.statuses = {}; // { fire: {until,def,lastTickAt}, ... }
     this.lastTouchAt = 0;
-    this.contactCooldownMs = 500;
-    this._kind = 'wolf';
-    this._vaporUntil = 0;
+    this.contactCooldownMs = 350; // re-bate mais rápido: inimigo colado é punitivo
+    this.contactRadius = 26; // distância de dano de contato (escala com o tamanho)
+    this._kind = "wolf";
     this._lastShotAt = 0;
     this._shotCooldownMs = 1800;
     this._shotRange = 260;
+    // Estado de congelamento (Aura Gélida) — para o inimigo, mas continua tomando dano
+    this._frozenUntil = 0; // congelado enquanto time < isso
+    this._freezeLockUntil = 0; // imune a novo freeze enquanto time < isso (anti-permafreeze)
+    this._auraEnterAt = 0; // quando entrou no campo da aura
+    this._auraLastSeen = 0; // última vez visto dentro do campo
+    this._frozenVisual = false;
+  }
+
+  isFrozen(time) {
+    return time < this._frozenUntil;
+  }
+
+  // Congela por durMs e trava re-freeze por immuneMs após descongelar.
+  freeze(time, durMs, immuneMs) {
+    this._frozenUntil = time + durMs;
+    this._freezeLockUntil = time + durMs + immuneMs;
   }
 
   activate(x, y, kind, wave, elite = false) {
@@ -36,44 +55,59 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.setPosition(x, y);
     this.body.enable = true;
     this.maxHp = ENEMY.HP(wave);
-    this.hp    = this.maxHp;
-    this.dmg   = ENEMY.DMG(wave);
+    this.hp = this.maxHp;
+    this.dmg = ENEMY.DMG(wave);
     this.statuses = {};
-    this._vaporUntil = 0;
     this.lastTouchAt = 0;
     this._lastShotAt = 0;
+    this._frozenUntil = 0;
+    this._freezeLockUntil = 0;
+    this._auraEnterAt = 0;
+    this._auraLastSeen = 0;
+    this._frozenVisual = false;
     this.clearTint();
     this.setAngle(0);
     this.setScale(GAME.PIXEL_SCALE);
+    this.contactRadius = 26;
 
-    if (kind === 'wolf') {
+    if (kind === "wolf") {
       this.setFrame(FRAMES.WOLF);
       this.speed = ENEMY.SPEED_WOLF;
-      this.maxHp *= 0.7; this.hp = this.maxHp;
-    } else if (kind === 'crow') {
+      this.maxHp *= 0.7;
+      this.hp = this.maxHp;
+    } else if (kind === "crow") {
       this.setFrame(FRAMES.CROW);
       this.speed = ENEMY.SPEED_CROW;
-      this.maxHp *= 0.55; this.hp = this.maxHp;
-    } else if (kind === 'goblin') {
+      this.maxHp *= 0.55;
+      this.hp = this.maxHp;
+    } else if (kind === "goblin") {
       this.setFrame(FRAMES.GOBLIN);
       this.speed = ENEMY.SPEED_GOBLIN;
-      this.maxHp *= 1.3; this.hp = this.maxHp;
+      this.maxHp *= 1.3;
+      this.hp = this.maxHp;
     } else {
       this.setFrame(FRAMES.WOLF);
       this.speed = ENEMY.SPEED_WOLF;
     }
 
     // Elite ('elite' string) ou mimic ('mimic')
-    if (elite === 'mimic') {
+    if (elite === "mimic") {
       this.setScale(GAME.PIXEL_SCALE * MIMIC.SCALE_MULT);
-      this.maxHp *= MIMIC.HP_MULT;
+      // HP com piso (não escala só com wave) + dano e velocidade próprios
+      this.maxHp = Math.max(ENEMY.HP(wave) * MIMIC.HP_MULT, MIMIC.HP_FLOOR);
       this.hp = this.maxHp;
-      this.dmg *= MIMIC.DMG_MULT;
+      this.dmg = ENEMY.DMG(wave) * MIMIC.DMG_MULT;
+      this.speed = MIMIC.SPEED;
+      this.contactRadius = MIMIC.CONTACT_RADIUS;
+      // Força perseguição melee (não fica atirando de longe como goblin)
+      this._kind = "wolf";
+      this.setFrame(FRAMES.WOLF);
       this.setTint(MIMIC.TINT);
     } else if (elite) {
       this.setScale(GAME.PIXEL_SCALE * ELITE.SCALE_MULT);
       this.maxHp *= ELITE.HP_MULT;
       this.hp = this.maxHp;
+      this.contactRadius = ELITE.CONTACT_RADIUS;
       this.setTint(ELITE.TINT);
     }
   }
@@ -100,16 +134,21 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       // SQUASH forte
       this.scene.tweens.add({
         targets: this,
-        scaleX: GAME.PIXEL_SCALE * 1.30, scaleY: GAME.PIXEL_SCALE * 0.75,
-        duration: 80, yoyo: true,
+        scaleX: GAME.PIXEL_SCALE * 1.3,
+        scaleY: GAME.PIXEL_SCALE * 0.75,
+        duration: 80,
+        yoyo: true,
       });
       // KNOCKBACK
       if (fromX != null && fromY != null && this.body?.enable) {
-        const dx = this.x - fromX, dy = this.y - fromY;
+        const dx = this.x - fromX,
+          dy = this.y - fromY;
         const len = Math.hypot(dx, dy) || 1;
         const k = 320;
-        this.body.setVelocity(this.body.velocity.x + (dx / len) * k,
-                              this.body.velocity.y + (dy / len) * k);
+        this.body.setVelocity(
+          this.body.velocity.x + (dx / len) * k,
+          this.body.velocity.y + (dy / len) * k,
+        );
       }
     }
 
@@ -120,34 +159,57 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   update(time, dt, target) {
     if (!this.active || !target?.active) return;
 
-    // Slow do gelo + vapor
+    // CONGELADO: para tudo (não anda, não atira), mas continua tomando dano.
+    if (this.isFrozen(time)) {
+      this.setVelocity(0, 0);
+      this.setDepth(this.y + 10000);
+      if (!this._frozenVisual) {
+        this.setTint(0x8fe3ff);
+        this._frozenVisual = true;
+      }
+      return;
+    }
+    if (this._frozenVisual) {
+      this._frozenVisual = false;
+      this.scene.elemental?._updateTint(this);
+    }
+
+    // Slow apenas do gelo (Aura Gélida). Vapor agora causa dano, não slow.
     let slow = 1;
     if (this.statuses.ice) slow *= 0.5;
-    if (time < this._vaporUntil) slow *= 0.5;
 
-    const dx = target.x - this.x, dy = target.y - this.y;
+    const dx = target.x - this.x,
+      dy = target.y - this.y;
     const len = Math.hypot(dx, dy) || 1;
 
-    if (this._kind === 'goblin') {
+    if (this._kind === "goblin") {
       // Atirador: mantém distância (~200px) e atira
       const desired = 200;
       const diff = len - desired;
       const sp = this.speed * slow * Math.sign(diff);
       this.setVelocity((dx / len) * sp, (dy / len) * sp);
 
-      if (len <= this._shotRange && time - this._lastShotAt >= this._shotCooldownMs) {
+      if (
+        len <= this._shotRange &&
+        time - this._lastShotAt >= this._shotCooldownMs
+      ) {
         this._lastShotAt = time;
         this._shoot(target);
       }
-    } else if (this._kind === 'crow') {
-      // Corvo: ataque em arco — adiciona oscilação lateral
-      const perpX = -dy / len, perpY = dx / len;
+    } else if (this._kind === "crow") {
+      // Corvo: mergulha em arco E dispara penas ocasionalmente (mergulha-bombardeiro)
+      const perpX = -dy / len,
+        perpY = dx / len;
       const wob = Math.sin(time / 200 + this.x) * 0.5;
       const sp = this.speed * slow;
       this.setVelocity(
         (dx / len) * sp + perpX * sp * wob,
-        (dy / len) * sp + perpY * sp * wob
+        (dy / len) * sp + perpY * sp * wob,
       );
+      if (len <= this._shotRange && time - this._lastShotAt >= 2400) {
+        this._lastShotAt = time;
+        this._shoot(target);
+      }
     } else {
       // Morcego (e default): perseguição reta
       const sp = this.speed * slow;
@@ -161,7 +223,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   _shoot(target) {
     const scene = this.scene;
     const proj = scene.enemyProjPool.acquire();
-    const dx = target.x - this.x, dy = target.y - this.y;
+    const dx = target.x - this.x,
+      dy = target.y - this.y;
     const len = Math.hypot(dx, dy) || 1;
     const sp = 180;
     proj.fire(this.x, this.y, (dx / len) * sp, (dy / len) * sp, this.dmg * 1.0);
@@ -174,25 +237,26 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
 export class BossEnt extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y) {
-    super(scene, x, y, 'creatures', FRAMES.BOSS);
+    super(scene, x, y, "creatures", FRAMES.BOSS);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setScale(GAME.PIXEL_SCALE * 2.5);
     this.body.setCircle(7, 1, 1);
-    this.maxHp = 0; this.hp = 0;
+    this.maxHp = 0;
+    this.hp = 0;
     this.dmg = 12;
     this.speed = 60;
     this.statuses = {};
-    this._vaporUntil = 0;
     this.phase = 1;
     this.lastSpecialAt = 0;
     this.lastTouchAt = 0;
-    this.contactCooldownMs = 700;
-    this._kind = 'boss';
+    this.contactCooldownMs = 450; // boss bate um pouco mais lento que os comuns
+    this._kind = "boss";
   }
 
   activate(maxHp) {
-    this.maxHp = maxHp; this.hp = maxHp;
+    this.maxHp = maxHp;
+    this.hp = maxHp;
     this.statuses = {};
     this.phase = 1;
     this.lastSpecialAt = 0;
@@ -216,7 +280,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
       this.phase = 2;
       this.speed = 90;
       this.scene.cameras.main.shake(400, 0.012);
-      this.scene.sound.play('sfx_boss_roar', { volume: 0.7 });
+      this.scene.sound.play("sfx_boss_roar", { volume: 0.7 });
     }
     return false;
   }
@@ -225,8 +289,8 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     if (!this.active || !target?.active) return;
     let slow = 1;
     if (this.statuses.ice) slow *= 0.5;
-    if (time < this._vaporUntil) slow *= 0.5;
-    const dx = target.x - this.x, dy = target.y - this.y;
+    const dx = target.x - this.x,
+      dy = target.y - this.y;
     const len = Math.hypot(dx, dy) || 1;
     const sp = this.speed * slow;
     this.setVelocity((dx / len) * sp, (dy / len) * sp);
@@ -239,24 +303,34 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
       // Alterna entre AoE slam e invocação
       this._specialCount = (this._specialCount || 0) + 1;
       if (this._specialCount % 2 === 1) this._aoeSlam();
-      else                              this._summon('wolf', 3);
+      else this._summon("wolf", 3);
     } else if (this.phase === 2 && time - this.lastSpecialAt > 2200) {
       this.lastSpecialAt = time;
       this._specialCount = (this._specialCount || 0) + 1;
       // Fase 2: sempre invoca + alterna volley/slam
-      this._summon(this._specialCount % 2 === 0 ? 'crow' : 'wolf', 3);
+      this._summon(this._specialCount % 2 === 0 ? "crow" : "wolf", 3);
       if (this._specialCount % 2 === 0) this._volley();
-      else                              this._aoeSlam();
+      else this._aoeSlam();
     }
   }
 
   _aoeSlam() {
     const scene = this.scene;
     const r = 180;
-    const ring = scene.add.circle(this.x, this.y, 10, 0xff7a3c, 0).setStrokeStyle(5, 0xff7a3c, 1).setDepth(60);
-    scene.tweens.add({ targets: ring, radius: r, alpha: 0, duration: 600, onComplete: () => ring.destroy() });
+    const ring = scene.add
+      .circle(this.x, this.y, 10, 0xff7a3c, 0)
+      .setStrokeStyle(5, 0xff7a3c, 1)
+      .setDepth(60);
+    scene.tweens.add({
+      targets: ring,
+      radius: r,
+      alpha: 0,
+      duration: 600,
+      onComplete: () => ring.destroy(),
+    });
     scene.time.delayedCall(600, () => {
-      const dx = scene.player.x - this.x, dy = scene.player.y - this.y;
+      const dx = scene.player.x - this.x,
+        dy = scene.player.y - this.y;
       if (dx * dx + dy * dy <= r * r) {
         scene.player.takeDamage(this.dmg);
         if (scene.player.isDead()) scene._onGameOver();
@@ -279,8 +353,16 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     const scene = this.scene;
     const wave = Math.floor(scene.elapsedMs / 30000);
     // Aviso visual do próprio boss: pulso roxo
-    const pulse = scene.add.circle(this.x, this.y, 30, 0xd98cff, 0.5).setDepth(55);
-    scene.tweens.add({ targets: pulse, radius: 70, alpha: 0, duration: 500, onComplete: () => pulse.destroy() });
+    const pulse = scene.add
+      .circle(this.x, this.y, 30, 0xd98cff, 0.5)
+      .setDepth(55);
+    scene.tweens.add({
+      targets: pulse,
+      radius: 70,
+      alpha: 0,
+      duration: 500,
+      onComplete: () => pulse.destroy(),
+    });
 
     for (let i = 0; i < count; i++) {
       if (scene.enemyPool.size >= GAME.MAX_ENEMIES_ALIVE) break;
@@ -289,7 +371,13 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
       const sy = this.y + Math.sin(ang) * 90;
       // Marca visual no ponto de spawn
       const spawn = scene.add.circle(sx, sy, 8, 0xd98cff, 0.7).setDepth(55);
-      scene.tweens.add({ targets: spawn, radius: 24, alpha: 0, duration: 350, onComplete: () => spawn.destroy() });
+      scene.tweens.add({
+        targets: spawn,
+        radius: 24,
+        alpha: 0,
+        duration: 350,
+        onComplete: () => spawn.destroy(),
+      });
 
       const e = scene.enemyPool.acquire();
       e.activate(sx, sy, kind, wave);
@@ -302,7 +390,9 @@ export class EnemyProjectile extends Phaser.GameObjects.Container {
   constructor(scene) {
     super(scene, -9999, -9999);
     scene.add.existing(this);
-    this.core = scene.add.circle(0, 0, 6, 0xff5a6e, 1).setStrokeStyle(2, 0x000000, 0.5);
+    this.core = scene.add
+      .circle(0, 0, 6, 0xff5a6e, 1)
+      .setStrokeStyle(2, 0x000000, 0.5);
     this.add([this.core]);
     scene.physics.add.existing(this);
     this.body.setCircle(7, -7, -7);

@@ -284,7 +284,7 @@ export class GameScene extends Phaser.Scene {
     this.enemyPool.forEachActive(e => {
       e.update(time, dt, this.player);
       const dx = e.x - this.player.x, dy = e.y - this.player.y;
-      if (dx * dx + dy * dy < 26 * 26 && time - e.lastTouchAt > e.contactCooldownMs) {
+      if (dx * dx + dy * dy < e.contactRadius * e.contactRadius && time - e.lastTouchAt > e.contactCooldownMs) {
         e.lastTouchAt = time;
         if (!this._god) {
           this.player.takeDamage(e.dmg);
@@ -292,6 +292,9 @@ export class GameScene extends Phaser.Scene {
         }
       }
     });
+
+    // Separação inimigo-inimigo: não deixam ocupar o mesmo espaço (anti-empilhamento)
+    this._separateEnemies(time);
 
     // Projéteis retos do player (Cajado etc) — somem no impacto
     this.projectilePool.forEachActive(p => {
@@ -459,6 +462,40 @@ export class GameScene extends Phaser.Scene {
     }
     enemy.deactivate();
     this.enemyPool.release(enemy);
+  }
+
+  // Empurra inimigos sobrepostos pra longe uns dos outros (separação tipo flocking).
+  // Congelados não se movem, mas ainda empurram quem encosta.
+  _separateEnemies(now) {
+    const list = [];
+    this.enemyPool.forEachActive((e) => { if (e.active) list.push(e); });
+    const n = list.length;
+    for (let i = 0; i < n; i++) {
+      const a = list[i];
+      const ra = a.displayWidth * 0.32;
+      const aF = a.isFrozen(now);
+      for (let j = i + 1; j < n; j++) {
+        const b = list[j];
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const minD = ra + b.displayWidth * 0.32;
+        const d2 = dx * dx + dy * dy;
+        if (d2 >= minD * minD || d2 === 0) continue;
+        const d = Math.sqrt(d2);
+        const overlap = minD - d;
+        const ux = dx / d, uy = dy / d;
+        const bF = b.isFrozen(now);
+        if (aF && bF) continue;
+        if (aF) {            // só b se afasta
+          b.x += ux * overlap; b.y += uy * overlap;
+        } else if (bF) {     // só a se afasta
+          a.x -= ux * overlap; a.y -= uy * overlap;
+        } else {             // dividem o empurrão
+          const h = overlap * 0.5;
+          a.x -= ux * h; a.y -= uy * h;
+          b.x += ux * h; b.y += uy * h;
+        }
+      }
+    }
   }
 
   _spawnBoss() {

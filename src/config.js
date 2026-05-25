@@ -16,7 +16,7 @@ export const PLAYER = {
   SPEED_BASE: 160,
   XP_PER_LEVEL: lvl => Math.floor(10 + lvl * 8 + lvl * lvl * 1.5),
   PICKUP_RADIUS: 36,
-  INVULN_MS: 600,
+  INVULN_MS: 350,   // i-frames pós-dano — menor = tick de dano de contato mais rápido
   // Despertar (★ DIFERENCIAL) — max escala com level pra evitar spam em late game
   AWAKEN_METER_MAX: lvl => 100 + (lvl - 1) * 25,
   AWAKEN_GAIN_REACTION: 12,   // por reação elemental disparada (era 25)
@@ -34,9 +34,9 @@ export const PLAYER = {
 
 export const ENEMY = {
   // wave = floor(t / 30); a cada 30s sobe a wave
-  // Difficulty: HP +50% e DMG +120% pra evitar player imortal em late game
-  HP:   wave => 10 + 4 * wave,
-  DMG:  wave => 2 + 0.7 * wave,
+  // Difficulty: inimigos mais fortes pra o jogo não ficar fácil em late game
+  HP:   wave => 14 + 6 * wave,
+  DMG:  wave => 3 + 1.0 * wave,
   SPEED_WOLF: 95,
   SPEED_CROW: 140,
   SPEED_GOBLIN: 60,
@@ -64,20 +64,22 @@ export const STATUS = {
 };
 
 export const REACTION = {
-  // FIRE + ICE => Vapor: nuvem que lentifica área
-  VAPOR:     { color: 0xb8d4ff, radius: 80, duration: 3000, slowFactor: 0.5, label: 'VAPOR!' },
-  // ICE + BOLT => Cristal Estilhaçado: explosão em anel
-  CRYSTAL:   { color: 0x5cc8ff, radius: 100, dmg: 25, label: 'CRISTAL!' },
-  // FIRE + BOLT => Sobrecarga: corrente entre N inimigos
-  OVERLOAD:  { color: 0xd98cff, jumps: 4, dmgPerJump: 12, label: 'SOBRECARGA!' },
+  // FIRE + ICE => Vapor: nuvem ESCALDANTE que causa dano contínuo na área (não dá mais slow)
+  VAPOR:     { color: 0xffc8a0, radius: 80, duration: 3000, dmgPerTick: 5, tickMs: 300, label: 'VAPOR!' },
+  // CONGELADO + BOLT => Cristal: o inimigo congelado ESTILHAÇA em lascas curtas (dano BAIXO)
+  CRYSTAL:   { color: 0x9fe8ff, radius: 70, dmg: 6, selfDmg: 14, shards: 8, label: 'CRISTAL!' },
+  // FIRE + BOLT => Sobrecarga: a recompensa em ÁREA — corrente forte entre muitos inimigos
+  OVERLOAD:  { color: 0xffe24c, jumps: 6, dmgPerJump: 16, jumpRange: 220, label: 'SOBRECARGA!' },
 };
 
 // Armas base + evoluções (D14)
 export const WEAPONS = {
   STAFF:    { name: 'Cajado',           element: 'fire', baseDmg: 8,  cooldown: 800,  range: 280, projSpeed: 320 },
-  AURA:     { name: 'Aura Gélida',      element: 'ice',  baseDmg: 2,  cooldown: 1100, range: 110 },
+  // Aura Gélida: campo de CONTROLE. Dano de chip + slow; quem fica 1s dentro CONGELA.
+  AURA:     { name: 'Aura Gélida',      element: 'ice',  baseDmg: 2,  cooldown: 1100, range: 110, freezeAfterMs: 1000, freezeMs: 1300, freezeImmuneMs: 3000 },
   BOOMER:   { name: 'Bumerangue',       element: 'fire', baseDmg: 6,  cooldown: 1400, range: 240, projSpeed: 280 },
-  CHAIN:    { name: 'Raio Encadeado',   element: 'bolt', baseDmg: 8,  cooldown: 2200, range: 200, jumps: 3 },
+  // Raio: dano ALTO focado em 1 alvo. (A "corrente" agora é a reação Sobrecarga: fogo+raio.)
+  CHAIN:    { name: 'Raio Concentrado', element: 'bolt', baseDmg: 26, cooldown: 1400, range: 280 },
   // evoluções (D12)
   VAPOR_STORM: { name: 'Tempestade de Vapor', evolvesFrom: ['STAFF','AURA'],   baseDmg: 14, cooldown: 700 },
   OVERLOAD_X:  { name: 'Sobrecarga Eterna',   evolvesFrom: ['STAFF','CHAIN'],  baseDmg: 16, cooldown: 900 },
@@ -153,14 +155,18 @@ export const CHEST = {
 export const ELITE = {
   HP_MULT: 2.0,
   SCALE_MULT: 1.4,
+  CONTACT_RADIUS: 38,
   TINT: 0xff6666,
 };
 
 // Mímico (chest com língua) — inimigo único super forte
 export const MIMIC = {
-  HP_MULT: 4.0,        // 4x HP
-  SCALE_MULT: 1.7,
-  DMG_MULT: 2.0,
+  HP_MULT: 9.0,        // muito mais tanque
+  HP_FLOOR: 320,       // piso de HP: nunca trivial, mesmo spawnando cedo
+  SCALE_MULT: 1.8,
+  DMG_MULT: 3.0,
+  SPEED: 115,          // mais rápido que o lobo (95): persegue de verdade
+  CONTACT_RADIUS: 52,  // hitbox de contato maior (sprite gigante)
   TINT: 0xff3333,
 };
 

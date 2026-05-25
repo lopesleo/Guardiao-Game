@@ -59,10 +59,25 @@ export class MenuScene extends Phaser.Scene {
     const sx = W - 260, sy = 24, sw = 240, sh = 80;
     this.add.rectangle(sx, sy, sw, sh, 0x000000, 0.7).setOrigin(0, 0).setStrokeStyle(2, 0xd9b25c, 0.8);
     sharp(this, sx + 14, sy + 12, '💰  MOEDAS', { fontFamily: F, fontSize: '12px', color: '#93a89a' });
-    sharp(this, sx + 14, sy + 30, `${this.meta.coins}`, { fontFamily: F, fontSize: '22px', fontStyle: 'bold', color: '#d9b25c' });
+    this._coinsText = sharp(this, sx + 14, sy + 30, `${this.meta.coins}`, { fontFamily: F, fontSize: '22px', fontStyle: 'bold', color: '#d9b25c' });
     sharp(this, sx + 130, sy + 12, '🏆  MELHOR', { fontFamily: F, fontSize: '12px', color: '#93a89a' });
     sharp(this, sx + 130, sy + 32, formatTime(this.meta.data.highScoreSeconds * 1000), {
       fontFamily: F, fontSize: '20px', fontStyle: 'bold', color: '#e8f0e6',
+    });
+
+    // Botão DEV: +100 moedas (para testar desbloqueios/bênçãos sem grindar)
+    const dcx = sx, dcy = sy + sh + 8;
+    const devBtn = this.add.rectangle(dcx, dcy, 130, 26, 0x0a1410, 0.95)
+      .setOrigin(0, 0).setStrokeStyle(2, 0x6fcf6f, 0.8).setInteractive({ useHandCursor: true });
+    const devTxt = sharp(this, dcx + 65, dcy + 13, '+100 💰 (dev)',
+      { fontFamily: F, fontSize: '12px', fontStyle: 'bold', color: '#6fcf6f' }).setOrigin(0.5);
+    devBtn.on('pointerover', () => { devBtn.setFillStyle(0x14241a); this.sound.play('sfx_ui_hover', { volume: 0.2 }); });
+    devBtn.on('pointerout', () => devBtn.setFillStyle(0x0a1410));
+    devBtn.on('pointerdown', () => {
+      this.sound.play('sfx_coin', { volume: 0.5 });
+      this.meta.addCoins(100);
+      this._coinsText.setText(`${this.meta.coins}`);
+      this.tweens.add({ targets: devTxt, scaleX: 1.2, scaleY: 1.2, duration: 80, yoyo: true });
     });
 
     if (!this.meta.available) {
@@ -140,7 +155,7 @@ export class MenuScene extends Phaser.Scene {
 
     const items = [
       { kind: 'weapon',  key: 'BOOMER', name: 'Bumerangue',     cost: META.WEAPON_UNLOCK_COST.BOOMER,  ico: '🔥' },
-      { kind: 'weapon',  key: 'CHAIN',  name: 'Raio Encadeado', cost: META.WEAPON_UNLOCK_COST.CHAIN,   ico: '⚡' },
+      { kind: 'weapon',  key: 'CHAIN',  name: 'Raio Concentrado', cost: META.WEAPON_UNLOCK_COST.CHAIN,   ico: '⚡' },
       { kind: 'weapon',  key: 'AURA',   name: 'Aura Gélida',    cost: META.WEAPON_UNLOCK_COST.AURA,    ico: '❄' },
       { kind: 'ability', key: 'DASH',   name: 'Dash (SHIFT)',   cost: META.ABILITY_UNLOCK_COST.DASH,   ico: '⚡' },
       { kind: 'ability', key: 'AWAKEN', name: 'Despertar (R)',  cost: META.ABILITY_UNLOCK_COST.AWAKEN, ico: '★' },

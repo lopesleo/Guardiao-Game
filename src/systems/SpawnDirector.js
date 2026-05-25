@@ -1,4 +1,5 @@
-// Variação por wave: morcego sempre, crow após wave 2, goblin após wave 4.
+// Variação por wave. Atiradores (goblin) e corvos entram cedo e ficam mais comuns
+// com o tempo, pra ter cada vez MAIS inimigos que atacam à distância.
 import { GAME, ENEMY } from '../config.js';
 
 export class SpawnDirector {
@@ -27,8 +28,12 @@ export class SpawnDirector {
     const wave = Math.floor(tSec / 30);
     const roll = Math.random();
     let kind;
-    if (wave >= 4 && roll < 0.18) kind = 'goblin';
-    else if (wave >= 2 && roll < 0.45) kind = 'crow';
+    // Goblin (atirador) entra na wave 1 e cresce até 45% dos spawns.
+    // Corvo (mergulha + tiro ocasional) entra na wave 1 com ~30%.
+    const goblinChance = wave >= 1 ? Math.min(0.18 + wave * 0.05, 0.45) : 0;
+    const crowChance = wave >= 1 ? 0.30 : 0;
+    if (roll < goblinChance) kind = 'goblin';
+    else if (roll < goblinChance + crowChance) kind = 'crow';
     else kind = 'wolf';
 
     const cam = this.scene.cameras.main;

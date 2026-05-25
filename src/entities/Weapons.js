@@ -245,18 +245,32 @@ export class AuraWeapon extends Weapon {
   }
   _fire() {
     if (!this.owner) return false;
+    const now = this.scene.time.now;
     const r2 = this.range * this.range;
+    const cd = this.cooldown;
+    const freezeAfter = this.def.freezeAfterMs ?? 1000;
     let hits = 0;
+    let froze = false;
     this.scene.enemyPool.forEachActive(e => {
       const dx = e.x - this.owner.x, dy = e.y - this.owner.y;
-      if (dx * dx + dy * dy <= r2) {
-        const { dmg, crit } = this.rollHit();
-        const died = e.takeDamage(dmg, null, this.owner.x, this.owner.y, crit);
-        this.owner.lifestealFrom(dmg);
-        this.scene._showDmg(e.x, e.y, dmg, 'ice', crit);
-        this.scene.elemental.applyStatus(e, 'ice');
-        if (died) this.scene._onEnemyDeath(e);
-        hits++;
+      if (dx * dx + dy * dy > r2) return;
+      // Chip damage + chill (slow + amplificação) enquanto dentro do campo
+      const { dmg, crit } = this.rollHit();
+      const died = e.takeDamage(dmg, null, this.owner.x, this.owner.y, crit);
+      this.owner.lifestealFrom(dmg);
+      this.scene._showDmg(e.x, e.y, dmg, 'ice', crit);
+      this.scene.elemental.applyStatus(e, 'ice');
+      hits++;
+      if (died) { this.scene._onEnemyDeath(e); return; }
+
+      // CONGELAMENTO: quem fica ~1s dentro do campo congela (com janela de imunidade)
+      if (now - e._auraLastSeen > cd * 1.7 || e._auraEnterAt === 0) e._auraEnterAt = now;
+      e._auraLastSeen = now;
+      const lingered = now - e._auraEnterAt >= freezeAfter;
+      if (lingered && !e.isFrozen(now) && now >= e._freezeLockUntil) {
+        e.freeze(now, this.def.freezeMs ?? 1300, this.def.freezeImmuneMs ?? 3000);
+        this._iceStreak(this.owner.x, this.owner.y, e.x, e.y);
+        froze = true;
       }
     });
     const boss = this.scene.boss;
@@ -267,12 +281,36 @@ export class AuraWeapon extends Weapon {
         const died = boss.takeDamage(dmg, null, this.owner.x, this.owner.y, crit);
         this.owner.lifestealFrom(dmg);
         this.scene._showDmg(boss.x, boss.y, dmg, 'ice', crit);
-        this.scene.elemental.applyStatus(boss, 'ice');
+        this.scene.elemental.applyStatus(boss, 'ice'); // boss só leva chill, não congela
         if (died) this.scene._onBossDeath();
         hits++;
       }
     }
+    if (froze) this.scene.sound.play('sfx_ice_attack', { volume: 0.4 });
     return hits > 0;
+  }
+
+  // Lasca-losango voa do player até o alvo e o congela (estala de cristal ao chegar)
+  _iceStreak(x1, y1, x2, y2) {
+    const scene = this.scene;
+    const ang = Math.atan2(y2 - y1, x2 - x1);
+    const shard = scene.add
+      .polygon(x1, y1, [12, 0, 0, -5, -8, 0, 0, 5], 0xeaf6ff, 1)
+      .setStrokeStyle(1, 0x5cc8ff, 1)
+      .setDepth(61)
+      .setRotation(ang);
+    scene.tweens.add({
+      targets: shard, x: x2, y: y2,
+      duration: 130, ease: "Quad.easeIn",
+      onComplete: () => {
+        shard.destroy();
+        const star = scene.add.star(x2, y2, 6, 4, 13, 0xbfeaff, 0.9).setDepth(61);
+        scene.tweens.add({
+          targets: star, scaleX: 1.6, scaleY: 1.6, alpha: 0,
+          duration: 280, onComplete: () => star.destroy(),
+        });
+      },
+    });
   }
 }
 
@@ -290,52 +328,51 @@ export class Boomerang extends Weapon {
   }
 }
 
-// CHAIN: dispara raio que salta entre inimigos próximos
+// CHAIN: raio de dano ALTO focado em 1 alvo (o mais próximo).
+// NÃO encadeia — a "corrente entre inimigos" agora é a reação Sobrecarga (fogo+raio).
+// extraProj adiciona alvos INDEPENDENTES (multi-tiro), não saltos em cadeia.
 export class ChainLightning extends Weapon {
   constructor(scene) { super(scene, 'CHAIN'); }
   _fire() {
-    const start = this._nearestEnemyInRange();
-    if (!start) return false;
-    const jumps = (this.def.jumps ?? 3) + (this.owner?.extraProj ?? 0) + this.extraProj;
-    const areaMult = this.owner?.areaMult ?? 1;
-    const jumpMaxSq = (140 * areaMult) * (140 * areaMult);  // saltos só em inimigos próximos
-    const visited = new Set();
-    let prev = this.owner;
-    let cur = start;
+    const targets = this._nearestTargets(1 + (this.owner?.extraProj ?? 0) + this.extraProj);
+    if (!targets.length) return false;
+    this.scene.sound.play('sfx_bolt_attack', { volume: 0.4 });
     const dmg = this.damage;
-    for (let i = 0; i < jumps && cur; i++) {
-      this.scene.elemental._drawBolt(prev.x, prev.y, cur.x, cur.y, COLORS.BOLT);
+    for (const cur of targets) {
+      this.scene.elemental._drawBolt(this.owner.x, this.owner.y, cur.x, cur.y, COLORS.BOLT);
       const isBoss = cur === this.scene.boss;
-      const hit = dmg * (1 - i * 0.15);
       const isCrit = Math.random() < (this.owner?.critChance ?? 0);
-      const finalDmg = isCrit ? hit * this.owner.critMult : hit;
-      const died = cur.takeDamage(finalDmg, isBoss ? undefined : null, prev.x, prev.y, isCrit);
+      const finalDmg = isCrit ? dmg * this.owner.critMult : dmg;
+      const died = cur.takeDamage(finalDmg, isBoss ? undefined : null, this.owner.x, this.owner.y, isCrit);
       this.owner.lifestealFrom(finalDmg);
       this.scene._showDmg(cur.x, cur.y, finalDmg, 'bolt', isCrit);
       this.scene.elemental.applyStatus(cur, 'bolt');
-      visited.add(cur);
       if (died) {
         if (isBoss) this.scene._onBossDeath();
         else this.scene._onEnemyDeath(cur);
       }
-      // Próximo alvo: enemies do pool OU boss (se ainda não visitado)
-      let next = null, bestSq = jumpMaxSq;
-      this.scene.enemyPool.forEachActive(e => {
-        if (visited.has(e)) return;
-        const dx = e.x - cur.x, dy = e.y - cur.y;
-        const d2 = dx * dx + dy * dy;
-        if (d2 < bestSq) { bestSq = d2; next = e; }
-      });
-      const boss = this.scene.boss;
-      if (boss && boss.active && !visited.has(boss)) {
-        const dx = boss.x - cur.x, dy = boss.y - cur.y;
-        const d2 = dx * dx + dy * dy;
-        if (d2 < bestSq) { bestSq = d2; next = boss; }
-      }
-      prev = cur;
-      cur = next;
     }
     return true;
+  }
+
+  // Retorna até `n` inimigos mais próximos dentro do alcance (inclui boss).
+  _nearestTargets(n) {
+    const range = this.range, rangeSq = range * range;
+    const list = [];
+    this.scene.enemyPool.forEachActive(e => {
+      if (!e.active) return;
+      const dx = e.x - this.owner.x, dy = e.y - this.owner.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 <= rangeSq) list.push({ e, d2 });
+    });
+    const boss = this.scene.boss;
+    if (boss && boss.active) {
+      const dx = boss.x - this.owner.x, dy = boss.y - this.owner.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 <= rangeSq) list.push({ e: boss, d2 });
+    }
+    list.sort((a, b) => a.d2 - b.d2);
+    return list.slice(0, n).map(o => o.e);
   }
 }
 
