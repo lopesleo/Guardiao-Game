@@ -36,4 +36,27 @@ Lacunas: arma **defensiva/orbital**, arma **direcional**, gelo **ofensivo**.
 
 ---
 
+---
+
+## 🌐 O que a comunidade do gênero valoriza (pesquisa)
+
+Pilares recorrentes em survivors-like / bullet heaven (Vampire Survivors, Brotato, HoloCure):
+
+1. **Variedade de build** *(nº1 do gênero)* — combinar/evoluir armas. → completar as **evoluções reais** + armas do backlog acima.
+2. **Múltiplos personagens** com mecânica única (HoloCure/Brotato). → hoje só 1; um 2º com viés elemental diferente multiplica rejogabilidade.
+3. **Níveis de dificuldade / "Perigo"** (estilo *Danger* do Brotato) — escala inimigos + recompensa maior; agrada casual e hardcore.
+4. **Loop "só mais uma run"** com progressão rápida (já melhorado: XP/moedas).
+5. **Meta-progressão significativa** (já temos: Bênçãos + desbloqueios).
+
+**Queixas comuns a evitar:** loop repetitivo, pouca variedade de build, picos de dificuldade injustos, pouco conteúdo.
+
+### Priorização sugerida (esforço × impacto)
+1. 🥇 **Seletor de dificuldade ("Perigo")** — barato, alto impacto; multiplicador em HP/dano/spawn + recompensa. Ataca o feedback de balanceamento.
+2. 🥈 **Evoluções de arma reais** — o feature nº1 do gênero (hoje são "stub").
+3. 🥉 **2º personagem jogável** — grande rejogabilidade, esforço médio.
+
+*Fontes: Rogueliker, GameSpot, TheGamer, GameRant, Brotato Builds.*
+
+---
+
 *Registrado a pedido — decidir/implementar depois.*
