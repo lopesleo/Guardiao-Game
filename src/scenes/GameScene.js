@@ -84,13 +84,8 @@ export class GameScene extends Phaser.Scene {
     this.boss = null;
     this.bossWarned = false;
 
-    // ESC → pausa (não sai mais direto)
-    this.input.keyboard.on('keydown-ESC', () => {
-      if (this.scene.isActive('LevelUpScene')) return;
-      if (this.scene.isActive('PauseScene')) return;
-      this.scene.pause();
-      this.scene.launch('PauseScene');
-    });
+    // ESC → pausa (não sai mais direto). Mesmo caminho do botão de pause do HUD.
+    this.input.keyboard.on('keydown-ESC', () => this.pauseGame());
 
     // ====== DEBUG KEYS (remover antes da entrega final se quiser) ======
     this.input.keyboard.on('keydown-NINE', () => {
@@ -701,6 +696,13 @@ export class GameScene extends Phaser.Scene {
         newUnlocks: this._newUnlocksThisRun,
       });
     });
+  }
+
+  pauseGame() {
+    if (this.scene.isActive('LevelUpScene')) return;
+    if (this.scene.isActive('PauseScene')) return;
+    this.scene.pause();
+    this.scene.launch('PauseScene');
   }
 
   shutdown() {

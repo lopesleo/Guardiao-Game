@@ -114,6 +114,13 @@ export class HUD {
       else scene.scale.startFullscreen();
     });
 
+    // ===== BOTÃO PAUSE (toque/clique — no mobile não há ESC) =====
+    this.pauseBtn = sharp(scene, RX, RY + RH + 48, '⏸', {
+      fontFamily: F, fontSize: '20px', fontStyle: 'bold', color: '#d9b25c',
+      backgroundColor: '#0a1410', padding: { x: 12, y: 6 },
+    }).setOrigin(1, 0).setScrollFactor(0).setDepth(D_TEXT).setInteractive({ useHandCursor: true });
+    this.pauseBtn.on('pointerup', () => scene.pauseGame?.());
+
     // ===== XP BAR FINA NO TOPO ABSOLUTO =====
     this.xpBg   = scene.add.rectangle(0, 0, W, 6, 0x000000, 0.7).setOrigin(0, 0).setScrollFactor(0).setDepth(D_BG);
     this.xpFill = scene.add.rectangle(0, 0, 0, 6, COLORS.XP)   .setOrigin(0, 0).setScrollFactor(0).setDepth(D_FILL);
