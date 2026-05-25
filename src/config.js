@@ -99,18 +99,18 @@ export const WEAPONS = {
     name: "Cajado",
     element: ELEMENT.FIRE,
     baseDmg: 7,
-    cooldown: 800,
+    cooldown: 1100,
     range: 280,
-    projSpeed: 320,
+    projSpeed: 300,
   },
   // Aura Gélida: campo de CONTROLE. Dano de chip + slow; quem fica 1s dentro CONGELA.
   AURA: {
     name: "Aura Gélida",
     element: ELEMENT.ICE,
     baseDmg: 2,
-    cooldown: 1100,
+    cooldown: 1200,
     range: 120,
-    freezeAfterMs: 1000,
+    freezeAfterMs: 900,
     freezeMs: 1300,
     freezeImmuneMs: 3000,
   },
@@ -118,7 +118,7 @@ export const WEAPONS = {
     name: "Bumerangue",
     element: ELEMENT.FIRE,
     baseDmg: 4,
-    cooldown: 1400,
+    cooldown: 1600,
     range: 240,
     projSpeed: 280,
   },
@@ -126,21 +126,21 @@ export const WEAPONS = {
   CHAIN: {
     name: "Raio Concentrado",
     element: ELEMENT.BOLT,
-    baseDmg: 26,
+    baseDmg: 15,
     cooldown: 1800,
-    range: 200,
+    range: 190,
   },
   // evoluções (D12)
   VAPOR_STORM: {
     name: "Tempestade de Vapor",
     evolvesFrom: ["STAFF", "AURA"],
-    baseDmg: 14,
+    baseDmg: 12,
     cooldown: 700,
   },
   OVERLOAD_X: {
     name: "Sobrecarga Eterna",
     evolvesFrom: ["STAFF", "CHAIN"],
-    baseDmg: 16,
+    baseDmg: 25,
     cooldown: 900,
   },
 };
@@ -252,8 +252,8 @@ export const PASSIVES = [
 
 // Drops aleatórios no chão (chance por kill)
 export const DROPS = {
-  COIN_CHANCE: 0.1, // dobrado — moedas estavam acumulando devagar (feedback)
-  HEART_CHANCE: 0.012,
+  COIN_CHANCE: 0.25, //25% de chance de dropar moeda
+  HEART_CHANCE: 0.05,
   AWAKEN_CHANCE: 0.018,
   HEART_HEAL: 20,
   AWAKEN_REFILL: 25,
@@ -277,19 +277,19 @@ export const CHEST = {
   GEMS_MIN: 4,
   GEMS_MAX: 8,
   COINS_MIN: 2,
-  COINS_MAX: 5,
+  COINS_MAX: 8,
   HEART_CHANCE_OPEN: 0.3,
   AWAKEN_CHANCE_OPEN: 0.3,
   // golden bonus
-  GOLDEN_EXTRA_COINS: 30,
+  GOLDEN_EXTRA_COINS: 40,
   // trap
-  TRAP_ENEMY_COUNT: 4,
+  TRAP_ENEMY_COUNT: 6,
 };
 
 // Inimigos elite (spawnam da armadilha de baú)
 export const ELITE = {
   HP_MULT: 2.0,
-  SCALE_MULT: 1.4,
+  SCALE_MULT: 1.6,
   CONTACT_RADIUS: 38,
   TINT: 0xff6666,
 };
@@ -297,7 +297,7 @@ export const ELITE = {
 // Mímico (chest com língua) — inimigo único super forte
 export const MIMIC = {
   HP_MULT: 9.0, // muito mais tanque
-  HP_FLOOR: 320, // piso de HP: nunca trivial, mesmo spawnando cedo
+  HP_FLOOR: 380, // piso de HP: nunca trivial, mesmo spawnando cedo
   SCALE_MULT: 1.8,
   DMG_MULT: 3.0,
   SPEED: 115, // mais rápido que o lobo (95): persegue de verdade
@@ -309,8 +309,8 @@ export const MIMIC = {
 export const META = {
   STORAGE_KEY: "guardiao_save_v1",
   COIN_VALUE: 1,
-  COIN_BOSS_WIN: 60,
-  COIN_BOSS_LOSS: 0,
+  COIN_BOSS_WIN: 80,
+  COIN_BOSS_LOSS: 10,
   WEAPON_UNLOCK_COST: { BOOMER: 30, CHAIN: 60, AURA: 100 },
   ABILITY_UNLOCK_COST: { DASH: 50, AWAKEN: 80 },
 };
