@@ -95,6 +95,15 @@ export class MenuScene extends Phaser.Scene {
     this._button(cx, by + bgap * 4, 'CRÉDITOS',      '#93a89a', 18, false, () => this.scene.start('CreditsScene'));
     this._button(cx, by + bgap * 5, 'NOVO JOGO',     '#ff8898', 14, false, () => this._showResetConfirm());
 
+    // === FULLSCREEN (PC + mobile) — canto superior esquerdo ===
+    const fsBtn = sharp(this, 20, 20, '⛶ Tela cheia', {
+      fontFamily: F, fontSize: '15px', fontStyle: 'bold', color: '#d9b25c',
+      backgroundColor: '#0a1410', padding: { x: 12, y: 8 },
+    }).setOrigin(0, 0).setInteractive({ useHandCursor: true });
+    fsBtn.on('pointerover', () => fsBtn.setColor('#ffe88a'));
+    fsBtn.on('pointerout',  () => fsBtn.setColor('#d9b25c'));
+    fsBtn.on('pointerup',   () => this.scale.toggleFullscreen());
+
     // === HINT ===
     sharp(this, cx, H - 28,
       'WASD mover  ·  R despertar  ·  SHIFT dash  ·  E abrir baú  ·  M mute',
@@ -235,26 +244,32 @@ export class MenuScene extends Phaser.Scene {
     const W = GAME.WIDTH, H = GAME.HEIGHT;
     const overlay = this.add.rectangle(0, 0, W, H, 0x000000, 0.92).setOrigin(0).setInteractive().setDepth(500);
     const panel = this.add.container(W / 2, H / 2).setDepth(501);
-    panel.add(this.add.rectangle(0, 0, 780, 600, 0x0a1410, 1).setStrokeStyle(3, 0xd9b25c, 1));
-    panel.add(sharp(this, 0, -260, 'BÊNÇÃOS', { fontFamily: F, fontSize: '30px', fontStyle: 'bold', color: '#d9b25c' }).setOrigin(0.5));
-    panel.add(sharp(this, 0, -224, 'Buffs permanentes para todas as runs', { fontFamily: F, fontSize: '13px', color: '#93a89a' }).setOrigin(0.5));
-    panel.add(sharp(this, 0, -200, `${this.meta.coins} moedas disponíveis`, { fontFamily: F, fontSize: '14px', color: '#e8f0e6' }).setOrigin(0.5));
+    // Layout calculado pra caber TODAS as bênçãos + cabeçalho + botão sem sobrepor
+    const n = BLESSINGS.length;
+    const step = 50, rowH = 44;
+    const headerSpace = 100, footerSpace = 70;
+    const panelH = headerSpace + n * step + footerSpace;
+    panel.add(this.add.rectangle(0, 0, 780, panelH, 0x0a1410, 1).setStrokeStyle(3, 0xd9b25c, 1));
+    const top = -panelH / 2;
+    panel.add(sharp(this, 0, top + 28, 'BÊNÇÃOS', { fontFamily: F, fontSize: '28px', fontStyle: 'bold', color: '#d9b25c' }).setOrigin(0.5));
+    panel.add(sharp(this, 0, top + 56, 'Buffs permanentes para todas as runs', { fontFamily: F, fontSize: '13px', color: '#93a89a' }).setOrigin(0.5));
+    panel.add(sharp(this, 0, top + 78, `${this.meta.coins} moedas disponíveis`, { fontFamily: F, fontSize: '14px', color: '#e8f0e6' }).setOrigin(0.5));
 
-    let y = -150;
+    let y = top + headerSpace + step / 2;
     for (const b of BLESSINGS) {
       const has = this.meta.ownsBlessing(b.id);
       const canBuy = !has && this.meta.coins >= b.cost;
       const row = this.add.container(0, y);
-      const bg = this.add.rectangle(0, 0, 720, 58, has ? 0x1a3a1a : (canBuy ? 0x1a2820 : 0x141414), 1)
+      const bg = this.add.rectangle(0, 0, 720, rowH, has ? 0x1a3a1a : (canBuy ? 0x1a2820 : 0x141414), 1)
                        .setStrokeStyle(2, has ? 0x6fcf6f : (canBuy ? 0xd9b25c : 0x333333), 1);
       row.add(bg);
-      row.add(sharp(this, -340, -12, b.name, {
-        fontFamily: F, fontSize: '15px', fontStyle: 'bold',
+      row.add(sharp(this, -340, -9, b.name, {
+        fontFamily: F, fontSize: '14px', fontStyle: 'bold',
         color: has ? '#6fcf6f' : (canBuy ? '#e8f0e6' : '#777'),
       }).setOrigin(0, 0.5));
-      row.add(sharp(this, -340, 12, b.desc, { fontFamily: F, fontSize: '12px', color: '#93a89a' }).setOrigin(0, 0.5));
+      row.add(sharp(this, -340, 11, b.desc, { fontFamily: F, fontSize: '11px', color: '#93a89a' }).setOrigin(0, 0.5));
       row.add(sharp(this, 340, 0, has ? 'COMPRADA' : `${b.cost} 💰`, {
-        fontFamily: F, fontSize: '15px', fontStyle: 'bold',
+        fontFamily: F, fontSize: '14px', fontStyle: 'bold',
         color: has ? '#6fcf6f' : (canBuy ? '#d9b25c' : '#666'),
       }).setOrigin(1, 0.5));
       panel.add(row);
@@ -270,14 +285,19 @@ export class MenuScene extends Phaser.Scene {
           }
         });
       }
-      y += 66;
+      y += step;
     }
-    const close = sharp(this, 0, 260, 'FECHAR', { fontFamily: F, fontSize: '16px', fontStyle: 'bold', color: '#d9b25c' })
-                  .setOrigin(0.5).setInteractive({ useHandCursor: true });
-    close.on('pointerdown', () => {
+    const closeY = (panelH / 2) - footerSpace / 2;
+    const closeBg = this.add.rectangle(0, closeY, 200, 40, 0x1a2820, 1)
+                        .setStrokeStyle(2, 0xd9b25c, 0.9).setInteractive({ useHandCursor: true });
+    const close = sharp(this, 0, closeY, 'FECHAR', { fontFamily: F, fontSize: '16px', fontStyle: 'bold', color: '#d9b25c' }).setOrigin(0.5);
+    closeBg.on('pointerover', () => closeBg.setFillStyle(0x2a3a3a));
+    closeBg.on('pointerout',  () => closeBg.setFillStyle(0x1a2820));
+    closeBg.on('pointerdown', () => {
       overlay.destroy(); panel.destroy();
       this.scene.restart();
     });
+    panel.add(closeBg);
     panel.add(close);
   }
 }

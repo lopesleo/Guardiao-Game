@@ -104,6 +104,16 @@ export class HUD {
       fontFamily: F, fontSize: '20px', fontStyle: 'bold', color: '#d9b25c',
     }).setOrigin(1, 0).setScrollFactor(0).setDepth(D_TEXT);
 
+    // ===== BOTÃO FULLSCREEN (PC + mobile) =====
+    this.fsBtn = sharp(scene, RX, RY + RH + 8, '⛶', {
+      fontFamily: F, fontSize: '20px', fontStyle: 'bold', color: '#d9b25c',
+      backgroundColor: '#0a1410', padding: { x: 10, y: 6 },
+    }).setOrigin(1, 0).setScrollFactor(0).setDepth(D_TEXT).setInteractive({ useHandCursor: true });
+    this.fsBtn.on('pointerup', () => {
+      if (scene.scale.isFullscreen) scene.scale.stopFullscreen();
+      else scene.scale.startFullscreen();
+    });
+
     // ===== XP BAR FINA NO TOPO ABSOLUTO =====
     this.xpBg   = scene.add.rectangle(0, 0, W, 6, 0x000000, 0.7).setOrigin(0, 0).setScrollFactor(0).setDepth(D_BG);
     this.xpFill = scene.add.rectangle(0, 0, 0, 6, COLORS.XP)   .setOrigin(0, 0).setScrollFactor(0).setDepth(D_FILL);
