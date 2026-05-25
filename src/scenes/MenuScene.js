@@ -1,6 +1,7 @@
 // Menu LIMPO com fonte system-ui (legível em projetor) — só título em pixel font.
 import { COLORS, GAME, META, BLESSINGS } from '../config.js';
 import { MetaProgression } from '../systems/MetaProgression.js';
+import { loadVolume, saveVolume } from '../systems/AudioSettings.js';
 import { formatTime } from '../utils.js';
 
 const F  = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
@@ -17,6 +18,7 @@ export class MenuScene extends Phaser.Scene {
     const W = GAME.WIDTH, H = GAME.HEIGHT;
     const cx = W / 2;
     this.meta = new MetaProgression();
+    this.sound.volume = loadVolume(); // aplica volume salvo (global, vale no jogo todo)
 
     // === BG gradiente escuro ===
     this.cameras.main.setBackgroundColor(0x0a1410);
@@ -103,6 +105,29 @@ export class MenuScene extends Phaser.Scene {
     fsBtn.on('pointerover', () => fsBtn.setColor('#ffe88a'));
     fsBtn.on('pointerout',  () => fsBtn.setColor('#d9b25c'));
     fsBtn.on('pointerup',   () => this.scale.toggleFullscreen());
+
+    // === VOLUME (slider salvo, vale no jogo todo) ===
+    const vx = 20, vy = 86, vw = 200, vh = 14;
+    sharp(this, vx, vy - 24, '🔊 Áudio', { fontFamily: F, fontSize: '13px', fontStyle: 'bold', color: '#d9b25c' }).setOrigin(0, 0);
+    const volTrack = this.add.rectangle(vx, vy, vw, vh, 0x000000, 0.7)
+      .setOrigin(0, 0).setStrokeStyle(2, 0xd9b25c, 0.7).setInteractive({ useHandCursor: true });
+    const volFill = this.add.rectangle(vx + 2, vy + 2, 0, vh - 4, 0xd9b25c).setOrigin(0, 0);
+    const volPct = sharp(this, vx + vw + 12, vy - 3, '', { fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: '#e8f0e6' }).setOrigin(0, 0);
+    const refreshVol = () => {
+      const v = this.sound.volume;
+      volFill.width = (vw - 4) * v;
+      volPct.setText(this.sound.mute ? 'MUDO' : `${Math.round(v * 100)}%`);
+    };
+    const setVolFromPointer = (p) => {
+      const f = Phaser.Math.Clamp((p.x - vx) / vw, 0, 1);
+      this.sound.volume = f;
+      if (f > 0) this.sound.mute = false;
+      saveVolume(f);
+      refreshVol();
+    };
+    volTrack.on('pointerdown', (p) => setVolFromPointer(p));
+    volTrack.on('pointermove', (p) => { if (p.isDown) setVolFromPointer(p); });
+    refreshVol();
 
     // === HINT ===
     sharp(this, cx, H - 28,

@@ -14,6 +14,7 @@ import { Chest } from '../entities/Chest.js';
 import { DamageNumber } from '../entities/DamageNumber.js';
 import { HUD } from '../ui/HUD.js';
 import { VirtualJoystick } from '../ui/VirtualJoystick.js';
+import { applyVolume } from '../systems/AudioSettings.js';
 
 export class GameScene extends Phaser.Scene {
   constructor() { super('GameScene'); }
@@ -28,6 +29,7 @@ export class GameScene extends Phaser.Scene {
 
     // Meta-progressão (carrega desbloqueios disponíveis)
     this.meta = new MetaProgression();
+    applyVolume(this); // respeita o volume salvo no menu (global)
     this._coinsGainedThisRun = 0;
     this._newUnlocksThisRun = [];
 
