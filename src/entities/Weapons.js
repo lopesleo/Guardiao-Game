@@ -11,7 +11,9 @@ export class Projectile extends Phaser.GameObjects.Container {
     scene.add.existing(this);
     this.glow = scene.add.circle(0, 0, 22, COLORS.FIRE, 0.4);
     this.core = scene.add.circle(0, 0, 10, 0xffe6b8, 1.0);
-    this.add([this.glow, this.core]);
+    // Bola de fogo animada (2 frames alternando) — usada pelo Cajado (fogo)
+    this.fball = scene.add.sprite(0, 0, "fireball").setScale(1.1);
+    this.add([this.glow, this.core, this.fball]);
     scene.physics.add.existing(this);
     this.body.setCircle(10, -10, -10);
     this.setActive(false).setVisible(false);
@@ -20,6 +22,7 @@ export class Projectile extends Phaser.GameObjects.Container {
     this.element = null;
     this.lifeUntil = 0;
     this.crit = false;
+    this._isFire = false;
   }
 
   fire(
@@ -42,7 +45,14 @@ export class Projectile extends Phaser.GameObjects.Container {
     this.crit = crit;
     this.lifeUntil = this.scene.time.now + lifeMs;
 
-    if (element === ELEMENT.ICE) {
+    // Fogo (e genérico) = sprite de bola de fogo; gelo/raio = bolinha colorida
+    this._isFire = element === ELEMENT.FIRE || element == null;
+    this.fball.setVisible(this._isFire);
+    this.glow.setVisible(!this._isFire);
+    this.core.setVisible(!this._isFire);
+    if (this._isFire) {
+      this.fball.setRotation(Math.atan2(vy, vx));
+    } else if (element === ELEMENT.ICE) {
       this.glow.setFillStyle(COLORS.ICE, 0.45);
       this.core.setFillStyle(0xeaf6ff, 1);
     } else if (element === ELEMENT.BOLT) {
@@ -63,8 +73,16 @@ export class Projectile extends Phaser.GameObjects.Container {
   update(time) {
     if (!this.active) return;
     if (time >= this.lifeUntil) this.kill();
-    const s = 1 + Math.sin(time / 60) * 0.12;
-    this.glow.setScale(s);
+    if (this._isFire) {
+      this.fball.setFrame(((time / 90) | 0) % 2);
+
+      this.fball.setRotation(
+        Math.atan2(this.body.velocity.y, this.body.velocity.x),
+      );
+    } else {
+      const s = 1 + Math.sin(time / 60) * 0.12;
+      this.glow.setScale(s);
+    }
   }
 }
 

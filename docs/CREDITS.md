@@ -21,6 +21,7 @@ Mantemos esta lista atualizada conforme novos assets são adicionados.
 | Tiny Dungeon | Kenney | CC0 1.0 | <https://kenney.nl/assets/tiny-dungeon> |
 | Tiny Town | Kenney | CC0 1.0 | <https://kenney.nl/assets/tiny-town> |
 | Tiny Creatures | Clint Bellanger (colab. Kenney) | CC0 1.0 | <https://opengameart.org/content/tiny-creatures> |
+| Bola de fogo (projétil do Cajado, 2 frames) | Revon | CC-BY 4.0 | <https://opengameart.org/content/fireball-3> |
 
 **Uso:** sprites foram usados como spritesheets de 16×16 px. Renderizados com `pixelArt: true` no Phaser (escala inteira, sem suavização).
 
@@ -40,7 +41,7 @@ Mantemos esta lista atualizada conforme novos assets são adicionados.
 | Electricity Game Sound Pack (raio + sobrecarga) | faxcorp | CC0 1.0 | <https://opengameart.org/content/electricity-game-sound-pack> |
 | Ice spells (gelo + cristal) | bart (Bart Kelsey) | CC0 1.0 | <https://opengameart.org/content/ice-spells> |
 | Steam release sounds (vapor) | bart (Bart Kelsey) | CC0 1.0 | <https://opengameart.org/content/steam-release-sounds> |
-| Fireball (ataque do Cajado) | Julien Matthey | CC0 1.0 | <https://opengameart.org/content/fireball-1> |
+| Spell 4 — fogo "foom" (ataque do Cajado) | Bart K. | CC-BY 3.0 | <https://opengameart.org/content/spell-4-fire> |
 
 **Sons selecionados deste pack (renomeados para clareza):**
 
