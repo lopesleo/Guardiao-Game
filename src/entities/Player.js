@@ -28,6 +28,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.xp    = 0;
 
     this.invulnUntil = 0;
+    this._contactFxUntil = 0; // throttle do feedback visual/sonoro do dano de contato
     this.weapons = [];
     this.facingX = 1;
 
@@ -80,13 +81,31 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (now < this.invulnUntil) return false;
     this.hp = Math.max(0, this.hp - dmg);
     this.invulnUntil = now + PLAYER.INVULN_MS;
+    this._hitFx(now);
+    return true;
+  }
+
+  // Dano de CONTATO: NÃO usa i-frame global, então cada inimigo colado SOMA o seu dano.
+  // (chamado uma vez por frame com a soma de todos os inimigos encostados que "venceram"
+  //  o próprio contactCooldown). Feedback visual/sonoro é throttled pra não spammar.
+  takeContactDamage(dmg) {
+    if (dmg <= 0) return false;
+    const now = this.scene.time.now;
+    this.hp = Math.max(0, this.hp - dmg);
+    if (now >= this._contactFxUntil) {
+      this._contactFxUntil = now + 120;
+      this._hitFx(now);
+    }
+    return true;
+  }
+
+  _hitFx() {
     this.scene.sound.play('sfx_player_hit', { volume: 0.7 });
     this.setTint(0xff5a6e);
     this.scene.time.delayedCall(120, () => {
       if (this.isAwakened()) this.setTint(0xffd96b);
       else this.clearTint();
     });
-    return true;
   }
 
   gainXp(amount) {

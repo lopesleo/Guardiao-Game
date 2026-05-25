@@ -280,18 +280,20 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    // Inimigos
+    // Inimigos — soma o dano de TODOS os que estão colados (cada um respeitando seu cooldown)
+    let contactDmg = 0;
     this.enemyPool.forEachActive(e => {
       e.update(time, dt, this.player);
       const dx = e.x - this.player.x, dy = e.y - this.player.y;
       if (dx * dx + dy * dy < e.contactRadius * e.contactRadius && time - e.lastTouchAt > e.contactCooldownMs) {
         e.lastTouchAt = time;
-        if (!this._god) {
-          this.player.takeDamage(e.dmg);
-          if (this.player.isDead()) this._onGameOver(false);
-        }
+        if (!this._god) contactDmg += e.dmg;
       }
     });
+    if (contactDmg > 0) {
+      this.player.takeContactDamage(contactDmg);
+      if (this.player.isDead()) this._onGameOver(false);
+    }
 
     // Separação inimigo-inimigo: não deixam ocupar o mesmo espaço (anti-empilhamento)
     this._separateEnemies(time);
