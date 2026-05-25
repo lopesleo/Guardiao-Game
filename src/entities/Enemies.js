@@ -8,6 +8,8 @@ const FRAMES = {
   CROW: 136, // Corvo voando (catalogo pos 137)
   GOBLIN: 10, // Goblin (catalogo pos 11)
   BOSS: 114, // Ent Carvalho (catalogo pos 115)
+  MAGE: 20, // Mago/caster telegrafado — ajuste o frame se o sprite nao combinar
+  BRUTE: 70, // Brutamontes (tanque pesado) — ajuste o frame se preciso
 };
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
@@ -30,6 +32,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this._lastShotAt = 0;
     this._shotCooldownMs = 1800;
     this._shotRange = 260;
+    // Mago: canalização telegrafada
+    this._casting = false;
+    this._castUntil = 0;
+    this._castCdUntil = 0;
     // Estado de congelamento (Aura Gélida) — para o inimigo, mas continua tomando dano
     this._frozenUntil = 0; // congelado enquanto time < isso
     this._freezeLockUntil = 0; // imune a novo freeze enquanto time < isso (anti-permafreeze)
@@ -60,6 +66,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.statuses = {};
     this.lastTouchAt = 0;
     this._lastShotAt = 0;
+    this._casting = false;
+    this._castCdUntil = 0;
+    this._shotRange = 260;
     this._frozenUntil = 0;
     this._freezeLockUntil = 0;
     this._auraEnterAt = 0;
@@ -85,6 +94,24 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.speed = ENEMY.SPEED_GOBLIN;
       this.maxHp *= 1.3;
       this.hp = this.maxHp;
+    } else if (kind === "mage") {
+      // Mago: lento, mantém distância e solta projétil telegrafado (dá pra desviar)
+      this.setFrame(FRAMES.MAGE);
+      this.speed = 70;
+      this.maxHp *= 1.1;
+      this.hp = this.maxHp;
+      this._shotRange = 300;
+      this.setTint(0xc290ff);
+    } else if (kind === "brute") {
+      // Brutamontes: tanque lento e grande que bate MUITO forte no contato
+      this.setFrame(FRAMES.BRUTE);
+      this.setScale(GAME.PIXEL_SCALE * 1.6);
+      this.speed = 55;
+      this.maxHp *= 3.0;
+      this.hp = this.maxHp;
+      this.dmg *= 1.8;
+      this.contactRadius = 44;
+      this.setTint(0xd98a6a);
     } else {
       this.setFrame(FRAMES.WOLF);
       this.speed = ENEMY.SPEED_WOLF;
@@ -210,6 +237,33 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
         this._lastShotAt = time;
         this._shoot(target);
       }
+    } else if (this._kind === "mage") {
+      // Mago: mantém distância; ao alcance, CANALIZA (cresce ~0.7s) e solta tiro lento
+      if (this._casting) {
+        this.setVelocity(0, 0); // parado enquanto canaliza (telegrafa)
+        if (time >= this._castUntil) {
+          this._casting = false;
+          this._castCdUntil = time + 2600;
+          this.setScale(GAME.PIXEL_SCALE);
+          this._castBigShot(target);
+        }
+      } else {
+        const desired = 240;
+        const diff = len - desired;
+        const sp = this.speed * slow * Math.sign(diff);
+        this.setVelocity((dx / len) * sp, (dy / len) * sp);
+        if (len <= this._shotRange && time >= this._castCdUntil) {
+          this._casting = true;
+          this._castUntil = time + 700;
+          this.setVelocity(0, 0);
+          this.scene.tweens.add({
+            targets: this,
+            scaleX: GAME.PIXEL_SCALE * 1.35,
+            scaleY: GAME.PIXEL_SCALE * 1.35,
+            duration: 350, yoyo: true,
+          });
+        }
+      }
     } else {
       // Morcego (e default): perseguição reta
       const sp = this.speed * slow;
@@ -228,6 +282,17 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     const len = Math.hypot(dx, dy) || 1;
     const sp = 180;
     proj.fire(this.x, this.y, (dx / len) * sp, (dy / len) * sp, this.dmg * 1.0);
+  }
+
+  // Tiro do Mago: LENTO, grande e roxo — telegrafado, fácil de desviar mas dói
+  _castBigShot(target) {
+    const scene = this.scene;
+    const proj = scene.enemyProjPool.acquire();
+    const dx = target.x - this.x,
+      dy = target.y - this.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const sp = 135;
+    proj.fire(this.x, this.y, (dx / len) * sp, (dy / len) * sp, this.dmg * 1.6, 2.2, 0xc26bff);
   }
 }
 
@@ -401,13 +466,14 @@ export class EnemyProjectile extends Phaser.GameObjects.Container {
     this.dmg = 0;
     this.lifeUntil = 0;
   }
-  fire(x, y, vx, vy, dmg) {
+  fire(x, y, vx, vy, dmg, scale = 1, color = 0xff5a6e) {
     this.setPosition(x, y);
     this.setActive(true).setVisible(true);
     this.body.enable = true;
     this.body.setVelocity(vx, vy);
     this.dmg = dmg;
     this.lifeUntil = this.scene.time.now + 3000;
+    this.core.setScale(scale).setFillStyle(color, 1);
   }
   kill() {
     this.setActive(false).setVisible(false);

@@ -27,13 +27,17 @@ export class SpawnDirector {
   _spawnOne(tSec) {
     const wave = Math.floor(tSec / 30);
     const roll = Math.random();
-    let kind;
-    // Goblin (atirador) entra na wave 1 e cresce até 45% dos spawns.
-    // Corvo (mergulha + tiro ocasional) entra na wave 1 com ~30%.
-    const goblinChance = wave >= 1 ? Math.min(0.18 + wave * 0.05, 0.45) : 0;
-    const crowChance = wave >= 1 ? 0.30 : 0;
-    if (roll < goblinChance) kind = 'goblin';
-    else if (roll < goblinChance + crowChance) kind = 'crow';
+    // Mix por wave: atiradores e tipos especiais entram cedo e escalam.
+    //   goblin (tiro rápido), crow (mergulha+tiro), mage (tiro telegrafado), brute (tanque)
+    const goblinChance = wave >= 1 ? Math.min(0.16 + wave * 0.04, 0.40) : 0;
+    const crowChance   = wave >= 1 ? 0.26 : 0;
+    const mageChance   = wave >= 3 ? 0.12 : 0;
+    const bruteChance  = wave >= 4 ? 0.10 : 0;
+    let kind, acc = 0;
+    if      (roll < (acc += goblinChance)) kind = 'goblin';
+    else if (roll < (acc += crowChance))   kind = 'crow';
+    else if (roll < (acc += mageChance))   kind = 'mage';
+    else if (roll < (acc += bruteChance))  kind = 'brute';
     else kind = 'wolf';
 
     const cam = this.scene.cameras.main;
