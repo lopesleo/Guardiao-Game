@@ -14,7 +14,8 @@ export const GAME = {
 export const PLAYER = {
   HP_BASE: 100,
   SPEED_BASE: 160,
-  XP_PER_LEVEL: lvl => Math.floor(10 + lvl * 8 + lvl * lvl * 1.5),
+  // Curva mais suave: evoluir não pode demorar tanto (feedback dos testers)
+  XP_PER_LEVEL: lvl => Math.floor(5 + lvl * 4 + lvl * lvl * 0.8),
   PICKUP_RADIUS: 36,
   INVULN_MS: 350,   // i-frames pós-dano — menor = tick de dano de contato mais rápido
   // Despertar (★ DIFERENCIAL) — max escala com level pra evitar spam em late game
@@ -34,9 +35,9 @@ export const PLAYER = {
 
 export const ENEMY = {
   // wave = floor(t / 30); a cada 30s sobe a wave
-  // Difficulty: inimigos mais fortes pra o jogo não ficar fácil em late game
-  HP:   wave => 14 + 6 * wave,
-  DMG:  wave => 3 + 1.0 * wave,
+  // Curva: começo mais suave, late-game duro (mas o dano de contato SOMA, então cuidado)
+  HP:   wave => 12 + 6 * wave,
+  DMG:  wave => 2 + 0.9 * wave,
   SPEED_WOLF: 95,
   SPEED_CROW: 140,
   SPEED_GOBLIN: 60,
@@ -94,7 +95,11 @@ const rf = (min, max) => +(min + Math.random() * (max - min)).toFixed(2);
 
 export const PASSIVES = [
   { id: 'hp', roll: () => { const v = r(10, 25);
-    return { name: `+${v}% HP Máximo`, apply: p => { p.maxHp *= 1 + v/100; p.hp = Math.min(p.maxHp, p.hp + v/2); } };
+    return { name: `+${v}% HP Máximo`, apply: p => {
+      const gain = p.maxHp * (v / 100);   // HP máximo ganho
+      p.maxHp += gain;
+      p.hp = Math.min(p.maxHp, p.hp + gain); // o bônus já chega PREENCHIDO
+    } };
   }},
   { id: 'speed', roll: () => { const v = r(8, 18);
     return { name: `+${v}% Velocidade`, apply: p => { p.speed *= 1 + v/100; } };
@@ -119,7 +124,7 @@ export const PASSIVES = [
 
 // Drops aleatórios no chão (chance por kill)
 export const DROPS = {
-  COIN_CHANCE:   0.05,
+  COIN_CHANCE:   0.10,  // dobrado — moedas estavam acumulando devagar (feedback)
   HEART_CHANCE:  0.012,
   AWAKEN_CHANCE: 0.018,
   HEART_HEAL:    20,
@@ -174,7 +179,7 @@ export const MIMIC = {
 export const META = {
   STORAGE_KEY: 'guardiao_save_v1',
   COIN_VALUE: 1,
-  COIN_BOSS_WIN: 50,
+  COIN_BOSS_WIN: 60,
   COIN_BOSS_LOSS: 0,
   WEAPON_UNLOCK_COST: { BOOMER: 30, CHAIN: 60, AURA: 100 },
   ABILITY_UNLOCK_COST: { DASH: 50, AWAKEN: 80 },
