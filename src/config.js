@@ -35,14 +35,17 @@ export const PLAYER = {
 
 export const ENEMY = {
   // wave = floor(t / 30); a cada 30s sobe a wave
-  // Curva: começo mais suave, late-game duro (mas o dano de contato SOMA, então cuidado)
+  // Curva: começo mais suave, late-game duro
   HP: (wave) => 12 + 6 * wave,
-  DMG: (wave) => 2 + 0.9 * wave,
-  SPEED_WOLF: 95,
+  // Dano subido (era 2 + 0.9*wave): inimigos não ameaçavam no late-game.
+  DMG: (wave) => 2 + 1.6 * wave,
+  // Velocidades subidas (lobo 95→145, goblin 60→105): player (160) não pode
+  // mais correr de TODO mundo de graça — kiting trivial era um exploit.
+  SPEED_WOLF: 145,
   SPEED_CROW: 140,
-  SPEED_GOBLIN: 60,
+  SPEED_GOBLIN: 105,
   SPAWN_RATE: (t) => 0.6 + t / 75,
-  XP_VALUE: 1,
+  XP_VALUE: 3,
   COIN_DROP_CHANCE: 0.05,
 };
 
@@ -69,7 +72,7 @@ export const REACTION = {
   VAPOR: {
     color: 0xffc8a0,
     radius: 80,
-    duration: 3000,
+    duration: 2200, // era 3000: nuvens não têm cap de concorrência, encurtar evita carpete de DoT
     dmgPerTick: 5,
     tickMs: 300,
     label: "VAPOR!",
@@ -78,8 +81,8 @@ export const REACTION = {
   CRYSTAL: {
     color: 0x9fe8ff,
     radius: 70,
-    dmg: 6,
-    selfDmg: 14,
+    dmg: 20, // era 12
+    selfDmg: 0, // era 14: auto-dano > dano fazia a reação ter EV negativo (armadilha)
     shards: 8,
     label: "CRISTAL!",
   },
@@ -130,7 +133,9 @@ export const WEAPONS = {
     cooldown: 1800,
     range: 190,
   },
-  // evoluções (D12)
+  // evoluções (D12) — ⚠️ DESATIVADAS por ora: não são oferecidas no level-up
+  // (ver UpgradeSystem.js). Eram só um Cajado reskin sem mecânica própria.
+  // Mantidas aqui para reativar no futuro com comportamento de verdade.
   VAPOR_STORM: {
     name: "Tempestade de Vapor",
     evolvesFrom: ["STAFF", "AURA"],
@@ -145,7 +150,6 @@ export const WEAPONS = {
   },
 };
 
-export const WEAPON_LEVEL_DMG = (base, lvl) => base * (1 + 0.25 * (lvl - 1));
 export const MAX_WEAPON_LEVEL = 5;
 
 // Upgrades passivos (level-up). roll() retorna { name, apply } com valor aleatório.

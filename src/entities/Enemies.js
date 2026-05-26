@@ -97,7 +97,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     } else if (kind === "mage") {
       // Mago: lento, mantém distância e solta projétil telegrafado (dá pra desviar)
       this.setFrame(FRAMES.MAGE);
-      this.speed = 70;
+      this.speed = 110; // era 70 (anti-kite; ainda < player 160)
       this.maxHp *= 1.1;
       this.hp = this.maxHp;
       this._shotRange = 300;
@@ -106,7 +106,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       // Brutamontes: tanque lento e grande que bate MUITO forte no contato
       this.setFrame(FRAMES.BRUTE);
       this.setScale(GAME.PIXEL_SCALE * 1.6);
-      this.speed = 55;
+      this.speed = 85; // era 55: continua o tanque mais lento, mas não dá pra ignorar andando
       this.maxHp *= 3.0;
       this.hp = this.maxHp;
       this.dmg *= 1.8;

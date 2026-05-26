@@ -55,6 +55,28 @@ Dano por nível: `base × (1 + 0.25 × (lvl - 1))` — max nível 5.
   - Aura Gélida: **100 moedas** (mais cara, sinergia chave para evoluções)
 - Cajado começa desbloqueado
 
+---
+
+> ⚠️ As tabelas acima estão **desatualizadas** em relação ao `src/config.js` atual.
+> O `config.js` é a fonte da verdade. Revisão abaixo registra o último passe.
+
+## Revisão de balanceamento — 2026-05-26 (Conselho multi-agente)
+
+Revisão estruturada (designer + chefes de Gênero/Cético/Restrições + árbitro). Veredito: **APROVADO** para um passe só de `config.js`/correções pontuais; mudanças de mecânica e UI novas foram adiadas (risco de regressão a 2 dias da entrega).
+
+**Descoberta-chave:** o scaling de dano de arma documentado (`base×(1+0.25(lvl-1))`, teto 2×) era **código morto** — o leveling real compõe `+15–30%` aleatório por nível (teto efetivo ~2,86× antes de proj/crit/bênção). Logo o problema **não** era "jogador fraco", e sim **inimigos que não ameaçavam**.
+
+Aplicado (GREEN):
+- **Dano de inimigo:** `2 + 0.9·wave` → `2 + 1.6·wave` (late-game agora pressiona).
+- **Velocidades:** lobo 95→145, goblin 60→105, mago 70→110, brutamontes 55→85 (player 160 não corre de todos de graça; kiting trivial era exploit).
+- **Piso de cooldown:** recarga nunca abaixo de 22% da base (antes empilhava player×arma×Despertar até ~42ms).
+- **Bug de reação corrigido:** com fogo+gelo+raio juntos, a seleção pegava só os 2 primeiros status e podia engolir uma reação válida; agora varre qualquer par mapeado.
+- **CRISTAL:** `selfDmg 14→0`, `dmg 12→20` (auto-dano > dano = EV negativo, lia como armadilha).
+- **VAPOR:** duração 3000→2200ms (nuvens não têm cap de concorrência).
+- **Código morto removido:** `WEAPON_LEVEL_DMG` e `Player.takeContactDamage` (este nunca foi ligado — o "swarm punitivo" não existia de fato).
+
+Adiado (pós-entrega): **Banish** nas cartas, **UI de receita de evolução**, rework de dano de contato somado, cap de `+proj` (fazer só se sobrar tempo).
+
 ## Sessão de balanceamento (D3 noite — 2h dedicadas)
 
 Checklist a executar:

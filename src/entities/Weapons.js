@@ -1,5 +1,5 @@
 // Armas: Staff(🔥), Aura(❄️), Boomerang(🔥), ChainLightning(⚡) + evoluções (D3).
-import { WEAPONS, WEAPON_LEVEL_DMG, COLORS, GAME, ELEMENT } from "../config.js";
+import { WEAPONS, COLORS, GAME, ELEMENT } from "../config.js";
 
 // ============================================================================
 // Projétil reutilizável (graphics container)
@@ -210,11 +210,13 @@ export class Weapon {
     this.extraProj = 0; // +N projéteis (Staff, Chain)
   }
   get cooldown() {
-    return (
+    const raw =
       this.def.cooldown *
       this.cdMult *
-      (this.owner?.effectiveCdMult ?? this.owner?.cdMult ?? 1)
-    );
+      (this.owner?.effectiveCdMult ?? this.owner?.cdMult ?? 1);
+    // Piso: recarga nunca abaixo de 22% da base. Sem isso, cdMult do player ×
+    // cdMult da arma × 0.4 do Despertar empilhavam até ~42ms (fire-rate degenerado).
+    return Math.max(this.def.cooldown * 0.22, raw);
   }
   get damage() {
     return (

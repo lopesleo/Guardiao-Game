@@ -58,17 +58,22 @@ export class ElementalSystem {
     const keys = Object.keys(enemy.statuses);
     if (keys.length < 2) return;
 
-    // Pega os 2 primeiros status diferentes
-    const [a, b] = keys;
-    const reactionKey = REACTION_MAP[`${a}+${b}`];
-    if (!reactionKey) return;
+    // Procura QUALQUER par mapeado — não só os 2 primeiros. Com fogo+gelo+raio
+    // juntos, pegar [a,b] = keys podia ler um par não-mapeado (ex.: ice+bolt) e
+    // engolir silenciosamente uma reação válida (fire+ice / fire+bolt).
+    for (let i = 0; i < keys.length; i++) {
+      for (let j = i + 1; j < keys.length; j++) {
+        const reactionKey = REACTION_MAP[`${keys[i]}+${keys[j]}`];
+        if (!reactionKey) continue;
 
-    // Consome os status (evita disparo contínuo)
-    delete enemy.statuses[a];
-    delete enemy.statuses[b];
-    this._updateTint(enemy);
-
-    this._trigger(enemy, reactionKey);
+        // Consome os status do par (evita disparo contínuo)
+        delete enemy.statuses[keys[i]];
+        delete enemy.statuses[keys[j]];
+        this._updateTint(enemy);
+        this._trigger(enemy, reactionKey);
+        return;
+      }
+    }
   }
 
   _trigger(enemy, reactionKey) {
