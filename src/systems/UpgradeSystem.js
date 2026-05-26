@@ -1,20 +1,14 @@
 // Gera 3 cartas elegíveis no level-up.
 // - se o jogador não tem todas as armas: pode oferecer NOVA arma
 // - se tem arma com nível < MAX: pode oferecer UPGRADE
-// - se 2 armas estão em max-level e formam uma evolução: oferece EVOLUÇÃO (prioritária)
 // - sempre pode oferecer passivo
+// (Evoluções foram DESATIVADAS por ora — eram só um Staff reskin sem mecânica.)
 import { WEAPONS, MAX_WEAPON_LEVEL, PASSIVES } from "../config.js";
 import { pick, shuffle } from "../utils.js";
 
 // Armas disponíveis para a run = APENAS as desbloqueadas na MetaProgression.
 // Filtrado dinamicamente em generateCards() lendo this.scene.meta.unlocked.
 const ALL_WEAPONS = ["STAFF", "AURA", "BOOMER", "CHAIN"];
-
-// Evoluções: requerem (arma A, arma B) ambas em max-level.
-const EVOLUTIONS = [
-  { key: "VAPOR_STORM", requires: ["STAFF", "AURA"] },
-  { key: "OVERLOAD_X", requires: ["STAFF", "CHAIN"] },
-];
 
 export class UpgradeSystem {
   constructor(scene) {
@@ -24,23 +18,7 @@ export class UpgradeSystem {
   generateCards(player) {
     const cards = [];
 
-    // 1) Evoluções disponíveis (prioritárias se houver)
-    for (const evo of EVOLUTIONS) {
-      const haveAll = evo.requires.every((k) =>
-        player.weapons.find((w) => w.key === k && w.level >= MAX_WEAPON_LEVEL),
-      );
-      if (haveAll && !player.weapons.find((w) => w.key === evo.key)) {
-        cards.push({
-          type: "evolution",
-          weaponKey: evo.key,
-          requires: evo.requires,
-          title: WEAPONS[evo.key].name,
-          desc: `Evolução: combina ${evo.requires.map((k) => WEAPONS[k].name).join(" + ")}`,
-        });
-      }
-    }
-
-    // 2) Novas armas — APENAS as desbloqueadas na meta-progressão
+    // 1) Novas armas — APENAS as desbloqueadas na meta-progressão
     const unlocked = this.scene.meta?.unlocked || ["STAFF"];
     const runWeapons = ALL_WEAPONS.filter((w) => unlocked.includes(w));
     const have = new Set(player.weapons.map((w) => w.key));
@@ -55,7 +33,7 @@ export class UpgradeSystem {
       }
     }
 
-    // 3) Upgrades de armas existentes — rola modificador aleatório por arma
+    // 2) Upgrades de armas existentes — rola modificador aleatório por arma
     const weaponMods = {
       STAFF: ["dmg", "cd", "range", "proj"],
       AURA: ["dmg", "cd", "range"],
@@ -66,7 +44,6 @@ export class UpgradeSystem {
       Math.floor(min + Math.random() * (max - min + 1));
     for (const w of player.weapons) {
       if (w.level >= MAX_WEAPON_LEVEL) continue;
-      if (w.key.startsWith("VAPOR") || w.key.startsWith("OVERLOAD_X")) continue;
       const pool = weaponMods[w.key] || ["dmg"];
       const mod = pool[Math.floor(Math.random() * pool.length)];
       const wName = WEAPONS[w.key].name;
@@ -111,7 +88,7 @@ export class UpgradeSystem {
       });
     }
 
-    // 4) Passivos — cada um rola valor aleatório DENTRO de uma faixa
+    // 3) Passivos — cada um rola valor aleatório DENTRO de uma faixa
     for (const p of PASSIVES) {
       const rolled = p.roll();
       cards.push({
@@ -123,13 +100,8 @@ export class UpgradeSystem {
       });
     }
 
-    // Embaralha. Se houver evolução, ela aparece em pelo menos uma das 3 slots.
-    const evolutions = cards.filter((c) => c.type === "evolution");
-    const others = shuffle(cards.filter((c) => c.type !== "evolution"));
-    const result = [];
-    if (evolutions.length) result.push(evolutions[0]);
-    while (result.length < 3 && others.length) result.push(others.shift());
-    return result.slice(0, 3);
+    // Embaralha e escolhe até 3.
+    return shuffle(cards).slice(0, 3);
   }
 
   _weaponDesc(key) {
@@ -164,21 +136,6 @@ export class UpgradeSystem {
       }
     } else if (card.type === "passive") {
       if (card._apply) card._apply(player);
-    } else if (card.type === "evolution") {
-      // Remove armas-ingrediente, adiciona evolução
-      const evoDef = WEAPONS[card.weaponKey];
-      player.weapons = player.weapons.filter(
-        (w) => !card.requires.includes(w.key),
-      );
-      import("../entities/Weapons.js").then((m) => {
-        // Por ora, a evolução é um Staff turbinado com cor diferente.
-        // (Implementação cheia em D3.)
-        const staffEvo = new m.Staff(this.scene);
-        staffEvo.def = { ...evoDef };
-        staffEvo.key = card.weaponKey;
-        staffEvo.level = 1;
-        player.addWeapon(staffEvo);
-      });
     }
   }
 }
