@@ -408,7 +408,7 @@ export class TutorialScene extends Phaser.Scene {
         this,
         cx,
         475,
-        "Mate inimigos para ganhar XP — cada level oferece 3 cartas de upgrade.",
+        "Mate inimigos para ganhar XP — cada level oferece 3 cartas. Escolha\nclicando ou com as teclas 1/2/3. R troca todas as cartas (1x por level).",
         {
           fontFamily: F,
           fontSize: "13px",

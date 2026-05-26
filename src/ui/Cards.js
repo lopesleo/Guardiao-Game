@@ -9,13 +9,23 @@ const TAG_COLORS = {
   passive:   { bg: 0x5cc8ff, label: 'PASSIVA' },
 };
 
-export function createCard(scene, x, y, w, h, card, onClick) {
+export function createCard(scene, x, y, w, h, card, onClick, index) {
   const container = scene.add.container(x, y);
 
   // Fundo
   const bg = scene.add.rectangle(0, 0, w, h, 0x0a1a10, 0.95)
                   .setStrokeStyle(3, 0xd9b25c, 1);
   container.add(bg);
+
+  // Selo com o número da tecla (1/2/3) no canto inferior esquerdo
+  if (index != null) {
+    const keyBg = scene.add.circle(-w / 2 + 26, h / 2 - 26, 18, 0xd9b25c, 1)
+                       .setStrokeStyle(2, 0x0a1a10, 1);
+    const keyTxt = scene.add.text(-w / 2 + 26, h / 2 - 26, String(index + 1), {
+      fontFamily: 'Press Start 2P, monospace', fontSize: '14px', color: '#0a1a10',
+    }).setOrigin(0.5);
+    container.add([keyBg, keyTxt]);
+  }
 
   // Tag colorida
   const tag = TAG_COLORS[card.type] || TAG_COLORS.passive;
@@ -40,7 +50,8 @@ export function createCard(scene, x, y, w, h, card, onClick) {
   container.add(desc);
 
   // Hint
-  const hint = scene.add.text(0, h / 2 - 22, 'CLIQUE', {
+  const hintTxt = index != null ? `TECLA ${index + 1} · CLIQUE` : 'CLIQUE';
+  const hint = scene.add.text(0, h / 2 - 22, hintTxt, {
     fontFamily: 'Press Start 2P, monospace', fontSize: '10px', color: '#d9b25c',
   }).setOrigin(0.5);
   container.add(hint);
