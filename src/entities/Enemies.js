@@ -1,15 +1,13 @@
 // Inimigos: Morcego, Corvo, Goblin (atira) + Boss (D3).
 import { ENEMY, GAME, COLORS, ELITE, MIMIC } from "../config.js";
 
-// Frames mapeados pelo catálogo Pimen Tiny Creatures (10 cols, 180 frames).
-// IMPORTANTE: Phaser usa 0-indexed. Catálogo do pack é 1-indexed -> subtrai 1.
 const FRAMES = {
-  WOLF: 24, // Morcego Gigante Sombrio (catalogo pos 140)
-  CROW: 136, // Corvo voando (catalogo pos 137)
-  GOBLIN: 10, // Goblin (catalogo pos 11)
-  BOSS: 114, // Ent Carvalho (catalogo pos 115)
-  MAGE: 20, // Mago/caster telegrafado — ajuste o frame se o sprite nao combinar
-  BRUTE: 70, // Brutamontes (tanque pesado) — ajuste o frame se preciso
+  WOLF: 24,
+  CROW: 136,
+  GOBLIN: 11,
+  BOSS: 113,
+  MAGE: 100,
+  BRUTE: 20,
 };
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
@@ -260,7 +258,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
             targets: this,
             scaleX: GAME.PIXEL_SCALE * 1.35,
             scaleY: GAME.PIXEL_SCALE * 1.35,
-            duration: 350, yoyo: true,
+            duration: 350,
+            yoyo: true,
           });
         }
       }
@@ -292,7 +291,15 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       dy = target.y - this.y;
     const len = Math.hypot(dx, dy) || 1;
     const sp = 135;
-    proj.fire(this.x, this.y, (dx / len) * sp, (dy / len) * sp, this.dmg * 1.6, 2.2, 0xc26bff);
+    proj.fire(
+      this.x,
+      this.y,
+      (dx / len) * sp,
+      (dy / len) * sp,
+      this.dmg * 1.6,
+      2.2,
+      0xc26bff,
+    );
   }
 }
 
@@ -318,7 +325,8 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this.contactCooldownMs = 450; // boss bate um pouco mais lento que os comuns
     this._kind = "boss";
     this._lungeUntil = 0;
-    this._lungeVX = 0; this._lungeVY = 0;
+    this._lungeVX = 0;
+    this._lungeVY = 0;
   }
 
   activate(maxHp) {
@@ -388,11 +396,16 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
       } else {
         // Fase 2: mais agressivo — leque, raízes (com combo), investida, slam
         const pick = c % 5;
-        if (pick === 0) { this._summon("crow", 3); this._fanVolley(); }
-        else if (pick === 1) this._aoeSlam();
+        if (pick === 0) {
+          this._summon("crow", 3);
+          this._fanVolley();
+        } else if (pick === 1) this._aoeSlam();
         else if (pick === 2) this._roots();
         else if (pick === 3) this._lunge();
-        else { this._summon("wolf", 2); this._fanVolley(); }
+        else {
+          this._summon("wolf", 2);
+          this._fanVolley();
+        }
       }
     }
   }
@@ -437,7 +450,8 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     const scene = this.scene;
     const target = scene.player;
     const base = Math.atan2(target.y - this.y, target.x - this.x);
-    const n = 7, spread = 0.16;
+    const n = 7,
+      spread = 0.16;
     for (let i = 0; i < n; i++) {
       const ang = base + (i - (n - 1) / 2) * spread;
       const proj = scene.enemyProjPool.acquire();
@@ -450,28 +464,39 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
   // Escapa saindo da área durante o aviso OU usando o DASH depois de preso.
   _roots() {
     const scene = this.scene;
-    const px = scene.player.x, py = scene.player.y;
+    const px = scene.player.x,
+      py = scene.player.y;
     const r = 95;
-    const tel = scene.add.circle(px, py, r, 0x6a4a10, 0.22)
-      .setStrokeStyle(3, 0x9a6a2a, 0.9).setDepth(55);
+    const tel = scene.add
+      .circle(px, py, r, 0x6a4a10, 0.22)
+      .setStrokeStyle(3, 0x9a6a2a, 0.9)
+      .setDepth(55);
     scene.tweens.add({
-      targets: tel, alpha: 0.5, yoyo: true, repeat: 2, duration: 230,
+      targets: tel,
+      alpha: 0.5,
+      yoyo: true,
+      repeat: 2,
+      duration: 230,
       onComplete: () => tel.destroy(),
     });
     // Durante o aviso, quem está na área é AGARRADO (anda devagar) — dasha pra sair!
     const r2 = r * r;
     scene.time.addEvent({
-      delay: 80, repeat: 8,
+      delay: 80,
+      repeat: 8,
       callback: () => {
-        const dx = scene.player.x - px, dy = scene.player.y - py;
+        const dx = scene.player.x - px,
+          dy = scene.player.y - py;
         if (dx * dx + dy * dy <= r2) scene.player.grabSlow(160);
       },
     });
     scene.time.delayedCall(720, () => {
-      const dx = scene.player.x - px, dy = scene.player.y - py;
+      const dx = scene.player.x - px,
+        dy = scene.player.y - py;
       if (dx * dx + dy * dy <= r2) {
         const dur = 1300;
-        const lx = scene.player.x, ly = scene.player.y;
+        const lx = scene.player.x,
+          ly = scene.player.y;
         scene.player.root(dur);
         scene.sound.play("sfx_boss_roar", { volume: 0.4, rate: 1.5 });
         this._rootVisual(lx, ly, dur);
@@ -488,14 +513,26 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     const n = 7;
     for (let i = 0; i < n; i++) {
       const ang = (i / n) * Math.PI * 2;
-      const r1 = 12, r2 = 30 + Math.random() * 10;
-      const x1 = x + Math.cos(ang) * r1, y1 = y + Math.sin(ang) * r1;
+      const r1 = 12,
+        r2 = 30 + Math.random() * 10;
+      const x1 = x + Math.cos(ang) * r1,
+        y1 = y + Math.sin(ang) * r1;
       const mx = x + Math.cos(ang) * (r2 * 0.6) + (Math.random() - 0.5) * 8;
       const my = y + Math.sin(ang) * (r2 * 0.6) - 8;
-      const x2 = x + Math.cos(ang) * r2, y2 = y + Math.sin(ang) * r2 - 16;
-      g.beginPath(); g.moveTo(x1, y1); g.lineTo(mx, my); g.lineTo(x2, y2); g.strokePath();
+      const x2 = x + Math.cos(ang) * r2,
+        y2 = y + Math.sin(ang) * r2 - 16;
+      g.beginPath();
+      g.moveTo(x1, y1);
+      g.lineTo(mx, my);
+      g.lineTo(x2, y2);
+      g.strokePath();
     }
-    scene.tweens.add({ targets: g, alpha: 0, duration: dur, onComplete: () => g.destroy() });
+    scene.tweens.add({
+      targets: g,
+      alpha: 0,
+      duration: dur,
+      onComplete: () => g.destroy(),
+    });
   }
 
   // INVESTIDA: telegrafa uma linha na direção do player e avança rápido — desvie de lado!
@@ -503,9 +540,17 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     const scene = this.scene;
     const target = scene.player;
     const ang = Math.atan2(target.y - this.y, target.x - this.x);
-    const ind = scene.add.rectangle(this.x, this.y, 340, 12, 0xff7a3c, 0.5)
-      .setOrigin(0, 0.5).setDepth(56).setRotation(ang);
-    scene.tweens.add({ targets: ind, alpha: 0, duration: 600, onComplete: () => ind.destroy() });
+    const ind = scene.add
+      .rectangle(this.x, this.y, 340, 12, 0xff7a3c, 0.5)
+      .setOrigin(0, 0.5)
+      .setDepth(56)
+      .setRotation(ang);
+    scene.tweens.add({
+      targets: ind,
+      alpha: 0,
+      duration: 600,
+      onComplete: () => ind.destroy(),
+    });
     scene.time.delayedCall(600, () => {
       if (!this.active) return;
       const sp = 620;
