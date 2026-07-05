@@ -146,20 +146,63 @@ export const WEAPONS = {
     cooldown: 1800,
     range: 190,
   },
-  // evoluções (D12) — ⚠️ DESATIVADAS por ora: não são oferecidas no level-up
-  // (ver UpgradeSystem.js). Eram só um Cajado reskin sem mecânica própria.
-  // Mantidas aqui para reativar no futuro com comportamento de verdade.
+  // ===== EVOLUÇÕES (Fase 4 do meta-loop — feature nº1 do gênero) =====
+  // Receita: arma-âncora (evolvesFrom) no Lv5 + parceira (partner) na run →
+  // carta ★ EVOLUÇÃO garantida no próximo level-up. A evolução SUBSTITUI a
+  // âncora, herda os multiplicadores comprados e fica em nível MAX.
+  // Tempestade de Vapor: projéteis de fogo que EXPLODEM em nuvem escaldante
+  // (mini-Vapor) no impacto — o Cajado vira dano em área.
   VAPOR_STORM: {
     name: "Tempestade de Vapor",
-    evolvesFrom: ["STAFF", "AURA"],
+    element: ELEMENT.FIRE,
+    evolvesFrom: "STAFF",
+    partner: "AURA",
     baseDmg: 12,
-    cooldown: 700,
+    cooldown: 850,
+    range: 300,
+    projSpeed: 320,
+    cloud: { radius: 55, dmgPerTick: 4, tickMs: 300, duration: 1400, color: 0xffc8a0 },
   },
+  // Sobrecarga Eterna: o raio volta a ENCADEAR — acerta o alvo prioritário e
+  // salta entre inimigos próximos com dano decrescente, aplicando bolt em todos.
   OVERLOAD_X: {
     name: "Sobrecarga Eterna",
-    evolvesFrom: ["STAFF", "CHAIN"],
-    baseDmg: 25,
-    cooldown: 900,
+    element: ELEMENT.BOLT,
+    evolvesFrom: "CHAIN",
+    partner: "STAFF",
+    baseDmg: 22,
+    cooldown: 1500,
+    range: 220,
+    jumps: 4, // saltos além do 1º alvo
+    jumpRange: 210,
+    falloff: 0.75, // dano por salto
+  },
+  // Coração do Inverno: a aura pulsa uma NOVA de estilhaços periódica que
+  // causa dano + aplica gelo num raio bem maior — gelo finalmente OFENSIVO.
+  WINTER_HEART: {
+    name: "Coração do Inverno",
+    element: ELEMENT.ICE,
+    evolvesFrom: "AURA",
+    partner: "CHAIN",
+    baseDmg: 3,
+    cooldown: 1100,
+    range: 130,
+    freezeAfterMs: 800,
+    freezeMs: 1400,
+    freezeImmuneMs: 2800,
+    nova: { everyMs: 2800, dmg: 14, radiusMult: 2.2, shards: 12 },
+  },
+  // Fênix: o bumerangue deixa um RASTRO DE CHAMAS no trajeto — zonas que
+  // queimam (dano + status fire) quem cruza o caminho.
+  PHOENIX: {
+    name: "Fênix",
+    element: ELEMENT.FIRE,
+    evolvesFrom: "BOOMER",
+    partner: "STAFF",
+    baseDmg: 7,
+    cooldown: 1300,
+    range: 260,
+    trail: { everyMs: 150, radius: 42, dmgPerTick: 3, tickMs: 300, ticks: 3 },
   },
 };
 
@@ -435,8 +478,13 @@ export const ANCESTRAL = {
 //   · mono-elemento gelo/raio → Piromante (só fogo) + Purista (só Cajado),
 //     porque o Cajado (fogo) é a arma inicial forçada de toda run.
 const wonAt = (idx) => (c) => (c.winsByDifficulty[String(idx)] || 0) > 0;
+// baseKey cobre armas EVOLUÍDAS: a evolução substitui a âncora Lv5, então
+// "Cajado no Lv5" também vale se a run terminar com Tempestade de Vapor.
 const weaponMax = (key) => (c) =>
-  !!c.run && c.run.weapons.some((w) => w.key === key && w.level >= MAX_WEAPON_LEVEL);
+  !!c.run &&
+  c.run.weapons.some(
+    (w) => (w.key === key || w.baseKey === key) && w.level >= MAX_WEAPON_LEVEL,
+  );
 
 export const ACHIEVEMENTS = [
   // — Vitórias —
@@ -452,6 +500,7 @@ export const ACHIEVEMENTS = [
   { id: "wmax_chain", name: "Tempestade Viva", desc: "Leve o Raio Concentrado ao nível 5", check: weaponMax("CHAIN") },
   { id: "wmax_aura", name: "Inverno Eterno", desc: "Leve a Aura Gélida ao nível 5", check: weaponMax("AURA") },
   { id: "arsenal", name: "Arsenal Completo", desc: "Tenha as 4 armas numa mesma run", check: (c) => !!c.run && c.run.weapons.length >= 4 },
+  { id: "evolve_first", name: "Metamorfose", desc: "Evolua uma arma", check: (c) => !!c.run && c.run.weapons.some((w) => w.evolved) },
   // — Reações (cumulativo entre runs) —
   { id: "vapor_100", name: "Mestre do Vapor", desc: "Dispare a reação Vapor 100 vezes", check: (c) => (c.reactions.VAPOR || 0) >= 100, prog: (c) => [c.reactions.VAPOR || 0, 100] },
   { id: "crystal_100", name: "Quebra-Gelo", desc: "Dispare a reação Cristal 100 vezes", check: (c) => (c.reactions.CRYSTAL || 0) >= 100, prog: (c) => [c.reactions.CRYSTAL || 0, 100] },

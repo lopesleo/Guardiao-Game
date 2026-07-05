@@ -421,6 +421,7 @@ export class GameScene extends Phaser.Scene {
           this.player.lifestealFrom(p.dmg);
           this._showDmg(this.boss.x, this.boss.y, p.dmg, p.element, p.crit);
           if (p.element) this.elemental.applyStatus(this.boss, p.element);
+          p.onImpact?.(p.x, p.y); // hook de evolução (nuvem da Tempestade de Vapor)
           p.kill();
           this.projectilePool.release(p);
           if (died) this._onBossDeath();
@@ -435,6 +436,7 @@ export class GameScene extends Phaser.Scene {
           const died = e.takeDamage(p.dmg, p.element, p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
           this._showDmg(e.x, e.y, p.dmg, p.element, p.crit);
+          p.onImpact?.(p.x, p.y); // hook de evolução (nuvem da Tempestade de Vapor)
           p.kill();
           this.projectilePool.release(p);
           if (died) this._onEnemyDeath(e);
@@ -599,6 +601,8 @@ export class GameScene extends Phaser.Scene {
         key: w.key,
         level: w.level,
         element: WEAPONS[w.key]?.element ?? null,
+        baseKey: w.baseKey ?? null, // âncora original, se evoluída
+        evolved: !!w.baseKey,
       })),
       tookHpPassive: this._runFlags.tookHpPassive,
     };

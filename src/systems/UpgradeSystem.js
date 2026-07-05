@@ -100,8 +100,43 @@ export class UpgradeSystem {
       });
     }
 
+    // 4) Evolução — âncora no Lv5 + parceira presente → carta GARANTIDA
+    // (1 por level-up; outras elegíveis aparecem nos próximos).
+    const evoCard = this._evolutionCard(player, have);
+    if (evoCard) return [evoCard, ...shuffle(cards).slice(0, 2)];
+
     // Embaralha e escolhe até 3.
     return shuffle(cards).slice(0, 3);
+  }
+
+  // Primeira evolução elegível: def com evolvesFrom, âncora no nível MAX,
+  // parceira na run e evolução ainda não obtida.
+  _evolutionCard(player, have) {
+    for (const key of Object.keys(WEAPONS)) {
+      const def = WEAPONS[key];
+      if (!def.evolvesFrom || have.has(key)) continue;
+      const anchor = player.weapons.find((w) => w.key === def.evolvesFrom);
+      if (!anchor || anchor.level < MAX_WEAPON_LEVEL) continue;
+      if (!have.has(def.partner)) continue;
+      return {
+        type: "evolution",
+        weaponKey: key,
+        title: def.name,
+        desc: this._evoDesc(key),
+      };
+    }
+    return null;
+  }
+
+  _evoDesc(key) {
+    return (
+      {
+        VAPOR_STORM: "🔥+❄️ Os projéteis EXPLODEM em nuvem escaldante no impacto",
+        OVERLOAD_X: "⚡+🔥 O raio SALTA em cadeia entre até 5 inimigos",
+        WINTER_HEART: "❄️+⚡ A aura pulsa NOVAS de estilhaços que congelam de longe",
+        PHOENIX: "🔥+🔥 O bumerangue deixa um RASTRO DE CHAMAS no caminho",
+      }[key] || WEAPONS[key].name
+    );
   }
 
   _weaponDesc(key) {
@@ -126,6 +161,29 @@ export class UpgradeSystem {
         if (cls) player.addWeapon(new cls(this.scene));
         // Conquista "Arsenal Completo" — checa aqui porque a arma entra async
         this.scene._checkAchievements?.();
+      });
+    } else if (card.type === "evolution") {
+      import("../entities/Weapons.js").then((m) => {
+        const def = WEAPONS[card.weaponKey];
+        const cls = m.WEAPON_CLASSES[card.weaponKey];
+        const idx = player.weapons.findIndex((w) => w.key === def.evolvesFrom);
+        if (!cls || idx < 0) return;
+        const old = player.weapons[idx];
+        const evo = new cls(this.scene);
+        // Herda o investimento da âncora; nível MAX tira das cartas de upgrade
+        evo.dmgMult = old.dmgMult;
+        evo.cdMult = old.cdMult;
+        evo.rangeMult = old.rangeMult;
+        evo.extraProj = old.extraProj;
+        evo.level = MAX_WEAPON_LEVEL;
+        evo.owner = player;
+        old.dispose();
+        player.weapons[idx] = evo;
+        this.scene.sound.play("sfx_levelup", { volume: 0.7, rate: 0.8 });
+        this.scene.cameras.main.flash(220, 216, 140, 255); // flash roxo de evolução
+        this.scene._toast?.(`★ ${def.name}! ★`, 2200);
+        this.scene.hud?.refreshWeapons();
+        this.scene._checkAchievements?.(); // "Metamorfose"
       });
     } else if (card.type === "upgrade") {
       if (card._apply) card._apply();

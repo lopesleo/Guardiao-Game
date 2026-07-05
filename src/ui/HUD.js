@@ -200,10 +200,13 @@ export class HUD {
     const icons = { fire: '🔥', ice: '❄️', bolt: '⚡' };
     let x = 0;
     for (const w of this.player.weapons) {
-      const elem = WEAPONS[w.key]?.element;
-      const icon = icons[elem] || '✨';
-      const txt = sharp(this.scene, x, 0, `${icon}  Lv${w.level}`, {
-        fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: '#e8f0e6',
+      const def = WEAPONS[w.key];
+      const icon = icons[def?.element] || '✨';
+      // Evoluída = ★ dourado no lugar do nível
+      const evolved = !!def?.evolvesFrom;
+      const txt = sharp(this.scene, x, 0, evolved ? `${icon}★ MAX` : `${icon}  Lv${w.level}`, {
+        fontFamily: F, fontSize: '14px', fontStyle: 'bold',
+        color: evolved ? '#ffd96b' : '#e8f0e6',
         backgroundColor: '#0a1410', padding: { x: 10, y: 6 },
       });
       this.weaponPanel.add(txt);

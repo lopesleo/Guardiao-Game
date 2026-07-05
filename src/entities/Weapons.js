@@ -23,6 +23,7 @@ export class Projectile extends Phaser.GameObjects.Container {
     this.lifeUntil = 0;
     this.crit = false;
     this._isFire = false;
+    this.onImpact = null; // hook das evoluções (ex.: nuvem da Tempestade de Vapor)
   }
 
   fire(
@@ -44,6 +45,7 @@ export class Projectile extends Phaser.GameObjects.Container {
     this.element = element;
     this.crit = crit;
     this.lifeUntil = this.scene.time.now + lifeMs;
+    this.onImpact = null; // projétil pooled — reseta o hook a cada disparo
 
     // Fogo (e genérico) = sprite de bola de fogo; gelo/raio = bolinha colorida
     this._isFire = element === ELEMENT.FIRE || element == null;
@@ -121,6 +123,10 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     this.deadline = 0;
     this.crit = false;
     this.lastHit = new Map();
+    // Rastro (evolução Fênix): callback que solta zonas de fogo pelo caminho
+    this.trailFn = null;
+    this.trailIntervalMs = 150;
+    this._nextTrailAt = 0;
   }
 
   fire(x, y, dirX, dirY, dmg, crit = false) {
@@ -130,6 +136,8 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     this.dmg = dmg;
     this.crit = crit;
     this.phase = "out";
+    this.trailFn = null; // pooled — reseta o rastro a cada disparo
+    this._nextTrailAt = 0;
     // Alcance escala com passiva de Area do player
     const areaMult = this.scene.player?.areaMult ?? 1;
     const sp = this.outSpeed * Math.sqrt(areaMult);
@@ -156,6 +164,12 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     if (!this.active) return;
     // Rotação visual
     this.rotation += dt * 0.03;
+
+    // Rastro de chamas (Fênix)
+    if (this.trailFn && time >= this._nextTrailAt) {
+      this._nextTrailAt = time + this.trailIntervalMs;
+      this.trailFn(this.x, this.y);
+    }
 
     const owner = this.scene.player;
     if (!owner) {
@@ -244,6 +258,10 @@ export class Weapon {
     return false;
   }
 
+  // Limpeza ao ser SUBSTITUÍDA por uma evolução (armas com gfx persistente
+  // sobrescrevem — ex.: círculo da Aura).
+  dispose() {}
+
   _nearestEnemyInRange() {
     const range = this.range;
     const rangeSq = range * range;
@@ -280,8 +298,9 @@ export class Weapon {
 // ============================================================================
 
 export class Staff extends Weapon {
-  constructor(scene) {
-    super(scene, "STAFF");
+  // defKey parametrizado pra evolução (Tempestade de Vapor) reusar o disparo
+  constructor(scene, defKey = "STAFF") {
+    super(scene, defKey);
   }
   _fire() {
     const target = this._nearestEnemyInRange();
@@ -311,6 +330,8 @@ export class Staff extends Weapon {
         COLORS.FIRE,
         crit,
       );
+      // Hook das evoluções (ex.: Tempestade de Vapor seta onImpact)
+      this._decorateProj?.(proj);
     }
     return true;
   }
@@ -318,13 +339,17 @@ export class Staff extends Weapon {
 
 // AURA: dano contínuo em raio ao redor do player
 export class AuraWeapon extends Weapon {
-  constructor(scene) {
-    super(scene, "AURA");
+  // defKey parametrizado pra evolução (Coração do Inverno) reusar o campo
+  constructor(scene, defKey = "AURA") {
+    super(scene, defKey);
     // Visual permanente (atualizado em update())
     this.gfx = scene.add
       .circle(0, 0, this.def.range, COLORS.ICE, 0.15)
       .setStrokeStyle(2, COLORS.ICE, 0.5)
       .setDepth(40);
+  }
+  dispose() {
+    this.gfx.destroy();
   }
   // AuraWeapon sobrescreve range pra incluir areaMult do player
   get range() {
@@ -434,8 +459,9 @@ export class AuraWeapon extends Weapon {
 }
 
 export class Boomerang extends Weapon {
-  constructor(scene) {
-    super(scene, "BOOMER");
+  // defKey parametrizado pra evolução (Fênix) reusar o voo
+  constructor(scene, defKey = "BOOMER") {
+    super(scene, defKey);
   }
   _fire() {
     const target = this._nearestEnemyInRange();
@@ -446,6 +472,8 @@ export class Boomerang extends Weapon {
     const len = Math.hypot(dx, dy) || 1;
     const { dmg, crit } = this.rollHit();
     proj.fire(this.owner.x, this.owner.y, dx / len, dy / len, dmg, crit);
+    // Hook das evoluções (Fênix seta o rastro de chamas)
+    this._decorateProj?.(proj);
     return true;
   }
 }
@@ -454,8 +482,9 @@ export class Boomerang extends Weapon {
 // NÃO encadeia — a "corrente entre inimigos" agora é a reação Sobrecarga (fogo+raio).
 // extraProj adiciona alvos INDEPENDENTES (multi-tiro), não saltos em cadeia.
 export class ChainLightning extends Weapon {
-  constructor(scene) {
-    super(scene, "CHAIN");
+  // defKey parametrizado pra evolução (Sobrecarga Eterna) reusar a priorização
+  constructor(scene, defKey = "CHAIN") {
+    super(scene, defKey);
   }
   _fire() {
     const targets = this._priorityTargets(
@@ -526,10 +555,226 @@ export class ChainLightning extends Weapon {
   }
 }
 
+// ============================================================================
+// EVOLUÇÕES (Fase 4) — âncora Lv5 + parceira na run. Substituem a arma base
+// herdando os multiplicadores; nível fixo em MAX (somem das cartas de upgrade).
+// `baseKey` liga a evolução à âncora (conquistas de "arma no Lv5").
+// ============================================================================
+
+// TEMPESTADE DE VAPOR (Cajado+Aura): cada projétil explode em nuvem escaldante
+// no impacto — reusa a mecânica de DoT em área da reação Vapor.
+export class VaporStorm extends Staff {
+  constructor(scene) {
+    super(scene, "VAPOR_STORM");
+    this.baseKey = this.def.evolvesFrom;
+  }
+  _decorateProj(proj) {
+    proj.onImpact = (x, y) => {
+      const c = this.def.cloud;
+      this.scene.elemental._vapor({ x, y }, c, this.owner?.areaMult ?? 1);
+    };
+  }
+}
+
+// SOBRECARGA ETERNA (Raio+Cajado): o raio ENCADEIA — alvo prioritário e depois
+// salta pros vizinhos com dano decrescente, aplicando bolt em cada um.
+export class OverloadX extends ChainLightning {
+  constructor(scene) {
+    super(scene, "OVERLOAD_X");
+    this.baseKey = this.def.evolvesFrom;
+  }
+  _fire() {
+    const first = this._priorityTargets(1)[0];
+    if (!first) return false;
+    this.scene.sound.play("sfx_bolt_attack", { volume: 0.45, rate: 0.9 });
+    const jumpR = this.def.jumpRange * (this.owner?.areaMult ?? 1);
+    const jumpRSq = jumpR * jumpR;
+    const visited = new Set();
+    let prev = this.owner,
+      cur = first,
+      dmg = this.damage;
+    for (let i = 0; i <= this.def.jumps && cur; i++) {
+      this.scene.elemental._drawBolt(prev.x, prev.y, cur.x, cur.y, COLORS.BOLT, 4);
+      const isBoss = cur === this.scene.boss;
+      const isCrit = Math.random() < (this.owner?.critChance ?? 0);
+      const finalDmg = isCrit ? dmg * this.owner.critMult : dmg;
+      const died = cur.takeDamage(
+        finalDmg,
+        isBoss ? undefined : null,
+        this.owner.x,
+        this.owner.y,
+        isCrit,
+      );
+      this.owner.lifestealFrom(finalDmg);
+      this.scene._showDmg(cur.x, cur.y, finalDmg, ELEMENT.BOLT, isCrit);
+      this.scene.elemental.applyStatus(cur, ELEMENT.BOLT);
+      if (died) {
+        if (isBoss) this.scene._onBossDeath();
+        else this.scene._onEnemyDeath(cur);
+      }
+      visited.add(cur);
+      // Próximo salto: inimigo mais próximo do elo atual, ainda não atingido
+      let next = null,
+        bestSq = jumpRSq;
+      this.scene.enemyPool.forEachActive((e) => {
+        if (!e.active || visited.has(e)) return;
+        const dx = e.x - cur.x,
+          dy = e.y - cur.y;
+        const d2 = dx * dx + dy * dy;
+        if (d2 < bestSq) {
+          bestSq = d2;
+          next = e;
+        }
+      });
+      prev = cur;
+      cur = next;
+      dmg *= this.def.falloff;
+    }
+    return true;
+  }
+}
+
+// CORAÇÃO DO INVERNO (Aura+Raio): mantém o campo congelante e ganha uma NOVA
+// periódica de estilhaços — dano + gelo num raio bem maior (gelo ofensivo).
+export class WinterHeart extends AuraWeapon {
+  constructor(scene) {
+    super(scene, "WINTER_HEART");
+    this.baseKey = this.def.evolvesFrom;
+    this.gfx.setStrokeStyle(2, COLORS.ICE, 0.8); // campo mais marcado
+    this._nextNovaAt = 0;
+  }
+  update(time, dt) {
+    super.update(time, dt);
+    if (this.owner && time >= this._nextNovaAt) {
+      this._nextNovaAt = time + this.def.nova.everyMs;
+      this._nova();
+    }
+  }
+  _nova() {
+    const scene = this.scene;
+    const cx = this.owner.x,
+      cy = this.owner.y;
+    const r = this.range * this.def.nova.radiusMult;
+    const rSq = r * r;
+    const dmgBase =
+      this.def.nova.dmg * this.dmgMult * (this.owner?._blessingDmgMult ?? 1);
+    let hits = 0;
+    const strike = (t, isBoss) => {
+      const dx = t.x - cx,
+        dy = t.y - cy;
+      if (dx * dx + dy * dy > rSq) return;
+      const isCrit = Math.random() < (this.owner?.critChance ?? 0);
+      const dmg = isCrit ? dmgBase * this.owner.critMult : dmgBase;
+      const died = t.takeDamage(dmg, isBoss ? undefined : null, cx, cy, isCrit);
+      this.owner.lifestealFrom(dmg);
+      scene._showDmg(t.x, t.y, dmg, ELEMENT.ICE, isCrit);
+      scene.elemental.applyStatus(t, ELEMENT.ICE);
+      hits++;
+      if (died) {
+        if (isBoss) scene._onBossDeath();
+        else scene._onEnemyDeath(t);
+      }
+    };
+    scene.enemyPool.forEachActive((e) => {
+      if (e.active) strike(e, false);
+    });
+    if (scene.boss?.active) strike(scene.boss, true);
+
+    // Visual: anel expansivo + estilhaços voando pra fora (mesmo estilo do Cristal)
+    if (hits > 0) scene.sound.play("sfx_ice_attack", { volume: 0.35, rate: 1.1 });
+    const ring = scene.add
+      .circle(cx, cy, this.range, COLORS.ICE, 0)
+      .setStrokeStyle(3, 0xbfeaff, 0.9)
+      .setDepth(60);
+    scene.tweens.add({
+      targets: ring,
+      radius: r,
+      alpha: 0,
+      duration: 380,
+      ease: "Cubic.easeOut",
+      onComplete: () => ring.destroy(),
+    });
+    const n = this.def.nova.shards;
+    for (let i = 0; i < n; i++) {
+      const ang = (i / n) * Math.PI * 2;
+      const shard = scene.add
+        .polygon(cx, cy, [10, 0, 0, -4, -6, 0, 0, 4], 0xeaf6ff, 1)
+        .setStrokeStyle(1, COLORS.ICE, 1)
+        .setDepth(61)
+        .setRotation(ang);
+      scene.tweens.add({
+        targets: shard,
+        x: cx + Math.cos(ang) * r,
+        y: cy + Math.sin(ang) * r,
+        alpha: 0,
+        duration: 340,
+        ease: "Cubic.easeOut",
+        onComplete: () => shard.destroy(),
+      });
+    }
+  }
+}
+
+// FÊNIX (Bumerangue+Cajado): o bumerangue deixa um rastro de zonas de fogo que
+// queimam (dano + status fire) quem cruza o caminho de ida E de volta.
+export class Phoenix extends Boomerang {
+  constructor(scene) {
+    super(scene, "PHOENIX");
+    this.baseKey = this.def.evolvesFrom;
+  }
+  _decorateProj(proj) {
+    proj.trailIntervalMs = this.def.trail.everyMs;
+    proj.trailFn = (x, y) => this._firePatch(x, y);
+  }
+  _firePatch(x, y) {
+    const scene = this.scene;
+    const t = this.def.trail;
+    const r = t.radius * (this.owner?.areaMult ?? 1);
+    const rSq = r * r;
+    const dmg = t.dmgPerTick * this.dmgMult * (this.owner?._blessingDmgMult ?? 1);
+    const life = t.ticks * t.tickMs;
+    // Visual: mancha de chama que encolhe até sumir
+    const patch = scene.add.circle(x, y, r, COLORS.FIRE, 0.28).setDepth(45);
+    scene.tweens.add({
+      targets: patch,
+      alpha: 0,
+      scale: 0.5,
+      duration: life,
+      onComplete: () => patch.destroy(),
+    });
+    // Dano em ticks (sem número flutuante — mesmo padrão do DoT do Vapor)
+    const burn = () => {
+      scene.enemyPool.forEachActive((e) => {
+        const dx = e.x - x,
+          dy = e.y - y;
+        if (dx * dx + dy * dy > rSq) return;
+        const died = e.takeDamage(dmg, null);
+        scene.elemental.applyStatus(e, ELEMENT.FIRE);
+        if (died) scene._onEnemyDeath(e);
+      });
+      if (scene.boss?.active) {
+        const dx = scene.boss.x - x,
+          dy = scene.boss.y - y;
+        if (dx * dx + dy * dy <= rSq) {
+          const died = scene.boss.takeDamage(dmg);
+          scene.elemental.applyStatus(scene.boss, ELEMENT.FIRE);
+          if (died) scene._onBossDeath();
+        }
+      }
+    };
+    scene.time.addEvent({ delay: t.tickMs, repeat: t.ticks - 1, callback: burn });
+  }
+}
+
 // Fábrica
 export const WEAPON_CLASSES = {
   STAFF: Staff,
   AURA: AuraWeapon,
   BOOMER: Boomerang,
   CHAIN: ChainLightning,
+  // evoluções
+  VAPOR_STORM: VaporStorm,
+  OVERLOAD_X: OverloadX,
+  WINTER_HEART: WinterHeart,
+  PHOENIX: Phoenix,
 };

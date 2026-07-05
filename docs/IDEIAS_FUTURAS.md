@@ -31,7 +31,9 @@ Lacunas: arma **defensiva/orbital**, arma **direcional**, gelo **ofensivo**.
 ## Ideias menores / rápidas
 - **Estilhaços de Gelo (ofensiva):** retomar a ideia antiga — uma arma de gelo que dispara lascas (a `lasca-losango` já existe no shatter do Cristal) nos N mais próximos, aplicando `ice`. Distinta da Aura (que é controle).
 - **Totem/Torre (bolt):** deployable estacionário que auto-atira — adiciona jogo de posicionamento.
-- **4ª evolução:** completar o web de evoluções (hoje só Tempestade de Vapor e Sobrecarga Eterna estão definidas; as implementações são "stub" — viram um Staff turbinado).
+- ~~**4ª evolução:** completar o web de evoluções~~ ✅ **FEITO** — 4 evoluções
+  reais (Tempestade de Vapor, Sobrecarga Eterna, Coração do Inverno, Fênix),
+  ver `docs/META_LOOP.md` Fase 4.
 - **Relíquias/passivas permanentes** além das Bênçãos (ex.: "reações dão +X% dano").
 
 ---
@@ -51,9 +53,9 @@ Pilares recorrentes em survivors-like / bullet heaven (Vampire Survivors, Brotat
 **Queixas comuns a evitar:** loop repetitivo, pouca variedade de build, picos de dificuldade injustos, pouco conteúdo.
 
 ### Priorização sugerida (esforço × impacto)
-1. 🥇 **Seletor de dificuldade ("Perigo")** — barato, alto impacto; multiplicador em HP/dano/spawn + recompensa. Ataca o feedback de balanceamento.
-2. 🥈 **Evoluções de arma reais** — o feature nº1 do gênero (hoje são "stub").
-3. 🥉 **2º personagem jogável** — grande rejogabilidade, esforço médio.
+1. ~~🥇 **Seletor de dificuldade ("Perigo")**~~ ✅ FEITO (META_LOOP Fase 1)
+2. ~~🥈 **Evoluções de arma reais**~~ ✅ FEITO (META_LOOP Fase 4)
+3. 🥉 **2º personagem jogável** — grande rejogabilidade, esforço médio. ← PRÓXIMO
 
 *Fontes: Rogueliker, GameSpot, TheGamer, GameRant, Brotato Builds.*
 

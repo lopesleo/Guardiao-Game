@@ -163,6 +163,35 @@ profundidade percebida (e a Steam **espera** conquistas; alimentam o algoritmo).
 
 ---
 
+## Fase 4 — Evoluções de arma reais  ✅ IMPLEMENTADO
+
+Variedade de build é o valor nº1 do gênero (pesquisa em `IDEIAS_FUTURAS.md`);
+as evoluções antigas eram stubs desativados (Staff reskin). Agora são 4
+mecânicas novas de verdade, uma por arma-âncora:
+
+| Evolução | Receita | Mecânica |
+|---|---|---|
+| Tempestade de Vapor | Cajado Lv5 + Aura | projéteis explodem em nuvem escaldante (DoT em área) no impacto |
+| Sobrecarga Eterna | Raio Lv5 + Cajado | o raio encadeia: alvo prioritário + 4 saltos com falloff, bolt em todos |
+| Coração do Inverno | Aura Lv5 + Raio | campo normal + nova periódica de estilhaços (dano+gelo em raio 2,2×) |
+| Fênix | Bumerangue Lv5 + Cajado | rastro de zonas de fogo no trajeto (dano + status fire) |
+
+**Regras:**
+- Receita: âncora no **Lv5** + parceira presente na run → a carta ★ EVOLUÇÃO é
+  **garantida** no próximo level-up (1 por level-up se várias elegíveis).
+- A evolução **substitui** a âncora, **herda** dmg/cd/range/extraProj comprados
+  e fica em nível MAX (some das cartas de upgrade — evolução é final).
+- Conquista nova: **Metamorfose** (evolua uma arma) → total 24.
+- Conquistas "arma no Lv5" contam via `baseKey` (evoluir não as invalida).
+
+**Encanamento:** defs em `WEAPONS` (`evolvesFrom`/`partner` + params);
+classes `VaporStorm/OverloadX/WinterHeart/Phoenix` em `Weapons.js` (estendem a
+base parametrizando `defKey`; hooks `_decorateProj`/`onImpact`/`trailFn` nos
+projéteis pooled); carta e troca em `UpgradeSystem` (`_evolutionCard`/`apply`);
+HUD mostra `★ MAX` dourado. `Cards.js` já tinha a tag ★ EVOLUÇÃO.
+
+---
+
 ## Matemática de retenção — antes vs. depois
 
 | | Hoje | Redesenhado |
