@@ -135,6 +135,14 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.contactRadius = ELITE.CONTACT_RADIUS;
       this.setTint(ELITE.TINT);
     }
+
+    // Dificuldade ("Perigo") — escala HP/dano por último, sobre todos os caminhos.
+    const diff = this.scene.diff;
+    if (diff) {
+      this.maxHp *= diff.hpMult;
+      this.hp = this.maxHp;
+      this.dmg *= diff.dmgMult;
+    }
   }
 
   deactivate() {
@@ -327,6 +335,11 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this._lungeUntil = 0;
     this._lungeVX = 0;
     this._lungeVY = 0;
+    // Transição de fase ("êxtase"): boss invulnerável e parado enquanto a barra recarrega
+    this._transitioning = false;
+    this._transitionEnd = 0;
+    this._displayFill = 1; // fração da barra controlada pela animação de recarga
+    this._furyPulse = null;
   }
 
   activate(maxHp) {
@@ -337,12 +350,19 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this.lastSpecialAt = 0;
     this.lastTouchAt = 0;
     this._lungeUntil = 0;
+    this._transitioning = false;
+    this._transitionEnd = 0;
+    this._displayFill = 1;
+    this._furyPulse?.stop();
+    this._furyPulse = null;
     this.clearTint();
     this.setActive(true).setVisible(true);
     this.body.enable = true;
   }
 
   takeDamage(dmg) {
+    // Invulnerável durante o êxtase da virada de fase (a barra está recarregando)
+    if (this._transitioning) return false;
     const iceAmp = this.statuses.ice ? 1.35 : 1;
     this.hp -= dmg * iceAmp;
     this.setTintFill(0xffffff);
@@ -351,18 +371,86 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
       this.scene.elemental?._updateTint(this);
     });
     if (this.hp <= 0) return true;
-    // Transição de fase
+    // Transição de fase — entra em FÚRIA (êxtase) e a barra recarrega 0→100%
     if (this.phase === 1 && this.hp <= this.maxHp * 0.5) {
-      this.phase = 2;
-      this.speed = 90;
-      this.scene.cameras.main.shake(400, 0.012);
-      this.scene.sound.play("sfx_boss_roar", { volume: 0.7 });
+      this._enterFury();
     }
     return false;
   }
 
+  // Êxtase da virada: boss parado e invulnerável ~1.3s, pulsando, enquanto a
+  // barra de vida recarrega de 0 a 100% (ver HUD lê _transitioning/_displayFill).
+  _enterFury() {
+    const scene = this.scene;
+    const DURATION = 1300;
+    this.phase = 2;
+    this.speed = 90;
+    this._transitioning = true;
+    this._transitionEnd = scene.time.now + DURATION;
+    this._displayFill = 0;
+    this.setVelocity(0, 0);
+    scene.cameras.main.shake(500, 0.014);
+    scene.sound.play("sfx_boss_roar", { volume: 0.85 });
+    scene.hud?.showBossBanner("FÚRIA!");
+
+    // Tint quente + pulso de escala (êxtase)
+    const base = GAME.PIXEL_SCALE * 2.5;
+    this.setTint(0xff8a1e);
+    this._furyPulse = scene.tweens.add({
+      targets: this,
+      scaleX: base * 1.14,
+      scaleY: base * 1.14,
+      duration: 200,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut",
+    });
+    // Barra recarrega 0→100% (anima a propriedade lida pela HUD)
+    scene.tweens.add({
+      targets: this,
+      _displayFill: 1,
+      duration: DURATION,
+      ease: "Cubic.easeOut",
+    });
+    // Anel de energia expandindo
+    const ring = scene.add
+      .circle(this.x, this.y, 24, 0xff8a1e, 0)
+      .setStrokeStyle(6, 0xffb24c, 1)
+      .setDepth(this.y + 9999);
+    scene.tweens.add({
+      targets: ring,
+      radius: 240,
+      alpha: 0,
+      duration: DURATION,
+      ease: "Cubic.easeOut",
+      onComplete: () => ring.destroy(),
+    });
+  }
+
+  // Encerra o êxtase: para o pulso, normaliza escala/tint, libera o boss.
+  _endFury() {
+    this._transitioning = false;
+    this._displayFill = 1;
+    this._furyPulse?.stop();
+    this._furyPulse = null;
+    this.setScale(GAME.PIXEL_SCALE * 2.5);
+    this.scene.elemental?._updateTint(this);
+  }
+
   update(time, dt, target) {
     if (!this.active || !target?.active) return;
+
+    // ÊXTASE: parado, invulnerável e pulsando enquanto a barra recarrega
+    if (this._transitioning) {
+      if (time >= this._transitionEnd) {
+        this._endFury();
+      } else {
+        this.setVelocity(0, 0);
+        this.setFlipX(target.x - this.x < 0);
+        this.setDepth(this.y + 10000);
+        return;
+      }
+    }
 
     // INVESTIDA: durante a lunge, voa em linha reta (não persegue, não usa especial)
     if (time < this._lungeUntil) {

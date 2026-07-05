@@ -80,6 +80,10 @@ export class ElementalSystem {
     const def = REACTION[reactionKey];
     const scene = this.scene;
 
+    // Conquistas (Fase 3): conta TODA reação mecânica, mesmo com visual em CD
+    scene.meta?.recordReaction(reactionKey);
+    scene._checkAchievements?.();
+
     // Anti-spam: cooldown por TIPO de reação (não mostra texto se foi disparado <350ms atrás)
     const now = scene.time.now;
     const onCd = now - this.lastReactionAt[reactionKey] < this.reactionCdMs;
@@ -182,6 +186,9 @@ export class ElementalSystem {
   _shatter(target, def) {
     const scene = this.scene;
     const now = scene.time.now;
+    // Conquistas (Fase 3): Cristal não passa por _trigger, conta aqui
+    scene.meta?.recordReaction("CRYSTAL");
+    scene._checkAchievements?.();
     // Anti-spam por TIPO
     if (now - this.lastReactionAt.CRYSTAL < this.reactionCdMs) {
       // ainda aplica mecânica, sem texto/shake

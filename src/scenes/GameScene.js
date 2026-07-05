@@ -10,6 +10,8 @@ import {
   BLESSINGS,
   DROPS,
   CHEST,
+  DIFFICULTY,
+  ANCESTRAL,
 } from "../config.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
@@ -59,8 +61,14 @@ export class GameScene extends Phaser.Scene {
 
     // Meta-progressão (carrega desbloqueios disponíveis)
     this.meta = new MetaProgression();
+    // Dificuldade da run (clampa ao desbloqueado por segurança)
+    const diffIdx = Math.min(this.meta.selectedDifficulty, DIFFICULTY.length - 1);
+    this.diff = DIFFICULTY[diffIdx] || DIFFICULTY[0];
     this._coinsGainedThisRun = 0;
     this._newUnlocksThisRun = [];
+    // Conquistas (Fase 3): flags observadas pelos check() de ACHIEVEMENTS
+    this._runFlags = { tookHpPassive: false };
+    this._survive10Checked = false;
 
     // Pools
     this.enemyPool = new Pool(() => {
@@ -84,9 +92,15 @@ export class GameScene extends Phaser.Scene {
     // Player
     this.player = new Player(this, 0, 0);
     // Aplica bênçãos compradas ANTES de criar armas (afetam stats base)
-    const owned = this.meta.ownedBlessings();
     for (const b of BLESSINGS) {
-      if (owned.includes(b.id)) b.apply(this.player);
+      const rank = this.meta.blessingRank(b.id);
+      if (rank > 0) b.apply(this.player, rank);
+    }
+    // Tesouro Ancestral — +2% dano geral por nível (sink infinito)
+    const anc = this.meta.ancestralLevel;
+    if (anc > 0) {
+      this.player._blessingDmgMult =
+        (this.player._blessingDmgMult || 1) * Math.pow(1 + ANCESTRAL.DMG_PER_LEVEL, anc);
     }
     // Locks de habilidades: bloqueia se não comprou
     this.player.dashUnlocked = this.meta.hasAbility("DASH");
@@ -186,8 +200,12 @@ export class GameScene extends Phaser.Scene {
         gameScene: this,
       });
     });
-    // Quando o LevelUpScene termina, atualiza painel de armas
-    this.events.on("resume", () => this.hud.refreshWeapons());
+    // Quando o LevelUpScene termina, atualiza painel de armas + checa
+    // conquistas de arma (Lv máximo / arsenal completo)
+    this.events.on("resume", () => {
+      this.hud.refreshWeapons();
+      this._checkAchievements();
+    });
 
     // Música
     if (!this.bgMusic) {
@@ -314,6 +332,13 @@ export class GameScene extends Phaser.Scene {
   update(time, dt) {
     if (this.gameOver) return;
     this.elapsedMs += dt;
+
+    // Conquista "Maratonista" (10:00) — checagem explícita porque na fase de
+    // boss não há kills de horda pra disparar a checagem por kill
+    if (!this._survive10Checked && this.elapsedMs >= 600000) {
+      this._survive10Checked = true;
+      this._checkAchievements();
+    }
 
     // Aviso de boss aos 6:30
     if (
@@ -564,6 +589,32 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  // Contexto de run passado aos check() de ACHIEVEMENTS (ver config.js)
+  _runCtx(won = false) {
+    return {
+      won,
+      difficultyId: this.diff.id,
+      timeMs: this.elapsedMs,
+      weapons: this.player.weapons.map((w) => ({
+        key: w.key,
+        level: w.level,
+        element: WEAPONS[w.key]?.element ?? null,
+      })),
+      tookHpPassive: this._runFlags.tookHpPassive,
+    };
+  }
+
+  // Checa conquistas pendentes; mostra toast pra cada recém-desbloqueada.
+  // silent=true no game over (a tela final já exibe no painel de desbloqueios).
+  _checkAchievements(won = false, silent = false) {
+    const newly = this.meta.checkAchievements(this._runCtx(won));
+    if (!silent && newly.length) {
+      this.sound.play("sfx_levelup", { volume: 0.5, rate: 1.3 });
+      this._toast(`🏆 ${newly.map((a) => a.name).join(" · ")}`, 3000);
+    }
+    return newly;
+  }
+
   _showDmg(x, y, dmg, element, crit = false) {
     const n = this.dmgNumberPool.acquire();
     let color;
@@ -581,6 +632,8 @@ export class GameScene extends Phaser.Scene {
   _onEnemyDeath(enemy) {
     if (!enemy.active) return;
     this.hud.addKill();
+    this.meta.recordKill();
+    this._checkAchievements();
     this.player.addAwakenMeter(PLAYER.AWAKEN_GAIN_KILL);
     this._killsSinceLastChest = (this._killsSinceLastChest || 0) + 1;
     if (this._killsSinceLastChest >= CHEST.KILL_DROP_EVERY) {
@@ -666,7 +719,8 @@ export class GameScene extends Phaser.Scene {
     const bx = this.player.x + Math.cos(ang) * r;
     const by = this.player.y + Math.sin(ang) * r;
     this.boss = new BossEnt(this, bx, by);
-    this.boss.activate(BOSS.HP);
+    this.boss.activate(BOSS.HP * this.diff.hpMult);
+    this.boss.dmg *= this.diff.dmgMult; // escala dano do boss pela dificuldade
     this.hud.setBossActive(this.boss);
     this.sound.play("sfx_boss_roar", { volume: 0.8 });
     this.cameras.main.shake(500, 0.015);
@@ -860,9 +914,20 @@ export class GameScene extends Phaser.Scene {
   _onGameOver(won) {
     if (this.gameOver) return;
     this.gameOver = true;
-    // Salva meta
-    this.meta.addCoins(this._coinsGainedThisRun);
-    this.meta.registerRun(this.elapsedMs / 1000, won);
+    // Recompensa final escalada pela dificuldade (HUD mostrou a contagem-base ao vivo)
+    const coinsFinal = Math.round(this._coinsGainedThisRun * this.diff.rewardMult);
+    // Detecta se ESTA vitória libera um novo nível (antes de gravar)
+    const prevMaxCleared = this.meta.data.maxDifficultyCleared;
+    const unlockedNewDifficulty =
+      won &&
+      this.diff.id > prevMaxCleared &&
+      this.diff.id + 1 < DIFFICULTY.length;
+    // Salva meta — registerRun ANTES das conquistas (wins/winsByDifficulty
+    // precisam estar atualizados pros check() de vitória)
+    this.meta.addCoins(coinsFinal);
+    this.meta.registerRun(this.elapsedMs / 1000, won, this.diff.id);
+    const newAchievements = this._checkAchievements(won, true);
+    this._newUnlocksThisRun.push(...newAchievements.map((a) => `🏆 ${a.name}`));
     this.cameras.main.fade(700, 0, 0, 0);
     this.time.delayedCall(800, () => {
       this.bgMusic?.stop();
@@ -871,8 +936,12 @@ export class GameScene extends Phaser.Scene {
         won,
         elapsedMs: this.elapsedMs,
         kills: this.hud.kills,
-        coinsGained: this._coinsGainedThisRun,
+        coinsGained: coinsFinal,
         newUnlocks: this._newUnlocksThisRun,
+        difficulty: this.diff,
+        unlockedNextDifficulty: unlockedNewDifficulty
+          ? DIFFICULTY[this.diff.id + 1].name
+          : null,
       });
     });
   }

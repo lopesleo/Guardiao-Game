@@ -228,8 +228,17 @@ export class HUD {
     this.coinText.setText(String(this.coins));
 
     if (this.boss && this.boss.active) {
-      const pct = Math.max(0, this.boss.hp / this.boss.maxHp);
-      this.bossHpFill.width = 714 * pct;
+      const frac = Math.max(0, this.boss.hp / this.boss.maxHp);
+      // Duas barras: cada fase = uma barra cheia. Fase 1 = 100%→50%, Fase 2 = 50%→0%.
+      // O HP real não muda. Durante a virada (êxtase) a barra recarrega 0→100%
+      // animada pelo boss (_displayFill); fora disso, mapeia a fração real.
+      const phase2 = this.boss.phase === 2;
+      let shown;
+      if (this.boss._transitioning) shown = this.boss._displayFill ?? 0;
+      else shown = phase2 ? frac / 0.5 : (frac - 0.5) / 0.5;
+      this.bossHpFill.width = 714 * Phaser.Math.Clamp(shown, 0, 1);
+      this.bossHpFill.fillColor = phase2 ? 0xff8a1e : 0xff3a55; // esquenta na Fase 2
+      this.bossLabel.setText(phase2 ? 'O ANCIÃO · FÚRIA' : 'O ANCIÃO');
     }
 
     // Despertar (mostra cadeado se não comprado)

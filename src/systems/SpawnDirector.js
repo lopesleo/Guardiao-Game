@@ -14,7 +14,8 @@ export class SpawnDirector {
   update(time, dt) {
     this.elapsedMs += dt;
     const tSec = this.elapsedMs / 1000;
-    const rate = ENEMY.SPAWN_RATE(tSec);
+    const spawnMult = this.scene.diff?.spawnMult ?? 1;
+    const rate = ENEMY.SPAWN_RATE(tSec) * spawnMult;
     this.spawnAcc += (rate * dt) / 1000;
 
     while (this.spawnAcc >= 1) {

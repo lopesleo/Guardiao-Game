@@ -11,6 +11,19 @@ export const GAME = {
   RUN_DURATION_S: 420, // 7 min até boss spawnar
 };
 
+// Níveis de dificuldade ("Perigo") — ver docs/META_LOOP.md (Fase 1).
+// Multiplicadores GLOBAIS aplicados sobre as fórmulas paramétricas (D16):
+//   HP/dano de inimigo, taxa de spawn e recompensa em moedas.
+// Cada nível libera o seguinte ao ser VENCIDO (boss morto). reward cresce mais
+// rápido que a dificuldade pra financiar os sinks de meta-progressão.
+export const DIFFICULTY = [
+  { id: 0, name: "Aprendiz",   hpMult: 0.85, dmgMult: 0.85, spawnMult: 0.9,  rewardMult: 1.0 },
+  { id: 1, name: "Guardião",   hpMult: 1.0,  dmgMult: 1.0,  spawnMult: 1.0,  rewardMult: 1.25 },
+  { id: 2, name: "Veterano",   hpMult: 1.25, dmgMult: 1.2,  spawnMult: 1.15, rewardMult: 1.6 },
+  { id: 3, name: "Implacável", hpMult: 1.6,  dmgMult: 1.45, spawnMult: 1.3,  rewardMult: 2.1 },
+  { id: 4, name: "Pesadelo",   hpMult: 2.1,  dmgMult: 1.8,  spawnMult: 1.5,  rewardMult: 3.0 },
+];
+
 export const PLAYER = {
   HP_BASE: 100,
   SPEED_BASE: 160,
@@ -319,82 +332,141 @@ export const META = {
   ABILITY_UNLOCK_COST: { DASH: 50, AWAKEN: 80 },
 };
 
-// Bênçãos persistentes — compradas no menu com moedas, aplicadas em toda run futura.
-// `apply(player)` é chamado uma vez no início da GameScene.
+// Bênçãos persistentes — trilhas de 5 ranks (Fase 2, ver docs/META_LOOP.md).
+// Compradas no menu; `apply(player, rank)` é chamado uma vez no início da run e
+// aplica o efeito CUMULATIVO do rank atingido. Custo do rank R = costs[R-1].
+export const MAX_BLESSING_RANK = 5;
+
 export const BLESSINGS = [
   {
     id: "hp1",
     name: "Vigor da Mata",
-    desc: "+20 HP máximo",
-    cost: 40,
-    apply: (p) => {
-      p.maxHp += 20;
+    desc: "+15 HP máximo por rank",
+    costs: [40, 70, 120, 200, 320],
+    apply: (p, rank) => {
+      p.maxHp += 15 * rank;
       p.hp = p.maxHp;
     },
   },
   {
     id: "spd1",
     name: "Pés Ligeiros",
-    desc: "+10% velocidade",
-    cost: 60,
-    apply: (p) => {
-      p.speed *= 1.1;
+    desc: "+6% velocidade por rank",
+    costs: [60, 100, 170, 290, 490],
+    apply: (p, rank) => {
+      p.speed *= Math.pow(1.06, rank);
     },
   },
   {
     id: "dmg1",
     name: "Cólera Antiga",
-    desc: "Armas começam com +15% dano",
-    cost: 90,
-    apply: (p) => {
-      p._blessingDmgMult = (p._blessingDmgMult || 1) * 1.15;
+    desc: "+8% dano de arma por rank",
+    costs: [90, 150, 255, 435, 740],
+    apply: (p, rank) => {
+      p._blessingDmgMult = (p._blessingDmgMult || 1) * Math.pow(1.08, rank);
     },
   },
   {
     id: "pickup",
     name: "Olhar de Coruja",
-    desc: "+50% raio de coleta",
-    cost: 50,
-    apply: (p) => {
-      p.pickupRadius *= 1.5;
+    desc: "+25% raio de coleta por rank",
+    costs: [50, 85, 145, 245, 415],
+    apply: (p, rank) => {
+      p.pickupRadius *= Math.pow(1.25, rank);
     },
   },
   {
     id: "awaken1",
     name: "Eco do Despertar",
-    desc: "Despertar enche 30% mais rápido",
-    cost: 80,
-    apply: (p) => {
-      p._awakenGainMult = (p._awakenGainMult || 1) * 1.3;
+    desc: "+15% ganho de Despertar por rank",
+    costs: [80, 135, 230, 390, 665],
+    apply: (p, rank) => {
+      p._awakenGainMult = (p._awakenGainMult || 1) * Math.pow(1.15, rank);
     },
   },
   {
     id: "dash1",
     name: "Sopro do Vento",
-    desc: "Dash recarrega 30% mais rápido",
-    cost: 70,
-    apply: (p) => {
-      p._dashCdMult = (p._dashCdMult || 1) * 0.7;
+    desc: "−10% recarga do dash por rank",
+    costs: [70, 120, 200, 340, 580],
+    apply: (p, rank) => {
+      p._dashCdMult = (p._dashCdMult || 1) * Math.pow(0.9, rank);
     },
   },
   {
     id: "xp1",
     name: "Sabedoria",
-    desc: "+20% XP de inimigos",
-    cost: 100,
-    apply: (p) => {
-      p._xpMult = (p._xpMult || 1) * 1.2;
+    desc: "+10% XP por rank",
+    costs: [100, 170, 290, 490, 830],
+    apply: (p, rank) => {
+      p._xpMult = (p._xpMult || 1) * Math.pow(1.1, rank);
     },
   },
   {
     id: "crit1",
     name: "Olhar do Caçador",
-    desc: "+12% chance de crítico",
-    cost: 90,
-    apply: (p) => {
-      p.critChance += 0.12;
+    desc: "+6% chance de crítico por rank",
+    costs: [90, 150, 255, 435, 740],
+    apply: (p, rank) => {
+      p.critChance += 0.06 * rank;
     },
   },
+];
+
+// Tesouro Ancestral — sink INFINITO (Fase 2). +2% dano geral por nível; custo
+// cresce 1,15× por compra. Auto-limita pelo custo, nunca esgota: moeda nunca
+// vira lixo. Aplicado via _blessingDmgMult no início da run.
+export const ANCESTRAL = {
+  DMG_PER_LEVEL: 0.02,
+  BASE_COST: 100,
+  COST_GROWTH: 1.15,
+  cost: (level) => Math.floor(100 * Math.pow(1.15, level)),
+};
+
+// Conquistas (Fase 3 — ver docs/META_LOOP.md). Avaliadas por MetaProgression.
+// check(c) recebe o contexto:
+//   c = { wins, winsByDifficulty, maxDifficultyCleared, reactions, totalKills,
+//         totalCoinsEarned, maxBlessingRank, ancestralLevel, run }
+//   c.run = null fora de run; durante/fim de run =
+//     { won, difficultyId, timeMs, weapons: [{ key, level, element }], tookHpPassive }
+// prog(c) (opcional) retorna [atual, meta] pra mostrar progresso no menu.
+// Adaptações sobre o spec original (impossíveis com as regras atuais):
+//   · speedrun "< 6:00" → "vencer em < 8:00" (boss só nasce aos 7:00)
+//   · mono-elemento gelo/raio → Piromante (só fogo) + Purista (só Cajado),
+//     porque o Cajado (fogo) é a arma inicial forçada de toda run.
+const wonAt = (idx) => (c) => (c.winsByDifficulty[String(idx)] || 0) > 0;
+const weaponMax = (key) => (c) =>
+  !!c.run && c.run.weapons.some((w) => w.key === key && w.level >= MAX_WEAPON_LEVEL);
+
+export const ACHIEVEMENTS = [
+  // — Vitórias —
+  { id: "win_first", name: "Guardião de Verdade", desc: "Vença sua primeira run", check: (c) => c.wins > 0 },
+  { id: "clear_d0", name: "Aprendiz Formado", desc: "Vença no Perigo Aprendiz", check: wonAt(0) },
+  { id: "clear_d1", name: "Guardião da Floresta", desc: "Vença no Perigo Guardião", check: wonAt(1) },
+  { id: "clear_d2", name: "Veterano de Guerra", desc: "Vença no Perigo Veterano", check: wonAt(2) },
+  { id: "clear_d3", name: "Implacável", desc: "Vença no Perigo Implacável", check: wonAt(3) },
+  { id: "clear_d4", name: "Senhor do Pesadelo", desc: "Vença no Perigo Pesadelo", check: wonAt(4) },
+  // — Armas —
+  { id: "wmax_staff", name: "Cajado Ancestral", desc: "Leve o Cajado ao nível 5", check: weaponMax("STAFF") },
+  { id: "wmax_boomer", name: "Retorno Perfeito", desc: "Leve o Bumerangue ao nível 5", check: weaponMax("BOOMER") },
+  { id: "wmax_chain", name: "Tempestade Viva", desc: "Leve o Raio Concentrado ao nível 5", check: weaponMax("CHAIN") },
+  { id: "wmax_aura", name: "Inverno Eterno", desc: "Leve a Aura Gélida ao nível 5", check: weaponMax("AURA") },
+  { id: "arsenal", name: "Arsenal Completo", desc: "Tenha as 4 armas numa mesma run", check: (c) => !!c.run && c.run.weapons.length >= 4 },
+  // — Reações (cumulativo entre runs) —
+  { id: "vapor_100", name: "Mestre do Vapor", desc: "Dispare a reação Vapor 100 vezes", check: (c) => (c.reactions.VAPOR || 0) >= 100, prog: (c) => [c.reactions.VAPOR || 0, 100] },
+  { id: "crystal_100", name: "Quebra-Gelo", desc: "Dispare a reação Cristal 100 vezes", check: (c) => (c.reactions.CRYSTAL || 0) >= 100, prog: (c) => [c.reactions.CRYSTAL || 0, 100] },
+  { id: "overload_100", name: "Eletricista", desc: "Dispare a reação Sobrecarga 100 vezes", check: (c) => (c.reactions.OVERLOAD || 0) >= 100, prog: (c) => [c.reactions.OVERLOAD || 0, 100] },
+  // — Meta-progressão —
+  { id: "bless_max", name: "Bênção Suprema", desc: "Maximize uma trilha de Bênção (rank 5)", check: (c) => c.maxBlessingRank >= MAX_BLESSING_RANK },
+  { id: "ancestral_10", name: "Herdeiro Ancestral", desc: "Tesouro Ancestral no nível 10", check: (c) => c.ancestralLevel >= 10, prog: (c) => [c.ancestralLevel, 10] },
+  { id: "coins_2000", name: "Tesoureiro da Mata", desc: "Ganhe 2.000 moedas no total", check: (c) => c.totalCoinsEarned >= 2000, prog: (c) => [c.totalCoinsEarned, 2000] },
+  { id: "kills_1000", name: "Ceifador do Bosque", desc: "Abata 1.000 inimigos no total", check: (c) => c.totalKills >= 1000, prog: (c) => [c.totalKills, 1000] },
+  // — Desafios (condições de vitória variantes) —
+  { id: "survive_10min", name: "Maratonista", desc: "Sobreviva 10:00 numa run", check: (c) => !!c.run && c.run.timeMs >= 600000 },
+  { id: "fast_win", name: "Execução Rápida", desc: "Vença em menos de 8:00", check: (c) => !!c.run && c.run.won && c.run.timeMs < 480000 },
+  { id: "pacifist_hp", name: "Osso Duro", desc: "Vença no Perigo Veterano+ sem passivo de HP", check: (c) => !!c.run && c.run.won && c.run.difficultyId >= 2 && !c.run.tookHpPassive },
+  { id: "solo_staff", name: "Purista", desc: "Vença usando apenas o Cajado", check: (c) => !!c.run && c.run.won && c.run.weapons.length === 1 && c.run.weapons[0].key === "STAFF" },
+  { id: "mono_fire", name: "Piromante", desc: "Vença com 2+ armas, todas de fogo", check: (c) => !!c.run && c.run.won && c.run.weapons.length >= 2 && c.run.weapons.every((w) => w.element === ELEMENT.FIRE) },
 ];
 
 export const COLORS = {

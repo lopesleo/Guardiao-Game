@@ -124,6 +124,8 @@ export class UpgradeSystem {
       import("../entities/Weapons.js").then((m) => {
         const cls = m.WEAPON_CLASSES[card.weaponKey];
         if (cls) player.addWeapon(new cls(this.scene));
+        // Conquista "Arsenal Completo" — checa aqui porque a arma entra async
+        this.scene._checkAchievements?.();
       });
     } else if (card.type === "upgrade") {
       if (card._apply) card._apply();
@@ -136,6 +138,10 @@ export class UpgradeSystem {
       }
     } else if (card.type === "passive") {
       if (card._apply) card._apply(player);
+      // Conquista "Osso Duro" (quase-pacifista): marca se pegou passivo de HP
+      if (card.passiveId === "hp" && this.scene._runFlags) {
+        this.scene._runFlags.tookHpPassive = true;
+      }
     }
   }
 }

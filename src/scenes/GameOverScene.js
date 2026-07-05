@@ -12,7 +12,7 @@ export class GameOverScene extends Phaser.Scene {
   constructor() { super('GameOverScene'); }
 
   create(data) {
-    const { won, elapsedMs, kills, coinsGained, newUnlocks } = data;
+    const { won, elapsedMs, kills, coinsGained, newUnlocks, difficulty, unlockedNextDifficulty } = data;
     const W = GAME.WIDTH, H = GAME.HEIGHT;
     const cx = W / 2;
 
@@ -67,7 +67,7 @@ export class GameOverScene extends Phaser.Scene {
     // === PAINEL DE STATS ===
     const px = cx, py = 320, pw = 600, ph = 250;
     this.add.rectangle(px, py, pw, ph, 0x0a1410, 0.92).setStrokeStyle(3, won ? 0xffd96b : 0xd9b25c, 0.85);
-    sharp(this, px, py - 100, 'RESULTADOS DA RUN', {
+    sharp(this, px, py - 100, difficulty ? `RESULTADOS · PERIGO: ${difficulty.name.toUpperCase()}` : 'RESULTADOS DA RUN', {
       fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: '#93a89a',
     }).setOrigin(0.5);
 
@@ -89,13 +89,17 @@ export class GameOverScene extends Phaser.Scene {
       sy += 48;
     }
 
-    // === DESBLOQUEIOS NOVOS (se houver) ===
-    if (newUnlocks && newUnlocks.length) {
+    // === DESBLOQUEIOS NOVOS (se houver) — inclui novo nível de Perigo ===
+    const unlocks = [...(newUnlocks || [])];
+    if (unlockedNextDifficulty) unlocks.unshift(`Perigo: ${unlockedNextDifficulty}`);
+    if (unlocks.length) {
       const uy = py + ph/2 + 30;
       const panel = this.add.rectangle(cx, uy, pw, 50, 0x1a3a1a, 0.9).setStrokeStyle(2, 0xd98cff, 1);
-      sharp(this, cx, uy, `★ DESBLOQUEADO:  ${newUnlocks.join(' · ')}`, {
+      const utxt = sharp(this, cx, uy, `★ DESBLOQUEADO:  ${unlocks.join(' · ')}`, {
         fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: '#d98cff',
       }).setOrigin(0.5);
+      // Várias conquistas de uma vez podem estourar o painel — encolhe a fonte
+      if (utxt.width > pw - 30) utxt.setFontSize(Math.max(10, Math.floor(14 * (pw - 30) / utxt.width)));
       // pulse
       this.tweens.add({ targets: panel, alpha: { from: 0.7, to: 1 }, duration: 800, yoyo: true, repeat: -1 });
     }
