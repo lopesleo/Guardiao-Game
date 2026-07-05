@@ -40,9 +40,21 @@ export class MenuScene extends Phaser.Scene {
     // === TÍTULO — Press Start 2P só pra ter cara de jogo, mas grande pra ler ===
     sharp(this, cx + 4, 134, 'GUARDIÃO', { fontFamily: FP, fontSize: '54px', color: '#000000' })
       .setOrigin(0.5).setAlpha(0.7);
-    sharp(this, cx, 130, 'GUARDIÃO', {
+    // Glow aditivo pulsando atrás do título ("respiração" dourada)
+    const titleGlow = sharp(this, cx, 130, 'GUARDIÃO', {
+      fontFamily: FP, fontSize: '54px', color: '#ffe88a',
+    }).setOrigin(0.5).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
+    const title = sharp(this, cx, 130, 'GUARDIÃO', {
       fontFamily: FP, fontSize: '54px', color: '#d9b25c',
     }).setOrigin(0.5);
+    this.tweens.add({
+      targets: titleGlow, alpha: 0.3, duration: 1600,
+      yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    });
+    this.tweens.add({
+      targets: [title, titleGlow], scaleX: 1.02, scaleY: 1.02, duration: 1600,
+      yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    });
 
     sharp(this, cx, 184, 'DA FLORESTA', {
       fontFamily: FP, fontSize: '22px', color: '#d9b25c',

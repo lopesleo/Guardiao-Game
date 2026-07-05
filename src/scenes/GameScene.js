@@ -122,6 +122,11 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
     this.cameras.main.setBounds(-GAME.WORLD_RADIUS, -GAME.WORLD_RADIUS, WS, WS);
 
+    // Atmosfera: vinheta escura + partículas ambiente (vagalumes/folhas)
+    this._createVignette();
+    this._createAmbient();
+    this._poofCount = 0;
+
     // HUD
     this.hud = new HUD(this, this.player);
     this.hud.refreshWeapons();
@@ -298,6 +303,124 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  // Vinheta radial (gerada 1x em canvas) — escurece as bordas pra dar clima de
+  // floresta fechada. Uma segunda cópia tintada de vermelho pulsa com HP baixo.
+  _createVignette() {
+    const W = GAME.WIDTH,
+      H = GAME.HEIGHT;
+    if (!this.textures.exists("vignette")) {
+      const c = this.textures.createCanvas("vignette", W, H);
+      const ctx = c.getContext();
+      const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.42, W / 2, H / 2, H * 0.78);
+      g.addColorStop(0, "rgba(0,0,0,0)");
+      g.addColorStop(1, "rgba(4,10,6,0.55)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+      c.refresh();
+    }
+    this.add.image(0, 0, "vignette").setOrigin(0).setScrollFactor(0).setDepth(49000);
+    this._lowHpOverlay = this.add
+      .image(0, 0, "vignette")
+      .setOrigin(0)
+      .setScrollFactor(0)
+      .setDepth(49001)
+      .setTint(0xff2038)
+      .setAlpha(0);
+  }
+
+  // Vagalumes flutuando + folhas caindo, em espaço de MUNDO (respawnam quando
+  // saem do enquadramento da câmera). Baratos: shapes com drift senoidal.
+  _createAmbient() {
+    this.ambient = [];
+    for (let i = 0; i < 10; i++) {
+      const p = this.add.circle(0, 0, 2, 0xfff5b8, 0.7).setDepth(20000);
+      p._kind = "ff";
+      p._phase = Math.random() * Math.PI * 2;
+      this._respawnAmbient(p, true);
+      this.ambient.push(p);
+    }
+    for (let i = 0; i < 8; i++) {
+      const leaf = this.add
+        .rectangle(0, 0, 6, 3, i % 2 ? 0x6fae4f : 0x9a7a3a, 0.85)
+        .setDepth(20000);
+      leaf._kind = "leaf";
+      leaf._phase = Math.random() * Math.PI * 2;
+      leaf._vy = 16 + Math.random() * 12;
+      leaf._vx = (Math.random() - 0.5) * 24;
+      this._respawnAmbient(leaf, true);
+      this.ambient.push(leaf);
+    }
+  }
+
+  _respawnAmbient(p, anywhere = false) {
+    const cam = this.cameras.main;
+    const lx = cam.scrollX,
+      ly = cam.scrollY;
+    p.x = lx + Math.random() * GAME.WIDTH;
+    // Folhas renascem acima do topo da tela (chuva contínua)
+    p.y = p._kind === "leaf" && !anywhere ? ly - 20 : ly + Math.random() * GAME.HEIGHT;
+  }
+
+  _updateAmbient(time, dt) {
+    const cam = this.cameras.main;
+    const lx = cam.scrollX,
+      ly = cam.scrollY;
+    const M = 40;
+    for (const p of this.ambient) {
+      if (p._kind === "ff") {
+        p.x += Math.sin(time / 900 + p._phase) * 0.35;
+        p.y += Math.cos(time / 1100 + p._phase) * 0.3 - 0.08;
+        p.alpha = 0.25 + Math.abs(Math.sin(time / 400 + p._phase)) * 0.55;
+      } else {
+        p.x += (p._vx + Math.sin(time / 600 + p._phase) * 14) * (dt / 1000);
+        p.y += p._vy * (dt / 1000);
+        p.rotation += dt * 0.0012;
+      }
+      if (
+        p.x < lx - M ||
+        p.x > lx + GAME.WIDTH + M ||
+        p.y < ly - M ||
+        p.y > ly + GAME.HEIGHT + M
+      ) {
+        this._respawnAmbient(p);
+      }
+    }
+    // Vinheta vermelha pulsante abaixo de 30% de HP
+    const pct = this.player.hp / this.player.maxHp;
+    this._lowHpOverlay.setAlpha(
+      pct < 0.3
+        ? ((0.3 - pct) / 0.3) * (0.45 + Math.sin(time / 180) * 0.15)
+        : 0,
+    );
+  }
+
+  // Burst de "poeira" na morte de inimigo. Cap de partículas simultâneas pra
+  // aguentar limpezas em massa (Sobrecarga/Vapor) sem afogar o tween manager.
+  _deathPoof(x, y) {
+    if (this._poofCount > 60) return;
+    for (let i = 0; i < 5; i++) {
+      this._poofCount++;
+      const ang = Math.random() * Math.PI * 2;
+      const d = 14 + Math.random() * 16;
+      const p = this.add
+        .circle(x, y, 2 + Math.random() * 2, 0xd8e8d0, 0.9)
+        .setDepth(y + 10001);
+      this.tweens.add({
+        targets: p,
+        x: x + Math.cos(ang) * d,
+        y: y + Math.sin(ang) * d - 8,
+        alpha: 0,
+        scale: 0.4,
+        duration: 260 + Math.random() * 120,
+        ease: "Cubic.easeOut",
+        onComplete: () => {
+          p.destroy();
+          this._poofCount--;
+        },
+      });
+    }
+  }
+
   _showOnboarding() {
     if (this.meta.data.hasSeenOnboarding) return;
     const txt = this.add
@@ -358,6 +481,7 @@ export class GameScene extends Phaser.Scene {
     if (!this.boss) this.spawnDirector.update(time, dt);
     this.elemental.tick(time);
     this.hud.update(time, dt);
+    this._updateAmbient(time, dt);
 
     // Baús: glow/prompt + interação E
     let chestPressed = this.inputMgr.consumeInteract();
@@ -647,6 +771,7 @@ export class GameScene extends Phaser.Scene {
     }
     this.sound.play("sfx_death", { volume: 0.15 });
     this.cameras.main.shake(40, 0.002);
+    this._deathPoof(enemy.x, enemy.y);
     // Drop XP sempre
     const g = this.xpPool.acquire();
     g.spawn(enemy.x, enemy.y);
