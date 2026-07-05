@@ -311,9 +311,10 @@ export class GameScene extends Phaser.Scene {
     if (!this.textures.exists("vignette")) {
       const c = this.textures.createCanvas("vignette", W, H);
       const ctx = c.getContext();
-      const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.42, W / 2, H / 2, H * 0.78);
+      // Sutil: só os cantos escurecem de leve (feedback: 0.55 estava forte)
+      const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.52, W / 2, H / 2, H * 0.92);
       g.addColorStop(0, "rgba(0,0,0,0)");
-      g.addColorStop(1, "rgba(4,10,6,0.55)");
+      g.addColorStop(1, "rgba(4,10,6,0.32)");
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
       c.refresh();
@@ -387,9 +388,10 @@ export class GameScene extends Phaser.Scene {
     }
     // Vinheta vermelha pulsante abaixo de 30% de HP
     const pct = this.player.hp / this.player.maxHp;
+    // Multiplicador alto compensa a textura de vinheta mais suave
     this._lowHpOverlay.setAlpha(
       pct < 0.3
-        ? ((0.3 - pct) / 0.3) * (0.45 + Math.sin(time / 180) * 0.15)
+        ? ((0.3 - pct) / 0.3) * (0.75 + Math.sin(time / 180) * 0.25)
         : 0,
     );
   }
