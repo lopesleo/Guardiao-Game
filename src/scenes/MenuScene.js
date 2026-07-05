@@ -111,7 +111,8 @@ export class MenuScene extends Phaser.Scene {
     this._button(cx, by + bgap,     'COMO JOGAR',    '#e8f0e6', 20, false, () => this.scene.start('TutorialScene'));
     this._button(cx, by + bgap * 2, 'BÊNÇÃOS',       '#e8f0e6', 20, false, () => this._showBlessingsMenu());
     this._button(cx, by + bgap * 3, 'DESBLOQUEAR',   '#e8f0e6', 20, false, () => this._showUnlockMenu());
-    this._button(cx, by + bgap * 4, `🏆 CONQUISTAS  ${achCount}/${ACHIEVEMENTS.length}`, '#e8f0e6', 18, false, () => this._showAchievementsMenu());
+    const achBtn = this._button(cx, by + bgap * 4, `🏆 CONQUISTAS  ${achCount}/${ACHIEVEMENTS.length}`, '#e8f0e6', 18, false, () => this._showAchievementsMenu());
+    this._achBtnTxt = achBtn.txt; // atualizado ao vivo após compras (sem restart)
     // Última fileira dividida em 2 pra caber CONQUISTAS sem estourar a tela
     this._button(cx - 102, by + bgap * 5, 'CRÉDITOS',  '#93a89a', 15, false, () => this.scene.start('CreditsScene'), 196);
     this._button(cx + 102, by + bgap * 5, 'NOVO JOGO', '#ff8898', 14, false, () => this._showResetConfirm(), 196);
@@ -290,10 +291,14 @@ export class MenuScene extends Phaser.Scene {
         bg.on('pointerout',  () => bg.setFillStyle(0x1a2820));
         bg.on('pointerdown', () => {
           this.sound.play('sfx_ui_click', { volume: 0.5 });
-          if (it.kind === 'weapon') this.meta.unlock(it.key);
-          else                       this.meta.unlockAbility(it.key, it.cost);
+          const ok = it.kind === 'weapon'
+            ? this.meta.unlock(it.key)
+            : this.meta.unlockAbility(it.key, it.cost);
+          if (!ok) return;
+          this._refreshCounters();
+          // Reabre o PRÓPRIO painel atualizado — sem restart (fechava o menu)
           overlay.destroy(); panel.destroy();
-          this.scene.restart();
+          this._showUnlockMenu();
         });
       }
       y += 58;
@@ -401,8 +406,7 @@ export class MenuScene extends Phaser.Scene {
         bg.on('pointerdown', () => {
           this.sound.play('sfx_ui_click', { volume: 0.5 });
           if (r.onBuy()) {
-            // Compras podem destravar conquistas (Bênção Suprema, Herdeiro Ancestral)
-            this.meta.checkAchievements();
+            this._refreshCounters();
             overlay.destroy(); panel.destroy();
             this._showBlessingsMenu();
           }
@@ -416,12 +420,17 @@ export class MenuScene extends Phaser.Scene {
     const close = sharp(this, 0, closeY, 'FECHAR', { fontFamily: F, fontSize: '16px', fontStyle: 'bold', color: '#d9b25c' }).setOrigin(0.5);
     closeBg.on('pointerover', () => closeBg.setFillStyle(0x2a3a3a));
     closeBg.on('pointerout',  () => closeBg.setFillStyle(0x1a2820));
-    closeBg.on('pointerdown', () => {
-      overlay.destroy(); panel.destroy();
-      this.scene.restart();
-    });
+    closeBg.on('pointerdown', () => { overlay.destroy(); panel.destroy(); });
     panel.add(closeBg);
     panel.add(close);
+  }
+
+  // Atualiza contadores do menu principal após compras (moedas, conquistas) —
+  // compras podem destravar conquistas (Bênção Suprema, Herdeiro Ancestral).
+  _refreshCounters() {
+    this.meta.checkAchievements();
+    this._coinsText.setText(`${this.meta.coins}`);
+    this._achBtnTxt?.setText(`🏆 CONQUISTAS  ${this.meta.data.achievements.length}/${ACHIEVEMENTS.length}`);
   }
 
   // Painel de conquistas (Fase 3) — 2 colunas, mostra progresso das cumulativas.
