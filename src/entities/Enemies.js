@@ -18,6 +18,12 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.setScale(GAME.PIXEL_SCALE);
     this.body.setCircle(7, 1, 1);
 
+    // Sombra "blob" no chão — aterra o sprite no cenário (segue em update)
+    this.shadow = scene.add
+      .ellipse(x, y, 30, 11, 0x000000, 0.28)
+      .setDepth(4)
+      .setVisible(false);
+
     this.hp = 1;
     this.maxHp = 1;
     this.dmg = 1;
@@ -143,12 +149,19 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.hp = this.maxHp;
       this.dmg *= diff.dmgMult;
     }
+
+    // Sombra proporcional ao tamanho final (elite/mímico são maiores)
+    this.shadow
+      .setScale(this.displayWidth / 48)
+      .setPosition(x, y + this.displayHeight * 0.36)
+      .setVisible(true);
   }
 
   deactivate() {
     this.setActive(false).setVisible(false);
     this.body.enable = false;
     this.setVelocity(0, 0);
+    this.shadow.setVisible(false);
   }
 
   // Aplicar dano. crit = true ativa BONK (knockback + squash forte + flash dourado).
@@ -191,6 +204,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   update(time, dt, target) {
     if (!this.active || !target?.active) return;
+    this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.36);
 
     // CONGELADO: para tudo (não anda, não atira), mas continua tomando dano.
     if (this.isFrozen(time)) {
@@ -322,6 +336,12 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     scene.physics.add.existing(this);
     this.setScale(GAME.PIXEL_SCALE * 2.5);
     this.body.setCircle(7, 1, 1);
+    // Sombra grande do boss (mesma mecânica dos inimigos comuns)
+    this.shadow = scene.add
+      .ellipse(x, y, 30, 11, 0x000000, 0.3)
+      .setScale(this.displayWidth / 48)
+      .setDepth(4)
+      .setVisible(false);
     this.maxHp = 0;
     this.hp = 0;
     this.dmg = 12;
@@ -358,6 +378,11 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this.clearTint();
     this.setActive(true).setVisible(true);
     this.body.enable = true;
+    this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.36).setVisible(true);
+  }
+
+  deactivate() {
+    this.shadow.setVisible(false);
   }
 
   takeDamage(dmg) {
@@ -439,6 +464,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
 
   update(time, dt, target) {
     if (!this.active || !target?.active) return;
+    this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.36);
 
     // ÊXTASE: parado, invulnerável e pulsando enquanto a barra recarrega
     if (this._transitioning) {

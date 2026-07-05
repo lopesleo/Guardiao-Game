@@ -238,6 +238,40 @@ export class GameScene extends Phaser.Scene {
       .setScale(GAME.PIXEL_SCALE)
       .setDepth(-100);
 
+    // Manchas suaves de sombra (copas) e luz (feixes de sol) — quebram o verde
+    // chapado do gramado. Textura radial gerada 1x, tintada por instância.
+    if (!this.textures.exists("softdisc")) {
+      const c = this.textures.createCanvas("softdisc", 256, 256);
+      const cctx = c.getContext();
+      const gg = cctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+      gg.addColorStop(0, "rgba(255,255,255,1)");
+      gg.addColorStop(1, "rgba(255,255,255,0)");
+      cctx.fillStyle = gg;
+      cctx.fillRect(0, 0, 256, 256);
+      c.refresh();
+    }
+    const patchCell = 620;
+    for (let py = -r; py < r; py += patchCell) {
+      for (let px = -r; px < r; px += patchCell) {
+        if (Math.random() < 0.62) {
+          this.add
+            .image(px + Math.random() * patchCell, py + Math.random() * patchCell, "softdisc")
+            .setScale(1.2 + Math.random() * 1.8)
+            .setTint(0x0a2a14)
+            .setAlpha(0.1 + Math.random() * 0.08)
+            .setDepth(-60);
+        }
+        if (Math.random() < 0.4) {
+          this.add
+            .image(px + Math.random() * patchCell, py + Math.random() * patchCell, "softdisc")
+            .setScale(0.8 + Math.random() * 1.2)
+            .setTint(0xfff2b0)
+            .setAlpha(0.05 + Math.random() * 0.05)
+            .setDepth(-60);
+        }
+      }
+    }
+
     // Single-tile decorações verificadas no PNG
     const SINGLE = [
       { f: 1, weight: 6 }, // grama com flores discretas
