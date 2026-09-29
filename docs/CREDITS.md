@@ -14,22 +14,12 @@ Mantemos esta lista atualizada conforme novos assets são adicionados.
 
 ---
 
-## Sprites
+## Arte
 
-| Pack | Autor | Licença | URL |
-|---|---|---|---|
-| Tiny Dungeon | Kenney | CC0 1.0 | <https://kenney.nl/assets/tiny-dungeon> |
-| Tiny Creatures | Clint Bellanger (colab. Kenney) | CC0 1.0 | <https://opengameart.org/content/tiny-creatures> |
-| Bola de fogo (projétil do Cajado, 2 frames) | Revon | CC-BY 4.0 | <https://opengameart.org/content/fireball-3> |
-
-**Uso:** personagens e criaturas desses packs, como spritesheets de 16×16 px (escala inteira, sem suavização).
-
-### Arte procedural (própria)
-
-Cenário (chão, árvores, pinheiros, arbustos, pedras, flores, cogumelos, tocos),
-ícones, pickups, partículas, molduras de UI e ícone do app são **gerados por
-código** com uma paleta única (`src/art/`, `tools/make-icons.py`). O pack *Tiny
-Town* não é mais usado.
+**100% própria.** Heróis, criaturas, chefe, baús, cenário, ícones, projéteis,
+partículas, molduras de UI e ícone do app são gerados por código com uma paleta
+única (`src/art/`, `tools/make-icons.py`). Nenhum pack de sprites de terceiros é
+usado (os packs Kenney/Tiny Creatures e a bola de fogo de Revon foram removidos).
 
 ---
 

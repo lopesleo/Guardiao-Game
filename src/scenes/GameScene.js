@@ -363,7 +363,7 @@ export class GameScene extends Phaser.Scene {
       const dx = this.boss.x - this.player.x,
         dy = this.boss.y - this.player.y;
       if (
-        dx * dx + dy * dy < 50 * 50 &&
+        dx * dx + dy * dy < 64 * 64 &&
         time - this.boss.lastTouchAt > this.boss.contactCooldownMs
       ) {
         this.boss.lastTouchAt = time;
@@ -402,7 +402,7 @@ export class GameScene extends Phaser.Scene {
       if (this.boss && this.boss.active) {
         const dx = this.boss.x - p.x,
           dy = this.boss.y - p.y;
-        if (dx * dx + dy * dy < 40 * 40) {
+        if (dx * dx + dy * dy < 56 * 56) {
           const died = this.boss.takeDamage(p.dmg, null, p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
           this._showDmg(this.boss.x, this.boss.y, p.dmg, p.element, p.crit);
@@ -440,7 +440,7 @@ export class GameScene extends Phaser.Scene {
       if (this.boss && this.boss.active) {
         const dx = this.boss.x - p.x,
           dy = this.boss.y - p.y;
-        if (dx * dx + dy * dy < 40 * 40 && p.canHit(this.boss, time)) {
+        if (dx * dx + dy * dy < 56 * 56 && p.canHit(this.boss, time)) {
           const died = this.boss.takeDamage(p.dmg, null, p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
           this._showDmg(this.boss.x, this.boss.y, p.dmg, "fire", p.crit);

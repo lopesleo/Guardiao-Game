@@ -10,15 +10,6 @@ os.chdir(ROOT)
 os.makedirs("resources", exist_ok=True)
 os.makedirs("icons", exist_ok=True)
 
-sheet = Image.open("assets/sprites/dungeon_packed.png").convert("RGBA")
-COLS = sheet.width // 16
-
-
-def frame(i):
-    x, y = (i % COLS) * 16, (i // COLS) * 16
-    return sheet.crop((x, y, x + 16, y + 16))
-
-
 def gradient(size, top, bottom):
     img = Image.new("RGBA", (size, size))
     d = ImageDraw.Draw(img)

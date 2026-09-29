@@ -1,30 +1,28 @@
-// Inimigos: Morcego, Corvo, Goblin (atira) + Boss (D3).
+// Inimigos + Boss. Arte 100% própria (src/art/Monsters.js): cada tipo tem
+// uma tira "mon_<tipo>" e a animação "<tipo>_move".
 import { ENEMY, GAME, COLORS, ELITE, MIMIC } from "../config.js";
+import { dangerZone, shockwave, chargeLine, rootsBurst, summonPulse } from "../art/Telegraph.js";
 
-// Quadros do pack de criaturas escolhidos pela COR NATURAL do sprite (nada de
-// tint pra "fingir" outro inimigo): bruxa roxa, troll do pântano verde etc.
-const FRAMES = {
-  WOLF: 24,
-  CROW: 136,
-  GOBLIN: 11,
-  BOSS: 113,
-  BOSS_FURY: 115, // Ancião ressecado (fase 2)
-  MAGE: 65,
-  BRUTE: 42,
-  BEE: 140, // vespa: enxames rápidos e frágeis
-  SHROOM: 13, // cogumelo: solta esporos venenosos ao morrer
-  ALPHA: 23, // Lobo Alfa (mini-chefe)
-  ELDER: 20, // Ogro Ancião (mini-chefe)
+// textura + animação por tipo (mini-chefes e mímico têm arte própria)
+const LOOK = {
+  wolf: ["mon_wolf", "wolf_move"],
+  crow: ["mon_crow", "crow_move"],
+  goblin: ["mon_goblin", "goblin_move"],
+  mage: ["mon_mage", "mage_move"],
+  brute: ["mon_brute", "brute_move"],
+  bee: ["mon_bee", "bee_move"],
+  shroom: ["mon_shroom", "shroom_move"],
+  alpha: ["mon_alpha", "alpha_move"],
+  elder: ["mon_elder", "elder_move"],
+  mimic: ["obj_chest", "mimic_bite"],
 };
-const MIMIC_FRAME = 92; // baú-mímico do Tiny Dungeon (mesmo baú do mapa)
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene, x, y, frame = FRAMES.WOLF) {
-    super(scene, x, y, "creatures", frame);
+  constructor(scene, x, y) {
+    super(scene, x, y, "mon_wolf", 0);
     scene.add.existing(this);
     scene.physics.add.existing(this);
     this.setScale(GAME.PIXEL_SCALE);
-    this.body.setCircle(7, 1, 1);
 
     // Sombra "blob" no chão — aterra o sprite no cenário (segue em update)
     this.shadow = scene.add
@@ -32,7 +30,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       .setDepth(4)
       .setVisible(false);
     // Contorno luminoso de ELITE/mímico (silhueta chapada atrás do sprite)
-    this.rim = scene.add.sprite(x, y, "creatures", frame).setVisible(false);
+    this.rim = scene.add.sprite(x, y, "mon_wolf", 0).setVisible(false);
     this.rimColor = null;
 
     this.hp = 1;
@@ -69,6 +67,17 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this._freezeLockUntil = time + durMs + immuneMs;
   }
 
+  // Aplica a arte do tipo: textura, animação e corpo físico no "pé" do sprite
+  _look(type) {
+    const [tex, anim] = LOOK[type] ?? LOOK.wolf;
+    this.setTexture(tex, 0);
+    this.play({ key: anim, startFrame: Math.floor(Math.random() * 2) });
+    const w = this.frame.width,
+      h = this.frame.height;
+    const r = Math.max(4, Math.round(Math.min(w, h) * 0.3));
+    this.body.setCircle(r, w / 2 - r, h - 2 * r - 1);
+  }
+
   activate(x, y, kind, wave, elite = false) {
     this._kind = kind;
     this._elite = elite;
@@ -93,35 +102,29 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.setAngle(0);
     this.setScale(GAME.PIXEL_SCALE);
     this.contactRadius = 26;
-    if (this.texture.key !== "creatures") this.setTexture("creatures");
     this.rimColor = null;
+    this._look(kind);
 
     if (kind === "wolf") {
-      this.setFrame(FRAMES.WOLF);
       this.speed = ENEMY.SPEED_WOLF;
       this.maxHp *= 0.7;
       this.hp = this.maxHp;
     } else if (kind === "crow") {
-      this.setFrame(FRAMES.CROW);
       this.speed = ENEMY.SPEED_CROW;
       this.maxHp *= 0.55;
       this.hp = this.maxHp;
     } else if (kind === "goblin") {
-      this.setFrame(FRAMES.GOBLIN);
       this.speed = ENEMY.SPEED_GOBLIN;
       this.maxHp *= 1.3;
       this.hp = this.maxHp;
     } else if (kind === "mage") {
       // Mago: lento, mantém distância e solta projétil telegrafado (dá pra desviar)
-      this.setFrame(FRAMES.MAGE);
       this.speed = 110; // era 70 (anti-kite; ainda < player 160)
       this.maxHp *= 1.1;
       this.hp = this.maxHp;
       this._shotRange = 300;
     } else if (kind === "brute") {
       // Brutamontes: tanque lento e grande que bate MUITO forte no contato
-      this.setFrame(FRAMES.BRUTE);
-      this.setScale(GAME.PIXEL_SCALE * 1.6);
       this.speed = 85; // era 55: continua o tanque mais lento, mas não dá pra ignorar andando
       this.maxHp *= 3.0;
       this.hp = this.maxHp;
@@ -129,21 +132,17 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.contactRadius = 44;
     } else if (kind === "bee") {
       // Vespa: muito rápida e frágil — vem em enxame, pune quem fica parado
-      this.setFrame(FRAMES.BEE);
       this.speed = 205;
       this.maxHp *= 0.35;
       this.hp = this.maxHp;
       this.dmg *= 0.45;
-      this.setScale(GAME.PIXEL_SCALE * 0.85);
       this.contactRadius = 22;
     } else if (kind === "shroom") {
       // Cogumelo: lento; ao morrer vira uma nuvem de esporos que fere o player
-      this.setFrame(FRAMES.SHROOM);
       this.speed = 80;
       this.maxHp *= 1.2;
       this.hp = this.maxHp;
     } else {
-      this.setFrame(FRAMES.WOLF);
       this.speed = ENEMY.SPEED_WOLF;
     }
 
@@ -152,9 +151,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     // derruba baú dourado + gema grande ao morrer.
     if (elite === "alpha" || elite === "elder") {
       const alpha = elite === "alpha";
-      this.setFrame(alpha ? FRAMES.ALPHA : FRAMES.ELDER);
+      this._look(alpha ? "alpha" : "elder");
       this._kind = "wolf"; // perseguição melee
-      this.setScale(GAME.PIXEL_SCALE * (alpha ? 2.2 : 2.6));
+      this.setScale(GAME.PIXEL_SCALE * (alpha ? 1.7 : 1.6));
       this.maxHp = Math.max(ENEMY.HP(wave) * (alpha ? 22 : 34), alpha ? 520 : 1100);
       this.hp = this.maxHp;
       this.dmg = ENEMY.DMG(wave) * (alpha ? 2 : 2.8);
@@ -165,7 +164,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     } else this.miniBoss = null;
 
     if (elite === "mimic") {
-      this.setScale(GAME.PIXEL_SCALE * MIMIC.SCALE_MULT);
+      this._look("mimic");
+      this.setScale(GAME.PIXEL_SCALE * 1.5);
       // HP com piso (não escala só com wave) + dano e velocidade próprios
       this.maxHp = Math.max(ENEMY.HP(wave) * MIMIC.HP_MULT, MIMIC.HP_FLOOR);
       this.hp = this.maxHp;
@@ -174,10 +174,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.contactRadius = MIMIC.CONTACT_RADIUS;
       // Força perseguição melee (não fica atirando de longe como goblin)
       this._kind = "wolf";
-      this.setTexture("dungeon_tiles", MIMIC_FRAME);
       this.rimColor = MIMIC.TINT;
     } else if (elite === true) {
-      this.setScale(GAME.PIXEL_SCALE * ELITE.SCALE_MULT);
+      this.setScale(GAME.PIXEL_SCALE * 1.3);
       this.maxHp *= ELITE.HP_MULT;
       this.hp = this.maxHp;
       this.contactRadius = ELITE.CONTACT_RADIUS;
@@ -195,7 +194,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this._baseScale = this.scaleX; // squash de crítico é relativo a isto
     // Sombra proporcional ao tamanho final (elite/mímico são maiores)
     this.shadow
-      .setScale((GAME.PIXEL_SCALE * this.displayWidth) / 48)
+      .setScale((this.displayWidth * 0.8) / 14, GAME.PIXEL_SCALE * (this.displayWidth > 90 ? 1.4 : 1))
       .setPosition(x, y + this.displayHeight * 0.46)
       .setVisible(true);
     if (this.rimColor) {
@@ -208,8 +207,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 
   _syncRim(time) {
-    const k = 1 + 2 / 16; // 1 pixel de arte a mais de cada lado
+    const k = 1 + 2 / this.frame.width; // 1 pixel de arte a mais de cada lado
     this.rim
+      .setFrame(this.frame.name)
       .setPosition(this.x, this.y)
       .setScale(this.scaleX * k, this.scaleY * k)
       .setFlipX(this.flipX)
@@ -275,12 +275,14 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       if (!this._frozenVisual) {
         this.setTint(0x8fe3ff);
         this._frozenVisual = true;
+        this.anims.pause();
       }
       if (this.rimColor) this._syncRim(time);
       return;
     }
     if (this._frozenVisual) {
       this._frozenVisual = false;
+      this.anims.resume();
       this.scene.elemental?._updateTint(this);
     }
 
@@ -395,11 +397,13 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
 export class BossEnt extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y) {
-    super(scene, x, y, "creatures", FRAMES.BOSS);
+    super(scene, x, y, "mon_boss", 0);
     scene.add.existing(this);
     scene.physics.add.existing(this);
-    this.setScale(GAME.PIXEL_SCALE * 2.5);
-    this.body.setCircle(7, 1, 1);
+    this._bossScale = GAME.PIXEL_SCALE * 1.1; // arte de 50×56 → ~165px: chefe tem que impor
+    this.setScale(this._bossScale);
+    this.body.setCircle(10, 15, 34);
+    this.play("boss_idle");
     // Sombra grande do boss (mesma mecânica dos inimigos comuns)
     this.shadow = scene.add
       .image(x, y, "px_shadow")
@@ -440,7 +444,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this._furyPulse?.stop();
     this._furyPulse = null;
     this.clearTint();
-    this.setFrame(FRAMES.BOSS);
+    this.play("boss_idle");
     this.setActive(true).setVisible(true);
     this.body.enable = true;
     this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46).setVisible(true);
@@ -484,10 +488,9 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     scene.hud?.showBossBanner("FÚRIA!");
 
     // Tint quente + pulso de escala (êxtase)
-    const base = GAME.PIXEL_SCALE * 2.5;
-    // Fase 2: o Ancião RESSECA (sprite próprio) em vez de só ficar laranja
-    this.setFrame(FRAMES.BOSS_FURY);
-    this.setTint(0xffb080);
+    const base = this._bossScale;
+    // Fase 2: o Ancião RESSECA e entra em brasa (quadros próprios)
+    this.play("boss_fury");
     this._furyPulse = scene.tweens.add({
       targets: this,
       scaleX: base * 1.14,
@@ -505,18 +508,8 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
       ease: "Cubic.easeOut",
     });
     // Anel de energia expandindo
-    const ring = scene.add
-      .circle(this.x, this.y, 24, 0xff8a1e, 0)
-      .setStrokeStyle(6, 0xffb24c, 1)
-      .setDepth(this.y + 9999);
-    scene.tweens.add({
-      targets: ring,
-      radius: 240,
-      alpha: 0,
-      duration: DURATION,
-      ease: "Cubic.easeOut",
-      onComplete: () => ring.destroy(),
-    });
+    shockwave(scene, this.x, this.y, 240, 0xff8a1e);
+    scene.time.delayedCall(250, () => this.active && shockwave(scene, this.x, this.y, 180, 0xffb24c));
   }
 
   // Encerra o êxtase: para o pulso, normaliza escala/tint, libera o boss.
@@ -525,7 +518,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this._displayFill = 1;
     this._furyPulse?.stop();
     this._furyPulse = null;
-    this.setScale(GAME.PIXEL_SCALE * 2.5);
+    this.setScale(this._bossScale);
     this.scene.elemental?._updateTint(this);
   }
 
@@ -591,21 +584,14 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
+  // BAQUE: zona carrega por 600ms; quem estiver dentro no fim leva o golpe
   _aoeSlam(cx = this.x, cy = this.y) {
     const scene = this.scene;
     const r = 180;
-    const ring = scene.add
-      .circle(cx, cy, 10, 0xff7a3c, 0)
-      .setStrokeStyle(5, 0xff7a3c, 1)
-      .setDepth(60);
-    scene.tweens.add({
-      targets: ring,
-      radius: r,
-      alpha: 0,
-      duration: 600,
-      onComplete: () => ring.destroy(),
-    });
-    scene.time.delayedCall(600, () => {
+    dangerZone(scene, cx, cy, r, 600, 0xff7a3c, () => {
+      if (!this.active) return;
+      shockwave(scene, cx, cy, r);
+      scene.cameras.main.shake(180, 0.008);
       const dx = scene.player.x - cx,
         dy = scene.player.y - cy;
       if (dx * dx + dy * dy <= r * r) {
@@ -648,18 +634,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     const px = scene.player.x,
       py = scene.player.y;
     const r = 95;
-    const tel = scene.add
-      .circle(px, py, r, 0x6a4a10, 0.22)
-      .setStrokeStyle(3, 0x9a6a2a, 0.9)
-      .setDepth(55);
-    scene.tweens.add({
-      targets: tel,
-      alpha: 0.5,
-      yoyo: true,
-      repeat: 2,
-      duration: 230,
-      onComplete: () => tel.destroy(),
-    });
+    dangerZone(scene, px, py, r, 720, 0x9ccf62);
     // Durante o aviso, quem está na área é AGARRADO (anda devagar) — dasha pra sair!
     const r2 = r * r;
     scene.time.addEvent({
@@ -688,32 +663,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
   }
 
   _rootVisual(x, y, dur) {
-    const scene = this.scene;
-    const g = scene.add.graphics().setDepth(y + 10001);
-    g.lineStyle(4, 0x7a4a1a, 1);
-    const n = 7;
-    for (let i = 0; i < n; i++) {
-      const ang = (i / n) * Math.PI * 2;
-      const r1 = 12,
-        r2 = 30 + Math.random() * 10;
-      const x1 = x + Math.cos(ang) * r1,
-        y1 = y + Math.sin(ang) * r1;
-      const mx = x + Math.cos(ang) * (r2 * 0.6) + (Math.random() - 0.5) * 8;
-      const my = y + Math.sin(ang) * (r2 * 0.6) - 8;
-      const x2 = x + Math.cos(ang) * r2,
-        y2 = y + Math.sin(ang) * r2 - 16;
-      g.beginPath();
-      g.moveTo(x1, y1);
-      g.lineTo(mx, my);
-      g.lineTo(x2, y2);
-      g.strokePath();
-    }
-    scene.tweens.add({
-      targets: g,
-      alpha: 0,
-      duration: dur,
-      onComplete: () => g.destroy(),
-    });
+    rootsBurst(this.scene, x, y, 60, dur);
   }
 
   // INVESTIDA: telegrafa uma linha na direção do player e avança rápido — desvie de lado!
@@ -721,17 +671,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     const scene = this.scene;
     const target = scene.player;
     const ang = Math.atan2(target.y - this.y, target.x - this.x);
-    const ind = scene.add
-      .rectangle(this.x, this.y, 340, 12, 0xff7a3c, 0.5)
-      .setOrigin(0, 0.5)
-      .setDepth(56)
-      .setRotation(ang);
-    scene.tweens.add({
-      targets: ind,
-      alpha: 0,
-      duration: 600,
-      onComplete: () => ind.destroy(),
-    });
+    chargeLine(scene, this.x, this.y, ang, 340, 600);
     scene.time.delayedCall(600, () => {
       if (!this.active) return;
       const sp = 620;
@@ -746,16 +686,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     const scene = this.scene;
     const wave = Math.floor(scene.elapsedMs / 30000);
     // Aviso visual do próprio boss: pulso roxo
-    const pulse = scene.add
-      .circle(this.x, this.y, 30, 0xd98cff, 0.5)
-      .setDepth(55);
-    scene.tweens.add({
-      targets: pulse,
-      radius: 70,
-      alpha: 0,
-      duration: 500,
-      onComplete: () => pulse.destroy(),
-    });
+    summonPulse(scene, this.x, this.y);
 
     for (let i = 0; i < count; i++) {
       if (scene.enemyPool.size >= GAME.MAX_ENEMIES_ALIVE) break;
@@ -763,14 +694,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
       const sx = this.x + Math.cos(ang) * 90;
       const sy = this.y + Math.sin(ang) * 90;
       // Marca visual no ponto de spawn
-      const spawn = scene.add.circle(sx, sy, 8, 0xd98cff, 0.7).setDepth(55);
-      scene.tweens.add({
-        targets: spawn,
-        radius: 24,
-        alpha: 0,
-        duration: 350,
-        onComplete: () => spawn.destroy(),
-      });
+      summonPulse(scene, sx, sy);
 
       const e = scene.enemyPool.acquire();
       e.activate(sx, sy, kind, wave);

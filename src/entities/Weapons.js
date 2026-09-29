@@ -1,5 +1,6 @@
 // Armas: Staff(🔥), Aura(❄️), Boomerang(🔥), ChainLightning(⚡) + evoluções (D3).
 import { WEAPONS, COLORS, GAME, ELEMENT } from "../config.js";
+import { shockwave } from "../art/Telegraph.js";
 
 // ============================================================================
 // Projétil reutilizável (graphics container)
@@ -17,7 +18,8 @@ export class Projectile extends Phaser.GameObjects.Container {
       .setAlpha(0.55)
       .setBlendMode(Phaser.BlendModes.ADD);
     this.core = scene.add.image(0, 0, "px_puff").setScale(2.4);
-    this.fball = scene.add.sprite(0, 0, "fireball").setScale(1.1);
+    // Bola de fogo própria (cabeça à direita do quadro → origem no núcleo)
+    this.fball = scene.add.sprite(0, 0, "px_fireball").setScale(2.6).setOrigin(0.72, 0.5).play("fireball_fly");
     this.add([this.glow, this.core, this.fball]);
     scene.physics.add.existing(this);
     this.body.setCircle(10, -10, -10);
@@ -81,7 +83,6 @@ export class Projectile extends Phaser.GameObjects.Container {
     if (!this.active) return;
     if (time >= this.lifeUntil) this.kill();
     if (this._isFire) {
-      this.fball.setFrame(((time / 90) | 0) % 2);
 
       this.fball.setRotation(
         Math.atan2(this.body.velocity.y, this.body.velocity.x),
@@ -464,14 +465,13 @@ export class AuraWeapon extends Weapon {
       ease: "Quad.easeIn",
       onComplete: () => {
         shard.destroy();
-        const star = scene.add
-          .star(x2, y2, 6, 4, 13, 0xbfeaff, 0.9)
-          .setDepth(61);
+        // Estalo de cristal: faísca pixelada gelada
+        const star = scene.add.image(x2, y2, "px_spark").setScale(3).setTint(0xbfeaff).setDepth(61);
         scene.tweens.add({
           targets: star,
-          scaleX: 1.6,
-          scaleY: 1.6,
+          scale: 6,
           alpha: 0,
+          angle: 45,
           duration: 280,
           onComplete: () => star.destroy(),
         });
@@ -704,18 +704,7 @@ export class WinterHeart extends AuraWeapon {
 
     // Visual: anel expansivo + estilhaços voando pra fora (mesmo estilo do Cristal)
     if (hits > 0) scene.sound.play("sfx_ice_attack", { volume: 0.35, rate: 1.1 });
-    const ring = scene.add
-      .circle(cx, cy, this.range, COLORS.ICE, 0)
-      .setStrokeStyle(3, 0xbfeaff, 0.9)
-      .setDepth(60);
-    scene.tweens.add({
-      targets: ring,
-      radius: r,
-      alpha: 0,
-      duration: 380,
-      ease: "Cubic.easeOut",
-      onComplete: () => ring.destroy(),
-    });
+    shockwave(scene, cx, cy, r, COLORS.ICE);
     const n = this.def.nova.shards;
     for (let i = 0; i < n; i++) {
       const ang = (i / n) * Math.PI * 2;
@@ -756,14 +745,24 @@ export class Phoenix extends Boomerang {
     const dmg = t.dmgPerTick * this.dmgMult * (this.owner?._blessingDmgMult ?? 1);
     const life = t.ticks * t.tickMs;
     // Visual: mancha de chama que encolhe até sumir
-    const patch = scene.add.circle(x, y, r, COLORS.FIRE, 0.28).setDepth(45);
-    scene.tweens.add({
-      targets: patch,
-      alpha: 0,
-      scale: 0.5,
-      duration: life,
-      onComplete: () => patch.destroy(),
-    });
+    // Visual: brasa no chão (luz aditiva) + chamas pixeladas subindo
+    const patch = scene.add
+      .image(x, y, "fx_glow")
+      .setScale((r * 2.2) / 64)
+      .setTint(COLORS.FIRE)
+      .setAlpha(0.45)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(45);
+    scene.tweens.add({ targets: patch, alpha: 0, scale: patch.scale * 0.5, duration: life, onComplete: () => patch.destroy() });
+    for (let i = 0; i < 3; i++) {
+      const f = scene.add
+        .image(x + (Math.random() - 0.5) * r, y + (Math.random() - 0.5) * r * 0.6, "px_puff")
+        .setScale(1.6)
+        .setTint([0xffe58f, 0xffb36b, 0xff7a3c][i])
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(y + 10002);
+      scene.tweens.add({ targets: f, y: f.y - 26, scale: 0.4, alpha: 0, delay: i * 90, duration: 520, onComplete: () => f.destroy() });
+    }
     // Dano em ticks (sem número flutuante — mesmo padrão do DoT do Vapor)
     const burn = () => {
       scene.enemyPool.forEachActive((e) => {

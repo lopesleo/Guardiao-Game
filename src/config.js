@@ -419,11 +419,11 @@ export const DROPS = {
 
 // Baús (lootboxes) — animação real entre frames + mecânica mimic
 export const CHEST = {
-  SPRITE_TEXTURE: "dungeon_tiles",
-  SPRITE_FRAME_CLOSED: 89, // baú fechado
-  SPRITE_FRAME_HALF: 90, // semi-aberto (frame intermediário)
-  SPRITE_FRAME_OPEN: 91, // totalmente aberto
-  SPRITE_FRAME_MIMIC: 92, // baú-mímico (com língua)
+  SPRITE_TEXTURE: "obj_chest", // arte própria (src/art/Monsters.js)
+  SPRITE_FRAME_CLOSED: 0,
+  SPRITE_FRAME_HALF: 1,
+  SPRITE_FRAME_OPEN: 2,
+  SPRITE_FRAME_MIMIC: 3,
   INTERACT_RADIUS: 50,
   STARTING_COUNT: 5,
   KILL_DROP_EVERY: 50,

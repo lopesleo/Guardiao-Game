@@ -746,10 +746,7 @@ export class MenuScene extends Phaser.Scene {
     const list = this._modalList(m);
     const lines = [
       ["Design, código e arte procedural", "Leonardo Lopes"],
-      ["Heróis", "Arte própria (gerada por código)"],
-      ["Criaturas e baús", "Clint Bellanger — Tiny Creatures (CC0) · Kenney — Tiny Dungeon (CC0)"],
-      ["Bola de fogo", "Revon (CC-BY 4.0)"],
-      ["Cenário, ícones, UI e efeitos", "Gerados proceduralmente para este jogo"],
+      ["Arte", "Heróis, criaturas, cenário, ícones e efeitos: arte própria, gerada por código"],
       ["Fonte", "Jersey 15 — The Soft Type Project Authors (OFL 1.1)"],
       ["Música", "JaggedStone — Loopable Dungeon Ambience (CC0) · Thalon — Fantasy Menu Theme (CC-BY 4.0)"],
       ["Efeitos sonoros", "Kenney (CC0) · rubberduck (CC0) · Little Robot Sound Factory (CC-BY 3.0) · artisticdude (CC0) · faxcorp (CC0) · Bart Kelsey (CC0 / CC-BY 3.0) · Julien Matthey (CC0)"],

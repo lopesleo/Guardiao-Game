@@ -4,6 +4,8 @@ import { registerEnvironment } from "../art/Environment.js";
 import { registerIcons } from "../art/Icons.js";
 import { registerSprites } from "../art/Sprites.js";
 import { registerHeroes } from "../art/Hero.js";
+import { registerMonsters } from "../art/Monsters.js";
+import { registerTelegraphs } from "../art/Telegraph.js";
 import { text, Bar, PAL, vw, vh, fitCamera } from "../ui/Theme.js";
 
 export class PreloadScene extends Phaser.Scene {
@@ -15,22 +17,7 @@ export class PreloadScene extends Phaser.Scene {
     fitCamera(this);
     this._drawBar();
 
-    // ---- Sprites ----
-    this.load.spritesheet(
-      "dungeon_tiles",
-      "assets/sprites/dungeon_packed.png",
-      { frameWidth: 16, frameHeight: 16 },
-    );
-    this.load.spritesheet(
-      "creatures",
-      "assets/sprites/enemies/creatures_packed.png",
-      { frameWidth: 16, frameHeight: 16 },
-    );
-    // Bola de fogo do Cajado — 2 frames (arte de Revon, CC-BY 4.0)
-    this.load.spritesheet("fireball", "assets/sprites/fx/fireball.png", {
-      frameWidth: 32, // Metade da largura total da imagem
-      frameHeight: 32, // Altura total da imagem
-    });
+    // ---- Sprites: toda a arte é gerada por código (src/art/) no create() ----
 
     // ---- Áudio ----
     this.load.audio("music_menu", "assets/audio/music/menu_theme.mp3");
@@ -73,6 +60,8 @@ export class PreloadScene extends Phaser.Scene {
     registerIcons(this);
     registerSprites(this);
     registerHeroes(this);
+    registerMonsters(this);
+    registerTelegraphs(this);
     this.scene.start("MenuScene");
   }
 

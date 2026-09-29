@@ -14,7 +14,7 @@ export class Chest extends Phaser.GameObjects.Container {
       .setBlendMode(Phaser.BlendModes.ADD)
       .setVisible(false);
     this.shadow = scene.add.image(0, 20, "px_shadow").setScale(3.4, 3);
-    this.sprite = scene.add.image(0, 0, CHEST.SPRITE_TEXTURE, CHEST.SPRITE_FRAME_CLOSED)
+    this.sprite = scene.add.sprite(0, 0, CHEST.SPRITE_TEXTURE, CHEST.SPRITE_FRAME_CLOSED)
                        .setScale(GAME.PIXEL_SCALE);
     this.prompt = scene.add.text(0, -42, '', {
       fontFamily: '"Jersey 15", monospace',
@@ -63,7 +63,7 @@ export class Chest extends Phaser.GameObjects.Container {
 
     if (kind === 'mimic') {
       // Mímico! Sprite vira chest com língua imediatamente, scale jump
-      this.sprite.setFrame(CHEST.SPRITE_FRAME_MIMIC);
+      this.sprite.play('mimic_bite');
       sc.tweens.add({
         targets: this.sprite,
         scaleX: GAME.PIXEL_SCALE * 1.8, scaleY: GAME.PIXEL_SCALE * 1.4,
