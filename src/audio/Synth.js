@@ -24,7 +24,7 @@ const saw = (ph) => 2 * (ph % 1) - 1;
 function renderSfx(dur, gen, gain = 0.8) {
   const n = Math.floor(dur * SR);
   const out = new Float32Array(n);
-  const st = { ph: 0, ph2: 0, lp: 0, hp: 0, prev: 0 };
+  const st = { ph: 0, ph2: 0, ph3: 0, lp: 0, hp: 0, prev: 0, gate: 1 };
   for (let i = 0; i < n; i++) out[i] = gen(i / SR, st, i);
   return normalize(out, gain);
 }
@@ -114,10 +114,19 @@ const SFX = {
     s.prev = hiss;
     return bell * env(t, 0.002, 0.14) + s.hp * 0.2 * env(t, 0.001, 0.05);
   }],
-  sfx_bolt_attack: [0.2, (t, s) => {
-    const f = 900 * Math.exp(-t * 12) + 180 + noise() * 120; // zumbido tremido
-    const gate = rnd() < 0.8 ? 1 : 0.2;
-    return sq(osc(s, "ph", f), 0.5) * gate * env(t, 0.001, 0.07) + noise() * 0.3 * env(t, 0.001, 0.03);
+  // Raio com PRESENÇA: estalo seco (ruído agudo) → crepitar elétrico (dente de
+  // serra grave com picotes aleatórios) → ribombo de trovão (ruído grave + sub)
+  sfx_bolt_attack: [0.75, (t, s) => {
+    const x = noise();
+    s.hp = x - s.prev; // agudo: o "CRACK"
+    s.prev = x;
+    const crack = s.hp * 1.4 * env(t, 0.0005, 0.018);
+    if (rnd() < 0.08) s.gate = rnd() < 0.55 ? 1 : 0.15; // picote irregular do arco
+    const buzzF = 95 + Math.sin(t * 60) * 15 + noise() * 25;
+    const buzz = (saw(osc(s, "ph", buzzF)) * 0.7 + sq(osc(s, "ph2", buzzF * 2.01), 0.3) * 0.3) * (s.gate ?? 1) * env(t, 0.004, 0.11);
+    const rumble = lp(s, noise(), 0.035) * 5 * env(t, 0.03, 0.28); // trovão ao fundo
+    const sub = Math.sin(TAU * osc(s, "ph3", 48 - t * 20)) * 0.55 * env(t, 0.005, 0.18);
+    return Math.tanh((crack + buzz * 0.8 + rumble + sub) * 1.6);
   }],
   sfx_react_vapor: [0.7, (t, s) => {
     const x = noise();

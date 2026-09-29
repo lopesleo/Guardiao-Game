@@ -154,7 +154,7 @@ export class ForestWorld {
         .setTint(0xfff2b0)
         .setAlpha(0.05)
         .setBlendMode(Phaser.BlendModes.ADD)
-        .setDepth(48000);
+        .setDepth(48600); // acima do mapa de luz: os feixes CLAREIAM
       s._phase = i * 2.1;
       this.shafts.push(s);
     }

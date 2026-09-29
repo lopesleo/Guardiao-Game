@@ -513,7 +513,7 @@ export class ChainLightning extends Weapon {
       1 + (this.owner?.extraProj ?? 0) + this.extraProj,
     );
     if (!targets.length) return false;
-    this.scene.sound.play("sfx_bolt_attack", { volume: 0.4 });
+    this.scene.sound.play("sfx_bolt_attack", { volume: 0.5, rate: 0.9 + Math.random() * 0.2 });
     const dmg = this.damage;
     for (const cur of targets) {
       this.scene.elemental._drawBolt(

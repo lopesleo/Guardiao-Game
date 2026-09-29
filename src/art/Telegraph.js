@@ -48,6 +48,7 @@ export function dangerZone(scene, x, y, r, durMs, color = PAL.red2, onDone) {
 
 // Onda de choque: anel de pixels expandindo + poeira
 export function shockwave(scene, x, y, r, color = PAL.org2) {
+  scene.lighting?.flash(x, y, r * 1.4, color, 350, 1);
   const g = scene.add.graphics().setDepth(56);
   const o = { t: 0 };
   scene.tweens.add({

@@ -42,6 +42,7 @@ import { Chest } from "../entities/Chest.js";
 import { DamageNumber } from "../entities/DamageNumber.js";
 import { HUD } from "../ui/HUD.js";
 import { ForestWorld } from "../world/ForestWorld.js";
+import { Lighting } from "../world/Lighting.js";
 import { vw, vh, text, drawFrame, fitCamera } from "../ui/Theme.js";
 import { DEBUG } from "../systems/Platform.js";
 import { Settings } from "../systems/Settings.js";
@@ -122,6 +123,7 @@ export class GameScene extends Phaser.Scene {
 
     // Spawner
     this.spawnDirector = new SpawnDirector(this, this.enemyPool, this.player);
+    this.lighting = new Lighting(this, this.world);
     this.runEvents = new RunEvents(this);
 
     // Baús — STARTING_COUNT espalhados aleatoriamente fora do spawn do player
@@ -213,6 +215,7 @@ export class GameScene extends Phaser.Scene {
     // de cartas em sequência — antes, reabrir por cima descartava escolhas.
     this._pendingLevelUps = 0;
     this.events.on("player:levelup", () => {
+      this.lighting?.flash(this.player.x, this.player.y, 420, 0xffe58f, 500, 1);
       this._pendingLevelUps++;
       this._openNextLevelUp();
     });
@@ -335,6 +338,7 @@ export class GameScene extends Phaser.Scene {
     this.elemental.tick(time);
     this.hud.update(time, dt);
     this.world.update(time, dt, this.player);
+    this.lighting.update(time);
 
     // Baús: glow/prompt + interação E
     let chestPressed = this.inputMgr.consumeInteract();
@@ -423,6 +427,7 @@ export class GameScene extends Phaser.Scene {
           this.player.lifestealFrom(p.dmg);
           this._showDmg(e.x, e.y, p.dmg, p.element, p.crit);
           p.onImpact?.(p.x, p.y); // hook de evolução (nuvem da Tempestade de Vapor)
+          this.lighting.flash(p.x, p.y, 120, 0xff8a3c, 120, 0.8);
           p.kill();
           this.projectilePool.release(p);
           if (died) this._onEnemyDeath(e);
@@ -958,6 +963,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   _chestBurst(x, y, kind) {
+    this.lighting?.flash(x, y, kind === "golden" ? 380 : 240, kind === "trap" ? 0xff4060 : 0xffd070, 600, 1);
     const color =
       kind === "trap" ? 0xff5a6e : kind === "golden" ? 0xffe88a : 0xffd96b;
     // 14 partículas pequenas voando pra fora

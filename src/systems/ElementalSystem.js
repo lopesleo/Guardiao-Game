@@ -100,6 +100,7 @@ export class ElementalSystem {
       return;
     }
 
+    scene.lighting?.flash(enemy.x, enemy.y, 280, def.color, 450, 1);
     // Texto flutuante BIG (D21)
     this._label(enemy.x, enemy.y, def.label, def.color);
     scene._hint?.("reaction", "REAÇÃO! Dois elementos no mesmo inimigo\ncausam efeitos extras. Combine armas!");
@@ -272,6 +273,7 @@ export class ElementalSystem {
     });
 
     if (!showFx) return;
+    scene.lighting?.flash(cx, cy, 260, 0x9fe8ff, 350, 1);
     scene.sound.play("sfx_react_crystal", { volume: 0.55 }); // estilhaço de gelo
     scene.cameras.main.shake(90, 0.004);
     scene.player?.addAwakenMeter(PLAYER.AWAKEN_GAIN_REACTION);
@@ -340,6 +342,9 @@ export class ElementalSystem {
       g.strokePath();
     };
     stroke(width + 8, color, 0.25); // halo
+    // Clarão do raio ilumina o entorno (origem e impacto)
+    scene.lighting?.flash(x2, y2, 230 + width * 12, color, 170, 1);
+    scene.lighting?.flash((x1 + x2) / 2, (y1 + y2) / 2, 160, color, 120, 0.6);
     stroke(width, color, 1);
     stroke(Math.max(1, width - 2), 0xffffff, 0.9); // núcleo quente
     // Faísca no ponto de impacto

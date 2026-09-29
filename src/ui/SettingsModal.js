@@ -5,7 +5,7 @@ import { text, Button } from "./Theme.js";
 import { Modal, Slider, Toggle } from "./Widgets.js";
 
 export function openSettings(scene, o = {}) {
-  const m = new Modal(scene, { title: "OPÇÕES", w: 620, h: o.onReset ? 560 : 480 });
+  const m = new Modal(scene, { title: "OPÇÕES", w: 620, h: o.onReset ? 620 : 540 });
   let y = m.top + 30;
   const row = (label, widget) => {
     m.add(text(scene, -m.w / 2 + 50, y, label, { size: 22, origin: [0, 0.5] }));
@@ -30,6 +30,7 @@ export function openSettings(scene, o = {}) {
     Settings.set("dmgNumbers", v);
     o.onDmgNumbers?.(v);
   }));
+  row("Iluminação dinâmica", new Toggle(scene, 0, 0, Settings.get("lighting"), (v) => Settings.set("lighting", v)));
   if (o.onReset) {
     m.add(new Button(scene, 0, m.h / 2 - 50, 300, 50, "APAGAR PROGRESSO", o.onReset, { size: 18, style: "danger", color: CSS.redHi }));
   }

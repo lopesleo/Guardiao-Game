@@ -8,6 +8,7 @@ const DEFAULTS = {
   haptics: true,
   shake: true,
   dmgNumbers: true,
+  lighting: true,
 };
 
 let cache = null;
