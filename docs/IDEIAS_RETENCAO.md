@@ -115,6 +115,36 @@ se **gera receita** no modelo com anúncios.
 - **Público feminino majoritário no Brasil:** arte fofa + Clareira aconchegante
   (horta, pesca, cozinha) conversa bem com esse público sem perder a ação.
 
+**Sinal de mercado:** a série *Cidade Invisível* (Netflix, 2021), com Curupira, Iara
+e Cuca, chegou ao **top 10 em 60 países** (1º lugar nos EUA por dias) e ganhou 2ª
+temporada — há interesse internacional real pelo tema.
+
+**Direitos autorais — pode usar?** Sim, com cuidados:
+- **Os personagens do folclore são domínio público** (autoria desconhecida): Saci,
+  Curupira, Iara, Boitatá, Mula sem Cabeça, Mapinguari etc. podem ser usados
+  comercialmente sem licença.
+- **O que é protegido são as representações específicas**: cada ilustração tem
+  autor. Não copiar desenhos existentes — a nossa arte já é própria (gerada por
+  código), então esse risco já está resolvido.
+- **Atenção ao Sítio do Picapau Amarelo:** os livros de Monteiro Lobato caíram em
+  domínio público em 2019, mas o **visual da TV Globo** (séries de 1977, 2001,
+  2012) é protegido. Evitar qualquer semelhança com o Saci/Cuca da Globo.
+- **Saberes tradicionais** (conhecimentos étnicos, indígenas) têm ressalva na lei:
+  usar as lendas é livre, mas convém não reproduzir rituais, cantos ou símbolos
+  sagrados específicos de um povo.
+- **Marca:** antes de publicar, consultar o nome final do jogo no **INPI** (se o
+  título usar um nome do folclore, pode haver marcas registradas em outras áreas).
+
+**Cuidado de representação (reputação, não lei):**
+- O **Saci** tem raiz indígena (Jaxy Jaterê, guarani), africana e europeia;
+  pesquisadores apontam que representações caricatas dele carregam racismo.
+  Retratar com respeito: herói esperto e poderoso, nunca piada racial.
+- Criadores indígenas criticaram produções recentes por **apropriação** das
+  culturas originárias. Boas práticas: tratar as lendas com seriedade, citar a
+  origem no Bestiário ("lenda de origem tupi…"), evitar estereótipos de "índio
+  genérico" e, se possível, ter um consultor/leitor indígena ou pesquisador de
+  folclore revisando os textos.
+
 ---
 
 ## Ideias priorizadas
@@ -193,6 +223,10 @@ dia que ainda não tentou.
 - [Halls of Torment — Wikipedia](https://en.wikipedia.org/wiki/Halls_of_Torment) · [Bullet Heavens — Rogueliker](https://rogueliker.com/bullet-heaven-games-like-vampire-survivors/) · [Ball x Pit — Wikipedia](https://en.wikipedia.org/wiki/Ball_x_Pit)
 - [20 Minutes Till Dawn — Runes (wiki)](https://20-minutes-till-dawn.fandom.com/wiki/Runes)
 - [Mighty DOOMed: How Doom's Mobile Spinoff Misstepped — Naavik](https://naavik.co/deep-dives/how-dooms-mobile-spinoff-misstepped/) · [Best free mobile RPGs that aren't pay-to-win](https://www.mobilegamereport.com/articles/best-mobile-roguelites-2026)
+- [Folclore e direitos autorais — blog Umapenca](https://blog.umapenca.com/folclore-e-direitos-autorais/) · [Proteção autoral das expressões do folclore — Jus.com.br](https://jus.com.br/artigos/19271/a-protecao-autoral-das-expressoes-culturais-tradicionais-e-expressoes-do-folclore) · [O domínio público no direito autoral brasileiro — ITS Rio](https://itsrio.org/wp-content/uploads/2017/01/O-Dominio-Publico-no-Direito-Autoral-Brasileiro.pdf)
+- [Obras de Monteiro Lobato em domínio público (2019) — Correio Braziliense](https://www.correiobraziliense.com.br/app/noticia/diversao-e-arte/2019/02/10/interna_diversao_arte,736370/monteiro-lobato-em-dominio-publico.shtml) · [Direitos Autorais — Monteiro Lobato](https://www.monteirolobato.com/direitos-autorais/)
+- [Cidade Invisível faz sucesso no exterior — O Liberal](https://www.oliberal.com/cultura/televisao/serie-brasileira-cidade-invisivel-faz-sucesso-ate-no-exterior-1.357076) · [Invisible City — Wikipedia](https://en.wikipedia.org/wiki/Invisible_City_(TV_series))
+- [Negação do Saci revela cultura racista, dizem pesquisadores — Brasil de Fato](https://www.brasildefato.com.br/2023/10/31/negacao-do-saci-no-brasil-revela-cultura-racista-dizem-pesquisadores/) · [Saci é construção negra, indígena e europeia — Altos Papos](https://altospapos.com.br/exu-duendes-e-jaxy-jatere-saci-e-construcao-negra-indigena-e-europeia-aponta-pesquisador/) · [Perspectivas decoloniais sobre o folclore — Nonada](https://www.nonada.com.br/2021/02/folclore-brasileiro-decolonial/)
 - [Jornada do Saci — Google Play](https://play.google.com/store/apps/details?id=com.Edtek.Folclore&hl=en_US) · [Guerreiros Folclóricos — Terminal de Informação](https://terminaldeinformacao.com/2017/09/30/conheca-jogo-brasileiro-guerreiros-folcloricos/)
 - [Why Mythology and Adventure Themes Remain Popular in Digital Gaming](https://digimagazine.uk/why-mythology-and-adventure-themes-remain-popular-in-digital-gaming/) · [Hades — a roguelike of mythological proportions](https://guilhermefmota99.medium.com/hades-a-roguelike-of-mythological-proportions-ca9638699a93) · [Best games based on Slavic folklore — gg.deals](https://gg.deals/blog/best-games-based-on-slavic-folklore-mythology/)
 - [The State of Mobile Gaming in Brazil 2025 — Tenjin](https://tenjin.com/blog/the-state-of-mobile-gaming-in-brazil-2025-data-trends-and-market-analysis/) · [Brazil Gaming Market 2025 — Allcorrect](https://allcorrectgames.com/insights/the-gaming-market-in-brazil-2025/) · [Brazilian Mobile Game Market — Alconost](https://alconost.com/en/blog/brazilian-market)
