@@ -21,6 +21,37 @@ se **gera receita** no modelo com anúncios.
 
 ---
 
+## Inspiração direta: Megabonk e Vampire Survivors
+
+### Megabonk (2025) — o mapa vira um lugar para explorar e decidir
+
+| O que ele faz | Como adaptar ao Guardião | Esforço |
+|---|---|---|
+| **200+ missões (quests)** que liberam personagens, armas, itens e skins — sempre há 3–4 metas "quase lá" | Trocar parte das compras com moedas por **desbloqueio por missão**: "abata 500 lobos → libera a Caçadora", "dispare 50 Sobrecargas → libera o Sopro". Nossas 24 conquistas viram ~80 missões com recompensa | M |
+| **Santuários no mapa**: de Carga (fique dentro e ganhe buff/cura), Ímã (puxa todo o XP), **Ganância** (+ouro, +5% dificuldade por uso), **Desafio** (invoca elites → baú grátis) | **Santuários da Floresta** espalhados pelo mapa com as mesmas funções — hoje o mapa grande não tem motivo para ser explorado | M |
+| **Baús pagos com ouro da partida**, preço sobe a cada compra; "micro-ondas" que **duplica um item** | Baús normais custam moedas coletadas na partida (decisão: gastar agora ou levar pra casa) + **Caldeirão** que duplica uma passiva | P–M |
+| **Portal do chefe**: você decide quando enfrentar; se o tempo acaba, vem o **Enxame Final** infinito com multiplicador crescente de recompensa | O Ancião aparece num **Altar** que o jogador ativa quando se sentir pronto; aos 7:00 começa o Enxame Final (ficar = mais moedas, mais risco) | M |
+| **Corridas em níveis**: 1, 2 ou 3 fases seguidas via portal | Quando houver mais biomas: Floresta → Pântano → Montanha num só run (modo "Jornada") | G (depende dos biomas) |
+| **Tomos** (livros de atributo) separados das armas, com **espaços limitados** | Limitar passivas a **4 espaços** (hoje são infinitas): cada carta vira uma decisão de verdade | P |
+| **Placar rotativo** de abates e **técnica de movimento** (pulo encadeado) | Placar semanal (Play Games) + técnica de dash: dash perfeito (no último instante antes do golpe) recarrega metade do tempo | P–M |
+
+### Vampire Survivors — segredos, surpresa e anúncio "sem malícia"
+
+| O que ele faz | Como adaptar ao Guardião | Esforço |
+|---|---|---|
+| **Caixões escondidos** guardados por um anel de inimigos: derrote o anel e libera um **personagem secreto** | **Santuários selados** no mapa: um círculo de corrompidos guarda um espírito; vença e desbloqueie um herói/skin secreto | P–M |
+| **Itens de chão** em candelabros quebráveis: Vácuo (pega todo XP), Relógio (congela inimigos), Rosário (limpa a tela), frango (cura) | **Lanternas de cogumelo** quebráveis (e que **iluminam** — combina com a iluminação dinâmica) derrubando: Vácuo de Seiva, Relógio da Mata, Sopro Ancestral (limpa a tela), fruta (cura) | P |
+| **Menu de Segredos** com dicas enigmáticas e "feitiços" (códigos) | Pergaminho de Segredos com dicas ("o lobo alfa teme o gelo…") que levam a desbloqueios escondidos | P |
+| **Limit Break** e **Modo Inverso** liberados por relíquia | Armas passam do nível 5 com bônus pequenos infinitos; "Floresta Invertida" com inimigos mais fortes e recompensa maior | M |
+| **Monetização "free-for-real"** no celular: **só anúncios opcionais** — reviver com metade da vida (1×), **dobrar o baú** ao abrir, dobrar ouro no fim. Sem anúncio forçado | Seguir o mesmo modelo: é o que dá boas avaliações. Momento extra ideal: **"Assista para dobrar este baú"** na hora que o baú abre | P |
+
+> **Recomendação:** o modelo do Vampire Survivors (só anúncios opcionais, nunca
+> forçados) rende menos por jogador, mas gera avaliações muito melhores — e
+> avaliação é o que faz um jogo gratuito ser encontrado na loja. Sugiro começar
+> **sem anúncio de tela cheia** e só adicionar se os números pedirem.
+
+---
+
 ## Ideias priorizadas
 
 ### 🥇 Alto impacto, esforço baixo/médio
@@ -88,3 +119,8 @@ dia que ainda não tentou.
 - [Battle Pass: examples & best practices — Udonis](https://www.blog.udonis.co/mobile-marketing/mobile-games/battle-pass)
 - [Mobile Game Retention Benchmarks — Maf.ad](https://maf.ad/en/blog/mobile-game-retention-benchmarks/) · [Segwise](https://segwise.ai/blog/mobile-gaming-app-user-retention-strategies)
 - [capacitor-community/admob (plugin, inclui consentimento UMP)](https://github.com/capacitor-community/admob)
+- [Megabonk — Wikipedia](https://en.wikipedia.org/wiki/Megabonk) · [Quests (wiki)](https://megabonk.fandom.com/wiki/Quests) · [All Quests — GameRant](https://gamerant.com/all-quests-in-megabonk/)
+- [Megabonk Mechanics: Timer, Shrines, Scaling](https://megabonk.org/guides/mechanics/) · [Shrines Guide](https://megabonk.org/guides/mechanics/shrines/) · [All Shrine Effects — TheGamer](https://www.thegamer.com/megabonk-all-shrine-effects-what-they-do-guide/)
+- [Megabonk: All Tomes — TheGamer](https://www.thegamer.com/megabonk-all-tomes-how-to-unlock-requirements-guide/) · [Megabonk Review — Netto's Game Room](https://www.nettosgameroom.com/2025/10/megabonk-review.html)
+- [Vampire Survivors: secret characters & coffins — PCGamesN](https://www.pcgamesn.com/vampire-survivors/unlock-characters) · [Secrets (wiki)](https://vampire-survivors.fandom.com/wiki/Secret)
+- [Vampire Survivors developer takes new approach to monetisation — PocketGamer.biz](https://www.pocketgamer.biz/vampire-survivors-developer-takes-new-approach-to-monetisation/) · [Mobile review — Pocket Tactics](https://www.pockettactics.com/vampire-survivors/review)

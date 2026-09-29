@@ -20,7 +20,8 @@ Legenda — **Esforço:** P (horas) · M (1–2 dias) · G (3+ dias) ·
 | 1.4 | Anúncio premiado **Dobrar moedas** no fim da partida | P | 🤖 |
 | 1.5 | Anúncio premiado **Troca extra de cartas** no level-up | P | 🤖 |
 | 1.6 | **Baú diário** no menu (grátis 1×/dia; 2º baú com anúncio) | P | 🤖 |
-| 1.7 | **Tela cheia (interstitial)** só no fim de partida, nunca antes da 3ª partida, no máx. 1 a cada 3 partidas / 3 min | P | 🤖 |
+| 1.6b | Anúncio premiado **"Dobrar este baú"** no momento em que o baú abre (modelo do Vampire Survivors) | P | 🤖 |
+| 1.7 | ~~Tela cheia (interstitial)~~ → **começar SEM** (modelo "free-for-real" do Vampire Survivors = avaliações melhores). Deixar pronto e desligado; ligar só se os números pedirem (fim de partida, nunca antes da 3ª, máx. 1 a cada 3) | P | 🤖 |
 | 1.8 | **Compra "Remover anúncios"** (R$ ~9,90): tira os de tela cheia e dá os prêmios sem assistir | M | 🤖 + 👤 (perfil de pagamentos no Play Console) |
 | 1.9 | Política de privacidade e **Segurança dos dados** atualizadas (ID de publicidade, SDK do AdMob) + permissão `AD_ID` | P | 🤖 texto · 👤 formulário |
 | 1.10 | Público-alvo **13+** no Play Console (evita as regras de "Famílias", que limitam anúncios) | P | 👤 |
@@ -38,6 +39,10 @@ Legenda — **Esforço:** P (horas) · M (1–2 dias) · G (3+ dias) ·
 | 2.3 | **Modo Infinito** após vencer o Ancião ("continuar?") — ondas crescentes até morrer, recorde próprio | P | 🤖 |
 | 2.4 | **Nível de conta** (XP acumulado de todas as partidas → recompensas a cada nível) | P | 🤖 |
 | 2.5 | **Notificação local** opcional ("seu baú diário está pronto") | P | 🤖 |
+| 2.6 | **Lanternas de cogumelo quebráveis** no mapa (iluminam!) com itens: Vácuo de Seiva (pega todo XP), Relógio da Mata (congela), Sopro Ancestral (limpa a tela), fruta (cura) — *Vampire Survivors* | P | 🤖 |
+| 2.7 | **Santuários da Floresta**: Carga (buff), Ganância (+moedas, +dificuldade), Desafio (elites → baú grátis) — dá motivo para explorar o mapa — *Megabonk* | M | 🤖 |
+| 2.8 | **Missões que desbloqueiam** (personagens/armas liberados por feito, não só por moeda) — metas sempre "quase lá" — *Megabonk* | M | 🤖 |
+| 2.9 | **Limite de 4 passivas** por partida: cada carta vira decisão — *Megabonk* (Tomos) | P | 🤖 |
 
 ## 3. Medição (sem isso não dá pra saber se está funcionando)
 
@@ -77,8 +82,8 @@ Legenda — **Esforço:** P (horas) · M (1–2 dias) · G (3+ dias) ·
 
 ## Ordem sugerida
 
-1. **Semana 1 — núcleo gratuito:** 1.1–1.7, 2.1–2.3, 3.1–3.2, 4.2–4.4
-2. **Semana 2 — polimento e loja:** 1.8–1.9, 2.4–2.5, 5.1–5.3, 6.1
+1. **Semana 1 — núcleo gratuito:** 1.1–1.6b, 2.1–2.3, 2.6, 2.9, 3.1–3.2, 4.2–4.4
+2. **Semana 2 — profundidade, polimento e loja:** 1.8–1.9, 2.4–2.5, 2.7–2.8, 5.1–5.3, 6.1
 3. **Você:** contas (AdMob, Firebase, Play Console), teste em aparelhos (4.1), playtest (4.5), `.aab` (5.5)
 4. **Lançamento em teste fechado** (Play Console exige testadores antes da produção em contas novas) → ajustar pelos números de D1/D7 → produção.
 
