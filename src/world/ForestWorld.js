@@ -4,6 +4,7 @@
 import { GAME } from "../config.js";
 import { PAL } from "../art/Palette.js";
 import { rng } from "../art/PixelArt.js";
+import { vw, vh } from "../ui/Theme.js";
 
 const S = GAME.PIXEL_SCALE;
 const D_PATCH = -90;
@@ -33,12 +34,12 @@ export class ForestWorld {
     const sc = this.scene;
     sc.cameras.main.setBackgroundColor(0x1d3926);
     this.ground = sc.add
-      .tileSprite(0, 0, sc.scale.width, sc.scale.height, "env_ground")
+      .tileSprite(0, 0, vw(sc), vh(sc), "env_ground")
       .setOrigin(0)
       .setScrollFactor(0)
       .setTileScale(S)
       .setDepth(-100);
-    this._onResize = (size) => this.ground.setSize(size.width, size.height);
+    this._onResize = () => this.ground.setSize(vw(sc), vh(sc));
     sc.scale.on("resize", this._onResize);
     sc.events.once("shutdown", () => sc.scale.off("resize", this._onResize));
   }
@@ -135,8 +136,8 @@ export class ForestWorld {
 
   _atmosphere() {
     const sc = this.scene;
-    const W = sc.scale.width,
-      H = sc.scale.height;
+    const W = vw(sc),
+      H = vh(sc);
 
     // Feixes de luz diagonais (aditivos, bem sutis) — dão profundidade
     this.shafts = [];

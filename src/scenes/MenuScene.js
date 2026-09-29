@@ -17,7 +17,7 @@ import { formatTime } from "../utils.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { WEAPON_ICON } from "../art/Icons.js";
 import { WEAPON_DESC } from "../systems/UpgradeSystem.js";
-import { text, drawFrame, panel, Button, P, vw, vh, haptic } from "../ui/Theme.js";
+import { text, drawFrame, panel, Button, P, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
 import { Modal, ScrollList, closeTopModal } from "../ui/Widgets.js";
 import { openSettings } from "../ui/SettingsModal.js";
 
@@ -38,6 +38,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create() {
+    fitCamera(this);
     this.meta = new MetaProgression();
     this.sound.volume = 1; // volumes por canal vêm de Settings (ganchos globais)
     this.W = vw(this);
@@ -239,8 +240,8 @@ export class MenuScene extends Phaser.Scene {
     this.heroY = hy;
 
     // Fogueira (pedras + lenha + chamas de partículas)
-    const fx = hx + 96,
-      fy = hy + 10;
+    const fx = hx + 150,
+      fy = hy - 6;
     this.add.image(fx, fy + 6, "px_shadow").setScale(6, 3);
     const glow = this.add.image(fx, fy - 10, "fx_glow").setScale(4.5).setTint(0xff9a4c).setAlpha(0.45).setBlendMode(Phaser.BlendModes.ADD);
     const wood = this.add.graphics();
@@ -412,10 +413,10 @@ export class MenuScene extends Phaser.Scene {
     let cur = Math.min(this.meta.selectedDifficulty, maxSel);
     if (cur !== this.meta.selectedDifficulty) this.meta.setSelectedDifficulty(cur);
     const g = this.add.graphics();
-    drawFrame(g, x - w / 2, y - 34, w, 68, "dark");
-    text(this, x, y - 20, "PERIGO", { size: 13, color: CSS.muted, origin: 0.5 });
-    const name = text(this, x, y + 2, "", { size: 24, origin: 0.5, stroke: true });
-    const sub = text(this, x, y + 22, "", { size: 13, color: CSS.gold, origin: 0.5 });
+    drawFrame(g, x - w / 2, y - 38, w, 78, "dark");
+    text(this, x, y - 24, "PERIGO", { size: 13, color: CSS.muted, origin: 0.5 });
+    const name = text(this, x, y - 1, "", { size: 24, origin: 0.5, stroke: true });
+    const sub = text(this, x, y + 24, "", { size: 13, color: CSS.gold, origin: 0.5 });
     const skulls = this.add.container(x, y - 2);
     const left = new Button(this, x - w / 2 + 34, y, 44, 48, null, () => change(-1), { icon: "ico_arrow_left", style: "dark" });
     const right = new Button(this, x + w / 2 - 34, y, 44, 48, null, () => change(1), { icon: "ico_arrow", style: "dark" });
@@ -424,7 +425,7 @@ export class MenuScene extends Phaser.Scene {
       const d = DIFFICULTY[cur];
       name.setText(d.name.toUpperCase()).setColor(colors[cur] ?? CSS.txt);
       const locked = cur >= maxSel && maxSel < last;
-      sub.setText(`Recompensa ×${d.rewardMult}` + (locked ? "  ·  vença p/ liberar o próximo" : ""));
+      sub.setText(`Recompensa ×${d.rewardMult}` + (locked ? "  ·  vença p/ liberar" : ""));
       left.setEnabled(cur > 0);
       right.setEnabled(cur < maxSel);
       skulls.removeAll(true);

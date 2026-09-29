@@ -4,7 +4,7 @@ import { WEAPONS, PASSIVES, MAX_WEAPON_LEVEL } from "../config.js";
 import { formatTime } from "../utils.js";
 import { PAL, CSS } from "../art/Palette.js";
 import { WEAPON_ICON, PASSIVE_ICON } from "../art/Icons.js";
-import { text, drawFrame, dim, Button, vw, vh } from "../ui/Theme.js";
+import { text, drawFrame, dim, Button, vw, vh, fitCamera } from "../ui/Theme.js";
 import { Modal, closeTopModal } from "../ui/Widgets.js";
 import { openSettings } from "../ui/SettingsModal.js";
 
@@ -16,6 +16,7 @@ export class PauseScene extends Phaser.Scene {
   create() {
     const W = vw(this),
       H = vh(this);
+    fitCamera(this);
     const gs = this.scene.get("GameScene");
     const p = gs.player;
     this._modals = [];

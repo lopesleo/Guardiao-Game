@@ -2,13 +2,13 @@
 //   topo: barra de XP de ponta a ponta + nível; HP/Despertar à esquerda;
 //   cronômetro no centro; abates/moedas + pausa à direita; armas abaixo do HP.
 //   baixo-direita (touch): botões redondos de Dash e Despertar com recarga.
-// Tudo ancorado em scene.scale.width (modo EXPAND: a largura varia).
+// Tudo ancorado em vw(scene) (modo EXPAND: a largura varia).
 import { GAME, PLAYER, WEAPONS, MAX_WEAPON_LEVEL } from "../config.js";
 import { formatTime } from "../utils.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { Pix } from "../art/PixelArt.js";
 import { WEAPON_ICON } from "../art/Icons.js";
-import { text, drawFrame, Bar, P, haptic } from "./Theme.js";
+import { vw, vh, text, drawFrame, Bar, P, haptic } from "./Theme.js";
 
 const D = 50000; // profundidade base do HUD (acima do mundo e da vinheta)
 
@@ -32,8 +32,8 @@ export class HUD {
     this.elapsedMs = 0;
     this.kills = 0;
     this.coins = 0;
-    this.W = scene.scale.width;
-    this.H = scene.scale.height;
+    this.W = vw(scene);
+    this.H = vh(scene);
     this.isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     const W = this.W;
     const fix = (o, d = 0) => o.setScrollFactor(0).setDepth(D + d);

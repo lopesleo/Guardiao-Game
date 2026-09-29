@@ -7,16 +7,33 @@ export const FONT = '"Jersey 15", monospace';
 export const P = 3; // 1 "pixel de arte" na UI = 3px de tela (mesma escala dos sprites)
 
 // Largura/altura visível (modo EXPAND: a largura varia com o aparelho)
-export const vw = (scene) => scene.scale.width;
-export const vh = (scene) => scene.scale.height;
+// No modo EXPAND o Phaser mantém scale.width no tamanho de config (1280) e
+// põe o tamanho real expandido em baseSize.
+export const vw = (scene) => Math.round(scene.scale.baseSize.width);
+export const vh = (scene) => Math.round(scene.scale.baseSize.height);
+
+// Câmera principal no tamanho REAL (EXPAND): o Phaser cria a câmera com o
+// tamanho de config, e cenas reiniciadas não recebem o resize de novo.
+export function fitCamera(scene) {
+  const cam = scene.cameras.main;
+  cam.setSize(vw(scene), vh(scene));
+  const onResize = () => cam.setSize(vw(scene), vh(scene));
+  scene.scale.on("resize", onResize);
+  scene.events.once("shutdown", () => scene.scale.off("resize", onResize));
+}
 
 // ---------------------------------------------------------------------------
 // Texto
 // ---------------------------------------------------------------------------
+// Celular em paisagem tem ~400px CSS de altura pra 720 lógicos: texto pequeno
+// fica ilegível. Amplia só os tamanhos pequenos (títulos já são grandes).
+const SMALL_SCREEN = Math.min(window.innerWidth, window.innerHeight) < 560;
+const fitSize = (s) => (SMALL_SCREEN && s <= 24 ? Math.round(s * (s <= 16 ? 1.3 : 1.18)) : s);
+
 export function text(scene, x, y, str, o = {}) {
   const style = {
     fontFamily: FONT,
-    fontSize: `${o.size ?? 18}px`,
+    fontSize: `${fitSize(o.size ?? 18)}px`,
     fontStyle: "normal", // fonte de peso único — negrito sintético borra
     color: o.color ?? CSS.txt,
     align: o.align ?? "left",

@@ -41,7 +41,7 @@ import { Chest } from "../entities/Chest.js";
 import { DamageNumber } from "../entities/DamageNumber.js";
 import { HUD } from "../ui/HUD.js";
 import { ForestWorld } from "../world/ForestWorld.js";
-import { text, drawFrame } from "../ui/Theme.js";
+import { vw, vh, text, drawFrame, fitCamera } from "../ui/Theme.js";
 import { DEBUG } from "../systems/Platform.js";
 import { Settings } from "../systems/Settings.js";
 import { VirtualJoystick } from "../ui/VirtualJoystick.js";
@@ -52,6 +52,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   create() {
+    fitCamera(this);
     const WS = GAME.WORLD_RADIUS * 2;
     this.physics.world.setBounds(
       -GAME.WORLD_RADIUS,
@@ -273,7 +274,7 @@ export class GameScene extends Phaser.Scene {
     if (seen.includes(id)) return;
     seen.push(id);
     this.meta._save();
-    const W = this.scale.width;
+    const W = vw(this);
     const c = this.add.container(W / 2, 150).setScrollFactor(0).setDepth(60500);
     const t = text(this, 0, 0, msg, { size: 22, origin: 0.5, align: "center", wrap: Math.min(700, W - 80) });
     const w = t.width + 60,
@@ -586,8 +587,8 @@ export class GameScene extends Phaser.Scene {
   // Empilha pra cima se vários chegarem juntos.
   _toast(msg, ms = 1600, color = "#ffe58f") {
     this._toasts = (this._toasts || []).filter((t) => t.active);
-    const y = this.scale.height - 130 - this._toasts.length * 44;
-    const c = this.add.container(this.scale.width / 2, y).setScrollFactor(0).setDepth(60000);
+    const y = vh(this) - 130 - this._toasts.length * 44;
+    const c = this.add.container(vw(this) / 2, y).setScrollFactor(0).setDepth(60000);
     const t = text(this, 0, 0, msg, { size: 18, color, origin: 0.5 });
     const w = t.width + 36,
       h = 38;

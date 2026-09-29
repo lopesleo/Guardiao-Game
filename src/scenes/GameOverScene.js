@@ -5,7 +5,7 @@ import { WEAPONS } from "../config.js";
 import { formatTime } from "../utils.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { WEAPON_ICON } from "../art/Icons.js";
-import { text, drawFrame, Button, vw, vh, haptic } from "../ui/Theme.js";
+import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
 
 export class GameOverScene extends Phaser.Scene {
   constructor() {
@@ -14,6 +14,7 @@ export class GameOverScene extends Phaser.Scene {
 
   create(data) {
     const { won, quit, elapsedMs, kills, coinsGained, newUnlocks = [], difficulty, unlockedNextDifficulty, level = 1, weapons = [] } = data;
+    fitCamera(this);
     const W = vw(this),
       H = vh(this);
     const cx = W / 2;

@@ -1,7 +1,7 @@
 // Level-up: pausa a GameScene e oferece 3 cartas (clique/toque ou teclas 1-2-3).
 // Troca de cartas (R) 1× por level-up. D24: ESC desabilitado aqui.
 import { createCard } from "../ui/Cards.js";
-import { text, dim, Button, vw, vh } from "../ui/Theme.js";
+import { text, dim, Button, vw, vh, fitCamera } from "../ui/Theme.js";
 import { CSS } from "../art/Palette.js";
 
 export class LevelUpScene extends Phaser.Scene {
@@ -10,6 +10,7 @@ export class LevelUpScene extends Phaser.Scene {
   }
 
   create(data) {
+    fitCamera(this);
     this.cards = data.cards;
     this.player = data.player;
     this.gameScene = data.gameScene;
