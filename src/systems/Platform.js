@@ -14,9 +14,17 @@ export function setupPlatform(game) {
     const gs = game.scene.getScene("GameScene");
     if (gs && game.scene.isActive("GameScene") && !gs.gameOver) gs.pauseGame?.();
   };
-  document.addEventListener("visibilitychange", () => {
-    if (document.hidden) pauseRun();
-  });
+  // Som: suspende o áudio inteiro em segundo plano e retoma ao voltar
+  // (a WebView do Android nem sempre dispara o blur que o Phaser escuta)
+  const audioCtx = () => game.sound?.context;
+  const setBackground = (bg) => {
+    if (bg) pauseRun();
+    const ctx = audioCtx();
+    if (!ctx) return game.sound?.[bg ? "pauseAll" : "resumeAll"]?.();
+    if (bg && ctx.state === "running") ctx.suspend().catch(() => {});
+    if (!bg && ctx.state === "suspended" && !game.sound.locked) ctx.resume().catch(() => {});
+  };
+  document.addEventListener("visibilitychange", () => setBackground(document.hidden));
   window.addEventListener("blur", pauseRun);
 
   // Voltar: a cena ativa mais ao topo decide (modal aberto fecha, jogo pausa…)
@@ -28,6 +36,7 @@ export function setupPlatform(game) {
   window.guardiaoBack = back;
   const App = window.Capacitor?.Plugins?.App;
   if (App?.addListener) {
+    App.addListener("appStateChange", ({ isActive }) => setBackground(!isActive));
     App.addListener("backButton", () => {
       if (!back()) App.exitApp?.();
     });

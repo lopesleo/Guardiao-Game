@@ -46,6 +46,9 @@ import { Lighting } from "../world/Lighting.js";
 import { vw, vh, text, drawFrame, fitCamera } from "../ui/Theme.js";
 import { DEBUG } from "../systems/Platform.js";
 import { Settings } from "../systems/Settings.js";
+import { Analytics } from "../systems/Analytics.js";
+import { AdService } from "../systems/AdService.js";
+import { QualityWatchdog } from "../systems/QualityWatchdog.js";
 import { VirtualJoystick } from "../ui/VirtualJoystick.js";
 
 export class GameScene extends Phaser.Scene {
@@ -124,6 +127,13 @@ export class GameScene extends Phaser.Scene {
     // Spawner
     this.spawnDirector = new SpawnDirector(this, this.enemyPool, this.player);
     this.lighting = new Lighting(this, this.world);
+    // Aparelho fraco: desliga a iluminação na 1ª partida (uma vez só)
+    this.quality = new QualityWatchdog(this, () => {
+      this.lighting.setEnabled(false);
+      this._hint("quality", "Iluminação desligada para o jogo rodar liso.\nDá pra religar em Opções.");
+    });
+    AdService.newRun();
+    Analytics.track("run_start", { character: this.character.id, difficulty: this.diff.id });
     this.runEvents = new RunEvents(this);
 
     // Baús — STARTING_COUNT espalhados aleatoriamente fora do spawn do player
@@ -221,11 +231,13 @@ export class GameScene extends Phaser.Scene {
     this.events.on("player:levelup", () => {
       this.lighting?.flash(this.player.x, this.player.y, 420, 0xffe58f, 500, 1);
       this._pendingLevelUps++;
+      Analytics.track("level_up", { level: this.player.level, t: Math.floor(this.elapsedMs / 1000) });
       this._openNextLevelUp();
     });
     // Quando o LevelUpScene termina, atualiza painel de armas + checa
     // conquistas de arma (Lv máximo / arsenal completo)
     this.events.on("resume", () => {
+      this.quality.reset();
       this._levelUpOpen = false;
       this.hud.refreshWeapons();
       this._checkAchievements();
@@ -343,6 +355,7 @@ export class GameScene extends Phaser.Scene {
     this.hud.update(time, dt);
     this.world.update(time, dt, this.player);
     this.lighting.update(time);
+    this.quality.update(this.game.loop.delta);
 
     // Baús: glow/prompt + interação E
     let chestPressed = this.inputMgr.consumeInteract();
@@ -1022,6 +1035,16 @@ export class GameScene extends Phaser.Scene {
     this.meta.registerRun(this.elapsedMs / 1000, won, this.diff.id);
     const newAchievements = this._checkAchievements(won, true);
     this._newUnlocksThisRun.push(...newAchievements.map((a) => a.name));
+    Analytics.track("run_end", {
+      won,
+      quit,
+      t: Math.floor(this.elapsedMs / 1000),
+      level: this.player.level,
+      kills: this.hud.kills,
+      coins: coinsFinal,
+      difficulty: this.diff.id,
+      character: this.character.id,
+    });
     // Morte: câmera lenta dramática antes do fade
     if (!won && !quit) {
       this.physics.world.timeScale = 3;

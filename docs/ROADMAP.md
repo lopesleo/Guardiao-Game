@@ -10,18 +10,18 @@ Legenda: ✅ feito · 🚧 em andamento · ⬜ a fazer · 👤 depende do Leonar
 
 ## Antes do lançamento
 
-### M0 — Fundações técnicas 🚧
+### M0 — Fundações técnicas ✅
 Base para tudo que vem depois; o jogador quase não vê.
-- ⬜ Save com **versão + migração** (proteger progresso nas atualizações)
-- ⬜ **Serviço de anúncios** (`AdService`): interface única; no navegador simula
+- ✅ Save com **versão + migração** (proteger progresso nas atualizações)
+- ✅ **Serviço de anúncios** (`AdService`): interface única; no navegador simula
   (sem anúncio real); no app, AdMob entra no M5
-- ⬜ **Registro de eventos** (`Analytics`): partida iniciada/terminada, nível,
+- ✅ **Registro de eventos** (`Analytics`): partida iniciada/terminada, nível,
   anúncio oferecido/visto — hoje só em memória/console; Firebase no M5
-- ⬜ **Qualidade gráfica automática** (Alta/Baixa): aparelho fraco desliga
+- ✅ **Qualidade gráfica automática** (Alta/Baixa): aparelho fraco desliga
   iluminação e reduz partículas
-- ⬜ Música pausa quando o app vai para o fundo
+- ✅ Música pausa quando o app vai para o fundo
 
-### M1 — Profundidade da partida ⬜
+### M1 — Profundidade da partida 🚧
 - ⬜ **Lanternas de cogumelo** quebráveis no mapa (iluminam) com itens:
   Vácuo de Seiva, Relógio da Mata, Sopro Ancestral, fruta
 - ⬜ **Limite de 4 passivas** por partida
