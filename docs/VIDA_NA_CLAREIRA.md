@@ -22,7 +22,7 @@ No Guardião:
    FLORESTA (ação, 7 min)                       CLAREIRA (vida, 1–5 min)
    sobreviver à horda                           pescar · plantar · cozinhar
         │  sementes raras, iscas, madeira,            │  refeições (buff 1 partida),
-        │  espíritos resgatados (NPCs)                │  moedas da Feira → Bênçãos,
+        │  bichos resgatados (ajudantes/pets)         │  moedas da Feira → Bênçãos,
         └──────────────────────────►──────────────────┘  personagens por marcos
                          ◄────────────────────────────
 ```
@@ -31,7 +31,7 @@ No Guardião:
   e é divertida por si, mas existe para APOIAR o jogo principal.** A ação na
   floresta continua sendo o coração do jogo. Na prática:
   - todo resultado da Clareira desemboca na ação (refeições/buffs, moedas para
-    Bênçãos, personagens, cosméticos, espíritos aliados);
+    Bênçãos, personagens, cosméticos, **bicho companheiro** na partida);
   - os ingredientes mais valiosos (sementes raras, iscas especiais, madeira)
     **vêm das partidas** — sem jogar a ação, a Clareira estaciona;
   - sessões na Clareira são curtas (1–5 min) e terminam apontando para
@@ -186,9 +186,10 @@ místicos (Sopa do Boitatá, Doce da Lua).
 - **Refeição da partida**: 1 prato antes de jogar (2 com Cozinha nv. 3) = buff só
   daquela partida. É o uso principal.
 - **Lobo-guará**: comida mantém o guardião da horta de plantão contra o Saci.
-- **Oferendas aos espíritos**: os espíritos resgatados pedem itens ("o Boto quer um
-  tambaqui dourado") e dão em troca **recompensas da ação** — runas, sementes raras,
-  Poções do Construtor, skins. São as "missões" da Clareira.
+- **Pedidos dos bichos**: os bichos resgatados pedem sua comida favorita ("a
+  capivara quer um tambaqui dourado") — cumprir dá **afeição** e **recompensas da
+  ação** (runas, sementes raras, Poções do Construtor, acessórios). São as
+  "missões" da Clareira.
 - **Feira**: o excedente (peixe, colheita) vende com **um toque** por moedas, que
   compram Bênçãos. Sem gestão — só converter sobra em progresso da ação, com teto
   diário para não desequilibrar.
@@ -197,7 +198,7 @@ místicos (Sopa do Boitatá, Doce da Lua).
 
 - **Três ofícios**: Pescador, Agricultor, Cozinheiro — níveis 1 a 30, cada nível
   com uma vantagem (zona verde maior, chance de mutação, prato mais forte…).
-- **Coleções/álbuns**: peixes, plantas, mutações, receitas, oferendas cumpridas.
+- **Coleções/álbuns**: peixes, plantas, mutações, receitas, pedidos dos bichos cumpridos.
 - **Conquistas próprias** da Clareira (somam às da ação).
 - **Decoração** do acampamento com o que se ganha (troféus de peixe, espantalhos,
   lanternas, bancos) — o lugar fica com a cara do jogador.
@@ -228,7 +229,7 @@ místicos (Sopa do Boitatá, Doce da Lua).
 | Fase | Conteúdo |
 |---|---|
 | **V1** | Lago + minigame com 3 comportamentos + 15 peixes + tamanhos/recordes + álbum · Horta 4×4 com 12 plantas, qualidade e 3 mutações · Cozinha com 15 receitas e buff de partida |
-| **V2** | **Oferendas** dos espíritos + **Lobo-guará** e o Saci ladrão + Feira |
+| **V2** | **Bichos** (pedidos, afeição, companheiro na partida) + **Lobo-guará** e o Saci ladrão + Feira |
 | **V3** | Igarapé e Cachoeira + estações Cheia/Vazante + Festival de Pesca semanal |
 | **V4** | Mutações completas + híbridos + culturas gigantes + abelhas e galinhas + estufa |
 | **V5** | Mangue (covos), Várzea, Poço da Iara, lendários, aquário |

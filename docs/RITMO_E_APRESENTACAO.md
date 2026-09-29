@@ -23,9 +23,10 @@
 5. **Um único guia apresenta tudo, em uma frase.** A **Anciã da Fogueira** (sempre
    a mesma personagem) introduz cada sistema com **uma fala curta + uma ação
    guiada** (uma mão apontando). Nunca um texto longo.
-   > Não confundir com os **espíritos resgatados**: esses são **moradores** que o
-   > jogador conquista nas partidas (libertando-os de um círculo de corrompidos) —
-   > depois pedem oferendas e trabalham na Clareira. São conteúdo, não tutorial.
+   > Não confundir com os **bichos resgatados**: esses são **moradores** que o
+   > jogador conquista nas partidas (libertando-os de armadilhas da Podridão) —
+   > depois fazem pedidos, trabalham na Clareira e acompanham na partida. São
+   > conteúdo, não tutorial.
 6. **Profundidade só para quem pedir.** Regras detalhadas moram no **Guia** e nos
    **álbuns** (e num toque longo sobre o item) — quem quer entender a fundo acha;
    quem só quer jogar não é interrompido.
@@ -37,7 +38,7 @@
 > Decisão (Leonardo): **não travar sistemas por dias reais** — é lento e o jogador
 > pode desistir antes de ver as partes legais. As descobertas dependem do que o
 > jogador **faz**; o **tempo real** fica só no **crescimento das coisas** (plantas,
-> lago, obras, espíritos voltando). Quem joga bastante vê tudo o que é essencial no
+> lago, obras, bichos voltando). Quem joga bastante vê tudo o que é essencial no
 > 1º dia; o que traz de volta amanhã é a planta crescendo, não um sistema trancado.
 
 | Gatilho (ação do jogador) | O que aparece | Como é apresentado |
@@ -48,8 +49,8 @@
 | Após a 3ª partida | **Horta**: 1 canteiro + 1 semente | Planta **cresce em 30 s** (tutorial) → colher → "plante de novo" (agora 5 min) |
 | Colheu a 1ª vez | **Cozinha** | 1 receita pronta (Cenoura Assada = +vida) → "coma antes da próxima partida" |
 | Usou a 1ª refeição | **Lago** | 1º peixe **garantido e fácil**; depois "o lago descansa — volte mais tarde" |
-| ~5ª partida | Na floresta, o 1º **espírito preso** num círculo de corrompidos (garantido) → ao libertá-lo, ele vira **morador** da Clareira → **Oferendas** | A Anciã apresenta o novo morador, que pede 1 item simples |
-| Cumpriu a 1ª oferenda | **João-de-Barro** + 1ª **obra** (5 min) | "Posso aumentar a horta — já volto" |
+| ~5ª partida | Na floresta, a 1ª **capivara presa** numa armadilha da Podridão (garantida) → ao libertá-la, vira **moradora** da Clareira → **Pedidos** | A Anciã apresenta a capivara, que pede 1 peixe simples |
+| Cumpriu o 1º pedido | **João-de-Barro** + 1ª **obra** (5 min) | "Posso aumentar a horta — já volto" |
 | 1ª colheita guardada + 1ª noite na Clareira | **Saci** rouba 1 cenoura, rindo → chega o **Lobo-guará filhote** | Problema e solução na mesma cena |
 | Aconteceu sozinho (clima) | 1ª **mutação** | Planta brilha → "Mutação! Vale 3×" → álbum se abre |
 | Estoque cheio pela 1ª vez | **Feira** | A Anciã sugere vender o excedente |
@@ -80,7 +81,7 @@ longa** disponíveis.
 Em vez de energia ou relógio visível, o próprio mundo explica a pausa:
 - **O lago descansa**: depois de alguns peixes, eles "se escondem" e voltam mais
   tarde (bolhas na água mostram quando voltaram).
-- **Os moradores vão e voltam**: depois de uma oferenda, o morador vai embora
+- **Os bichos vão e voltam**: depois de um pedido cumprido, o bicho sai para passear
   pela trilha e **volta no dia seguinte** com um pedido novo.
 - **O Saci aparece à noite**; o **clima** muda algumas vezes por dia.
 - Os timers existem (para quem quiser ver, com um toque), mas a tela mostra
@@ -98,9 +99,9 @@ Em vez de energia ou relógio visível, o próprio mundo explica a pausa:
 |---|---|
 | A cada partida | adianta obras; traz sementes/iscas/madeira |
 | Algumas horas | colheitas, peixes do lago, produção dos NPCs, clima |
-| Diário | oferendas, missões, baú diário, "peixe do dia", visita do Saci |
+| Diário | pedidos dos bichos, missões, baú diário, "peixe do dia", visita do Saci |
 | Semanal | estação (Cheia/Vazante), Festival de Pesca, missão semanal |
-| Por atualização | pontos de pesca, plantas, receitas, espíritos novos |
+| Por atualização | pontos de pesca, plantas, receitas, bichos novos |
 
 ---
 
@@ -109,7 +110,7 @@ Em vez de energia ou relógio visível, o próprio mundo explica a pausa:
 - **No máximo 1 destaque** (seta/mão/brilho) na tela por vez.
 - **Dicas de 1 linha**, ditas por um personagem, somem sozinhas; nunca janela de
   texto que precisa fechar.
-- **Ícones flutuantes** sobre o que está pronto (colheita, peixe, obra, oferenda)
+- **Ícones flutuantes** sobre o que está pronto (colheita, peixe, obra, pedido)
   convidam a tocar — o jogador aprende o padrão "ícone = algo para pegar" sozinho.
 - **Construções bloqueadas** aparecem como **ruínas com cipós** e uma placa "?" —
   toque mostra só "Cure a floresta para revelar" (sem listar requisitos longos).
@@ -125,7 +126,7 @@ Em vez de energia ou relógio visível, o próprio mundo explica a pausa:
 
 | Meta | O que o design faz |
 |---|---|
-| **Dia 1** (voltar amanhã) | 1ª sessão termina com algo plantado para "amanhã" + promessa do espírito ("volto amanhã") |
+| **Dia 1** (voltar amanhã) | 1ª sessão termina com algo plantado para "amanhã" + a capivara avisa que volta amanhã com fome |
 | **Dia 7** | Plantas/obras longas, oferendas diárias e mutações raras — sempre há algo crescendo ou para descobrir |
 | **Dia 30** | Álbuns, mutações, estações semanais e obras longas dão metas de semanas |
 
