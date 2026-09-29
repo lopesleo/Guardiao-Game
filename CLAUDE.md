@@ -49,6 +49,19 @@ público brasileiro, com potencial internacional.
 - Debug só com `?debug=1` na URL (nunca no build da loja).
 - Commits sem o trailer `Co-Authored-By`; mensagens em português.
 
+## Fluxo de branches (git)
+
+- `main` = sempre jogável e testada. Nada é desenvolvido direto nela.
+- Cada funcionalidade nasce numa branch a partir da `main`:
+  `feat/<marco>-<nome>` (ex.: `feat/m1-lanternas`), `fix/<nome>` para correções,
+  `docs/<nome>` para documentação.
+- Commits pequenos, no padrão `tipo(escopo): descrição` (`feat`, `fix`, `docs`,
+  `refactor`, `test`, `chore`).
+- Terminou e testou → merge na `main` com `--no-ff` (o histórico mostra cada
+  funcionalidade como um bloco) e apaga a branch local.
+- Status do `docs/ROADMAP.md` atualizado no mesmo merge.
+- Push só quando o Leonardo pedir.
+
 ## Onde está cada coisa
 
 | Assunto | Documento |
