@@ -71,7 +71,7 @@ export class PauseScene extends Phaser.Scene {
     // Botões
     const by = H - 150;
     new Button(this, W / 2, by, 320, 68, "CONTINUAR", () => this._resume(), { size: 30, style: "primary", color: CSS.goldHi });
-    new Button(this, W / 2 - 170, by + 76, 300, 52, "OPÇÕES", () => openSettings(this, { onDmgNumbers: (v) => (gs._showDmgNumbers = v) }), {
+    new Button(this, W / 2 - 170, by + 76, 300, 52, "OPÇÕES", () => openSettings(this, { onDmgNumbers: (v) => (gs._showDmgNumbers = v), onLighting: (v) => gs.lighting?.setEnabled(v) }), {
       size: 20,
       icon: "ico_gear",
       iconScale: 2.5,

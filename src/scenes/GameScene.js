@@ -214,6 +214,10 @@ export class GameScene extends Phaser.Scene {
     // FILA de level-ups: vários de uma vez (XP alto, baú dourado) abrem a tela
     // de cartas em sequência — antes, reabrir por cima descartava escolhas.
     this._pendingLevelUps = 0;
+    // O emissor de eventos da cena SOBREVIVE a reinícios (Jogar de novo):
+    // sem limpar, cada partida somava mais um ouvinte → cartas em dobro/triplo.
+    this.events.off("player:levelup");
+    this.events.off("resume");
     this.events.on("player:levelup", () => {
       this.lighting?.flash(this.player.x, this.player.y, 420, 0xffe58f, 500, 1);
       this._pendingLevelUps++;

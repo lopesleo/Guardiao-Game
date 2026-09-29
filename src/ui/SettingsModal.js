@@ -30,7 +30,10 @@ export function openSettings(scene, o = {}) {
     Settings.set("dmgNumbers", v);
     o.onDmgNumbers?.(v);
   }));
-  row("Iluminação dinâmica", new Toggle(scene, 0, 0, Settings.get("lighting"), (v) => Settings.set("lighting", v)));
+  row("Iluminação dinâmica", new Toggle(scene, 0, 0, Settings.get("lighting"), (v) => {
+    Settings.set("lighting", v);
+    o.onLighting?.(v); // aplica na partida em andamento (vindo da Pausa)
+  }));
   if (o.onReset) {
     m.add(new Button(scene, 0, m.h / 2 - 50, 300, 50, "APAGAR PROGRESSO", o.onReset, { size: 18, style: "danger", color: CSS.redHi }));
   }

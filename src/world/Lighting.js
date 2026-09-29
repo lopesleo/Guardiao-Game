@@ -25,14 +25,19 @@ const mix = (c1, c2, t) => (Math.round(lerp(c1[0], c2[0], t)) << 16) | (Math.rou
 
 function ensureTextures(scene) {
   if (!scene.textures.exists("fx_light")) {
+    // OPACA: branco no centro → PRETO nas bordas. Em blend aditivo, preto não
+    // soma nada — assim os cantos do quad nunca aparecem (com alfa, o desenho
+    // em lote do RenderTexture somava os cantos e as luzes viravam quadrados).
     const S = 128;
     const c = scene.textures.createCanvas("fx_light", S, S);
     const ctx = c.getContext();
-    const g = ctx.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
-    g.addColorStop(0, "rgba(255,255,255,1)");
-    g.addColorStop(0.35, "rgba(255,255,255,0.7)");
-    g.addColorStop(0.7, "rgba(255,255,255,0.22)");
-    g.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, S, S);
+    const g = ctx.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2 - 1);
+    g.addColorStop(0, "rgb(255,255,255)");
+    g.addColorStop(0.35, "rgb(178,178,178)");
+    g.addColorStop(0.7, "rgb(56,56,56)");
+    g.addColorStop(1, "rgb(0,0,0)");
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, S, S);
     c.refresh();
@@ -54,26 +59,43 @@ function ensureTextures(scene) {
   }
 }
 
+const MAX_LIGHTS = 72; // teto por frame (o resto é descartado)
+const REFRESH_MS = 33; // mapa de luz redesenhado a ~30 Hz (luz não precisa de 60)
+
 export class Lighting {
   constructor(scene, world) {
     this.scene = scene;
     this.world = world;
-    this.enabled = Settings.get("lighting") !== false;
     this.flashes = [];
     this.shadowPool = [];
-    if (!this.enabled) return;
-    ensureTextures(scene);
-    this.rt = scene.add
-      .renderTexture(0, 0, Math.ceil(vw(scene) / RES), Math.ceil(vh(scene) / RES))
-      .setOrigin(0)
-      .setScale(RES)
-      .setScrollFactor(0)
-      .setDepth(D_LIGHTMAP)
-      .setBlendMode(Phaser.BlendModes.MULTIPLY);
-    this.stamp = scene.make.image({ key: "fx_light", add: false }).setBlendMode(Phaser.BlendModes.ADD);
-    this._onResize = () => this.rt.resize(Math.ceil(vw(scene) / RES), Math.ceil(vh(scene) / RES));
-    scene.scale.on("resize", this._onResize);
-    scene.events.once("shutdown", () => scene.scale.off("resize", this._onResize));
+    this.stamps = []; // pool de "carimbos" de luz — TODOS desenhados numa chamada só
+    this._nextDraw = 0;
+    this.rt = null;
+    this.setEnabled(Settings.get("lighting") !== false);
+  }
+
+  // Liga/desliga na hora (opção em Pausa/Opções), sem reiniciar a partida
+  setEnabled(on) {
+    this.enabled = on;
+    const scene = this.scene;
+    if (on && !this.rt) {
+      ensureTextures(scene);
+      this.rt = scene.add
+        .renderTexture(0, 0, Math.ceil(vw(scene) / RES), Math.ceil(vh(scene) / RES))
+        .setOrigin(0)
+        .setScale(RES)
+        .setScrollFactor(0)
+        .setDepth(D_LIGHTMAP)
+        .setBlendMode(Phaser.BlendModes.MULTIPLY);
+      this._onResize = () => this.rt?.resize(Math.ceil(vw(scene) / RES), Math.ceil(vh(scene) / RES));
+      scene.scale.on("resize", this._onResize);
+      scene.events.once("shutdown", () => scene.scale.off("resize", this._onResize));
+    }
+    this.rt?.setVisible(on);
+    if (!on) {
+      this.flashes = [];
+      for (const sh of this.shadowPool) sh.setVisible(false);
+    }
   }
 
   // Luz passageira (clarão de raio, explosão, reação)
@@ -82,31 +104,50 @@ export class Lighting {
     this.flashes.push({ x, y, r, color, t0: this.scene.time.now, ms, power });
   }
 
+  // Enfileira uma luz (em coordenadas do mapa de luz, 1/RES da tela)
   _light(x, y, r, color, alpha = 1) {
+    if (this._n >= MAX_LIGHTS || alpha <= 0.02) return;
     const cam = this.scene.cameras.main;
     const sx = x - cam.scrollX,
       sy = y - cam.scrollY;
     if (sx < -r || sy < -r || sx > cam.width + r || sy > cam.height + r) return;
-    this.stamp.setScale((r * 2) / 128 / RES).setTint(color);
-    this.rt.draw(this.stamp, sx / RES, sy / RES, alpha);
+    let st = this.stamps[this._n];
+    if (!st) {
+      st = this.scene.make.image({ key: "fx_light", add: false }).setBlendMode(Phaser.BlendModes.ADD);
+      this.stamps.push(st);
+    }
+    this._n++;
+    // Intensidade = cor escurecida (alfa não é confiável no blend aditivo em lote)
+    const k = Math.min(1, alpha);
+    const tint = (Math.round(((color >> 16) & 255) * k) << 16) | (Math.round(((color >> 8) & 255) * k) << 8) | Math.round((color & 255) * k);
+    st.setPosition(sx / RES, sy / RES)
+      .setScale((r * 2) / 128 / RES)
+      .setTint(tint);
   }
 
   update(time) {
     if (!this.enabled) return;
+    this._treeShadows(this.scene.player);
+    if (time < this._nextDraw) return;
+    this._nextDraw = time + REFRESH_MS;
     const s = this.scene;
     const p = s.player;
+    this._n = 0;
 
-    // Ambiente conforme o tempo de partida
-    const tRun = Math.min(1, s.elapsedMs / (GAME.RUN_DURATION_S * 1000));
-    const amb = s.boss?.active ? mix(AMB_NIGHT, AMB_BOSS, 1) : mix(AMB_DUSK, AMB_NIGHT, Math.pow(tRun, 1.3));
-    this.rt.clear();
-    this.rt.fill(amb);
-
-    // ---- Fontes de luz ----
+    // ---- Fontes de luz (em ordem de importância: o teto corta as últimas) ----
     if (p?.active) {
       const awake = p.isAwakened?.();
       this._light(p.x, p.y, awake ? 430 : 330, awake ? 0xffd070 : 0xffe2b8, 1);
       this._light(p.x, p.y, 120, 0xffffff, 0.35); // miolo
+    }
+    this.flashes = this.flashes.filter((f) => time - f.t0 < f.ms);
+    for (const f of this.flashes) {
+      const k = 1 - (time - f.t0) / f.ms;
+      this._light(f.x, f.y, f.r * (0.8 + 0.2 * k), f.color, k * f.power);
+    }
+    if (s.boss?.active) {
+      const fury = s.boss.phase === 2;
+      this._light(s.boss.x, s.boss.y - 30, fury ? 260 : 180, fury ? 0xff6a2a : 0xb03aa0, 0.7);
     }
     s.projectilePool?.forEachActive((pr) => {
       const c = pr.element === "ice" ? 0x5cc8ff : pr.element === "bolt" ? 0xc78cff : 0xff8a3c;
@@ -118,31 +159,25 @@ export class Lighting {
       if (w.orbs) for (const o of w.orbs) this._light(o.spr.x, o.spr.y, 110, 0x5cc8ff, 0.8);
       if (w.gfx && w.range && p) this._light(p.x, p.y, w.range * 1.5, 0x3a8ac8, 0.35); // aura gélida
     }
+    for (const c of s.chests ?? []) if (!c.opened) this._light(c.x, c.y, 110, 0xf2c14e, 0.55);
+    s.awakenOrbPool?.forEachActive((o) => this._light(o.x, o.y, 80, 0xffd070, 0.8));
+    s.heartPool?.forEachActive((h) => this._light(h.x, h.y, 60, 0xff5060, 0.6));
     // Brilho fraco da corrupção em cada inimigo: legibilidade no escuro
     s.enemyPool?.forEachActive((e) => {
       if (e.active) this._light(e.x, e.y - e.displayHeight * 0.15, e.miniBoss ? 150 : 58, e.miniBoss ? 0xf2c14e : 0xb0308a, e.miniBoss ? 0.6 : 0.4);
     });
-    s.awakenOrbPool?.forEachActive((o) => this._light(o.x, o.y, 80, 0xffd070, 0.8));
-    s.heartPool?.forEachActive((h) => this._light(h.x, h.y, 60, 0xff5060, 0.6));
     let gems = 0;
     s.xpPool?.forEachActive((g) => {
-      if (gems++ < 40) this._light(g.x, g.y, 46, 0x7fe07a, 0.5);
+      if (gems++ < 16) this._light(g.x, g.y, 46, 0x7fe07a, 0.5);
     });
-    for (const c of s.chests ?? []) if (!c.opened) this._light(c.x, c.y, 110, 0xf2c14e, 0.55);
-    if (s.boss?.active) {
-      const fury = s.boss.phase === 2;
-      this._light(s.boss.x, s.boss.y - 30, fury ? 260 : 180, fury ? 0xff6a2a : 0xb03aa0, 0.7);
-    }
     for (const f of this.world?.ambient ?? []) if (f.kind === "ff") this._light(f.x, f.y, 44, 0xfff2b0, f.core.alpha * 0.8);
 
-    // Clarões passageiros
-    this.flashes = this.flashes.filter((f) => time - f.t0 < f.ms);
-    for (const f of this.flashes) {
-      const k = 1 - (time - f.t0) / f.ms;
-      this._light(f.x, f.y, f.r * (0.8 + 0.2 * k), f.color, k * f.power);
-    }
-
-    this._treeShadows(p);
+    // Ambiente + todas as luzes numa ÚNICA passada no mapa de luz.
+    // (Antes: 1 draw por luz = ~100 trocas de framebuffer/frame → travava celular.)
+    const tRun = Math.min(1, s.elapsedMs / (GAME.RUN_DURATION_S * 1000));
+    const amb = s.boss?.active ? mix(AMB_NIGHT, AMB_BOSS, 1) : mix(AMB_DUSK, AMB_NIGHT, Math.pow(tRun, 1.3));
+    this.rt.fill(amb);
+    if (this._n) this.rt.draw(this.stamps.slice(0, this._n));
   }
 
   // Sombras projetadas pelas árvores a partir da luz do herói
