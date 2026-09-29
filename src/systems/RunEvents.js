@@ -7,7 +7,7 @@ import { CSS } from "../art/Palette.js";
 // t = segundos de partida
 const SCRIPT = [
   { t: 70, type: "swarm", n: 10, kind: "bee", msg: "ENXAME DE VESPAS!" },
-  { t: 120, type: "miniboss", kind: "alpha", msg: "O LOBO ALFA CHEGOU!" },
+  { t: 150, type: "miniboss", kind: "alpha", msg: "O LOBO ALFA CHEGOU!" },
   { t: 170, type: "ring", n: 18, kinds: ["wolf"], msg: "CERCO!" },
   { t: 222, type: "swarm", n: 18, kind: "bee", msg: "ENXAME DE VESPAS!" },
   { t: 268, type: "miniboss", kind: "elder", msg: "O OGRO ANCIÃO DESPERTA!" },

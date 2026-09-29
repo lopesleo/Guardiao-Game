@@ -5,7 +5,9 @@ import { META, MAX_BLESSING_RANK, ANCESTRAL, ACHIEVEMENTS } from '../config.js';
 const DEFAULT = {
   totalCoins: 0,
   highScoreSeconds: 0,
-  unlockedWeapons: ['STAFF'],
+  // Cajado (fogo) + Aura (gelo) desde o início: a 1ª partida já mostra a
+  // mecânica-assinatura (Fogo+Gelo = VAPOR). Antes o novato só tinha fogo.
+  unlockedWeapons: ['STAFF', 'AURA'],
   unlockedAbilities: [],   // 'DASH', 'AWAKEN'
   blessingRanks: {},       // { id: rank 1..MAX } (Fase 2)
   ancestralLevel: 0,       // Tesouro Ancestral (sink infinito)
@@ -67,6 +69,7 @@ export class MetaProgression {
       const data = { ...fd, ...parsed };
       // Migração Fase 3: saves antigos não têm achievements/stats
       if (!Array.isArray(data.achievements)) data.achievements = [];
+      if (!data.unlockedWeapons.includes('AURA')) data.unlockedWeapons.push('AURA');
       if (!Array.isArray(data.unlockedCharacters)) data.unlockedCharacters = ['guardian'];
       data.stats = { ...fd.stats, ...(parsed.stats || {}) };
       data.stats.reactions = { ...((parsed.stats || {}).reactions || {}) };

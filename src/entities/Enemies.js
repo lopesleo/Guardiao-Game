@@ -154,10 +154,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this._look(alpha ? "alpha" : "elder");
       this._kind = "wolf"; // perseguição melee
       this.setScale(GAME.PIXEL_SCALE * (alpha ? 1.7 : 1.6));
-      this.maxHp = Math.max(ENEMY.HP(wave) * (alpha ? 22 : 34), alpha ? 520 : 1100);
+      this.maxHp = Math.max(ENEMY.HP(wave) * (alpha ? 16 : 28), alpha ? 420 : 950);
       this.hp = this.maxHp;
-      this.dmg = ENEMY.DMG(wave) * (alpha ? 2 : 2.8);
-      this.speed = alpha ? 150 : 100;
+      this.dmg = ENEMY.DMG(wave) * (alpha ? 1.6 : 2.4);
+      this.speed = alpha ? 132 : 95; // < 160 do herói: dá pra kitar
       this.contactRadius = alpha ? 50 : 62;
       this.rimColor = 0xf2c14e;
       this.miniBoss = alpha ? "LOBO ALFA" : "OGRO ANCIÃO";

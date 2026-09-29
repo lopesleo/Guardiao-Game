@@ -410,7 +410,7 @@ export const PASSIVES = [
 
 // Drops aleatórios no chão (chance por kill)
 export const DROPS = {
-  COIN_CHANCE: 0.25, //25% de chance de dropar moeda
+  COIN_CHANCE: 0.2, // 20%: playtest mostrou tudo comprado em ~25 partidas; alonga a progressão
   HEART_CHANCE: 0.05,
   AWAKEN_CHANCE: 0.018,
   HEART_HEAL: 20,
@@ -469,8 +469,8 @@ export const META = {
   COIN_VALUE: 1,
   COIN_BOSS_WIN: 80,
   COIN_BOSS_LOSS: 10,
-  WEAPON_UNLOCK_COST: { BOOMER: 30, CHAIN: 60, AURA: 100, ORB: 140, FLAME: 180 },
-  WEAPON_UNLOCK_ORDER: ["BOOMER", "CHAIN", "AURA", "ORB", "FLAME"],
+  WEAPON_UNLOCK_COST: { BOOMER: 30, CHAIN: 60, ORB: 140, FLAME: 180 },
+  WEAPON_UNLOCK_ORDER: ["BOOMER", "CHAIN", "ORB", "FLAME"], // Aura já vem liberada
   ABILITY_UNLOCK_COST: { DASH: 50, AWAKEN: 80 },
 };
 

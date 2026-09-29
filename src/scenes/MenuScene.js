@@ -616,6 +616,7 @@ export class MenuScene extends Phaser.Scene {
     const elName = { fire: "Fogo", ice: "Gelo", bolt: "Raio" };
     const rows = [
       { kind: "weapon", key: "STAFF", cost: 0 },
+      { kind: "weapon", key: "AURA", cost: 0 },
       ...META.WEAPON_UNLOCK_ORDER.map((k) => ({ kind: "weapon", key: k, cost: META.WEAPON_UNLOCK_COST[k] })),
       { kind: "ability", key: "DASH", cost: META.ABILITY_UNLOCK_COST.DASH, name: "Dash", icon: "ico_dash", desc: "Esquiva rápida e invulnerável (SHIFT / botão)" },
       { kind: "ability", key: "AWAKEN", cost: META.ABILITY_UNLOCK_COST.AWAKEN, name: "Despertar", icon: "ico_star", desc: "Modo fúria: armas disparam 2,5× mais rápido" },
