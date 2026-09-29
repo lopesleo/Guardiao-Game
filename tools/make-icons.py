@@ -84,8 +84,18 @@ def outlined(img, color, n=1):
     return out
 
 
+def hero_frame():
+    """Quadro 0 do herói (exportado do jogo: resources/hero_guardian_strip.png),
+    centralizado num quadrado."""
+    strip = Image.open("resources/hero_guardian_strip.png").convert("RGBA")
+    f = strip.crop((0, 0, 24, 28))
+    sq = Image.new("RGBA", (28, 28), (0, 0, 0, 0))
+    sq.alpha_composite(f, (2, 0))
+    return sq
+
+
 def hero(size, scale_frac):
-    h = outlined(frame(84), (255, 229, 143))
+    h = outlined(hero_frame(), (255, 229, 143))
     s = int(size * scale_frac) // h.width * h.width
     return h.resize((s, s), Image.NEAREST)
 

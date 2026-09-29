@@ -280,8 +280,7 @@ export class MenuScene extends Phaser.Scene {
 
     this.heroLight = this.add.image(hx, hy - 20, "fx_glow").setScale(4, 3).setTint(0xffc07a).setAlpha(0.16).setBlendMode(Phaser.BlendModes.ADD);
     this.add.image(hx, hy + 4, "px_shadow").setScale(6, 4);
-    this.hero = this.add.image(hx, hy, "dungeon_tiles", 84).setOrigin(0.5, 1).setScale(7);
-    this.tweens.add({ targets: this.hero, scaleY: 7.25, duration: 1400, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    this.hero = this.add.sprite(hx, hy + 6, "hero_guardian", 0).setOrigin(0.5, 1).setScale(6);
 
     // Plaquinha do personagem + setas
     const py = hy + 50;
@@ -311,7 +310,7 @@ export class MenuScene extends Phaser.Scene {
   _refreshChar() {
     const c = CHARACTERS[this.charIdx];
     const owned = this.meta.hasCharacter(c.id);
-    this.hero.setFrame(c.frame);
+    this.hero.setTexture(`hero_${c.id}`, 0).play(`${c.id}_idle`);
     if (owned) this.hero.clearTint();
     else this.hero.setTint(0x28303a);
     this.charName.setText(c.name);
@@ -747,7 +746,8 @@ export class MenuScene extends Phaser.Scene {
     const list = this._modalList(m);
     const lines = [
       ["Design, código e arte procedural", "Leonardo Lopes"],
-      ["Personagens e criaturas", "Kenney — Tiny Dungeon (CC0) · Clint Bellanger — Tiny Creatures (CC0)"],
+      ["Heróis", "Arte própria (gerada por código)"],
+      ["Criaturas e baús", "Clint Bellanger — Tiny Creatures (CC0) · Kenney — Tiny Dungeon (CC0)"],
       ["Bola de fogo", "Revon (CC-BY 4.0)"],
       ["Cenário, ícones, UI e efeitos", "Gerados proceduralmente para este jogo"],
       ["Fonte", "Jersey 15 — The Soft Type Project Authors (OFL 1.1)"],

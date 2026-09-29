@@ -102,7 +102,7 @@ export class GameScene extends Phaser.Scene {
       CHARACTERS.find((c) => c.id === this.meta.selectedCharacter && this.meta.hasCharacter(c.id)) || CHARACTERS[0];
 
     // Player
-    this.player = new Player(this, 0, 0, this.character.frame);
+    this.player = new Player(this, 0, 0, this.character.id);
     this._applyCharacterMods(this.player, this.character.mods || {});
     // Aplica bênçãos compradas ANTES de criar armas (afetam stats base)
     for (const b of BLESSINGS) {

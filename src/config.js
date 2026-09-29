@@ -257,13 +257,12 @@ export const WEAPONS = {
 export const MAX_WEAPON_LEVEL = 5;
 
 // Personagens jogáveis — cada um começa com uma arma e tem um viés de stats.
-// frame = quadro do Tiny Dungeon. mods aplicados no início da run.
+// Sprite = textura hero_<id> (arte própria, src/art/Hero.js). mods aplicados no início da run.
 export const CHARACTERS = [
   {
     id: "guardian",
     name: "O Guardião",
     title: "Equilibrado",
-    frame: 84,
     weapon: "STAFF",
     cost: 0,
     perk: "Sem fraquezas. Bom para aprender.",
@@ -273,7 +272,6 @@ export const CHARACTERS = [
     id: "huntress",
     name: "Caçadora",
     title: "Veloz e letal",
-    frame: 112,
     weapon: "BOOMER",
     cost: 120,
     perk: "+12% velocidade · +8% crítico · −10% vida",
@@ -283,7 +281,6 @@ export const CHARACTERS = [
     id: "druid",
     name: "Druida da Geada",
     title: "Controle de área",
-    frame: 111,
     weapon: "AURA",
     cost: 180,
     perk: "+20% área · +1 Vida/s · −15% velocidade",
@@ -293,7 +290,6 @@ export const CHARACTERS = [
     id: "shaman",
     name: "Xamã do Trovão",
     title: "Canhão de vidro",
-    frame: 99,
     weapon: "CHAIN",
     cost: 260,
     perk: "−15% recarga · +15% dano · −25% vida",

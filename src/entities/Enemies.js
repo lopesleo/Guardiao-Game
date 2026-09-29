@@ -271,7 +271,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     // CONGELADO: para tudo (não anda, não atira), mas continua tomando dano.
     if (this.isFrozen(time)) {
       this.setVelocity(0, 0);
-      this.setDepth(this.y + 10000);
+      this.setDepth(this.y + this.displayHeight * 0.45 + 10000);
       if (!this._frozenVisual) {
         this.setTint(0x8fe3ff);
         this._frozenVisual = true;
@@ -355,7 +355,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     }
 
     this.setFlipX(dx < 0);
-    this.setDepth(this.y + 10000); // sort com player e cenário
+    this.setDepth(this.y + this.displayHeight * 0.45 + 10000); // sort com player e cenário
     if (this.rimColor) this._syncRim(time);
   }
 
@@ -540,7 +540,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
       } else {
         this.setVelocity(0, 0);
         this.setFlipX(target.x - this.x < 0);
-        this.setDepth(this.y + 10000);
+        this.setDepth(this.y + this.displayHeight * 0.45 + 10000);
         return;
       }
     }
@@ -549,7 +549,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     if (time < this._lungeUntil) {
       this.setVelocity(this._lungeVX, this._lungeVY);
       this.setFlipX(this._lungeVX < 0);
-      this.setDepth(this.y + 10000);
+      this.setDepth(this.y + this.displayHeight * 0.45 + 10000);
       return;
     }
 
@@ -561,7 +561,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     const sp = this.speed * slow;
     this.setVelocity((dx / len) * sp, (dy / len) * sp);
     this.setFlipX(dx < 0);
-    this.setDepth(this.y + 10000);
+    this.setDepth(this.y + this.displayHeight * 0.45 + 10000);
 
     // Especiais — rotação por fase
     const interval = this.phase === 1 ? 3500 : 2000;

@@ -3,6 +3,7 @@ import { COLORS, GAME } from "../config.js";
 import { registerEnvironment } from "../art/Environment.js";
 import { registerIcons } from "../art/Icons.js";
 import { registerSprites } from "../art/Sprites.js";
+import { registerHeroes } from "../art/Hero.js";
 import { text, Bar, PAL, vw, vh, fitCamera } from "../ui/Theme.js";
 
 export class PreloadScene extends Phaser.Scene {
@@ -71,6 +72,7 @@ export class PreloadScene extends Phaser.Scene {
     this.registry.set("envKeys", registerEnvironment(this));
     registerIcons(this);
     registerSprites(this);
+    registerHeroes(this);
     this.scene.start("MenuScene");
   }
 

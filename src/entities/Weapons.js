@@ -843,7 +843,7 @@ export class OrbitalIce extends Weapon {
       const x = this.owner.x + Math.cos(a) * R;
       const y = this.owner.y + Math.sin(a) * R * 0.9;
       const o = this.orbs[i];
-      o.spr.setPosition(x, y).setDepth(y + 10000).setRotation(a * 2);
+      o.spr.setPosition(x, y).setDepth(y + 14 + 10000).setRotation(a * 2);
       o.glow.setPosition(x, y);
       const strike = (e, isBoss) => {
         const dx = e.x - x,

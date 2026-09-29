@@ -23,7 +23,7 @@ export class Chest extends Phaser.GameObjects.Container {
     }).setOrigin(0.5).setVisible(false);
 
     this.add([this.shadow, this.glow, this.sprite, this.prompt]);
-    this.setDepth(y + 9500);
+    this.setDepth(y + 22 + 10000); // pé do baú (y-sort igual ao cenário)
 
     this.opened = false;
     this.playerNear = false;

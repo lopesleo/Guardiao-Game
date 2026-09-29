@@ -2,24 +2,24 @@
 // Diferenciais: Despertar (R) e Dash (Shift/Space).
 import { PLAYER, GAME, COLORS } from '../config.js';
 
-const PLAYER_FRAME = 84;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene, x, y, frame = PLAYER_FRAME) {
-    super(scene, x, y, 'dungeon_tiles', frame);
-    this.spriteFrame = frame;
+  constructor(scene, x, y, heroId = 'guardian') {
+    super(scene, x, y, `hero_${heroId}`, 0);
+    this.heroId = heroId;
+    this.play(`${heroId}_idle`);
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
     this.setScale(GAME.PIXEL_SCALE);
     this.setCollideWorldBounds(true);
-    this.body.setCircle(7, 1, 1);
+    this.body.setCircle(6, 6, 14); // corpo na altura dos pés (quadro 24×28)
     this.body.setMaxSpeed(PLAYER.SPEED_BASE * 6); // permitir dash
 
     // Sombra "blob" no chão (segue em update)
     this.shadow = scene.add
       .image(x, y, "px_shadow")
-      .setScale((GAME.PIXEL_SCALE * this.displayWidth) / 48)
+      .setScale(GAME.PIXEL_SCALE * 1.15, GAME.PIXEL_SCALE)
       .setDepth(4);
     // Luz suave sob o herói — destaca o Guardião no chão escuro da floresta
     this.light = scene.add
@@ -190,7 +190,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const scene = this.scene;
     for (let i = 0; i < 4; i++) {
       scene.time.delayedCall(i * 30, () => {
-        const ghost = scene.add.sprite(this.x, this.y, 'dungeon_tiles', this.spriteFrame)
+        const ghost = scene.add.sprite(this.x, this.y, this.texture.key, this.frame.name)
                           .setScale(this.scale).setAlpha(0.5).setTint(0xffffff).setDepth(this.depth - 1);
         ghost.setFlipX(this.flipX);
         scene.tweens.add({ targets: ghost, alpha: 0, duration: 250, onComplete: () => ghost.destroy() });
@@ -235,6 +235,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       if (input.move.x !== 0) this.facingX = Math.sign(input.move.x);
     }
     this.setFlipX(this.facingX < 0);
+    // Anima: andando vs. parado (troca só quando muda, pra não reiniciar o ciclo)
+    const anim = `${this.heroId}_${this.isMoving || this.isDashing() ? 'walk' : 'idle'}`;
+    if (this.anims.currentAnim?.key !== anim) this.play(anim);
 
     this.isMoving = Math.abs(input.move.x) + Math.abs(input.move.y) > 0.1;
     if (this.isMoving) {
@@ -246,7 +249,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     for (const w of this.weapons) w.update(time, dt);
 
     // Depth-sort por Y (offset +10000 garante sempre acima do floor deco)
-    this.setDepth(this.y + 10000);
+    this.setDepth(this.y + this.displayHeight * 0.45 + 10000);
     this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46);
     this.light.setPosition(this.x, this.y + this.displayHeight * 0.3);
   }
