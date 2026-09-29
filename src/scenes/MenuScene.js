@@ -748,8 +748,7 @@ export class MenuScene extends Phaser.Scene {
       ["Design, código e arte procedural", "Leonardo Lopes"],
       ["Arte", "Heróis, criaturas, cenário, ícones e efeitos: arte própria, gerada por código"],
       ["Fonte", "Jersey 15 — The Soft Type Project Authors (OFL 1.1)"],
-      ["Música", "JaggedStone — Loopable Dungeon Ambience (CC0) · Thalon — Fantasy Menu Theme (CC-BY 4.0)"],
-      ["Efeitos sonoros", "Kenney (CC0) · rubberduck (CC0) · Little Robot Sound Factory (CC-BY 3.0) · artisticdude (CC0) · faxcorp (CC0) · Bart Kelsey (CC0 / CC-BY 3.0) · Julien Matthey (CC0)"],
+      ["Música e efeitos sonoros", "Compostos e sintetizados por código para este jogo"],
       ["Motor", "Phaser 3 (MIT) · nipplejs (MIT)"],
     ];
     for (const [a, b] of lines) {

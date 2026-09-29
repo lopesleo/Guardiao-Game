@@ -56,7 +56,8 @@ npm run android:open   # abre no Android Studio
 
 ```
 src/
-  art/       paleta única + gerador de pixel-art (cenário, ícones, pickups, FX)
+  art/       paleta única + pixel-art procedural (heróis, bestiário, cenário, ícones, FX)
+  audio/     sintetizador: efeitos sonoros e 3 músicas (chiptune)
   ui/        kit de UI (Theme: fonte, molduras, botões, barras) + Widgets
              (modal, lista rolável, slider, toggle) + HUD + cartas
   world/     ForestWorld: chão, decoração, muralha de árvores, atmosfera, culling
@@ -67,14 +68,15 @@ src/
   config.js  todo o balanceamento centralizado
 ```
 
-A identidade visual é **uma paleta só** (`src/art/Palette.js`): o cenário, os
-ícones e a interface são gerados por código com ela, e os personagens vêm de
-packs CC0 que compartilham o mesmo contorno escuro — por isso tudo conversa.
+A identidade visual é **uma paleta só** (`src/art/Palette.js`): heróis,
+criaturas, cenário, ícones, efeitos e interface são desenhados por código com
+ela. Músicas e efeitos sonoros são sintetizados no carregamento
+(`src/audio/Synth.js`). O jogo não usa nenhum asset de terceiros além da fonte.
 
 ## Créditos
 
 Lista completa em [`docs/CREDITS.md`](docs/CREDITS.md) e no menu → Créditos.
-Personagens: Kenney (Tiny Dungeon) e Clint Bellanger (Tiny Creatures), CC0 ·
-Fonte: Jersey 15 (OFL) · Áudio: vários autores CC0/CC-BY · Motor: Phaser 3 (MIT).
+**Arte e áudio 100% próprios**, gerados por código (`src/art/`, `src/audio/`) ·
+Fonte: Jersey 15 (OFL) · Motor: Phaser 3 (MIT) · nipplejs (MIT).
 
 **Autor:** Leonardo Lopes

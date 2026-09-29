@@ -798,6 +798,10 @@ export class GameScene extends Phaser.Scene {
     this.boss.dmg *= this.diff.dmgMult; // escala dano do boss pela dificuldade
     this.hud.setBossActive(this.boss);
     this.sound.play("sfx_boss_roar", { volume: 0.8 });
+    // Trilha do chefe entra no lugar da música da partida
+    this.bgMusic?.stop();
+    this.bgMusic = this.sound.add("music_boss", { loop: true, volume: 0.4 });
+    this.bgMusic.play();
     this.cameras.main.shake(500, 0.015);
     // Limpa hordas para o boss respirar
     this.enemyPool.forEachActive((e) => {
