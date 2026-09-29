@@ -17,7 +17,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     // Sombra "blob" no chão (segue em update)
     this.shadow = scene.add
-      .ellipse(x, y, 30, 11, 0x000000, 0.3)
+      .ellipse(x, y, 42, 13, 0x000000, 0.3)
       .setScale(this.displayWidth / 48)
       .setDepth(4);
 
@@ -226,7 +226,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     // Depth-sort por Y (offset +10000 garante sempre acima do floor deco)
     this.setDepth(this.y + 10000);
-    this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.35);
+    this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46);
   }
 
   // Multiplicador de cooldown final (usado por Weapon.cooldown)

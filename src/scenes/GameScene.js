@@ -250,23 +250,18 @@ export class GameScene extends Phaser.Scene {
       cctx.fillRect(0, 0, 256, 256);
       c.refresh();
     }
+    // Só sombras frias SUTIS (as manchas claras "de sol" lavavam a cor da
+    // grama — feedback com screenshot). Escala menor + alpha baixo preservam
+    // a textura do tile por baixo.
     const patchCell = 620;
     for (let py = -r; py < r; py += patchCell) {
       for (let px = -r; px < r; px += patchCell) {
-        if (Math.random() < 0.62) {
+        if (Math.random() < 0.55) {
           this.add
             .image(px + Math.random() * patchCell, py + Math.random() * patchCell, "softdisc")
-            .setScale(1.2 + Math.random() * 1.8)
+            .setScale(0.8 + Math.random() * 1.0)
             .setTint(0x0a2a14)
-            .setAlpha(0.1 + Math.random() * 0.08)
-            .setDepth(-60);
-        }
-        if (Math.random() < 0.4) {
-          this.add
-            .image(px + Math.random() * patchCell, py + Math.random() * patchCell, "softdisc")
-            .setScale(0.8 + Math.random() * 1.2)
-            .setTint(0xfff2b0)
-            .setAlpha(0.05 + Math.random() * 0.05)
+            .setAlpha(0.06 + Math.random() * 0.05)
             .setDepth(-60);
         }
       }

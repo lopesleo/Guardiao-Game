@@ -20,7 +20,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
     // Sombra "blob" no chão — aterra o sprite no cenário (segue em update)
     this.shadow = scene.add
-      .ellipse(x, y, 30, 11, 0x000000, 0.28)
+      .ellipse(x, y, 42, 13, 0x000000, 0.28)
       .setDepth(4)
       .setVisible(false);
 
@@ -153,7 +153,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     // Sombra proporcional ao tamanho final (elite/mímico são maiores)
     this.shadow
       .setScale(this.displayWidth / 48)
-      .setPosition(x, y + this.displayHeight * 0.36)
+      .setPosition(x, y + this.displayHeight * 0.46)
       .setVisible(true);
   }
 
@@ -204,7 +204,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   update(time, dt, target) {
     if (!this.active || !target?.active) return;
-    this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.36);
+    this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46);
 
     // CONGELADO: para tudo (não anda, não atira), mas continua tomando dano.
     if (this.isFrozen(time)) {
@@ -338,7 +338,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this.body.setCircle(7, 1, 1);
     // Sombra grande do boss (mesma mecânica dos inimigos comuns)
     this.shadow = scene.add
-      .ellipse(x, y, 30, 11, 0x000000, 0.3)
+      .ellipse(x, y, 42, 13, 0x000000, 0.3)
       .setScale(this.displayWidth / 48)
       .setDepth(4)
       .setVisible(false);
@@ -378,7 +378,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this.clearTint();
     this.setActive(true).setVisible(true);
     this.body.enable = true;
-    this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.36).setVisible(true);
+    this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46).setVisible(true);
   }
 
   deactivate() {
@@ -464,7 +464,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
 
   update(time, dt, target) {
     if (!this.active || !target?.active) return;
-    this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.36);
+    this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46);
 
     // ÊXTASE: parado, invulnerável e pulsando enquanto a barra recarrega
     if (this._transitioning) {
