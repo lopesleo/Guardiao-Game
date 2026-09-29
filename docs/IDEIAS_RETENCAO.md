@@ -69,7 +69,7 @@ se **gera receita** no modelo com anúncios.
 |---|---|---|---|
 | **HoloCure** | **Carimbos** que modificam a arma principal (3 espaços, fundir para fortalecer) | **Runas do Cajado**: 3 encaixes na arma inicial ("explode ao acertar", "perfura", "divide em 2") | M |
 | **HoloCure** | **Cartas de fãs**: colecionáveis raros com bônus minúsculos que somam | **Sementes Raras** achadas em partidas: +1% em algo, colecionar todas vira meta de longo prazo | P |
-| **HoloCure** | **Holo House**: área tranquila entre partidas com pesca, horta, decoração, minigames | **Clareira do Guardião**: hub que cresce com o progresso — Árvore Sagrada (renda offline), horta de ervas (bônus para a próxima partida), decoração com itens conquistados, minigame de pesca | G (em partes) |
+| **HoloCure** | **Holo House**: área tranquila entre partidas com pesca, horta, decoração, minigames | **Clareira do Guardião** — design completo em [`CLAREIRA.md`](CLAREIRA.md): acampamento como menu, horta, pesca, cozinha (buff de 1 partida), construções e NPCs resgatados que trabalham offline | G (em fases) |
 | **Halls of Torment** | **Levar 1 item por partida** para a coleção permanente pelo "poço"; saque com atributos | **Poço Ancestral**: amuletos/anéis caem na partida; escolher 1 para guardar — equipamento com caça de atributos | M–G |
 | **Halls of Torment** | **Ambiente interativo**: armadilhas que o jogador usa contra inimigos | Cogumelos explosivos, arbustos de espinhos que ferem inimigos, troncos que rolam | M |
 | **20 Minutes Till Dawn** | **Runas por níveis**: escolher 1 por nível em vez de comprar tudo (identidade de build) | Bênçãos em "galhos": em cada nível da árvore, escolher 1 de 2 caminhos | M |
