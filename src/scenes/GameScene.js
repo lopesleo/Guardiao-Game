@@ -13,6 +13,7 @@ import {
   DIFFICULTY,
   ANCESTRAL,
   CHARACTERS,
+  ADS,
 } from "../config.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
@@ -43,7 +44,8 @@ import { DamageNumber } from "../entities/DamageNumber.js";
 import { HUD } from "../ui/HUD.js";
 import { ForestWorld } from "../world/ForestWorld.js";
 import { Lighting } from "../world/Lighting.js";
-import { vw, vh, text, drawFrame, fitCamera } from "../ui/Theme.js";
+import { vw, vh, text, drawFrame, fitCamera, Button } from "../ui/Theme.js";
+import { CSS } from "../art/Palette.js";
 import { DEBUG } from "../systems/Platform.js";
 import { Settings } from "../systems/Settings.js";
 import { Analytics } from "../systems/Analytics.js";
@@ -253,6 +255,8 @@ export class GameScene extends Phaser.Scene {
       this.bgMusic.play();
     }
     this.gameOver = false;
+    this._reviveOpen = false;
+    this._chestOffer = null;
 
     // Onboarding (D20): 5s, skipável
     this._showOnboarding();
@@ -878,30 +882,9 @@ export class GameScene extends Phaser.Scene {
 
     // Loot spawnado DEPOIS dos reels (caça-níquel revela)
     this.time.delayedCall(burstDelay + 50, () => {
-      const ngems = Phaser.Math.Between(CHEST.GEMS_MIN, CHEST.GEMS_MAX);
-      const ncoins = Phaser.Math.Between(CHEST.COINS_MIN, CHEST.COINS_MAX);
-      for (let i = 0; i < ngems; i++) {
-        const g = this.xpPool.acquire();
-        const ang = Math.random() * Math.PI * 2;
-        const d = 8 + Math.random() * 22;
-        g.spawn(x + Math.cos(ang) * d, y + Math.sin(ang) * d);
-      }
-      for (let i = 0; i < ncoins; i++) {
-        const c = this.coinPool.acquire();
-        const ang = Math.random() * Math.PI * 2;
-        const d = 8 + Math.random() * 22;
-        c.spawn(x + Math.cos(ang) * d, y + Math.sin(ang) * d);
-      }
-      if (Math.random() < CHEST.HEART_CHANCE_OPEN) {
-        const h = this.heartPool.acquire();
-        h.spawn(x - 22, y);
-      }
-      if (Math.random() < CHEST.AWAKEN_CHANCE_OPEN) {
-        const o = this.awakenOrbPool.acquire();
-        o.spawn(x + 22, y);
-      }
+      this._spawnChestLoot(x, y);
+      if (kind === "normal" || kind === "golden") this._offerDoubleChest(x, y);
     });
-
     if (kind === "golden") {
       // JACKPOT: chips colliding + level-up + coin cascade
       this.time.delayedCall(burstDelay, () => {
@@ -979,6 +962,88 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  // Volta à luta após o anúncio: metade da vida, invulnerável por um tempo e
+  // uma onda de luz que fere e empurra quem estava em volta (nada de morrer
+  // de novo no mesmo segundo).
+  _revive() {
+    this._reviveOpen = false;
+    const p = this.player;
+    p.hp = Math.max(1, Math.round(p.maxHp * ADS.REVIVE_HP_PCT));
+    p.invulnUntil = this.time.now + ADS.REVIVE_INVULN_MS;
+    const blinks = Math.max(1, Math.floor(ADS.REVIVE_INVULN_MS / 240));
+    this.tweens.add({ targets: p, alpha: 0.35, duration: 120, yoyo: true, repeat: blinks - 1, onComplete: () => p.setAlpha(1) });
+    const R = ADS.REVIVE_CLEAR_RADIUS;
+    this.enemyPool.forEachActive((e) => {
+      if (!e.active) return;
+      const dx = e.x - p.x,
+        dy = e.y - p.y;
+      if (dx * dx + dy * dy > R * R) return;
+      const died = e.takeDamage(e.maxHp * 0.6, null, p.x, p.y, true);
+      if (died) this._onEnemyDeath(e);
+    });
+    this.enemyProjPool.forEachActive((b) => {
+      const dx = b.x - p.x,
+        dy = b.y - p.y;
+      if (dx * dx + dy * dy < R * R) {
+        b.kill?.();
+        this.enemyProjPool.release(b);
+      }
+    });
+    this._chestBurst(p.x, p.y, "golden");
+    this.lighting?.flash(p.x, p.y, R * 1.5, 0xfff0a0, 900, 1.3);
+    this.cameras.main.flash(260, 255, 240, 180);
+    this.sound.play("sfx_levelup", { volume: 0.8, rate: 0.9 });
+    this._toast("DE VOLTA À LUTA!", 2200, "#ffe58f");
+    Analytics.track("revive", { t: Math.floor(this.elapsedMs / 1000), level: p.level });
+  }
+
+  // Moedas, gemas e (às vezes) coração/orbe saindo do baú
+  _spawnChestLoot(x, y) {
+    const ngems = Phaser.Math.Between(CHEST.GEMS_MIN, CHEST.GEMS_MAX);
+    const ncoins = Phaser.Math.Between(CHEST.COINS_MIN, CHEST.COINS_MAX);
+    const around = (d0, d1) => {
+      const ang = Math.random() * Math.PI * 2;
+      const d = d0 + Math.random() * d1;
+      return [x + Math.cos(ang) * d, y + Math.sin(ang) * d];
+    };
+    for (let i = 0; i < ngems; i++) this.xpPool.acquire().spawn(...around(8, 22));
+    for (let i = 0; i < ncoins; i++) this.coinPool.acquire().spawn(...around(8, 22));
+    if (Math.random() < CHEST.HEART_CHANCE_OPEN) this.heartPool.acquire().spawn(x - 22, y);
+    if (Math.random() < CHEST.AWAKEN_CHANCE_OPEN) this.awakenOrbPool.acquire().spawn(x + 22, y);
+  }
+
+  // "Dobrar baú" (anúncio premiado): botão discreto no alto da tela por alguns
+  // segundos. Ignorar não custa nada; tocar pausa a partida durante o anúncio.
+  _offerDoubleChest(x, y) {
+    if (this.gameOver || !AdService.canShow("double_chest")) return;
+    this._chestOffer?.destroy();
+    const btn = new Button(this, vw(this) - 16 - 120, 128, 240, 52, "BAÚ ×2", async () => {
+      if (btn._used) return;
+      btn._used = true;
+      btn.setEnabled(false);
+      this.scene.pause();
+      const ok = await AdService.rewarded("double_chest");
+      this.scene.resume();
+      btn.destroy();
+      if (!ok || this.gameOver) return;
+      this._chestBurst(x, y, "normal");
+      this.sound.play("sfx_chest_jackpot", { volume: 0.7 });
+      this._spawnChestLoot(x, y);
+      this._toast("Baú dobrado!", 1600);
+    }, { size: 24, style: "primary", color: CSS.goldHi, icon: "ico_play", iconScale: 2.5 });
+    btn.setScrollFactor(0).setDepth(60400).setAlpha(0);
+    this._chestOffer = btn;
+    Analytics.track("ad_offer_show", { placement: "double_chest" });
+    this.tweens.add({ targets: btn, alpha: 1, duration: 200 });
+    this.tweens.add({
+      targets: btn,
+      alpha: 0,
+      delay: ADS.CHEST_OFFER_MS,
+      duration: 300,
+      onComplete: () => !btn._used && btn.destroy(),
+    });
+  }
+
   _chestBurst(x, y, kind) {
     this.lighting?.flash(x, y, kind === "golden" ? 380 : 240, kind === "trap" ? 0xff4060 : 0xffd070, 600, 1);
     const color =
@@ -1018,8 +1083,21 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  _onGameOver(won, quit = false) {
+  _onGameOver(won, quit = false, skipRevive = false) {
     if (this.gameOver) return;
+    // Segunda chance (anúncio premiado, 1x por partida) — só se os anúncios
+    // estiverem ligados. Várias checagens de morte podem cair no mesmo quadro:
+    // enquanto a oferta está aberta, ignora as repetidas.
+    if (!won && !quit && !skipRevive) {
+      if (this._reviveOpen) return;
+      if (AdService.canShow("revive")) {
+        this._reviveOpen = true;
+        this.scene.pause();
+        this.scene.launch("ReviveScene");
+        return;
+      }
+    }
+    this._reviveOpen = false;
     this.gameOver = true;
     // Recompensa final escalada pela dificuldade (HUD mostrou a contagem-base ao vivo)
     const coinsFinal = Math.round(this._coinsGainedThisRun * this.diff.rewardMult);

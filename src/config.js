@@ -408,6 +408,17 @@ export const PASSIVES = [
   },
 ];
 
+// Anúncios premiados (sempre opcionais). ENABLED = false: tudo desenvolvido,
+// mas nenhuma oferta aparece para o jogador. Para testar: ?ads=1 na URL.
+export const ADS = {
+  ENABLED: false,
+  REVIVE_HP_PCT: 0.5, // volta com metade da vida
+  REVIVE_INVULN_MS: 3000,
+  REVIVE_CLEAR_RADIUS: 280, // onda que empurra/fere quem está em volta
+  REVIVE_OFFER_S: 8, // tempo para decidir antes de encerrar a partida
+  CHEST_OFFER_MS: 5000, // botão "dobrar baú" fica visível por este tempo
+};
+
 // Drops aleatórios no chão (chance por kill)
 export const DROPS = {
   COIN_CHANCE: 0.2, // 20%: playtest mostrou tudo comprado em ~25 partidas; alonga a progressão

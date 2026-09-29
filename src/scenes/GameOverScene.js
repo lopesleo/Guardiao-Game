@@ -6,6 +6,9 @@ import { formatTime } from "../utils.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { WEAPON_ICON } from "../art/Icons.js";
 import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
+import { AdService } from "../systems/AdService.js";
+import { Analytics } from "../systems/Analytics.js";
+import { MetaProgression } from "../systems/MetaProgression.js";
 
 export class GameOverScene extends Phaser.Scene {
   constructor() {
@@ -15,6 +18,8 @@ export class GameOverScene extends Phaser.Scene {
   create(data) {
     const { won, quit, elapsedMs, kills, coinsGained, newUnlocks = [], difficulty, unlockedNextDifficulty, level = 1, weapons = [] } = data;
     fitCamera(this);
+    this._coinsShown = undefined;
+    this._coinText = null;
     const W = vw(this),
       H = vh(this);
     const cx = W / 2;
@@ -59,7 +64,8 @@ export class GameOverScene extends Phaser.Scene {
         onUpdate: () => v.setText(s.fmt(o.n)),
         onStart: () => this.sound.play("sfx_ui_hover", { volume: 0.3 }),
         onComplete: () => {
-          v.setText(s.fmt(s.value));
+          if (s.icon === "ico_coin") this._coinText = v;
+          v.setText(s.fmt(this._coinsShown ?? s.value));
           this.tweens.add({ targets: v, scale: { from: 1.25, to: 1 }, duration: 160 });
           if (s.icon === "ico_coin" && s.value > 0) this.sound.play("sfx_coin_cascade", { volume: 0.5 });
         },
@@ -89,6 +95,29 @@ export class GameOverScene extends Phaser.Scene {
       ug.setAlpha(0);
       ut.setAlpha(0);
       this.tweens.add({ targets: [ug, ut], alpha: 1, delay: 1300, duration: 300, onStart: () => this.sound.play("sfx_levelup", { volume: 0.5 }) });
+    }
+
+    // Dobrar moedas (anúncio premiado, opcional) — só com moedas ganhas
+    if (!quit && coinsGained > 0 && AdService.canShow("double_coins")) {
+      Analytics.track("ad_offer_show", { placement: "double_coins" });
+      const db = new Button(this, cx, H - 134, 360, 54, `DOBRAR MOEDAS  +${coinsGained}`, async () => {
+        if (db._used) return;
+        db._used = true;
+        db.setEnabled(false);
+        const ok = await AdService.rewarded("double_coins");
+        if (!ok) {
+          db._used = false;
+          db.setEnabled(true);
+          return;
+        }
+        new MetaProgression().addCoins(coinsGained);
+        this._coinsShown = coinsGained * 2;
+        db.setLabel("MOEDAS DOBRADAS!");
+        this._coinText?.setText(`+${this._coinsShown}`);
+        if (this._coinText) this.tweens.add({ targets: this._coinText, scale: { from: 1.5, to: 1 }, duration: 260, ease: "Back.easeOut" });
+        this.sound.play("sfx_coin_cascade", { volume: 0.7 });
+        haptic(30);
+      }, { size: 22, style: "primary", color: CSS.goldHi, icon: "ico_play", iconScale: 2.5 });
     }
 
     // Botões

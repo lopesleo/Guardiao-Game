@@ -11,6 +11,7 @@
 // A compra "Remover anúncios" (noAds) também libera direto, sem assistir.
 import { Analytics } from "./Analytics.js";
 import { DEBUG } from "./Platform.js";
+import { ADS } from "../config.js";
 
 const KEY = "guardiao_ads_v1";
 
@@ -47,6 +48,10 @@ function save() {
 }
 
 export const AdService = {
+  // Chave geral: desligado, nenhuma oferta aparece (ver ADS.ENABLED)
+  get enabled() {
+    return ADS.ENABLED || /[?&]ads=1(&|$)/.test(globalThis.location?.search ?? "");
+  },
   get noAds() {
     return !!state.noAds;
   },
@@ -64,7 +69,7 @@ export const AdService = {
   },
   canShow(placement) {
     const cfg = PLACEMENTS[placement];
-    if (!cfg) return false;
+    if (!cfg || !this.enabled) return false;
     if (state.day !== today()) state = loadState();
     const run = runCounts[placement] || 0;
     const day = state.daily[placement] || 0;
