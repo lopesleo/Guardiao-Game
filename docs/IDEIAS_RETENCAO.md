@@ -81,6 +81,42 @@ se **gera receita** no modelo com anúncios.
 
 ---
 
+## Tema e narrativa: folclore brasileiro como diferencial
+
+**Achados da pesquisa:**
+- Mitologia vende jogo porque o jogador já chega com vínculo emocional (símbolos e
+  criaturas conhecidos) — *Hades* (mitologia grega) passou de 1 milhão de cópias
+  em poucos meses; o folclore eslavo virou nicho próprio (*Black Book*, *Deathless*).
+- Jogos com **folclore brasileiro** que existem são quase todos **educativos** —
+  não há um jogo de ação forte e bem-acabado nesse tema. **É um espaço vazio.**
+- Brasil: **~83%** da população joga, **celular** é o aparelho principal, **mais de
+  53% são mulheres**, e o país é o **4º maior mercado de receita de anúncios no
+  Android** — bom para o modelo gratuito com anúncios.
+
+**Proposta (o nome "Guardião da Floresta" já pede isso):**
+
+| Hoje | Com folclore |
+|---|---|
+| O Guardião (fogo) | **Curupira** — o guardião das matas, cabelo de fogo, pés virados (os rastros ao contrário confundem os inimigos: habilidade própria!) |
+| Druida da Geada (gelo) | **Iara** — senhora das águas (gelo/água) |
+| Xamã do Trovão (raio) | **Saci** — redemoinho e vento/raio; teleporte curto no lugar do dash |
+| Caçadora (bumerangue) | **Caipora** — protetora dos animais, montada no porco-do-mato |
+| O Ancião (chefe) | **Mapinguari** corrompido (fase 1) → a **Podridão** revelada (fase 2) |
+| Inimigos corrompidos | Criaturas da mata tomadas pela Podridão; mini-chefes **Mula sem Cabeça** (investidas em chamas) e **Corpo-Seco** |
+| Reação Sobrecarga | chamada de **Boitatá** (a serpente de fogo) |
+
+- **Narrativa leve:** a floresta adoece (a Podridão avança — pode ser metáfora de
+  queimada/garimpo, tema com apelo no Brasil e lá fora); cada Perigo vencido
+  "cura" uma região da Clareira.
+- **Eventos com data:** **Dia do Folclore (22/08)**, **Festa Junina** (fogueira,
+  balões, quentão como refeição), **Carnaval**.
+- **Apelo internacional:** "folclore brasileiro" é exótico e raro lá fora — ajuda
+  a chamar atenção em lojas e redes (como o eslavo virou marca própria).
+- **Público feminino majoritário no Brasil:** arte fofa + Clareira aconchegante
+  (horta, pesca, cozinha) conversa bem com esse público sem perder a ação.
+
+---
+
 ## Ideias priorizadas
 
 ### 🥇 Alto impacto, esforço baixo/médio
@@ -157,5 +193,8 @@ dia que ainda não tentou.
 - [Halls of Torment — Wikipedia](https://en.wikipedia.org/wiki/Halls_of_Torment) · [Bullet Heavens — Rogueliker](https://rogueliker.com/bullet-heaven-games-like-vampire-survivors/) · [Ball x Pit — Wikipedia](https://en.wikipedia.org/wiki/Ball_x_Pit)
 - [20 Minutes Till Dawn — Runes (wiki)](https://20-minutes-till-dawn.fandom.com/wiki/Runes)
 - [Mighty DOOMed: How Doom's Mobile Spinoff Misstepped — Naavik](https://naavik.co/deep-dives/how-dooms-mobile-spinoff-misstepped/) · [Best free mobile RPGs that aren't pay-to-win](https://www.mobilegamereport.com/articles/best-mobile-roguelites-2026)
+- [Jornada do Saci — Google Play](https://play.google.com/store/apps/details?id=com.Edtek.Folclore&hl=en_US) · [Guerreiros Folclóricos — Terminal de Informação](https://terminaldeinformacao.com/2017/09/30/conheca-jogo-brasileiro-guerreiros-folcloricos/)
+- [Why Mythology and Adventure Themes Remain Popular in Digital Gaming](https://digimagazine.uk/why-mythology-and-adventure-themes-remain-popular-in-digital-gaming/) · [Hades — a roguelike of mythological proportions](https://guilhermefmota99.medium.com/hades-a-roguelike-of-mythological-proportions-ca9638699a93) · [Best games based on Slavic folklore — gg.deals](https://gg.deals/blog/best-games-based-on-slavic-folklore-mythology/)
+- [The State of Mobile Gaming in Brazil 2025 — Tenjin](https://tenjin.com/blog/the-state-of-mobile-gaming-in-brazil-2025-data-trends-and-market-analysis/) · [Brazil Gaming Market 2025 — Allcorrect](https://allcorrectgames.com/insights/the-gaming-market-in-brazil-2025/) · [Brazilian Mobile Game Market — Alconost](https://alconost.com/en/blog/brazilian-market)
 - [Survivor.io — Google Play](https://play.google.com/store/apps/details/Survivor_io?id=com.dxx.firenow&hl=en_US)
 - [Vampire Survivors developer takes new approach to monetisation — PocketGamer.biz](https://www.pocketgamer.biz/vampire-survivors-developer-takes-new-approach-to-monetisation/) · [Mobile review — Pocket Tactics](https://www.pockettactics.com/vampire-survivors/review)
