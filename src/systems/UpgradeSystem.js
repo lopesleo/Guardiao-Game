@@ -2,7 +2,7 @@
 //   nova arma (peso 3) · melhoria de arma (peso 4) · passiva (peso 1 cada).
 // Sem peso, as 11 passivas soterravam as armas — builds ficavam aleatórias.
 // Evolução elegível = carta garantida.
-import { WEAPONS, MAX_WEAPON_LEVEL, PASSIVES } from "../config.js";
+import { WEAPONS, MAX_WEAPON_LEVEL, PASSIVES, PASSIVE_SLOTS } from "../config.js";
 import { WEAPON_ICON, PASSIVE_ICON } from "../art/Icons.js";
 import { WEAPON_CLASSES } from "../entities/Weapons.js";
 
@@ -114,8 +114,13 @@ export class UpgradeSystem {
       });
     }
 
-    // 3) Passivas — valor rolado dentro de uma faixa
+    // 3) Passivas — valor rolado dentro de uma faixa. Com os espaços cheios
+    // (PASSIVE_SLOTS), só reforços das que o jogador já tem.
+    const taken = player.passivesTaken || {};
+    const full = Object.keys(taken).length >= PASSIVE_SLOTS;
     for (const ps of PASSIVES) {
+      const owned = !!taken[ps.id];
+      if (full && !owned) continue;
       const rolled = ps.roll();
       cards.push({
         type: "passive",
@@ -123,6 +128,9 @@ export class UpgradeSystem {
         title: ps.label,
         desc: ps.desc,
         stat: rolled.name,
+        ribbon: owned
+          ? `PASSIVA ×${taken[ps.id] + 1}`
+          : `PASSIVA NOVA ${Object.keys(taken).length + 1}/${PASSIVE_SLOTS}`,
         icon: PASSIVE_ICON[ps.id] ?? "ico_plus",
         _w: 1,
         _apply: rolled.apply,
@@ -213,6 +221,8 @@ export class UpgradeSystem {
       if (card._apply) card._apply(player);
       player.passivesTaken ??= {};
       player.passivesTaken[card.passiveId] = (player.passivesTaken[card.passiveId] || 0) + 1;
+      if (Object.keys(player.passivesTaken).length === PASSIVE_SLOTS)
+        this.scene._hint?.("passive_slots", `Passivas completas (${PASSIVE_SLOTS}/${PASSIVE_SLOTS})!\nAgora as cartas só reforçam as que você já tem.`);
       // Conquista "Osso Duro" (quase-pacifista): marca se pegou passivo de HP
       if (card.passiveId === "hp" && this.scene._runFlags) {
         this.scene._runFlags.tookHpPassive = true;

@@ -28,7 +28,7 @@ export function createCard(scene, x, y, w, h, card, onClick, index, showKey = tr
   const rw = w - 12 * P;
   drawFrame(rib, -rw / 2, -h / 2 + 5 * P, rw, 10 * P, { border: PAL.ink, body: t.ribbon, hi: 0xffffff, lo: PAL.ink }, { noRivets: true });
   inner.add(rib);
-  inner.add(text(scene, 0, -h / 2 + 10 * P, t.label, { size: 15, color: CSS.ink, origin: 0.5, shadow: false }));
+  inner.add(text(scene, 0, -h / 2 + 10 * P, card.ribbon ?? t.label, { size: 15, color: CSS.ink, origin: 0.5, shadow: false }));
 
   // Medalhão com ícone
   const my = -h / 2 + 42 * P;
