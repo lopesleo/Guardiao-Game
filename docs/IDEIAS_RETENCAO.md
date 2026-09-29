@@ -52,6 +52,35 @@ se **gera receita** no modelo com anúncios.
 
 ---
 
+## O que os jogadores reclamam (e como evitar no Guardião)
+
+| Reclamação comum no gênero | Como o Guardião pode evitar |
+|---|---|
+| **Fim de partida chato**: "é só desviar de círculos enquanto o chefe morre fora da tela" | Chefe com padrões que exigem reação (já temos avisos/raízes/investida); inimigos de elite com **modificadores** (escudo, veloz, explosivo) no fim da partida; Enxame Final com risco real |
+| **Poluição visual**: não se enxerga o herói no meio dos efeitos | Opção **"Intensidade dos efeitos"** (100/60/30%), contorno/brilho no herói sempre visível, projéteis inimigos sempre na mesma cor de perigo |
+| **Falta de objetivo** depois de sobreviver ao começo | **Objetivos dentro da partida** ("derrote o Alfa", "abra 3 baús", "dispare 10 Cristais") que dão recompensa na hora |
+| **Monotonia**: builds diferentes parecem iguais | Limite de passivas, **cartas que mudam regras** (ex.: "o bumerangue congela"), sinergias visíveis na própria carta |
+| **"Nunca perco nada"**: sem risco | Santuário da Ganância, moedas da partida gastas em baús (gastar agora × levar pra casa), modo Maldito |
+| **Free-to-play injusto**: energia, sorteio (gacha), pagar pra vencer — foi um dos motivos da queda do *Mighty Doom* (Bethesda, fechado em 1 ano apesar de 7,6 mi de downloads) | Princípio fixo: **sem energia, sem gacha, sem vender poder**. Vender só conveniência e cosméticos (*Soul Knight*: personagens por compra única barata) |
+
+## Ideias vindas de outros jogos amados pelos jogadores
+
+| Jogo | O que os jogadores amam | Versão para o Guardião | Esforço |
+|---|---|---|---|
+| **HoloCure** | **Carimbos** que modificam a arma principal (3 espaços, fundir para fortalecer) | **Runas do Cajado**: 3 encaixes na arma inicial ("explode ao acertar", "perfura", "divide em 2") | M |
+| **HoloCure** | **Cartas de fãs**: colecionáveis raros com bônus minúsculos que somam | **Sementes Raras** achadas em partidas: +1% em algo, colecionar todas vira meta de longo prazo | P |
+| **HoloCure** | **Holo House**: área tranquila entre partidas com pesca, horta, decoração, minigames | **Clareira do Guardião**: hub que cresce com o progresso — Árvore Sagrada (renda offline), horta de ervas (bônus para a próxima partida), decoração com itens conquistados, minigame de pesca | G (em partes) |
+| **Halls of Torment** | **Levar 1 item por partida** para a coleção permanente pelo "poço"; saque com atributos | **Poço Ancestral**: amuletos/anéis caem na partida; escolher 1 para guardar — equipamento com caça de atributos | M–G |
+| **Halls of Torment** | **Ambiente interativo**: armadilhas que o jogador usa contra inimigos | Cogumelos explosivos, arbustos de espinhos que ferem inimigos, troncos que rolam | M |
+| **20 Minutes Till Dawn** | **Runas por níveis**: escolher 1 por nível em vez de comprar tudo (identidade de build) | Bênçãos em "galhos": em cada nível da árvore, escolher 1 de 2 caminhos | M |
+| **20 Minutes Till Dawn** | **Escuridão 1–15**: muitos níveis de dificuldade com modificadores | Ampliar o Perigo de 5 para **10–15 níveis**, cada um somando um modificador — fim de jogo barato e longo | P |
+| **20 Minutes Till Dawn** | **Raio de visão** como mecânica | **Modo Noite**: usa a nossa iluminação dinâmica — você só enxerga o que suas luzes alcançam; armas de fogo/raio iluminam, gelo não. **Diferencial raro no gênero** | M |
+| **Ball x Pit** | Mistura de gêneros + **construção de base** entre partidas | Reconstruir a vila/floresta com moedas (casas que dão bônus), junto com a Clareira | G |
+| **Survivor.io** | **Jogar com uma mão, em pé** (modo retrato) no ônibus | **Modo retrato opcional** com HUD adaptado — amplia muito o público casual | M–G |
+| **Soulstone / VS** | Ver **sinergias** antes de escolher | Carta mostra "combina com: Aura → VAPOR" e marca a arma parceira de evolução | P |
+
+---
+
 ## Ideias priorizadas
 
 ### 🥇 Alto impacto, esforço baixo/médio
@@ -123,4 +152,10 @@ dia que ainda não tentou.
 - [Megabonk Mechanics: Timer, Shrines, Scaling](https://megabonk.org/guides/mechanics/) · [Shrines Guide](https://megabonk.org/guides/mechanics/shrines/) · [All Shrine Effects — TheGamer](https://www.thegamer.com/megabonk-all-shrine-effects-what-they-do-guide/)
 - [Megabonk: All Tomes — TheGamer](https://www.thegamer.com/megabonk-all-tomes-how-to-unlock-requirements-guide/) · [Megabonk Review — Netto's Game Room](https://www.nettosgameroom.com/2025/10/megabonk-review.html)
 - [Vampire Survivors: secret characters & coffins — PCGamesN](https://www.pcgamesn.com/vampire-survivors/unlock-characters) · [Secrets (wiki)](https://vampire-survivors.fandom.com/wiki/Secret)
+- [Vampire Survivors–like (gênero) — Wikipedia](https://en.wikipedia.org/wiki/Vampire_Survivors%E2%80%93like) · [Soulstone Survivors — discussão sobre popularidade (Steam)](https://steamcommunity.com/app/2066020/discussions/0/4337608555590600768/) · [What's wrong with survival games — RetroStyle](https://retrostylegames.com/blog/whats-wrong-with-survival-games-and-how-can-they-be-fixed/)
+- [HoloCure Review — Game8](https://game8.co/articles/reviews/770) · [Fan Letters — Siliconera](https://www.siliconera.com/what-are-fan-letters-in-holocure-and-how-to-get-them/) · [Holo House (wiki)](https://holocure.wiki.gg/wiki/Holo_House)
+- [Halls of Torment — Wikipedia](https://en.wikipedia.org/wiki/Halls_of_Torment) · [Bullet Heavens — Rogueliker](https://rogueliker.com/bullet-heaven-games-like-vampire-survivors/) · [Ball x Pit — Wikipedia](https://en.wikipedia.org/wiki/Ball_x_Pit)
+- [20 Minutes Till Dawn — Runes (wiki)](https://20-minutes-till-dawn.fandom.com/wiki/Runes)
+- [Mighty DOOMed: How Doom's Mobile Spinoff Misstepped — Naavik](https://naavik.co/deep-dives/how-dooms-mobile-spinoff-misstepped/) · [Best free mobile RPGs that aren't pay-to-win](https://www.mobilegamereport.com/articles/best-mobile-roguelites-2026)
+- [Survivor.io — Google Play](https://play.google.com/store/apps/details/Survivor_io?id=com.dxx.firenow&hl=en_US)
 - [Vampire Survivors developer takes new approach to monetisation — PocketGamer.biz](https://www.pocketgamer.biz/vampire-survivors-developer-takes-new-approach-to-monetisation/) · [Mobile review — Pocket Tactics](https://www.pockettactics.com/vampire-survivors/review)
