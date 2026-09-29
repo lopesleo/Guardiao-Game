@@ -29,30 +29,32 @@
 
 ---
 
-## 2. Calendário de descobertas (os primeiros 7 dias)
+## 2. Ordem de descobertas (por progresso, não por calendário)
 
-Os desbloqueios dependem de **progresso do jogador** (partidas jogadas) **e** de
-**tempo real** — assim ninguém recebe tudo num dia só, nem trava esperando.
+> Decisão (Leonardo): **não travar sistemas por dias reais** — é lento e o jogador
+> pode desistir antes de ver as partes legais. As descobertas dependem do que o
+> jogador **faz**; o **tempo real** fica só no **crescimento das coisas** (plantas,
+> lago, obras, espíritos voltando). Quem joga bastante vê tudo o que é essencial no
+> 1º dia; o que traz de volta amanhã é a planta crescendo, não um sistema trancado.
 
-| Quando | O que aparece | Como é apresentado |
+| Gatilho (ação do jogador) | O que aparece | Como é apresentado |
 |---|---|---|
 | **1ª abertura** | Partida direto (só a floresta) | Dica de 1 linha: "Arraste para andar" (já existe) |
 | Fim da 1ª partida | **A Clareira em ruínas** com a **Fogueira** acesa | Espírito da Fogueira: *"A Podridão tomou nosso lar. Cada partida devolve um pouco da floresta."* → botão JOGAR |
-| Após a 2ª partida | **Santuário** (Bênçãos) se descobre | Moedas suficientes para a 1ª Bênção barata → mão aponta → compra → volta a jogar |
-| Após a 3ª partida | **Horta**: 1 canteiro limpo + 1 semente de cenoura | Planta **cresce em 30 s** (tutorial) → colher → "plante de novo" — agora leva 5 min |
-| Colheu a 1ª vez | **Cozinha** aparece | 1 receita pronta (Cenoura Assada = +vida) → "coma antes da próxima partida" → mostra o bônus na partida |
-| **Dia 1**, 2ª sessão | **Lago** | 1º peixe **garantido e fácil** (minigame em câmera lenta); ao terminar: "o lago descansa — volte mais tarde" |
-| **Dia 2** | **1º Espírito Selado** aparece numa partida (garantido) → **Oferendas** | O espírito resgatado chega na Clareira e pede 1 item simples |
-| **Dia 2** | **João-de-Barro** e a 1ª **obra** (tempo curto) | "Posso reconstruir a horta maior — volto em 5 minutos" |
-| **Dia 3** | **Saci** visita pela 1ª vez (rouba só 1 cenoura, rindo) + **Lobo-guará filhote** chega | Encenado e leve — apresenta o problema e a solução na mesma cena |
-| **Dia 4** | 1ª **mutação** (acontece sozinha num dia de chuva) | Planta brilha → "Mutação! Vale 3×" → álbum de mutações se abre |
-| **Dia 5** | **Feira** e 2º canteiro de receitas | Espírito comerciante passa pela Clareira |
-| **Dia 7** | **Igarapé** + 1º **evento de fim de semana** | Recompensa de "uma semana na floresta" |
-| Semanas 2+ | Cachoeira, estações Cheia/Vazante, NPCs trabalhando offline, construções nv. 3+ | Um por vez, como atualização de conteúdo |
+| Após a 2ª partida | **Santuário** (Bênçãos) | Moedas para a 1ª Bênção barata → mão aponta → compra → volta a jogar |
+| Após a 3ª partida | **Horta**: 1 canteiro + 1 semente | Planta **cresce em 30 s** (tutorial) → colher → "plante de novo" (agora 5 min) |
+| Colheu a 1ª vez | **Cozinha** | 1 receita pronta (Cenoura Assada = +vida) → "coma antes da próxima partida" |
+| Usou a 1ª refeição | **Lago** | 1º peixe **garantido e fácil**; depois "o lago descansa — volte mais tarde" |
+| ~5ª partida | **1º Espírito Selado** (garantido na partida) → **Oferendas** | O espírito chega na Clareira e pede 1 item simples |
+| Cumpriu a 1ª oferenda | **João-de-Barro** + 1ª **obra** (5 min) | "Posso aumentar a horta — já volto" |
+| 1ª colheita guardada + 1ª noite na Clareira | **Saci** rouba 1 cenoura, rindo → chega o **Lobo-guará filhote** | Problema e solução na mesma cena |
+| Aconteceu sozinho (clima) | 1ª **mutação** | Planta brilha → "Mutação! Vale 3×" → álbum se abre |
+| Estoque cheio pela 1ª vez | **Feira** | Espírito comerciante passa pela Clareira |
+| Depois, com o tempo | Igarapé, Cachoeira, estações, NPCs offline, construções nv. 3+ | Por marcos de progresso e como **atualizações de conteúdo** |
 
-> Regra de segurança: se o jogador jogar muitas partidas seguidas no 1º dia, os
-> desbloqueios **por partida** continuam chegando, mas os **por dia** esperam —
-> evita afogar em novidades e guarda surpresas para amanhã.
+**Único freio:** no máximo **1 novidade por vez** — o próximo sistema só aparece
+depois que o jogador **usou** o anterior pelo menos uma vez. Não há espera por
+calendário; só a ordem garante que ninguém recebe tudo junto.
 
 ---
 
@@ -62,7 +64,7 @@ Os desbloqueios dependem de **progresso do jogador** (partidas jogadas) **e** de
 | Fase | Tempos típicos | Por quê |
 |---|---|---|
 | Tutorial (1ª sessão) | segundos (30 s) | o jogador **vê** o ciclo completo antes de esperar |
-| Primeiros dias | 5 min – 1 h | cabe dentro de uma sessão de algumas partidas |
+| Primeiras sessões | 5 min – 1 h | cabe dentro de uma sessão de algumas partidas |
 | Depois da 1ª semana | 1 h – 8 h | combina com a rotina: **manhã, almoço, noite** (~3 visitas/dia) |
 | Coisas especiais | "durante a noite" (8–12 h) | a "planta de dormir": planta antes de deitar, colhe ao acordar |
 
@@ -121,7 +123,7 @@ Em vez de energia ou relógio visível, o próprio mundo explica a pausa:
 | Meta | O que o design faz |
 |---|---|
 | **Dia 1** (voltar amanhã) | 1ª sessão termina com algo plantado para "amanhã" + promessa do espírito ("volto amanhã") |
-| **Dia 7** | Um sistema novo a cada 1–2 dias na primeira semana — sempre há uma surpresa a caminho |
+| **Dia 7** | Plantas/obras longas, oferendas diárias e mutações raras — sempre há algo crescendo ou para descobrir |
 | **Dia 30** | Álbuns, mutações, estações semanais e obras longas dão metas de semanas |
 
 ## Fontes
