@@ -18,16 +18,18 @@ Base para tudo que vem depois; o jogador quase não vê.
 - ✅ **Registro de eventos** (`Analytics`): partida iniciada/terminada, nível,
   anúncio oferecido/visto — hoje só em memória/console; Firebase no M5
 - ✅ **Qualidade gráfica automática** (Alta/Baixa): aparelho fraco desliga
-  iluminação e reduz partículas
+  a iluminação dinâmica
 - ✅ Música pausa quando o app vai para o fundo
 
 ### M1 — Profundidade da partida 🚧
 - ⬜ **Lanternas de cogumelo** quebráveis no mapa (iluminam) com itens:
   Vácuo de Seiva, Relógio da Mata, Sopro Ancestral, fruta
 - ⬜ **Limite de 4 passivas** por partida
-- ⬜ **Reviver** 1× por partida (via `AdService`)
-- ⬜ **Dobrar o baú** ao abrir (via `AdService`)
-- ⬜ **Dobrar moedas** no fim da partida (via `AdService`)
+- ✅ **Reviver** 1× por partida (via `AdService`)
+- ✅ **Dobrar o baú** ao abrir (via `AdService`)
+- ✅ **Dobrar moedas** no fim da partida (via `AdService`)
+- ℹ️ Ofertas de anúncio prontas, mas **desligadas** (`ADS.ENABLED = false` em
+  `src/config.js`); para testar, abrir com `?ads=1`. Ligar junto com o AdMob (M5).
 - ⬜ **Modo Infinito** depois de vencer o Ancião
 
 ### M2 — Clareira, parte 1: o acampamento ⬜
