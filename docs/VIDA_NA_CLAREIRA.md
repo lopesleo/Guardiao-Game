@@ -171,7 +171,7 @@ precisava ser alimentado. No Guardião:
 
 ---
 
-## 4. Cozinha, Feira e Oferendas
+## 4. Cozinha, Feira e Pedidos dos bichos
 
 ### 4.1 Receitas (40+), culinária brasileira + místicas
 Moqueca, tacacá, caldeirada, pirão, tapioca, pamonha, curau, pé-de-moleque,

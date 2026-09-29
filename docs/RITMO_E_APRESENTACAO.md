@@ -54,7 +54,7 @@
 | 1ª colheita guardada + 1ª noite na Clareira | **Saci** rouba 1 cenoura, rindo → chega o **Lobo-guará filhote** | Problema e solução na mesma cena |
 | Aconteceu sozinho (clima) | 1ª **mutação** | Planta brilha → "Mutação! Vale 3×" → álbum se abre |
 | Estoque cheio pela 1ª vez | **Feira** | A Anciã sugere vender o excedente |
-| Depois, com o tempo | Igarapé, Cachoeira, estações, NPCs offline, construções nv. 3+ | Por marcos de progresso e como **atualizações de conteúdo** |
+| Depois, com o tempo | Igarapé, Cachoeira, estações, bichos trabalhando offline, construções nv. 3+ | Por marcos de progresso e como **atualizações de conteúdo** |
 
 **Único freio:** no máximo **1 novidade por vez** — o próximo sistema só aparece
 depois que o jogador **usou** o anterior pelo menos uma vez. Não há espera por
@@ -88,7 +88,7 @@ Em vez de energia ou relógio visível, o próprio mundo explica a pausa:
   **sinais do mundo**, não números.
 
 ### 3.4 Limites que não castigam
-- **Armazenamento de 8–12 h** para NPCs e colheita: dá para passar o dia fora
+- **Armazenamento de 8–12 h** para bichos e colheita: dá para passar o dia fora
   sem perder, mas não uma semana inteira (senão o jogador não volta).
 - **Nada morre**: descuidar só reduz a qualidade (a planta que murcha e se perde
   do Colheita Feliz frustrava).
@@ -98,7 +98,7 @@ Em vez de energia ou relógio visível, o próprio mundo explica a pausa:
 | Frequência | O que renova |
 |---|---|
 | A cada partida | adianta obras; traz sementes/iscas/madeira |
-| Algumas horas | colheitas, peixes do lago, produção dos NPCs, clima |
+| Algumas horas | colheitas, peixes do lago, produção dos bichos, clima |
 | Diário | pedidos dos bichos, missões, baú diário, "peixe do dia", visita do Saci |
 | Semanal | estação (Cheia/Vazante), Festival de Pesca, missão semanal |
 | Por atualização | pontos de pesca, plantas, receitas, bichos novos |
@@ -127,7 +127,7 @@ Em vez de energia ou relógio visível, o próprio mundo explica a pausa:
 | Meta | O que o design faz |
 |---|---|
 | **Dia 1** (voltar amanhã) | 1ª sessão termina com algo plantado para "amanhã" + a capivara avisa que volta amanhã com fome |
-| **Dia 7** | Plantas/obras longas, oferendas diárias e mutações raras — sempre há algo crescendo ou para descobrir |
+| **Dia 7** | Plantas/obras longas, pedidos diários dos bichos e mutações raras — sempre há algo crescendo ou para descobrir |
 | **Dia 30** | Álbuns, mutações, estações semanais e obras longas dão metas de semanas |
 
 ## Fontes

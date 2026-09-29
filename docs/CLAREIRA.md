@@ -17,14 +17,14 @@
   pescar, cozinhar. É o hábito diário que o modelo com anúncios precisa.
 - **Preparação antes da partida** (escolher a refeição) cria decisão estratégica —
   como as refeições do *Monster Hunter*.
-- **NPCs trabalhando offline** é a fórmula de jogos "idle": sempre há algo esperando
+- **Ajudantes trabalhando offline** é a fórmula de jogos "idle": sempre há algo esperando
   quando você volta.
 - Dá **alma** ao menu: hoje o menu é uma tela de botões; a Clareira vira um lugar.
 
 ### Riscos e como resolver
 | Risco | Solução proposta |
 |---|---|
-| **Escopo gigante** (pesca + horta + cozinha + NPCs + construções é quase um segundo jogo) | Dividir em **fases** (seção 10); a 1ª já entrega valor sozinha |
+| **Escopo gigante** (pesca + horta + cozinha + bichos + construções é quase um segundo jogo) | Dividir em **fases** (seção 10); a 1ª já entrega valor sozinha |
 | **Poder demais**: refeição + acampamento + Bênçãos somados deixam o jogo fácil | Refeição dura **1 partida** e é **só 1 por partida** (2 com Cozinha nv. 3); bônus modestos (≤ 15%); construções dão mais **conveniência/conteúdo** que força bruta |
 | **Sistemas duplicados**: Bênçãos, Arsenal e Clareira competindo | **Unificar**: as Bênçãos viram o **Santuário**, o Arsenal vira a **Forja** — tudo mora na Clareira |
 | **Moedas demais** confundem | Só 3 tipos: **Moedas** (partidas), **Madeira Ancestral** (materiais de construção, cai nas partidas) e **Ingredientes** (horta e pesca) |
@@ -45,11 +45,11 @@ Partida (7 min) ──► traz Moedas, Madeira Ancestral, Sementes, Iscas, Bicho
      │                                         ▼
 Refeição (buff 1 partida)          Clareira: construir, plantar, pescar, contratar
      ▲                                         │
-     └──── Cozinha ◄── Ingredientes ◄── Horta / Lago / NPCs (offline)
+     └──── Cozinha ◄── Ingredientes ◄── Horta / Lago / Bichos (offline)
 ```
 
 **Sessão curta (1–2 min, sem partida):** colher, replantar, pescar 1–2 peixes,
-recolher o que os NPCs juntaram. **Sessão longa:** isso + cozinhar + 1–3 partidas.
+recolher o que os bichos juntaram. **Sessão longa:** isso + cozinhar + 1–3 partidas.
 
 ---
 
@@ -60,7 +60,7 @@ recolher o que os NPCs juntaram. **Sessão longa:** isso + cozinhar + 1–3 part
 - O jogador **toca nas construções** (no PC, clica ou anda até elas).
 - **Trilha da floresta** (saída do acampamento) = **JOGAR**.
 - Construções com algo pronto mostram um **ícone flutuante** (colheita pronta,
-  NPC com carga cheia, refeição cozida) — convida a tocar.
+  bicho com carga cheia, refeição cozida) — convida a tocar.
 - A Clareira **cresce visualmente** com as melhorias (barracas, tochas, bandeiras,
   cerca, jardim) — progresso que se vê.
 
@@ -281,7 +281,7 @@ jogador voltar ("chegou a pescaria!").
   não prejudica ninguém, não vale complicar.
 - Novo formato de save com **versão + migração** (Bênçãos/Arsenal atuais viram
   níveis do Santuário/Forja sem perda).
-- A Clareira reaproveita o motor de pixel-art (construções procedurais, NPCs
+- A Clareira reaproveita o motor de pixel-art (construções procedurais, bichos
   como variações de paleta dos heróis) e a iluminação dinâmica (fogueira e
   tochas iluminando a cena).
 
