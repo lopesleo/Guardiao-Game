@@ -34,6 +34,41 @@
 
 ---
 
+## 1.1 Validação de mercado (pesquisa de set/2026)
+
+**A favor — jogos que já fizeram algo parecido e deram certo:**
+| Jogo | O que combinou | Resultado |
+|---|---|---|
+| **Ball x Pit** (2025) | ação estilo survivor + **construção de base** entre partidas | **2+ milhões** de cópias, Metacritic 84, avaliações "extremamente positivas" |
+| **Dave the Diver** | ação + um **segundo loop** que alimenta o primeiro | **10+ milhões** de cópias |
+| **HoloCure** (Holo House) | survivor-like + **pesca, horta, mascotes** cujas recompensas **servem ao jogo principal** — exatamente a nossa estrutura | modo querido pelos fãs, expandido em atualizações |
+| **Survivor.io** | **pets como companheiros na partida** | virou padrão no gênero no celular (lá, vendidos por sorteio pago — aqui, conquistados jogando = vantagem de justiça) |
+| **Neko Atsume** | tigela de comida + **presentes enquanto você está fora** | clássico de retenção com o mínimo de sistemas |
+
+**Alertas — o que pode dar errado:**
+- **Mineko's Night Market** (2023) misturou gêneros e recebeu críticas mistas:
+  *"jogabilidade confusa… deveria ter focado mais em um dos lados"*. → Reforça a
+  regra de ouro: **a Clareira serve à ação**, nunca compete com ela.
+- **"Muro de complexidade" do 3º dia**: é quando muitos jogos de celular
+  apresentam sistemas demais e o jogador desiste. O problema não é ter muitos
+  recursos, é **apresentá-los de forma avassaladora**. → Nossa resposta é o
+  [`RITMO_E_APRESENTACAO.md`](RITMO_E_APRESENTACAO.md) (uma novidade por vez), mas
+  o risco é real — **medir a saída no dia 3** com analytics.
+- **Adicionar sistemas para atrair quem não gosta do jogo principal dilui a
+  experiência do público central.** → A Clareira existe para quem já gosta da ação
+  ter mais motivos para voltar, não para virar outro jogo.
+
+**Veredito:** a ideia é **validada** — o formato "ação + base/atividades que
+alimentam a ação" tem sucessos grandes e recentes. Ajustes que a pesquisa pede:
+1. **Lançar enxuto:** Clareira com construções + horta + cozinha (F1–F2); pesca e
+   bichos como atualizações seguintes.
+2. **Teste para cada novo recurso:** *"isso faz o jogador querer jogar a próxima
+   partida?"* Se não, não entra.
+3. **Bichos nunca por sorteio pago** — só resgatados jogando.
+4. **Medir** (analytics) a saída nos dias 1, 3 e 7 para ajustar o ritmo.
+
+---
+
 > Como e quando cada parte é apresentada ao jogador (sem despejar informação) e
 > o ritmo de tempo que o faz voltar: [`RITMO_E_APRESENTACAO.md`](RITMO_E_APRESENTACAO.md).
 
