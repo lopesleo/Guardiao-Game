@@ -109,6 +109,21 @@ const MAPS = {
     "kllk.kllk",
     "kkkk.kkkk",
   ],
+  // "Assistir anúncio" — telinha com ▶ (símbolo universal de vídeo premiado)
+  play: [
+    ".kkkkkkkkkk.",
+    "kaaaaaaaaaak",
+    "kaxxwxxxxxak",
+    "kaxxwwxxxxak",
+    "kaxxwwwxxxak",
+    "kaxxwwwwxxak",
+    "kaxxwwwxxxak",
+    "kaxxwwxxxxak",
+    "kaxxwxxxxxak",
+    "kaaaaaaaaaak",
+    ".kkkkkkkkkk.",
+    "...kk..kk...",
+  ],
   fullscreen: [
     "kkkkk..kkkkk",
     "klllk..klllk",

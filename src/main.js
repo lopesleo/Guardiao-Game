@@ -10,6 +10,7 @@ import { HUDScene } from './scenes/HUDScene.js';
 import { LevelUpScene } from './scenes/LevelUpScene.js';
 import { GameOverScene } from './scenes/GameOverScene.js';
 import { PauseScene } from './scenes/PauseScene.js';
+import { ReviveScene } from './scenes/ReviveScene.js';
 import { setupPlatform } from './systems/Platform.js';
 
 const config = {
@@ -40,6 +41,7 @@ const config = {
     LevelUpScene,
     GameOverScene,
     PauseScene,
+    ReviveScene,
   ],
 };
 
