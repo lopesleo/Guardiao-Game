@@ -8,6 +8,8 @@ inimigo disparam Vapor, Cristal ou Sobrecarga.
 Feito em **JavaScript + Phaser 3**, empacotado para Android com **Capacitor**.
 Roda 100% offline.
 
+**Jogue no navegador:** <https://lopesleo.github.io/Guardiao-Game/>
+
 ## Conteúdo
 
 - **6 armas** (Cajado, Aura Gélida, Bumerangue, Raio, Orbe Gélido, Sopro
