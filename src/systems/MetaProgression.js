@@ -3,6 +3,7 @@
 import { META, MAX_BLESSING_RANK, ANCESTRAL, ACHIEVEMENTS } from '../config.js';
 
 const DEFAULT = {
+  saveVersion: 2,
   totalCoins: 0,
   highScoreSeconds: 0,
   // Cajado (fogo) + Aura (gelo) desde o início: a 1ª partida já mostra a
@@ -39,10 +40,42 @@ function freshDefault() {
     blessingRanks: {},
     winsByDifficulty: {},
     achievements: [],
+    unlockedWeapons: DEFAULT.unlockedWeapons.slice(),
     unlockedCharacters: ['guardian'],
+    hintsSeen: [],
     stats: { reactions: {}, totalKills: 0, totalCoinsEarned: 0 },
   };
 }
+
+// Completa campos que faltam (saves antigos) sem perder os existentes.
+function withDefaults(parsed) {
+  const fd = freshDefault();
+  const data = { ...fd, ...parsed };
+  data.stats = { ...fd.stats, ...(parsed.stats || {}) };
+  data.stats.reactions = { ...((parsed.stats || {}).reactions || {}) };
+  for (const k of ['achievements', 'unlockedWeapons', 'unlockedAbilities', 'unlockedCharacters', 'hintsSeen'])
+    if (!Array.isArray(data[k])) data[k] = fd[k];
+  data.saveVersion = SAVE_VERSION;
+  return data;
+}
+
+// Versão do formato do save. Ao mudar a estrutura: SAVE_VERSION++ e adicionar
+// MIGRATIONS[versãoAnterior] que transforma o objeto no formato novo.
+export const SAVE_VERSION = 2;
+const MIGRATIONS = {
+  // v1 → v2: tudo que antes era corrigido "no susto" ao carregar
+  1: (d) => {
+    // Fase 2: bênçãos booleanas viram rank 1
+    if (Array.isArray(d.ownedBlessings) && !d.blessingRanks) {
+      d.blessingRanks = {};
+      for (const id of d.ownedBlessings) d.blessingRanks[id] = 1;
+    }
+    delete d.ownedBlessings;
+    // Aura Gélida passou a vir liberada para todos
+    d.unlockedWeapons = Array.isArray(d.unlockedWeapons) ? d.unlockedWeapons : ['STAFF'];
+    if (!d.unlockedWeapons.includes('AURA')) d.unlockedWeapons.push('AURA');
+  },
+};
 
 export class MetaProgression {
   constructor() {
@@ -59,29 +92,27 @@ export class MetaProgression {
     } catch { return false; }
   }
 
+  // Carrega o save e o traz até a versão atual (SAVE_VERSION) aplicando as
+  // migrações em ordem. Antes de migrar, guarda uma cópia de segurança; se o
+  // JSON estiver corrompido, preserva o texto original em vez de apagá-lo.
   _load() {
     if (!this.available) return freshDefault();
+    let raw = null;
     try {
-      const raw = localStorage.getItem(META.STORAGE_KEY);
+      raw = localStorage.getItem(META.STORAGE_KEY);
       if (!raw) return freshDefault();
       const parsed = JSON.parse(raw);
-      const fd = freshDefault();
-      const data = { ...fd, ...parsed };
-      // Migração Fase 3: saves antigos não têm achievements/stats
-      if (!Array.isArray(data.achievements)) data.achievements = [];
-      if (!data.unlockedWeapons.includes('AURA')) data.unlockedWeapons.push('AURA');
-      if (!Array.isArray(data.unlockedCharacters)) data.unlockedCharacters = ['guardian'];
-      data.stats = { ...fd.stats, ...(parsed.stats || {}) };
-      data.stats.reactions = { ...((parsed.stats || {}).reactions || {}) };
-      // Migração Fase 2: saves antigos guardavam ownedBlessings (booleano) →
-      // converte cada bênção possuída para rank 1.
-      if (Array.isArray(parsed.ownedBlessings) && !parsed.blessingRanks) {
-        data.blessingRanks = {};
-        for (const id of parsed.ownedBlessings) data.blessingRanks[id] = 1;
+      const from = parsed.saveVersion || 1;
+      if (from < SAVE_VERSION) {
+        try { localStorage.setItem(`${META.STORAGE_KEY}_backup_v${from}`, raw); } catch {}
+        for (let v = from; v < SAVE_VERSION; v++) MIGRATIONS[v]?.(parsed);
+        parsed.saveVersion = SAVE_VERSION;
       }
-      delete data.ownedBlessings;
-      return data;
-    } catch { return freshDefault(); }
+      return withDefaults(parsed);
+    } catch {
+      if (raw) try { localStorage.setItem(`${META.STORAGE_KEY}_corrupt`, raw); } catch {}
+      return freshDefault();
+    }
   }
 
   _save() {
