@@ -6,13 +6,13 @@ import { CSS } from "../art/Palette.js";
 
 // t = segundos de partida
 const SCRIPT = [
-  { t: 45, type: "swarm", n: 14, kind: "bee", msg: "ENXAME DE VESPAS!" },
-  { t: 95, type: "miniboss", kind: "alpha", msg: "O LOBO ALFA CHEGOU!" },
-  { t: 150, type: "ring", n: 20, kinds: ["wolf"], msg: "CERCO!" },
-  { t: 205, type: "swarm", n: 22, kind: "bee", msg: "ENXAME DE VESPAS!" },
-  { t: 255, type: "miniboss", kind: "elder", msg: "O OGRO ANCIÃO DESPERTA!" },
-  { t: 300, type: "ring", n: 26, kinds: ["wolf", "goblin", "shroom"], msg: "CERCO!" },
-  { t: 350, type: "swarm", n: 30, kind: "bee", msg: "A COLMEIA SE ENFURECE!" },
+  { t: 70, type: "swarm", n: 10, kind: "bee", msg: "ENXAME DE VESPAS!" },
+  { t: 120, type: "miniboss", kind: "alpha", msg: "O LOBO ALFA CHEGOU!" },
+  { t: 170, type: "ring", n: 18, kinds: ["wolf"], msg: "CERCO!" },
+  { t: 222, type: "swarm", n: 18, kind: "bee", msg: "ENXAME DE VESPAS!" },
+  { t: 268, type: "miniboss", kind: "elder", msg: "O OGRO ANCIÃO DESPERTA!" },
+  { t: 318, type: "ring", n: 24, kinds: ["wolf", "goblin", "shroom"], msg: "CERCO!" },
+  { t: 362, type: "swarm", n: 26, kind: "bee", msg: "A COLMEIA SE ENFURECE!" },
 ];
 
 export class RunEvents {
@@ -46,6 +46,8 @@ export class RunEvents {
 
   _run(ev) {
     const s = this.scene;
+    // Tamanho do evento acompanha o Perigo escolhido
+    ev = { ...ev, n: Math.round((ev.n ?? 0) * (s.diff?.spawnMult ?? 1)) };
     const p = s.player;
     s.hud.showBossBanner(ev.msg, ev.type === "miniboss" ? CSS.goldHi : CSS.redHi);
     s.sound.play("sfx_boss_roar", { volume: 0.4, rate: ev.type === "miniboss" ? 0.8 : 1.3 });

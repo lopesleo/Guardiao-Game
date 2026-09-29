@@ -133,7 +133,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.speed = 205;
       this.maxHp *= 0.35;
       this.hp = this.maxHp;
-      this.dmg *= 0.6;
+      this.dmg *= 0.45;
       this.setScale(GAME.PIXEL_SCALE * 0.85);
       this.contactRadius = 22;
     } else if (kind === "shroom") {

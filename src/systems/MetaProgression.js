@@ -17,7 +17,7 @@ const DEFAULT = {
     totalCoinsEarned: 0,   // só ganhos (compras não descontam)
   },
   // Dificuldade (Fase 1 — ver docs/META_LOOP.md)
-  selectedDifficulty: 1,      // padrão = Guardião (balanceamento "normal" atual)
+  selectedDifficulty: 0,      // saves novos começam no Aprendiz (1ª partida não pode frustrar)
   // Cursor de desbloqueio: libera níveis até maxDifficultyCleared+1. Começa em 0
   // para que Aprendiz (fácil, opcional) E Guardião (normal) já venham abertos.
   // Cada vitória num nível ainda não vencido avança o cursor em 1.

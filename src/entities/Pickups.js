@@ -36,7 +36,12 @@ class Pickup extends Phaser.Physics.Arcade.Sprite {
     this.body.setVelocity(0, 0);
     this.setDepth(y + 9000);
     this._pulled = false;
-    if (this.anim) this.play({ key: this.anim, startFrame: Math.floor(Math.random() * 3) });
+    if (this.anim) {
+      // Quadro inicial aleatório (dessincroniza o brilho), limitado ao tamanho
+      // da animação — orbe tem só 2 quadros; quadro inexistente quebrava o loop.
+      const n = this.scene.anims.get(this.anim)?.frames.length ?? 1;
+      this.play({ key: this.anim, startFrame: Math.floor(Math.random() * n) });
+    }
     this.glow?.setVisible(true);
     // Pulinho de saída: arco rápido pra cima e quique
     this._hop?.stop();
