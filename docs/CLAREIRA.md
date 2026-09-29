@@ -60,8 +60,9 @@
 
 **Veredito:** a ideia é **validada** — o formato "ação + base/atividades que
 alimentam a ação" tem sucessos grandes e recentes. Ajustes que a pesquisa pede:
-1. **Lançar enxuto:** Clareira com construções + horta + cozinha (F1–F2); pesca e
-   bichos como atualizações seguintes.
+1. **Lançar enxuto:** Clareira com construções + horta + **pesca** + cozinha
+   (F1–F2; pesca junto porque completa a cozinha — decisão do Leonardo); bichos
+   como atualização seguinte.
 2. **Teste para cada novo recurso:** *"isso faz o jogador querer jogar a próxima
    partida?"* Se não, não entra.
 3. **Bichos nunca por sorteio pago** — só resgatados jogando.
@@ -306,14 +307,14 @@ A compra **"Remover anúncios"** concede tudo isso sem assistir.
 | Fase | Conteúdo | Esforço |
 |---|---|---|
 | **F1 — Clareira base** | Cena do acampamento como menu; Fogueira (Jogar), Santuário (Bênçãos), Forja (Arsenal), Mural; construções com níveis, **obras com tempo + 1º João-de-Barro**, partidas adiantando obras, Madeira Ancestral caindo nas partidas | M–G |
-| **F2 — Comida** | Horta (tempo real, 3–6 canteiros, 5 plantas) + Cozinha (8 receitas) + sistema de buff de 1 partida | M |
-| **F3 — Pesca** | Lago + minigame de um polegar + 7 peixes + varas + horário real | M |
-| **F4 — Bichos** | Bichos presos nas partidas + Toca dos Bichos + ajuda nas atividades + tigela e presentinhos + afeição + companheiro na partida | M–G |
-| **F5 — Vida** | Torre de Vigia liberando personagens, decoração, cosméticos, eventos sazonais na Clareira | contínuo |
+| **F2 — Comida** | Horta (tempo real, 3–6 canteiros, 5 plantas) + **Lago com minigame de um polegar, 7 peixes, varas e horário real** + Cozinha (8 receitas misturando **peixe + horta**) + sistema de buff de 1 partida | M–G |
+| **F3 — Bichos** | Bichos presos nas partidas + Toca dos Bichos + ajuda nas atividades + tigela e presentinhos + afeição + companheiro na partida | M–G |
+| **F4 — Vida** | Torre de Vigia liberando personagens, decoração, cosméticos, eventos sazonais na Clareira | contínuo |
 
-Sugestão: **F1 e F2 antes do lançamento** (já transformam o menu e criam o hábito
-diário); F3 e F4 como primeiras atualizações — cada uma vira um motivo para o
-jogador voltar ("chegou a pescaria!").
+Decisão: **F1 e F2 antes do lançamento** — acampamento, horta, **pesca** e cozinha
+juntas, porque a pesca completa a cozinha (moqueca, peixe na folha, espetinho) e
+dá uma atividade ativa além de plantar e esperar. F3 (bichos) e F4 como
+atualizações — cada uma vira um motivo para o jogador voltar ("chegaram os bichos!").
 
 ## 11. Notas técnicas
 

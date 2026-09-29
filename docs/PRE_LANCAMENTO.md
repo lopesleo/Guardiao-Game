@@ -43,7 +43,7 @@ Legenda — **Esforço:** P (horas) · M (1–2 dias) · G (3+ dias) ·
 | 2.7 | **Santuários da Floresta**: Carga (buff), Ganância (+moedas, +dificuldade), Desafio (elites → baú grátis) — dá motivo para explorar o mapa — *Megabonk* | M | 🤖 |
 | 2.8 | **Missões que desbloqueiam** (personagens/armas liberados por feito, não só por moeda) — metas sempre "quase lá" — *Megabonk* | M | 🤖 |
 | 2.9 | **Limite de 4 passivas** por partida: cada carta vira decisão — *Megabonk* (Tomos) | P | 🤖 |
-| 2.10 | **Clareira do Guardião — fases F1 e F2** (acampamento como menu + horta e cozinha com buff de 1 partida) — ver [`CLAREIRA.md`](CLAREIRA.md) | M–G | 🤖 |
+| 2.10 | **Clareira do Guardião — fases F1 e F2** (acampamento como menu + horta + **pesca** + cozinha com buff de 1 partida) — ver [`CLAREIRA.md`](CLAREIRA.md) | G | 🤖 |
 
 ## 3. Medição (sem isso não dá pra saber se está funcionando)
 
