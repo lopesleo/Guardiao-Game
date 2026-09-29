@@ -34,6 +34,9 @@
 
 ---
 
+> Como e quando cada parte é apresentada ao jogador (sem despejar informação) e
+> o ritmo de tempo que o faz voltar: [`RITMO_E_APRESENTACAO.md`](RITMO_E_APRESENTACAO.md).
+
 ## 2. Loop principal
 
 ```

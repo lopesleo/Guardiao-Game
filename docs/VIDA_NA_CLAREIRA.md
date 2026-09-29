@@ -42,6 +42,8 @@ No Guardião:
 
 ---
 
+> Ordem de descoberta e ritmo de tempo: [`RITMO_E_APRESENTACAO.md`](RITMO_E_APRESENTACAO.md).
+
 ## 2. Pescaria (jogo completo)
 
 ### 2.1 Pontos de pesca (6, liberados aos poucos)
