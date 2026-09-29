@@ -85,6 +85,54 @@ a vir de **marcos da Clareira + missões**, não só de moedas.
 Custos: **Moedas + Madeira Ancestral** (cai de mini-chefes, baús e do Ancião) —
 assim melhorar o acampamento **exige jogar partidas**, não só esperar.
 
+### 4.1 Obras com tempo de construção e construtores (estilo *Clash of Clans*)
+
+Melhorar uma construção não é instantâneo: vira uma **obra** com tempo, feita por
+um **construtor**. Isso cria o ritmo "começo uma obra, jogo umas partidas, volto
+e está pronta" — e o gancho de notificação ("sua Cozinha nível 3 ficou pronta!").
+
+**Construtores = espíritos João-de-Barro** (o pássaro construtor brasileiro — casa
+com o tema do folclore). Cada um faz **1 obra por vez**.
+
+| Construtor | Como se consegue |
+|---|---|
+| 1º João-de-Barro | já vem no início |
+| 2º | marco do Nível do Acampamento (ex.: nível 8) |
+| 3º | resgatado num Espírito Selado raro (Perigo Veterano+) |
+| 4º | conquista de longo prazo (ex.: vencer no Pesadelo) |
+
+> Diferente do *Clash of Clans* (que **vende** construtores com gemas), aqui
+> construtor **nunca é vendido** — continua o princípio "não vender progresso".
+
+**Tempos por nível** (curtos no começo para não frustrar; longos só no fim):
+
+| Nível da obra | Tempo |
+|---|---|
+| 1 → 2 | instantâneo |
+| 2 → 3 | 5 min |
+| 3 → 4 | 1 h |
+| 4 → 5 | 4 h |
+| (melhorias futuras) | até 12 h, nunca mais que 1 dia |
+
+**Acelerar sem pagar, e sem só esperar:**
+- **Jogar adianta a obra:** cada partida concluída adianta **todas** as obras em
+  andamento (ex.: 10 min + 1 min por minuto sobrevivido). Quem joga mais constrói
+  mais rápido — o timer premia jogar, não ficar olhando o relógio.
+- **Termina grátis com menos de 5 min** restantes (toque para concluir).
+- **Anúncio opcional:** −30 min numa obra (até 3× por dia).
+- **Poção do Construtor** (rara, cai de baús e de missões semanais): 1 h de todas
+  as obras passa num instante.
+- A compra "Remover anúncios" transforma os −30 min em toques sem anúncio.
+
+**Visual:** a construção em obra ganha andaime, placa e o João-de-Barro
+trabalhando (bater de martelo, pó); ao terminar, confete e um "Novo nível!".
+
+**Regras para não virar frustração:**
+- Nada da partida depende de obra pronta (sem bloquear o jogo).
+- Sempre mostrar **quanto falta** e o **que a obra vai dar** antes de começar.
+- Notificação local **opcional** quando uma obra termina.
+- Os primeiros 30 minutos do jogador nunca esperam obra: os níveis 1→3 são rápidos.
+
 ---
 
 ## 5. Horta
@@ -185,7 +233,7 @@ A compra **"Remover anúncios"** concede tudo isso sem assistir.
 
 | Fase | Conteúdo | Esforço |
 |---|---|---|
-| **F1 — Clareira base** | Cena do acampamento como menu; Fogueira (Jogar), Santuário (Bênçãos), Forja (Arsenal), Mural; construções com níveis e Madeira Ancestral caindo nas partidas | M–G |
+| **F1 — Clareira base** | Cena do acampamento como menu; Fogueira (Jogar), Santuário (Bênçãos), Forja (Arsenal), Mural; construções com níveis, **obras com tempo + 1º João-de-Barro**, partidas adiantando obras, Madeira Ancestral caindo nas partidas | M–G |
 | **F2 — Comida** | Horta (tempo real, 3–6 canteiros, 5 plantas) + Cozinha (8 receitas) + sistema de buff de 1 partida | M |
 | **F3 — Pesca** | Lago + minigame de um polegar + 7 peixes + varas + horário real | M |
 | **F4 — Espíritos** | Espíritos Selados nas partidas + Casa dos Espíritos + produção offline com limite + notificações | M–G |
@@ -212,4 +260,5 @@ jogador voltar ("chegou a pescaria!").
 - [MH Wilds Food System Explained — Icy Veins](https://www.icy-veins.com/monster-hunter-wilds/news/mh-wilds-food-system-explained-best-buffs-combos/) · [Monster Hunter Wilds' new cooking system — PC Gamer](https://www.pcgamer.com/games/action/monster-hunter-wilds-new-cooking-system-is-a-win-for-balance-but-theres-a-meowscular-chef-shaped-hole-in-my-heart/) · [I really dislike timed meal buff effects — ResetEra](https://www.resetera.com/threads/i-really-dislike-timed-meal-buff-effects.366287/)
 - [What Is an Idle Game? Clickers and Offline Progress](https://azfreegame.com/news/what-is-an-idle-game) · [Best Idle Games on Mobile — Udonis](https://www.blog.udonis.co/mobile-marketing/mobile-games/best-idle-games)
 - [House Contractor — Hades Wiki](https://hades.fandom.com/wiki/House_Contractor)
+- [Builder's Hut — Clash of Clans Wiki](https://clashofclans.fandom.com/wiki/Builder's_Hut) · [Clash of Clans — Wikipedia](https://en.wikipedia.org/wiki/Clash_of_Clans)
 - [Holo House — HoloCure Wiki](https://holocure.wiki.gg/wiki/Holo_House) · [Fishing Pond — HoloCure Wiki](https://holocure.wiki.gg/wiki/Fishing_Pond)
