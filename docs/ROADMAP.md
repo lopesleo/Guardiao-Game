@@ -24,7 +24,7 @@ Base para tudo que vem depois; o jogador quase não vê.
 ### M1 — Profundidade da partida 🚧
 - ⬜ **Lanternas de cogumelo** quebráveis no mapa (iluminam) com itens:
   Vácuo de Seiva, Relógio da Mata, Sopro Ancestral, fruta
-- ⬜ **Limite de 4 passivas** por partida
+- ✅ **Limite de 4 passivas** por partida
 - ✅ **Reviver** 1× por partida (via `AdService`)
 - ✅ **Dobrar o baú** ao abrir (via `AdService`)
 - ✅ **Dobrar moedas** no fim da partida (via `AdService`)

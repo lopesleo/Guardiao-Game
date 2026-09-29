@@ -301,6 +301,10 @@ export const CHARACTERS = [
 const r = (min, max) => Math.floor(min + Math.random() * (max - min + 1));
 const rf = (min, max) => +(min + Math.random() * (max - min)).toFixed(2);
 
+// Máximo de passivas DIFERENTES por partida. Cheio, as cartas só oferecem as que
+// o jogador já tem — escolher vira decisão de build (como armas têm 6 espaços).
+export const PASSIVE_SLOTS = 4;
+
 // label: nome curto (título da carta) · desc: o que faz, em linguagem de jogador.
 export const PASSIVES = [
   {

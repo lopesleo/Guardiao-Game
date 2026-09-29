@@ -1,6 +1,6 @@
 // Pausa: overlay sobre a GameScene. Mostra a build atual (armas com nível,
 // passivas acumuladas) e estatísticas; Continuar / Opções / Desistir.
-import { WEAPONS, PASSIVES, MAX_WEAPON_LEVEL } from "../config.js";
+import { WEAPONS, PASSIVES, MAX_WEAPON_LEVEL, PASSIVE_SLOTS } from "../config.js";
 import { formatTime } from "../utils.js";
 import { PAL, CSS } from "../art/Palette.js";
 import { WEAPON_ICON, PASSIVE_ICON } from "../art/Icons.js";
@@ -52,7 +52,7 @@ export class PauseScene extends Phaser.Scene {
     const taken = p.passivesTaken || {};
     const ids = Object.keys(taken);
     const ty = py + 210;
-    text(this, px + 28, ty, "PASSIVAS", { size: 20, color: hexIce(), origin: [0, 0.5] });
+    text(this, px + 28, ty, `PASSIVAS ${ids.length}/${PASSIVE_SLOTS}`, { size: 20, color: hexIce(), origin: [0, 0.5] });
     if (!ids.length) text(this, px + 28, ty + 40, "Nenhuma ainda — escolha passivas nas cartas de nível.", { size: 16, color: CSS.dim, origin: [0, 0.5] });
     ids.forEach((id, i) => {
       const x = px + 40 + i * 64;
