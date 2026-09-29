@@ -8,21 +8,21 @@
 
 ---
 
-## 1. A visão: dois jogos que se alimentam
+## 1. A visão: duas atividades que se alimentam
 
-O modelo é **Dave the Diver**: de dia você mergulha (ação), à noite serve sushi no
-restaurante (gestão). Um loop alimenta o outro — "cada mergulho eu penso no próximo
-turno do restaurante; cada turno eu anoto o que buscar no próximo mergulho". O jogo
-tem **150+ ingredientes e 260 receitas** e vai liberando fazenda, pesqueiro e uma
-2ª filial para quebrar a repetição.
+A referência de estrutura é o *Dave the Diver* — dois loops em que um alimenta o
+outro ("em cada mergulho eu já penso no que vou precisar depois"). **Sem copiar o
+restaurante** (decisão do Leonardo: gestão de restaurante não combina com o
+Guardião). Aqui o segundo loop é **cuidar da Clareira** — pescar, plantar e
+cozinhar para **ficar mais forte na floresta**.
 
 No Guardião:
 
 ```
    FLORESTA (ação, 7 min)                       CLAREIRA (vida, 1–5 min)
-   sobreviver à horda                           pescar · plantar · cozinhar · servir
+   sobreviver à horda                           pescar · plantar · cozinhar
         │  sementes raras, iscas, madeira,            │  refeições (buff 1 partida),
-        │  espíritos resgatados (clientes/NPCs)       │  moedas do restaurante → Bênçãos,
+        │  espíritos resgatados (NPCs)                │  moedas da Feira → Bênçãos,
         └──────────────────────────►──────────────────┘  personagens por marcos
                          ◄────────────────────────────
 ```
@@ -169,39 +169,33 @@ precisava ser alimentado. No Guardião:
 
 ---
 
-## 4. Cozinha e o restaurante **Tenda dos Encantados**
+## 4. Cozinha, Feira e Oferendas
 
-### 4.1 Receitas (60+), culinária brasileira + místicas
+### 4.1 Receitas (40+), culinária brasileira + místicas
 Moqueca, tacacá, caldeirada, pirão, tapioca, pamonha, curau, pé-de-moleque,
 açaí na tigela, **quentão** (Festa Junina), peixe na folha de bananeira… e pratos
 místicos (Sopa do Boitatá, Doce da Lua).
 - Fórmula simples: **base + ingrediente + tempero** (modelo do *Monster Hunter
-  Wilds*); descobrir combinações preenche o **livro de receitas**.
+  Wilds*); descobrir combinações preenche o **livro de receitas** (colecionável).
 - **Qualidade do prato** = qualidade dos ingredientes + minigame rápido de preparo
-  opcional (cortar/mexer no tempo certo, 5 s).
+  opcional (mexer/temperar no tempo certo, 5 s). Prato melhor = buff maior.
 
-### 4.2 O restaurante (o "Bancho Sushi" da Clareira)
-- À noite, **espíritos do folclore** chegam como clientes — Saci, Iara, Boto,
-  Caipora, Cuca… — cada um com gostos, pedidos e paciência diferentes.
-- Servir dá **moedas, gorjetas e reputação**. Clientes especiais trazem
-  **missões** ("o Boto quer um prato de tambaqui dourado") e presentes (receitas,
-  sementes, decoração).
-- **Reputação** libera decoração, novos clientes, mesas e um **garçom espírito**
-  contratável (idle).
-- Turnos curtos (1–2 min) — cabem numa pausa.
-
-### 4.3 A ponte com a ação continua
-- **1 refeição** antes da partida (2 com Cozinha nv. 3) = buff só daquela partida.
-- Moedas do restaurante também compram Bênçãos — **o jogador cozy também
-  progride na ação**.
-
----
+### 4.2 Para onde vai a comida (tudo aponta para a ação)
+- **Refeição da partida**: 1 prato antes de jogar (2 com Cozinha nv. 3) = buff só
+  daquela partida. É o uso principal.
+- **Lobo-guará**: comida mantém o guardião da horta de plantão contra o Saci.
+- **Oferendas aos espíritos**: os espíritos resgatados pedem itens ("o Boto quer um
+  tambaqui dourado") e dão em troca **recompensas da ação** — runas, sementes raras,
+  Poções do Construtor, skins. São as "missões" da Clareira.
+- **Feira**: o excedente (peixe, colheita) vende com **um toque** por moedas, que
+  compram Bênçãos. Sem gestão — só converter sobra em progresso da ação, com teto
+  diário para não desequilibrar.
 
 ## 5. Progressão própria
 
 - **Três ofícios**: Pescador, Agricultor, Cozinheiro — níveis 1 a 30, cada nível
-  com uma vantagem (zona verde maior, chance de mutação, gorjeta maior…).
-- **Coleções/álbuns**: peixes, plantas, mutações, receitas, clientes atendidos.
+  com uma vantagem (zona verde maior, chance de mutação, prato mais forte…).
+- **Coleções/álbuns**: peixes, plantas, mutações, receitas, oferendas cumpridas.
 - **Conquistas próprias** da Clareira (somam às da ação).
 - **Decoração** do acampamento com o que se ganha (troféus de peixe, espantalhos,
   lanternas, bancos) — o lugar fica com a cara do jogador.
@@ -225,14 +219,14 @@ místicos (Sopa do Boitatá, Doce da Lua).
 | Escopo enorme | Fases (seção 8); cada fase é uma atualização que traz jogador de volta |
 | Dividir a identidade do jogo | Marketing como **"ação + vida na floresta"** (como *Dave the Diver*: dois gêneros, uma identidade) |
 | Timers irritantes | Nada bloqueia; tempos curtos no começo; anúncios só opcionais |
-| Economia desequilibrar a ação | Moedas do restaurante entram na mesma economia das Bênçãos, com teto diário de clientes |
+| Economia desequilibrar a ação | Moedas da Feira entram na mesma economia das Bênçãos, com teto diário de venda |
 
 ## 8. Fases sugeridas
 
 | Fase | Conteúdo |
 |---|---|
 | **V1** | Lago + minigame com 3 comportamentos + 15 peixes + tamanhos/recordes + álbum · Horta 4×4 com 12 plantas, qualidade e 3 mutações · Cozinha com 15 receitas e buff de partida |
-| **V2** | **Tenda dos Encantados** (restaurante) com 6 clientes do folclore e reputação |
+| **V2** | **Oferendas** dos espíritos + **Lobo-guará** e o Saci ladrão + Feira |
 | **V3** | Igarapé e Cachoeira + estações Cheia/Vazante + Festival de Pesca semanal |
 | **V4** | Mutações completas + híbridos + culturas gigantes + abelhas e galinhas + estufa |
 | **V5** | Mangue (covos), Várzea, Poço da Iara, lendários, aquário |

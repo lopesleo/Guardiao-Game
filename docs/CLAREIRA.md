@@ -137,8 +137,8 @@ trabalhando (bater de martelo, pó); ao terminar, confete e um "Novo nível!".
 
 > **Versão expandida (jogo à parte):** horta, pesca e cozinha foram ampliadas em
 > [`VIDA_NA_CLAREIRA.md`](VIDA_NA_CLAREIRA.md) — 6 pontos de pesca, ~45 peixes,
-> 30+ plantas com mutações e híbridos, 60+ receitas e o restaurante Tenda dos
-> Encantados. As seções 5–7 abaixo são o resumo da V1.
+> 30+ plantas com mutações e híbridos, 40+ receitas, oferendas aos espíritos e
+> o lobo-guará. As seções 5–7 abaixo são o resumo da V1.
 
 ## 5. Horta
 
