@@ -73,7 +73,7 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 ## Política de privacidade
 
 Obrigatória mesmo sem coleta de dados. Texto pronto em `docs/PRIVACY.md` —
-publique no GitHub Pages (ex.: `https://lopesleo.github.io/guardiao-jogo-p2/docs/PRIVACY.html`)
+publique no GitHub Pages (ex.: `https://lopesleo.github.io/Guardiao-Game/docs/PRIVACY.html`)
 e cole o link no Play Console. Na seção **Segurança dos dados**, declare:
 *o app não coleta nem compartilha dados*.
 
