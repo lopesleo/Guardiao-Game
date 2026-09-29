@@ -130,7 +130,10 @@ export class UpgradeSystem {
     }
 
     const evo = this._evolutionCard(player, have);
-    if (evo) return [evo, ...weightedPick(cards, 2)];
+    if (evo) {
+      this.scene._hint?.("evolution", "EVOLUÇÃO disponível! Arma no nível 5\n+ arma parceira = versão suprema.");
+      return [evo, ...weightedPick(cards, 2)];
+    }
     return weightedPick(cards, 3);
   }
 
@@ -193,7 +196,7 @@ export class UpgradeSystem {
         player.weapons[idx] = evo;
         this.scene.sound.play("sfx_levelup", { volume: 0.7, rate: 0.8 });
         this.scene.cameras.main.flash(220, 216, 140, 255); // flash roxo de evolução
-        this.scene._toast?.(`★ ${def.name}! ★`, 2200);
+        this.scene._toast?.(`EVOLUÇÃO: ${def.name}!`, 2600, "#e8ccff");
         this.scene.hud?.refreshWeapons();
         this.scene._checkAchievements?.(); // "Metamorfose"
       }

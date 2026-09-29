@@ -788,6 +788,208 @@ export class Phoenix extends Boomerang {
   }
 }
 
+// ORBE GÉLIDO: N orbes giram ao redor do player; tocar = dano + gelo.
+// Re-acerto no mesmo alvo limitado por `cooldown` (mapa por inimigo).
+export class OrbitalIce extends Weapon {
+  constructor(scene, defKey = "ORB") {
+    super(scene, defKey);
+    this.angle = 0;
+    this.orbs = [];
+    this.lastHit = new Map();
+  }
+  get count() {
+    return this.def.count + this.extraProj;
+  }
+  get orbitR() {
+    return this.def.range * this.rangeMult * (this.owner?.areaMult ?? 1);
+  }
+  _syncOrbs() {
+    const want = this.count;
+    while (this.orbs.length < want) {
+      const glow = this.scene.add
+        .image(0, 0, "fx_glow")
+        .setScale(0.6)
+        .setTint(COLORS.ICE)
+        .setAlpha(0.5)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(41);
+      const spr = this.scene.add.image(0, 0, "px_iceorb").setScale(this._orbScale ?? 3);
+      this.orbs.push({ glow, spr });
+    }
+    while (this.orbs.length > want) {
+      const o = this.orbs.pop();
+      o.glow.destroy();
+      o.spr.destroy();
+    }
+  }
+  dispose() {
+    for (const o of this.orbs) {
+      o.glow.destroy();
+      o.spr.destroy();
+    }
+    this.orbs = [];
+  }
+  update(time, dt) {
+    if (!this.owner) return;
+    this._syncOrbs();
+    this.angle += this.def.spin * (dt / 1000);
+    const n = this.orbs.length;
+    const R = this.orbitR;
+    const hitR = this.def.hitRadius;
+    const hitSq = hitR * hitR;
+    const cd = this.cooldown;
+    for (let i = 0; i < n; i++) {
+      const a = this.angle + (i / n) * Math.PI * 2;
+      const x = this.owner.x + Math.cos(a) * R;
+      const y = this.owner.y + Math.sin(a) * R * 0.9;
+      const o = this.orbs[i];
+      o.spr.setPosition(x, y).setDepth(y + 10000).setRotation(a * 2);
+      o.glow.setPosition(x, y);
+      const strike = (e, isBoss) => {
+        const dx = e.x - x,
+          dy = e.y - y;
+        if (dx * dx + dy * dy > hitSq) return;
+        const last = this.lastHit.get(e) ?? -1e9;
+        if (time - last < cd) return;
+        this.lastHit.set(e, time);
+        const { dmg, crit } = this.rollHit();
+        const died = e.takeDamage(dmg, isBoss ? undefined : null, x, y, crit);
+        this.owner.lifestealFrom(dmg);
+        this.scene._showDmg(e.x, e.y, dmg, ELEMENT.ICE, crit);
+        this.scene.elemental.applyStatus(e, ELEMENT.ICE);
+        this._onOrbHit?.(e, time, isBoss);
+        if (died) {
+          if (isBoss) this.scene._onBossDeath();
+          else this.scene._onEnemyDeath(e);
+        }
+      };
+      this.scene.enemyPool.forEachActive((e) => e.active && strike(e, false));
+      if (this.scene.boss?.active) strike(this.scene.boss, true);
+    }
+    // Inimigos são pooled: limpa o mapa de acertos de tempos em tempos
+    if (this.lastHit.size > 200) this.lastHit.clear();
+  }
+}
+
+// GELEIRA VIVA (Orbe+Aura): orbes maiores e em maior número que CONGELAM
+export class Glacier extends OrbitalIce {
+  constructor(scene) {
+    super(scene, "GLACIER");
+    this.baseKey = this.def.evolvesFrom;
+    this._orbScale = 4;
+  }
+  _onOrbHit(e, time, isBoss) {
+    if (isBoss || !e.freeze || e.isFrozen(time) || time < e._freezeLockUntil) return;
+    e.freeze(time, this.def.freezeMs, this.def.freezeImmuneMs);
+  }
+}
+
+// SOPRO FLAMEJANTE: cone de fogo na direção do movimento (parado = mira o
+// inimigo mais próximo). Acerta todos dentro do cone.
+export class Flamethrower extends Weapon {
+  constructor(scene, defKey = "FLAME") {
+    super(scene, defKey);
+  }
+  get range() {
+    return this.def.range * this.rangeMult * Math.sqrt(this.owner?.areaMult ?? 1);
+  }
+  _dir() {
+    const p = this.owner;
+    if (p.isMoving) return Math.atan2(p.lastMoveY, p.lastMoveX);
+    const t = this._nearestEnemyInRange();
+    if (t) return Math.atan2(t.y - p.y, t.x - p.x);
+    return Math.atan2(p.lastMoveY, p.lastMoveX);
+  }
+  _fire() {
+    if (!this.owner) return false;
+    if (!this._nearestEnemyInRange()) return false;
+    const dir = this._dir();
+    const R = this.range;
+    const half = this.def.halfAngle;
+    const scene = this.scene;
+    const px = this.owner.x,
+      py = this.owner.y;
+    const strike = (e, isBoss) => {
+      const dx = e.x - px,
+        dy = e.y - py;
+      const d = Math.hypot(dx, dy);
+      if (d > R + 10) return;
+      let da = Math.atan2(dy, dx) - dir;
+      da = Math.atan2(Math.sin(da), Math.cos(da));
+      if (Math.abs(da) > half && d > 30) return;
+      const { dmg, crit } = this.rollHit();
+      const died = e.takeDamage(dmg, isBoss ? undefined : null, px, py, crit);
+      this.owner.lifestealFrom(dmg);
+      scene._showDmg(e.x, e.y, dmg, ELEMENT.FIRE, crit);
+      scene.elemental.applyStatus(e, ELEMENT.FIRE);
+      if (died) {
+        if (isBoss) scene._onBossDeath();
+        else scene._onEnemyDeath(e);
+      }
+    };
+    scene.enemyPool.forEachActive((e) => e.active && strike(e, false));
+    if (scene.boss?.active) strike(scene.boss, true);
+    this._flameFx(px, py, dir, R, half);
+    this._afterBurst?.(px, py, dir, R);
+    scene.sound.play("sfx_fire_attack", { volume: 0.22, rate: 0.8 + Math.random() * 0.15 });
+    return true;
+  }
+  // Leque de "puffs" de fogo que voam pelo cone e se apagam
+  _flameFx(px, py, dir, R, half) {
+    const scene = this.scene;
+    const n = 14;
+    for (let i = 0; i < n; i++) {
+      const a = dir + (Math.random() * 2 - 1) * half * 0.85;
+      const dist = R * (0.45 + Math.random() * 0.55);
+      const tint = [0xffe58f, 0xffb36b, 0xff7a3c, 0xc4511e][i % 4];
+      const f = scene.add
+        .image(px + Math.cos(dir) * 14, py + Math.sin(dir) * 14, "px_puff")
+        .setScale(1.2)
+        .setTint(tint)
+        .setDepth(py + 10003)
+        .setBlendMode(i % 2 ? Phaser.BlendModes.ADD : Phaser.BlendModes.NORMAL);
+      scene.tweens.add({
+        targets: f,
+        x: px + Math.cos(a) * dist,
+        y: py + Math.sin(a) * dist - 6,
+        scale: 3.2 + Math.random() * 1.5,
+        alpha: 0,
+        delay: i * 12,
+        duration: 320 + Math.random() * 120,
+        ease: "Quad.easeOut",
+        onComplete: () => f.destroy(),
+      });
+    }
+    const glow = scene.add
+      .image(px + Math.cos(dir) * R * 0.5, py + Math.sin(dir) * R * 0.5, "fx_glow")
+      .setScale(R / 22, R / 40)
+      .setRotation(dir)
+      .setTint(0xff7a3c)
+      .setAlpha(0.45)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(60);
+    scene.tweens.add({ targets: glow, alpha: 0, duration: 380, onComplete: () => glow.destroy() });
+  }
+}
+
+// INFERNO (Sopro+Bumerangue): cone mais largo que deixa o chão em chamas
+export class Inferno extends Flamethrower {
+  constructor(scene) {
+    super(scene, "INFERNO");
+    this.baseKey = this.def.evolvesFrom;
+  }
+  _afterBurst(px, py, dir, R) {
+    for (let i = 1; i <= 3; i++) {
+      const d = (R * i) / 3.2;
+      Phoenix.prototype._firePatch.call(
+        { scene: this.scene, def: { trail: this.def.trail }, dmgMult: this.dmgMult, owner: this.owner },
+        px + Math.cos(dir) * d,
+        py + Math.sin(dir) * d,
+      );
+    }
+  }
+}
+
 // Fábrica
 export const WEAPON_CLASSES = {
   STAFF: Staff,
@@ -799,4 +1001,8 @@ export const WEAPON_CLASSES = {
   OVERLOAD_X: OverloadX,
   WINTER_HEART: WinterHeart,
   PHOENIX: Phoenix,
+  ORB: OrbitalIce,
+  FLAME: Flamethrower,
+  GLACIER: Glacier,
+  INFERNO: Inferno,
 };

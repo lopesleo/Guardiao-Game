@@ -455,6 +455,8 @@ const RECOLOR = {
   dash_green: { base: "dash", swap: { y: "e" } },
   heart_plus: { base: "heart", swap: {} },
   arrow_left: { base: "arrow", flip: true },
+  orb_frost: { base: "orb", swap: { b: "c", B: "b", c: "w" } },
+  flame_red: { base: "flame", swap: { o: "R", h: "r", y: "o", O: "d" } },
 };
 
 export function registerIcons(scene) {
@@ -486,8 +488,8 @@ export const WEAPON_ICON = {
   OVERLOAD_X: "ico_bolt_gold",
   WINTER_HEART: "ico_heart_ice",
   PHOENIX: "ico_flame_pink",
-  GLACIER: "ico_aura",
-  INFERNO: "ico_flame_pink",
+  GLACIER: "ico_orb_frost",
+  INFERNO: "ico_flame_red",
 };
 
 export const PASSIVE_ICON = {

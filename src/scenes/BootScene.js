@@ -11,8 +11,7 @@ export class BootScene extends Phaser.Scene {
     const go = () => this.scene.start('PreloadScene');
     try {
       Promise.all([
-        document.fonts.load('bold 16px "Pixelify Sans"'),
-        document.fonts.load('16px "Pixelify Sans"'),
+        document.fonts.load('16px "Jersey 15"'),
       ]).then(go, go);
     } catch {
       go();

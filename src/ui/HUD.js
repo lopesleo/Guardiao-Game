@@ -304,6 +304,7 @@ export class HUD {
         this.awHint.setText(this.isTouch ? "PRONTO!" : "PRONTO! [R]").setColor(CSS.goldHi);
         this.awHint.setAlpha(0.6 + Math.sin(time / 120) * 0.4);
         awReady = true;
+        this.scene._hint?.("awaken", this.isTouch ? "Despertar pronto! Toque na estrela\npara disparar tudo mais rápido." : "Despertar pronto! Aperte R\npara disparar tudo mais rápido.");
       } else {
         this.awBar.setColor(now < p.awakenLockUntil ? PAL.yel1 : PAL.yel2);
         this.awBar.set(aw);

@@ -12,6 +12,7 @@ import {
   CHEST,
   DIFFICULTY,
   ANCESTRAL,
+  CHARACTERS,
 } from "../config.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
@@ -41,6 +42,8 @@ import { DamageNumber } from "../entities/DamageNumber.js";
 import { HUD } from "../ui/HUD.js";
 import { ForestWorld } from "../world/ForestWorld.js";
 import { text, drawFrame } from "../ui/Theme.js";
+import { DEBUG } from "../systems/Platform.js";
+import { Settings } from "../systems/Settings.js";
 import { VirtualJoystick } from "../ui/VirtualJoystick.js";
 
 export class GameScene extends Phaser.Scene {
@@ -67,6 +70,7 @@ export class GameScene extends Phaser.Scene {
     const diffIdx = Math.min(this.meta.selectedDifficulty, DIFFICULTY.length - 1);
     this.diff = DIFFICULTY[diffIdx] || DIFFICULTY[0];
     this._coinsGainedThisRun = 0;
+    this._showDmgNumbers = Settings.get("dmgNumbers");
     this._newUnlocksThisRun = [];
     // Conquistas (Fase 3): flags observadas pelos check() de ACHIEVEMENTS
     this._runFlags = { tookHpPassive: false };
@@ -91,8 +95,13 @@ export class GameScene extends Phaser.Scene {
     this.elemental = new ElementalSystem(this);
     this.upgrades = new UpgradeSystem(this);
 
+    // Personagem escolhido no menu (sprite, arma inicial, viés de stats)
+    this.character =
+      CHARACTERS.find((c) => c.id === this.meta.selectedCharacter && this.meta.hasCharacter(c.id)) || CHARACTERS[0];
+
     // Player
-    this.player = new Player(this, 0, 0);
+    this.player = new Player(this, 0, 0, this.character.frame);
+    this._applyCharacterMods(this.player, this.character.mods || {});
     // Aplica bênçãos compradas ANTES de criar armas (afetam stats base)
     for (const b of BLESSINGS) {
       const rank = this.meta.blessingRank(b.id);
@@ -107,7 +116,7 @@ export class GameScene extends Phaser.Scene {
     // Locks de habilidades: bloqueia se não comprou
     this.player.dashUnlocked = this.meta.hasAbility("DASH");
     this.player.awakenUnlocked = this.meta.hasAbility("AWAKEN");
-    this.player.addWeapon(new Staff(this));
+    this.player.addWeapon(new WEAPON_CLASSES[this.character.weapon](this));
 
     // Spawner
     this.spawnDirector = new SpawnDirector(this, this.enemyPool, this.player);
@@ -138,7 +147,8 @@ export class GameScene extends Phaser.Scene {
     // ESC (PC) e botão ⏸ do HUD (mobile) → pausa. Ambos passam por pauseGame().
     this.input.keyboard.on("keydown-ESC", () => this.pauseGame());
 
-    // ====== DEBUG KEYS (remover antes da entrega final se quiser) ======
+    // ====== DEBUG KEYS — só com ?debug=1 na URL (fora do build da loja) ======
+    if (DEBUG) {
     this.input.keyboard.on("keydown-NINE", () => {
       // Enche Despertar
       this.player.awakenMeter = this.player.awakenMax;
@@ -192,6 +202,7 @@ export class GameScene extends Phaser.Scene {
         4500,
       );
     });
+    }
     // =================================================================
 
     // Level-up
@@ -255,35 +266,36 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  _showOnboarding() {
-    if (this.meta.data.hasSeenOnboarding) return;
-    const txt = this.add
-      .text(
-        GAME.WIDTH / 2,
-        GAME.HEIGHT - 130,
-        "WASD/setas pra mover. Ataque é automático.\nSuba de nível para escolher armas.",
-        {
-          fontFamily: "Press Start 2P, monospace",
-          fontSize: "12px",
-          color: "#e8f0e6",
-          stroke: "#000",
-          strokeThickness: 4,
-          align: "center",
-          lineSpacing: 8,
-        },
-      )
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(2000);
-    this.tweens.add({
-      targets: txt,
-      alpha: 0,
-      delay: 4500,
-      duration: 500,
-      onComplete: () => txt.destroy(),
-    });
-    this.meta.data.hasSeenOnboarding = true;
+  // Dicas contextuais — cada uma aparece UMA vez na vida do save, no momento
+  // em que a mecânica surge (substitui o tutorial em páginas).
+  _hint(id, msg, ms = 4200) {
+    const seen = (this.meta.data.hintsSeen ||= []);
+    if (seen.includes(id)) return;
+    seen.push(id);
     this.meta._save();
+    const W = this.scale.width;
+    const c = this.add.container(W / 2, 150).setScrollFactor(0).setDepth(60500);
+    const t = text(this, 0, 0, msg, { size: 22, origin: 0.5, align: "center", wrap: Math.min(700, W - 80) });
+    const w = t.width + 60,
+      h = t.height + 30;
+    const g = this.add.graphics();
+    drawFrame(g, -w / 2, -h / 2, w, h, "gold", { alpha: 0.92 });
+    c.add([g, t]);
+    c.setAlpha(0).setY(130);
+    this.tweens.add({ targets: c, alpha: 1, y: 150, duration: 260, ease: "Back.easeOut" });
+    this.tweens.add({ targets: c, alpha: 0, delay: ms, duration: 400, onComplete: () => c.destroy() });
+  }
+
+  _showOnboarding() {
+    const touch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    this.time.delayedCall(600, () =>
+      this._hint(
+        "move",
+        touch
+          ? "Arraste o polegar na esquerda para andar.\nO ataque é automático!"
+          : "Ande com WASD ou setas.\nO ataque é automático!",
+      ),
+    );
   }
 
   update(time, dt) {
@@ -319,13 +331,22 @@ export class GameScene extends Phaser.Scene {
 
     // Baús: glow/prompt + interação E
     let chestPressed = this.inputMgr.consumeInteract();
+    const view = this.cameras.main.worldView;
     for (const c of this.chests) {
       if (c.opened) continue;
-      c.update(time, this.player);
-      if (chestPressed && c.playerNear) {
-        chestPressed = false;
-        this._openChest(c);
+      if (!this._chestHinted && view.contains(c.x, c.y)) {
+        this._chestHinted = true;
+        this._hint("chest", "Um baú! Encoste nele para abrir.\nCuidado: alguns são armadilhas…");
       }
+      c.update(time, this.player);
+      // Abre ao ENCOSTAR (~0,3s perto) — sem botão extra no celular; E ainda vale
+      if (c.playerNear) {
+        c._nearMs = (c._nearMs || 0) + dt;
+        if (chestPressed || c._nearMs > 300) {
+          chestPressed = false;
+          this._openChest(c);
+        }
+      } else c._nearMs = 0;
     }
 
     // Boss update
@@ -518,6 +539,19 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  _applyCharacterMods(p, m) {
+    if (m.hp) {
+      p.maxHp *= m.hp;
+      p.hp = p.maxHp;
+    }
+    if (m.speed) p.speed *= m.speed;
+    if (m.crit) p.critChance += m.crit;
+    if (m.area) p.areaMult *= m.area;
+    if (m.regen) p.regenPerSec += m.regen;
+    if (m.cd) p.cdMult *= m.cd;
+    if (m.dmg) p._blessingDmgMult = (p._blessingDmgMult || 1) * m.dmg;
+  }
+
   _openNextLevelUp() {
     if (this._pendingLevelUps <= 0 || this.gameOver) return;
     // pause()/launch() do Phaser são enfileirados pro próximo frame: a flag
@@ -532,6 +566,12 @@ export class GameScene extends Phaser.Scene {
       player: this.player,
       gameScene: this,
     });
+  }
+
+  // Botão VOLTAR do Android → pausa (ver systems/Platform.js)
+  onBack() {
+    this.pauseGame();
+    return true;
   }
 
   // Pausa o jogo e abre o PauseScene. Usado pelo ESC (PC) e pelo botão ⏸ (mobile).
@@ -590,12 +630,13 @@ export class GameScene extends Phaser.Scene {
     const newly = this.meta.checkAchievements(this._runCtx(won));
     if (!silent && newly.length) {
       this.sound.play("sfx_levelup", { volume: 0.5, rate: 1.3 });
-      this._toast(`🏆 ${newly.map((a) => a.name).join(" · ")}`, 3000);
+      this._toast(`Conquista: ${newly.map((a) => a.name).join(" · ")}`, 3000, "#e8ccff");
     }
     return newly;
   }
 
   _showDmg(x, y, dmg, element, crit = false) {
+    if (element !== "heal" && !this._showDmgNumbers) return;
     const n = this.dmgNumberPool.acquire();
     let color;
     if (crit) color = "#ffd96b";
@@ -811,7 +852,7 @@ export class GameScene extends Phaser.Scene {
           });
         }
       });
-      this._toast("★ BAÚ DOURADO! ★", 2200);
+      this._toast("BAÚ DOURADO!", 2200, "#ffe58f");
       // Carta extra grátis
       this.time.delayedCall(burstDelay + 1200, () =>
         this.events.emit("player:levelup", this.player.level),
@@ -822,7 +863,7 @@ export class GameScene extends Phaser.Scene {
         this.sound.play("sfx_boss_roar", { volume: 0.5, rate: 0.7 });
         this.cameras.main.shake(280, 0.018);
       });
-      this._toast("ARMADILHA!", 1500);
+      this._toast("ARMADILHA!", 1500, "#ff8a8a");
       const wave = Math.floor(this.elapsedMs / 30000);
       const types = ["wolf", "crow", "goblin"];
       for (let i = 0; i < CHEST.TRAP_ENEMY_COUNT; i++) {
@@ -843,7 +884,7 @@ export class GameScene extends Phaser.Scene {
         this.cameras.main.shake(450, 0.025);
         this.cameras.main.flash(150, 200, 40, 40);
       });
-      this._toast("☠ MÍMICO! ☠", 1800);
+      this._toast("MÍMICO!", 1800, "#ff8a8a");
       const wave = Math.floor(this.elapsedMs / 30000);
       const types = ["goblin", "wolf"];
       this.time.delayedCall(burstDelay + 200, () => {
@@ -898,7 +939,7 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  _onGameOver(won) {
+  _onGameOver(won, quit = false) {
     if (this.gameOver) return;
     this.gameOver = true;
     // Recompensa final escalada pela dificuldade (HUD mostrou a contagem-base ao vivo)
@@ -914,13 +955,24 @@ export class GameScene extends Phaser.Scene {
     this.meta.addCoins(coinsFinal);
     this.meta.registerRun(this.elapsedMs / 1000, won, this.diff.id);
     const newAchievements = this._checkAchievements(won, true);
-    this._newUnlocksThisRun.push(...newAchievements.map((a) => `🏆 ${a.name}`));
-    this.cameras.main.fade(700, 0, 0, 0);
-    this.time.delayedCall(800, () => {
+    this._newUnlocksThisRun.push(...newAchievements.map((a) => a.name));
+    // Morte: câmera lenta dramática antes do fade
+    if (!won && !quit) {
+      this.physics.world.timeScale = 3;
+      this.tweens.timeScale = 0.35;
+      this.cameras.main.zoomTo(1.25, 700);
+    }
+    this.cameras.main.fade(quit ? 250 : 800, 0, 0, 0);
+    this.time.delayedCall(quit ? 300 : 900, () => {
+      this.physics.world.timeScale = 1;
+      this.tweens.timeScale = 1;
       this.bgMusic?.stop();
       this.bgMusic = null;
       this.scene.start("GameOverScene", {
         won,
+        quit,
+        level: this.player.level,
+        weapons: this.player.weapons.map((w) => ({ key: w.key, level: w.level })),
         elapsedMs: this.elapsedMs,
         kills: this.hud.kills,
         coinsGained: coinsFinal,

@@ -204,9 +204,102 @@ export const WEAPONS = {
     range: 260,
     trail: { everyMs: 150, radius: 42, dmgPerTick: 3, tickMs: 300, ticks: 3 },
   },
+  // Orbe Gélido: orbes de gelo GIRAM ao redor do player (defesa passiva).
+  // cooldown = intervalo mínimo entre acertos no MESMO inimigo.
+  ORB: {
+    name: "Orbe Gélido",
+    element: ELEMENT.ICE,
+    baseDmg: 5,
+    cooldown: 650,
+    range: 88, // raio da órbita
+    count: 2,
+    spin: 2.6, // rad/s
+    hitRadius: 26,
+  },
+  // Sopro Flamejante: cone de fogo na direção em que o player anda.
+  FLAME: {
+    name: "Sopro Flamejante",
+    element: ELEMENT.FIRE,
+    baseDmg: 6,
+    cooldown: 1250,
+    range: 165,
+    halfAngle: 0.62, // ~35°
+  },
+  // Geleira (Orbe Lv5 + Aura): orbes maiores, 2 extras, e CONGELAM ao tocar.
+  GLACIER: {
+    name: "Geleira Viva",
+    element: ELEMENT.ICE,
+    evolvesFrom: "ORB",
+    partner: "AURA",
+    baseDmg: 9,
+    cooldown: 550,
+    range: 104,
+    count: 4,
+    spin: 3.0,
+    hitRadius: 34,
+    freezeMs: 1100,
+    freezeImmuneMs: 2600,
+  },
+  // Inferno (Sopro Lv5 + Bumerangue): cone largo que deixa o chão em chamas.
+  INFERNO: {
+    name: "Inferno",
+    element: ELEMENT.FIRE,
+    evolvesFrom: "FLAME",
+    partner: "BOOMER",
+    baseDmg: 10,
+    cooldown: 1000,
+    range: 220,
+    halfAngle: 0.85,
+    trail: { radius: 40, dmgPerTick: 4, tickMs: 300, ticks: 4 },
+  },
 };
 
 export const MAX_WEAPON_LEVEL = 5;
+
+// Personagens jogáveis — cada um começa com uma arma e tem um viés de stats.
+// frame = quadro do Tiny Dungeon. mods aplicados no início da run.
+export const CHARACTERS = [
+  {
+    id: "guardian",
+    name: "O Guardião",
+    title: "Equilibrado",
+    frame: 84,
+    weapon: "STAFF",
+    cost: 0,
+    perk: "Sem fraquezas. Bom para aprender.",
+    mods: {},
+  },
+  {
+    id: "huntress",
+    name: "Caçadora",
+    title: "Veloz e letal",
+    frame: 112,
+    weapon: "BOOMER",
+    cost: 120,
+    perk: "+12% velocidade · +8% crítico · −10% vida",
+    mods: { speed: 1.12, crit: 0.08, hp: 0.9 },
+  },
+  {
+    id: "druid",
+    name: "Druida da Geada",
+    title: "Controle de área",
+    frame: 111,
+    weapon: "AURA",
+    cost: 180,
+    perk: "+20% área · +1 Vida/s · −15% velocidade",
+    mods: { area: 1.2, regen: 1, speed: 0.85 },
+  },
+  {
+    id: "shaman",
+    name: "Xamã do Trovão",
+    title: "Canhão de vidro",
+    frame: 99,
+    weapon: "CHAIN",
+    cost: 260,
+    perk: "−15% recarga · +15% dano · −25% vida",
+    mods: { cd: 0.85, dmg: 1.15, hp: 0.75 },
+  },
+];
 
 // Upgrades passivos (level-up). roll() retorna { name, apply } com valor aleatório.
 const r = (min, max) => Math.floor(min + Math.random() * (max - min + 1));
@@ -380,7 +473,8 @@ export const META = {
   COIN_VALUE: 1,
   COIN_BOSS_WIN: 80,
   COIN_BOSS_LOSS: 10,
-  WEAPON_UNLOCK_COST: { BOOMER: 30, CHAIN: 60, AURA: 100 },
+  WEAPON_UNLOCK_COST: { BOOMER: 30, CHAIN: 60, AURA: 100, ORB: 140, FLAME: 180 },
+  WEAPON_UNLOCK_ORDER: ["BOOMER", "CHAIN", "AURA", "ORB", "FLAME"],
   ABILITY_UNLOCK_COST: { DASH: 50, AWAKEN: 80 },
 };
 

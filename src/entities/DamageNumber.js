@@ -3,7 +3,7 @@ export class DamageNumber extends Phaser.GameObjects.Text {
   constructor(scene) {
     super(scene, -9999, -9999, '', {
       resolution: 2,
-      fontFamily: '"Pixelify Sans", monospace', fontStyle: 'bold',
+      fontFamily: '"Jersey 15", monospace',
       fontSize: '16px', color: '#ffffff',
       stroke: '#000000', strokeThickness: 3,
     });

@@ -23,6 +23,9 @@ const DEFAULT = {
   // Cada vitória num nível ainda não vencido avança o cursor em 1.
   maxDifficultyCleared: 0,
   wins: 0,                    // total de vitórias (boss morto)
+  // Personagens jogáveis (CHARACTERS em config.js)
+  selectedCharacter: 'guardian',
+  unlockedCharacters: ['guardian'],
   winsByDifficulty: {},       // { "0": n, "1": n, ... }
 };
 
@@ -34,6 +37,7 @@ function freshDefault() {
     blessingRanks: {},
     winsByDifficulty: {},
     achievements: [],
+    unlockedCharacters: ['guardian'],
     stats: { reactions: {}, totalKills: 0, totalCoinsEarned: 0 },
   };
 }
@@ -63,6 +67,7 @@ export class MetaProgression {
       const data = { ...fd, ...parsed };
       // Migração Fase 3: saves antigos não têm achievements/stats
       if (!Array.isArray(data.achievements)) data.achievements = [];
+      if (!Array.isArray(data.unlockedCharacters)) data.unlockedCharacters = ['guardian'];
       data.stats = { ...fd.stats, ...(parsed.stats || {}) };
       data.stats.reactions = { ...((parsed.stats || {}).reactions || {}) };
       // Migração Fase 2: saves antigos guardavam ownedBlessings (booleano) →
@@ -216,6 +221,25 @@ export class MetaProgression {
     if (this.data.totalCoins < cost) return false;
     this.data.totalCoins -= cost;
     this.data.unlockedAbilities.push(id);
+    this._save();
+    return true;
+  }
+
+  // Personagens
+  hasCharacter(id) { return this.data.unlockedCharacters.includes(id); }
+  get selectedCharacter() { return this.data.selectedCharacter || 'guardian'; }
+  setSelectedCharacter(id) {
+    if (!this.hasCharacter(id)) return false;
+    this.data.selectedCharacter = id;
+    this._save();
+    return true;
+  }
+  unlockCharacter(id, cost) {
+    if (this.hasCharacter(id)) return false;
+    if (this.data.totalCoins < cost) return false;
+    this.data.totalCoins -= cost;
+    this.data.unlockedCharacters.push(id);
+    this.data.selectedCharacter = id;
     this._save();
     return true;
   }

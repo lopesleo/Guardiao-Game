@@ -1,491 +1,767 @@
-// Menu LIMPO com fonte system-ui (legível em projetor) — só título em pixel font.
-import { COLORS, GAME, META, BLESSINGS, DIFFICULTY, MAX_BLESSING_RANK, ACHIEVEMENTS } from '../config.js';
-import { MetaProgression } from '../systems/MetaProgression.js';
-import { loadVolume, saveVolume } from '../systems/AudioSettings.js';
-import { formatTime } from '../utils.js';
+// Menu principal — a "vitrine" do jogo (é o que aparece nos screenshots da loja).
+// Cena: clareira noturna com floresta em camadas, lua, névoa, vaga-lumes e o
+// herói escolhido ao lado de uma fogueira. À direita, o painel de ações.
+import {
+  META,
+  BLESSINGS,
+  DIFFICULTY,
+  MAX_BLESSING_RANK,
+  ACHIEVEMENTS,
+  CHARACTERS,
+  WEAPONS,
+} from "../config.js";
+import { MetaProgression } from "../systems/MetaProgression.js";
+import { Settings } from "../systems/Settings.js";
+import { DEBUG, isNative } from "../systems/Platform.js";
+import { formatTime } from "../utils.js";
+import { PAL, CSS, hex } from "../art/Palette.js";
+import { WEAPON_ICON } from "../art/Icons.js";
+import { WEAPON_DESC } from "../systems/UpgradeSystem.js";
+import { text, drawFrame, panel, Button, P, vw, vh, haptic } from "../ui/Theme.js";
+import { Modal, ScrollList, closeTopModal } from "../ui/Widgets.js";
+import { openSettings } from "../ui/SettingsModal.js";
 
-const F  = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
-const FP = '"Press Start 2P", monospace';
-
-function sharp(scene, x, y, str, opts) {
-  return scene.add.text(Math.round(x), Math.round(y), str, opts).setResolution(2);
-}
+const BLESSING_ICON = {
+  hp1: "ico_heart",
+  spd1: "ico_dash_green",
+  dmg1: "ico_sword",
+  pickup: "ico_magnet",
+  awaken1: "ico_star",
+  dash1: "ico_dash",
+  xp1: "ico_gem",
+  crit1: "ico_crit",
+};
 
 export class MenuScene extends Phaser.Scene {
-  constructor() { super('MenuScene'); }
+  constructor() {
+    super("MenuScene");
+  }
 
   create() {
-    const W = GAME.WIDTH, H = GAME.HEIGHT;
-    const cx = W / 2;
     this.meta = new MetaProgression();
-    this.sound.volume = loadVolume(); // aplica volume salvo (global, vale no jogo todo)
+    this.sound.volume = 1; // volumes por canal vêm de Settings (ganchos globais)
+    this.W = vw(this);
+    this.H = vh(this);
+    this._modals = [];
 
-    // === BG gradiente escuro ===
-    this.cameras.main.setBackgroundColor(0x0a1410);
-    const grad = this.add.graphics();
-    grad.fillStyle(0x152820, 1); grad.fillRect(0, 0, W, H);
-    grad.fillStyle(0x0a1410, 0.6); grad.fillRect(0, H * 0.5, W, H * 0.5);
-    grad.fillStyle(0x000000, 0.5); grad.fillRect(0, H - 120, W, 120);
+    this._backdrop();
+    this._heroArea();
+    this._title();
+    this._actionPanel();
+    this._topBar();
+    this._refreshAll();
 
-    // === Fireflies sutis ===
-    this.fireflies = [];
-    for (let i = 0; i < 12; i++) {
-      const ff = this.add.circle(Math.random() * W, H + Math.random() * 200, 2, 0xfff5b8, 0.7).setDepth(5);
-      ff._phase = Math.random() * Math.PI * 2;
-      ff._driftX = (Math.random() - 0.5) * 0.4;
-      ff._driftY = -0.4 - Math.random() * 0.3;
-      this.fireflies.push(ff);
+    // Música do menu (desbloqueia áudio no 1º toque, exigência dos navegadores)
+    if (this.cache.audio.exists("music_menu")) {
+      this.menuMusic = this.sound.add("music_menu", { loop: true, volume: 0.35 });
+      const start = () => {
+        if (this.menuMusic && !this.menuMusic.isPlaying) this.menuMusic.play();
+      };
+      if (!this.sound.locked) start();
+      else this.sound.once("unlocked", start);
     }
-
-    // === TÍTULO — Press Start 2P só pra ter cara de jogo, mas grande pra ler ===
-    sharp(this, cx + 4, 134, 'GUARDIÃO', { fontFamily: FP, fontSize: '54px', color: '#000000' })
-      .setOrigin(0.5).setAlpha(0.7);
-    // Glow aditivo pulsando atrás do título ("respiração" dourada)
-    const titleGlow = sharp(this, cx, 130, 'GUARDIÃO', {
-      fontFamily: FP, fontSize: '54px', color: '#ffe88a',
-    }).setOrigin(0.5).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
-    const title = sharp(this, cx, 130, 'GUARDIÃO', {
-      fontFamily: FP, fontSize: '54px', color: '#d9b25c',
-    }).setOrigin(0.5);
-    this.tweens.add({
-      targets: titleGlow, alpha: 0.3, duration: 1600,
-      yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-    });
-    this.tweens.add({
-      targets: [title, titleGlow], scaleX: 1.02, scaleY: 1.02, duration: 1600,
-      yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    this.events.once("shutdown", () => {
+      this.menuMusic?.stop();
+      this.menuMusic?.destroy();
+      this.menuMusic = null;
     });
 
-    sharp(this, cx, 184, 'DA FLORESTA', {
-      fontFamily: FP, fontSize: '22px', color: '#d9b25c',
-    }).setOrigin(0.5);
+    this.input.keyboard.on("keydown-ESC", () => closeTopModal(this));
+    this.input.keyboard.on("keydown-ENTER", () => !this._modals.length && this._play());
+    this.cameras.main.fadeIn(350, 10, 14, 10);
+  }
 
-    // Tagline em sans-serif legível
-    sharp(this, cx, 222, '— DESPERTAR —', {
-      fontFamily: F, fontSize: '18px', fontStyle: 'bold', color: '#6fcf6f',
-    }).setOrigin(0.5);
+  // Botão VOLTAR do Android: fecha modal; sem modal, deixa o app sair
+  onBack() {
+    return closeTopModal(this);
+  }
 
-    // === HERO ===
-    this.hero = this.add.image(cx, 278, 'dungeon_tiles', 84).setScale(GAME.PIXEL_SCALE * 1.3);
-    this.tweens.add({ targets: this.hero, y: 270, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-
-    // === STATS CARD ===
-    const sx = W - 260, sy = 24, sw = 240, sh = 80;
-    this.add.rectangle(sx, sy, sw, sh, 0x000000, 0.7).setOrigin(0, 0).setStrokeStyle(2, 0xd9b25c, 0.8);
-    sharp(this, sx + 14, sy + 12, '💰  MOEDAS', { fontFamily: F, fontSize: '12px', color: '#93a89a' });
-    this._coinsText = sharp(this, sx + 14, sy + 30, `${this.meta.coins}`, { fontFamily: F, fontSize: '22px', fontStyle: 'bold', color: '#d9b25c' });
-    sharp(this, sx + 130, sy + 12, '🏆  MELHOR', { fontFamily: F, fontSize: '12px', color: '#93a89a' });
-    sharp(this, sx + 130, sy + 32, formatTime(this.meta.data.highScoreSeconds * 1000), {
-      fontFamily: F, fontSize: '20px', fontStyle: 'bold', color: '#e8f0e6',
-    });
-
-    // Botão DEV: +100 moedas (para testar desbloqueios/bênçãos sem grindar)
-    const dcx = sx, dcy = sy + sh + 8;
-    const devBtn = this.add.rectangle(dcx, dcy, 130, 26, 0x0a1410, 0.95)
-      .setOrigin(0, 0).setStrokeStyle(2, 0x6fcf6f, 0.8).setInteractive({ useHandCursor: true });
-    const devTxt = sharp(this, dcx + 65, dcy + 13, '+100 💰 (dev)',
-      { fontFamily: F, fontSize: '12px', fontStyle: 'bold', color: '#6fcf6f' }).setOrigin(0.5);
-    devBtn.on('pointerover', () => { devBtn.setFillStyle(0x14241a); this.sound.play('sfx_ui_hover', { volume: 0.2 }); });
-    devBtn.on('pointerout', () => devBtn.setFillStyle(0x0a1410));
-    devBtn.on('pointerdown', () => {
-      this.sound.play('sfx_coin', { volume: 0.5 });
-      this.meta.addCoins(100);
-      this._coinsText.setText(`${this.meta.coins}`);
-      this.tweens.add({ targets: devTxt, scaleX: 1.2, scaleY: 1.2, duration: 80, yoyo: true });
-    });
-
-    if (!this.meta.available) {
-      // Canto superior esquerdo (livre) — antes em H-70, colidia com os botões.
-      sharp(this, 20, 120, '⚠ Modo privado — progresso não será salvo', {
-        fontFamily: F, fontSize: '12px', color: '#ff5a6e',
-      }).setOrigin(0, 0.5);
+  // =========================================================================
+  // CENÁRIO
+  // =========================================================================
+  _backdrop() {
+    const W = this.W,
+      H = this.H;
+    const horizon = Math.round(H * 0.56);
+    // Céu em gradiente (gerado por tamanho de tela)
+    const key = `menu_sky_${W}x${H}`;
+    if (!this.textures.exists(key)) {
+      const c = this.textures.createCanvas(key, W, H);
+      const ctx = c.getContext();
+      const g = ctx.createLinearGradient(0, 0, 0, horizon);
+      g.addColorStop(0, "#070b14");
+      g.addColorStop(0.55, "#10202a");
+      g.addColorStop(1, "#1d3a33");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+      c.refresh();
     }
+    this.add.image(0, 0, key).setOrigin(0);
 
-    // === SELETOR DE PERIGO (dificuldade) — acima de JOGAR ===
-    this._difficultySelector(cx, 352);
+    // Estrelas piscando
+    for (let i = 0; i < 60; i++) {
+      const s = this.add
+        .image(Math.random() * W, Math.random() * horizon * 0.8, i % 5 ? "px_dot1" : "px_dot2")
+        .setScale(3)
+        .setAlpha(0.2 + Math.random() * 0.6)
+        .setTint(i % 7 ? 0xffffff : 0xffe58f);
+      this.tweens.add({ targets: s, alpha: 0.1, duration: 800 + Math.random() * 2000, yoyo: true, repeat: -1, delay: Math.random() * 2000 });
+    }
+    // Lua
+    const mx = W * 0.62,
+      my = H * 0.17;
+    this.add.image(mx, my, "fx_glow").setScale(5).setTint(0xbfe0ff).setAlpha(0.18).setBlendMode(Phaser.BlendModes.ADD);
+    const moon = this.add.graphics();
+    const pr = 10;
+    for (let y = -pr; y <= pr; y++)
+      for (let x = -pr; x <= pr; x++) {
+        const d = x * x + y * y;
+        if (d > pr * pr) continue;
+        const shade = x + y > 6 ? 0xc9d6e0 : (x * 7 + y * 3) % 11 === 0 ? 0xd8e2ea : 0xeef4f8;
+        moon.fillStyle(shade, 1).fillRect(mx + x * 3, my + y * 3, 3, 3);
+      }
 
-    // === BOTÕES — sans-serif grande e legível ===
-    const by = 406, bgap = 48;
-    const achCount = this.meta.data.achievements.length;
-    this._button(cx, by,            'JOGAR',         '#ffd96b', 26, true,  () => this.scene.start('GameScene'));
-    this._button(cx, by + bgap,     'COMO JOGAR',    '#e8f0e6', 20, false, () => this.scene.start('TutorialScene'));
-    this._button(cx, by + bgap * 2, 'BÊNÇÃOS',       '#e8f0e6', 20, false, () => this._showBlessingsMenu());
-    this._button(cx, by + bgap * 3, 'DESBLOQUEAR',   '#e8f0e6', 20, false, () => this._showUnlockMenu());
-    const achBtn = this._button(cx, by + bgap * 4, `🏆 CONQUISTAS  ${achCount}/${ACHIEVEMENTS.length}`, '#e8f0e6', 18, false, () => this._showAchievementsMenu());
-    this._achBtnTxt = achBtn.txt; // atualizado ao vivo após compras (sem restart)
-    // Última fileira dividida em 2 pra caber CONQUISTAS sem estourar a tela
-    this._button(cx - 102, by + bgap * 5, 'CRÉDITOS',  '#93a89a', 15, false, () => this.scene.start('CreditsScene'), 196);
-    this._button(cx + 102, by + bgap * 5, 'NOVO JOGO', '#ff8898', 14, false, () => this._showResetConfirm(), 196);
-
-    // === FULLSCREEN (PC + mobile) — canto superior esquerdo ===
-    const fsBtn = sharp(this, 20, 20, '⛶ Tela cheia', {
-      fontFamily: F, fontSize: '15px', fontStyle: 'bold', color: '#d9b25c',
-      backgroundColor: '#0a1410', padding: { x: 12, y: 8 },
-    }).setOrigin(0, 0).setInteractive({ useHandCursor: true });
-    fsBtn.on('pointerover', () => fsBtn.setColor('#ffe88a'));
-    fsBtn.on('pointerout',  () => fsBtn.setColor('#d9b25c'));
-    fsBtn.on('pointerup',   () => this.scale.toggleFullscreen());
-
-    // === VOLUME (slider salvo, vale no jogo todo) ===
-    const vx = 20, vy = 86, vw = 200, vh = 14;
-    sharp(this, vx, vy - 24, '🔊 Áudio', { fontFamily: F, fontSize: '13px', fontStyle: 'bold', color: '#d9b25c' }).setOrigin(0, 0);
-    const volTrack = this.add.rectangle(vx, vy, vw, vh, 0x000000, 0.7)
-      .setOrigin(0, 0).setStrokeStyle(2, 0xd9b25c, 0.7).setInteractive({ useHandCursor: true });
-    const volFill = this.add.rectangle(vx + 2, vy + 2, 0, vh - 4, 0xd9b25c).setOrigin(0, 0);
-    const volPct = sharp(this, vx + vw + 12, vy - 3, '', { fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: '#e8f0e6' }).setOrigin(0, 0);
-    const refreshVol = () => {
-      const v = this.sound.volume;
-      volFill.width = (vw - 4) * v;
-      volPct.setText(this.sound.mute ? 'MUDO' : `${Math.round(v * 100)}%`);
+    const env = this.registry.get("envKeys");
+    const trees = [...env.pines, ...env.trees.slice(0, 5)];
+    // Camadas de floresta: silhuetas escuras ao fundo → cor real na frente
+    const layer = (baseY, scale, tint, step, alpha = 1) => {
+      const imgs = [];
+      for (let x = -40; x < W + 60; x += step + Math.random() * step * 0.5) {
+        const f = trees[Math.floor(Math.random() * trees.length)];
+        const im = this.add
+          .image(x, baseY + Math.random() * 16, "env", f)
+          .setOrigin(0.5, 1)
+          .setScale(scale)
+          .setTint(tint)
+          .setAlpha(alpha);
+        imgs.push(im);
+      }
+      return imgs;
     };
-    const setVolFromPointer = (p) => {
-      const f = Phaser.Math.Clamp((p.x - vx) / vw, 0, 1);
-      this.sound.volume = f;
-      if (f > 0) this.sound.mute = false;
-      saveVolume(f);
-      refreshVol();
+    layer(horizon - 30, 2, 0x0d1c1b, 34);
+    // Névoa entre camadas
+    this.fog = [];
+    for (let i = 0; i < 4; i++) {
+      const f = this.add
+        .image(W * (i / 3), horizon - 20, "fx_glow")
+        .setScale(9, 1.6)
+        .setTint(0x9fc8c0)
+        .setAlpha(0.07)
+        .setBlendMode(Phaser.BlendModes.ADD);
+      f._v = 6 + Math.random() * 8;
+      this.fog.push(f);
+    }
+    layer(horizon + 10, 3, 0x142a24, 52);
+
+    // Chão da clareira
+    this.add
+      .tileSprite(0, horizon, W, H - horizon, "env_ground")
+      .setOrigin(0)
+      .setTileScale(3)
+      .setTint(0xb8c8c0);
+    const shade = this.add.graphics();
+    shade.fillStyle(0x070b10, 0.5).fillRect(0, horizon, W, 18);
+    shade.fillStyle(0x070b10, 0.25).fillRect(0, horizon + 18, W, 18);
+
+    // Detalhes no chão
+    for (let i = 0; i < 26; i++) {
+      const list = i % 3 ? env.tufts : env.flowers;
+      this.add
+        .image(Math.random() * W, horizon + 30 + Math.random() * (H - horizon - 40), "env", list[i % list.length])
+        .setOrigin(0.5, 1)
+        .setScale(3);
+    }
+    // Árvores grandes emoldurando as bordas (cor real)
+    const frame = (x, y, f, flip) => {
+      this.add.image(x, y, "px_shadow").setScale(9, 4).setAlpha(0.6);
+      this.add.image(x, y, "env", f).setOrigin(0.5, 1).setScale(5).setFlipX(flip);
     };
-    volTrack.on('pointerdown', (p) => setVolFromPointer(p));
-    volTrack.on('pointermove', (p) => { if (p.isDown) setVolFromPointer(p); });
-    refreshVol();
+    frame(-30, H + 40, "tree_big", false);
+    frame(W + 20, H + 30, "pine2", true);
+    frame(W * 0.08, horizon + 70, "pine1", false);
 
-    // === HINT ===
-    sharp(this, cx, H - 28,
-      'WASD mover  ·  R despertar  ·  SHIFT dash  ·  E abrir baú  ·  M mute',
-      { fontFamily: F, fontSize: '13px', color: '#93a89a' }
-    ).setOrigin(0.5);
-
-    // === MÚSICA ===
-    if (!this.menuMusic && this.cache.audio.exists('music_menu')) {
-      this.menuMusic = this.sound.add('music_menu', { loop: true, volume: 0.25 });
-      const startMusic = () => { this.sound.unlock?.(); if (!this.menuMusic.isPlaying) this.menuMusic.play(); };
-      this.input.once('pointerdown', startMusic);
-      this.input.keyboard.once('keydown', startMusic);
+    // Vaga-lumes
+    this.flies = [];
+    for (let i = 0; i < 18; i++) {
+      const g = this.add.image(Math.random() * W, horizon + Math.random() * (H - horizon), "fx_glow").setScale(0.3).setTint(0xfff5b8).setBlendMode(Phaser.BlendModes.ADD);
+      const c = this.add.image(g.x, g.y, "px_dot2").setScale(2).setTint(0xfff5b8);
+      this.flies.push({ g, c, ph: Math.random() * 7, vx: (Math.random() - 0.5) * 0.3, vy: -0.1 - Math.random() * 0.25 });
     }
-    this.events.on('shutdown', () => { this.menuMusic?.stop(); this.menuMusic = null; });
+    // Vinheta
+    const vk = `vignette_${W}x${H}`;
+    if (!this.textures.exists(vk)) {
+      const c = this.textures.createCanvas(vk, W, H);
+      const ctx = c.getContext();
+      const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, Math.max(W, H) * 0.72);
+      g.addColorStop(0, "rgba(0,0,0,0)");
+      g.addColorStop(1, "rgba(10,6,16,0.55)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+      c.refresh();
+    }
+    this.add.image(0, 0, vk).setOrigin(0).setDepth(900);
   }
 
-  update(time) {
-    for (const ff of this.fireflies) {
-      ff.x += ff._driftX + Math.sin(time / 700 + ff._phase) * 0.2;
-      ff.y += ff._driftY;
-      ff.alpha = 0.4 + Math.sin(time / 350 + ff._phase) * 0.35;
-      if (ff.y < -10) { ff.y = GAME.HEIGHT + 20; ff.x = Math.random() * GAME.WIDTH; }
+  update(time, dt) {
+    const W = this.W,
+      H = this.H;
+    for (const f of this.flies || []) {
+      f.g.x += f.vx + Math.sin(time / 700 + f.ph) * 0.25;
+      f.g.y += f.vy;
+      if (f.g.y < H * 0.5) {
+        f.g.y = H + 10;
+        f.g.x = Math.random() * W;
+      }
+      const a = 0.3 + Math.abs(Math.sin(time / 400 + f.ph)) * 0.6;
+      f.g.setAlpha(a * 0.6);
+      f.c.setPosition(f.g.x, f.g.y).setAlpha(a);
+    }
+    for (const f of this.fog || []) {
+      f.x += (f._v * dt) / 1000;
+      if (f.x > W + 300) f.x = -300;
+    }
+    // Fogueira: chamas pulsando
+    if (this.fire) {
+      this.fire.glow.setAlpha(0.45 + Math.sin(time / 90) * 0.08 + Math.random() * 0.05);
+      this.heroLight?.setAlpha(0.16 + Math.sin(time / 90) * 0.03);
     }
   }
 
-  _button(x, y, label, color, fontSize, primary, onClick, w = 400) {
-    const h = 46;
-    const bgColor = primary ? 0x1a3a20 : 0x0a1410;
-    const strokeColor = primary ? 0xffe88a : 0xd9b25c;
-    const bg = this.add.rectangle(x, y, w, h, bgColor, 0.95)
-                    .setStrokeStyle(3, strokeColor, primary ? 1 : 0.7).setInteractive({ useHandCursor: true });
-    const txt = sharp(this, x, y, label, {
-      fontFamily: F, fontSize: `${fontSize}px`, fontStyle: 'bold', color,
-    }).setOrigin(0.5);
+  // =========================================================================
+  // HERÓI + FOGUEIRA + SELETOR DE PERSONAGEM
+  // =========================================================================
+  _heroArea() {
+    const W = this.W,
+      H = this.H;
+    const hx = Math.round(W * 0.3),
+      hy = Math.round(H * 0.8);
+    this.heroX = hx;
+    this.heroY = hy;
 
-    bg.on('pointerover', () => {
-      bg.setFillStyle(primary ? 0x2a5a30 : 0x1a3a20);
-      bg.setStrokeStyle(3, 0xffe88a, 1);
-      this.tweens.add({ targets: [bg, txt], scaleX: 1.04, scaleY: 1.04, duration: 90 });
-      this.sound.play('sfx_ui_hover', { volume: 0.22 });
+    // Fogueira (pedras + lenha + chamas de partículas)
+    const fx = hx + 96,
+      fy = hy + 10;
+    this.add.image(fx, fy + 6, "px_shadow").setScale(6, 3);
+    const glow = this.add.image(fx, fy - 10, "fx_glow").setScale(4.5).setTint(0xff9a4c).setAlpha(0.45).setBlendMode(Phaser.BlendModes.ADD);
+    const wood = this.add.graphics();
+    wood.fillStyle(PAL.ink, 1).fillRect(fx - 24, fy - 6, 48, 12);
+    wood.fillStyle(PAL.n2, 1).fillRect(fx - 21, fy - 3, 42, 6);
+    wood.fillStyle(PAL.n3, 1).fillRect(fx - 21, fy - 3, 42, 3);
+    for (let i = -3; i <= 3; i++) {
+      wood.fillStyle(PAL.ink, 1).fillRect(fx + i * 9 - 5, fy + 3, 10, 8);
+      wood.fillStyle(i % 2 ? PAL.s2 : PAL.s3, 1).fillRect(fx + i * 9 - 3, fy + 5, 6, 4);
+    }
+    this.fire = { glow };
+    this.time.addEvent({
+      delay: 70,
+      loop: true,
+      callback: () => {
+        const f = this.add
+          .image(fx + (Math.random() - 0.5) * 22, fy - 4, "px_puff")
+          .setScale(2.2 + Math.random())
+          .setTint([0xffe58f, 0xffb36b, 0xff7a3c][Math.floor(Math.random() * 3)])
+          .setBlendMode(Phaser.BlendModes.ADD);
+        this.tweens.add({
+          targets: f,
+          y: fy - 40 - Math.random() * 30,
+          x: f.x + (Math.random() - 0.5) * 14,
+          scale: 0.4,
+          alpha: 0,
+          duration: 520 + Math.random() * 260,
+          onComplete: () => f.destroy(),
+        });
+        if (Math.random() < 0.25) {
+          const e = this.add.image(fx, fy - 20, "px_dot1").setScale(3).setTint(0xffe58f);
+          this.tweens.add({ targets: e, y: fy - 120 - Math.random() * 60, x: fx + (Math.random() - 0.5) * 60, alpha: 0, duration: 1400, onComplete: () => e.destroy() });
+        }
+      },
     });
-    bg.on('pointerout', () => {
-      bg.setFillStyle(bgColor);
-      bg.setStrokeStyle(3, strokeColor, primary ? 1 : 0.7);
-      this.tweens.add({ targets: [bg, txt], scaleX: 1, scaleY: 1, duration: 90 });
-    });
-    bg.on('pointerdown', () => { this.sound.play('sfx_ui_click', { volume: 0.4 }); onClick(); });
-    return { bg, txt };
+
+    this.heroLight = this.add.image(hx, hy - 20, "fx_glow").setScale(4, 3).setTint(0xffc07a).setAlpha(0.16).setBlendMode(Phaser.BlendModes.ADD);
+    this.add.image(hx, hy + 4, "px_shadow").setScale(6, 4);
+    this.hero = this.add.image(hx, hy, "dungeon_tiles", 84).setOrigin(0.5, 1).setScale(7);
+    this.tweens.add({ targets: this.hero, scaleY: 7.25, duration: 1400, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+
+    // Plaquinha do personagem + setas
+    const py = hy + 50;
+    this.charPanel = this.add.container(hx, py);
+    this.charG = this.add.graphics();
+    this.charName = text(this, 0, -20, "", { size: 24, color: CSS.goldHi, origin: 0.5, stroke: true });
+    this.charPerk = text(this, 0, 4, "", { size: 15, color: CSS.muted, origin: 0.5 });
+    this.charMods = text(this, 0, 24, "", { size: 15, color: CSS.green, origin: 0.5 });
+    this.charPanel.add([this.charG, this.charName, this.charPerk, this.charMods]);
+    const arrowL = new Button(this, hx - 200, py, 48, 48, null, () => this._cycleChar(-1), { icon: "ico_arrow_left", style: "dark" });
+    const arrowR = new Button(this, hx + 200, py, 48, 48, null, () => this._cycleChar(1), { icon: "ico_arrow", style: "dark" });
+    this.charBuy = new Button(this, hx, hy - 150, 280, 50, "", () => this._buyChar(), { size: 18, style: "primary", color: CSS.goldHi });
+    this.charIdx = Math.max(0, CHARACTERS.findIndex((c) => c.id === this.meta.selectedCharacter));
+    this._refreshChar();
+    this.input.keyboard.on("keydown-LEFT", () => !this._modals.length && this._cycleChar(-1));
+    this.input.keyboard.on("keydown-RIGHT", () => !this._modals.length && this._cycleChar(1));
   }
 
-  // Seletor de Perigo (dificuldade). Travado ao maior nível vencido + 1.
-  _difficultySelector(x, y) {
-    const lastIdx = DIFFICULTY.length - 1;
-    const maxSel = this.meta.maxSelectableDifficulty(lastIdx);
+  _cycleChar(d) {
+    this.charIdx = (this.charIdx + d + CHARACTERS.length) % CHARACTERS.length;
+    const c = CHARACTERS[this.charIdx];
+    if (this.meta.hasCharacter(c.id)) this.meta.setSelectedCharacter(c.id);
+    this.tweens.add({ targets: this.hero, x: { from: this.heroX + d * 30, to: this.heroX }, alpha: { from: 0, to: 1 }, duration: 180 });
+    this._refreshChar();
+  }
+
+  _refreshChar() {
+    const c = CHARACTERS[this.charIdx];
+    const owned = this.meta.hasCharacter(c.id);
+    this.hero.setFrame(c.frame);
+    if (owned) this.hero.clearTint();
+    else this.hero.setTint(0x28303a);
+    this.charName.setText(c.name);
+    const wname = WEAPONS[c.weapon].name;
+    this.charPerk.setText(`${c.title} · começa com ${wname}`);
+    this.charMods.setText(c.perk);
+    const w = Math.max(this.charName.width, this.charPerk.width, this.charMods.width, 300) + 48;
+    this.charG.clear();
+    drawFrame(this.charG, -w / 2, -42, w, 84, owned ? "glass" : "dark");
+    if (owned) {
+      this.charBuy.setVisible(false);
+    } else {
+      this.charBuy.setVisible(true);
+      this.charBuy.setLabel(`LIBERAR · ${c.cost} moedas`);
+      this.charBuy.setEnabled(this.meta.coins >= c.cost);
+    }
+    this.playBtn?.setEnabled(owned);
+    this.playBtn?.setLabel(owned ? "JOGAR" : "BLOQUEADO");
+  }
+
+  _buyChar() {
+    const c = CHARACTERS[this.charIdx];
+    if (!this.meta.unlockCharacter(c.id, c.cost)) return;
+    this.sound.play("sfx_chest_jackpot", { volume: 0.5 });
+    haptic(40);
+    this.cameras.main.flash(250, 242, 193, 78);
+    this._refreshAll();
+  }
+
+  // =========================================================================
+  // TÍTULO
+  // =========================================================================
+  _title() {
+    const x = Math.round(this.W * 0.3);
+    const glow = this.add.image(x, 110, "fx_glow").setScale(8, 2.5).setTint(0xf2c14e).setAlpha(0.14).setBlendMode(Phaser.BlendModes.ADD);
+    this.tweens.add({ targets: glow, alpha: 0.24, duration: 1800, yoyo: true, repeat: -1 });
+    const t1 = text(this, x, 96, "GUARDIÃO", { size: 84, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 10, shadowY: 6 });
+    const t2 = text(this, x, 160, "DA FLORESTA", { size: 34, color: hex(PAL.g6), origin: 0.5, stroke: true, strokeW: 6 });
+    text(this, x, 202, "Sobreviva à horda. Desperte a mata.", { size: 18, color: CSS.muted, origin: 0.5 });
+    [t1, t2].forEach((t, i) => {
+      t.setAlpha(0).y -= 20;
+      this.tweens.add({ targets: t, alpha: 1, y: t.y + 20, delay: 150 + i * 120, duration: 500, ease: "Back.easeOut" });
+    });
+  }
+
+  // =========================================================================
+  // PAINEL DE AÇÕES (direita)
+  // =========================================================================
+  _actionPanel() {
+    const W = this.W,
+      H = this.H;
+    const pw = 420,
+      ph = 492;
+    const cx = Math.round(Math.max(W * 0.74, W - pw / 2 - 40));
+    const cy = Math.round(H / 2 + 34);
+    panel(this, cx, cy, pw, ph, "glass", { center: true });
+    const top = cy - ph / 2;
+
+    // Perigo
+    this._difficultySelector(cx, top + 52, pw - 50);
+
+    this.playBtn = new Button(this, cx, top + 136, pw - 50, 78, "JOGAR", () => this._play(), { size: 38, style: "primary", color: CSS.goldHi });
+    this.tweens.add({ targets: this.playBtn, scale: 1.03, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+
+    const bw = (pw - 62) / 2,
+      bh = 62;
+    const gx = [cx - bw / 2 - 6, cx + bw / 2 + 6];
+    const gy = [top + 222, top + 294];
+    this.btnBless = new Button(this, gx[0], gy[0], bw, bh, "BÊNÇÃOS", () => this._showBlessings(), { size: 19, icon: "ico_star", iconScale: 2.5 });
+    this.btnArsenal = new Button(this, gx[1], gy[0], bw, bh, "ARSENAL", () => this._showArsenal(), { size: 19, icon: "ico_staff", iconScale: 2.5 });
+    this.btnAch = new Button(this, gx[0], gy[1], bw, bh, "00/00", () => this._showAchievements(), { size: 19, icon: "ico_trophy", iconScale: 2.5 });
+    new Button(this, gx[1], gy[1], bw, bh, "GUIA", () => this._showGuide(), { size: 19, icon: "ico_chest", iconScale: 2.5 });
+
+    // Recorde
+    this.bestText = text(this, cx, top + 360, "", { size: 16, color: CSS.muted, origin: 0.5 });
+
+    const sy = top + ph - 56;
+    new Button(this, cx - bw / 2 - 6, sy, bw, 52, "OPÇÕES", () => this._showSettings(), { size: 17, icon: "ico_gear", iconScale: 2.5, style: "dark" });
+    new Button(this, cx + bw / 2 + 6, sy, bw, 52, "CRÉDITOS", () => this._showCredits(), { size: 17, style: "dark" });
+
+    // Selo "!" quando há algo comprável (puxa o jogador pra meta-progressão)
+    this.dotBless = this._notifyDot(gx[0] + bw / 2 - 6, gy[0] - bh / 2 + 6);
+    this.dotArsenal = this._notifyDot(gx[1] + bw / 2 - 6, gy[1 - 1] - bh / 2 + 6);
+  }
+
+  _notifyDot(x, y) {
+    const c = this.add.container(x, y);
+    const g = this.add.graphics();
+    g.fillStyle(PAL.ink, 1).fillCircle(0, 0, 13);
+    g.fillStyle(PAL.red2, 1).fillCircle(0, 0, 10);
+    c.add([g, text(this, 0, -1, "!", { size: 16, origin: 0.5, shadow: false })]);
+    this.tweens.add({ targets: c, scale: 1.2, duration: 500, yoyo: true, repeat: -1 });
+    return c;
+  }
+
+  _difficultySelector(x, y, w) {
+    const last = DIFFICULTY.length - 1;
+    const maxSel = this.meta.maxSelectableDifficulty(last);
     let cur = Math.min(this.meta.selectedDifficulty, maxSel);
     if (cur !== this.meta.selectedDifficulty) this.meta.setSelectedDifficulty(cur);
-
-    const w = 430, h = 46;
-    this.add.rectangle(x, y, w, h, 0x000000, 0.55).setStrokeStyle(2, 0xd9b25c, 0.7);
-    this.add.rectangle(x, y - h / 2, 90, 18, 0x1a3a20, 1).setStrokeStyle(2, 0xd9b25c, 0.7);
-    sharp(this, x, y - h / 2, 'PERIGO', { fontFamily: F, fontSize: '11px', fontStyle: 'bold', color: '#d9b25c' }).setOrigin(0.5);
-
-    const nameTxt = sharp(this, x, y - 3, '', { fontFamily: F, fontSize: '19px', fontStyle: 'bold', color: '#e8f0e6' }).setOrigin(0.5);
-    const subTxt = sharp(this, x, y + 15, '', { fontFamily: F, fontSize: '10px', color: '#93a89a' }).setOrigin(0.5);
-
-    const mkArrow = (ax, label) => {
-      const t = sharp(this, ax, y, label, { fontFamily: F, fontSize: '30px', fontStyle: 'bold', color: '#d9b25c' })
-        .setOrigin(0.5).setInteractive({ useHandCursor: true });
-      t.on('pointerover', () => { if (t.input.enabled) t.setColor('#ffe88a'); });
-      t.on('pointerout',  () => { if (t.input.enabled) t.setColor('#d9b25c'); });
-      return t;
-    };
-    const left  = mkArrow(x - w / 2 + 28, '◄');
-    const right = mkArrow(x + w / 2 - 28, '►');
-
+    const g = this.add.graphics();
+    drawFrame(g, x - w / 2, y - 34, w, 68, "dark");
+    text(this, x, y - 20, "PERIGO", { size: 13, color: CSS.muted, origin: 0.5 });
+    const name = text(this, x, y + 2, "", { size: 24, origin: 0.5, stroke: true });
+    const sub = text(this, x, y + 22, "", { size: 13, color: CSS.gold, origin: 0.5 });
+    const skulls = this.add.container(x, y - 2);
+    const left = new Button(this, x - w / 2 + 34, y, 44, 48, null, () => change(-1), { icon: "ico_arrow_left", style: "dark" });
+    const right = new Button(this, x + w / 2 - 34, y, 44, 48, null, () => change(1), { icon: "ico_arrow", style: "dark" });
+    const colors = [CSS.green, CSS.txt, CSS.goldHi, hex(PAL.org2), CSS.redHi];
     const refresh = () => {
       const d = DIFFICULTY[cur];
-      nameTxt.setText(`${cur} · ${d.name}`);
-      const lockHint = cur >= maxSel && maxSel < lastIdx ? '   🔒 vença p/ liberar' : '';
-      subTxt.setText(`Recompensa ×${d.rewardMult}${lockHint}`);
-      // Habilita/desabilita setas nos limites
-      const setEnabled = (t, on) => {
-        t.input.enabled = on;
-        t.setColor(on ? '#d9b25c' : '#3a4a3a');
-      };
-      setEnabled(left, cur > 0);
-      setEnabled(right, cur < maxSel);
+      name.setText(d.name.toUpperCase()).setColor(colors[cur] ?? CSS.txt);
+      const locked = cur >= maxSel && maxSel < last;
+      sub.setText(`Recompensa ×${d.rewardMult}` + (locked ? "  ·  vença p/ liberar o próximo" : ""));
+      left.setEnabled(cur > 0);
+      right.setEnabled(cur < maxSel);
+      skulls.removeAll(true);
+      for (let i = 0; i < cur; i++) skulls.add(this.add.image((i - (cur - 1) / 2) * 20, -38, "ico_skull").setScale(1.6));
     };
-
-    const change = (delta) => {
-      const next = Phaser.Math.Clamp(cur + delta, 0, maxSel);
-      if (next === cur) return;
-      cur = next;
+    const change = (dd) => {
+      const n = Phaser.Math.Clamp(cur + dd, 0, maxSel);
+      if (n === cur) return;
+      cur = n;
       this.meta.setSelectedDifficulty(cur);
-      this.sound.play('sfx_ui_click', { volume: 0.4 });
-      this.tweens.add({ targets: nameTxt, scaleX: 1.12, scaleY: 1.12, duration: 80, yoyo: true });
+      this.tweens.add({ targets: name, scale: { from: 1.2, to: 1 }, duration: 140 });
       refresh();
     };
-    left.on('pointerdown', () => change(-1));
-    right.on('pointerdown', () => change(1));
     refresh();
   }
 
-  _showUnlockMenu() {
-    const W = GAME.WIDTH, H = GAME.HEIGHT;
-    const overlay = this.add.rectangle(0, 0, W, H, 0x000000, 0.92).setOrigin(0).setInteractive().setDepth(500);
-    const panel = this.add.container(W / 2, H / 2).setDepth(501);
-    panel.add(this.add.rectangle(0, 0, 640, 460, 0x0a1410, 1).setStrokeStyle(3, 0xd9b25c, 1));
-    panel.add(sharp(this, 0, -190, 'DESBLOQUEAR ARMAS', { fontFamily: F, fontSize: '26px', fontStyle: 'bold', color: '#d9b25c' }).setOrigin(0.5));
-    panel.add(sharp(this, 0, -150, `${this.meta.coins} moedas disponíveis`, { fontFamily: F, fontSize: '14px', color: '#e8f0e6' }).setOrigin(0.5));
-
-    const items = [
-      { kind: 'weapon',  key: 'BOOMER', name: 'Bumerangue',     cost: META.WEAPON_UNLOCK_COST.BOOMER,  ico: '🔥' },
-      { kind: 'weapon',  key: 'CHAIN',  name: 'Raio Concentrado', cost: META.WEAPON_UNLOCK_COST.CHAIN,   ico: '⚡' },
-      { kind: 'weapon',  key: 'AURA',   name: 'Aura Gélida',    cost: META.WEAPON_UNLOCK_COST.AURA,    ico: '❄' },
-      { kind: 'ability', key: 'DASH',   name: 'Dash (SHIFT)',   cost: META.ABILITY_UNLOCK_COST.DASH,   ico: '⚡' },
-      { kind: 'ability', key: 'AWAKEN', name: 'Despertar (R)',  cost: META.ABILITY_UNLOCK_COST.AWAKEN, ico: '★' },
-    ];
-    let y = -130;
-    for (const it of items) {
-      const has = it.kind === 'weapon' ? this.meta.isUnlocked(it.key) : this.meta.hasAbility(it.key);
-      const canBuy = !has && this.meta.coins >= it.cost;
-      const row = this.add.container(0, y);
-      const bg = this.add.rectangle(0, 0, 560, 50, has ? 0x1a3a1a : (canBuy ? 0x1a2820 : 0x141414), 1)
-                       .setStrokeStyle(2, has ? 0x6fcf6f : (canBuy ? 0xd9b25c : 0x333333), 1);
-      row.add(bg);
-      const tag = it.kind === 'ability' ? ' [HAB]' : '';
-      row.add(sharp(this, -260, 0, `${it.ico}  ${it.name}${tag}`, {
-        fontFamily: F, fontSize: '16px', fontStyle: 'bold',
-        color: has ? '#6fcf6f' : (canBuy ? '#e8f0e6' : '#777'),
-      }).setOrigin(0, 0.5));
-      row.add(sharp(this, 260, 0, has ? 'COMPRADA' : `${it.cost} 💰`, {
-        fontFamily: F, fontSize: '14px', fontStyle: 'bold',
-        color: has ? '#6fcf6f' : (canBuy ? '#d9b25c' : '#666'),
-      }).setOrigin(1, 0.5));
-      panel.add(row);
-      if (canBuy) {
-        bg.setInteractive({ useHandCursor: true });
-        bg.on('pointerover', () => { bg.setFillStyle(0x2a3a3a); this.sound.play('sfx_ui_hover', { volume: 0.2 }); });
-        bg.on('pointerout',  () => bg.setFillStyle(0x1a2820));
-        bg.on('pointerdown', () => {
-          this.sound.play('sfx_ui_click', { volume: 0.5 });
-          const ok = it.kind === 'weapon'
-            ? this.meta.unlock(it.key)
-            : this.meta.unlockAbility(it.key, it.cost);
-          if (!ok) return;
-          this._refreshCounters();
-          // Reabre o PRÓPRIO painel atualizado — sem restart (fechava o menu)
-          overlay.destroy(); panel.destroy();
-          this._showUnlockMenu();
-        });
-      }
-      y += 58;
+  _topBar() {
+    const W = this.W;
+    // Moedas
+    const g = this.add.graphics();
+    drawFrame(g, W - 204, 14, 186, 52, "dark");
+    this.add.image(W - 180, 40, "ico_coin").setScale(3);
+    this.coinText = text(this, W - 34, 40, "", { size: 26, color: CSS.goldHi, origin: [1, 0.5], stroke: true });
+    if (DEBUG) {
+      new Button(this, W - 290, 40, 150, 44, "+500 (dev)", () => {
+        this.meta.addCoins(500);
+        this._refreshAll();
+      }, { size: 14, style: "green" });
     }
-    const close = sharp(this, 0, 200, 'FECHAR', { fontFamily: F, fontSize: '16px', fontStyle: 'bold', color: '#d9b25c' })
-                  .setOrigin(0.5).setInteractive({ useHandCursor: true });
-    close.on('pointerdown', () => { overlay.destroy(); panel.destroy(); });
-    panel.add(close);
-  }
-
-  _showResetConfirm() {
-    const W = GAME.WIDTH, H = GAME.HEIGHT;
-    const overlay = this.add.rectangle(0, 0, W, H, 0x000000, 0.92).setOrigin(0).setInteractive().setDepth(500);
-    const panel = this.add.container(W / 2, H / 2).setDepth(501);
-    panel.add(this.add.rectangle(0, 0, 520, 280, 0x2a0a0a, 1).setStrokeStyle(3, 0xff5a6e, 1));
-    panel.add(sharp(this, 0, -100, '⚠  NOVO JOGO  ⚠', { fontFamily: F, fontSize: '24px', fontStyle: 'bold', color: '#ff5a6e' }).setOrigin(0.5));
-    panel.add(sharp(this, 0, -60, 'Isto vai APAGAR TODO seu progresso:', { fontFamily: F, fontSize: '14px', color: '#e8f0e6' }).setOrigin(0.5));
-    panel.add(sharp(this, 0, -32, '· Moedas acumuladas', { fontFamily: F, fontSize: '12px', color: '#93a89a' }).setOrigin(0.5));
-    panel.add(sharp(this, 0, -12, '· Armas e habilidades desbloqueadas', { fontFamily: F, fontSize: '12px', color: '#93a89a' }).setOrigin(0.5));
-    panel.add(sharp(this, 0,   8, '· Bênçãos compradas', { fontFamily: F, fontSize: '12px', color: '#93a89a' }).setOrigin(0.5));
-    panel.add(sharp(this, 0,  28, '· Recorde de tempo', { fontFamily: F, fontSize: '12px', color: '#93a89a' }).setOrigin(0.5));
-
-    // Botões
-    const yesBg = this.add.rectangle(-120, 80, 200, 44, 0x3a0a0a, 1).setStrokeStyle(2, 0xff5a6e, 1).setInteractive({ useHandCursor: true });
-    panel.add(yesBg);
-    panel.add(sharp(this, -120, 80, 'SIM, APAGAR', { fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: '#ff8898' }).setOrigin(0.5));
-    yesBg.on('pointerover', () => yesBg.setFillStyle(0x5a1a1a));
-    yesBg.on('pointerout',  () => yesBg.setFillStyle(0x3a0a0a));
-    yesBg.on('pointerdown', () => {
-      this.sound.play('sfx_ui_click', { volume: 0.5 });
-      this.meta.reset();
-      overlay.destroy(); panel.destroy();
-      this.scene.restart();
-    });
-
-    const noBg = this.add.rectangle(120, 80, 200, 44, 0x0a1410, 1).setStrokeStyle(2, 0xd9b25c, 1).setInteractive({ useHandCursor: true });
-    panel.add(noBg);
-    panel.add(sharp(this, 120, 80, 'CANCELAR', { fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: '#e8f0e6' }).setOrigin(0.5));
-    noBg.on('pointerover', () => noBg.setFillStyle(0x1a3a20));
-    noBg.on('pointerout',  () => noBg.setFillStyle(0x0a1410));
-    noBg.on('pointerdown', () => { overlay.destroy(); panel.destroy(); });
-  }
-
-  _showBlessingsMenu() {
-    const W = GAME.WIDTH, H = GAME.HEIGHT;
-    const overlay = this.add.rectangle(0, 0, W, H, 0x000000, 0.92).setOrigin(0).setInteractive().setDepth(500);
-    const panel = this.add.container(W / 2, H / 2).setDepth(501);
-
-    // Monta as linhas: 1 por trilha de bênção + Tesouro Ancestral (sink infinito).
-    const rows = BLESSINGS.map((b) => {
-      const rank = this.meta.blessingRank(b.id);
-      const maxed = rank >= MAX_BLESSING_RANK;
-      const cost = maxed ? null : b.costs[rank];
-      const canBuy = !maxed && this.meta.coins >= cost;
-      return {
-        name: b.name,
-        sub: `${b.desc}  ·  Rank ${rank}/${MAX_BLESSING_RANK}`,
-        right: maxed ? 'MÁX' : `${cost} 💰`,
-        state: maxed ? 'max' : (canBuy ? 'buy' : 'lock'),
-        onBuy: canBuy ? () => this.meta.rankUpBlessing(b) : null,
-      };
-    });
-    const ancLvl = this.meta.ancestralLevel;
-    const ancCost = this.meta.ancestralCost();
-    const ancCanBuy = this.meta.coins >= ancCost;
-    rows.push({
-      name: '✦ Tesouro Ancestral',
-      sub: `+2% dano geral por nível  ·  Nível ${ancLvl}  (infinito)`,
-      right: `${ancCost} 💰`,
-      state: ancCanBuy ? 'buy' : 'lock',
-      gold: true,
-      onBuy: ancCanBuy ? () => this.meta.buyAncestral() : null,
-    });
-
-    // Layout calculado pra caber todas as linhas + cabeçalho + botão sem sobrepor
-    const n = rows.length;
-    const step = 50, rowH = 44;
-    const headerSpace = 100, footerSpace = 70;
-    const panelH = headerSpace + n * step + footerSpace;
-    panel.add(this.add.rectangle(0, 0, 780, panelH, 0x0a1410, 1).setStrokeStyle(3, 0xd9b25c, 1));
-    const top = -panelH / 2;
-    panel.add(sharp(this, 0, top + 28, 'BÊNÇÃOS', { fontFamily: F, fontSize: '28px', fontStyle: 'bold', color: '#d9b25c' }).setOrigin(0.5));
-    panel.add(sharp(this, 0, top + 56, 'Buffs permanentes — suba o rank a cada run', { fontFamily: F, fontSize: '13px', color: '#93a89a' }).setOrigin(0.5));
-    panel.add(sharp(this, 0, top + 78, `${this.meta.coins} moedas disponíveis`, { fontFamily: F, fontSize: '14px', color: '#e8f0e6' }).setOrigin(0.5));
-
-    let y = top + headerSpace + step / 2;
-    for (const r of rows) {
-      // Paleta por estado (gold = Ancestral em destaque)
-      const fill   = r.state === 'max' ? 0x1a3a1a : (r.state === 'buy' ? (r.gold ? 0x2a2410 : 0x1a2820) : 0x141414);
-      const stroke = r.state === 'max' ? 0x6fcf6f : (r.state === 'buy' ? (r.gold ? 0xffd96b : 0xd9b25c) : 0x333333);
-      const nameCol = r.state === 'max' ? '#6fcf6f' : (r.state === 'buy' ? (r.gold ? '#ffe88a' : '#e8f0e6') : '#777');
-      const rightCol = r.state === 'max' ? '#6fcf6f' : (r.state === 'buy' ? (r.gold ? '#ffe88a' : '#d9b25c') : '#666');
-      const hoverFill = r.gold ? 0x3a3216 : 0x2a3a3a;
-      const row = this.add.container(0, y);
-      const bg = this.add.rectangle(0, 0, 720, rowH, fill, 1).setStrokeStyle(2, stroke, 1);
-      row.add(bg);
-      row.add(sharp(this, -340, -9, r.name, { fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: nameCol }).setOrigin(0, 0.5));
-      row.add(sharp(this, -340, 11, r.sub, { fontFamily: F, fontSize: '11px', color: '#93a89a' }).setOrigin(0, 0.5));
-      row.add(sharp(this, 340, 0, r.right, { fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: rightCol }).setOrigin(1, 0.5));
-      panel.add(row);
-      if (r.onBuy) {
-        bg.setInteractive({ useHandCursor: true });
-        bg.on('pointerover', () => { bg.setFillStyle(hoverFill); this.sound.play('sfx_ui_hover', { volume: 0.2 }); });
-        bg.on('pointerout',  () => bg.setFillStyle(fill));
-        bg.on('pointerdown', () => {
-          this.sound.play('sfx_ui_click', { volume: 0.5 });
-          if (r.onBuy()) {
-            this._refreshCounters();
-            overlay.destroy(); panel.destroy();
-            this._showBlessingsMenu();
-          }
-        });
-      }
-      y += step;
+    if (!this.meta.available) {
+      text(this, 20, this.H - 20, "Modo privado: o progresso não será salvo", { size: 14, color: CSS.redHi, origin: [0, 1] });
     }
-    const closeY = (panelH / 2) - footerSpace / 2;
-    const closeBg = this.add.rectangle(0, closeY, 200, 40, 0x1a2820, 1)
-                        .setStrokeStyle(2, 0xd9b25c, 0.9).setInteractive({ useHandCursor: true });
-    const close = sharp(this, 0, closeY, 'FECHAR', { fontFamily: F, fontSize: '16px', fontStyle: 'bold', color: '#d9b25c' }).setOrigin(0.5);
-    closeBg.on('pointerover', () => closeBg.setFillStyle(0x2a3a3a));
-    closeBg.on('pointerout',  () => closeBg.setFillStyle(0x1a2820));
-    closeBg.on('pointerdown', () => { overlay.destroy(); panel.destroy(); });
-    panel.add(closeBg);
-    panel.add(close);
+    // Tela cheia (só navegador)
+    if (!isNative()) {
+      new Button(this, 44, 40, 52, 52, null, () => this.scale.toggleFullscreen(), { icon: "ico_fullscreen", style: "dark", iconScale: 2.5 });
+    }
+    text(this, W - 12, this.H - 8, "v1.0", { size: 12, color: CSS.dim, origin: [1, 1], shadow: false });
   }
 
-  // Atualiza contadores do menu principal após compras (moedas, conquistas) —
-  // compras podem destravar conquistas (Bênção Suprema, Herdeiro Ancestral).
-  _refreshCounters() {
+  // Tudo que depende de moedas/compras (sem reiniciar a cena)
+  _refreshAll() {
     this.meta.checkAchievements();
-    this._coinsText.setText(`${this.meta.coins}`);
-    this._achBtnTxt?.setText(`🏆 CONQUISTAS  ${this.meta.data.achievements.length}/${ACHIEVEMENTS.length}`);
+    this.coinText.setText(String(this.meta.coins));
+    this.btnAch.setLabel(`${this.meta.data.achievements.length}/${ACHIEVEMENTS.length}`);
+    const best = this.meta.data.highScoreSeconds;
+    this.bestText.setText(best > 0 ? `Recorde: ${formatTime(best * 1000)}  ·  Vitórias: ${this.meta.data.wins || 0}` : "Primeira vez? Toque em JOGAR!");
+    const coins = this.meta.coins;
+    const canBless =
+      BLESSINGS.some((b) => {
+        const c = this.meta.blessingNextCost(b);
+        return c != null && coins >= c;
+      }) || coins >= this.meta.ancestralCost();
+    const canArsenal =
+      META.WEAPON_UNLOCK_ORDER.some((k) => !this.meta.isUnlocked(k) && coins >= META.WEAPON_UNLOCK_COST[k]) ||
+      Object.entries(META.ABILITY_UNLOCK_COST).some(([k, c]) => !this.meta.hasAbility(k) && coins >= c);
+    this.dotBless.setVisible(canBless);
+    this.dotArsenal.setVisible(canArsenal);
+    this._refreshChar();
   }
 
-  // Painel de conquistas (Fase 3) — 2 colunas, mostra progresso das cumulativas.
-  _showAchievementsMenu() {
-    const W = GAME.WIDTH, H = GAME.HEIGHT;
-    const overlay = this.add.rectangle(0, 0, W, H, 0x000000, 0.92).setOrigin(0).setInteractive().setDepth(500);
-    const panel = this.add.container(W / 2, H / 2).setDepth(501);
+  _play() {
+    const c = CHARACTERS[this.charIdx];
+    if (!this.meta.hasCharacter(c.id)) return;
+    this.meta.setSelectedCharacter(c.id);
+    haptic(30);
+    this.cameras.main.fadeOut(300, 5, 8, 6);
+    this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start("GameScene"));
+  }
 
-    const ctx = this.meta.buildAchievementCtx();
+  // =========================================================================
+  // MODAIS
+  // =========================================================================
+  // Lista rolável padrão dentro de um modal
+  _modalList(m, rowsTop = null) {
+    const W = this.W,
+      H = this.H;
+    const x = W / 2 - m.w / 2 + 30;
+    const y = H / 2 + (rowsTop ?? m.top) + 6;
+    const list = new ScrollList(this, x, y, m.w - 76, H / 2 + m.h / 2 - 24 - y, m.root.depth + 3);
+    m.list = list;
+    return list;
+  }
+
+  // Linha de loja genérica: ícone, nome, descrição, direita (preço/estado)
+  _shopRow(o) {
+    const scene = this;
+    return {
+      h: o.h ?? 74,
+      onTap: o.onTap,
+      build(c, w) {
+        const g = scene.add.graphics();
+        const draw = (hover) => {
+          g.clear();
+          drawFrame(g, 0, 0, w, o.h ?? 74, hover && o.onTap ? { ...(o.styleObj ?? {}), border: PAL.uiGoldHi, body: PAL.uiPanel2, hi: 0x2b463a, lo: PAL.uiLine } : o.style ?? "dark", { noRivets: true });
+        };
+        draw(false);
+        this.hover = draw;
+        c.add(g);
+        const hh = (o.h ?? 74) / 2;
+        if (o.icon) c.add(scene.add.image(38, hh, o.icon).setScale(3).setAlpha(o.dim ? 0.45 : 1));
+        c.add(text(scene, 74, hh - 13, o.name, { size: 20, color: o.nameColor ?? CSS.txt, origin: [0, 0.5] }));
+        c.add(text(scene, 74, hh + 13, o.desc, { size: 14, color: CSS.muted, origin: [0, 0.5], shadow: false, wrap: w - 300 }));
+        if (o.pips != null) {
+          for (let i = 0; i < o.pipsMax; i++)
+            c.add(scene.add.rectangle(w - 250 + i * 18, hh, 12, 12, i < o.pips ? PAL.yel2 : PAL.inkSoft).setStrokeStyle(3, PAL.ink));
+        }
+        if (o.right) {
+          const rc = scene.add.container(w - 20, hh);
+          const rt = text(scene, 0, 0, o.right, { size: 20, color: o.rightColor ?? CSS.goldHi, origin: [1, 0.5], stroke: true });
+          rc.add(rt);
+          if (o.rightIcon) rc.add(scene.add.image(-rt.width - 18, 0, o.rightIcon).setScale(2.5));
+          c.add(rc);
+        }
+      },
+    };
+  }
+
+  _buyFx() {
+    this.sound.play("sfx_coin_cascade", { volume: 0.5 });
+    haptic(30);
+  }
+
+  _showBlessings() {
+    const m = new Modal(this, { title: "BÊNÇÃOS", subtitle: "Poderes permanentes — valem para todos os personagens", w: 860, h: 640 });
+    const list = this._modalList(m);
+    const reopen = () => {
+      m.close();
+      this._refreshAll();
+      this._showBlessings();
+    };
+    for (const b of BLESSINGS) {
+      const rank = this.meta.blessingRank(b.id);
+      const cost = this.meta.blessingNextCost(b);
+      const can = cost != null && this.meta.coins >= cost;
+      list.addRow(
+        this._shopRow({
+          icon: BLESSING_ICON[b.id],
+          name: b.name,
+          desc: b.desc,
+          pips: rank,
+          pipsMax: MAX_BLESSING_RANK,
+          right: cost == null ? "MÁX" : String(cost),
+          rightIcon: cost == null ? null : "ico_coin",
+          rightColor: cost == null ? CSS.green : can ? CSS.goldHi : CSS.dim,
+          style: cost == null ? "green" : can ? "button" : "dark",
+          onTap: can
+            ? () => {
+                if (this.meta.rankUpBlessing(b)) {
+                  this._buyFx();
+                  reopen();
+                }
+              }
+            : null,
+        }),
+      );
+    }
+    const ac = this.meta.ancestralCost();
+    const acan = this.meta.coins >= ac;
+    list.addRow(
+      this._shopRow({
+        icon: "ico_trophy",
+        name: "Tesouro Ancestral",
+        desc: `+2% de dano geral por nível · Nível ${this.meta.ancestralLevel} (sem limite)`,
+        right: String(ac),
+        rightIcon: "ico_coin",
+        rightColor: acan ? CSS.goldHi : CSS.dim,
+        nameColor: CSS.goldHi,
+        style: acan ? "gold" : "dark",
+        onTap: acan
+          ? () => {
+              if (this.meta.buyAncestral()) {
+                this._buyFx();
+                reopen();
+              }
+            }
+          : null,
+      }),
+    );
+  }
+
+  _showArsenal() {
+    const m = new Modal(this, { title: "ARSENAL", subtitle: "Armas liberadas aparecem nas cartas de nível", w: 860, h: 640 });
+    const list = this._modalList(m);
+    const reopen = () => {
+      m.close();
+      this._refreshAll();
+      this._showArsenal();
+    };
+    const elName = { fire: "Fogo", ice: "Gelo", bolt: "Raio" };
+    const rows = [
+      { kind: "weapon", key: "STAFF", cost: 0 },
+      ...META.WEAPON_UNLOCK_ORDER.map((k) => ({ kind: "weapon", key: k, cost: META.WEAPON_UNLOCK_COST[k] })),
+      { kind: "ability", key: "DASH", cost: META.ABILITY_UNLOCK_COST.DASH, name: "Dash", icon: "ico_dash", desc: "Esquiva rápida e invulnerável (SHIFT / botão)" },
+      { kind: "ability", key: "AWAKEN", cost: META.ABILITY_UNLOCK_COST.AWAKEN, name: "Despertar", icon: "ico_star", desc: "Modo fúria: armas disparam 2,5× mais rápido" },
+    ];
+    for (const r of rows) {
+      const has = r.kind === "weapon" ? r.cost === 0 || this.meta.isUnlocked(r.key) : this.meta.hasAbility(r.key);
+      const can = !has && this.meta.coins >= r.cost;
+      const def = WEAPONS[r.key];
+      list.addRow(
+        this._shopRow({
+          icon: r.icon ?? WEAPON_ICON[r.key],
+          name: r.name ?? `${def.name}  ·  ${elName[def.element]}`,
+          desc: r.desc ?? WEAPON_DESC[r.key],
+          right: has ? "LIBERADA" : String(r.cost),
+          rightIcon: has ? null : "ico_coin",
+          rightColor: has ? CSS.green : can ? CSS.goldHi : CSS.dim,
+          style: has ? "green" : can ? "button" : "dark",
+          onTap: can
+            ? () => {
+                const ok = r.kind === "weapon" ? this.meta.unlock(r.key) : this.meta.unlockAbility(r.key, r.cost);
+                if (ok) {
+                  this._buyFx();
+                  reopen();
+                }
+              }
+            : null,
+        }),
+      );
+    }
+    // Evoluções: receitas visíveis (descoberta guiada)
+    list.addRow({
+      h: 40,
+      build: (c, w) => c.add(text(this, w / 2, 24, "RECEITAS DE EVOLUÇÃO", { size: 18, color: hex(PAL.pur3), origin: 0.5 })),
+    });
+    for (const [k, d] of Object.entries(WEAPONS)) {
+      if (!d.evolvesFrom) continue;
+      list.addRow(
+        this._shopRow({
+          h: 62,
+          icon: WEAPON_ICON[k],
+          name: d.name,
+          desc: `${WEAPONS[d.evolvesFrom].name} nível 5 + ${WEAPONS[d.partner].name}`,
+          style: "purple",
+        }),
+      );
+    }
+  }
+
+  _showAchievements() {
     const done = this.meta.data.achievements;
-    const n = ACHIEVEMENTS.length;
-    const perCol = Math.ceil(n / 2);
-
-    const step = 42, rowH = 38, rowW = 560;
-    const headerSpace = 84, footerSpace = 60;
-    const panelH = headerSpace + perCol * step + footerSpace;
-    panel.add(this.add.rectangle(0, 0, 1180, panelH, 0x0a1410, 1).setStrokeStyle(3, 0xd9b25c, 1));
-    const top = -panelH / 2;
-    panel.add(sharp(this, 0, top + 30, '🏆 CONQUISTAS', { fontFamily: F, fontSize: '26px', fontStyle: 'bold', color: '#d9b25c' }).setOrigin(0.5));
-    panel.add(sharp(this, 0, top + 62, `${done.length} de ${n} desbloqueadas`, { fontFamily: F, fontSize: '13px', color: '#93a89a' }).setOrigin(0.5));
-
-    ACHIEVEMENTS.forEach((a, i) => {
-      const colX = i < perCol ? -295 : 295;
-      const y = top + headerSpace + (i % perCol) * step + step / 2;
+    const m = new Modal(this, { title: "CONQUISTAS", subtitle: `${done.length} de ${ACHIEVEMENTS.length} desbloqueadas`, w: 860, h: 640 });
+    const list = this._modalList(m);
+    const ctx = this.meta.buildAchievementCtx();
+    // Desbloqueadas por último → mostra primeiro o que falta
+    const sorted = ACHIEVEMENTS.slice().sort((a, b) => done.includes(a.id) - done.includes(b.id));
+    for (const a of sorted) {
       const has = done.includes(a.id);
-      const row = this.add.container(colX, y);
-      row.add(this.add.rectangle(0, 0, rowW, rowH, has ? 0x1a3a1a : 0x141414, 1)
-        .setStrokeStyle(2, has ? 0x6fcf6f : 0x2a2a2a, 1));
-      row.add(sharp(this, -rowW / 2 + 14, 0, has ? '✓' : '·', {
-        fontFamily: F, fontSize: '18px', fontStyle: 'bold', color: has ? '#6fcf6f' : '#555',
-      }).setOrigin(0, 0.5));
-      row.add(sharp(this, -rowW / 2 + 40, -8, a.name, {
-        fontFamily: F, fontSize: '13px', fontStyle: 'bold', color: has ? '#6fcf6f' : '#c8d4c8',
-      }).setOrigin(0, 0.5));
-      row.add(sharp(this, -rowW / 2 + 40, 9, a.desc, {
-        fontFamily: F, fontSize: '10px', color: has ? '#5a8a5a' : '#777',
-      }).setOrigin(0, 0.5));
-      // Progresso das cumulativas (ex.: reações 37/100)
+      let right = has ? "OK" : "";
       if (!has && a.prog) {
         const [cur, goal] = a.prog(ctx);
-        row.add(sharp(this, rowW / 2 - 12, 0, `${Math.min(cur, goal)}/${goal}`, {
-          fontFamily: F, fontSize: '12px', fontStyle: 'bold', color: '#d9b25c',
-        }).setOrigin(1, 0.5));
+        right = `${Math.min(cur, goal)}/${goal}`;
       }
-      panel.add(row);
-    });
+      list.addRow(
+        this._shopRow({
+          h: 64,
+          icon: has ? "ico_trophy" : "ico_lock",
+          name: a.name,
+          nameColor: has ? CSS.goldHi : CSS.txt,
+          desc: a.desc,
+          right,
+          rightColor: has ? CSS.green : CSS.gold,
+          style: has ? "gold" : "dark",
+        }),
+      );
+    }
+  }
 
-    const closeY = panelH / 2 - footerSpace / 2;
-    const closeBg = this.add.rectangle(0, closeY, 200, 40, 0x1a2820, 1)
-      .setStrokeStyle(2, 0xd9b25c, 0.9).setInteractive({ useHandCursor: true });
-    const close = sharp(this, 0, closeY, 'FECHAR', { fontFamily: F, fontSize: '16px', fontStyle: 'bold', color: '#d9b25c' }).setOrigin(0.5);
-    closeBg.on('pointerover', () => closeBg.setFillStyle(0x2a3a3a));
-    closeBg.on('pointerout',  () => closeBg.setFillStyle(0x1a2820));
-    closeBg.on('pointerdown', () => { overlay.destroy(); panel.destroy(); });
-    panel.add(closeBg);
-    panel.add(close);
+  _showGuide() {
+    const m = new Modal(this, { title: "GUIA DA FLORESTA", w: 880, h: 640 });
+    const list = this._modalList(m);
+    const touch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    const sections = [
+      ["ico_dash", "Movimento", touch ? "Arraste o polegar na metade esquerda da tela para andar. O ataque é automático." : "WASD ou setas para andar. O ataque é automático — posicione-se."],
+      ["ico_gem", "Nível", "Colete gemas verdes para subir de nível e escolher 1 de 3 cartas: novas armas, melhorias ou passivas."],
+      ["ico_staff", "Elementos", "Cada arma aplica um elemento: Fogo, Gelo ou Raio. Dois elementos no mesmo inimigo disparam uma REAÇÃO."],
+      ["ico_cloud", "Vapor (Fogo + Gelo)", "Nuvem escaldante que causa dano contínuo na área."],
+      ["ico_aura", "Cristal (Congelado + Raio)", "O inimigo congelado estilhaça e fere quem está perto."],
+      ["ico_bolt_gold", "Sobrecarga (Fogo + Raio)", "Corrente elétrica que salta entre vários inimigos."],
+      ["ico_star", "Despertar", "Reações enchem a barra dourada. Ative para disparar tudo muito mais rápido por alguns segundos."],
+      ["ico_chest", "Baús", "Encoste num baú para abri-lo: tesouro, jackpot dourado… ou uma armadilha (e o temido mímico)."],
+      ["ico_heart_ice", "Evoluções", "Arma no nível 5 + a arma parceira na mesma partida = carta de EVOLUÇÃO garantida. Veja as receitas no Arsenal."],
+      ["ico_skull", "O Ancião", "Aos 7:00 o chefe desperta. Derrote-o para vencer e liberar o próximo nível de Perigo."],
+      ["ico_coin", "Entre partidas", "Moedas compram Bênçãos permanentes, armas, habilidades e novos personagens."],
+    ];
+    for (const [icon, name, desc] of sections) {
+      list.addRow({
+        h: 84,
+        build: (c, w) => {
+          const g = this.add.graphics();
+          drawFrame(g, 0, 0, w, 84, "dark", { noRivets: true });
+          c.add(g);
+          c.add(this.add.image(40, 42, icon).setScale(3));
+          c.add(text(this, 80, 20, name, { size: 20, color: CSS.goldHi, origin: [0, 0.5] }));
+          c.add(text(this, 80, 38, desc, { size: 15, color: CSS.muted, origin: [0, 0], wrap: w - 100, shadow: false }));
+        },
+      });
+    }
+  }
+
+  _showSettings() {
+    openSettings(this, { onReset: () => this._confirmReset() });
+  }
+
+  _confirmReset() {
+    const m = new Modal(this, { title: "APAGAR TUDO?", style: "danger", w: 560, h: 330 });
+    m.add(text(this, 0, -30, "Moedas, bênçãos, armas, personagens,\nconquistas e recordes serão perdidos.", { size: 18, align: "center", origin: 0.5, color: CSS.txt }));
+    m.add(
+      new Button(this, -125, 90, 220, 54, "APAGAR", () => {
+        this.meta.reset();
+        this.scene.restart();
+      }, { style: "danger", color: CSS.redHi, size: 20 }),
+    );
+    m.add(new Button(this, 125, 90, 220, 54, "CANCELAR", () => m.close(), { size: 20 }));
+  }
+
+  _showCredits() {
+    const m = new Modal(this, { title: "CRÉDITOS", w: 820, h: 620 });
+    const list = this._modalList(m);
+    const lines = [
+      ["Design, código e arte procedural", "Leonardo Lopes"],
+      ["Personagens e criaturas", "Kenney — Tiny Dungeon (CC0) · Clint Bellanger — Tiny Creatures (CC0)"],
+      ["Bola de fogo", "Revon (CC-BY 4.0)"],
+      ["Cenário, ícones, UI e efeitos", "Gerados proceduralmente para este jogo"],
+      ["Fonte", "Jersey 15 — The Soft Type Project Authors (OFL 1.1)"],
+      ["Música", "JaggedStone — Loopable Dungeon Ambience (CC0) · Thalon — Fantasy Menu Theme (CC-BY 4.0)"],
+      ["Efeitos sonoros", "Kenney (CC0) · rubberduck (CC0) · Little Robot Sound Factory (CC-BY 3.0) · artisticdude (CC0) · faxcorp (CC0) · Bart Kelsey (CC0 / CC-BY 3.0) · Julien Matthey (CC0)"],
+      ["Motor", "Phaser 3 (MIT) · nipplejs (MIT)"],
+    ];
+    for (const [a, b] of lines) {
+      list.addRow({
+        h: 70,
+        build: (c, w) => {
+          c.add(text(this, 0, 12, a, { size: 18, color: CSS.goldHi }));
+          c.add(text(this, 0, 38, b, { size: 15, color: CSS.muted, wrap: w - 10, shadow: false }));
+        },
+      });
+    }
   }
 }

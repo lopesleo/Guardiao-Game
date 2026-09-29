@@ -5,8 +5,9 @@ import { PLAYER, GAME, COLORS } from '../config.js';
 const PLAYER_FRAME = 84;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene, x, y) {
-    super(scene, x, y, 'dungeon_tiles', PLAYER_FRAME);
+  constructor(scene, x, y, frame = PLAYER_FRAME) {
+    super(scene, x, y, 'dungeon_tiles', frame);
+    this.spriteFrame = frame;
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
@@ -44,6 +45,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.invulnUntil = 0;
     this.weapons = [];
     this.facingX = 1;
+    // Última direção de movimento (Sopro Flamejante mira pra onde você anda)
+    this.lastMoveX = 1;
+    this.lastMoveY = 0;
+    this.isMoving = false;
 
     // Despertar (default DESTRAVADO até GameScene checar)
     this.awakenUnlocked = true;
@@ -185,7 +190,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const scene = this.scene;
     for (let i = 0; i < 4; i++) {
       scene.time.delayedCall(i * 30, () => {
-        const ghost = scene.add.sprite(this.x, this.y, 'dungeon_tiles', PLAYER_FRAME)
+        const ghost = scene.add.sprite(this.x, this.y, 'dungeon_tiles', this.spriteFrame)
                           .setScale(this.scale).setAlpha(0.5).setTint(0xffffff).setDepth(this.depth - 1);
         ghost.setFlipX(this.flipX);
         scene.tweens.add({ targets: ghost, alpha: 0, duration: 250, onComplete: () => ghost.destroy() });
@@ -230,6 +235,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       if (input.move.x !== 0) this.facingX = Math.sign(input.move.x);
     }
     this.setFlipX(this.facingX < 0);
+
+    this.isMoving = Math.abs(input.move.x) + Math.abs(input.move.y) > 0.1;
+    if (this.isMoving) {
+      this.lastMoveX = input.move.x;
+      this.lastMoveY = input.move.y;
+    }
 
     // Armas (cooldown reduzido durante despertar)
     for (const w of this.weapons) w.update(time, dt);

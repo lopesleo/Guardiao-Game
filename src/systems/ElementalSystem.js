@@ -102,6 +102,7 @@ export class ElementalSystem {
 
     // Texto flutuante BIG (D21)
     this._label(enemy.x, enemy.y, def.label, def.color);
+    scene._hint?.("reaction", "REAÇÃO! Dois elementos no mesmo inimigo\ncausam efeitos extras. Combine armas!");
 
     // Screenshake leve
     scene.cameras.main.shake(120, 0.005);

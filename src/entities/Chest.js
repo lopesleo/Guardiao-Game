@@ -16,8 +16,8 @@ export class Chest extends Phaser.GameObjects.Container {
     this.shadow = scene.add.image(0, 20, "px_shadow").setScale(3.4, 3);
     this.sprite = scene.add.image(0, 0, CHEST.SPRITE_TEXTURE, CHEST.SPRITE_FRAME_CLOSED)
                        .setScale(GAME.PIXEL_SCALE);
-    this.prompt = scene.add.text(0, -42, 'ABRIR', {
-      fontFamily: '"Pixelify Sans", monospace', fontStyle: 'bold',
+    this.prompt = scene.add.text(0, -42, '', {
+      fontFamily: '"Jersey 15", monospace',
       fontSize: '16px', color: '#ffe58f',
       stroke: '#1a1420', strokeThickness: 4, resolution: 2,
     }).setOrigin(0.5).setVisible(false);

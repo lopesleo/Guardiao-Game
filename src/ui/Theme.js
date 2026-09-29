@@ -3,7 +3,7 @@
 // de produto em vez de "caixas do Phaser".
 import { PAL, CSS, hex } from "../art/Palette.js";
 
-export const FONT = '"Pixelify Sans", monospace';
+export const FONT = '"Jersey 15", monospace';
 export const P = 3; // 1 "pixel de arte" na UI = 3px de tela (mesma escala dos sprites)
 
 // Largura/altura visível (modo EXPAND: a largura varia com o aparelho)
@@ -17,7 +17,7 @@ export function text(scene, x, y, str, o = {}) {
   const style = {
     fontFamily: FONT,
     fontSize: `${o.size ?? 18}px`,
-    fontStyle: o.bold === false ? "normal" : "bold",
+    fontStyle: "normal", // fonte de peso único — negrito sintético borra
     color: o.color ?? CSS.txt,
     align: o.align ?? "left",
   };
@@ -203,7 +203,7 @@ export class Button extends Phaser.GameObjects.Container {
 }
 
 function measure(scene, str, size) {
-  const t = scene.add.text(0, 0, str, { fontFamily: FONT, fontSize: `${size}px`, fontStyle: "bold" });
+  const t = scene.add.text(0, 0, str, { fontFamily: FONT, fontSize: `${size}px` });
   const w = t.width;
   t.destroy();
   return w;

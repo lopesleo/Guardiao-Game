@@ -1,151 +1,180 @@
-// Tela final polida — combina visual com o menu (gradiente, painéis, animações).
-import { COLORS, GAME } from '../config.js';
-import { formatTime } from '../utils.js';
-
-const F = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
-
-function sharp(scene, x, y, str, opts) {
-  return scene.add.text(Math.round(x), Math.round(y), str, opts).setResolution(2);
-}
+// Fim de partida: vitória / derrota / desistência. Números sobem animados,
+// armas da build aparecem, desbloqueios novos ganham destaque. Botão principal
+// = JOGAR DE NOVO (o "só mais uma" do gênero).
+import { WEAPONS } from "../config.js";
+import { formatTime } from "../utils.js";
+import { PAL, CSS, hex } from "../art/Palette.js";
+import { WEAPON_ICON } from "../art/Icons.js";
+import { text, drawFrame, Button, vw, vh, haptic } from "../ui/Theme.js";
 
 export class GameOverScene extends Phaser.Scene {
-  constructor() { super('GameOverScene'); }
+  constructor() {
+    super("GameOverScene");
+  }
 
   create(data) {
-    const { won, elapsedMs, kills, coinsGained, newUnlocks, difficulty, unlockedNextDifficulty } = data;
-    const W = GAME.WIDTH, H = GAME.HEIGHT;
+    const { won, quit, elapsedMs, kills, coinsGained, newUnlocks = [], difficulty, unlockedNextDifficulty, level = 1, weapons = [] } = data;
+    const W = vw(this),
+      H = vh(this);
     const cx = W / 2;
 
-    // === BG gradiente diferente por vitória/derrota ===
-    this.cameras.main.setBackgroundColor(0x0a1410);
-    const grad = this.add.graphics();
-    if (won) {
-      grad.fillStyle(0x1a3a20, 1); grad.fillRect(0, 0, W, H);
-      grad.fillStyle(0x152820, 0.7); grad.fillRect(0, H * 0.4, W, H * 0.6);
-    } else {
-      grad.fillStyle(0x2a1010, 1); grad.fillRect(0, 0, W, H);
-      grad.fillStyle(0x0a0606, 0.7); grad.fillRect(0, H * 0.4, W, H * 0.6);
-    }
-    grad.fillStyle(0x000000, 0.5); grad.fillRect(0, H - 120, W, 120);
+    this._backdrop(won);
 
-    // === Partículas — fireflies pra vitória, cinzas pra derrota ===
-    this.particles = [];
-    const pColor = won ? 0xfff5b8 : 0x664444;
-    for (let i = 0; i < 16; i++) {
-      const p = this.add.circle(Math.random() * W, H + Math.random() * 200,
-        2 + Math.random() * 1.5, pColor, 0.7).setDepth(5);
-      p._phase = Math.random() * Math.PI * 2;
-      p._driftX = (Math.random() - 0.5) * 0.4;
-      p._driftY = -0.4 - Math.random() * 0.3;
-      this.particles.push(p);
-    }
+    // Título
+    const title = won ? "VITÓRIA!" : quit ? "RECUO" : "DERROTA";
+    const color = won ? CSS.goldHi : quit ? CSS.muted : CSS.redHi;
+    const t = text(this, cx, 78, title, { size: 80, color, origin: 0.5, stroke: true, strokeW: 10, shadowY: 6 });
+    t.setScale(0.3).setAlpha(0);
+    this.tweens.add({ targets: t, scale: 1, alpha: 1, duration: 420, ease: "Back.easeOut" });
+    const sub = won ? "O Ancião foi derrotado. A floresta respira." : quit ? "Você recuou para lutar outro dia." : "A floresta caiu… por enquanto.";
+    text(this, cx, 132, sub, { size: 22, color: CSS.muted, origin: 0.5 });
 
-    // === TÍTULO ===
-    const titleColor = won ? '#ffe88a' : '#ff5a6e';
-    const titleText  = won ? 'VITÓRIA' : 'GAME OVER';
-
-    // Sombra
-    sharp(this, cx + 4, 124, titleText, {
-      fontFamily: F, fontSize: '64px', fontStyle: 'bold', color: '#000000',
-    }).setOrigin(0.5).setAlpha(0.7);
-    const title = sharp(this, cx, 120, titleText, {
-      fontFamily: F, fontSize: '64px', fontStyle: 'bold', color: titleColor,
-      stroke: '#000', strokeThickness: 6,
-    }).setOrigin(0.5);
-
-    // Pulsa o título
-    this.tweens.add({ targets: title, alpha: { from: 0.9, to: 1 }, duration: 1400, yoyo: true, repeat: -1 });
-    // Spawn com escala
-    title.setScale(0);
-    this.tweens.add({ targets: title, scale: 1, duration: 500, ease: 'Back.easeOut' });
-
-    // Subtítulo
-    sharp(this, cx, 185, won ? 'O Ancião foi derrotado!' : 'Você caiu na floresta…', {
-      fontFamily: F, fontSize: '18px', color: won ? '#6fcf6f' : '#93a89a',
-    }).setOrigin(0.5);
-
-    // === PAINEL DE STATS ===
-    const px = cx, py = 320, pw = 600, ph = 250;
-    this.add.rectangle(px, py, pw, ph, 0x0a1410, 0.92).setStrokeStyle(3, won ? 0xffd96b : 0xd9b25c, 0.85);
-    sharp(this, px, py - 100, difficulty ? `RESULTADOS · PERIGO: ${difficulty.name.toUpperCase()}` : 'RESULTADOS DA RUN', {
-      fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: '#93a89a',
-    }).setOrigin(0.5);
+    // Painel de resultados
+    const pw = Math.min(700, W - 60),
+      ph = 300;
+    const px = cx - pw / 2,
+      py = 164;
+    const g = this.add.graphics();
+    drawFrame(g, px, py, pw, ph, won ? "gold" : "dark");
+    text(this, cx, py + 30, `PERIGO: ${(difficulty?.name ?? "").toUpperCase()}   ·   NÍVEL ${level}`, { size: 18, color: CSS.muted, origin: 0.5 });
 
     const stats = [
-      { icon: '⏱',  label: 'TEMPO SOBREVIVIDO', value: formatTime(elapsedMs), color: '#e8f0e6' },
-      { icon: '⚔',  label: 'INIMIGOS ABATIDOS',  value: String(kills), color: '#e8f0e6' },
-      { icon: '💰', label: 'MOEDAS GANHAS',       value: `+${coinsGained}`, color: '#d9b25c' },
+      { icon: "ico_hourglass", label: "Tempo", value: elapsedMs / 1000, fmt: (v) => formatTime(v * 1000) },
+      { icon: "ico_skull", label: "Abates", value: kills, fmt: (v) => String(Math.round(v)) },
+      { icon: "ico_coin", label: "Moedas ganhas", value: coinsGained, fmt: (v) => `+${Math.round(v)}`, color: CSS.goldHi },
     ];
-    let sy = py - 50;
-    for (const s of stats) {
-      // Linha
-      sharp(this, px - pw/2 + 30, sy, s.icon, { fontFamily: F, fontSize: '26px' }).setOrigin(0, 0.5);
-      sharp(this, px - pw/2 + 70, sy, s.label, {
-        fontFamily: F, fontSize: '14px', color: '#93a89a',
-      }).setOrigin(0, 0.5);
-      sharp(this, px + pw/2 - 30, sy, s.value, {
-        fontFamily: F, fontSize: '22px', fontStyle: 'bold', color: s.color,
-      }).setOrigin(1, 0.5);
-      sy += 48;
-    }
+    stats.forEach((s, i) => {
+      const y = py + 78 + i * 52;
+      this.add.image(px + 50, y, s.icon).setScale(3);
+      text(this, px + 84, y, s.label, { size: 22, color: CSS.muted, origin: [0, 0.5] });
+      const v = text(this, px + pw - 36, y, s.fmt(0), { size: 30, color: s.color ?? CSS.txt, origin: [1, 0.5], stroke: true });
+      const o = { n: 0 };
+      this.tweens.add({
+        targets: o,
+        n: s.value,
+        delay: 350 + i * 250,
+        duration: 700,
+        ease: "Cubic.easeOut",
+        onUpdate: () => v.setText(s.fmt(o.n)),
+        onStart: () => this.sound.play("sfx_ui_hover", { volume: 0.3 }),
+        onComplete: () => {
+          v.setText(s.fmt(s.value));
+          this.tweens.add({ targets: v, scale: { from: 1.25, to: 1 }, duration: 160 });
+          if (s.icon === "ico_coin" && s.value > 0) this.sound.play("sfx_coin_cascade", { volume: 0.5 });
+        },
+      });
+    });
 
-    // === DESBLOQUEIOS NOVOS (se houver) — inclui novo nível de Perigo ===
-    const unlocks = [...(newUnlocks || [])];
-    if (unlockedNextDifficulty) unlocks.unshift(`Perigo: ${unlockedNextDifficulty}`);
+    // Build final (ícones)
+    const wy = py + ph - 44;
+    weapons.forEach((w, i) => {
+      const x = cx + (i - (weapons.length - 1) / 2) * 60;
+      const sg = this.add.graphics();
+      drawFrame(sg, x - 24, wy - 24, 48, 48, WEAPONS[w.key]?.evolvesFrom ? "purple" : "dark", { noRivets: true });
+      this.add.image(x, wy, WEAPON_ICON[w.key] ?? "ico_staff").setScale(2.5);
+    });
+
+    // Desbloqueios
+    const unlocks = [...newUnlocks];
+    if (unlockedNextDifficulty) unlocks.unshift(`Novo Perigo: ${unlockedNextDifficulty}`);
     if (unlocks.length) {
-      const uy = py + ph/2 + 30;
-      const panel = this.add.rectangle(cx, uy, pw, 50, 0x1a3a1a, 0.9).setStrokeStyle(2, 0xd98cff, 1);
-      const utxt = sharp(this, cx, uy, `★ DESBLOQUEADO:  ${unlocks.join(' · ')}`, {
-        fontFamily: F, fontSize: '14px', fontStyle: 'bold', color: '#d98cff',
-      }).setOrigin(0.5);
-      // Várias conquistas de uma vez podem estourar o painel — encolhe a fonte
-      if (utxt.width > pw - 30) utxt.setFontSize(Math.max(10, Math.floor(14 * (pw - 30) / utxt.width)));
-      // pulse
-      this.tweens.add({ targets: panel, alpha: { from: 0.7, to: 1 }, duration: 800, yoyo: true, repeat: -1 });
+      const uy = py + ph + 40;
+      const uw = Math.min(pw, W - 60);
+      const ug = this.add.graphics();
+      drawFrame(ug, cx - uw / 2, uy - 28, uw, 56, "purple");
+      this.add.image(cx - uw / 2 + 34, uy, "ico_trophy").setScale(2.5);
+      const ut = text(this, cx + 10, uy, unlocks.join("  ·  "), { size: 20, color: hex(PAL.pur3), origin: 0.5 });
+      if (ut.width > uw - 90) ut.setScale((uw - 90) / ut.width);
+      ug.setAlpha(0);
+      ut.setAlpha(0);
+      this.tweens.add({ targets: [ug, ut], alpha: 1, delay: 1300, duration: 300, onStart: () => this.sound.play("sfx_levelup", { volume: 0.5 }) });
     }
 
-    // === BOTÕES ===
-    const by = H - 110;
-    this._button(cx - 180, by, '⟲  JOGAR DE NOVO', '#ffd96b', true,  () => this.scene.start('GameScene'));
-    this._button(cx + 180, by, 'VOLTAR AO MENU',    '#e8f0e6', false, () => this.scene.start('MenuScene'));
-
-    // Dica rodapé
-    sharp(this, cx, H - 28, won
-      ? 'Compre Bênçãos no menu pra fortalecer próximas runs'
-      : 'Bênçãos te dão buffs permanentes — não desista!',
-      { fontFamily: F, fontSize: '12px', color: '#6a7a6a' }
-    ).setOrigin(0.5);
+    // Botões
+    const by = H - 62;
+    const again = new Button(this, cx - 170, by, 310, 66, "JOGAR DE NOVO", () => this._go("GameScene"), { size: 26, style: "primary", color: CSS.goldHi });
+    new Button(this, cx + 170, by, 310, 66, "MENU", () => this._go("MenuScene"), { size: 26 });
+    this.tweens.add({ targets: again, scale: 1.04, duration: 800, yoyo: true, repeat: -1, delay: 1500 });
+    this.input.keyboard.on("keydown-ENTER", () => this._go("GameScene"));
+    this.input.keyboard.on("keydown-ESC", () => this._go("MenuScene"));
+    haptic(won ? 80 : 40);
   }
 
-  update(time) {
-    for (const p of this.particles) {
-      p.x += p._driftX + Math.sin(time / 700 + p._phase) * 0.2;
-      p.y += p._driftY;
-      p.alpha = 0.4 + Math.sin(time / 350 + p._phase) * 0.35;
-      if (p.y < -10) { p.y = GAME.HEIGHT + 20; p.x = Math.random() * GAME.WIDTH; }
+  onBack() {
+    this._go("MenuScene");
+    return true;
+  }
+
+  _go(key) {
+    if (this._leaving) return;
+    this._leaving = true;
+    this.cameras.main.fadeOut(250, 5, 8, 6);
+    this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start(key));
+  }
+
+  _backdrop(won) {
+    const W = vw(this),
+      H = vh(this);
+    const key = `go_sky_${won ? 1 : 0}_${W}x${H}`;
+    if (!this.textures.exists(key)) {
+      const c = this.textures.createCanvas(key, W, H);
+      const ctx = c.getContext();
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      if (won) {
+        g.addColorStop(0, "#1a2a3a");
+        g.addColorStop(0.6, "#2a4a3a");
+        g.addColorStop(1, "#122018");
+      } else {
+        g.addColorStop(0, "#140a12");
+        g.addColorStop(0.6, "#2a1418");
+        g.addColorStop(1, "#0c0a0c");
+      }
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+      c.refresh();
     }
-  }
-
-  _button(x, y, label, color, primary, onClick) {
-    const w = 280, h = 52;
-    const bgColor = primary ? 0x1a3a20 : 0x0a1410;
-    const strokeColor = primary ? 0xffe88a : 0xd9b25c;
-    const bg = this.add.rectangle(x, y, w, h, bgColor, 0.95)
-                    .setStrokeStyle(3, strokeColor, primary ? 1 : 0.7).setInteractive({ useHandCursor: true });
-    const txt = sharp(this, x, y, label, {
-      fontFamily: F, fontSize: '18px', fontStyle: 'bold', color,
-    }).setOrigin(0.5);
-    bg.on('pointerover', () => {
-      bg.setFillStyle(primary ? 0x2a5a30 : 0x1a3a20);
-      bg.setStrokeStyle(3, 0xffe88a, 1);
-      this.tweens.add({ targets: [bg, txt], scaleX: 1.05, scaleY: 1.05, duration: 90 });
-      this.sound.play('sfx_ui_hover', { volume: 0.22 });
-    });
-    bg.on('pointerout', () => {
-      bg.setFillStyle(bgColor);
-      bg.setStrokeStyle(3, strokeColor, primary ? 1 : 0.7);
-      this.tweens.add({ targets: [bg, txt], scaleX: 1, scaleY: 1, duration: 90 });
-    });
-    bg.on('pointerdown', () => { this.sound.play('sfx_ui_click', { volume: 0.4 }); onClick(); });
+    this.add.image(0, 0, key).setOrigin(0);
+    const env = this.registry.get("envKeys");
+    const trees = [...env.pines, ...env.trees.slice(0, 5)];
+    for (let x = -40; x < W + 60; x += 40 + Math.random() * 30) {
+      this.add
+        .image(x, H + 10 + Math.random() * 20, "env", trees[Math.floor(Math.random() * trees.length)])
+        .setOrigin(0.5, 1)
+        .setScale(3)
+        .setTint(won ? 0x14302a : 0x1a0e12);
+    }
+    // Partículas: vaga-lumes (vitória) ou cinzas (derrota)
+    for (let i = 0; i < 24; i++) {
+      const p = this.add
+        .image(Math.random() * W, H + Math.random() * 200, won ? "px_dot2" : "px_dot1")
+        .setScale(3)
+        .setTint(won ? 0xfff5b8 : 0x8a6a6a)
+        .setAlpha(0.7);
+      this.tweens.add({
+        targets: p,
+        y: -20,
+        x: p.x + (Math.random() - 0.5) * 120,
+        duration: 6000 + Math.random() * 6000,
+        repeat: -1,
+        delay: Math.random() * 6000,
+      });
+    }
+    if (won) {
+      for (let i = 0; i < 40; i++) {
+        const c = this.add
+          .image(W / 2, 80, "px_dot2")
+          .setScale(3)
+          .setTint([0xf2c14e, 0x9ccf62, 0xff7a3c, 0x5cc8ff][i % 4]);
+        const a = Math.random() * Math.PI * 2;
+        this.tweens.add({
+          targets: c,
+          x: W / 2 + Math.cos(a) * (200 + Math.random() * 300),
+          y: 80 + Math.sin(a) * 160 + 200,
+          alpha: 0,
+          duration: 1400 + Math.random() * 800,
+          ease: "Cubic.easeOut",
+        });
+      }
+    }
   }
 }
