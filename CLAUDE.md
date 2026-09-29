@@ -54,6 +54,7 @@ público brasileiro, com potencial internacional.
 | Assunto | Documento |
 |---|---|
 | Visão geral, rodar, controles, arquitetura | `README.md` |
+| **Roadmap (ordem de execução e status)** | `docs/ROADMAP.md` |
 | Plano antes de publicar (anúncios, retenção, loja) | `docs/PRE_LANCAMENTO.md` |
 | Publicação na Play Store, privacidade | `docs/PLAY_STORE.md`, `docs/PRIVACY.md` |
 | Clareira (acampamento, obras, bichos, fases) | `docs/CLAREIRA.md` |
