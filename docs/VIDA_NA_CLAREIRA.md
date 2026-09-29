@@ -1,4 +1,4 @@
-# Vida na Clareira — horta, pesca e cozinha como um jogo à parte
+# Vida na Clareira — horta, pesca e cozinha (progressão própria, a serviço da ação)
 
 > Evolução de [`CLAREIRA.md`](CLAREIRA.md) (seções 5–7). Pergunta do Leonardo:
 > *"a horta e os peixes estão pequenos? queria um jogo à parte divertido"*.
@@ -27,8 +27,15 @@ No Guardião:
                          ◄────────────────────────────
 ```
 
-- **Cada lado se sustenta sozinho**: o jogador "cozy" pode passar dias só na
-  Clareira; o jogador de ação pode quase ignorá-la. Juntos, rendem mais.
+- **Regra de ouro (decisão do Leonardo): a Vida na Clareira tem progressão própria
+  e é divertida por si, mas existe para APOIAR o jogo principal.** A ação na
+  floresta continua sendo o coração do jogo. Na prática:
+  - todo resultado da Clareira desemboca na ação (refeições/buffs, moedas para
+    Bênçãos, personagens, cosméticos, espíritos aliados);
+  - os ingredientes mais valiosos (sementes raras, iscas especiais, madeira)
+    **vêm das partidas** — sem jogar a ação, a Clareira estaciona;
+  - sessões na Clareira são curtas (1–5 min) e terminam apontando para
+    "agora vá jogar uma partida" (ex.: "sua refeição está pronta — use na próxima partida").
 - **Dois públicos numa loja só**: ação *e* jogo aconchegante. No Brasil (mais de
   53% dos jogadores são mulheres; *Roblox* é o nº 1 da Google Play e o jogo de
   jardinagem *Grow a Garden* explodiu em 2025) isso amplia muito o alcance.
@@ -110,7 +117,37 @@ dá bônus de qualidade.
 | Mágicas | flor-de-geada, pimenta-de-brasa, erva-do-trovão, cogumelo-luz | ligadas aos elementos da ação |
 | Sombra | cogumelos (canteiro sob árvores) | só crescem sem sol |
 
-### 3.3 Profundidade
+### 3.3 Cuidar da horta — inspirado no **Colheita Feliz**
+O Colheita Feliz (Orkut, 2009–2010) e o original chinês *Happy Farm* (23 milhões
+de jogadores diários no auge) viciaram com um ciclo simples: **plantar → regar →
+tirar ervas daninhas e pragas → colher na hora certa**, visitar a fazenda dos
+amigos para **ajudar** ou **roubar** a colheita, e um **cachorro de guarda** que
+precisava ser alimentado. No Guardião:
+
+- **Estágios visíveis de crescimento** (semente → broto → muda → florindo →
+  pronto), cada um com um desenho — ver a planta mudar é metade da graça.
+- **Cuidados que aparecem sozinhos**: planta com sede (ícone de gota), **erva
+  daninha** brotando, **praga** (lagarta, formiga-cortadeira). Tocar resolve
+  (1 toque cada). Cuidar em dia = **mais qualidade**; descuidar só **reduz a
+  qualidade** e atrasa — **a planta nunca morre** (o original deixava murchar e
+  perder tudo, o que frustra; aqui o castigo é leve).
+- **Janela de colheita**: colher no ponto dá bônus; passar muito do ponto cai
+  uma estrela de qualidade.
+- **O Saci ladrão** (folclore + mecânica do "roubo"): o Saci é famoso por
+  travessuras — de vez em quando ele visita a horta e **leva parte da colheita
+  madura** se ninguém estiver guardando.
+- **Cão-guardião → Lobo-guará**: mascote brasileiro que **protege a horta** do
+  Saci. Precisa ser **alimentado** (com comida da cozinha) para ficar de guarda —
+  mais um uso para os ingredientes. Evolui com o tempo (e pode ter skins).
+- **Social (fase futura)**: visitar a Clareira de amigos (Google Play Games) para
+  **regar/tirar pragas** (ganha um pequeno prêmio) e "dar uma de Saci" pegando uma
+  fruta madura que o dono esqueceu — só se o lobo-guará dele estiver com fome.
+  Gera o ciclo social que fez o Colheita Feliz virar febre; precisa de servidor,
+  por isso fica para depois.
+- **Marketing de nostalgia**: "lembra do Colheita Feliz?" é um gancho forte para
+  o público brasileiro que jogava no Orkut (hoje com 25–40 anos).
+
+### 3.4 Profundidade
 - **Qualidade** (comum → prata → ouro → ancestral): adubo, rega em dia, vizinhança.
 - **Plantas companheiras**: a técnica indígena das **"três irmãs"** (milho +
   feijão + abóbora juntos crescem melhor) vira bônus de adjacência — verdadeira,
@@ -206,4 +243,6 @@ místicos (Sopa do Boitatá, Doce da Lua).
 - [Into the depths of Dave the Diver — Game Developer](https://www.gamedeveloper.com/design/dave-the-diver) · [The Genius Goal Loops of Dave the Diver](https://www.linkedin.com/pulse/genius-goal-loops-dave-diver-dan-butchko-g2zwe) · [Dive, Gather, Filet — AV Club](https://www.avclub.com/dave-the-diver-review-gameplay-loop-roguelike-fish-restaurant-management)
 - [Best Fishing Game Design Insights](https://aaagameartstudio.com/blog/fishing-game) · [Best Casual Fishing Games 2026](https://gamecentral.blog/best-casual-fishing-games/) · [Fishing — Stardew Valley Wiki](https://stardewvalleywiki.com/Fishing)
 - [Crops](https://stardewvalleywiki.com/Crops) · [Fertilizer](https://stardewvalleywiki.com/Fertilizer) · [Giant Crops — TheGamer](https://www.thegamer.com/stardew-valley-giant-crops/) · [Greenhouse](https://stardewvalleywiki.com/Greenhouse) — Stardew Valley
+- [Colheita Feliz — Wikipédia](https://pt.wikipedia.org/wiki/Colheita_Feliz) · [Colheita Feliz e mais 4 jogos clássicos do Orkut — TecMundo](https://www.tecmundo.com.br/redes-sociais/237148-colheita-feliz-4-jogos-classicos-orkut.htm) · [Colheita Feliz, mais uma febre no Orkut — Gazeta Digital](https://www.gazetadigital.com.br/suplementos/zine/colheita-feliz-mais-uma-febre-no-orkut/230307)
+- [Happy Farm — Wikipedia](https://en.wikipedia.org/wiki/Happy_Farm) · [Crop-stealing on Happy Farm: an addiction to affiliation — China.org.cn](http://www.china.org.cn/china/2009-12/10/content_19044478.htm) · [China's Happy Farm and the Impact of Social Gaming — AAS](https://www.asianstudies.org/publications/eaa/archives/chinas-happy-farm-and-the-impact-of-social-gaming/)
 - [Crop Mutations — Grow a Garden Wiki](https://growagarden.fandom.com/wiki/Crop_Mutations) · [Garden — Cookie Clicker Wiki](https://cookieclicker.fandom.com/wiki/Garden) · [Gardening — Palia Wiki](https://palia.wiki.gg/wiki/Gardening)
