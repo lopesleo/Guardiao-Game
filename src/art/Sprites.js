@@ -1,0 +1,271 @@
+// Sprites procedurais de gameplay: pickups, projéteis, partículas e sombras.
+// Substituem os círculos/retângulos vetoriais (que "denunciavam" protótipo).
+import { PAL } from "./Palette.js";
+import { Pix, registerStrip } from "./PixelArt.js";
+
+const K = PAL.ink;
+
+// Gema de XP com brilho que percorre a face (4 frames)
+function gemFrames(light, mid, dark) {
+  const base = [
+    "...kk...",
+    "..kLMk..",
+    ".kLMMDk.",
+    "kLMMMMDk",
+    "kMMMMMDk",
+    ".kMMMDk.",
+    "..kMDk..",
+    "...kk...",
+  ];
+  const legend = { k: K, L: light, M: mid, D: dark };
+  const shine = [
+    [2, 3],
+    [3, 3],
+    [4, 4],
+    [3, 5],
+  ];
+  return shine.map(([x, y]) => {
+    const p = Pix.fromMap(base, legend);
+    p.set(x, y, PAL.white);
+    return p;
+  });
+}
+
+// Moeda girando (4 frames: cheia → fina → borda → fina)
+function coinFrames() {
+  const maps = [
+    [
+      "..kkkk..",
+      ".kzyyyk.",
+      "kzyyYyYk",
+      "kyyYyyYk",
+      "kyyYyyYk",
+      "kyyyyYYk",
+      ".kYYYYk.",
+      "..kkkk..",
+    ],
+    [
+      "..kkk...",
+      ".kzyYk..",
+      ".kyYyk..",
+      ".kyYYk..",
+      ".kyYYk..",
+      ".kyyYk..",
+      ".kYYYk..",
+      "..kkk...",
+    ],
+    [
+      "...kk...",
+      "...kzk..",
+      "...kyk..",
+      "...kYk..",
+      "...kYk..",
+      "...kyk..",
+      "...kYk..",
+      "...kk...",
+    ],
+    [
+      "...kkk..",
+      "..kzyYk.",
+      "..kyYyk.",
+      "..kyYYk.",
+      "..kyYYk.",
+      "..kyyYk.",
+      "..kYYYk.",
+      "...kkk..",
+    ],
+  ];
+  const legend = { k: K, z: PAL.yel3, y: PAL.yel2, Y: PAL.yel1 };
+  return maps.map((m) => Pix.fromMap(m, legend));
+}
+
+function heartPickup() {
+  return Pix.fromMap(
+    [
+      ".kk.kk.",
+      "kwrkrrk",
+      "krrrrRk",
+      "krrrrRk",
+      ".krrRk.",
+      "..kRk..",
+      "...k...",
+    ],
+    { k: K, w: PAL.white, r: PAL.red2, R: PAL.red1 },
+  );
+}
+
+// Orbe dourado de Despertar (2 frames de faísca)
+function awakenFrames() {
+  const base = [
+    "...kkk...",
+    "..kzzyk..",
+    ".kzwzyYk.",
+    "kzzzyyyYk",
+    "kzzyyyyYk",
+    "kyyyyyYYk",
+    ".kyyyYYk.",
+    "..kYYYk..",
+    "...kkk...",
+  ];
+  const legend = { k: K, w: PAL.white, z: PAL.yel3, y: PAL.yel2, Y: PAL.yel1 };
+  const a = Pix.fromMap(base, legend);
+  const big = new Pix(13, 13);
+  big.blit(a, 2, 2);
+  const f1 = new Pix(13, 13);
+  f1.blit(big, 0, 0);
+  f1.set(6, 0, PAL.yel3);
+  f1.set(0, 6, PAL.yel3);
+  f1.set(12, 6, PAL.yel3);
+  f1.set(6, 12, PAL.yel3);
+  const f2 = new Pix(13, 13);
+  f2.blit(big, 0, 0);
+  f2.set(1, 1, PAL.white);
+  f2.set(11, 1, PAL.white);
+  f2.set(1, 11, PAL.white);
+  f2.set(11, 11, PAL.white);
+  return [f1, f2];
+}
+
+// Sombra "blob" pixelada (substitui a elipse vetorial com borda lisa)
+function shadow() {
+  const p = new Pix(14, 5);
+  p.ellipse(7, 2.5, 7, 2.5, K, 110);
+  p.ellipse(7, 2.5, 5, 1.6, K, 150);
+  return p;
+}
+
+// Bumerangue de madeira com fio em brasa
+function boomerang() {
+  return Pix.fromMap(
+    [
+      "kkkk......",
+      "khhok.....",
+      "kmnnok....",
+      ".kmnnok...",
+      "..kmnnok..",
+      "..kmnnnokk",
+      "...kmnnnhk",
+      "....kmmnnk",
+      ".....kkkkk",
+    ],
+    { k: K, h: PAL.org3, o: PAL.org2, m: PAL.n4, n: PAL.n3 },
+  );
+}
+
+// Projétil inimigo (vermelho, núcleo branco) — distinto dos do jogador
+function enemyShot() {
+  return Pix.fromMap(
+    [
+      "..kkk..",
+      ".krrrk.",
+      "krhwhRk",
+      "krwwwRk",
+      "krhwhRk",
+      ".kRRRk.",
+      "..kkk..",
+    ],
+    { k: K, r: PAL.red2, R: PAL.red1, h: PAL.red3, w: PAL.white },
+  );
+}
+
+// Orbe de gelo (arma orbital)
+function iceOrb() {
+  return Pix.fromMap(
+    [
+      "...kkkk...",
+      "..kccbbk..",
+      ".kcwcbbBk.",
+      "kccwbbbBBk",
+      "kcbbbbbBBk",
+      "kbbbbbBBDk",
+      "kbbbbBBBDk",
+      ".kbBBBBDk.",
+      "..kDDDDk..",
+      "...kkkk...",
+    ],
+    { k: K, w: PAL.white, c: PAL.ice3, b: PAL.ice2, B: PAL.ice1, D: PAL.ice0 },
+  );
+}
+
+// Partículas brancas (tintáveis) em pixel
+function dot(size) {
+  const p = new Pix(size, size);
+  p.rect(0, 0, size, size, PAL.white);
+  return p;
+}
+function spark() {
+  return Pix.fromMap(["..w..", "..w..", "wwwww", "..w..", "..w.."], { w: PAL.white });
+}
+function puff() {
+  const p = new Pix(7, 7);
+  p.disc(3.5, 3.5, 3.5, PAL.white);
+  return p;
+}
+function ring() {
+  const p = new Pix(15, 15);
+  p.disc(7.5, 7.5, 7.5, PAL.white);
+  const q = new Pix(15, 15);
+  q.disc(7.5, 7.5, 5.5, PAL.white);
+  for (let i = 0; i < p.c.length; i++) if (q.c[i]) p.c[i] = 0;
+  return p;
+}
+function shard() {
+  return Pix.fromMap([".cc....", "cwwcc..", ".cbbbcc", "..cc..."], {
+    c: PAL.ice2,
+    w: PAL.white,
+    b: PAL.ice3,
+  });
+}
+function leaf() {
+  return Pix.fromMap([".gg", "gGk"], { g: PAL.g5, G: PAL.g3, k: PAL.g2 });
+}
+
+// Brilho suave (NÃO-pixel, gradiente radial) — só pra luz aditiva
+function registerGlow(scene) {
+  if (scene.textures.exists("fx_glow")) return;
+  const c = scene.textures.createCanvas("fx_glow", 64, 64);
+  const ctx = c.getContext();
+  const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, "rgba(255,255,255,1)");
+  g.addColorStop(0.35, "rgba(255,255,255,0.45)");
+  g.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 64, 64);
+  c.refresh();
+}
+
+export function registerSprites(scene) {
+  registerStrip(scene, "px_gem", gemFrames(PAL.g6, PAL.g5, PAL.g3));
+  registerStrip(scene, "px_gem_blue", gemFrames(PAL.ice3, PAL.ice2, PAL.ice1));
+  registerStrip(scene, "px_gem_gold", gemFrames(PAL.yel3, PAL.yel2, PAL.yel1));
+  registerStrip(scene, "px_coin", coinFrames());
+  registerStrip(scene, "px_awaken", awakenFrames());
+  heartPickup().register(scene, "px_heart");
+  shadow().register(scene, "px_shadow");
+  boomerang().register(scene, "px_boomer");
+  enemyShot().register(scene, "px_eshot");
+  iceOrb().register(scene, "px_iceorb");
+  dot(1).register(scene, "px_dot1");
+  dot(2).register(scene, "px_dot2");
+  spark().register(scene, "px_spark");
+  puff().register(scene, "px_puff");
+  ring().register(scene, "px_ring");
+  shard().register(scene, "px_shard");
+  leaf().register(scene, "px_leaf");
+  registerGlow(scene);
+
+  const anim = (key, tex, rate, frames) => {
+    if (!scene.anims.exists(key))
+      scene.anims.create({
+        key,
+        frames: scene.anims.generateFrameNumbers(tex, { frames }),
+        frameRate: rate,
+        repeat: -1,
+      });
+  };
+  anim("gem_shine", "px_gem", 6, [0, 1, 2, 3, 0, 0, 0, 0]);
+  anim("gem_blue_shine", "px_gem_blue", 6, [0, 1, 2, 3, 0, 0, 0, 0]);
+  anim("gem_gold_shine", "px_gem_gold", 6, [0, 1, 2, 3, 0, 0, 0, 0]);
+  anim("coin_spin", "px_coin", 8, [0, 1, 2, 3]);
+  anim("awaken_spark", "px_awaken", 4, [0, 1]);
+}

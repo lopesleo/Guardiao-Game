@@ -1,14 +1,49 @@
-// Gera 3 cartas elegíveis no level-up.
-// - se o jogador não tem todas as armas: pode oferecer NOVA arma
-// - se tem arma com nível < MAX: pode oferecer UPGRADE
-// - sempre pode oferecer passivo
-// (Evoluções foram DESATIVADAS por ora — eram só um Staff reskin sem mecânica.)
+// Gera 3 cartas elegíveis no level-up, com SORTEIO PONDERADO:
+//   nova arma (peso 3) · melhoria de arma (peso 4) · passiva (peso 1 cada).
+// Sem peso, as 11 passivas soterravam as armas — builds ficavam aleatórias.
+// Evolução elegível = carta garantida.
 import { WEAPONS, MAX_WEAPON_LEVEL, PASSIVES } from "../config.js";
-import { pick, shuffle } from "../utils.js";
+import { WEAPON_ICON, PASSIVE_ICON } from "../art/Icons.js";
+import { WEAPON_CLASSES } from "../entities/Weapons.js";
 
-// Armas disponíveis para a run = APENAS as desbloqueadas na MetaProgression.
-// Filtrado dinamicamente em generateCards() lendo this.scene.meta.unlocked.
-const ALL_WEAPONS = ["STAFF", "AURA", "BOOMER", "CHAIN"];
+// Ordem = ordem de exibição no menu de desbloqueio
+export const BASE_WEAPONS = ["STAFF", "AURA", "BOOMER", "CHAIN", "ORB", "FLAME"];
+export const MAX_WEAPON_SLOTS = 6;
+
+export const WEAPON_DESC = {
+  STAFF: "Bola de fogo no inimigo mais próximo.",
+  AURA: "Campo gélido: dano contínuo e congela quem demora dentro.",
+  BOOMER: "Bumerangue em brasa que atravessa e volta.",
+  CHAIN: "Raio de dano alto; prefere alvos já afetados.",
+  ORB: "Orbes de gelo giram ao seu redor e resfriam quem tocam.",
+  FLAME: "Sopro de fogo em cone na direção em que você anda.",
+};
+
+const WEAPON_MODS = {
+  STAFF: ["dmg", "cd", "range", "proj"],
+  AURA: ["dmg", "cd", "range"],
+  BOOMER: ["dmg", "cd", "range"],
+  CHAIN: ["dmg", "cd", "range", "proj"],
+  ORB: ["dmg", "proj", "range"],
+  FLAME: ["dmg", "cd", "range"],
+};
+
+// Sorteio ponderado sem reposição
+function weightedPick(list, n) {
+  const pool = list.slice();
+  const out = [];
+  while (out.length < n && pool.length) {
+    const total = pool.reduce((s, c) => s + c._w, 0);
+    let r = Math.random() * total;
+    let i = 0;
+    for (; i < pool.length - 1; i++) {
+      r -= pool[i]._w;
+      if (r <= 0) break;
+    }
+    out.push(pool.splice(i, 1)[0]);
+  }
+  return out;
+}
 
 export class UpgradeSystem {
   constructor(scene) {
@@ -17,96 +52,86 @@ export class UpgradeSystem {
 
   generateCards(player) {
     const cards = [];
+    const rInt = (min, max) => Math.floor(min + Math.random() * (max - min + 1));
 
-    // 1) Novas armas — APENAS as desbloqueadas na meta-progressão
+    // 1) Novas armas — só as desbloqueadas na meta-progressão, com slot livre
     const unlocked = this.scene.meta?.unlocked || ["STAFF"];
-    const runWeapons = ALL_WEAPONS.filter((w) => unlocked.includes(w));
     const have = new Set(player.weapons.map((w) => w.key));
-    for (const key of runWeapons) {
-      if (!have.has(key)) {
+    const haveBase = new Set(player.weapons.map((w) => w.baseKey ?? w.key));
+    if (player.weapons.length < MAX_WEAPON_SLOTS) {
+      for (const key of BASE_WEAPONS) {
+        if (!unlocked.includes(key) || haveBase.has(key)) continue;
         cards.push({
           type: "new",
           weaponKey: key,
           title: WEAPONS[key].name,
-          desc: this._weaponDesc(key),
+          desc: WEAPON_DESC[key],
+          stat: "Nova arma",
+          icon: WEAPON_ICON[key],
+          element: WEAPONS[key].element,
+          level: 0,
+          _w: 3,
         });
       }
     }
 
-    // 2) Upgrades de armas existentes — rola modificador aleatório por arma
-    const weaponMods = {
-      STAFF: ["dmg", "cd", "range", "proj"],
-      AURA: ["dmg", "cd", "range"],
-      BOOMER: ["dmg", "cd", "range"],
-      CHAIN: ["dmg", "cd", "range", "proj"],
-    };
-    const rInt = (min, max) =>
-      Math.floor(min + Math.random() * (max - min + 1));
+    // 2) Melhorias — cada arma rola UM modificador
     for (const w of player.weapons) {
       if (w.level >= MAX_WEAPON_LEVEL) continue;
-      const pool = weaponMods[w.key] || ["dmg"];
+      const pool = WEAPON_MODS[w.key] || ["dmg"];
       const mod = pool[Math.floor(Math.random() * pool.length)];
-      const wName = WEAPONS[w.key].name;
-      const lvlTxt = `Lv ${w.level} → ${w.level + 1}`;
-      let title = wName,
-        desc = "",
-        apply;
+      let stat, apply;
       if (mod === "dmg") {
         const v = rInt(15, 30);
-        desc = `+${v}% Dano · ${lvlTxt}`;
-        apply = () => {
-          w.dmgMult *= 1 + v / 100;
-          w.level += 1;
-        };
+        stat = `+${v}% Dano`;
+        apply = () => (w.dmgMult *= 1 + v / 100);
       } else if (mod === "cd") {
-        const v = rInt(10, 22);
-        desc = `−${v}% Recarga · ${lvlTxt}`;
-        apply = () => {
-          w.cdMult *= 1 - v / 100;
-          w.level += 1;
-        };
-      } else if (mod === "range") {
         const v = rInt(10, 20);
-        desc = `+${v}% Alcance · ${lvlTxt}`;
-        apply = () => {
-          w.rangeMult *= 1 + v / 100;
-          w.level += 1;
-        };
-      } else if (mod === "proj") {
-        desc = `+1 Projétil · ${lvlTxt}`;
-        apply = () => {
-          w.extraProj += 1;
-          w.level += 1;
-        };
+        stat = `−${v}% Recarga`;
+        apply = () => (w.cdMult *= 1 - v / 100);
+      } else if (mod === "range") {
+        const v = rInt(12, 22);
+        stat = `+${v}% Alcance`;
+        apply = () => (w.rangeMult *= 1 + v / 100);
+      } else {
+        stat = w.key === "ORB" ? "+1 Orbe" : "+1 Projétil";
+        apply = () => (w.extraProj += 1);
       }
       cards.push({
         type: "upgrade",
         weaponKey: w.key,
-        title,
-        desc,
-        _apply: apply,
+        title: WEAPONS[w.key].name,
+        desc: WEAPON_DESC[w.key] ?? "",
+        stat,
+        icon: WEAPON_ICON[w.key],
+        element: WEAPONS[w.key].element,
+        level: w.level,
+        _w: 4,
+        _apply: () => {
+          apply();
+          w.level += 1;
+        },
       });
     }
 
-    // 3) Passivos — cada um rola valor aleatório DENTRO de uma faixa
-    for (const p of PASSIVES) {
-      const rolled = p.roll();
+    // 3) Passivas — valor rolado dentro de uma faixa
+    for (const ps of PASSIVES) {
+      const rolled = ps.roll();
       cards.push({
         type: "passive",
-        passiveId: p.id,
-        title: rolled.name,
-        desc: "Modificador permanente",
+        passiveId: ps.id,
+        title: ps.label,
+        desc: ps.desc,
+        stat: rolled.name,
+        icon: PASSIVE_ICON[ps.id] ?? "ico_plus",
+        _w: 1,
         _apply: rolled.apply,
       });
     }
 
-    // 4) Evolução — âncora no Lv5 + parceira presente → carta GARANTIDA
-    // (1 por level-up; outras elegíveis aparecem nos próximos).
-    const evoCard = this._evolutionCard(player, have);
-    if (evoCard) return [evoCard, ...shuffle(cards).slice(0, 2)];
-
-    // Embaralha e escolhe até 3.
-    return shuffle(cards).slice(0, 3);
+    const evo = this._evolutionCard(player, have);
+    if (evo) return [evo, ...weightedPick(cards, 2)];
+    return weightedPick(cards, 3);
   }
 
   // Primeira evolução elegível: def com evolvesFrom, âncora no nível MAX,
@@ -123,6 +148,9 @@ export class UpgradeSystem {
         weaponKey: key,
         title: def.name,
         desc: this._evoDesc(key),
+        stat: `${WEAPONS[def.evolvesFrom].name} + ${WEAPONS[def.partner].name}`,
+        icon: WEAPON_ICON[key],
+        element: def.element,
       };
     }
     return null;
@@ -131,41 +159,25 @@ export class UpgradeSystem {
   _evoDesc(key) {
     return (
       {
-        VAPOR_STORM: "🔥+❄️ Os projéteis EXPLODEM em nuvem escaldante no impacto",
-        OVERLOAD_X: "⚡+🔥 O raio SALTA em cadeia entre até 5 inimigos",
-        WINTER_HEART: "❄️+⚡ A aura pulsa NOVAS de estilhaços que congelam de longe",
-        PHOENIX: "🔥+🔥 O bumerangue deixa um RASTRO DE CHAMAS no caminho",
+        VAPOR_STORM: "As bolas de fogo EXPLODEM em nuvem escaldante no impacto.",
+        OVERLOAD_X: "O raio SALTA em cadeia entre até 5 inimigos.",
+        WINTER_HEART: "A aura pulsa NOVAS de estilhaços que congelam de longe.",
+        PHOENIX: "O bumerangue deixa um RASTRO DE CHAMAS pelo caminho.",
+        GLACIER: "Os orbes crescem e CONGELAM na hora quem tocam.",
+        INFERNO: "O sopro vira um INFERNO que deixa o chão em chamas.",
       }[key] || WEAPONS[key].name
     );
   }
 
-  _weaponDesc(key) {
-    const w = WEAPONS[key];
-    const elem = { fire: "🔥", ice: "❄️", bolt: "⚡" }[w.element] || "";
-    const desc =
-      {
-        STAFF: "Projétil de fogo no inimigo mais próximo",
-        AURA: "Aura gélida de dano contínuo ao redor",
-        BOOMER: "Bumerangue flamejante que volta",
-        CHAIN: "Raio elétrico de dano alto em um alvo",
-      }[key] || "";
-    return `${elem} ${desc}`;
-  }
-
   apply(card, player) {
     if (card.type === "new") {
-      // Cria a arma e adiciona ao player
-      // (import dinâmico evita ciclo)
-      import("../entities/Weapons.js").then((m) => {
-        const cls = m.WEAPON_CLASSES[card.weaponKey];
-        if (cls) player.addWeapon(new cls(this.scene));
-        // Conquista "Arsenal Completo" — checa aqui porque a arma entra async
-        this.scene._checkAchievements?.();
-      });
+      const cls = WEAPON_CLASSES[card.weaponKey];
+      if (cls) player.addWeapon(new cls(this.scene));
+      this.scene.hud?.refreshWeapons();
     } else if (card.type === "evolution") {
-      import("../entities/Weapons.js").then((m) => {
+      {
         const def = WEAPONS[card.weaponKey];
-        const cls = m.WEAPON_CLASSES[card.weaponKey];
+        const cls = WEAPON_CLASSES[card.weaponKey];
         const idx = player.weapons.findIndex((w) => w.key === def.evolvesFrom);
         if (!cls || idx < 0) return;
         const old = player.weapons[idx];
@@ -184,7 +196,7 @@ export class UpgradeSystem {
         this.scene._toast?.(`★ ${def.name}! ★`, 2200);
         this.scene.hud?.refreshWeapons();
         this.scene._checkAchievements?.(); // "Metamorfose"
-      });
+      }
     } else if (card.type === "upgrade") {
       if (card._apply) card._apply();
       else {
@@ -196,6 +208,8 @@ export class UpgradeSystem {
       }
     } else if (card.type === "passive") {
       if (card._apply) card._apply(player);
+      player.passivesTaken ??= {};
+      player.passivesTaken[card.passiveId] = (player.passivesTaken[card.passiveId] || 0) + 1;
       // Conquista "Osso Duro" (quase-pacifista): marca se pegou passivo de HP
       if (card.passiveId === "hp" && this.scene._runFlags) {
         this.scene._runFlags.tookHpPassive = true;

@@ -6,16 +6,23 @@ export class Chest extends Phaser.GameObjects.Container {
     super(scene, x, y);
     scene.add.existing(this);
 
-    this.glow = scene.add.circle(0, 0, 28, COLORS.GOLD, 0.4).setVisible(false);
+    this.glow = scene.add
+      .image(0, 0, "fx_glow")
+      .setScale(1.2)
+      .setTint(COLORS.GOLD)
+      .setAlpha(0.6)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setVisible(false);
+    this.shadow = scene.add.image(0, 20, "px_shadow").setScale(3.4, 3);
     this.sprite = scene.add.image(0, 0, CHEST.SPRITE_TEXTURE, CHEST.SPRITE_FRAME_CLOSED)
                        .setScale(GAME.PIXEL_SCALE);
-    this.prompt = scene.add.text(0, -38, '[E] ABRIR', {
-      fontFamily: 'Press Start 2P, monospace',
-      fontSize: '10px', color: '#ffd96b',
-      stroke: '#000000', strokeThickness: 3,
+    this.prompt = scene.add.text(0, -42, 'ABRIR', {
+      fontFamily: '"Pixelify Sans", monospace', fontStyle: 'bold',
+      fontSize: '16px', color: '#ffe58f',
+      stroke: '#1a1420', strokeThickness: 4, resolution: 2,
     }).setOrigin(0.5).setVisible(false);
 
-    this.add([this.glow, this.sprite, this.prompt]);
+    this.add([this.shadow, this.glow, this.sprite, this.prompt]);
     this.setDepth(y + 9500);
 
     this.opened = false;

@@ -39,6 +39,8 @@ import {
 import { Chest } from "../entities/Chest.js";
 import { DamageNumber } from "../entities/DamageNumber.js";
 import { HUD } from "../ui/HUD.js";
+import { ForestWorld } from "../world/ForestWorld.js";
+import { text, drawFrame } from "../ui/Theme.js";
 import { VirtualJoystick } from "../ui/VirtualJoystick.js";
 
 export class GameScene extends Phaser.Scene {
@@ -54,7 +56,7 @@ export class GameScene extends Phaser.Scene {
       WS,
       WS,
     );
-    this._drawGround();
+    this.world = new ForestWorld(this);
 
     this.inputMgr = new InputManager(this);
     this.joystick = new VirtualJoystick(this.inputMgr);
@@ -122,9 +124,6 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
     this.cameras.main.setBounds(-GAME.WORLD_RADIUS, -GAME.WORLD_RADIUS, WS, WS);
 
-    // Atmosfera: vinheta escura + partículas ambiente (vagalumes/folhas)
-    this._createVignette();
-    this._createAmbient();
     this._poofCount = 0;
 
     // HUD
@@ -196,20 +195,20 @@ export class GameScene extends Phaser.Scene {
     // =================================================================
 
     // Level-up
+    // FILA de level-ups: vários de uma vez (XP alto, baú dourado) abrem a tela
+    // de cartas em sequência — antes, reabrir por cima descartava escolhas.
+    this._pendingLevelUps = 0;
     this.events.on("player:levelup", () => {
-      const cards = this.upgrades.generateCards(this.player);
-      this.scene.pause();
-      this.scene.launch("LevelUpScene", {
-        cards,
-        player: this.player,
-        gameScene: this,
-      });
+      this._pendingLevelUps++;
+      this._openNextLevelUp();
     });
     // Quando o LevelUpScene termina, atualiza painel de armas + checa
     // conquistas de arma (Lv máximo / arsenal completo)
     this.events.on("resume", () => {
+      this._levelUpOpen = false;
       this.hud.refreshWeapons();
       this._checkAchievements();
+      if (this._pendingLevelUps > 0) this.time.delayedCall(120, () => this._openNextLevelUp());
     });
 
     // Música
@@ -226,205 +225,6 @@ export class GameScene extends Phaser.Scene {
     this._showOnboarding();
   }
 
-  _drawGround() {
-    const r = GAME.WORLD_RADIUS;
-    const TS = 16 * GAME.PIXEL_SCALE;
-    this.cameras.main.setBackgroundColor(0x4a7a3a);
-
-    // Grama base limpa (frame 0)
-    this.add
-      .tileSprite(0, 0, r * 2, r * 2, "town_tiles", 0)
-      .setOrigin(0.5)
-      .setScale(GAME.PIXEL_SCALE)
-      .setDepth(-100);
-
-    // Manchas suaves de sombra (copas) e luz (feixes de sol) — quebram o verde
-    // chapado do gramado. Textura radial gerada 1x, tintada por instância.
-    if (!this.textures.exists("softdisc")) {
-      const c = this.textures.createCanvas("softdisc", 256, 256);
-      const cctx = c.getContext();
-      const gg = cctx.createRadialGradient(128, 128, 0, 128, 128, 128);
-      gg.addColorStop(0, "rgba(255,255,255,1)");
-      gg.addColorStop(1, "rgba(255,255,255,0)");
-      cctx.fillStyle = gg;
-      cctx.fillRect(0, 0, 256, 256);
-      c.refresh();
-    }
-    // Só sombras frias SUTIS (as manchas claras "de sol" lavavam a cor da
-    // grama — feedback com screenshot). Escala menor + alpha baixo preservam
-    // a textura do tile por baixo.
-    const patchCell = 620;
-    for (let py = -r; py < r; py += patchCell) {
-      for (let px = -r; px < r; px += patchCell) {
-        if (Math.random() < 0.55) {
-          this.add
-            .image(px + Math.random() * patchCell, py + Math.random() * patchCell, "softdisc")
-            .setScale(0.8 + Math.random() * 1.0)
-            .setTint(0x0a2a14)
-            .setAlpha(0.06 + Math.random() * 0.05)
-            .setDepth(-60);
-        }
-      }
-    }
-
-    // Single-tile decorações verificadas no PNG
-    const SINGLE = [
-      { f: 1, weight: 6 }, // grama com flores discretas
-      { f: 2, weight: 4 }, // grama com flores mais marcadas
-      { f: 29, weight: 3 }, // cogumelos vermelhos
-      { f: 43, weight: 2 }, // calçamento de pedra cinza
-    ];
-    const pickWeighted = (arr) => {
-      const total = arr.reduce((s, x) => s + x.weight, 0);
-      let r2 = Math.random() * total;
-      for (const x of arr) {
-        r2 -= x.weight;
-        if (r2 <= 0) return x.f;
-      }
-      return arr[0].f;
-    };
-
-    // Áreas de exclusão (centro = spawn do player)
-    const isClear = (x, y) => x * x + y * y > 220 * 220;
-
-    // === Decoração procedural via GRID + JITTER ===
-    // Cobre o mapa inteiro com densidade uniforme.
-
-    // Single-tile decorações: célula 192px (4 tiles), 75% chance por célula
-    const decoCell = 192;
-    for (let cy = -r; cy < r; cy += decoCell) {
-      for (let cx = -r; cx < r; cx += decoCell) {
-        if (Math.random() > 0.75) continue;
-        const x = cx + Math.random() * decoCell;
-        const y = cy + Math.random() * decoCell;
-        if (!isClear(x, y)) continue;
-        const f = pickWeighted(SINGLE);
-        this.add
-          .image(x, y, "town_tiles", f)
-          .setScale(GAME.PIXEL_SCALE)
-          .setDepth(-50);
-      }
-    }
-
-    // Árvores 2-tile: célula 384px (8 tiles), 45% chance por célula
-    const TREES = [
-      [3, 15], // árvore outono laranja
-      [4, 16], // pinheiro verde
-      [5, 17], // arbusto redondo
-    ];
-    const treeCell = 384;
-    for (let cy = -r; cy < r; cy += treeCell) {
-      for (let cx = -r; cx < r; cx += treeCell) {
-        if (Math.random() > 0.45) continue;
-        const x = cx + Math.random() * treeCell;
-        const y = cy + Math.random() * treeCell;
-        if (!isClear(x, y)) continue;
-        const [top, bot] = TREES[Math.floor(Math.random() * TREES.length)];
-        this.add
-          .image(x, y, "town_tiles", bot)
-          .setScale(GAME.PIXEL_SCALE)
-          .setDepth(y + 10000);
-        this.add
-          .image(x, y - TS, "town_tiles", top)
-          .setScale(GAME.PIXEL_SCALE)
-          .setDepth(y + 10000);
-      }
-    }
-  }
-
-  // Vinheta radial (gerada 1x em canvas) — escurece as bordas pra dar clima de
-  // floresta fechada. Uma segunda cópia tintada de vermelho pulsa com HP baixo.
-  _createVignette() {
-    const W = GAME.WIDTH,
-      H = GAME.HEIGHT;
-    if (!this.textures.exists("vignette")) {
-      const c = this.textures.createCanvas("vignette", W, H);
-      const ctx = c.getContext();
-      // Sutil: só os cantos escurecem de leve (feedback: 0.55 estava forte)
-      const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.52, W / 2, H / 2, H * 0.92);
-      g.addColorStop(0, "rgba(0,0,0,0)");
-      g.addColorStop(1, "rgba(4,10,6,0.32)");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
-      c.refresh();
-    }
-    this.add.image(0, 0, "vignette").setOrigin(0).setScrollFactor(0).setDepth(49000);
-    this._lowHpOverlay = this.add
-      .image(0, 0, "vignette")
-      .setOrigin(0)
-      .setScrollFactor(0)
-      .setDepth(49001)
-      .setTint(0xff2038)
-      .setAlpha(0);
-  }
-
-  // Vagalumes flutuando + folhas caindo, em espaço de MUNDO (respawnam quando
-  // saem do enquadramento da câmera). Baratos: shapes com drift senoidal.
-  _createAmbient() {
-    this.ambient = [];
-    for (let i = 0; i < 10; i++) {
-      const p = this.add.circle(0, 0, 2, 0xfff5b8, 0.7).setDepth(20000);
-      p._kind = "ff";
-      p._phase = Math.random() * Math.PI * 2;
-      this._respawnAmbient(p, true);
-      this.ambient.push(p);
-    }
-    for (let i = 0; i < 8; i++) {
-      const leaf = this.add
-        .rectangle(0, 0, 6, 3, i % 2 ? 0x6fae4f : 0x9a7a3a, 0.85)
-        .setDepth(20000);
-      leaf._kind = "leaf";
-      leaf._phase = Math.random() * Math.PI * 2;
-      leaf._vy = 16 + Math.random() * 12;
-      leaf._vx = (Math.random() - 0.5) * 24;
-      this._respawnAmbient(leaf, true);
-      this.ambient.push(leaf);
-    }
-  }
-
-  _respawnAmbient(p, anywhere = false) {
-    const cam = this.cameras.main;
-    const lx = cam.scrollX,
-      ly = cam.scrollY;
-    p.x = lx + Math.random() * GAME.WIDTH;
-    // Folhas renascem acima do topo da tela (chuva contínua)
-    p.y = p._kind === "leaf" && !anywhere ? ly - 20 : ly + Math.random() * GAME.HEIGHT;
-  }
-
-  _updateAmbient(time, dt) {
-    const cam = this.cameras.main;
-    const lx = cam.scrollX,
-      ly = cam.scrollY;
-    const M = 40;
-    for (const p of this.ambient) {
-      if (p._kind === "ff") {
-        p.x += Math.sin(time / 900 + p._phase) * 0.35;
-        p.y += Math.cos(time / 1100 + p._phase) * 0.3 - 0.08;
-        p.alpha = 0.25 + Math.abs(Math.sin(time / 400 + p._phase)) * 0.55;
-      } else {
-        p.x += (p._vx + Math.sin(time / 600 + p._phase) * 14) * (dt / 1000);
-        p.y += p._vy * (dt / 1000);
-        p.rotation += dt * 0.0012;
-      }
-      if (
-        p.x < lx - M ||
-        p.x > lx + GAME.WIDTH + M ||
-        p.y < ly - M ||
-        p.y > ly + GAME.HEIGHT + M
-      ) {
-        this._respawnAmbient(p);
-      }
-    }
-    // Vinheta vermelha pulsante abaixo de 30% de HP
-    const pct = this.player.hp / this.player.maxHp;
-    // Multiplicador alto compensa a textura de vinheta mais suave
-    this._lowHpOverlay.setAlpha(
-      pct < 0.3
-        ? ((0.3 - pct) / 0.3) * (0.75 + Math.sin(time / 180) * 0.25)
-        : 0,
-    );
-  }
-
   // Burst de "poeira" na morte de inimigo. Cap de partículas simultâneas pra
   // aguentar limpezas em massa (Sobrecarga/Vapor) sem afogar o tween manager.
   _deathPoof(x, y) {
@@ -434,7 +234,10 @@ export class GameScene extends Phaser.Scene {
       const ang = Math.random() * Math.PI * 2;
       const d = 14 + Math.random() * 16;
       const p = this.add
-        .circle(x, y, 2 + Math.random() * 2, 0xd8e8d0, 0.9)
+        .image(x, y, "px_puff")
+        .setScale(1.2 + Math.random() * 1.2)
+        .setTint(i % 2 ? 0xf4ecd6 : 0x9fb4a4)
+        .setAlpha(0.9)
         .setDepth(y + 10001);
       this.tweens.add({
         targets: p,
@@ -512,7 +315,7 @@ export class GameScene extends Phaser.Scene {
     if (!this.boss) this.spawnDirector.update(time, dt);
     this.elemental.tick(time);
     this.hud.update(time, dt);
-    this._updateAmbient(time, dt);
+    this.world.update(time, dt, this.player);
 
     // Baús: glow/prompt + interação E
     let chestPressed = this.inputMgr.consumeInteract();
@@ -715,6 +518,22 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  _openNextLevelUp() {
+    if (this._pendingLevelUps <= 0 || this.gameOver) return;
+    // pause()/launch() do Phaser são enfileirados pro próximo frame: a flag
+    // evita abrir 2× no mesmo tick
+    if (this._levelUpOpen) return;
+    this._levelUpOpen = true;
+    this._pendingLevelUps--;
+    const cards = this.upgrades.generateCards(this.player);
+    this.scene.pause();
+    this.scene.launch("LevelUpScene", {
+      cards,
+      player: this.player,
+      gameScene: this,
+    });
+  }
+
   // Pausa o jogo e abre o PauseScene. Usado pelo ESC (PC) e pelo botão ⏸ (mobile).
   pauseGame() {
     if (this.scene.isActive("LevelUpScene")) return;
@@ -723,26 +542,28 @@ export class GameScene extends Phaser.Scene {
     this.scene.launch("PauseScene");
   }
 
-  _toast(msg, ms = 1500) {
-    const t = this.add
-      .text(GAME.WIDTH / 2, GAME.HEIGHT - 80, msg, {
-        fontFamily: "Press Start 2P, monospace",
-        fontSize: "12px",
-        color: "#ffd96b",
-        stroke: "#000",
-        strokeThickness: 3,
-        backgroundColor: "#000000",
-        padding: { x: 10, y: 6 },
-      })
-      .setOrigin(0.5)
-      .setScrollFactor(0)
-      .setDepth(60000);
+  // Aviso curto na parte de baixo da tela (conquistas, baús, eventos).
+  // Empilha pra cima se vários chegarem juntos.
+  _toast(msg, ms = 1600, color = "#ffe58f") {
+    this._toasts = (this._toasts || []).filter((t) => t.active);
+    const y = this.scale.height - 130 - this._toasts.length * 44;
+    const c = this.add.container(this.scale.width / 2, y).setScrollFactor(0).setDepth(60000);
+    const t = text(this, 0, 0, msg, { size: 18, color, origin: 0.5 });
+    const w = t.width + 36,
+      h = 38;
+    const g = this.add.graphics();
+    drawFrame(g, -w / 2, -h / 2, w, h, "glass");
+    c.add([g, t]);
+    c.setAlpha(0).setScale(0.8);
+    this._toasts.push(c);
+    this.tweens.add({ targets: c, alpha: 1, scale: 1, duration: 160, ease: "Back.easeOut" });
     this.tweens.add({
-      targets: t,
+      targets: c,
       alpha: 0,
+      y: y - 16,
       delay: ms - 300,
       duration: 300,
-      onComplete: () => t.destroy(),
+      onComplete: () => c.destroy(),
     });
   }
 
@@ -807,7 +628,8 @@ export class GameScene extends Phaser.Scene {
     const g = this.xpPool.acquire();
     g.spawn(enemy.x, enemy.y);
     // Drops aleatórios
-    const r = Math.random();
+    // Sorte (passiva Trevo) escala as chances de drop
+    const r = Math.random() / (1 + (this.player.luck || 0));
     if (r < DROPS.COIN_CHANCE) {
       const c = this.coinPool.acquire();
       c.spawn(
@@ -1044,7 +866,11 @@ export class GameScene extends Phaser.Scene {
     // 14 partículas pequenas voando pra fora
     for (let i = 0; i < 14; i++) {
       const ang = (i / 14) * Math.PI * 2 + Math.random() * 0.3;
-      const p = this.add.circle(x, y, 4, color, 1).setDepth(y + 10500);
+      const p = this.add
+        .image(x, y, i % 2 ? "px_spark" : "px_dot2")
+        .setScale(3)
+        .setTint(color)
+        .setDepth(y + 10500);
       const dist = 50 + Math.random() * 40;
       this.tweens.add({
         targets: p,
@@ -1059,12 +885,13 @@ export class GameScene extends Phaser.Scene {
     }
     // Flash radial breve
     const ring = this.add
-      .circle(x, y, 8, color, 0)
-      .setStrokeStyle(4, color, 1)
+      .image(x, y, "px_ring")
+      .setScale(1)
+      .setTint(color)
       .setDepth(y + 10500);
     this.tweens.add({
       targets: ring,
-      radius: 60,
+      scale: 9,
       alpha: 0,
       duration: 400,
       onComplete: () => ring.destroy(),

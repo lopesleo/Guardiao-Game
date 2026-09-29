@@ -9,9 +9,14 @@ export class Projectile extends Phaser.GameObjects.Container {
   constructor(scene) {
     super(scene, -9999, -9999);
     scene.add.existing(this);
-    this.glow = scene.add.circle(0, 0, 22, COLORS.FIRE, 0.4);
-    this.core = scene.add.circle(0, 0, 10, 0xffe6b8, 1.0);
-    // Bola de fogo animada (2 frames alternando) — usada pelo Cajado (fogo)
+    // Brilho aditivo (luz) + núcleo pixelado; fogo usa a bola de fogo animada
+    this.glow = scene.add
+      .image(0, 0, "fx_glow")
+      .setScale(0.8)
+      .setTint(COLORS.FIRE)
+      .setAlpha(0.55)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.core = scene.add.image(0, 0, "px_puff").setScale(2.4);
     this.fball = scene.add.sprite(0, 0, "fireball").setScale(1.1);
     this.add([this.glow, this.core, this.fball]);
     scene.physics.add.existing(this);
@@ -50,19 +55,19 @@ export class Projectile extends Phaser.GameObjects.Container {
     // Fogo (e genérico) = sprite de bola de fogo; gelo/raio = bolinha colorida
     this._isFire = element === ELEMENT.FIRE || element == null;
     this.fball.setVisible(this._isFire);
-    this.glow.setVisible(!this._isFire);
     this.core.setVisible(!this._isFire);
     if (this._isFire) {
       this.fball.setRotation(Math.atan2(vy, vx));
+      this.glow.setTint(COLORS.FIRE);
     } else if (element === ELEMENT.ICE) {
-      this.glow.setFillStyle(COLORS.ICE, 0.45);
-      this.core.setFillStyle(0xeaf6ff, 1);
+      this.glow.setTint(COLORS.ICE);
+      this.core.setTint(0xeaf6ff);
     } else if (element === ELEMENT.BOLT) {
-      this.glow.setFillStyle(COLORS.BOLT, 0.45);
-      this.core.setFillStyle(0xf5e6ff, 1);
+      this.glow.setTint(COLORS.BOLT);
+      this.core.setTint(0xf5e6ff);
     } else {
-      this.glow.setFillStyle(color, 0.4);
-      this.core.setFillStyle(0xffe6b8, 1);
+      this.glow.setTint(color);
+      this.core.setTint(0xffe6b8);
     }
   }
 
@@ -81,10 +86,8 @@ export class Projectile extends Phaser.GameObjects.Container {
       this.fball.setRotation(
         Math.atan2(this.body.velocity.y, this.body.velocity.x),
       );
-    } else {
-      const s = 1 + Math.sin(time / 60) * 0.12;
-      this.glow.setScale(s);
     }
+    this.glow.setScale(0.8 + Math.sin(time / 60) * 0.08);
   }
 }
 
@@ -96,18 +99,15 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
   constructor(scene) {
     super(scene, -9999, -9999);
     scene.add.existing(this);
-    // Forma de L: 2 retângulos perpendiculares, com bordas escuras
-    const w = 4,
-      l = 18;
-    this.armA = scene.add
-      .rectangle(-2, 0, l, w, COLORS.FIRE)
-      .setStrokeStyle(1, 0x6a3010, 1);
-    this.armB = scene.add
-      .rectangle(0, -2, w, l, COLORS.FIRE)
-      .setStrokeStyle(1, 0x6a3010, 1);
-    // Glow externo discreto
-    this.glow = scene.add.circle(0, 0, 14, COLORS.FIRE, 0.25);
-    this.add([this.glow, this.armA, this.armB]);
+    // Bumerangue de madeira com fio em brasa (pixel-art) + brilho quente
+    this.glow = scene.add
+      .image(0, 0, "fx_glow")
+      .setScale(0.7)
+      .setTint(COLORS.FIRE)
+      .setAlpha(0.45)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    this.spr = scene.add.image(0, 0, "px_boomer").setScale(GAME.PIXEL_SCALE);
+    this.add([this.glow, this.spr]);
 
     scene.physics.add.existing(this);
     this.body.setCircle(12, -12, -12);
@@ -342,14 +342,35 @@ export class AuraWeapon extends Weapon {
   // defKey parametrizado pra evolução (Coração do Inverno) reusar o campo
   constructor(scene, defKey = "AURA") {
     super(scene, defKey);
-    // Visual permanente (atualizado em update())
+    // Visual permanente: névoa fria aditiva + anel de cristais girando
     this.gfx = scene.add
-      .circle(0, 0, this.def.range, COLORS.ICE, 0.15)
-      .setStrokeStyle(2, COLORS.ICE, 0.5)
+      .image(0, 0, "fx_glow")
+      .setTint(COLORS.ICE)
+      .setAlpha(0.22)
+      .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(40);
+    this.ring = scene.add.graphics().setDepth(41);
+    this._ringStrong = false;
   }
   dispose() {
     this.gfx.destroy();
+    this.ring.destroy();
+  }
+  // Anel pontilhado em "pixels" (quadrados de 3px) que gira devagar
+  _drawRing(time) {
+    const g = this.ring;
+    const r = this.range;
+    g.clear();
+    const n = Math.max(18, Math.round(r / 7));
+    const rot = time / 2600;
+    for (let i = 0; i < n; i++) {
+      if (i % 3 === 2) continue; // tracejado
+      const a = rot + (i / n) * Math.PI * 2;
+      const x = Math.round((this.owner.x + Math.cos(a) * r) / 3) * 3;
+      const y = Math.round((this.owner.y + Math.sin(a) * r) / 3) * 3;
+      g.fillStyle(i % 3 === 0 ? 0xbfeaff : 0x5cc8ff, this._ringStrong ? 0.95 : 0.7);
+      g.fillRect(x - 1, y - 1, 3, 3);
+    }
   }
   // AuraWeapon sobrescreve range pra incluir areaMult do player
   get range() {
@@ -358,7 +379,8 @@ export class AuraWeapon extends Weapon {
   update(time, dt) {
     if (this.owner) {
       this.gfx.setPosition(this.owner.x, this.owner.y);
-      this.gfx.setRadius(this.range);
+      this.gfx.setScale((this.range * 2.3) / 64);
+      this._drawRing(time);
     }
     super.update(time, dt);
   }
@@ -430,8 +452,8 @@ export class AuraWeapon extends Weapon {
     const scene = this.scene;
     const ang = Math.atan2(y2 - y1, x2 - x1);
     const shard = scene.add
-      .polygon(x1, y1, [12, 0, 0, -5, -8, 0, 0, 5], 0xeaf6ff, 1)
-      .setStrokeStyle(1, 0x5cc8ff, 1)
+      .image(x1, y1, "px_shard")
+        .setScale(GAME.PIXEL_SCALE)
       .setDepth(61)
       .setRotation(ang);
     scene.tweens.add({
@@ -640,7 +662,7 @@ export class WinterHeart extends AuraWeapon {
   constructor(scene) {
     super(scene, "WINTER_HEART");
     this.baseKey = this.def.evolvesFrom;
-    this.gfx.setStrokeStyle(2, COLORS.ICE, 0.8); // campo mais marcado
+    this._ringStrong = true; // campo mais marcado
     this._nextNovaAt = 0;
   }
   update(time, dt) {
@@ -698,8 +720,8 @@ export class WinterHeart extends AuraWeapon {
     for (let i = 0; i < n; i++) {
       const ang = (i / n) * Math.PI * 2;
       const shard = scene.add
-        .polygon(cx, cy, [10, 0, 0, -4, -6, 0, 0, 4], 0xeaf6ff, 1)
-        .setStrokeStyle(1, COLORS.ICE, 1)
+        .image(cx, cy, "px_shard")
+        .setScale(GAME.PIXEL_SCALE)
         .setDepth(61)
         .setRotation(ang);
       scene.tweens.add({

@@ -1,186 +1,122 @@
-// XPGem (verde) + CoinPickup (dourado) + HeartPickup (vermelho) + AwakenOrb (dourado).
-import { ENEMY, COLORS, DROPS } from "../config.js";
+// Pickups em pixel-art: gema de XP, moeda, coração e orbe de Despertar.
+// Nascem com um "pulinho" (arco) e são puxados por ímã ao chegar perto.
+import { ENEMY, GAME } from "../config.js";
 
-export class XPGem extends Phaser.GameObjects.Container {
-  constructor(scene) {
-    super(scene, -9999, -9999);
+const S = GAME.PIXEL_SCALE;
+
+class Pickup extends Phaser.Physics.Arcade.Sprite {
+  constructor(scene, texture, o = {}) {
+    super(scene, -9999, -9999, texture, 0);
     scene.add.existing(this);
-    this.glow = scene.add.circle(0, 0, 18, COLORS.XP, 0.45);
-    this.gem = scene.add
-      .rectangle(0, 0, 14, 14, COLORS.XP)
-      .setStrokeStyle(2, 0xffffff, 1);
-    this.gem.setAngle(45);
-    this.add([this.glow, this.gem]);
     scene.physics.add.existing(this);
-    this.body.setCircle(8, -8, -8);
+    this.setScale(S);
+    this.body.setCircle(4, this.width / 2 - 4, this.height / 2 - 4);
+    this.magnetSpeed = o.magnet ?? 340;
+    this.magnetMult = o.magnetMult ?? 4;
+    this.anim = o.anim ?? null;
+    this.glowTint = o.glow ?? null;
+    if (this.glowTint != null) {
+      this.glow = scene.add
+        .image(0, 0, "fx_glow")
+        .setScale(o.glowScale ?? 0.55)
+        .setTint(this.glowTint)
+        .setAlpha(0.5)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setVisible(false);
+    }
     this.setActive(false).setVisible(false);
     this.body.enable = false;
+    this._hop = null;
+  }
+
+  spawn(x, y) {
+    this.setPosition(x, y);
+    this.setActive(true).setVisible(true);
+    this.body.enable = true;
+    this.body.setVelocity(0, 0);
+    this.setDepth(y + 9000);
+    this._pulled = false;
+    if (this.anim) this.play({ key: this.anim, startFrame: Math.floor(Math.random() * 3) });
+    this.glow?.setVisible(true);
+    // Pulinho de saída: arco rápido pra cima e quique
+    this._hop?.stop();
+    this._baseY = y;
+    this.y = y;
+    this._hop = this.scene.tweens.add({
+      targets: this,
+      y: { from: y, to: y - 14 },
+      duration: 140,
+      yoyo: true,
+      ease: "Quad.easeOut",
+    });
+  }
+
+  pickup() {
+    this._hop?.stop();
+    this.stop();
+    this.setActive(false).setVisible(false);
+    this.body.enable = false;
+    this.glow?.setVisible(false);
+  }
+
+  update(time, dt, player) {
+    if (!this.active) return;
+    if (this.glow) {
+      this.glow.setPosition(this.x, this.y);
+      this.glow.setAlpha(0.35 + Math.sin(time / 220 + this.x) * 0.15);
+    }
+    if (!player?.active) return;
+    const dx = player.x - this.x,
+      dy = player.y - this.y;
+    const d = Math.hypot(dx, dy);
+    const reach = player.pickupRadius * this.magnetMult;
+    // Uma vez puxado, não solta mais (evita gema "orbitando" no limite)
+    if (this._pulled || d < reach) {
+      this._pulled = true;
+      this._hop?.stop();
+      const sp = this.magnetSpeed + Math.max(0, 260 - d) * 1.5;
+      this.body.setVelocity((dx / (d || 1)) * sp, (dy / (d || 1)) * sp);
+    } else this.body.setVelocity(0, 0);
+  }
+}
+
+export class XPGem extends Pickup {
+  constructor(scene) {
+    super(scene, "px_gem", { anim: "gem_shine", magnet: 360 });
     this.xpValue = ENEMY.XP_VALUE;
-    this.magnetSpeed = 380;
   }
-  spawn(x, y) {
-    this.setPosition(x, y);
-    this.setActive(true).setVisible(true);
-    this.body.enable = true;
-    this.body.setVelocity(0, 0);
-  }
-  pickup() {
-    this.setActive(false).setVisible(false);
-    this.body.enable = false;
-  }
-  update(time, dt, player) {
-    if (!this.active) return;
-    this.gem.angle = (this.gem.angle + 1.5) % 360;
-    const s = 1 + Math.sin(time / 200) * 0.2;
-    this.glow.setScale(s);
-    if (!player?.active) return;
-    const dx = player.x - this.x,
-      dy = player.y - this.y;
-    const d = Math.hypot(dx, dy);
-    if (d < player.pickupRadius * 4) {
-      const sp =
-        this.magnetSpeed *
-        (1 - Math.min(1, d / (player.pickupRadius * 4)) * 0.4);
-      this.body.setVelocity((dx / (d || 1)) * sp, (dy / (d || 1)) * sp);
-    } else {
-      this.body.setVelocity(0, 0);
-    }
+  // tier: 0 verde (normal), 1 azul (×5), 2 dourada (×20) — usado por baús
+  spawn(x, y, tier = 0) {
+    const T = [
+      ["px_gem", "gem_shine", 1],
+      ["px_gem_blue", "gem_blue_shine", 5],
+      ["px_gem_gold", "gem_gold_shine", 20],
+    ][tier] ?? ["px_gem", "gem_shine", 1];
+    this.setTexture(T[0]);
+    this.anim = T[1];
+    this.xpValue = ENEMY.XP_VALUE * T[2];
+    super.spawn(x, y);
   }
 }
 
-// Coração de cura
-export class HeartPickup extends Phaser.GameObjects.Container {
+export class CoinPickup extends Pickup {
   constructor(scene) {
-    super(scene, -9999, -9999);
-    scene.add.existing(this);
-    this.glow = scene.add.circle(0, 0, 16, COLORS.DANGER, 0.45);
-    // Coração formado por 2 círculos + triângulo
-    this.l = scene.add.circle(-3, -2, 5, 0xff3a55);
-    this.r = scene.add.circle(3, -2, 5, 0xff3a55);
-    this.t = scene.add.triangle(0, 4, -8, -2, 8, -2, 0, 8, 0xff3a55);
-    this.add([this.glow, this.l, this.r, this.t]);
-    scene.physics.add.existing(this);
-    this.body.setCircle(8, -8, -8);
-    this.setActive(false).setVisible(false);
-    this.body.enable = false;
-  }
-  spawn(x, y) {
-    this.setPosition(x, y);
-    this.setActive(true).setVisible(true);
-    this.body.enable = true;
-    this.body.setVelocity(0, 0);
-  }
-  pickup() {
-    this.setActive(false).setVisible(false);
-    this.body.enable = false;
-  }
-  update(time, dt, player) {
-    if (!this.active) return;
-    const s = 1 + Math.sin(time / 200) * 0.18;
-    this.glow.setScale(s);
-    if (!player?.active) return;
-    const dx = player.x - this.x,
-      dy = player.y - this.y;
-    const d = Math.hypot(dx, dy);
-    if (d < player.pickupRadius * 4) {
-      const sp = 300 * (1 - Math.min(1, d / (player.pickupRadius * 4)) * 0.4);
-      this.body.setVelocity((dx / (d || 1)) * sp, (dy / (d || 1)) * sp);
-    } else this.body.setVelocity(0, 0);
+    super(scene, "px_coin", { anim: "coin_spin", magnet: 320, magnetMult: 5, glow: 0xf2c14e, glowScale: 0.45 });
   }
 }
 
-// Orbe que recupera Despertar
-export class AwakenOrb extends Phaser.GameObjects.Container {
+export class HeartPickup extends Pickup {
   constructor(scene) {
-    super(scene, -9999, -9999);
-    scene.add.existing(this);
-    this.glow = scene.add.circle(0, 0, 18, 0xffd96b, 0.5);
-    this.core = scene.add
-      .circle(0, 0, 7, 0xfff5b8)
-      .setStrokeStyle(2, 0xb88040, 1);
-    this.spark1 = scene.add.rectangle(0, -10, 2, 6, 0xfff5b8);
-    this.spark2 = scene.add.rectangle(0, 10, 2, 6, 0xfff5b8);
-    this.spark3 = scene.add.rectangle(-10, 0, 6, 2, 0xfff5b8);
-    this.spark4 = scene.add.rectangle(10, 0, 6, 2, 0xfff5b8);
-    this.add([
-      this.glow,
-      this.core,
-      this.spark1,
-      this.spark2,
-      this.spark3,
-      this.spark4,
-    ]);
-    scene.physics.add.existing(this);
-    this.body.setCircle(8, -8, -8);
-    this.setActive(false).setVisible(false);
-    this.body.enable = false;
-  }
-  spawn(x, y) {
-    this.setPosition(x, y);
-    this.setActive(true).setVisible(true);
-    this.body.enable = true;
-    this.body.setVelocity(0, 0);
-  }
-  pickup() {
-    this.setActive(false).setVisible(false);
-    this.body.enable = false;
+    super(scene, "px_heart", { magnet: 300, glow: 0xe8434f, glowScale: 0.55 });
   }
   update(time, dt, player) {
-    if (!this.active) return;
-    this.rotation += dt * 0.003;
-    const s = 1 + Math.sin(time / 180) * 0.2;
-    this.glow.setScale(s);
-    if (!player?.active) return;
-    const dx = player.x - this.x,
-      dy = player.y - this.y;
-    const d = Math.hypot(dx, dy);
-    if (d < player.pickupRadius * 4) {
-      const sp = 320 * (1 - Math.min(1, d / (player.pickupRadius * 4)) * 0.4);
-      this.body.setVelocity((dx / (d || 1)) * sp, (dy / (d || 1)) * sp);
-    } else this.body.setVelocity(0, 0);
+    if (this.active) this.setScale(S * (1 + Math.sin(time / 160) * 0.08));
+    super.update(time, dt, player);
   }
 }
 
-export class CoinPickup extends Phaser.GameObjects.Container {
+export class AwakenOrb extends Pickup {
   constructor(scene) {
-    super(scene, -9999, -9999);
-    scene.add.existing(this);
-    this.glow = scene.add.circle(0, 0, 16, COLORS.GOLD, 0.45);
-    this.coin = scene.add
-      .circle(0, 0, 8, COLORS.GOLD)
-      .setStrokeStyle(2, 0x6a4a10, 1);
-    this.add([this.glow, this.coin]);
-    scene.physics.add.existing(this);
-    this.body.setCircle(8, -8, -8);
-    this.setActive(false).setVisible(false);
-    this.body.enable = false;
-    this.magnetSpeed = 300;
-  }
-  spawn(x, y) {
-    this.setPosition(x, y);
-    this.setActive(true).setVisible(true);
-    this.body.enable = true;
-    this.body.setVelocity(0, 0);
-  }
-  pickup() {
-    this.setActive(false).setVisible(false);
-    this.body.enable = false;
-  }
-  update(time, dt, player) {
-    if (!this.active) return;
-    const s = 1 + Math.sin(time / 250) * 0.2;
-    this.glow.setScale(s);
-    if (!player?.active) return;
-    const dx = player.x - this.x,
-      dy = player.y - this.y;
-    const d = Math.hypot(dx, dy);
-    if (d < player.pickupRadius * 5) {
-      const sp =
-        this.magnetSpeed *
-        (1 - Math.min(1, d / (player.pickupRadius * 5)) * 0.4);
-      this.body.setVelocity((dx / (d || 1)) * sp, (dy / (d || 1)) * sp);
-    } else {
-      this.body.setVelocity(0, 0);
-    }
+    super(scene, "px_awaken", { anim: "awaken_spark", magnet: 320, glow: 0xffe58f, glowScale: 0.7 });
   }
 }

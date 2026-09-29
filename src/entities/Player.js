@@ -17,9 +17,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     // Sombra "blob" no chão (segue em update)
     this.shadow = scene.add
-      .ellipse(x, y, 42, 13, 0x000000, 0.3)
-      .setScale(this.displayWidth / 48)
+      .image(x, y, "px_shadow")
+      .setScale((GAME.PIXEL_SCALE * this.displayWidth) / 48)
       .setDepth(4);
+    // Luz suave sob o herói — destaca o Guardião no chão escuro da floresta
+    this.light = scene.add
+      .image(x, y, "fx_glow")
+      .setScale(2.6, 1.6)
+      .setTint(0xfff2c0)
+      .setAlpha(0.13)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(5);
 
     // Stats
     this.maxHp     = PLAYER.HP_BASE;
@@ -57,6 +65,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this._regenAcc = 0;
     this.critChance = 0.08;   // 8% base
     this.critMult = 2.0;      // 2x dano
+    this.dmgTakenMult = 1;    // Casca de Carvalho (armadura %)
+    this.luck = 0;            // Trevo da Sorte (+% drops)
 
     // Multiplicadores de bênçãos (setados via BLESSINGS.apply)
     this._xpMult = 1;
@@ -86,7 +96,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   takeDamage(dmg) {
     const now = this.scene.time.now;
     if (now < this.invulnUntil) return false;
-    this.hp = Math.max(0, this.hp - dmg);
+    this.hp = Math.max(0, this.hp - dmg * this.dmgTakenMult);
     this.invulnUntil = now + PLAYER.INVULN_MS;
     this._hitFx(now);
     return true;
@@ -227,6 +237,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     // Depth-sort por Y (offset +10000 garante sempre acima do floor deco)
     this.setDepth(this.y + 10000);
     this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46);
+    this.light.setPosition(this.x, this.y + this.displayHeight * 0.3);
   }
 
   // Multiplicador de cooldown final (usado por Weapon.cooldown)

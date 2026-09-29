@@ -212,100 +212,109 @@ export const MAX_WEAPON_LEVEL = 5;
 const r = (min, max) => Math.floor(min + Math.random() * (max - min + 1));
 const rf = (min, max) => +(min + Math.random() * (max - min)).toFixed(2);
 
+// label: nome curto (título da carta) · desc: o que faz, em linguagem de jogador.
 export const PASSIVES = [
   {
     id: "hp",
+    label: "Seiva Vital",
+    desc: "Vida máxima maior — o bônus já chega curado.",
     roll: () => {
       const v = r(10, 25);
       return {
-        name: `+${v}% HP Máximo`,
+        name: `+${v}% Vida máxima`,
         apply: (p) => {
-          const gain = p.maxHp * (v / 100); // HP máximo ganho
+          const gain = p.maxHp * (v / 100);
           p.maxHp += gain;
-          p.hp = Math.min(p.maxHp, p.hp + gain); // o bônus já chega PREENCHIDO
+          p.hp = Math.min(p.maxHp, p.hp + gain);
         },
       };
     },
   },
   {
     id: "speed",
+    label: "Passo do Vento",
+    desc: "Corra mais rápido que a horda.",
     roll: () => {
-      const v = r(8, 18);
-      return {
-        name: `+${v}% Velocidade`,
-        apply: (p) => {
-          p.speed *= 1 + v / 100;
-        },
-      };
+      const v = r(8, 16);
+      return { name: `+${v}% Velocidade`, apply: (p) => (p.speed *= 1 + v / 100) };
     },
   },
   {
     id: "cooldown",
+    label: "Ritmo Ancestral",
+    desc: "Todas as armas disparam mais vezes.",
     roll: () => {
-      const v = r(8, 20);
-      return {
-        name: `-${v}% Recarga`,
-        apply: (p) => {
-          p.cdMult *= 1 - v / 100;
-        },
-      };
+      const v = r(8, 16);
+      return { name: `−${v}% Recarga`, apply: (p) => (p.cdMult *= 1 - v / 100) };
     },
   },
   {
     id: "area",
+    label: "Raízes Largas",
+    desc: "Auras, nuvens, reações e bumerangues alcançam mais longe.",
     roll: () => {
-      const v = r(10, 30);
-      return {
-        name: `+${v}% Área`,
-        apply: (p) => {
-          p.areaMult *= 1 + v / 100;
-        },
-      };
+      const v = r(10, 25);
+      return { name: `+${v}% Área`, apply: (p) => (p.areaMult *= 1 + v / 100) };
     },
   },
   {
     id: "proj",
-    roll: () => ({
-      name: "+1 Projétil (Cajado/Raio)",
-      apply: (p) => {
-        p.extraProj += 1;
-      },
-    }),
+    label: "Galhos Extras",
+    desc: "+1 projétil/alvo no Cajado e no Raio.",
+    roll: () => ({ name: "+1 Projétil", apply: (p) => (p.extraProj += 1) }),
   },
   {
     id: "lifesteal",
+    label: "Sede da Mata",
+    desc: "Parte do dano causado vira cura.",
     roll: () => {
-      const v = r(3, 8);
-      return {
-        name: `+${v}% Roubo de Vida`,
-        apply: (p) => {
-          p.lifestealPct += v / 100;
-        },
-      };
+      const v = r(3, 7);
+      return { name: `+${v}% Roubo de vida`, apply: (p) => (p.lifestealPct += v / 100) };
     },
   },
   {
     id: "regen",
+    label: "Musgo Curativo",
+    desc: "Regenera vida continuamente.",
     roll: () => {
-      const v = rf(0.5, 2.0);
-      return {
-        name: `+${v} HP/s`,
-        apply: (p) => {
-          p.regenPerSec += v;
-        },
-      };
+      const v = rf(0.5, 1.8);
+      return { name: `+${v} Vida/s`, apply: (p) => (p.regenPerSec += v) };
     },
   },
   {
     id: "crit",
+    label: "Olho de Falcão",
+    desc: "Críticos causam dano dobrado e empurram.",
     roll: () => {
-      const v = r(5, 12);
-      return {
-        name: `+${v}% Chance Crítica`,
-        apply: (p) => {
-          p.critChance += v / 100;
-        },
-      };
+      const v = r(5, 10);
+      return { name: `+${v}% Crítico`, apply: (p) => (p.critChance += v / 100) };
+    },
+  },
+  {
+    id: "magnet",
+    label: "Ímã de Seiva",
+    desc: "Puxa gemas e moedas de mais longe.",
+    roll: () => {
+      const v = r(30, 50);
+      return { name: `+${v}% Coleta`, apply: (p) => (p.pickupRadius *= 1 + v / 100) };
+    },
+  },
+  {
+    id: "armor",
+    label: "Casca de Carvalho",
+    desc: "Reduz todo dano recebido (máx. 50%).",
+    roll: () => {
+      const v = r(6, 10);
+      return { name: `−${v}% Dano recebido`, apply: (p) => (p.dmgTakenMult = Math.max(0.5, p.dmgTakenMult * (1 - v / 100))) };
+    },
+  },
+  {
+    id: "luck",
+    label: "Trevo da Sorte",
+    desc: "Mais moedas, corações e orbes caindo.",
+    roll: () => {
+      const v = r(15, 25);
+      return { name: `+${v}% Sorte`, apply: (p) => (p.luck += v / 100) };
     },
   },
 ];

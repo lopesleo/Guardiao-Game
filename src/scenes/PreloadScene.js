@@ -1,5 +1,9 @@
 // Preload: carrega todos os assets com barra de progresso.
 import { COLORS, GAME } from "../config.js";
+import { registerEnvironment } from "../art/Environment.js";
+import { registerIcons } from "../art/Icons.js";
+import { registerSprites } from "../art/Sprites.js";
+import { text, Bar, PAL, vw, vh } from "../ui/Theme.js";
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -65,33 +69,23 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   create() {
+    // Arte procedural (cenário, ícones, pickups, FX) — gerada 1x, fica no cache
+    // global de texturas; as chaves do cenário vão pro registry.
+    this.registry.set("envKeys", registerEnvironment(this));
+    registerIcons(this);
+    registerSprites(this);
     this.scene.start("MenuScene");
   }
 
   _drawBar() {
-    const { width, height } = this.scale.gameSize;
-    const cx = width / 2,
-      cy = height / 2;
-
-    this.add
-      .text(cx, cy - 60, "Carregando...", {
-        fontFamily: "Press Start 2P, monospace",
-        fontSize: "18px",
-        color: "#e8f0e6",
-      })
-      .setOrigin(0.5);
-
-    const barW = 400,
-      barH = 16;
-    const bg = this.add
-      .rectangle(cx, cy, barW, barH, 0x222222)
-      .setStrokeStyle(2, COLORS.GOLD);
-    const fill = this.add
-      .rectangle(cx - barW / 2 + 2, cy, 0, barH - 4, COLORS.GOLD)
-      .setOrigin(0, 0.5);
-
-    this.load.on("progress", (v) => {
-      fill.width = (barW - 4) * v;
-    });
+    const cx = vw(this) / 2,
+      cy = vh(this) / 2;
+    text(this, cx, cy - 50, "GUARDIÃO DA FLORESTA", { size: 34, color: "#f2c14e", origin: 0.5 });
+    const label = text(this, cx, cy + 44, "Despertando a floresta…", { size: 16, color: "#9fb4a4", origin: 0.5 });
+    const barW = 420;
+    const bar = new Bar(this, cx - barW / 2, cy - 6, barW, 24, PAL.g5, { segments: 10 });
+    bar.set(0, true);
+    this.load.on("progress", (v) => bar.set(v, true));
+    this.load.on("complete", () => label.setText("Pronto!"));
   }
 }

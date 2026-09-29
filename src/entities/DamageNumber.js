@@ -2,20 +2,21 @@
 export class DamageNumber extends Phaser.GameObjects.Text {
   constructor(scene) {
     super(scene, -9999, -9999, '', {
-      fontFamily: 'Press Start 2P, monospace',
-      fontSize: '10px', color: '#ffffff',
+      resolution: 2,
+      fontFamily: '"Pixelify Sans", monospace', fontStyle: 'bold',
+      fontSize: '16px', color: '#ffffff',
       stroke: '#000000', strokeThickness: 3,
     });
     scene.add.existing(this);
-    this.setOrigin(0.5).setDepth(1500);
+    this.setOrigin(0.5).setDepth(59000);
     this.setActive(false).setVisible(false);
     this._tween = null;
   }
   show(x, y, value, color = '#ffffff', big = false) {
     this.setText(typeof value === 'string' ? value : String(Math.ceil(value)));
     this.setColor(color);
-    this.setFontSize(big ? 16 : 10);
-    this.setStroke('#000000', big ? 4 : 3);
+    this.setFontSize(big ? 24 : 16);
+    this.setStroke('#1a1420', big ? 5 : 4);
     this.setPosition(x + (Math.random() - 0.5) * 16, y - 10);
     this.setActive(true).setVisible(true);
     this.setAlpha(1).setScale(1);

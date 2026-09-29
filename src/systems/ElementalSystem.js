@@ -1,6 +1,8 @@
 // ★ DIFERENCIAL ★ — Status elementais e reações automáticas.
 // 3 status: fire, ice, bolt. Quando 2+ coexistem no mesmo inimigo, dispara reação.
 import { STATUS, REACTION, COLORS, PLAYER, ELEMENT } from "../config.js";
+import { text } from "../ui/Theme.js";
+import { hex } from "../art/Palette.js";
 
 // Reações por COEXISTÊNCIA de status. (gelo+bolt NÃO está aqui: CRISTAL agora é
 // "inimigo CONGELADO leva raio → estilhaça", tratado em applyStatus.)
@@ -99,23 +101,7 @@ export class ElementalSystem {
     }
 
     // Texto flutuante BIG (D21)
-    const txt = scene.add
-      .text(enemy.x, enemy.y - 30, def.label, {
-        fontFamily: "Press Start 2P, monospace",
-        fontSize: "18px",
-        color: "#ffffff",
-        stroke: "#000000",
-        strokeThickness: 4,
-      })
-      .setOrigin(0.5)
-      .setDepth(2000);
-    scene.tweens.add({
-      targets: txt,
-      y: enemy.y - 80,
-      alpha: 0,
-      duration: 900,
-      onComplete: () => txt.destroy(),
-    });
+    this._label(enemy.x, enemy.y, def.label, def.color);
 
     // Screenshake leve
     scene.cameras.main.shake(120, 0.005);
@@ -142,16 +128,7 @@ export class ElementalSystem {
       cy = enemy.y;
     const radius = def.radius * areaMult;
     const radiusSq = radius * radius;
-    const cloud = scene.add
-      .circle(cx, cy, radius, def.color, 0.35)
-      .setDepth(50);
-    scene.tweens.add({
-      targets: cloud,
-      alpha: 0,
-      scale: 1.2,
-      duration: def.duration,
-      onComplete: () => cloud.destroy(),
-    });
+    this._cloudFx(cx, cy, radius, def.color, def.duration);
 
     const tickDmg = def.dmgPerTick;
     const applyDmg = () => {
@@ -179,6 +156,58 @@ export class ElementalSystem {
       repeat: Math.floor(def.duration / def.tickMs),
       callback: applyDmg,
     });
+  }
+
+  // Nuvem em pixel-art: vários "puffs" que incham, sobem e somem + luz quente
+  _cloudFx(cx, cy, radius, color, duration) {
+    const scene = this.scene;
+    const glow = scene.add
+      .image(cx, cy, "fx_glow")
+      .setScale((radius * 2.4) / 64)
+      .setTint(color)
+      .setAlpha(0.35)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(50);
+    scene.tweens.add({ targets: glow, alpha: 0, duration, onComplete: () => glow.destroy() });
+    const n = Math.min(9, 4 + Math.round(radius / 20));
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const d = Math.random() * radius * 0.7;
+      const px = cx + Math.cos(a) * d,
+        py = cy + Math.sin(a) * d;
+      const s0 = (radius / 7) * (0.35 + Math.random() * 0.3);
+      const puff = scene.add
+        .image(px, py, "px_puff")
+        .setScale(s0 * 0.5)
+        .setTint(i % 2 ? 0xffffff : color)
+        .setAlpha(0.55)
+        .setDepth(py + 10002);
+      scene.tweens.add({
+        targets: puff,
+        scale: s0,
+        y: py - 18 - Math.random() * 16,
+        alpha: 0,
+        delay: Math.random() * 180,
+        duration: duration * (0.6 + Math.random() * 0.4),
+        ease: "Sine.easeOut",
+        onComplete: () => puff.destroy(),
+      });
+    }
+  }
+
+  // Rótulo de reação ("VAPOR!") — pixel font, cor da reação, "pop" de escala
+  _label(x, y, str, color) {
+    const scene = this.scene;
+    const t = text(scene, x, y - 26, str, {
+      size: 22,
+      color: hex(color),
+      origin: 0.5,
+      stroke: true,
+      strokeW: 5,
+    }).setDepth(60000);
+    t.setScale(0.4);
+    scene.tweens.add({ targets: t, scale: 1, duration: 140, ease: "Back.easeOut" });
+    scene.tweens.add({ targets: t, y: y - 70, alpha: 0, delay: 350, duration: 600, onComplete: () => t.destroy() });
   }
 
   // CRISTAL = o inimigo CONGELADO leva raio e ESTILHAÇA: lascas curtas em todas as
@@ -219,8 +248,8 @@ export class ElementalSystem {
       const ex = cx + Math.cos(ang) * radius;
       const ey = cy + Math.sin(ang) * radius;
       const shard = scene.add
-        .polygon(cx, cy, [10, 0, 0, -4, -6, 0, 0, 4], 0xeaf6ff, 1)
-        .setStrokeStyle(1, def.color, 1)
+        .image(cx, cy, "px_shard")
+        .setScale(3)
         .setDepth(61)
         .setRotation(ang);
       scene.tweens.add({
@@ -245,16 +274,7 @@ export class ElementalSystem {
     scene.sound.play("sfx_react_crystal", { volume: 0.55 }); // estilhaço de gelo
     scene.cameras.main.shake(90, 0.004);
     scene.player?.addAwakenMeter(PLAYER.AWAKEN_GAIN_REACTION);
-    const txt = scene.add
-      .text(cx, cy - 30, def.label, {
-        fontFamily: "Press Start 2P, monospace",
-        fontSize: "18px", color: "#ffffff", stroke: "#000000", strokeThickness: 4,
-      })
-      .setOrigin(0.5).setDepth(2000);
-    scene.tweens.add({
-      targets: txt, y: cy - 80, alpha: 0, duration: 900,
-      onComplete: () => txt.destroy(),
-    });
+    this._label(cx, cy, def.label, def.color);
   }
 
   _overload(enemy, def, areaMult = 1) {
@@ -265,13 +285,16 @@ export class ElementalSystem {
     const jumpMaxSq = reach * reach;
     // Flash no ponto de origem — marca a Sobrecarga como "a recompensa em área"
     const flash = scene.add
-      .circle(enemy.x, enemy.y, 10, def.color, 0.8)
+      .image(enemy.x, enemy.y, "fx_glow")
+      .setScale(0.5)
+      .setTint(def.color)
+      .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(61);
     scene.tweens.add({
       targets: flash,
-      radius: 34,
+      scale: 2.2,
       alpha: 0,
-      duration: 260,
+      duration: 300,
       onComplete: () => flash.destroy(),
     });
     for (let i = 0; i < def.jumps; i++) {
@@ -299,20 +322,28 @@ export class ElementalSystem {
 
   _drawBolt(x1, y1, x2, y2, color, width = 3) {
     const scene = this.scene;
-    const g = scene.add.graphics().setDepth(60);
-    g.lineStyle(width, color, 1);
-    // zig-zag
+    const g = scene.add.graphics().setDepth(60).setBlendMode(Phaser.BlendModes.ADD);
+    // zig-zag (mesmos pontos pra halo e núcleo)
     const segs = 6;
-    g.beginPath();
-    g.moveTo(x1, y1);
+    const pts = [[x1, y1]];
     for (let i = 1; i < segs; i++) {
       const t = i / segs;
-      const x = x1 + (x2 - x1) * t + (Math.random() - 0.5) * 14;
-      const y = y1 + (y2 - y1) * t + (Math.random() - 0.5) * 14;
-      g.lineTo(x, y);
+      pts.push([x1 + (x2 - x1) * t + (Math.random() - 0.5) * 16, y1 + (y2 - y1) * t + (Math.random() - 0.5) * 16]);
     }
-    g.lineTo(x2, y2);
-    g.strokePath();
+    pts.push([x2, y2]);
+    const stroke = (w, c, a) => {
+      g.lineStyle(w, c, a);
+      g.beginPath();
+      g.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
+      g.strokePath();
+    };
+    stroke(width + 8, color, 0.25); // halo
+    stroke(width, color, 1);
+    stroke(Math.max(1, width - 2), 0xffffff, 0.9); // núcleo quente
+    // Faísca no ponto de impacto
+    const sp = scene.add.image(x2, y2, "px_spark").setScale(3).setTint(color).setDepth(61);
+    scene.tweens.add({ targets: sp, scale: 5, alpha: 0, duration: 200, onComplete: () => sp.destroy() });
     scene.tweens.add({
       targets: g,
       alpha: 0,

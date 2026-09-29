@@ -1,16 +1,21 @@
-// Boot: configurações globais antes do preload.
+// Boot: garante a fonte pixel carregada ANTES de qualquer texto ser desenhado
+// (texto do Phaser é rasterizado uma vez — se a fonte chegar depois, fica a
+// fonte de fallback pra sempre naquele objeto).
 import { COLORS } from '../config.js';
 
 export class BootScene extends Phaser.Scene {
   constructor() { super('BootScene'); }
 
-  preload() {
-    // Carregamos uma fonte de fallback aqui para a tela de preload ter texto bonito.
-    // (A WebFont 'Press Start 2P' já vem do <link> em index.html.)
-  }
-
   create() {
     this.cameras.main.setBackgroundColor(COLORS.BG);
-    this.scene.start('PreloadScene');
+    const go = () => this.scene.start('PreloadScene');
+    try {
+      Promise.all([
+        document.fonts.load('bold 16px "Pixelify Sans"'),
+        document.fonts.load('16px "Pixelify Sans"'),
+      ]).then(go, go);
+    } catch {
+      go();
+    }
   }
 }

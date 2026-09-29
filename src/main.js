@@ -19,8 +19,10 @@ const config = {
   backgroundColor: COLORS.BG,
   pixelArt: true,
   roundPixels: true,
+  // EXPAND: altura lógica fixa (720) e largura acompanha a proporção da tela
+  // (celulares 19.5:9 ganham campo de visão lateral em vez de tarjas pretas).
   scale: {
-    mode: Phaser.Scale.FIT,
+    mode: Phaser.Scale.EXPAND,
     autoCenter: Phaser.Scale.CENTER_BOTH,
     width: GAME.WIDTH,
     height: GAME.HEIGHT,
@@ -45,6 +47,6 @@ const config = {
 };
 
 window.addEventListener('load', () => {
-  // eslint-disable-next-line no-new
-  new Phaser.Game(config);
+  // Expõe a instância (útil pra testes automatizados e depuração no console)
+  window.game = new Phaser.Game(config);
 });
