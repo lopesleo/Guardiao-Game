@@ -18,6 +18,8 @@ export class ForestWorld {
     this.keys = scene.registry.get("envKeys");
     this.r = rng(opts.seed ?? (Math.random() * 1e9) | 0);
     this.trees = [];
+    this.statics = []; // toda decoração fixa — culling por câmera em update()
+    this._cullAt = 0;
     this._buildGround();
     this._scatter();
     this._border();
@@ -51,16 +53,18 @@ export class ForestWorld {
       .setScale(S)
       .setDepth(depth);
     if (flip ?? this.r() < 0.5) im.setFlipX(true);
+    this.statics.push(im);
     return im;
   }
 
   // Sombra pixelada no pé de objetos altos
   _shadow(x, y, w) {
-    this.scene.add
+    const sh = this.scene.add
       .image(Math.round(x), Math.round(y), "px_shadow")
       .setScale((w / 14) * 0.9, S)
       .setAlpha(0.8)
       .setDepth(D_PATCH + 5);
+    this.statics.push(sh);
   }
 
   _scatter() {
@@ -121,10 +125,10 @@ export class ForestWorld {
     const R = this.R;
     const k = this.keys;
     const all = [...k.trees, ...k.pines, ...k.pines];
-    const step = 64;
+    const step = 74;
     for (let t = -R - 60; t < R + 60; t += step) {
-      for (let row = 0; row < 3; row++) {
-        const inset = 30 + row * 70 + this.r() * 30;
+      for (let row = 0; row < 2; row++) {
+        const inset = 30 + row * 80 + this.r() * 30;
         const j = () => t + (this.r() - 0.5) * 40;
         this._tree(j(), -R + inset, all); // topo
         this._tree(j(), R - inset + 40, all); // base
@@ -194,14 +198,34 @@ export class ForestWorld {
     p.y = p.kind === "leaf" && !anywhere ? cam.scrollY - 20 : cam.scrollY + this.r() * cam.height;
   }
 
+  // Esconde decoração fora da câmera (com margem) — o Phaser não faz culling
+  // de imagens soltas; sem isto ~2000 objetos iriam pro renderer todo frame.
+  _cull() {
+    const v = this.scene.cameras.main.worldView;
+    const M = 260;
+    const x0 = v.x - M,
+      x1 = v.right + M,
+      y0 = v.y - M,
+      y1 = v.bottom + M + 200; // árvores têm origem no pé: copa fica acima
+    for (const o of this.statics) {
+      const on = o.x > x0 && o.x < x1 && o.y > y0 && o.y < y1;
+      if (o.visible !== on) o.setVisible(on);
+    }
+  }
+
   update(time, dt, player) {
     const cam = this.scene.cameras.main;
+    if (time >= this._cullAt) {
+      this._cullAt = time + 150;
+      this._cull();
+    }
     this.ground.tilePositionX = cam.scrollX / S;
     this.ground.tilePositionY = cam.scrollY / S;
 
     // Árvores na frente do player ficam translúcidas (não esconder o herói)
     if (player) {
       for (const t of this.trees) {
+        if (!t.visible) continue;
         const dx = Math.abs(t.x - player.x);
         if (dx > t.displayWidth * 0.5) {
           if (t.alpha < 1) t.setAlpha(1);
