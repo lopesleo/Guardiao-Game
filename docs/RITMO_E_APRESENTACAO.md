@@ -20,9 +20,12 @@
    Podridão**: construções em ruínas, cobertas de cipós corrompidos. Jogar
    partidas "cura" a Clareira e **revela** uma construção de cada vez. O
    desbloqueio vira história e curiosidade ("o que tem embaixo daquele cipó?").
-5. **Um personagem apresenta, em uma frase.** Cada sistema é introduzido por um
-   espírito com **uma fala curta + uma ação guiada** (uma mão apontando). Nunca
-   um texto longo.
+5. **Um único guia apresenta tudo, em uma frase.** A **Anciã da Fogueira** (sempre
+   a mesma personagem) introduz cada sistema com **uma fala curta + uma ação
+   guiada** (uma mão apontando). Nunca um texto longo.
+   > Não confundir com os **espíritos resgatados**: esses são **moradores** que o
+   > jogador conquista nas partidas (libertando-os de um círculo de corrompidos) —
+   > depois pedem oferendas e trabalham na Clareira. São conteúdo, não tutorial.
 6. **Profundidade só para quem pedir.** Regras detalhadas moram no **Guia** e nos
    **álbuns** (e num toque longo sobre o item) — quem quer entender a fundo acha;
    quem só quer jogar não é interrompido.
@@ -40,16 +43,16 @@
 | Gatilho (ação do jogador) | O que aparece | Como é apresentado |
 |---|---|---|
 | **1ª abertura** | Partida direto (só a floresta) | Dica de 1 linha: "Arraste para andar" (já existe) |
-| Fim da 1ª partida | **A Clareira em ruínas** com a **Fogueira** acesa | Espírito da Fogueira: *"A Podridão tomou nosso lar. Cada partida devolve um pouco da floresta."* → botão JOGAR |
+| Fim da 1ª partida | **A Clareira em ruínas** com a **Fogueira** acesa | Anciã da Fogueira: *"A Podridão tomou nosso lar. Cada partida devolve um pouco da floresta."* → botão JOGAR |
 | Após a 2ª partida | **Santuário** (Bênçãos) | Moedas para a 1ª Bênção barata → mão aponta → compra → volta a jogar |
 | Após a 3ª partida | **Horta**: 1 canteiro + 1 semente | Planta **cresce em 30 s** (tutorial) → colher → "plante de novo" (agora 5 min) |
 | Colheu a 1ª vez | **Cozinha** | 1 receita pronta (Cenoura Assada = +vida) → "coma antes da próxima partida" |
 | Usou a 1ª refeição | **Lago** | 1º peixe **garantido e fácil**; depois "o lago descansa — volte mais tarde" |
-| ~5ª partida | **1º Espírito Selado** (garantido na partida) → **Oferendas** | O espírito chega na Clareira e pede 1 item simples |
+| ~5ª partida | Na floresta, o 1º **espírito preso** num círculo de corrompidos (garantido) → ao libertá-lo, ele vira **morador** da Clareira → **Oferendas** | A Anciã apresenta o novo morador, que pede 1 item simples |
 | Cumpriu a 1ª oferenda | **João-de-Barro** + 1ª **obra** (5 min) | "Posso aumentar a horta — já volto" |
 | 1ª colheita guardada + 1ª noite na Clareira | **Saci** rouba 1 cenoura, rindo → chega o **Lobo-guará filhote** | Problema e solução na mesma cena |
 | Aconteceu sozinho (clima) | 1ª **mutação** | Planta brilha → "Mutação! Vale 3×" → álbum se abre |
-| Estoque cheio pela 1ª vez | **Feira** | Espírito comerciante passa pela Clareira |
+| Estoque cheio pela 1ª vez | **Feira** | A Anciã sugere vender o excedente |
 | Depois, com o tempo | Igarapé, Cachoeira, estações, NPCs offline, construções nv. 3+ | Por marcos de progresso e como **atualizações de conteúdo** |
 
 **Único freio:** no máximo **1 novidade por vez** — o próximo sistema só aparece
@@ -77,7 +80,7 @@ longa** disponíveis.
 Em vez de energia ou relógio visível, o próprio mundo explica a pausa:
 - **O lago descansa**: depois de alguns peixes, eles "se escondem" e voltam mais
   tarde (bolhas na água mostram quando voltaram).
-- **Os espíritos vão e voltam**: depois de uma oferenda, o espírito vai embora
+- **Os moradores vão e voltam**: depois de uma oferenda, o morador vai embora
   pela trilha e **volta no dia seguinte** com um pedido novo.
 - **O Saci aparece à noite**; o **clima** muda algumas vezes por dia.
 - Os timers existem (para quem quiser ver, com um toque), mas a tela mostra
