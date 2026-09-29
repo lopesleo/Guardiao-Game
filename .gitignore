@@ -10,3 +10,7 @@ _tmp/
 _FRAMES_*.png
 _preview.html
 _fonttest.html
+node_modules/
+www/
+android/app/build/
+android/.gradle/

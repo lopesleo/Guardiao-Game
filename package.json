@@ -1,0 +1,23 @@
+{
+  "name": "guardiao-da-floresta",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Guardião da Floresta — survivor-like de reações elementais (Phaser 3).",
+  "type": "module",
+  "scripts": {
+    "serve": "npx serve . -l 8000",
+    "build": "node tools/build-www.mjs",
+    "android:sync": "npm run build && npx cap sync android",
+    "android:open": "npx cap open android",
+    "icons": "npx @capacitor/assets generate --android --iconBackgroundColor '#10202a' --splashBackgroundColor '#070b14'"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/app": "^6.0.1",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/status-bar": "^6.0.1"
+  }
+}

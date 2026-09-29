@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#0a0e0a" />
+  <meta name="theme-color" content="#070b14" />
+  <meta name="description" content="Survivor-like de reações elementais: sobreviva à horda e desperte a floresta." />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <link rel="icon" type="image/png" href="./favicon.png" />
   <title>Guardião da Floresta: Despertar</title>
   <style>
@@ -42,5 +45,11 @@
   <script src="./vendor/phaser.min.js"></script>
   <script src="./vendor/nipplejs.min.js"></script>
   <script type="module" src="./src/main.js"></script>
+  <script>
+    // PWA offline (só na web; no app nativo os arquivos já estão no pacote)
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http") && !window.Capacitor) {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    }
+  </script>
 </body>
 </html>
