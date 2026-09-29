@@ -17,7 +17,7 @@
   pescar, cozinhar. É o hábito diário que o modelo com anúncios precisa.
 - **Preparação antes da partida** (escolher a refeição) cria decisão estratégica —
   como as refeições do *Monster Hunter*.
-- **Ajudantes trabalhando offline** é a fórmula de jogos "idle": sempre há algo esperando
+- **Algo acontecendo enquanto você está fora** (plantas crescendo, presentes dos bichos): sempre há algo esperando
   quando você volta.
 - Dá **alma** ao menu: hoje o menu é uma tela de botões; a Clareira vira um lugar.
 
@@ -45,11 +45,11 @@ Partida (7 min) ──► traz Moedas, Madeira Ancestral, Sementes, Iscas, Bicho
      │                                         ▼
 Refeição (buff 1 partida)          Clareira: construir, plantar, pescar, contratar
      ▲                                         │
-     └──── Cozinha ◄── Ingredientes ◄── Horta / Lago / Bichos (offline)
+     └──── Cozinha ◄── Ingredientes ◄── Horta / Lago (você) + presentes dos bichos
 ```
 
 **Sessão curta (1–2 min, sem partida):** colher, replantar, pescar 1–2 peixes,
-recolher o que os bichos juntaram. **Sessão longa:** isso + cozinhar + 1–3 partidas.
+pegar os presentinhos dos bichos e reabastecer a tigela. **Sessão longa:** isso + cozinhar + 1–3 partidas.
 
 ---
 
@@ -60,7 +60,7 @@ recolher o que os bichos juntaram. **Sessão longa:** isso + cozinhar + 1–3 pa
 - O jogador **toca nas construções** (no PC, clica ou anda até elas).
 - **Trilha da floresta** (saída do acampamento) = **JOGAR**.
 - Construções com algo pronto mostram um **ícone flutuante** (colheita pronta,
-  bicho com carga cheia, refeição cozida) — convida a tocar.
+  presente de bicho, refeição cozida) — convida a tocar.
 - A Clareira **cresce visualmente** com as melhorias (barracas, tochas, bandeiras,
   cerca, jardim) — progresso que se vê.
 
@@ -159,7 +159,7 @@ trabalhando (bater de martelo, pó); ao terminar, confete e um "Novo nível!".
   | Erva-do-trovão | 3 h | raio |
   | Raiz Ancestral (rara) | 4 h | receitas lendárias |
 - **Regar** (tocar) acelera 10%; **anúncio opcional** acelera 50% (1× por canteiro).
-- O **Quati** e o **Tatu-bola** colhem e replantam sozinhos.
+- O **Tatu-bola** e o **Quati** ajudam quando você planta e colhe (seção 8).
 
 ## 6. Lago e o minigame de pesca
 
@@ -184,7 +184,7 @@ trabalhando (bater de martelo, pó); ao terminar, confete e um "Novo nível!".
   | Enguia-trovão | raro | chuva/noite |
   | Carpa-luar | raro | noite, fim de semana |
   | **Guardião do Lago** | lendário | 1% à noite, com isca mágica |
-- A **Capivara** traz peixes comuns sozinha (bem mais devagar).
+- A **Capivara** e a **Arara** ajudam quando você pesca (seção 8).
 
 ## 7. Cozinha e refeições
 
@@ -203,45 +203,51 @@ trabalhando (bater de martelo, pó); ao terminar, confete e um "Novo nível!".
   | Torta de Cogumelo-luz | cogumelo-luz ×2 | +20% raio de coleta e de luz |
   | Ensopado do Trovão | enguia + erva-do-trovão | raio salta +1 inimigo |
   | **Banquete do Guardião** | Guardião do Lago + Raiz Ancestral | começa a partida com uma arma no nível 2 |
-- A **Preguiça** cozinha uma receita da fila enquanto você está fora (devagar, mas caprichado).
+- A **Preguiça** ao lado da panela deixa o prato mais forte (seção 8).
 
-## 8. Os Bichos da Clareira (ajudantes e pets)
+## 8. Os Bichos da Clareira (companheiros, não trabalhadores)
 
-> Decisão (Leonardo): em vez de espíritos trabalhando, **bichos fofos** da fauna
-> brasileira. Reforça a premissa — **o Guardião protege os animais** — e bichos
-> fofos têm apelo enorme no público casual.
+> Decisões (Leonardo): em vez de espíritos, **bichos fofos** da fauna brasileira —
+> o **Guardião protege os animais**. E os bichos **não fazem as atividades pelo
+> jogador**: pescar, plantar e cozinhar são a parte divertida, e continuam com ele.
+> Regra: **automatizar o tedioso, nunca o divertido** (no *Stardew* o regador
+> automático tira a parte chata; colher continua sendo do jogador).
 
 - **Como chegam:** nas partidas aparecem **bichos presos em armadilhas da
   Podridão** (um círculo de corrompidos em volta). Derrote o círculo → o bicho
   vai morar na Clareira. Os mais raros só aparecem em Perigos altos.
-- **Elenco (cada um com um trabalho):**
-  | Bicho | Trabalho na Clareira | Como companheiro na partida |
-  |---|---|---|
-  | **Capivara** | pescadora (calma, paciente) | +regeneração de vida |
-  | **Tatu-bola** | ara a terra e planta | às vezes cava um item do chão |
-  | **Quati** | colhe e junta (meio travesso) | pega moedas próximas |
-  | **Tucano** | leva o excedente à Feira | avisa onde estão os baús |
-  | **Bicho-preguiça** | cozinha (lento, mas tempero perfeito) | +duração do Despertar |
-  | **Lobo-guará** | guarda a horta do Saci | morde inimigos que encostam |
-  | **João-de-barro** | construtor das obras (seção 4.1) | — |
-  | **Mico-leão-dourado** *(raro)* | traz sorte (+chance de mutação) | +sorte nos drops |
-  | **Arara-azul** *(raro)* | explora e volta com sementes raras | +raio de coleta |
-- **Carinho e comida favorita:** cada bicho tem um prato preferido. Alimentar e
-  fazer carinho sobe o **nível de afeição** (corações) → trabalha melhor, ganha
-  **acessório** (chapeuzinho, lenço) e desbloqueia a habilidade de companheiro.
+
+### 8.1 Ajudam quando VOCÊ faz a atividade
+| Bicho | Ajuda na Clareira (quando você faz) | Como companheiro na partida |
+|---|---|---|
+| **Capivara** | sentada na beira do lago: **zona verde da pesca maior** | +regeneração de vida |
+| **Tatu-bola** | afofa a terra: plantas crescem **10% mais rápido** | às vezes cava um item do chão |
+| **Quati** | fareja: mais chance de **semente rara** ao colher | pega moedas próximas |
+| **Tucano** | canta na Feira: **preço melhor** ao vender | avisa onde estão os baús |
+| **Bicho-preguiça** | ao lado da panela: **prato mais forte** | +duração do Despertar |
+| **Mico-leão-dourado** *(raro)* | traz sorte: +chance de **mutação** | +sorte nos drops |
+| **Arara-azul** *(raro)* | avista cardumes: mais chance de **peixe raro** | +raio de coleta |
+
+### 8.2 Presentinhos (o "algo esperando quando você volta")
+Modelo do *Neko Atsume*: o jogador põe a **comida favorita** do bicho na **tigela**.
+Enquanto está fora, os bichos aparecem, comem e **deixam presentes** — sementes
+raras, iscas, moedas, madeira, às vezes um acessório. Quando a tigela esvazia,
+eles param de vir → o jogador volta para encher. Mesmo efeito de retenção do
+"trabalho offline", **sem tirar a diversão das atividades**. Comida mais caprichada
+(melhor qualidade) = presentes melhores.
+
+### 8.3 Afeição e companheiro
+- **Carinho e comida favorita** sobem os **corações** → ajuda mais forte,
+  **acessórios** (chapeuzinho, lenço) e a habilidade de companheiro.
 - **Companheiro na partida:** o jogador leva **1 bicho** para a floresta, que o
-  segue e dá uma habilidade pequena (tabela acima). Liga a Clareira direto à
-  ação — e é o tipo de coisa que o jogador adora mostrar.
-- **Bem mais lentos que o jogador** — a regra que você propôs:
-  | Tarefa | Jogador (ativo) | Bicho (offline) |
-  |---|---|---|
-  | Pescar | ~1 peixe a cada 20 s | 1 peixe comum a cada 30 min (capivara) |
-  | Colher | instantâneo ao tocar | colhe/replanta sozinho quando pronto (quati + tatu) |
-  | Cozinhar | instantâneo | 1 refeição a cada 2 h (preguiça, da fila) |
-- **Limite de armazenamento (8–12 h)**: quando enche, o bicho "tira uma soneca" →
-  o jogador volta para esvaziar (prática padrão de jogos idle).
-- **Toca dos Bichos** (construção): mais vagas, bichos mais rápidos, mais
-  armazenamento.
+  segue e dá uma habilidade pequena (tabela 8.1). Liga a Clareira direto à ação —
+  e é o tipo de coisa que o jogador adora mostrar.
+
+### 8.4 Exceções automáticas (não são atividades divertidas)
+- **João-de-barro** constrói as obras (seção 4.1).
+- **Lobo-guará** guarda a horta do Saci (precisa ser alimentado).
+
+- **Toca dos Bichos** (construção): mais bichos, tigela maior, presentes melhores.
 - **Alternativa futura — povoadores:** quando regiões da floresta forem curadas,
   **famílias** podem voltar a morar perto da Clareira (vila que cresce), como
   decoração viva e fonte de pedidos. Fica para uma atualização, se fizer sentido.
@@ -250,7 +256,7 @@ trabalhando (bater de martelo, pó); ao terminar, confete e um "Novo nível!".
 
 ## 9. Anúncios opcionais (encaixes naturais, nunca obrigatórios)
 
-- Dobrar a colheita/pescaria de um bicho.
+- Dobrar os presentinhos dos bichos.
 - Acelerar 50% um canteiro (1× por canteiro).
 - Isca mágica diária.
 - Árvore Sagrada: dobrar a coleta.
@@ -267,7 +273,7 @@ A compra **"Remover anúncios"** concede tudo isso sem assistir.
 | **F1 — Clareira base** | Cena do acampamento como menu; Fogueira (Jogar), Santuário (Bênçãos), Forja (Arsenal), Mural; construções com níveis, **obras com tempo + 1º João-de-Barro**, partidas adiantando obras, Madeira Ancestral caindo nas partidas | M–G |
 | **F2 — Comida** | Horta (tempo real, 3–6 canteiros, 5 plantas) + Cozinha (8 receitas) + sistema de buff de 1 partida | M |
 | **F3 — Pesca** | Lago + minigame de um polegar + 7 peixes + varas + horário real | M |
-| **F4 — Bichos** | Bichos presos nas partidas + Toca dos Bichos + afeição + companheiro na partida + produção offline com limite + notificações | M–G |
+| **F4 — Bichos** | Bichos presos nas partidas + Toca dos Bichos + ajuda nas atividades + tigela e presentinhos + afeição + companheiro na partida | M–G |
 | **F5 — Vida** | Torre de Vigia liberando personagens, decoração, cosméticos, eventos sazonais na Clareira | contínuo |
 
 Sugestão: **F1 e F2 antes do lançamento** (já transformam o menu e criam o hábito
@@ -289,7 +295,7 @@ jogador voltar ("chegou a pescaria!").
 
 - [Taxonomy of Fishing Mini-games — Davide Aversa](https://www.davideaversa.it/blog/game-design-taxonomy-fishing-mini-games/) · [Fishing — Stardew Valley Wiki](https://stardewvalleywiki.com/Fishing)
 - [MH Wilds Food System Explained — Icy Veins](https://www.icy-veins.com/monster-hunter-wilds/news/mh-wilds-food-system-explained-best-buffs-combos/) · [Monster Hunter Wilds' new cooking system — PC Gamer](https://www.pcgamer.com/games/action/monster-hunter-wilds-new-cooking-system-is-a-win-for-balance-but-theres-a-meowscular-chef-shaped-hole-in-my-heart/) · [I really dislike timed meal buff effects — ResetEra](https://www.resetera.com/threads/i-really-dislike-timed-meal-buff-effects.366287/)
-- [What Is an Idle Game? Clickers and Offline Progress](https://azfreegame.com/news/what-is-an-idle-game) · [Best Idle Games on Mobile — Udonis](https://www.blog.udonis.co/mobile-marketing/mobile-games/best-idle-games)
+- [Neko Atsume — Wikipedia](https://en.wikipedia.org/wiki/Neko_Atsume) · [Game Design Breakdown: Neko Atsume](https://alexiamandeville.medium.com/game-design-breakdown-the-simplicity-of-neko-atsume-a8616a937a47) · [What Is an Idle Game? Clickers and Offline Progress](https://azfreegame.com/news/what-is-an-idle-game) · [Best Idle Games on Mobile — Udonis](https://www.blog.udonis.co/mobile-marketing/mobile-games/best-idle-games)
 - [House Contractor — Hades Wiki](https://hades.fandom.com/wiki/House_Contractor)
 - [Builder's Hut — Clash of Clans Wiki](https://clashofclans.fandom.com/wiki/Builder's_Hut) · [Clash of Clans — Wikipedia](https://en.wikipedia.org/wiki/Clash_of_Clans)
 - [Holo House — HoloCure Wiki](https://holocure.wiki.gg/wiki/Holo_House) · [Fishing Pond — HoloCure Wiki](https://holocure.wiki.gg/wiki/Fishing_Pond)

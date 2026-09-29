@@ -25,7 +25,7 @@
    guiada** (uma mão apontando). Nunca um texto longo.
    > Não confundir com os **bichos resgatados**: esses são **moradores** que o
    > jogador conquista nas partidas (libertando-os de armadilhas da Podridão) —
-   > depois fazem pedidos, trabalham na Clareira e acompanham na partida. São
+   > depois fazem pedidos, ajudam nas atividades, deixam presentes e acompanham na partida. São
    > conteúdo, não tutorial.
 6. **Profundidade só para quem pedir.** Regras detalhadas moram no **Guia** e nos
    **álbuns** (e num toque longo sobre o item) — quem quer entender a fundo acha;
@@ -54,7 +54,7 @@
 | 1ª colheita guardada + 1ª noite na Clareira | **Saci** rouba 1 cenoura, rindo → chega o **Lobo-guará filhote** | Problema e solução na mesma cena |
 | Aconteceu sozinho (clima) | 1ª **mutação** | Planta brilha → "Mutação! Vale 3×" → álbum se abre |
 | Estoque cheio pela 1ª vez | **Feira** | A Anciã sugere vender o excedente |
-| Depois, com o tempo | Igarapé, Cachoeira, estações, bichos trabalhando offline, construções nv. 3+ | Por marcos de progresso e como **atualizações de conteúdo** |
+| Depois, com o tempo | Igarapé, Cachoeira, estações, tigela de presentes dos bichos, construções nv. 3+ | Por marcos de progresso e como **atualizações de conteúdo** |
 
 **Único freio:** no máximo **1 novidade por vez** — o próximo sistema só aparece
 depois que o jogador **usou** o anterior pelo menos uma vez. Não há espera por
@@ -88,7 +88,7 @@ Em vez de energia ou relógio visível, o próprio mundo explica a pausa:
   **sinais do mundo**, não números.
 
 ### 3.4 Limites que não castigam
-- **Armazenamento de 8–12 h** para bichos e colheita: dá para passar o dia fora
+- **Armazenamento de 8–12 h** para colheita e presentes: dá para passar o dia fora
   sem perder, mas não uma semana inteira (senão o jogador não volta).
 - **Nada morre**: descuidar só reduz a qualidade (a planta que murcha e se perde
   do Colheita Feliz frustrava).
@@ -98,7 +98,7 @@ Em vez de energia ou relógio visível, o próprio mundo explica a pausa:
 | Frequência | O que renova |
 |---|---|
 | A cada partida | adianta obras; traz sementes/iscas/madeira |
-| Algumas horas | colheitas, peixes do lago, produção dos bichos, clima |
+| Algumas horas | colheitas, peixes do lago, presentes dos bichos (enquanto a tigela tiver comida), clima |
 | Diário | pedidos dos bichos, missões, baú diário, "peixe do dia", visita do Saci |
 | Semanal | estação (Cheia/Vazante), Festival de Pesca, missão semanal |
 | Por atualização | pontos de pesca, plantas, receitas, bichos novos |
