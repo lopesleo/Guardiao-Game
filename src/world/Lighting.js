@@ -162,6 +162,7 @@ export class Lighting {
     for (const c of s.chests ?? []) if (!c.opened) this._light(c.x, c.y, 110, 0xf2c14e, 0.55);
     s.awakenOrbPool?.forEachActive((o) => this._light(o.x, o.y, 80, 0xffd070, 0.8));
     s.heartPool?.forEachActive((h) => this._light(h.x, h.y, 60, 0xff5060, 0.6));
+    s.lanterns?.lights((x, y, r, c, a) => this._light(x, y, r, c, a));
     // Brilho fraco da corrupção em cada inimigo: legibilidade no escuro
     s.enemyPool?.forEachActive((e) => {
       if (e.active) this._light(e.x, e.y - e.displayHeight * 0.15, e.miniBoss ? 150 : 58, e.miniBoss ? 0xf2c14e : 0xb0308a, e.miniBoss ? 0.6 : 0.4);

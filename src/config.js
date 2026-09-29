@@ -412,6 +412,30 @@ export const PASSIVES = [
   },
 ];
 
+// Lanternas de cogumelo: brotam fora da tela, iluminam e derrubam um item ao
+// serem tocadas. Pesos (w) = chance relativa de cada item.
+export const LANTERN = {
+  FIRST_MS: 25000, // primeira lanterna aos 25 s
+  SPAWN_MS: 14000, // depois, uma nova a cada 14 s
+  MAX: 4, // vivas ao mesmo tempo
+  MIN_DIST: 520, // nascem fora da tela…
+  MAX_DIST: 900, // …mas não longe demais
+  DESPAWN_DIST: 1700, // muito para trás = some (recicla)
+  TOUCH_R: 34,
+  LIGHT_R: 190,
+  ITEM_LIFETIME_MS: 40000,
+  ITEM_READY_MS: 650, // item recém-caído só pode ser pego depois de pousar
+  DROPS: [
+    { id: "fruit", w: 45 },
+    { id: "vacuum", w: 25 },
+    { id: "clock", w: 18 },
+    { id: "breath", w: 12 },
+  ],
+  FRUIT_HEAL_PCT: 0.3,
+  CLOCK_MS: 5000,
+  BREATH_TOUGH_DMG_PCT: 0.25, // elites/minichefes perdem 25% da vida
+};
+
 // Anúncios premiados (sempre opcionais). ENABLED = false: tudo desenvolvido,
 // mas nenhuma oferta aparece para o jogador. Para testar: ?ads=1 na URL.
 export const ADS = {

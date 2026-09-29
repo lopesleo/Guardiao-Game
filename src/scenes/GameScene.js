@@ -51,6 +51,7 @@ import { Settings } from "../systems/Settings.js";
 import { Analytics } from "../systems/Analytics.js";
 import { AdService } from "../systems/AdService.js";
 import { QualityWatchdog } from "../systems/QualityWatchdog.js";
+import { LanternSystem } from "../systems/LanternSystem.js";
 import { VirtualJoystick } from "../ui/VirtualJoystick.js";
 
 export class GameScene extends Phaser.Scene {
@@ -137,6 +138,7 @@ export class GameScene extends Phaser.Scene {
     AdService.newRun();
     Analytics.track("run_start", { character: this.character.id, difficulty: this.diff.id });
     this.runEvents = new RunEvents(this);
+    this.lanterns = new LanternSystem(this);
 
     // Baús — STARTING_COUNT espalhados aleatoriamente fora do spawn do player
     this.chests = [];
@@ -354,6 +356,7 @@ export class GameScene extends Phaser.Scene {
       this.spawnDirector.update(time, dt);
       this.runEvents.update();
     }
+    this.lanterns.update(time, this.elapsedMs, this.player);
     this._updateSpores(time, dt);
     this.elemental.tick(time);
     this.hud.update(time, dt);
@@ -404,7 +407,8 @@ export class GameScene extends Phaser.Scene {
         dy = e.y - this.player.y;
       if (
         dx * dx + dy * dy < e.contactRadius * e.contactRadius &&
-        time - e.lastTouchAt > e.contactCooldownMs
+        time - e.lastTouchAt > e.contactCooldownMs &&
+        !this.lanterns.timeStopped
       ) {
         e.lastTouchAt = time;
         if (!this._god) {
