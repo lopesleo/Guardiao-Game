@@ -53,7 +53,8 @@ export class Chest extends Phaser.GameObjects.Container {
     // Determina tipo
     const r = Math.random();
     let kind;
-    if (r < CHEST.GOLDEN_CHANCE)                                                   kind = 'golden';
+    if (this.forceKind) kind = this.forceKind;
+    else if (r < CHEST.GOLDEN_CHANCE)                                                   kind = 'golden';
     else if (r < CHEST.GOLDEN_CHANCE + CHEST.MIMIC_CHANCE)                         kind = 'mimic';
     else if (r < CHEST.GOLDEN_CHANCE + CHEST.MIMIC_CHANCE + CHEST.TRAP_CHANCE)     kind = 'trap';
     else                                                                           kind = 'normal';

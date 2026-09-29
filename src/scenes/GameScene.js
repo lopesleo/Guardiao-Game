@@ -17,6 +17,7 @@ import {
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
 import { SpawnDirector } from "../systems/SpawnDirector.js";
+import { RunEvents } from "../systems/RunEvents.js";
 import { ElementalSystem } from "../systems/ElementalSystem.js";
 import { UpgradeSystem } from "../systems/UpgradeSystem.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
@@ -121,6 +122,7 @@ export class GameScene extends Phaser.Scene {
 
     // Spawner
     this.spawnDirector = new SpawnDirector(this, this.enemyPool, this.player);
+    this.runEvents = new RunEvents(this);
 
     // Baús — STARTING_COUNT espalhados aleatoriamente fora do spawn do player
     this.chests = [];
@@ -325,7 +327,11 @@ export class GameScene extends Phaser.Scene {
 
     this.inputMgr.update();
     this.player.update(time, dt, this.inputMgr);
-    if (!this.boss) this.spawnDirector.update(time, dt);
+    if (!this.boss) {
+      this.spawnDirector.update(time, dt);
+      this.runEvents.update();
+    }
+    this._updateSpores(time, dt);
     this.elemental.tick(time);
     this.hud.update(time, dt);
     this.world.update(time, dt, this.player);
@@ -663,6 +669,10 @@ export class GameScene extends Phaser.Scene {
       const pos = this._randomChestPos();
       this.chests.push(new Chest(this, pos.x, pos.y));
     }
+    // Cogumelo: vira nuvem de esporos (dano no player que ficar dentro)
+    if (enemy._kind === "shroom") this._sporeCloud(enemy.x, enemy.y, enemy.dmg * 0.7);
+    // Mini-chefe: baú dourado garantido + gema grande + moedas
+    if (enemy.miniBoss) this._miniBossReward(enemy);
     this.sound.play("sfx_death", { volume: 0.15 });
     this.cameras.main.shake(40, 0.002);
     this._deathPoof(enemy.x, enemy.y);
@@ -690,6 +700,47 @@ export class GameScene extends Phaser.Scene {
     }
     enemy.deactivate();
     this.enemyPool.release(enemy);
+  }
+
+  _miniBossReward(e) {
+    const x = e.x,
+      y = e.y;
+    this.cameras.main.shake(400, 0.016);
+    this.cameras.main.flash(200, 242, 193, 78);
+    this.sound.play("sfx_chest_jackpot", { volume: 0.6 });
+    this._toast(`${e.miniBoss} DERROTADO!`, 2200, "#ffe58f");
+    const chest = new Chest(this, x, y);
+    chest.forceKind = "golden";
+    this.chests.push(chest);
+    for (let i = 0; i < 3; i++) this.xpPool.acquire().spawn(x + (i - 1) * 26, y + 30, 2);
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      this.coinPool.acquire().spawn(x + Math.cos(a) * 40, y + Math.sin(a) * 40);
+    }
+    if (this.hud.boss === e) this.hud.clearBoss();
+  }
+
+  // Nuvem de esporos: aviso visual e depois dano periódico no player dentro
+  _sporeCloud(x, y, dmg) {
+    const r = 64;
+    this.elemental._cloudFx(x, y, r, 0x9ccf62, 1800);
+    (this._spores ||= []).push({ x, y, r, dmg, until: this.time.now + 1800, nextTick: this.time.now + 350 });
+  }
+
+  _updateSpores(time) {
+    if (!this._spores?.length) return;
+    const p = this.player;
+    this._spores = this._spores.filter((c) => time < c.until);
+    for (const c of this._spores) {
+      if (time < c.nextTick) continue;
+      c.nextTick = time + 400;
+      const dx = p.x - c.x,
+        dy = p.y - c.y;
+      if (dx * dx + dy * dy < c.r * c.r && !this._god) {
+        p.takeDamage(c.dmg);
+        if (p.isDead()) this._onGameOver(false);
+      }
+    }
   }
 
   // Empurra inimigos sobrepostos pra longe uns dos outros (separação tipo flocking).

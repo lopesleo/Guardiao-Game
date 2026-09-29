@@ -212,11 +212,14 @@ export class HUD {
     });
   }
 
-  setBossActive(boss) {
+  // Barra de chefe no topo — serve pro Ancião e pros mini-chefes (name)
+  setBossActive(boss, name = "O ANCIÃO") {
     this.boss = boss;
+    this.bossName = name;
     this.bossBar.setVisible(true);
     this.bossBar.set(1, true);
-    this.bossLabel.setVisible(true).setText("O ANCIÃO");
+    this.bossBar.setColor(boss.miniBoss ? PAL.org2 : PAL.red2);
+    this.bossLabel.setVisible(true).setText(name);
   }
 
   clearBoss() {
@@ -262,11 +265,19 @@ export class HUD {
     this.xpBar.set(p.xp / need);
     this.xpBar.tick(dt);
     this.lvlText.setText(`NV ${p.level}`);
+    this.elapsedMs = this.scene.elapsedMs ?? this.elapsedMs; // relógio único: o da cena
     this.timerText.setText(formatTime(this.elapsedMs));
     this.killText.setText(String(this.kills));
     this.coinText.setText(String(this.coins));
 
-    if (this.boss && this.boss.active) {
+    if (this.boss && this.boss.miniBoss) {
+      // Mini-chefe: barra simples; some quando ele morre
+      if (!this.boss.active || this.boss.miniBoss !== this.bossName) this.clearBoss();
+      else {
+        this.bossBar.set(Math.max(0, this.boss.hp / this.boss.maxHp));
+        this.bossBar.tick(dt);
+      }
+    } else if (this.boss && this.boss.active) {
       const frac = Math.max(0, this.boss.hp / this.boss.maxHp);
       // Duas barras (fases): Fase 1 = 100%→50%, Fase 2 = 50%→0%. Na virada
       // (êxtase) a barra recarrega animada pelo boss (_displayFill).

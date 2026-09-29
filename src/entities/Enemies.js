@@ -11,6 +11,10 @@ const FRAMES = {
   BOSS_FURY: 115, // Ancião ressecado (fase 2)
   MAGE: 65,
   BRUTE: 42,
+  BEE: 140, // vespa: enxames rápidos e frágeis
+  SHROOM: 13, // cogumelo: solta esporos venenosos ao morrer
+  ALPHA: 23, // Lobo Alfa (mini-chefe)
+  ELDER: 20, // Ogro Ancião (mini-chefe)
 };
 const MIMIC_FRAME = 92; // baú-mímico do Tiny Dungeon (mesmo baú do mapa)
 
@@ -123,12 +127,43 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.hp = this.maxHp;
       this.dmg *= 1.8;
       this.contactRadius = 44;
+    } else if (kind === "bee") {
+      // Vespa: muito rápida e frágil — vem em enxame, pune quem fica parado
+      this.setFrame(FRAMES.BEE);
+      this.speed = 205;
+      this.maxHp *= 0.35;
+      this.hp = this.maxHp;
+      this.dmg *= 0.6;
+      this.setScale(GAME.PIXEL_SCALE * 0.85);
+      this.contactRadius = 22;
+    } else if (kind === "shroom") {
+      // Cogumelo: lento; ao morrer vira uma nuvem de esporos que fere o player
+      this.setFrame(FRAMES.SHROOM);
+      this.speed = 80;
+      this.maxHp *= 1.2;
+      this.hp = this.maxHp;
     } else {
       this.setFrame(FRAMES.WOLF);
       this.speed = ENEMY.SPEED_WOLF;
     }
 
     // Elite ('elite' string) ou mimic ('mimic')
+    // MINI-CHEFE (evento da partida): grande, contorno dourado, muito HP,
+    // derruba baú dourado + gema grande ao morrer.
+    if (elite === "alpha" || elite === "elder") {
+      const alpha = elite === "alpha";
+      this.setFrame(alpha ? FRAMES.ALPHA : FRAMES.ELDER);
+      this._kind = "wolf"; // perseguição melee
+      this.setScale(GAME.PIXEL_SCALE * (alpha ? 2.2 : 2.6));
+      this.maxHp = Math.max(ENEMY.HP(wave) * (alpha ? 22 : 34), alpha ? 520 : 1100);
+      this.hp = this.maxHp;
+      this.dmg = ENEMY.DMG(wave) * (alpha ? 2 : 2.8);
+      this.speed = alpha ? 150 : 100;
+      this.contactRadius = alpha ? 50 : 62;
+      this.rimColor = 0xf2c14e;
+      this.miniBoss = alpha ? "LOBO ALFA" : "OGRO ANCIÃO";
+    } else this.miniBoss = null;
+
     if (elite === "mimic") {
       this.setScale(GAME.PIXEL_SCALE * MIMIC.SCALE_MULT);
       // HP com piso (não escala só com wave) + dano e velocidade próprios
@@ -141,7 +176,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this._kind = "wolf";
       this.setTexture("dungeon_tiles", MIMIC_FRAME);
       this.rimColor = MIMIC.TINT;
-    } else if (elite) {
+    } else if (elite === true) {
       this.setScale(GAME.PIXEL_SCALE * ELITE.SCALE_MULT);
       this.maxHp *= ELITE.HP_MULT;
       this.hp = this.maxHp;
@@ -157,6 +192,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.dmg *= diff.dmgMult;
     }
 
+    this._baseScale = this.scaleX; // squash de crítico é relativo a isto
     // Sombra proporcional ao tamanho final (elite/mímico são maiores)
     this.shadow
       .setScale((GAME.PIXEL_SCALE * this.displayWidth) / 48)
@@ -205,10 +241,11 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       // SQUASH forte
       this.scene.tweens.add({
         targets: this,
-        scaleX: GAME.PIXEL_SCALE * 1.3,
-        scaleY: GAME.PIXEL_SCALE * 0.75,
+        scaleX: (this._baseScale ?? GAME.PIXEL_SCALE) * 1.3,
+        scaleY: (this._baseScale ?? GAME.PIXEL_SCALE) * 0.75,
         duration: 80,
         yoyo: true,
+        onComplete: () => this.active && this.setScale(this._baseScale ?? GAME.PIXEL_SCALE),
       });
       // KNOCKBACK
       if (fromX != null && fromY != null && this.body?.enable) {

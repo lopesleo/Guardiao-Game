@@ -34,11 +34,15 @@ export class SpawnDirector {
     const crowChance   = wave >= 1 ? 0.26 : 0;
     const mageChance   = wave >= 3 ? 0.12 : 0;
     const bruteChance  = wave >= 4 ? 0.10 : 0;
+    const shroomChance = wave >= 2 ? 0.08 : 0;
+    const beeChance    = wave >= 1 ? 0.06 : 0;
     let kind, acc = 0;
     if      (roll < (acc += goblinChance)) kind = 'goblin';
     else if (roll < (acc += crowChance))   kind = 'crow';
     else if (roll < (acc += mageChance))   kind = 'mage';
     else if (roll < (acc += bruteChance))  kind = 'brute';
+    else if (roll < (acc += shroomChance)) kind = 'shroom';
+    else if (roll < (acc += beeChance))    kind = 'bee';
     else kind = 'wolf';
 
     const cam = this.scene.cameras.main;
