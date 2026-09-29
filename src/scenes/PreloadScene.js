@@ -20,10 +20,6 @@ export class PreloadScene extends Phaser.Scene {
       "assets/sprites/dungeon_packed.png",
       { frameWidth: 16, frameHeight: 16 },
     );
-    this.load.spritesheet("town_tiles", "assets/sprites/town_packed.png", {
-      frameWidth: 16,
-      frameHeight: 16,
-    });
     this.load.spritesheet(
       "creatures",
       "assets/sprites/enemies/creatures_packed.png",

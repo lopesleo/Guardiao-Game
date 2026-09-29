@@ -19,11 +19,17 @@ Mantemos esta lista atualizada conforme novos assets são adicionados.
 | Pack | Autor | Licença | URL |
 |---|---|---|---|
 | Tiny Dungeon | Kenney | CC0 1.0 | <https://kenney.nl/assets/tiny-dungeon> |
-| Tiny Town | Kenney | CC0 1.0 | <https://kenney.nl/assets/tiny-town> |
 | Tiny Creatures | Clint Bellanger (colab. Kenney) | CC0 1.0 | <https://opengameart.org/content/tiny-creatures> |
 | Bola de fogo (projétil do Cajado, 2 frames) | Revon | CC-BY 4.0 | <https://opengameart.org/content/fireball-3> |
 
-**Uso:** sprites foram usados como spritesheets de 16×16 px. Renderizados com `pixelArt: true` no Phaser (escala inteira, sem suavização).
+**Uso:** personagens e criaturas desses packs, como spritesheets de 16×16 px (escala inteira, sem suavização).
+
+### Arte procedural (própria)
+
+Cenário (chão, árvores, pinheiros, arbustos, pedras, flores, cogumelos, tocos),
+ícones, pickups, partículas, molduras de UI e ícone do app são **gerados por
+código** com uma paleta única (`src/art/`, `tools/make-icons.py`). O pack *Tiny
+Town* não é mais usado.
 
 ---
 
@@ -82,9 +88,9 @@ Mantemos esta lista atualizada conforme novos assets são adicionados.
 
 | Fonte | Autor | Licença | URL |
 |---|---|---|---|
-| Press Start 2P | CodeMan38 (Cody Boisclair) | OFL 1.1 | <https://fonts.google.com/specimen/Press+Start+2P> |
+| Jersey 15 | The Soft Type Project Authors | OFL 1.1 | <https://fonts.google.com/specimen/Jersey+15> |
 
-Carregada via Google Fonts no `index.html`.
+Empacotada localmente (`assets/fonts/`, licença em `OFL-Jersey15.txt`) — funciona offline.
 
 ---
 

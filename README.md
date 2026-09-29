@@ -1,112 +1,80 @@
-# 🌲 Guardião da Floresta: Despertar
+# 🌲 Guardião da Floresta
 
-Survivor-like top-down em arena fixa: o Guardião enfrenta hordas crescentes durante ~7 minutos até o boss final. Inspirado em *Vampire Survivors* e *Megabonk*, com **mecânica-assinatura própria**: **Reações Elementais** — quando um inimigo acumula dois status elementais diferentes, uma reação dispara automaticamente (Vapor, Cristal Estilhaçado, Sobrecarga).
+Roguelite de sobrevivência (*survivor-like*) para **celular Android e navegador**.
+Você só se move; as armas atacam sozinhas; cada nível traz uma escolha. A
+mecânica-assinatura são as **Reações Elementais**: dois elementos no mesmo
+inimigo disparam Vapor, Cristal ou Sobrecarga.
 
-Construído em **JavaScript + Phaser 3** para navegador web. Tudo offline (libs + assets no `.zip`).
+Feito em **JavaScript + Phaser 3**, empacotado para Android com **Capacitor**.
+Roda 100% offline.
 
-🎮 **Jogue online:** <https://lopesleo.github.io/guardiao-jogo-p2/>
-👤 **Aluno responsável pela entrega:** Leonardo Lopes
+## Conteúdo
 
----
+- **6 armas** (Cajado, Aura Gélida, Bumerangue, Raio, Orbe Gélido, Sopro
+  Flamejante) e **6 evoluções** (arma nível 5 + arma parceira)
+- **4 personagens** jogáveis, cada um com arma inicial e estilo próprios
+- **Roteiro de partida**: enxames, cercos, mini-chefes (Lobo Alfa, Ogro Ancião)
+  e o chefe final, o Ancião, aos 7:00
+- **11 passivas**, baús (normal, dourado, armadilha, mímico)
+- **Meta-progressão**: 5 níveis de Perigo, Bênçãos em 5 ranks, Tesouro
+  Ancestral infinito, 24 conquistas
+- Dicas contextuais na primeira partida; Guia completo no menu
 
-## ▶️ Como rodar
+## Rodar no navegador
 
-Phaser usa módulos ES, então **não funciona abrindo `index.html` direto** (`file://`). Precisa de um servidor estático local — qualquer um serve.
+Precisa de um servidor estático (módulos ES não funcionam via `file://`):
 
-### Opção A — Python (já vem no Windows/macOS/Linux)
 ```bash
-cd guardiao
-python -m http.server 8000
+python -m http.server 8000     # ou: npx serve .
 ```
-Abra no navegador: <http://localhost:8000>
 
-### Opção B — Node.js
+Abra <http://localhost:8000>. Ferramentas de desenvolvimento (teclas de debug,
+botão de moedas) só aparecem com `?debug=1` na URL.
+
+## Controles
+
+| | Celular | Teclado |
+|---|---|---|
+| Mover | arrastar o polegar na metade esquerda | WASD / setas |
+| Dash | botão redondo grande | SHIFT / ESPAÇO |
+| Despertar | botão da estrela | R |
+| Abrir baú | encostar no baú | encostar / E |
+| Pausar | botão ⏸ ou Voltar do Android | ESC |
+
+## Android / Play Store
+
+Veja **[`docs/PLAY_STORE.md`](docs/PLAY_STORE.md)** — build do AAB, ficha da loja,
+política de privacidade ([`docs/PRIVACY.md`](docs/PRIVACY.md)).
+
 ```bash
-cd guardiao
-npx serve .
+npm install
+npm run android:sync   # copia o jogo para www/ e sincroniza o projeto android/
+npm run android:open   # abre no Android Studio
 ```
 
-### Opção C — VS Code
-Instale a extensão **Live Server** → clique direito em `index.html` → *Open with Live Server*.
+## Arquitetura
 
-> 💡 **Tudo offline:** libs (Phaser, nipplejs) estão em `vendor/`, assets em `assets/`. Não precisa de internet em nenhum momento depois de descompactar o zip.
+```
+src/
+  art/       paleta única + gerador de pixel-art (cenário, ícones, pickups, FX)
+  ui/        kit de UI (Theme: fonte, molduras, botões, barras) + Widgets
+             (modal, lista rolável, slider, toggle) + HUD + cartas
+  world/     ForestWorld: chão, decoração, muralha de árvores, atmosfera, culling
+  scenes/    Boot → Preload → Menu → Game (+ LevelUp, Pause) → GameOver
+  entities/  Player, inimigos/chefes, armas/evoluções, pickups, baús
+  systems/   reações elementais, spawn, eventos da partida, cartas,
+             meta-progressão, configurações, plataforma (Android)
+  config.js  todo o balanceamento centralizado
+```
 
----
+A identidade visual é **uma paleta só** (`src/art/Palette.js`): o cenário, os
+ícones e a interface são gerados por código com ela, e os personagens vêm de
+packs CC0 que compartilham o mesmo contorno escuro — por isso tudo conversa.
 
-## 🎮 Controles
+## Créditos
 
-### Desktop
-| Tecla | Ação |
-|---|---|
-| `W A S D` / setas | Mover |
-| `SHIFT` | Dash (esquiva — sai de área de raízes, desvia de tiros) |
-| `R` | Despertar (modo fúria temporário) |
-| `E` | Abrir baú próximo |
-| `M` | Mute/unmute |
-| `ESC` | Voltar / Pausar |
+Lista completa em [`docs/CREDITS.md`](docs/CREDITS.md) e no menu → Créditos.
+Personagens: Kenney (Tiny Dungeon) e Clint Bellanger (Tiny Creatures), CC0 ·
+Fonte: Jersey 15 (OFL) · Áudio: vários autores CC0/CC-BY · Motor: Phaser 3 (MIT).
 
-> 🔊 No menu há **slider de volume** e botão **⛶ tela cheia** (ambos também úteis no mobile).
-
-### Mobile
-- **Joystick virtual** (canto inferior esquerdo) para mover.
-- O ataque é **automático** — você só precisa se posicionar.
-- 📱 Use em **modo paisagem**.
-
----
-
-## 🔥 Mecânica-assinatura: Reações Elementais
-
-Cada arma carrega um elemento fixo. Cada elemento aplica um **status** no inimigo. Quando dois status diferentes coexistem no mesmo inimigo, uma **reação** dispara automaticamente:
-
-| Status 1 | Status 2 | Reação | Efeito |
-|---|---|---|---|
-| 🔥 Fogo | ❄️ Gelo | 💨 **VAPOR** | Nuvem escaldante: dano contínuo na área |
-| ❄️ Congelado | ⚡ Raio | 💎 **CRISTAL** | Inimigo congelado **estilhaça** em lascas (dano em área) |
-| 🔥 Fogo | ⚡ Raio | ⚡ **SOBRECARGA** | Corrente elétrica salta entre vários inimigos |
-
-> A **Aura Gélida** congela inimigos que ficam tempo demais no seu campo — e um inimigo **congelado** atingido pelo Raio é quem dispara o **Cristal**.
-
-### Evoluções de arma
-Quando duas armas atingem o nível máximo, uma combinação específica desbloqueia uma **evolução** na próxima carta de level-up:
-
-- **Cajado** 🔥 + **Aura Gélida** ❄️ → 🌪️ **Tempestade de Vapor**
-- **Cajado** 🔥 + **Raio Concentrado** ⚡ → ⚡ **Sobrecarga Eterna**
-
----
-
-## 🧱 Arquitetura
-
-- `src/scenes/` — máquina de estados (Boot → Preload → Menu → Game → LevelUp → GameOver → Credits)
-- `src/entities/` — Player, Inimigos, Armas, Pickups
-- `src/systems/` — Elemental, Spawn, Upgrade, Meta-progressão, Input, Audio, Pool
-- `src/ui/` — HUD, Cards, Joystick virtual
-- `src/config.js` — **todos** os parâmetros de balanceamento centralizados
-- `assets/` — sprites, áudio, fonte, tilemaps
-- `vendor/` — Phaser e nipplejs (locais, não CDN)
-- `docs/` — créditos, balanceamento, arquitetura, smoke-test
-- `legacy/` — versões anteriores do projeto (referência histórica)
-
----
-
-## 💡 Por que não é cópia
-
-1. **Mecânica original** — Reações Elementais com status acumulativos não existem nos titulos referência. Vampire Survivors tem sinergia de armas, mas não tem sistema de status químico/elemental disparando reações.
-2. **Identidade própria** — tema da floresta com fauna brasileira/mítica (Guardião, Lobo, Corvo, Goblin, Boss Ent), não os monstros genéricos do gênero.
-3. **Conteúdo autoral** — balanceamento, waves, upgrades, sistema de evolução, narrativa: tudo decidido aqui. Phaser é apenas o renderizador.
-
----
-
-## 📜 Créditos
-
-Lista completa em [`docs/CREDITS.md`](docs/CREDITS.md) e acessível **dentro do jogo** (menu → CRÉDITOS). Resumo:
-
-- Sprites: **Kenney** (Tiny Dungeon, Tiny Town) + **Clint Bellanger** (Tiny Creatures) — todos CC0
-- Áudio SFX: **Kenney** Impact Sounds (CC0)
-- Música: **JaggedStone** (Loopable Dungeon Ambience, CC0) + **Thalon** (Fantasy Menu Theme, CC-BY 4.0)
-- Fonte: **CodeMan38** (Press Start 2P, OFL)
-- Engine: **Phaser 3** (MIT) + **nipplejs** (MIT)
-
----
-
-**Apresentação:** 27/05/2026 — Disciplina P2, Prof. Dalmo.
-**Aluno responsável pela entrega:** Leonardo Lopes
+**Autor:** Leonardo Lopes
