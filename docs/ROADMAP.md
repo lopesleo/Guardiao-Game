@@ -51,7 +51,7 @@ Base para tudo que vem depois; o jogador quase não vê.
   com cena e fala da **Anciã da Fogueira**; 1ª abertura vai direto para a floresta;
   saves antigos veem tudo revelado
 
-### M2.5 — Lendas da mata 🚧
+### M2.5 — Lendas da mata ✅ (falta só a revisão 👤)
 Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
 - ✅ Redesenho dos 4 personagens: **Curupira** (pés virados, cabelo de fogo), **Caipora**,
   **Iara**, **Saci** (uma perna, sem cachimbo; pele com luz e sombra, sem caricatura)
@@ -59,8 +59,10 @@ Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
   (a Podridão sai dele, olho verde, some na mata)
 - ✅ Minichefes **Mula sem Cabeça** (no lugar do Lobo Alfa) e **Corpo-Seco** (no
   lugar do Ogro Ancião)
-- ⬜ Nomes/descrições de inimigos, armas e reações revistos no tema
-- ⬜ Bestiário com a origem de cada lenda
+- ✅ Nomes revistos no tema (guardiões, chefe, minichefes, falas, guia); criaturas comuns
+  seguem como "bichos tomados pela Podridão" (sem nome na tela)
+- ✅ Bestiário com a origem de cada lenda (aba **Lendas** do Mural; reveladas ao
+  encontrar — guardiões ao liberar, minichefes e chefe ao cruzar na floresta)
 - 👤 Revisão dos textos por leitor indígena/pesquisador de folclore (ideal)
 
 ### M3 — Clareira, parte 2: horta, pesca e cozinha ⬜
