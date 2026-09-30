@@ -15,8 +15,10 @@ segundo loop de "vida na floresta" que apoia a ação.
   e bichos da fauna brasileira resgatados nas partidas (companheiros, não
   trabalhadores). **Regra de ouro: a Clareira tem progressão própria, mas existe
   para apoiar a ação — nunca compete com ela.**
-- **Tema em estudo:** folclore brasileiro (Curupira, Iara, Saci, Caipora,
-  Mapinguari) — domínio público; cuidar da representação (sem caricatura).
+- **Tema (decidido):** folclore brasileiro — Curupira, Iara, Saci, Caipora,
+  Mapinguari. **As lendas são guardiãs e aliadas; o vilão é a Podridão** (lenda
+  inimiga = corrompida e libertada ao vencer). Domínio público; sem caricatura.
+  Ver `docs/TEMA_FOLCLORE.md`.
 
 ## Finalidade
 
@@ -74,6 +76,7 @@ público brasileiro, com potencial internacional.
 | Horta, pesca e cozinha em detalhe | `docs/VIDA_NA_CLAREIRA.md` |
 | Ordem de apresentação e ritmo de tempo | `docs/RITMO_E_APRESENTACAO.md` |
 | Pesquisa de mercado e ideias de retenção/tema | `docs/IDEIAS_RETENCAO.md` |
+| **Tema folclore: decisão, papéis e cuidados** | `docs/TEMA_FOLCLORE.md` |
 | Meta-progressão atual (Perigo, Bênçãos, conquistas) | `docs/META_LOOP.md` |
 
 ## Rodar e testar
