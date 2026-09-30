@@ -25,7 +25,7 @@ import { MetaPanels } from "../ui/MetaPanels.js";
 import { CampGarden } from "./CampGarden.js";
 import { CampKitchen } from "./CampKitchen.js";
 import { CampPond } from "./CampPond.js";
-import { CampDecor } from "./CampDecor.js";
+import { CampDecor, decorFree } from "./CampDecor.js";
 
 const S = GAME.PIXEL_SCALE;
 const CAMP_W = 1500,
@@ -162,7 +162,7 @@ export class CampScene extends Phaser.Scene {
     for (let i = 0; i < 90; i++) {
       const x = rnd.between(-CAMP_W / 2 + 60, CAMP_W / 2 - 60),
         y = rnd.between(TOP + 80, CAMP_H / 2 - 40);
-      if (Math.hypot(x, y - 70) < 200 || this.groundPaint.onPath(x, y, 12)) continue;
+      if (Math.hypot(x, y - 70) < 200 || this.groundPaint.onPath(x, y, 12) || !decorFree(x, y)) continue;
       const list = i % 4 === 0 ? env.flowers : i % 4 === 1 ? env.shrooms : env.tufts;
       this.add.image(x, y, "env", rnd.pick(list)).setOrigin(0.5, 1).setScale(S).setDepth(y);
     }
@@ -282,8 +282,8 @@ export class CampScene extends Phaser.Scene {
       });
       this.buildings[id] = b;
     };
-    B("shrine", "camp_shrine", "SANTUÁRIO", "BÊNÇÃOS E DONS", -430, -130, () => this._showBlessings(), [0, -75, 0xffe58f, 2.4]);
-    B("forge", "camp_forge", "FORJA", "FORJAR ARMAS", 440, -120, () => this._showArsenal(), [-8, -18, 0xff8a3c, 2.8]);
+    B("shrine", "camp_shrine", "SANTUÁRIO", "BÊNÇÃOS E DONS", -430, -130, () => this._showBlessings(), [0, -99, 0xffe58f, 2.4]);
+    B("forge", "camp_forge", "FORJA", "FORJAR ARMAS", 440, -120, () => this._showArsenal(), [-40, -24, 0xff8a3c, 2.8]);
     B("board", "camp_board", "MURAL", "CONQUISTAS E LENDAS", -420, 280, () => this._showBoard());
 
     // Ninho do João-de-barro (o construtor chega com as obras) + o pássaro
