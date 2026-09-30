@@ -328,9 +328,10 @@ export const MetaPanels = {
   _showBoard(tab = "conquistas") {
     const done = this.meta.data.achievements;
     const seen = LEGENDS.filter((l) => this._legendSeen(l)).length;
+    const missions = !!this._daily?.();
     const m = new Modal(this, {
       title: "MURAL",
-      subtitle: tab === "lendas" ? `Lendas da mata encontradas: ${seen} de ${LEGENDS.length}` : `Conquistas: ${done.length} de ${ACHIEVEMENTS.length}`,
+      subtitle: tab === "missoes" ? "Três missões por dia · o prêmio se pega aqui" : tab === "lendas" ? `Lendas da mata encontradas: ${seen} de ${LEGENDS.length}` : `Conquistas: ${done.length} de ${ACHIEVEMENTS.length}`,
       w: 860,
       h: 640,
     });
@@ -343,9 +344,21 @@ export const MetaPanels = {
           this._showBoard(id);
         }, { size: 18, style: tab === id ? "gold" : "dark", color: tab === id ? CSS.goldHi : CSS.muted }),
       );
-    tabBtn(-128, "conquistas", "CONQUISTAS");
-    tabBtn(128, "lendas", "LENDAS");
+    if (missions) {
+      tabBtn(-250, "missoes", "MISSÕES");
+      tabBtn(0, "conquistas", "CONQUISTAS");
+      tabBtn(250, "lendas", "LENDAS");
+    } else {
+      tabBtn(-128, "conquistas", "CONQUISTAS");
+      tabBtn(128, "lendas", "LENDAS");
+    }
     const list = this._modalList(m, m.top + 58);
+    if (tab === "missoes" && missions)
+      return this._fillMissions(list, () => {
+        m.close();
+        this._refreshAll();
+        this._showBoard("missoes");
+      });
     if (tab === "lendas") return this._fillLegends(list);
     this._fillAchievements(list);
   },

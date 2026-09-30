@@ -178,6 +178,7 @@ export const CampGarden = {
     const r = this.garden.harvest(i);
     if (!r) return;
     this._plotFx(i, "harvest", r);
+    this._dailyBump?.("harvest");
     if (this.meta.data.stats.harvests === 1) this.time.delayedCall(700, () => this._say("Isso! Agora plante de novo: desta vez leva alguns minutos. Jogue uma partida e volte."));
     this._refreshGardenWorld();
   },
@@ -320,6 +321,9 @@ export const CampGarden = {
     }
     Analytics.track("garden_plant", { crop: id, n });
     this._refreshGardenWorld();
+    // Planta demorada (1 h ou mais): oferece o aviso da colheita
+    const ms = Math.max(0, ...gd.plots.map((p) => gd.remainingMs(p)));
+    if (GARDEN.CROPS[id].s >= 3600) this.time.delayedCall(500, () => this._offerNotify?.("crop", Date.now() + ms));
   },
 
   // ---------------------------------------------------------------------------

@@ -9,6 +9,8 @@ const DEFAULTS = {
   shake: true,
   dmgNumbers: true,
   lighting: true,
+  notify: false, // avisos (só no app, só depois que o jogador aceitar)
+  notifyAsked: false,
 };
 
 let cache = null;

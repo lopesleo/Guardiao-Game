@@ -112,6 +112,7 @@ export class LanternSystem {
 
   _break(l, i) {
     const s = this.scene;
+    s._runLanterns = (s._runLanterns || 0) + 1;
     this.list.splice(i, 1);
     this._killHalo(l);
     l.spr.stop();

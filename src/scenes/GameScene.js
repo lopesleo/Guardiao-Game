@@ -23,6 +23,7 @@ import {
 } from "../config.js";
 import { randomRareSeed } from "../systems/Garden.js";
 import { recipe, mealMods, bonusText } from "../systems/Kitchen.js";
+import { Daily, dailyUnlocked } from "../systems/Daily.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
 import { SpawnDirector } from "../systems/SpawnDirector.js";
@@ -114,6 +115,10 @@ export class GameScene extends Phaser.Scene {
     this._woodThisRun = 0;
     this.seedPool = new Pool(() => new SeedPickup(this), 6);
     this._seedsThisRun = {};
+    // Para as missões do dia: o que ESTA partida fez
+    this._runChests = 0;
+    this._runLanterns = 0;
+    this._reactionsAtStart = { ...(this.meta.data.stats.reactions || {}) };
     // Sementes raras só depois que a Horta apareceu (uma novidade por vez)
     this._seedsOn = (this.meta.data.revealed || []).includes("garden");
     this.heartPool = new Pool(() => new HeartPickup(this), 10);
@@ -1136,6 +1141,7 @@ export class GameScene extends Phaser.Scene {
   _openChest(chest) {
     const result = chest.open();
     if (!result) return;
+    this._runChests++;
     const { kind, x, y } = result;
 
     // Som de abertura imediato
@@ -1382,6 +1388,18 @@ export class GameScene extends Phaser.Scene {
     this.meta.registerRun(this.elapsedMs / 1000, won, this.diff.id);
     const newAchievements = this._checkAchievements(won, true);
     this._newUnlocksThisRun.push(...newAchievements.map((a) => a.name));
+    // Missões do dia (o prêmio se pega no Mural da Clareira)
+    if (dailyUnlocked(this.meta.data)) {
+      const now = this.meta.data.stats.reactions || {};
+      const byType = {};
+      let reactions = 0;
+      for (const k of Object.keys(now)) {
+        byType[k] = (now[k] || 0) - (this._reactionsAtStart[k] || 0);
+        reactions += byType[k];
+      }
+      const done = new Daily(this.meta).runEnd({ kills: this.hud.kills, reactions, byType, seconds: this.elapsedMs / 1000, chests: this._runChests, lanterns: this._runLanterns, won });
+      this._newUnlocksThisRun.push(...done.map((t) => `Missão: ${t}`));
+    }
     Analytics.track("run_end", {
       won,
       quit,

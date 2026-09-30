@@ -42,6 +42,11 @@ export const REVEALS = [
     when: (d) => (d.runsPlayed || 0) >= 4 || (d.achievements || []).length > 0,
     line: "O Mural guarda cada feito seu na floresta.",
   },
+  {
+    id: "chest",
+    when: (d) => (d.revealed || []).includes("board") && (d.runsPlayed || 0) >= 5,
+    line: "Todo dia a floresta deixa um presente aqui, junto ao fogo. Abra o baú!",
+  },
 ];
 
 export function isRevealed(id, data) {

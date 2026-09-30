@@ -498,6 +498,7 @@ export const CampPond = {
   _fishCaught(f) {
     const q = f.slips === 0 ? 2 : f.slips <= 2 ? 1 : 0;
     const r = this.pond.catch(f.fishId, q);
+    this._dailyBump?.("fish");
     const fish = FISHING.FISH[r.id];
     f.state = "result";
     f.result = r;
