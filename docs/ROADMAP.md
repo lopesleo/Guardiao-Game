@@ -26,7 +26,8 @@ Base para tudo que vem depois; o jogador quase não vê.
   Vácuo de Seiva, Relógio da Mata, Sopro Ancestral, caju
 - ✅ **Limite de 4 passivas** por partida
 - ✅ **Reviver** 1× por partida (via `AdService`)
-- ✅ **Dobrar o baú** ao abrir (via `AdService`)
+- ✅ **Mais uma carta** na tela de nível, 1× por partida (via `AdService`) —
+  substituiu o "dobrar baú", que oferecia anúncio no meio da ação
 - ✅ **Dobrar moedas** no fim da partida (via `AdService`)
 - ℹ️ Ofertas de anúncio prontas, mas **desligadas** (`ADS.ENABLED = false` em
   `src/config.js`); para testar, abrir com `?ads=1`. Ligar junto com o AdMob (M5).

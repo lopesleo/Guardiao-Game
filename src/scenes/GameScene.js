@@ -261,7 +261,6 @@ export class GameScene extends Phaser.Scene {
     this.endless = false;
     this._endlessStartMs = 0;
     this._reviveOpen = false;
-    this._chestOffer = null;
 
     // Onboarding (D20): 5s, skipável
     this._showOnboarding();
@@ -926,7 +925,6 @@ export class GameScene extends Phaser.Scene {
     // Loot spawnado DEPOIS dos reels (caça-níquel revela)
     this.time.delayedCall(burstDelay + 50, () => {
       this._spawnChestLoot(x, y);
-      if (kind === "normal" || kind === "golden") this._offerDoubleChest(x, y);
     });
     if (kind === "golden") {
       // JACKPOT: chips colliding + level-up + coin cascade
@@ -1053,38 +1051,6 @@ export class GameScene extends Phaser.Scene {
     for (let i = 0; i < ncoins; i++) this.coinPool.acquire().spawn(...around(8, 22));
     if (Math.random() < CHEST.HEART_CHANCE_OPEN) this.heartPool.acquire().spawn(x - 22, y);
     if (Math.random() < CHEST.AWAKEN_CHANCE_OPEN) this.awakenOrbPool.acquire().spawn(x + 22, y);
-  }
-
-  // "Dobrar baú" (anúncio premiado): botão discreto no alto da tela por alguns
-  // segundos. Ignorar não custa nada; tocar pausa a partida durante o anúncio.
-  _offerDoubleChest(x, y) {
-    if (this.gameOver || !AdService.canShow("double_chest")) return;
-    this._chestOffer?.destroy();
-    const btn = new Button(this, vw(this) - 16 - 120, 128, 240, 52, "BAÚ ×2", async () => {
-      if (btn._used) return;
-      btn._used = true;
-      btn.setEnabled(false);
-      this.scene.pause();
-      const ok = await AdService.rewarded("double_chest");
-      this.scene.resume();
-      btn.destroy();
-      if (!ok || this.gameOver) return;
-      this._chestBurst(x, y, "normal");
-      this.sound.play("sfx_chest_jackpot", { volume: 0.7 });
-      this._spawnChestLoot(x, y);
-      this._toast("Baú dobrado!", 1600);
-    }, { size: 24, style: "primary", color: CSS.goldHi, icon: "ico_play", iconScale: 2.5 });
-    btn.setScrollFactor(0).setDepth(60400).setAlpha(0);
-    this._chestOffer = btn;
-    Analytics.track("ad_offer_show", { placement: "double_chest" });
-    this.tweens.add({ targets: btn, alpha: 1, duration: 200 });
-    this.tweens.add({
-      targets: btn,
-      alpha: 0,
-      delay: ADS.CHEST_OFFER_MS,
-      duration: 300,
-      onComplete: () => !btn._used && btn.destroy(),
-    });
   }
 
   _chestBurst(x, y, kind) {
