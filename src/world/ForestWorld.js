@@ -130,13 +130,27 @@ export class ForestWorld {
     const k = this.keys;
     const all = [...k.trees, ...k.pines, ...k.pines];
     const step = 74;
+    // Cerca viva contínua no sul, NA LINHA do limite físico: o limite fica
+    // visível (sem trecho de grama "aberto" antes das árvores). A única brecha
+    // é a trilha de entrada, que os arbustos fecham no início da partida.
+    const E = this.entrance;
+    if (E?.y != null) {
+      for (let x = -R - 40, i = 0; x < R + 40; x += 40, i++) {
+        if (Math.abs(x) < E.half + 14) continue;
+        const y = E.y + 10 + (i % 2) * 14;
+        this._img(x, y, this._pick(k.bushes), y + Y_SORT).setFlipX(i % 3 === 0);
+      }
+    }
     for (let t = -R - 60; t < R + 60; t += step) {
       for (let row = 0; row < 2; row++) {
         const inset = 30 + row * 80 + this.r() * 30;
         const j = () => t + (this.r() - 0.5) * 40;
         this._tree(j(), -R + inset, all); // topo
         const xb = j();
-        if (!this.entrance || Math.abs(xb) > this.entrance.half + 36) this._tree(xb, R - inset + 40, all); // base (com a brecha da entrada)
+        // Base: mais para o sul (troncos abaixo da borda da câmera) — as copas
+        // altas terminam onde começa a área jogável, então o jogador nunca
+        // fica "dentro" delas. Com a brecha da entrada no meio.
+        if (!this.entrance || Math.abs(xb) > this.entrance.half + 36) this._tree(xb, R - inset + 210, all);
         this._tree(-R + inset, j(), all); // esquerda
         this._tree(R - inset, j(), all); // direita
       }

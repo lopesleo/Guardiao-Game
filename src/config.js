@@ -424,6 +424,17 @@ export const INTRO = {
   CLOSE_MS: 750, // tempo da mata fechando até o controle voltar
 };
 
+// Área JOGÁVEL = face de dentro da muralha de árvores. As árvores da borda ficam
+// de 30 a 140 px para dentro da borda do mundo e NÃO têm colisão: o limite
+// físico precisa ficar antes delas, senão dá para andar por dentro da mata e
+// contornar a entrada. Sul = linha dos arbustos que fecham a entrada.
+export const ARENA = {
+  minX: -GAME.WORLD_RADIUS + 220,
+  maxX: GAME.WORLD_RADIUS - 220,
+  minY: -GAME.WORLD_RADIUS + 150,
+  maxY: GAME.WORLD_RADIUS - INTRO.GATE_OFF,
+};
+
 // Noite Eterna (Modo Infinito): oferecida ao vencer o Ancião. A força cresce
 // de forma composta a cada minuto; eventos voltam em ciclo.
 export const ENDLESS = {

@@ -51,7 +51,8 @@ export class CampScene extends Phaser.Scene {
     this._elderLine = this.meta.data.elderLine || 0;
     this.isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
-    this.physics.world.setBounds(-CAMP_W / 2, TOP, CAMP_W, CAMP_H);
+    // Limite antes das árvores da borda (norte: a saída pela trilha dispara antes)
+    this.physics.world.setBounds(-CAMP_W / 2 + 40, TOP + 50, CAMP_W - 80, CAMP_H - 50);
     this.solids = this.physics.add.staticGroup();
     this.interactables = [];
     this.glows = [];
@@ -143,7 +144,7 @@ export class CampScene extends Phaser.Scene {
       const off = row * 70;
       for (let x = -CAMP_W / 2 - 120; x <= CAMP_W / 2 + 120; x += 64 + rnd.between(0, 24)) {
         put(x, TOP + 10 - off + rnd.between(-10, 10)); // norte
-        put(x, CAMP_H / 2 + 90 + off + rnd.between(-10, 10)); // sul
+        put(x, CAMP_H / 2 + 240 + off + rnd.between(-10, 10)); // sul: troncos abaixo da câmera, copas só até o limite
       }
       for (let y = TOP; y <= CAMP_H / 2 + 60; y += 60 + rnd.between(0, 20)) {
         put(-CAMP_W / 2 - 30 - off + rnd.between(-10, 10), y); // oeste

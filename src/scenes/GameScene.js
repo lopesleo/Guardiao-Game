@@ -16,6 +16,7 @@ import {
   ADS,
   ENDLESS,
   INTRO,
+  ARENA,
 } from "../config.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
@@ -64,13 +65,9 @@ export class GameScene extends Phaser.Scene {
   create() {
     fitCamera(this);
     const WS = GAME.WORLD_RADIUS * 2;
-    this.physics.world.setBounds(
-      -GAME.WORLD_RADIUS,
-      -GAME.WORLD_RADIUS,
-      WS,
-      WS,
-    );
-    this.world = new ForestWorld(this, { entrance: { half: INTRO.PATH_HALF } });
+    // Limite físico na face de dentro da muralha (ver ARENA em config.js)
+    this.physics.world.setBounds(ARENA.minX, ARENA.minY, ARENA.maxX - ARENA.minX, ARENA.maxY - ARENA.minY);
+    this.world = new ForestWorld(this, { entrance: { half: INTRO.PATH_HALF, y: ARENA.maxY } });
 
     this.inputMgr = new InputManager(this);
     this.joystick = new VirtualJoystick(this.inputMgr);
@@ -299,7 +296,7 @@ export class GameScene extends Phaser.Scene {
     }
     // Árvores fechando os lados da brecha (a muralha fica contínua até a trilha)
     const trees = [...env.trees, ...env.pines, ...env.pines];
-    for (let y = this._gateY - 10, i = 0; y < R + 120; y += 58, i++) {
+    for (let y = R + 70, i = 0; y < R + 300; y += 58, i++) {
       for (const side of [-1, 1]) {
         const x = side * (INTRO.PATH_HALF + 44 + (i % 2) * 18);
         this.add.image(x, y + 4, "px_shadow").setScale(7, 3).setAlpha(0.5).setDepth(y + 9999);
@@ -1003,10 +1000,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   _randomChestPos() {
-    const r = GAME.WORLD_RADIUS - 100;
+    // Sempre dentro da área jogável (nunca escondido na muralha de árvores)
+    const m = 80;
     for (let i = 0; i < 30; i++) {
-      const x = (Math.random() - 0.5) * r * 2;
-      const y = (Math.random() - 0.5) * r * 2;
+      const x = Phaser.Math.Between(ARENA.minX + m, ARENA.maxX - m);
+      const y = Phaser.Math.Between(ARENA.minY + m, ARENA.maxY - m);
       const dx = x - (this.player?.x ?? 0),
         dy = y - (this.player?.y ?? 0);
       if (dx * dx + dy * dy > 250 * 250) return { x, y };
