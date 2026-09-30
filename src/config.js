@@ -606,14 +606,14 @@ export const FISHING = {
 // com a qualidade dos ingredientes (média, arredondada para baixo).
 // bonus: hp/speed/dmg/area/xp = +%; cd = −% de recarga; crit = +chance; regen = vida/s
 export const KITCHEN = {
-  QUALITY_MULT: [1, 1.35, 1.7], // Comum, Prata, Ouro
+  QUALITY_MULT: [1, 1.2, 1.4], // Comum, Prata, Ouro (era 1,35/1,7: prato Ouro de dano valia ~70% de uma bênção maxada)
   RECIPES: [
     { id: "roast_carrot", name: "Cenoura Assada", food: "carrot", needs: { carrot: 2 }, bonus: { hp: 0.2 } },
     { id: "pamonha", name: "Pamonha", food: "corn", needs: { corn: 2 }, bonus: { speed: 0.1 } },
     { id: "tapioca", name: "Tapioca", food: "cassava", needs: { cassava: 2 }, bonus: { regen: 0.6 } },
     { id: "tropeiro", name: "Feijão Tropeiro", food: "bean", needs: { bean: 2, cassava: 1 }, bonus: { crit: 0.08 } },
     { id: "quibebe", name: "Quibebe", food: "pumpkin", needs: { pumpkin: 1, cassava: 1 }, bonus: { xp: 0.15 } },
-    { id: "brasa", name: "Caldo de Brasa", food: "pepper", needs: { pepper: 1, corn: 1 }, bonus: { dmg: 0.15 } },
+    { id: "brasa", name: "Caldo de Brasa", food: "pepper", needs: { pepper: 1, corn: 1 }, bonus: { dmg: 0.11 } },
     { id: "geada", name: "Chá de Geada", food: "frost", needs: { frost: 1, carrot: 1 }, bonus: { area: 0.15 } },
     { id: "trovao", name: "Mingau do Trovão", food: "thunder", needs: { thunder: 1, cassava: 1 }, bonus: { cd: 0.1 } },
     // Com peixe (Lago)
@@ -621,8 +621,8 @@ export const KITCHEN = {
     { id: "pirao", name: "Pirão de Peixe", needs: { tilapia: 1, cassava: 2 }, bonus: { cd: 0.08 } },
     { id: "caldeirada", name: "Caldeirada", needs: { cara: 1, traira: 1, corn: 1 }, bonus: { regen: 0.9 } },
     { id: "pacu_assado", name: "Pacu Assado", needs: { pacu: 1, cassava: 1 }, bonus: { hp: 0.3 } },
-    { id: "moqueca", name: "Moqueca de Tucunaré", needs: { tucunare: 1, carrot: 1, pepper: 1 }, bonus: { dmg: 0.2 } },
-    { id: "dourado_brasa", name: "Dourado na Brasa", needs: { dourado: 1 }, bonus: { crit: 0.12 } },
+    { id: "moqueca", name: "Moqueca de Tucunaré", needs: { tucunare: 1, carrot: 1, pepper: 1 }, bonus: { dmg: 0.15 } },
+    { id: "dourado_brasa", name: "Dourado na Brasa", needs: { dourado: 1 }, bonus: { crit: 0.09 } },
   ],
 };
 
