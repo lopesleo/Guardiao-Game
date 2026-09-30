@@ -73,6 +73,13 @@ export class GameScene extends Phaser.Scene {
 
     this.inputMgr = new InputManager(this);
     this.joystick = new VirtualJoystick(this.inputMgr);
+    // O Phaser não chama shutdown() sozinho: sem isto, cada partida deixava uma
+    // camada de toque (joystick) e a música anteriores para trás
+    this.events.once("shutdown", () => {
+      this.joystick?.destroy();
+      this.joystick = null;
+      this.shutdown();
+    });
 
     // Meta-progressão (carrega desbloqueios disponíveis)
     this.meta = new MetaProgression();

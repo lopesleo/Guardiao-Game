@@ -130,15 +130,15 @@ export class GameOverScene extends Phaser.Scene {
     // Botões
     const by = H - 62;
     const again = new Button(this, cx - 170, by, 310, 66, "JOGAR DE NOVO", () => this._go("GameScene"), { size: 26, style: "primary", color: CSS.goldHi });
-    new Button(this, cx + 170, by, 310, 66, "MENU", () => this._go("MenuScene"), { size: 26 });
+    new Button(this, cx + 170, by, 310, 66, "CLAREIRA", () => this._go("CampScene"), { size: 26 });
     this.tweens.add({ targets: again, scale: 1.04, duration: 800, yoyo: true, repeat: -1, delay: 1500 });
     this.input.keyboard.on("keydown-ENTER", () => this._go("GameScene"));
-    this.input.keyboard.on("keydown-ESC", () => this._go("MenuScene"));
+    this.input.keyboard.on("keydown-ESC", () => this._go("CampScene"));
     haptic(won ? 80 : 40);
   }
 
   onBack() {
-    this._go("MenuScene");
+    this._go("CampScene");
     return true;
   }
 
@@ -146,7 +146,8 @@ export class GameOverScene extends Phaser.Scene {
     if (this._leaving) return;
     this._leaving = true;
     this.cameras.main.fadeOut(250, 5, 8, 6);
-    this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start(key));
+    // Voltando à Clareira, o guardião chega pela trilha (vindo da floresta)
+    this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start(key, key === "CampScene" ? { fromRun: true } : undefined));
   }
 
   _backdrop(won) {

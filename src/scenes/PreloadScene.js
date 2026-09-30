@@ -41,7 +41,7 @@ export class PreloadScene extends Phaser.Scene {
     let i = 0;
     const next = () => {
       if (i >= steps.length) {
-        this.scene.start("MenuScene");
+        this.scene.start("TitleScene");
         return;
       }
       const [msg, fn] = steps[i];
