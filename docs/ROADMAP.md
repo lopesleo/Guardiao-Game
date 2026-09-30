@@ -65,7 +65,7 @@ Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
   encontrar — guardiões ao liberar, minichefes e chefe ao cruzar na floresta)
 - 👤 Revisão dos textos por leitor indígena/pesquisador de folclore (ideal)
 
-### M3 — Clareira, parte 2: horta, pesca e cozinha 🚧
+### M3 — Clareira, parte 2: horta, pesca e cozinha ✅
 - ✅ **Horta** revelada após a 3ª partida: canteiros no mapa (2 → 9 com obras do
   João-de-barro), 5 plantas comuns (cenoura 5 min, milho 30 min, feijão 1 h, abóbora
   4 h, mandioca 8 h) + 3 **mágicas** (pimenta-de-brasa, flor-de-geada, erva-do-trovão)
@@ -79,13 +79,21 @@ Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
   pé da tela (segurar = todos os vazios)
 - ✅ **Celeiro**: prédio próprio ao lado da horta + botão no HUD; colheita por
   qualidade e sementes raras
-- ⬜ Lago + minigame de um polegar + 7 peixes + varas + horário real
+- ✅ **Lago no chão** (revelado após a 1ª refeição): pesca no trapiche — lança a
+  linha, espera a boia afundar, toca para fisgar e joga o minijogo de um polegar por
+  cima do mundo (segurar sobe a zona verde); **7 peixes brasileiros** (lambari, cará,
+  tilápia, traíra, pacu, tucunaré, dourado) com jeitos diferentes (calmo, fujão,
+  saltador, arrastador) e **horário real** (traíra à noite; tucunaré e dourado de
+  dia); tamanho em cm + recordes; pegada perfeita = Ouro; o lago **descansa** (poucos
+  peixes, repõe 1 a cada 20 min; bolhas mostram que voltaram); obra do Lago = vara
+  melhor + mais peixes; valores em `FISHING` no config
 - ✅ **Cozinha** (fogão de barro ao lado da horta; revelada após a 1ª colheita):
   8 receitas da horta (Cenoura Assada, Pamonha, Tapioca, Feijão Tropeiro, Quibebe e
-  3 mágicas) → marmita por qualidade; **1 prato servido = bônus só na próxima
+  3 mágicas) → pratos prontos por qualidade; **1 prato servido = bônus só na próxima
   partida** (Ouro dá 1,7× o bônus); valores em `KITCHEN` no config
-- ⬜ Receitas com peixe (junto com o Lago)
-- ⬜ Ordem de descobertas por progresso ([`RITMO_E_APRESENTACAO.md`](RITMO_E_APRESENTACAO.md))
+- ✅ 6 receitas com peixe (Lambari Frito, Pirão, Caldeirada, Pacu Assado, Moqueca de
+  Tucunaré, Dourado na Brasa) — 14 no total
+- ✅ Ordem de descobertas por progresso ([`RITMO_E_APRESENTACAO.md`](RITMO_E_APRESENTACAO.md)): Horta (3ª partida) → Cozinha (1ª colheita) → Lago (1ª refeição), uma por visita
 
 ### M4 — Hábito diário ⬜
 - ⬜ Missões diárias (3/dia) + bônus ao completar todas

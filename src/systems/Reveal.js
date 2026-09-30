@@ -33,6 +33,11 @@ export const REVEALS = [
     line: "A cozinha acendeu! Transforme a colheita num prato e coma antes da próxima partida.",
   },
   {
+    id: "pond",
+    when: (d) => (d.stats?.mealsEaten || 0) >= 1 || (d.stats?.fishCaught || 0) > 0,
+    line: "O lago voltou a ter vida! Vá até o trapiche e jogue a linha.",
+  },
+  {
     id: "board",
     when: (d) => (d.runsPlayed || 0) >= 4 || (d.achievements || []).length > 0,
     line: "O Mural guarda cada feito seu na floresta.",

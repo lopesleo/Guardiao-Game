@@ -4,13 +4,15 @@
 // (E no teclado / botão de ação no toque):
 //   Fogueira → guardiões · Santuário → bênçãos e dons · Forja → armas ·
 //   Mural → Conquistas · Horta → plantar/cuidar/colher (no chão) · Celeiro ·
-//   Cozinha → pratos · Placa da trilha → Perigo · Anciã → conversa.
+//   Cozinha → pratos · Lago → pescar (no trapiche) · Placa da trilha → Perigo ·
+//   Anciã → conversa.
 // A trilha ao norte leva à floresta (começa a partida).
 import { GAME, CHARACTERS, DIFFICULTY, META, BLESSINGS, BUILDINGS } from "../config.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
 import { Builds, fmtDuration } from "../systems/Builds.js";
 import { Garden } from "../systems/Garden.js";
 import { Kitchen } from "../systems/Kitchen.js";
+import { Pond } from "../systems/Pond.js";
 import { REVEALS, pendingReveals } from "../systems/Reveal.js";
 import { InputManager } from "../systems/InputManager.js";
 import { VirtualJoystick } from "../ui/VirtualJoystick.js";
@@ -22,6 +24,7 @@ import { Modal, closeTopModal } from "../ui/Widgets.js";
 import { MetaPanels } from "../ui/MetaPanels.js";
 import { CampGarden } from "./CampGarden.js";
 import { CampKitchen } from "./CampKitchen.js";
+import { CampPond } from "./CampPond.js";
 
 const S = GAME.PIXEL_SCALE;
 const CAMP_W = 1500,
@@ -55,6 +58,7 @@ export class CampScene extends Phaser.Scene {
     this.builds = new Builds(this.meta);
     this.garden = new Garden(this.meta, this.builds.level("garden"));
     this.kitchen = new Kitchen(this.meta);
+    this.pond = new Pond(this.meta, this.builds.level("pond"));
     this.D_HUD = D_HUD;
     // Revelações: pendentes viram cena (1 por visita); o resto aparece normal
     this._pending = pendingReveals(this.meta.data);
@@ -88,6 +92,7 @@ export class CampScene extends Phaser.Scene {
     this._structures();
     this._gardenWorld();
     this._kitchenWorld();
+    this._pondWorld();
     this._player();
     this._night();
     this._hud();
@@ -454,6 +459,7 @@ export class CampScene extends Phaser.Scene {
     this.buildings.forge.dot.setVisible(canArsenal && this.buildings.forge.shown);
     this._refreshGardenWorld();
     this._refreshKitchenDot();
+    this._refreshPondDot();
   }
 
   // Trocou de guardião na Fogueira: o avatar muda na hora (com fumacinha)
@@ -693,6 +699,7 @@ export class CampScene extends Phaser.Scene {
   _onBuildDone(r) {
     const name = BUILDINGS[r.id].name;
     if (r.id === "garden") this.garden.setLevel(r.to);
+    if (r.id === "pond") this.pond.setLevel(r.to);
     const b = this.buildings[r.id];
     this.sound.play("sfx_levelup", { volume: 0.6 });
     haptic(40);
@@ -709,7 +716,7 @@ export class CampScene extends Phaser.Scene {
 
   // Construções que o João-de-barro pode melhorar (as já reveladas)
   _workIds() {
-    return ["fire", "shrine", "forge", "garden"].filter((id) => this._isShown(id));
+    return ["fire", "shrine", "forge", "garden", "pond"].filter((id) => this._isShown(id));
   }
 
   // Aviso curto no alto da tela
@@ -836,4 +843,4 @@ export class CampScene extends Phaser.Scene {
   }
 }
 
-Object.assign(CampScene.prototype, MetaPanels, CampGarden, CampKitchen);
+Object.assign(CampScene.prototype, MetaPanels, CampGarden, CampKitchen, CampPond);

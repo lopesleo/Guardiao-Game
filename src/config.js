@@ -491,6 +491,7 @@ export const BUILDINGS = {
   shrine: { name: "Santuário", max: 5 },
   forge: { name: "Forja", max: 4 },
   garden: { name: "Horta", max: 4 }, // nível → canteiros (GARDEN.PLOTS) e plantas
+  pond: { name: "Lago", max: 3 }, // nível → vara melhor e mais peixes (FISHING.LEVELS)
 };
 
 // Madeira Ancestral: material das obras da Clareira. Rara de propósito — as
@@ -534,6 +535,34 @@ export const GARDEN = {
   SEEDS: { MINIBOSS: 1, GOLDEN_CHEST: 1, BOSS: 2 },
 };
 
+// Lago da Clareira (M3): pesca no chão (trapiche) + minijogo de um polegar:
+// segurar sobe a zona verde, soltar desce; manter o peixe dentro enche a barra.
+// O lago "descansa": tem poucos peixes e repõe com o tempo real (sem cronômetro
+// na cara — bolhas na água mostram que há peixe). Horário REAL muda quem aparece.
+export const FISHING = {
+  // nível do Lago (obra) → zona verde (fração da barra) e peixes no lago
+  LEVELS: [null, { zone: 0.26, cap: 4 }, { zone: 0.31, cap: 6 }, { zone: 0.36, cap: 8 }],
+  REGEN_MIN: 20, // o lago repõe 1 peixe a cada 20 min
+  BITE_S: [1.2, 3.5], // espera pela fisgada
+  HOOK_S: 1.2, // tempo para puxar depois do "!"
+  FILL_S: 3, // segundos com o peixe na zona para pegar
+  DRAIN_S: 4, // segundos fora da zona para ele escapar (barra cheia → vazia)
+  START: 0.3, // progresso inicial
+  RISE: 2.2, // aceleração da zona segurando (barra/s²)
+  FALL: 1.8, // …e soltando
+  // move: calm (calmo) · darter (fujão: arrancadas) · jumper (saltador) · sinker (arrastador: puxa pro fundo)
+  // w = peso no sorteio; day/night = só nesse horário (6h–18h é dia)
+  FISH: {
+    lambari: { name: "Lambari", move: "calm", speed: 0.35, w: 30, cm: [8, 16] },
+    cara: { name: "Cará", move: "calm", speed: 0.5, w: 22, cm: [10, 22] },
+    tilapia: { name: "Tilápia", move: "calm", speed: 0.6, w: 18, cm: [18, 42] },
+    traira: { name: "Traíra", move: "darter", speed: 0.55, w: 14, cm: [25, 60], night: true },
+    pacu: { name: "Pacu", move: "sinker", speed: 0.5, w: 11, cm: [30, 70] },
+    tucunare: { name: "Tucunaré", move: "darter", speed: 0.75, w: 7, cm: [30, 80], day: true },
+    dourado: { name: "Dourado", move: "jumper", speed: 0.85, w: 3, cm: [50, 100], day: true },
+  },
+};
+
 // Cozinha da Clareira (M3): colheita vira prato; 1 prato servido = bônus só na
 // PRÓXIMA partida (o prato é consumido ao entrar na floresta). O bônus cresce
 // com a qualidade dos ingredientes (média, arredondada para baixo).
@@ -549,6 +578,13 @@ export const KITCHEN = {
     { id: "brasa", name: "Caldo de Brasa", food: "pepper", needs: { pepper: 1, corn: 1 }, bonus: { dmg: 0.15 } },
     { id: "geada", name: "Chá de Geada", food: "frost", needs: { frost: 1, carrot: 1 }, bonus: { area: 0.15 } },
     { id: "trovao", name: "Mingau do Trovão", food: "thunder", needs: { thunder: 1, cassava: 1 }, bonus: { cd: 0.1 } },
+    // Com peixe (Lago)
+    { id: "lambari_frito", name: "Lambari Frito", needs: { lambari: 3 }, bonus: { pickup: 0.3 } },
+    { id: "pirao", name: "Pirão de Peixe", needs: { tilapia: 1, cassava: 2 }, bonus: { cd: 0.08 } },
+    { id: "caldeirada", name: "Caldeirada", needs: { cara: 1, traira: 1, corn: 1 }, bonus: { regen: 0.9 } },
+    { id: "pacu_assado", name: "Pacu Assado", needs: { pacu: 1, cassava: 1 }, bonus: { hp: 0.3 } },
+    { id: "moqueca", name: "Moqueca de Tucunaré", needs: { tucunare: 1, carrot: 1, pepper: 1 }, bonus: { dmg: 0.2 } },
+    { id: "dourado_brasa", name: "Dourado na Brasa", needs: { dourado: 1 }, bonus: { crit: 0.12 } },
   ],
 };
 
