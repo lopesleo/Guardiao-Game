@@ -41,6 +41,15 @@ Base para tudo que vem depois; o jogador quase não vê.
 - ⬜ **Madeira Ancestral** caindo nas partidas
 - ⬜ Clareira começa **em ruínas** e é revelada por progresso; guia **Anciã da Fogueira**
 
+### M2.5 — Lendas da mata ⬜
+Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
+- ⬜ Redesenho dos 4 personagens: **Curupira**, **Iara**, **Saci**, **Caipora**
+- ⬜ Chefe **Mapinguari corrompido** (vencer = libertá-lo da Podridão)
+- ⬜ Minichefes **Mula sem Cabeça** e **Corpo-Seco**
+- ⬜ Nomes/descrições de inimigos, armas e reações revistos no tema
+- ⬜ Bestiário com a origem de cada lenda
+- 👤 Revisão dos textos por leitor indígena/pesquisador de folclore (ideal)
+
 ### M3 — Clareira, parte 2: horta, pesca e cozinha ⬜
 - ⬜ Horta (estágios, rega, ervas daninhas, pragas, qualidade; nunca morre)
 - ⬜ Lago + minigame de um polegar + 7 peixes + varas + horário real
@@ -69,10 +78,10 @@ Base para tudo que vem depois; o jogador quase não vê.
 
 ---
 
-## Decisões pendentes 👤
-- **Tema folclore brasileiro** (Curupira, Iara, Saci…) — decidir **antes do M2**,
-  porque muda personagens, guia e nomes na Clareira. Até lá, os sistemas são
-  feitos independentes do tema.
+## Decisões tomadas
+- **Tema folclore brasileiro: SIM** (29/09/2026), como camada respeitosa — as
+  lendas são guardiãs e aliadas; o vilão é a Podridão. Ver
+  [`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md).
 
 ## Depois do lançamento (atualizações)
 | Ordem | Atualização |
