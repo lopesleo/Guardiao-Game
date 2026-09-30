@@ -962,6 +962,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   _spawnBoss() {
+    this.meta.markLegend("mapinguari");
     const ang = Math.random() * Math.PI * 2;
     const r = 320;
     const bx = this.player.x + Math.cos(ang) * r;

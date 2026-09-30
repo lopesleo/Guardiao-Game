@@ -445,6 +445,26 @@ export const ENDLESS = {
   EVENT_EVERY_S: 45, // um evento (enxame/cerco/minichefe) a cada 45 s
 };
 
+// Bestiário das LENDAS (aba do Mural). Cada ficha: quem é no jogo + a ORIGEM
+// da lenda (cuidado de representação: citar a origem — ver TEMA_FOLCLORE.md).
+// char = liberada junto com o guardião; as outras, ao encontrá-las na mata.
+export const LEGENDS = [
+  { id: "curupira", char: "guardian", name: "Curupira", sprite: ["hero_guardian", 0, 2.2], role: "Guardião da mata · fogo",
+    origin: "Lenda de origem tupi, registrada já no século XVI. Protege as matas e os bichos; os pés virados para trás deixam rastros que confundem os caçadores." },
+  { id: "caipora", char: "huntress", name: "Caipora", sprite: ["hero_huntress", 0, 2.2], role: "Protetora dos bichos · bumerangue",
+    origin: "Do tupi ka'apora, \"habitante do mato\". Protetora dos animais contra a caça em excesso; em muitas regiões anda montada num porco-do-mato." },
+  { id: "iara", char: "druid", name: "Iara", sprite: ["hero_druid", 0, 2.2], role: "Senhora das águas · gelo",
+    origin: "Do tupi y-îara, \"senhora das águas\". Vive nos rios da Amazônia e encanta com seu canto; a lenda somou traços europeus e africanos com o tempo." },
+  { id: "saci", char: "shaman", name: "Saci", sprite: ["hero_shaman", 0, 2.2], role: "Redemoinho travesso · raio",
+    origin: "Nasceu do Jaxy Jaterê guarani e ganhou traços africanos e europeus ao longo dos séculos. Esperto e brincalhão, vive dentro dos redemoinhos de vento." },
+  { id: "mula", name: "Mula sem Cabeça", sprite: ["mon_alpha", 0, 2.2], role: "Minichefe · investidas em chamas",
+    origin: "Lenda de origem ibérica espalhada pelo interior do Brasil: uma mula que solta fogo pelo pescoço e galopa pelos campos em noites escuras." },
+  { id: "corposeco", name: "Corpo-Seco", sprite: ["mon_elder", 0, 2], role: "Minichefe · lento e resistente",
+    origin: "Contada no interior do Sudeste: alguém tão cruel em vida que nem a terra o aceitou, e ficou seco, vagando. Aqui, a Podridão o levantou." },
+  { id: "mapinguari", name: "Mapinguari", sprite: ["mon_boss", 4, 1.2], role: "Chefe · corrompido pela Podridão",
+    origin: "Gigante da Amazônia, peludo, com um olho na testa e a boca na barriga. Há quem ligue a lenda às preguiças-gigantes extintas. Vencê-lo o liberta." },
+];
+
 // Obras da Clareira (níveis das construções): custam moedas + Madeira Ancestral
 // e levam tempo real, feitas pelo João-de-barro (1 obra por vez). Partidas
 // adiantam a obra; faltando FREE_FINISH_MIN ou menos, conclui com um toque.

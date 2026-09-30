@@ -151,6 +151,15 @@ export class MetaProgression {
     this._save();
   }
 
+  // Bestiário: lenda encontrada na floresta (minichefes, chefe)
+  markLegend(id) {
+    const list = (this.data.legendsSeen ||= []);
+    if (list.includes(id)) return false;
+    list.push(id);
+    this._save();
+    return true;
+  }
+
   addCoins(n) {
     this.data.totalCoins += n;
     if (n > 0) this.data.stats.totalCoinsEarned += n;
