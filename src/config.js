@@ -50,8 +50,8 @@ export const ENEMY = {
   // wave = floor(t / 30); a cada 30s sobe a wave
   // Curva: começo mais suave, late-game duro
   HP: (wave) => 12 + 6 * wave,
-  // Dano subido (era 2 + 0.9*wave): inimigos não ameaçavam no late-game.
-  DMG: (wave) => 2 + 1.6 * wave,
+  // Estilo Vampire Survivors: ~8% da vida por batida no começo (era 2 + 1.6*wave, 2%).
+  DMG: (wave) => 8 + 1.4 * wave,
   // Velocidades subidas (lobo 95→145, goblin 60→105): player (160) não pode
   // mais correr de TODO mundo de graça — kiting trivial era um exploit.
   SPEED_WOLF: 145,
