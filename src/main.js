@@ -4,7 +4,8 @@
 import { GAME, COLORS } from './config.js';
 import { BootScene } from './scenes/BootScene.js';
 import { PreloadScene } from './scenes/PreloadScene.js';
-import { MenuScene } from './scenes/MenuScene.js';
+import { TitleScene } from './scenes/TitleScene.js';
+import { CampScene } from './scenes/CampScene.js';
 import { GameScene } from './scenes/GameScene.js';
 import { HUDScene } from './scenes/HUDScene.js';
 import { LevelUpScene } from './scenes/LevelUpScene.js';
@@ -36,7 +37,8 @@ const config = {
   scene: [
     BootScene,
     PreloadScene,
-    MenuScene,
+    TitleScene,
+    CampScene,
     GameScene,
     HUDScene,
     LevelUpScene,

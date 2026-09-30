@@ -3,7 +3,7 @@
 //   fruta (cura) · Vácuo de Seiva (puxa todas as gemas) ·
 //   Relógio da Mata (congela tudo) · Sopro Ancestral (limpa a tela).
 // Dá motivo para andar pelo mapa e momentos de alívio no meio da horda.
-import { LANTERN, GAME } from "../config.js";
+import { LANTERN, GAME, ARENA } from "../config.js";
 import { Analytics } from "./Analytics.js";
 
 const S = GAME.PIXEL_SCALE;
@@ -83,13 +83,13 @@ export class LanternSystem {
 
   _spawn(player) {
     const s = this.scene;
-    const R = GAME.WORLD_RADIUS - 80;
+    const m = 60; // dentro da área jogável, fora da muralha de árvores
     for (let tries = 0; tries < 10; tries++) {
       const ang = Math.random() * Math.PI * 2;
       const d = LANTERN.MIN_DIST + Math.random() * (LANTERN.MAX_DIST - LANTERN.MIN_DIST);
       const x = player.x + Math.cos(ang) * d,
         y = player.y + Math.sin(ang) * d;
-      if (Math.abs(x) > R || Math.abs(y) > R) continue;
+      if (x < ARENA.minX + m || x > ARENA.maxX - m || y < ARENA.minY + m || y > ARENA.maxY - m) continue;
       if (this.list.some((l) => (l.x - x) ** 2 + (l.y - y) ** 2 < 300 * 300)) continue;
       const spr = s.add.sprite(x, y, "px_lantern", 0).setScale(S).setOrigin(0.5, 0.9);
       spr.setDepth(y + 10000);

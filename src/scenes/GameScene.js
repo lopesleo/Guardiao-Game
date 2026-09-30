@@ -15,6 +15,8 @@ import {
   CHARACTERS,
   ADS,
   ENDLESS,
+  INTRO,
+  ARENA,
 } from "../config.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
@@ -63,16 +65,19 @@ export class GameScene extends Phaser.Scene {
   create() {
     fitCamera(this);
     const WS = GAME.WORLD_RADIUS * 2;
-    this.physics.world.setBounds(
-      -GAME.WORLD_RADIUS,
-      -GAME.WORLD_RADIUS,
-      WS,
-      WS,
-    );
-    this.world = new ForestWorld(this);
+    // Limite físico na face de dentro da muralha (ver ARENA em config.js)
+    this.physics.world.setBounds(ARENA.minX, ARENA.minY, ARENA.maxX - ARENA.minX, ARENA.maxY - ARENA.minY);
+    this.world = new ForestWorld(this, { entrance: { half: INTRO.PATH_HALF, y: ARENA.maxY } });
 
     this.inputMgr = new InputManager(this);
     this.joystick = new VirtualJoystick(this.inputMgr);
+    // O Phaser não chama shutdown() sozinho: sem isto, cada partida deixava uma
+    // camada de toque (joystick) e a música anteriores para trás
+    this.events.once("shutdown", () => {
+      this.joystick?.destroy();
+      this.joystick = null;
+      this.shutdown();
+    });
 
     // Meta-progressão (carrega desbloqueios disponíveis)
     this.meta = new MetaProgression();
@@ -110,7 +115,7 @@ export class GameScene extends Phaser.Scene {
       CHARACTERS.find((c) => c.id === this.meta.selectedCharacter && this.meta.hasCharacter(c.id)) || CHARACTERS[0];
 
     // Player
-    this.player = new Player(this, 0, 0, this.character.id);
+    this.player = new Player(this, 0, GAME.WORLD_RADIUS - INTRO.END_OFF, this.character.id);
     this._applyCharacterMods(this.player, this.character.mods || {});
     // Aplica bênçãos compradas ANTES de criar armas (afetam stats base)
     for (const b of BLESSINGS) {
@@ -149,8 +154,8 @@ export class GameScene extends Phaser.Scene {
     }
     this._killsSinceLastChest = 0;
 
-    // Câmera — segue player mas trava nas bordas do mundo
-    this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+    // Câmera — trava nas bordas do mundo; começa PARADA para o guardião entrar
+    // pela trilha (ver _startIntro) e só então passa a segui-lo
     this.cameras.main.setBounds(-GAME.WORLD_RADIUS, -GAME.WORLD_RADIUS, WS, WS);
 
     this._poofCount = 0;
@@ -258,11 +263,116 @@ export class GameScene extends Phaser.Scene {
       this.bgMusic.play();
     }
     this.gameOver = false;
+    this._introPhase = null;
+    this._levelUpOpen = false;
     this.endless = false;
     this._endlessStartMs = 0;
     this._reviveOpen = false;
 
-    // Onboarding (D20): 5s, skipável
+    // Entrada pela trilha: o guardião chega andando e a mata se fecha atrás
+    // dele; o relógio e as hordas só começam depois (onboarding no fim)
+    this._startIntro();
+  }
+
+  // =========================================================================
+  // ENTRADA NA FLORESTA (continuação da saída da Clareira)
+  // =========================================================================
+  _startIntro() {
+    const p = this.player;
+    const S = GAME.PIXEL_SCALE;
+    const R = GAME.WORLD_RADIUS;
+    this._intro = true;
+    this._introEndY = R - INTRO.END_OFF;
+    this._gateY = R - INTRO.GATE_OFF;
+    const cam = this.cameras.main;
+    cam.centerOn(0, R - 260); // limitada pela borda: a base da tela é a borda da arena
+    cam.fadeIn(600, 5, 8, 6); // continua o escurecer da Clareira
+    p.setCollideWorldBounds(false); // vem de fora da arena
+    p.setPosition(0, R - INTRO.START_OFF);
+    p.setFlipX(false);
+    const env = this.registry.get("envKeys");
+    // Trilha de terra atravessando a muralha de árvores
+    for (let y = this._introEndY - 50; y < R + 80; y += 36) {
+      this.add.image((y % 3) * 5, y, "env", env.patches.dirt[(y / 36) % env.patches.dirt.length | 0]).setScale(S).setDepth(-50);
+    }
+    // Lados da brecha: mesma regra da muralha sul (copa começando na linha do
+    // limite), em fileiras descendo — a trilha passa ENTRE as árvores
+    const trees = [...env.trees, ...env.pines, ...env.pines];
+    for (let i = 0; i < 4; i++) {
+      for (const side of [-1, 1]) {
+        const x = side * (INTRO.PATH_HALF + 70 + (i % 2) * 10);
+        this.world.southTree(x, this._gateY - 4 + i * 48, trees).setFlipX(side > 0);
+      }
+    }
+    // Some o HUD durante a entrada (volta junto com o controle)
+    // (só o HUD: profundidade >= 50000; a camada de luz e o chão ficam)
+    this._introHud = this.children.list.filter((o) => o.scrollFactorX === 0 && o.visible && o.depth >= 50000 && o !== this.lighting?.rt);
+    this._introHud.forEach((o) => o.setAlpha(0));
+  }
+
+  // Anda sozinho até passar da brecha; então a mata fecha e o jogo começa
+  _updateIntro(time, dt) {
+    const p = this.player;
+    this.world.update(time, dt, p);
+    this.lighting.update(time);
+    if (this._introPhase === "closing") return;
+    if (p.y > this._introEndY) {
+      p.setVelocity(0, -p.speed * INTRO.WALK_MULT);
+      if (p.anims.currentAnim?.key !== `${p.heroId}_walk`) p.play(`${p.heroId}_walk`);
+      p.setDepth(p.y + 10000);
+      return;
+    }
+    p.setVelocity(0, 0);
+    p.play(`${p.heroId}_idle`);
+    this._introPhase = "closing";
+    this._closeGate();
+  }
+
+  // Árvores brotam e fecham a brecha atrás do guardião — e viram parede
+  _closeGate() {
+    const S = GAME.PIXEL_SCALE;
+    const env = this.registry.get("envKeys");
+    const y = this._gateY;
+    const xs = [-INTRO.PATH_HALF + 4, -18, 22, INTRO.PATH_HALF - 2];
+    // Folhas voando enquanto as árvores brotam
+    xs.forEach((x, i) => {
+      this.time.delayedCall(120 + i * 90, () => {
+        for (let k = 0; k < 5; k++) {
+          const l = this.add.image(x, y - 10, "px_leaf").setScale(3).setDepth(y + 10100);
+          const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2;
+          this.tweens.add({
+            targets: l,
+            x: x + Math.cos(a) * (30 + Math.random() * 40),
+            y: y - 10 + Math.sin(a) * (30 + Math.random() * 30) + 30,
+            angle: Math.random() * 360,
+            alpha: 0,
+            duration: 700,
+            onComplete: () => l.destroy(),
+          });
+        }
+      });
+    });
+    // Árvores brotam na brecha: a muralha fica contínua, igual ao resto da borda
+    [-30, 32].forEach((x, i) => {
+      const t = this.world.southTree(x, y - 4 + i * 12, env.pines);
+      t.setScale(S, 0);
+      this.tweens.add({ targets: t, scaleY: S, duration: 520, delay: 120 + i * 140, ease: "Back.easeOut" });
+    });
+    // Parede física: não dá para voltar pela brecha
+    const wall = this.add.zone(0, y - 10, INTRO.PATH_HALF * 2 + 90, 40);
+    this.physics.add.existing(wall, true);
+    this.physics.add.collider(this.player, wall);
+    this.player.setCollideWorldBounds(true);
+    this.sound.play("sfx_dash", { volume: 0.5, rate: 0.55 });
+    this.time.delayedCall(260, () => this.cameras.main.shake(220, 0.006));
+    this.time.delayedCall(INTRO.CLOSE_MS, () => this._endIntro());
+  }
+
+  _endIntro() {
+    this._intro = false;
+    this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+    this._introHud?.forEach((o) => o.active && this.tweens.add({ targets: o, alpha: 1, duration: 350 }));
+    this._introHud = null;
     this._showOnboarding();
   }
 
@@ -330,6 +440,7 @@ export class GameScene extends Phaser.Scene {
 
   update(time, dt) {
     if (this.gameOver) return;
+    if (this._intro) return this._updateIntro(time, dt);
     this.elapsedMs += dt;
 
     // Conquista "Maratonista" (10:00) — checagem explícita porque na fase de
@@ -891,10 +1002,11 @@ export class GameScene extends Phaser.Scene {
   }
 
   _randomChestPos() {
-    const r = GAME.WORLD_RADIUS - 100;
+    // Sempre dentro da área jogável (nunca escondido na muralha de árvores)
+    const m = 80;
     for (let i = 0; i < 30; i++) {
-      const x = (Math.random() - 0.5) * r * 2;
-      const y = (Math.random() - 0.5) * r * 2;
+      const x = Phaser.Math.Between(ARENA.minX + m, ARENA.maxX - m);
+      const y = Phaser.Math.Between(ARENA.minY + m, ARENA.maxY - m);
       const dx = x - (this.player?.x ?? 0),
         dy = y - (this.player?.y ?? 0);
       if (dx * dx + dy * dy > 250 * 250) return { x, y };

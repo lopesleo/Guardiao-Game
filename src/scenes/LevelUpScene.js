@@ -20,6 +20,7 @@ export class LevelUpScene extends Phaser.Scene {
     this._cardObjs = [];
     this.rerollsLeft = 1;
     this._locked = false;
+    this._extraBusy = false;
     this.isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     const W = vw(this),
       H = vh(this);

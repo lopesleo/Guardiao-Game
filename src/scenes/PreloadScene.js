@@ -8,6 +8,7 @@ import { registerHeroes } from "../art/Hero.js";
 import { registerMonsters } from "../art/Monsters.js";
 import { registerTelegraphs } from "../art/Telegraph.js";
 import { registerLanterns } from "../art/Lanterns.js";
+import { registerCamp } from "../art/Camp.js";
 import { registerAudio } from "../audio/Synth.js";
 import { text, Bar, PAL, vw, vh, fitCamera } from "../ui/Theme.js";
 
@@ -34,12 +35,13 @@ export class PreloadScene extends Phaser.Scene {
       ["Corrompendo criaturas…", () => registerMonsters(this)],
       ["Afiando garras…", () => registerTelegraphs(this)],
       ["Acendendo cogumelos…", () => registerLanterns(this)],
+      ["Erguendo o acampamento…", () => registerCamp(this)],
       ["Afinando a floresta…", () => registerAudio(this.game)],
     ];
     let i = 0;
     const next = () => {
       if (i >= steps.length) {
-        this.scene.start("MenuScene");
+        this.scene.start("TitleScene");
         return;
       }
       const [msg, fn] = steps[i];

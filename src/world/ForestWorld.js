@@ -17,6 +17,8 @@ export class ForestWorld {
     this.R = opts.radius ?? GAME.WORLD_RADIUS;
     this.keys = scene.registry.get("envKeys");
     this.r = rng(opts.seed ?? (Math.random() * 1e9) | 0);
+    // Entrada da floresta na borda sul: { half } = meia-largura da brecha
+    this.entrance = opts.entrance ?? null;
     this.trees = [];
     this.statics = []; // toda decoração fixa — culling por câmera em update()
     this._cullAt = 0;
@@ -70,7 +72,9 @@ export class ForestWorld {
   _scatter() {
     const R = this.R,
       k = this.keys;
-    const clear = (x, y, r = 240) => x * x + y * y > r * r; // spawn do player livre
+    // Livre: centro da arena e a trilha de entrada (borda sul)
+    const E = this.entrance;
+    const clear = (x, y, r = 240) => (x * x + y * y > r * r) && !(E && Math.abs(x) < E.half + 140 && y > R - 620);
     const grid = (cell, fn) => {
       for (let cy = -R; cy < R; cy += cell)
         for (let cx = -R; cx < R; cx += cell) fn(cx + this.r() * cell, cy + this.r() * cell);
@@ -120,18 +124,35 @@ export class ForestWorld {
     return im;
   }
 
+  // Árvore da muralha sul: a copa começa em topY (o tronco fica mais abaixo).
+  // Não entra na lista de "desbotar": o jogador nunca fica atrás dela.
+  southTree(x, topY, list) {
+    const f = this._pick(list);
+    const h = this.scene.textures.getFrame("env", f).height * S;
+    const y = topY + h;
+    const im = this._img(x, y, f, y + Y_SORT);
+    this._shadow(x, y - 2, im.displayWidth * 0.7);
+    return im;
+  }
+
   // Muralha de floresta nas bordas: a arena vira uma CLAREIRA fechada
   _border() {
     const R = this.R;
     const k = this.keys;
     const all = [...k.trees, ...k.pines, ...k.pines];
     const step = 74;
+    const E = this.entrance;
     for (let t = -R - 60; t < R + 60; t += step) {
       for (let row = 0; row < 2; row++) {
         const inset = 30 + row * 80 + this.r() * 30;
         const j = () => t + (this.r() - 0.5) * 40;
         this._tree(j(), -R + inset, all); // topo
-        this._tree(j(), R - inset + 40, all); // base
+        // Sul: cada árvore é posicionada pela PRÓPRIA altura para a copa começar
+        // na linha do limite físico — a mata é a parede (sem grama aberta antes
+        // dela). Brecha no meio para a trilha de entrada.
+        const xb = j();
+        if (E?.y == null) this._tree(xb, R - inset + 40, all);
+        else if (Math.abs(xb) > E.half + 100) this.southTree(xb, E.y - 4 + row * 48 + this.r() * 10, all);
         this._tree(-R + inset, j(), all); // esquerda
         this._tree(R - inset, j(), all); // direita
       }

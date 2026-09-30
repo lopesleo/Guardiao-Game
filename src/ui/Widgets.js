@@ -19,7 +19,7 @@ export class Modal {
     this.onClose = o.onClose;
     const depth = D_MODAL + (scene._modals?.length ?? 0) * 10;
     this.bg = dim(scene, 0.75, depth);
-    this.root = scene.add.container(W / 2, H / 2).setDepth(depth + 1);
+    this.root = scene.add.container(W / 2, H / 2).setDepth(depth + 1).setScrollFactor(0);
     const g = scene.add.graphics();
     drawFrame(g, -this.w / 2, -this.h / 2, this.w, this.h, o.style ?? "gold");
     this.root.add(g);
@@ -84,15 +84,17 @@ export class ScrollList {
     this.rows = [];
     this.scroll = 0;
     this.contentH = 0;
-    this.content = scene.add.container(x, y).setDepth(depth);
-    const maskG = scene.make.graphics({ add: false });
+    // Tudo fixo na tela (scrollFactor 0): funciona também em cenas com câmera
+    // que segue o jogador (a Clareira)
+    this.content = scene.add.container(x, y).setDepth(depth).setScrollFactor(0);
+    const maskG = scene.make.graphics({ add: false }).setScrollFactor(0);
     maskG.fillStyle(0xffffff).fillRect(x, y, w, h);
     this.content.setMask(maskG.createGeometryMask());
     this._maskG = maskG;
     // Barra de rolagem
-    this.bar = scene.add.graphics().setDepth(depth + 1);
+    this.bar = scene.add.graphics().setDepth(depth + 1).setScrollFactor(0);
 
-    this.zone = scene.add.zone(x, y, w, h).setOrigin(0).setDepth(depth + 2).setInteractive();
+    this.zone = scene.add.zone(x, y, w, h).setOrigin(0).setDepth(depth + 2).setScrollFactor(0).setInteractive();
     let startY = 0,
       startScroll = 0,
       dragged = false,
