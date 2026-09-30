@@ -18,6 +18,9 @@ export class GameOverScene extends Phaser.Scene {
   create(data) {
     const { won, quit, elapsedMs, kills, coinsGained, newUnlocks = [], difficulty, unlockedNextDifficulty, level = 1, weapons = [], endlessS = 0, endlessRecord = false } = data;
     fitCamera(this);
+    // O Phaser REAPROVEITA a instância da cena: todo estado de "visita" precisa
+    // ser zerado aqui, senão sobra da vez anterior (ex.: herói preso andando).
+    this._leaving = false;
     this._coinsShown = undefined;
     this._coinText = null;
     const W = vw(this),

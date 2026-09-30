@@ -264,6 +264,7 @@ export class GameScene extends Phaser.Scene {
     }
     this.gameOver = false;
     this._introPhase = null;
+    this._levelUpOpen = false;
     this.endless = false;
     this._endlessStartMs = 0;
     this._reviveOpen = false;

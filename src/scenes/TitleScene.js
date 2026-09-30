@@ -21,6 +21,9 @@ export class TitleScene extends Phaser.Scene {
     this.W = vw(this);
     this.H = vh(this);
     this._modals = [];
+    // O Phaser REAPROVEITA a instância da cena: todo estado de "visita" precisa
+    // ser zerado aqui, senão sobra da vez anterior (ex.: herói preso andando).
+    this._leaving = false;
 
     this._backdrop();
     this._heroArea();

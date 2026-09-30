@@ -47,7 +47,12 @@ export class CampScene extends Phaser.Scene {
     this.W = vw(this);
     this.H = vh(this);
     this._modals = [];
+    // O Phaser REAPROVEITA a instância da cena: todo estado de "visita" precisa
+    // ser zerado aqui, senão sobra da vez anterior (ex.: herói preso andando).
     this._leaving = false;
+    this._exiting = false;
+    this._target = null;
+    this._bubbleUntil = 0;
     this._elderLine = this.meta.data.elderLine || 0;
     this.isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
