@@ -87,6 +87,11 @@ Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
   dia); tamanho em cm + recordes; pegada perfeita = Ouro; o lago **descansa** (poucos
   peixes, repõe 1 a cada 20 min; bolhas mostram que voltaram); obra do Lago = vara
   melhor + mais peixes; valores em `FISHING` no config
+- ✅ Lago redesenhado: igarapé de contorno orgânico com faixas de profundidade,
+  ilhota com açaizeiro (e seu reflexo), bica d'água caindo das pedras, vitórias-régias
+  balançando, trapiche com lamparina refletida (o herói anda até a ponta), canoa,
+  brilho da lua correndo na água, névoa rasteira, peixes saltando e vaga-lumes
+  refletidos
 - ✅ **Cozinha** (fogão de barro ao lado da horta; revelada após a 1ª colheita):
   8 receitas da horta (Cenoura Assada, Pamonha, Tapioca, Feijão Tropeiro, Quibebe e
   3 mágicas) → pratos prontos por qualidade; **comer 1 prato = bônus só na próxima
