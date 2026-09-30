@@ -292,7 +292,10 @@ export class TitleScene extends Phaser.Scene {
     this._leaving = true;
     haptic(30);
     this.cameras.main.fadeOut(300, 5, 8, 6);
-    this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start("CampScene"));
+    // 1ª vez: direto para a floresta (primeiro sucesso em segundos); a Clareira
+    // aparece depois da 1ª partida
+    const firstTime = !(this.meta.data.runsPlayed > 0) && !(this.meta.data.highScoreSeconds > 0);
+    this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start(firstTime ? "GameScene" : "CampScene"));
   }
 }
 
