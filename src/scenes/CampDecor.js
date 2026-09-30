@@ -49,6 +49,16 @@ export function skyAt(hour) {
   return { color: SKY[0][1], k: 1 };
 }
 
+// Áreas reservadas (sem cogumelo/flor/capim soltos): horta, lago, celeiro,
+// cozinha e o terreiro da fogueira
+const RESERVED = [
+  [-170, 250, 210, 500],
+  [360, -40, 740, 210],
+  [-400, 260, -200, 480],
+  [200, 280, 420, 480],
+];
+export const decorFree = (x, y) => !RESERVED.some(([a, b, c, d]) => x > a && x < c && y > b && y < d);
+
 export const CampDecor = {
   // Chão pintado sob medida: terreiro + trilhas (chamado por _ground)
   _paintPaths(bounds) {
@@ -66,7 +76,7 @@ export const CampDecor = {
       { from: E_, x: 440, y: -96, w: 30, bend: 0.3 }, // Forja
       { from: E_, x: 410, y: 84, w: 30, bend: -0.2 }, // trapiche do Lago
       { ...S_, w: 44, bend: 0.15 }, // tronco sul (Horta)
-      { from: { x: -40, y: 250 }, x: -250, y: 480, w: 28, bend: -0.25 }, // Celeiro
+      { from: { x: -40, y: 250 }, x: -300, y: 490, w: 28, bend: -0.25 }, // Celeiro
       { from: { x: 70, y: 250 }, x: 300, y: 480, w: 28, bend: 0.25 }, // Cozinha
       { from: { x: 200, y: 360 }, x: 440, y: 312, w: 22, bend: -0.3 }, // ninho do João-de-barro
     ];
@@ -120,7 +130,7 @@ export const CampDecor = {
     // Pedras com samambaia (nordeste) e helicônias perto das construções
     this.add.image(230, -300, "camp_rocks").setOrigin(0.5, 1).setScale(S).setDepth(-300);
     this._solid(215, -318, 70, 24);
-    for (const [x, y, t] of [[-360, -60, 0], [-500, -150, 1], [520, -60, 0], [360, -150, 1], [-330, 330, 1], [200, 470, 0], [-120, 500, 1], [560, 250, 0], [-650, 220, 0], [120, -250, 1]]) {
+    for (const [x, y, t] of [[-360, -60, 0], [-500, -150, 1], [520, -60, 0], [360, -150, 1], [-330, 330, 1], [200, 470, 0], [-175, 530, 1], [560, 250, 0], [-650, 220, 0], [120, -250, 1]]) {
       const h = this.add.image(x, y, `camp_heliconia${t}`).setOrigin(0.5, 1).setScale(S).setDepth(y);
       this.tweens.add({ targets: h, angle: { from: -3, to: 3 }, duration: 2000 + Math.random() * 800, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: Math.random() * 1000 });
     }
@@ -225,7 +235,7 @@ export const CampDecor = {
       for (let k = 0; k < 6; k++) {
         const x = cx + rnd.between(-40, 40),
           y = cy + rnd.between(-22, 22);
-        if (this.groundPaint?.onPath(x, y, 10)) continue;
+        if (this.groundPaint?.onPath(x, y, 10) || !decorFree(x, y)) continue;
         const t = this.add.image(x, y, "env", rnd.pick(env.tufts)).setOrigin(0.5, 1).setScale(S).setDepth(y);
         this.tweens.add({ targets: t, angle: { from: -4, to: 5 }, duration: 1400 + rnd.between(0, 900), yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: rnd.between(0, 1200) });
       }
@@ -254,7 +264,7 @@ export const CampDecor = {
         }
         const forge = this.buildings.forge;
         if (forge?.shown && Math.random() < 0.8) {
-          const s = this.add.image(forge.x - 12 + Math.random() * 10, forge.y - 30, "px_dot1").setScale(3).setTint(Math.random() < 0.5 ? 0xffb36b : 0xffe58f).setBlendMode(Phaser.BlendModes.ADD).setDepth(D_NIGHT + 2);
+          const s = this.add.image(forge.x - 44 + Math.random() * 10, forge.y - 40, "px_dot1").setScale(3).setTint(Math.random() < 0.5 ? 0xffb36b : 0xffe58f).setBlendMode(Phaser.BlendModes.ADD).setDepth(D_NIGHT + 2);
           this.tweens.add({ targets: s, y: s.y - 50 - Math.random() * 40, x: s.x + (Math.random() - 0.5) * 30, alpha: 0, duration: 900 + Math.random() * 500, onComplete: () => s.destroy() });
         }
         const shrine = this.buildings.shrine;

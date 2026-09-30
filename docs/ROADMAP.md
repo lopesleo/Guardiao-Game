@@ -99,6 +99,13 @@ Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
   cipós, bromélias, vaga-lumes na copa); helicônias, pedras com samambaia, rede
   listrada, espantalho e regador; capim balançando, folhas caindo, faíscas da forja,
   brilho do santuário e vinheta
+- ✅ **Construções redesenhadas** (`src/art/Buildings.js`): sapê em fiadas, tábuas com
+  veio, pedra assentada com musgo, barro; Santuário (altar em degraus, esteios
+  entalhados, oferendas), Forja (forno com arco de pedra, telheiro, bigorna, fole,
+  tina), Mural (mapa com X, lamparina), ninho de torrões, Celeiro (paiol com
+  "chapéus" contra ratos, réstia de milho, escada) e Cozinha (pau-a-pique caiado,
+  fogão a lenha, panelas com vapor, lenha); Horta com canteiros elevados de tábua,
+  cerca de taquara e portal de bambu; `tools/art-preview.html` para ver a arte
 - ✅ **Dia e noite pela hora real** do aparelho na Clareira: amanhecer rosado, dia,
   fim de tarde dourado, anoitecer roxo e noite; as luzes acendem conforme escurece
 - ✅ **Cozinha** (fogão de barro ao lado da horta; revelada após a 1ª colheita):

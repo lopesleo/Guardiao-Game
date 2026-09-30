@@ -21,7 +21,7 @@ export const CampKitchen = {
     const shadow = this.add.image(KX, KY + 4, "px_shadow").setScale(8, 4).setAlpha(shown ? 0.55 : 0).setDepth(KY - 1);
     const img = this.add.image(KX, KY, "camp_kitchen").setOrigin(0.5, 1).setScale(S).setDepth(KY).setAlpha(shown ? 1 : 0);
     this._solid(KX - 8, KY - 14, img.displayWidth * 0.7, 30);
-    const glow = this._glow(KX - 30, KY - 16, 1.8, 0xff8a3c, true).setVisible(shown);
+    const glow = this._glow(KX - 28, KY - 21, 1.8, 0xff8a3c, true).setVisible(shown);
     const ruin = shown ? null : this.add.image(KX, KY, "camp_ruin").setOrigin(0.5, 1).setScale(S).setDepth(KY);
     // Fumacinha da chaminé
     this.time.addEvent({
@@ -29,7 +29,7 @@ export const CampKitchen = {
       loop: true,
       callback: () => {
         if (!this.buildings.kitchen.shown) return;
-        const p = this.add.image(KX + 18 + (Math.random() - 0.5) * 6, KY - img.displayHeight, "px_puff").setScale(1.6).setTint(0x9aa0a8).setAlpha(0.5).setDepth(KY + 1);
+        const p = this.add.image(KX + 34 + (Math.random() - 0.5) * 6, KY - img.displayHeight, "px_puff").setScale(1.6).setTint(0x9aa0a8).setAlpha(0.5).setDepth(KY + 1);
         this.tweens.add({ targets: p, y: p.y - 60, x: p.x + 14, scale: 3, alpha: 0, duration: 1800, onComplete: () => p.destroy() });
       },
     });

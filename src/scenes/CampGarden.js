@@ -20,7 +20,7 @@ const COL = 86,
   ROW = 64;
 const PLOT_W = 72,
   PLOT_H = 48; // canteiro na tela (arte 24×16 ×3)
-const BARN_X = -250,
+const BARN_X = -300,
   BARN_Y = 450;
 const NEED_ICON = { water: "ico_water", weed: "ico_weed", pest: "ico_pest" };
 const NEED_VERB = { water: "REGAR", weed: "ARRANCAR MATO", pest: "TIRAR LAGARTA" };
@@ -38,28 +38,28 @@ export const CampGarden = {
     const shown = this._isShown("garden");
     const g = (this.gardenGfx = { plots: [] });
     const fade = []; // o que aparece na cena de revelação
-    // Cerquinha de varas atrás e mourões baixos dos lados
+    // Cerca de taquara atrás, com o portal de bambu no meio (onde a trilha
+    // chega), e mourões de bambu nas laterais
     const x0 = GX - 1.5 * COL - 16,
       x1 = GX + 1.5 * COL + 16,
       y0 = GY - 1.5 * ROW - 6,
       y1 = GY + 1.5 * ROW + 10;
-    const back = this.add.graphics().setDepth(y0 - 40);
-    back.fillStyle(PAL.ink, 1);
-    for (const y of [y0 - 22, y0 - 12]) back.fillRect(x0, y, x1 - x0, 5);
-    back.fillStyle(PAL.n3, 1);
-    for (const y of [y0 - 21, y0 - 11]) back.fillRect(x0, y, x1 - x0, 3);
-    for (let k = 0; k <= 4; k++) {
-      const x = x0 + ((x1 - x0) * k) / 4;
-      back.fillStyle(PAL.ink, 1).fillRect(x - 4, y0 - 30, 8, 28);
-      back.fillStyle(PAL.n3, 1).fillRect(x - 2, y0 - 28, 4, 24);
-    }
-    const sides = this.add.graphics().setDepth(y1 + 10);
-    for (const x of [x0, x1])
-      for (let y = y0 + 20; y <= y1; y += 44) {
-        sides.fillStyle(PAL.ink, 1).fillRect(x - 4, y - 16, 8, 20);
-        sides.fillStyle(PAL.n3, 1).fillRect(x - 2, y - 14, 4, 16);
+    const gateHalf = 45;
+    const fy = y0 - 6;
+    const leftW = Math.round((GX - gateHalf - x0) / S),
+      rightW = Math.round((x1 - (GX + gateHalf)) / S);
+    const fenceL = this.add.tileSprite(x0, fy, leftW, 14, "garden_fence").setOrigin(0, 1).setScale(S).setDepth(fy);
+    const fenceR = this.add.tileSprite(GX + gateHalf, fy, rightW, 14, "garden_fence").setOrigin(0, 1).setScale(S).setDepth(fy);
+    const arch = this.add.image(GX, fy + 2, "garden_arch").setOrigin(0.5, 1).setScale(S).setDepth(fy + 2);
+    fade.push(fenceL, fenceR, arch);
+    for (const x of [x0 - 2, x1 - 16])
+      for (let y = y0 + 40; y <= y1; y += 46) {
+        const post = this.add.image(x, y, "garden_fence_post").setOrigin(0, 1).setScale(S).setDepth(y);
+        fade.push(post);
       }
-    fade.push(back, sides);
+    // postes do portal e as cercas não se atravessam
+    this._solid((x0 + GX - gateHalf) / 2, fy - 8, GX - gateHalf - x0, 12);
+    this._solid((GX + gateHalf + x1) / 2, fy - 8, x1 - GX - gateHalf, 12);
     // Canteiros: terra arada (aberto) ou mato (fechado) + planta + aviso
     for (let i = 0; i < 9; i++) {
       const { x, y } = plotPos(i);
