@@ -92,6 +92,15 @@ Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
   balançando, trapiche com lamparina refletida (o herói anda até a ponta), canoa,
   brilho da lua correndo na água, névoa rasteira, peixes saltando e vaga-lumes
   refletidos
+- ✅ **Clareira redesenhada**: rede de trilhas de terra que saem do terreiro e se
+  ramificam até cada lugar; fogueira com anel de pedras e troncos de sentar; varal
+  de **bandeirinhas com luzinhas só na festa junina/julina** (1/6 a 31/7, pela data
+  real — `SEASONS` no config, pronto para outras datas); **samaúma** gigante (sapopemas,
+  cipós, bromélias, vaga-lumes na copa); helicônias, pedras com samambaia, rede
+  listrada, espantalho e regador; capim balançando, folhas caindo, faíscas da forja,
+  brilho do santuário e vinheta
+- ✅ **Dia e noite pela hora real** do aparelho na Clareira: amanhecer rosado, dia,
+  fim de tarde dourado, anoitecer roxo e noite; as luzes acendem conforme escurece
 - ✅ **Cozinha** (fogão de barro ao lado da horta; revelada após a 1ª colheita):
   8 receitas da horta (Cenoura Assada, Pamonha, Tapioca, Feijão Tropeiro, Quibebe e
   3 mágicas) → pratos prontos por qualidade; **comer 1 prato = bônus só na próxima

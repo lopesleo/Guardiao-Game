@@ -25,6 +25,7 @@ import { MetaPanels } from "../ui/MetaPanels.js";
 import { CampGarden } from "./CampGarden.js";
 import { CampKitchen } from "./CampKitchen.js";
 import { CampPond } from "./CampPond.js";
+import { CampDecor } from "./CampDecor.js";
 
 const S = GAME.PIXEL_SCALE;
 const CAMP_W = 1500,
@@ -75,6 +76,7 @@ export class CampScene extends Phaser.Scene {
     this._nextBuildTick = 0;
     this.scaffold = this.buildTimer = this._birdWork = null;
     this._cutscene = false;
+    this.flies = [];
     this.sayBox = null;
     this._elderLine = this.meta.data.elderLine || 0;
     this.isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
@@ -93,6 +95,7 @@ export class CampScene extends Phaser.Scene {
     this._gardenWorld();
     this._kitchenWorld();
     this._pondWorld();
+    this._decor();
     this._player();
     this._night();
     this._hud();
@@ -153,17 +156,13 @@ export class CampScene extends Phaser.Scene {
       .setDepth(-1e6);
     const env = this.registry.get("envKeys");
     const rnd = new Phaser.Math.RandomDataGenerator(["clareira"]);
-    // Terreiro de terra batida em volta da fogueira
-    for (let i = 0; i < 14; i++) {
-      const a = (i / 14) * Math.PI * 2;
-      const d = 60 + rnd.frac() * 110;
-      this.add.image(Math.cos(a) * d, 70 + Math.sin(a) * d * 0.7, "env", rnd.pick(env.patches.dirt)).setScale(S).setDepth(-9e5).setAlpha(0.9);
-    }
-    // Detalhes (sem colisão)
-    for (let i = 0; i < 70; i++) {
+    // Terreiro de terra batida + trilhas até cada lugar (uma textura só)
+    this.groundPaint = this._paintPaths({ x0: -CAMP_W / 2, top: TOP, w: CAMP_W, h: CAMP_H });
+    // Detalhes (sem colisão), fora das trilhas
+    for (let i = 0; i < 90; i++) {
       const x = rnd.between(-CAMP_W / 2 + 60, CAMP_W / 2 - 60),
         y = rnd.between(TOP + 80, CAMP_H / 2 - 40);
-      if (Math.hypot(x, y - 70) < 200 || Math.abs(x) < TRAIL_HALF + 20) continue;
+      if (Math.hypot(x, y - 70) < 200 || this.groundPaint.onPath(x, y, 12)) continue;
       const list = i % 4 === 0 ? env.flowers : i % 4 === 1 ? env.shrooms : env.tufts;
       this.add.image(x, y, "env", rnd.pick(list)).setOrigin(0.5, 1).setScale(S).setDepth(y);
     }
@@ -194,10 +193,6 @@ export class CampScene extends Phaser.Scene {
 
   // Trilha de terra ao norte, com duas tochas — a saída para a floresta
   _trail() {
-    const env = this.registry.get("envKeys");
-    for (let y = TOP - 200; y < -120; y += 34) {
-      this.add.image((y % 3) * 6, y, "env", env.patches.dirt[Math.abs(y) % env.patches.dirt.length]).setScale(S).setDepth(-9e5);
-    }
     for (const side of [-1, 1]) this._torch(side * (TRAIL_HALF + 18), TOP + 120);
     // Placa: escolha do Perigo
     const sx = TRAIL_HALF + 90,
@@ -223,16 +218,10 @@ export class CampScene extends Phaser.Scene {
 
   // Fogueira central: trocar de guardião
   _fire(x, y) {
-    const g = this.add.graphics().setDepth(y);
-    this.add.image(x, y + 6, "px_shadow").setScale(6, 3).setDepth(y - 2);
-    g.fillStyle(PAL.ink, 1).fillRect(x - 24, y - 6, 48, 12);
-    g.fillStyle(PAL.n2, 1).fillRect(x - 21, y - 3, 42, 6);
-    g.fillStyle(PAL.n3, 1).fillRect(x - 21, y - 3, 42, 3);
-    for (let i = -3; i <= 3; i++) {
-      g.fillStyle(PAL.ink, 1).fillRect(x + i * 9 - 5, y + 3, 10, 8);
-      g.fillStyle(i % 2 ? PAL.s2 : PAL.s3, 1).fillRect(x + i * 9 - 3, y + 5, 6, 4);
-    }
+    // Anel de pedras com lenha cruzada (as chamas são partículas por cima)
+    this.add.image(x, y + 4, "camp_fire").setScale(S).setDepth(y - 30);
     this._glow(x, y - 16, 5.5, 0xff9a4c, true);
+    this._glow(x, y + 4, 1.6, 0xff5a1e, true); // brasa
     this._flames(x, y - 4, 22, 70, 0.25);
     this._solid(x, y, 56, 22);
     this._addInteract({ x, y, top: y - 70, r: 110, name: "FOGUEIRA", verb: "GUARDIÕES", action: () => this._showCharacters(), build: "fire" });
@@ -342,8 +331,7 @@ export class CampScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setBlendMode(Phaser.BlendModes.MULTIPLY)
       .setDepth(D_NIGHT);
-    // Vaga-lumes
-    this.flies = [];
+    // Vaga-lumes (a lista é zerada no create: a samaúma também põe os seus)
     for (let i = 0; i < 26; i++) {
       const x = Phaser.Math.Between(-CAMP_W / 2, CAMP_W / 2),
         y = Phaser.Math.Between(TOP, CAMP_H / 2);
@@ -518,13 +506,14 @@ export class CampScene extends Phaser.Scene {
     if (!busy && p.y < TOP + 130 && Math.abs(p.x) < TRAIL_HALF) this._play();
 
     // Luzes tremulando e vaga-lumes
-    for (const g of this.glows) g.g.setAlpha(g.base + Math.sin(time / 90 + g.ph) * 0.06 + Math.random() * 0.04);
+    const k = this._lightK ?? 1; // luzes acesas conforme escurece (hora real)
+    for (const g of this.glows) g.g.setAlpha((g.base + Math.sin(time / 90 + g.ph) * 0.06 + Math.random() * 0.04) * k);
     for (const f of this.flies) {
       const x = f.ox + Math.sin(time / 1300 + f.ph) * 40,
         y = f.oy + Math.cos(time / 1700 + f.ph) * 30;
       const a = 0.3 + Math.abs(Math.sin(time / 400 + f.ph)) * 0.6;
-      f.g.setPosition(x, y).setAlpha(a * 0.6);
-      f.c.setPosition(x, y).setAlpha(a);
+      f.g.setPosition(x, y).setAlpha(a * 0.6 * k);
+      f.c.setPosition(x, y).setAlpha(a * k);
     }
     if (this.bubble.visible && this._bubbleUntil < time) this.bubble.setVisible(false);
     if (time > (this._nextBuildTick || 0)) {
@@ -843,4 +832,4 @@ export class CampScene extends Phaser.Scene {
   }
 }
 
-Object.assign(CampScene.prototype, MetaPanels, CampGarden, CampKitchen, CampPond);
+Object.assign(CampScene.prototype, MetaPanels, CampGarden, CampKitchen, CampPond, CampDecor);
