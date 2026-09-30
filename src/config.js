@@ -261,17 +261,17 @@ export const MAX_WEAPON_LEVEL = 5;
 export const CHARACTERS = [
   {
     id: "guardian",
-    name: "O Guardião",
-    title: "Equilibrado",
+    name: "Curupira",
+    title: "Guardião da mata",
     weapon: "STAFF",
     cost: 0,
-    perk: "Sem fraquezas. Bom para aprender.",
+    perk: "Equilibrado, sem fraquezas. Bom para aprender.",
     mods: {},
   },
   {
     id: "huntress",
-    name: "Caçadora",
-    title: "Veloz e letal",
+    name: "Caipora",
+    title: "Protetora dos bichos",
     weapon: "BOOMER",
     cost: 120,
     perk: "+12% velocidade · +8% crítico · −10% vida",
@@ -279,8 +279,8 @@ export const CHARACTERS = [
   },
   {
     id: "druid",
-    name: "Druida da Geada",
-    title: "Controle de área",
+    name: "Iara",
+    title: "Senhora das águas",
     weapon: "AURA",
     cost: 180,
     perk: "+20% área · +1 Vida/s · −15% velocidade",
@@ -288,8 +288,8 @@ export const CHARACTERS = [
   },
   {
     id: "shaman",
-    name: "Xamã do Trovão",
-    title: "Canhão de vidro",
+    name: "Saci",
+    title: "Redemoinho travesso",
     weapon: "CHAIN",
     cost: 260,
     perk: "−15% recarga · +15% dano · −25% vida",
@@ -435,7 +435,7 @@ export const ARENA = {
   maxY: GAME.WORLD_RADIUS - INTRO.GATE_OFF,
 };
 
-// Noite Eterna (Modo Infinito): oferecida ao vencer o Ancião. A força cresce
+// Noite Eterna (Modo Infinito): oferecida ao libertar o Mapinguari. A força cresce
 // de forma composta a cada minuto; eventos voltam em ciclo.
 export const ENDLESS = {
   HP_GROWTH_PER_MIN: 0.25, // +25% vida dos inimigos por minuto (composto)
@@ -478,7 +478,7 @@ export const WOOD = {
   MINIBOSS: 3, // por minichefe (Lobo Alfa, Ogro Ancião)
   GOLDEN_CHEST: 2, // baú dourado
   CHEST_CHANCE: 0.25, // baú comum: 25% de chance de 1
-  BOSS: 6, // o Ancião
+  BOSS: 6, // o Mapinguari
 };
 
 // Lanternas de cogumelo: brotam fora da tela, iluminam e derrubam um item ao

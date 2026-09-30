@@ -462,7 +462,7 @@ export class GameScene extends Phaser.Scene {
       this.elapsedMs >= (GAME.RUN_DURATION_S - 30) * 1000
     ) {
       this.bossWarned = true;
-      this.hud.showBossBanner("O guardião do bosque desperta…");
+      this.hud.showBossBanner("O Mapinguari corrompido desperta…");
     }
     // Spawn do boss aos 7:00
     if (!this.boss && !this.endless && this.elapsedMs >= GAME.RUN_DURATION_S * 1000) {
@@ -985,19 +985,24 @@ export class GameScene extends Phaser.Scene {
 
   _onBossDeath() {
     if (!this.boss) return;
+    const bx = this.boss.x,
+      by = this.boss.y,
+      bs = this.boss.scaleX;
     this.boss.deactivate?.();
     this.boss.setActive(false).setVisible(false);
     this.hud.clearBoss();
+    this._freeMapinguari(bx, by, bs);
     // Recompensa
     this._coinsGainedThisRun += META.COIN_BOSS_WIN;
     this.hud.addCoin(META.COIN_BOSS_WIN);
-    // Madeira do Ancião entra direto (a escolha da Noite Eterna vem em seguida)
+    // Madeira do Mapinguari entra direto (a escolha da Noite Eterna vem em seguida)
     this._woodThisRun += WOOD.BOSS;
     this.hud.addWood(WOOD.BOSS);
     this._toast(`+${WOOD.BOSS} Madeira Ancestral`, 2200, "#ffc86b");
     this.cameras.main.shake(600, 0.02);
     // Vitória: escolher entre encerrar ou seguir na Noite Eterna
-    this.time.delayedCall(900, () => this._offerEndless());
+    // Depois da cena de libertação (~2,4 s), a escolha da Noite Eterna
+    this.time.delayedCall(2600, () => this._offerEndless());
   }
 
   // Espera cartas de nível/pausa fecharem antes de abrir a escolha
@@ -1009,6 +1014,33 @@ export class GameScene extends Phaser.Scene {
     }
     this.scene.pause();
     this.scene.launch("EndlessChoiceScene");
+  }
+
+  // Vencer = LIBERTAR: a Podridão sai do Mapinguari (fumaça magenta subindo),
+  // ele volta à cor natural e some na mata (lenda: guardião, não vilão)
+  _freeMapinguari(x, y, scale) {
+    const m = this.add.sprite(x, y, "mon_boss", 4).setScale(scale).setDepth(y + 10000).setTint(0xc060c0); // quadro 4 = curado
+    this.tweens.addCounter({
+      from: 0,
+      to: 1,
+      duration: 1400,
+      onUpdate: (tw) => {
+        const c = Phaser.Display.Color.Interpolate.ColorWithColor(
+          Phaser.Display.Color.ValueToColor(0xc060c0),
+          Phaser.Display.Color.ValueToColor(0xffffff),
+          100,
+          tw.getValue() * 100,
+        );
+        m.setTint(Phaser.Display.Color.GetColor(c.r, c.g, c.b));
+      },
+    });
+    for (let i = 0; i < 40; i++) {
+      const p = this.add.image(x + (Math.random() - 0.5) * 120, y - Math.random() * 140, "px_puff").setScale(2 + Math.random() * 2).setTint(i % 3 ? 0x8a3fa0 : 0xff5ec8).setAlpha(0.8).setDepth(y + 10100);
+      this.tweens.add({ targets: p, y: p.y - 120 - Math.random() * 80, alpha: 0, scale: 0.5, duration: 1400 + Math.random() * 800, delay: Math.random() * 500, onComplete: () => p.destroy() });
+    }
+    this.lighting?.flash(x, y - 60, 420, 0x9ccf62, 1400, 1.2);
+    this._toast("O MAPINGUARI ESTÁ LIVRE!", 2600, "#9ccf62");
+    this.tweens.add({ targets: m, alpha: 0, y: y - 30, delay: 1500, duration: 900, onComplete: () => m.destroy() });
   }
 
   // Segundos sobrevividos na Noite Eterna
@@ -1259,7 +1291,7 @@ export class GameScene extends Phaser.Scene {
     const endlessS = this.endlessSeconds;
     let endlessRecord = false;
     if (this.endless) {
-      won = true; // cair na Noite Eterna não apaga a vitória sobre o Ancião
+      won = true; // cair na Noite Eterna não apaga a vitória sobre o Mapinguari
       const bonus = Math.floor(endlessS / 60) * ENDLESS.COINS_PER_MIN;
       this._coinsGainedThisRun += bonus;
       endlessRecord = this.meta.registerEndless(endlessS);

@@ -37,9 +37,9 @@ export class GameOverScene extends Phaser.Scene {
     this.tweens.add({ targets: t, scale: 1, alpha: 1, duration: 420, ease: "Back.easeOut" });
     const sub =
       endlessS > 0
-        ? `Ancião derrotado e mais ${formatTime(endlessS * 1000)} na escuridão${endlessRecord ? " — NOVO RECORDE!" : "."}`
+        ? `Mapinguari libertado e mais ${formatTime(endlessS * 1000)} na escuridão${endlessRecord ? " — NOVO RECORDE!" : "."}`
         : won
-          ? "O Ancião foi derrotado. A floresta respira."
+          ? "O Mapinguari está livre da Podridão. A floresta respira."
           : quit
             ? "Você recuou para lutar outro dia."
             : "A floresta caiu… por enquanto.";

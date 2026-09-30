@@ -51,10 +51,12 @@ Base para tudo que vem depois; o jogador quase não vê.
   com cena e fala da **Anciã da Fogueira**; 1ª abertura vai direto para a floresta;
   saves antigos veem tudo revelado
 
-### M2.5 — Lendas da mata ⬜
+### M2.5 — Lendas da mata 🚧
 Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
-- ⬜ Redesenho dos 4 personagens: **Curupira**, **Iara**, **Saci**, **Caipora**
-- ⬜ Chefe **Mapinguari corrompido** (vencer = libertá-lo da Podridão)
+- ✅ Redesenho dos 4 personagens: **Curupira** (pés virados, cabelo de fogo), **Caipora**,
+  **Iara**, **Saci** (uma perna, sem cachimbo; pele com luz e sombra, sem caricatura)
+- ✅ Chefe **Mapinguari corrompido** (um olho, boca na barriga); vencer = libertá-lo
+  (a Podridão sai dele, olho verde, some na mata)
 - ⬜ Minichefes **Mula sem Cabeça** e **Corpo-Seco**
 - ⬜ Nomes/descrições de inimigos, armas e reações revistos no tema
 - ⬜ Bestiário com a origem de cada lenda
