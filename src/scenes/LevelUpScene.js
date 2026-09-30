@@ -1,8 +1,11 @@
 // Level-up: pausa a GameScene e oferece 3 cartas (clique/toque ou teclas 1-2-3).
 // Troca de cartas (R) 1× por level-up. D24: ESC desabilitado aqui.
+// "Mais uma carta" (anúncio premiado, 1× por partida) revela uma 4ª opção.
 import { createCard } from "../ui/Cards.js";
 import { text, dim, Button, vw, vh, fitCamera } from "../ui/Theme.js";
 import { CSS } from "../art/Palette.js";
+import { AdService } from "../systems/AdService.js";
+import { Analytics } from "../systems/Analytics.js";
 
 export class LevelUpScene extends Phaser.Scene {
   constructor() {
@@ -38,6 +41,7 @@ export class LevelUpScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-ONE", () => this._pick(0));
     this.input.keyboard.on("keydown-TWO", () => this._pick(1));
     this.input.keyboard.on("keydown-THREE", () => this._pick(2));
+    this.input.keyboard.on("keydown-FOUR", () => this._pick(3));
     this.input.keyboard.on("keydown-R", () => this._reroll());
   }
 
@@ -68,8 +72,43 @@ export class LevelUpScene extends Phaser.Scene {
   _buildReroll() {
     const W = vw(this),
       H = vh(this);
-    this.rerollBtn = new Button(this, W / 2, H - 34, 280, 44, "", () => this._reroll(), { size: 17, style: "ice" });
+    const offer = AdService.canShow("extra_card");
+    this.rerollBtn = new Button(this, offer ? W / 2 - 150 : W / 2, H - 34, 280, 44, "", () => this._reroll(), { size: 17, style: "ice" });
     this._refreshReroll();
+    if (offer) {
+      Analytics.track("ad_offer_show", { placement: "extra_card" });
+      this.extraBtn = new Button(this, W / 2 + 150, H - 34, 280, 44, "MAIS UMA CARTA", () => this._extraCard(), {
+        size: 17,
+        style: "primary",
+        color: CSS.goldHi,
+        icon: "ico_play",
+        iconScale: 2,
+      });
+    }
+  }
+
+  // Anúncio premiado → revela uma 4ª carta (as 3 atuais continuam)
+  async _extraCard() {
+    if (this._locked || this._extraBusy || this.cards.length >= 4) return;
+    this._extraBusy = true;
+    this.extraBtn.setEnabled(false);
+    const ok = await AdService.rewarded("extra_card");
+    this._extraBusy = false;
+    if (!ok || this._locked) {
+      this.extraBtn?.setEnabled(!this._locked && AdService.canShow("extra_card"));
+      return;
+    }
+    const c = this.gameScene.upgrades.extraCard(this.player, this.cards);
+    this.extraBtn.destroy();
+    this.extraBtn = null;
+    this.rerollBtn.x = vw(this) / 2;
+    if (!c) return;
+    this.cards = [...this.cards, c];
+    this._renderCards(false);
+    const last = this._cardObjs[3];
+    last.setScale(0.6).setAlpha(0);
+    this.tweens.add({ targets: last, scale: 1, alpha: 1, duration: 320, ease: "Back.easeOut" });
+    this.sound.play("sfx_chest_jackpot", { volume: 0.5 });
   }
 
   _refreshReroll() {
@@ -82,7 +121,12 @@ export class LevelUpScene extends Phaser.Scene {
   _reroll() {
     if (this._locked || (this.rerollsLeft || 0) <= 0) return;
     this.rerollsLeft -= 1;
+    const extra = this.cards.length > 3; // a 4ª carta paga continua valendo na troca
     this.cards = this.gameScene.upgrades.generateCards(this.player);
+    if (extra) {
+      const c = this.gameScene.upgrades.extraCard(this.player, this.cards);
+      if (c) this.cards.push(c);
+    }
     this._renderCards(true);
     this._refreshReroll();
   }

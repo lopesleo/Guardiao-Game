@@ -145,6 +145,17 @@ export class UpgradeSystem {
     return weightedPick(cards, 3);
   }
 
+  // Uma carta a mais, diferente das que já estão na mesa (4ª carta)
+  extraCard(player, current) {
+    const id = (c) => `${c.type}:${c.weaponKey ?? c.passiveId}`;
+    const taken = new Set(current.map(id));
+    for (let i = 0; i < 25; i++) {
+      const c = this.generateCards(player).find((c) => !taken.has(id(c)));
+      if (c) return c;
+    }
+    return null;
+  }
+
   // Primeira evolução elegível: def com evolvesFrom, âncora no nível MAX,
   // parceira na run e evolução ainda não obtida.
   _evolutionCard(player, have) {

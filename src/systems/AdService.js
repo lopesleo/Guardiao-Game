@@ -18,7 +18,7 @@ const KEY = "guardiao_ads_v1";
 // Limites por ponto de anúncio: por partida e por dia (evita abuso e cansaço)
 export const PLACEMENTS = {
   revive: { perRun: 1, perDay: 99, label: "Reviver" },
-  double_chest: { perRun: 3, perDay: 20, label: "Dobrar baú" },
+  extra_card: { perRun: 1, perDay: 20, label: "Mais uma carta" },
   double_coins: { perRun: 1, perDay: 20, label: "Dobrar moedas" },
   extra_reroll: { perRun: 3, perDay: 20, label: "Troca extra" },
   daily_chest: { perRun: 99, perDay: 1, label: "Baú diário" },

@@ -454,7 +454,6 @@ export const ADS = {
   REVIVE_INVULN_MS: 3000,
   REVIVE_CLEAR_RADIUS: 280, // onda que empurra/fere quem está em volta
   REVIVE_OFFER_S: 8, // tempo para decidir antes de encerrar a partida
-  CHEST_OFFER_MS: 5000, // botão "dobrar baú" fica visível por este tempo
 };
 
 // Drops aleatórios no chão (chance por kill)
