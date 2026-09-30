@@ -18,6 +18,7 @@ import {
   INTRO,
   ARENA,
   WOOD,
+  BUILD,
 } from "../config.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
@@ -57,6 +58,7 @@ import { Analytics } from "../systems/Analytics.js";
 import { AdService } from "../systems/AdService.js";
 import { QualityWatchdog } from "../systems/QualityWatchdog.js";
 import { LanternSystem } from "../systems/LanternSystem.js";
+import { Builds } from "../systems/Builds.js";
 import { VirtualJoystick } from "../ui/VirtualJoystick.js";
 
 export class GameScene extends Phaser.Scene {
@@ -1275,6 +1277,14 @@ export class GameScene extends Phaser.Scene {
     // precisam estar atualizados pros check() de vitória)
     this.meta.addCoins(coinsFinal);
     if (this._woodThisRun > 0) this.meta.addWood(this._woodThisRun);
+    // Cada partida adianta a obra do João-de-barro (jogar acelera as obras)
+    const builds = new Builds(this.meta);
+    if (builds.job) {
+      const min = BUILD.RUN_SPEEDUP_MIN + Math.floor(this.elapsedMs / 60000) * BUILD.RUN_SPEEDUP_PER_MIN;
+      builds.advance(min * 60000);
+      this.meta.data.lastRunBuildAdvanceMin = min;
+      this.meta._save();
+    }
     this.meta.registerRun(this.elapsedMs / 1000, won, this.diff.id);
     const newAchievements = this._checkAchievements(won, true);
     this._newUnlocksThisRun.push(...newAchievements.map((a) => a.name));

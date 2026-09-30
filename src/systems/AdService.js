@@ -19,6 +19,7 @@ const KEY = "guardiao_ads_v1";
 export const PLACEMENTS = {
   revive: { perRun: 1, perDay: 99, label: "Reviver" },
   extra_card: { perRun: 1, perDay: 20, label: "Mais uma carta" },
+  build_speed: { perRun: 99, perDay: 3, label: "Adiantar obra" },
   double_coins: { perRun: 1, perDay: 20, label: "Dobrar moedas" },
   extra_reroll: { perRun: 3, perDay: 20, label: "Troca extra" },
   daily_chest: { perRun: 99, perDay: 1, label: "Baú diário" },

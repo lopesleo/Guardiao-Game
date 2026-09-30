@@ -1,9 +1,9 @@
 // Persistência entre runs via localStorage.
 // Salva: moedas totais, high score (tempo), armas desbloqueadas.
-import { META, MAX_BLESSING_RANK, ANCESTRAL, ACHIEVEMENTS } from '../config.js';
+import { META, MAX_BLESSING_RANK, ANCESTRAL, ACHIEVEMENTS, BUILD } from '../config.js';
 
 const DEFAULT = {
-  saveVersion: 2,
+  saveVersion: 3,
   totalCoins: 0,
   highScoreSeconds: 0,
   bestEndlessSeconds: 0, // recorde na Noite Eterna (Modo Infinito)
@@ -63,7 +63,7 @@ function withDefaults(parsed) {
 
 // Versão do formato do save. Ao mudar a estrutura: SAVE_VERSION++ e adicionar
 // MIGRATIONS[versãoAnterior] que transforma o objeto no formato novo.
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 const MIGRATIONS = {
   // v1 → v2: tudo que antes era corrigido "no susto" ao carregar
   1: (d) => {
@@ -76,6 +76,21 @@ const MIGRATIONS = {
     // Aura Gélida passou a vir liberada para todos
     d.unlockedWeapons = Array.isArray(d.unlockedWeapons) ? d.unlockedWeapons : ['STAFF'];
     if (!d.unlockedWeapons.includes('AURA')) d.unlockedWeapons.push('AURA');
+  },
+  // v2 → v3: construções com nível (obras da Clareira). Os níveis saem do que
+  // o jogador JÁ TEM, para ninguém perder nada: bênção no rank 3 → Santuário 3;
+  // Orbe forjado → Forja 3; Xamã liberado → Fogueira 4.
+  2: (d) => {
+    const ranks = Object.values(d.blessingRanks || {});
+    const weapons = Array.isArray(d.unlockedWeapons) ? d.unlockedWeapons : [];
+    const chars = Array.isArray(d.unlockedCharacters) ? d.unlockedCharacters : [];
+    const clamp = (v, max) => Math.max(1, Math.min(max, v));
+    d.builds = {
+      shrine: { level: clamp(Math.max(0, ...ranks), 5) },
+      forge: { level: clamp(Math.max(0, ...weapons.map((k) => BUILD.FORGE_WEAPON_LEVEL[k] || 1)), 4) },
+      fire: { level: clamp(Math.max(0, ...chars.map((c) => BUILD.FIRE_CHARACTER_LEVEL[c] || 1)), 4) },
+    };
+    d.buildJob = null;
   },
 };
 

@@ -445,6 +445,33 @@ export const ENDLESS = {
   EVENT_EVERY_S: 45, // um evento (enxame/cerco/minichefe) a cada 45 s
 };
 
+// Obras da Clareira (níveis das construções): custam moedas + Madeira Ancestral
+// e levam tempo real, feitas pelo João-de-barro (1 obra por vez). Partidas
+// adiantam a obra; faltando FREE_FINISH_MIN ou menos, conclui com um toque.
+export const BUILD = {
+  // índice = nível ATUAL → custo e tempo para subir ao próximo
+  STEPS: [
+    null,
+    { coins: 40, wood: 2, min: 0 },
+    { coins: 120, wood: 5, min: 5 },
+    { coins: 280, wood: 10, min: 60 },
+    { coins: 550, wood: 18, min: 240 },
+  ],
+  RUN_SPEEDUP_MIN: 10, // cada partida adianta a obra em 10 min…
+  RUN_SPEEDUP_PER_MIN: 1, // …+1 min por minuto sobrevivido
+  FREE_FINISH_MIN: 2, // menor que a obra mais curta (5 min), senão ela vira instantânea
+  AD_SPEEDUP_MIN: 30, // anúncio opcional (desligado junto com ADS.ENABLED)
+  // O que cada nível libera
+  FORGE_WEAPON_LEVEL: { BOOMER: 1, CHAIN: 2, ORB: 3, FLAME: 4 }, // Forja nv mínimo
+  FIRE_CHARACTER_LEVEL: { huntress: 2, druid: 3, shaman: 4 }, // Fogueira nv → guardião
+};
+// Santuário nv N → bênçãos até o rank N
+export const BUILDINGS = {
+  fire: { name: "Fogueira", max: 4 },
+  shrine: { name: "Santuário", max: 5 },
+  forge: { name: "Forja", max: 4 },
+};
+
 // Madeira Ancestral: material das obras da Clareira. Rara de propósito — as
 // obras exigem JOGAR partidas, não só esperar.
 export const WOOD = {
