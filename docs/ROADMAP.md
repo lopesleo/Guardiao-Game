@@ -72,8 +72,13 @@ Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
   com **sementes raras** das partidas (minichefe, baú dourado, Mapinguari); 5 estágios
   visíveis; cuidados que aparecem sozinhos (sede, erva daninha, lagarta) — pendentes
   atrasam e custam qualidade (Comum/Prata/Ouro), **nada morre**; 1ª cenoura em 30 s
-  (tutorial); colher/cuidar arrastando o dedo; celeiro por qualidade; valores em
-  `GARDEN` no config
+  (tutorial); valores em `GARDEN` no config
+- ✅ Horta **no chão** (sem menu): o canteiro mais perto fica destacado e o botão de
+  ação muda com ele (PLANTAR/REGAR/ARRANCAR MATO/TIRAR LAGARTA/COLHER); passar por
+  cima do que está maduro **colhe andando**; plantar abre uma fileira de sementes no
+  pé da tela (segurar = todos os vazios)
+- ✅ **Celeiro**: prédio próprio ao lado da horta + botão no HUD; colheita por
+  qualidade e sementes raras
 - ⬜ Lago + minigame de um polegar + 7 peixes + varas + horário real
 - ⬜ Cozinha (8 receitas peixe + horta) + **buff de 1 partida**
 - ⬜ Ordem de descobertas por progresso ([`RITMO_E_APRESENTACAO.md`](RITMO_E_APRESENTACAO.md))

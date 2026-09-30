@@ -1,6 +1,8 @@
-// Horta na Clareira: os canteiros no mapa (plantas crescendo à vista, avisos
-// de cuidado e de colheita) e o painel da Horta, onde se planta, cuida e colhe
-// com toques — arrastar o dedo por cima dos canteiros cuida/colhe vários.
+// Horta NO CHÃO da Clareira: o jogador anda até um canteiro e o botão de ação
+// muda com ele (PLANTAR · REGAR · ARRANCAR · TIRAR LAGARTA · COLHER). Passar
+// por cima de um canteiro maduro colhe andando. Plantar abre uma fileira de
+// sementes no pé da tela (segurar = planta em todos os vazios).
+// O Celeiro (prédio ao lado + botão no HUD) mostra a colheita e as sementes.
 // Mixin da CampScene (Object.assign): usa this.meta, this.builds, this.garden.
 import { GAME, GARDEN } from "../config.js";
 import { fmtDuration } from "../systems/Builds.js";
@@ -8,18 +10,24 @@ import { pantryCount } from "../systems/Garden.js";
 import { Analytics } from "../systems/Analytics.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { cropIcon } from "../art/Garden.js";
-import { text, drawFrame, Button, haptic } from "../ui/Theme.js";
+import { text, drawFrame, haptic } from "../ui/Theme.js";
 import { Modal } from "../ui/Widgets.js";
 
 const S = GAME.PIXEL_SCALE;
-const GX = 0,
-  GY = 400; // centro da horta no mapa
-const COL = 70,
-  ROW = 52;
+const GX = 20,
+  GY = 410; // centro da horta no mapa
+const COL = 86,
+  ROW = 64;
+const PLOT_W = 72,
+  PLOT_H = 48; // canteiro na tela (arte 24×16 ×3)
+const BARN_X = -250,
+  BARN_Y = 450;
 const NEED_ICON = { water: "ico_water", weed: "ico_weed", pest: "ico_pest" };
+const NEED_VERB = { water: "REGAR", weed: "ARRANCAR MATO", pest: "TIRAR LAGARTA" };
 const Q_COLOR = [CSS.muted, hex(PAL.s4), CSS.goldHi];
+const HOLD_MS = 450; // segurar a semente = plantar em todos os vazios
 
-// Posição do canteiro i (grade 3×3, de cima para baixo)
+// Centro do canteiro i (grade 3×3, de cima para baixo)
 const plotPos = (i) => ({ x: GX + ((i % 3) - 1) * COL, y: GY + (Math.floor(i / 3) - 1) * ROW });
 
 export const CampGarden = {
@@ -28,380 +36,384 @@ export const CampGarden = {
   // ---------------------------------------------------------------------------
   _gardenWorld() {
     const shown = this._isShown("garden");
-    const g = (this.gardenGfx = { plots: [], shown });
-    // Cerquinha de varas em volta
-    const fence = this.add.graphics().setDepth(GY - 80).setAlpha(shown ? 1 : 0);
-    const x0 = GX - 1.5 * COL - 18,
-      x1 = GX + 1.5 * COL + 18,
-      y0 = GY - 1.5 * ROW - 14,
-      y1 = GY + 1.5 * ROW + 16;
-    const post = (x, y) => {
-      fence.fillStyle(PAL.ink, 1).fillRect(x - 4, y - 22, 8, 26);
-      fence.fillStyle(PAL.n3, 1).fillRect(x - 2, y - 20, 4, 22);
-    };
-    fence.fillStyle(PAL.ink, 1);
-    for (const y of [y0 - 14, y0 - 6]) fence.fillRect(x0, y, x1 - x0, 5);
-    fence.fillStyle(PAL.n3, 1);
-    for (const y of [y0 - 13, y0 - 5]) fence.fillRect(x0, y, x1 - x0, 3);
-    for (let x = x0; x <= x1; x += (x1 - x0) / 4) post(x, y0);
-    // Laterais e frente: mourões baixos
-    const low = this.add.graphics().setDepth(y1 + 10).setAlpha(shown ? 1 : 0);
+    const g = (this.gardenGfx = { plots: [] });
+    const fade = []; // o que aparece na cena de revelação
+    // Cerquinha de varas atrás e mourões baixos dos lados
+    const x0 = GX - 1.5 * COL - 16,
+      x1 = GX + 1.5 * COL + 16,
+      y0 = GY - 1.5 * ROW - 6,
+      y1 = GY + 1.5 * ROW + 10;
+    const back = this.add.graphics().setDepth(y0 - 40);
+    back.fillStyle(PAL.ink, 1);
+    for (const y of [y0 - 22, y0 - 12]) back.fillRect(x0, y, x1 - x0, 5);
+    back.fillStyle(PAL.n3, 1);
+    for (const y of [y0 - 21, y0 - 11]) back.fillRect(x0, y, x1 - x0, 3);
+    for (let k = 0; k <= 4; k++) {
+      const x = x0 + ((x1 - x0) * k) / 4;
+      back.fillStyle(PAL.ink, 1).fillRect(x - 4, y0 - 30, 8, 28);
+      back.fillStyle(PAL.n3, 1).fillRect(x - 2, y0 - 28, 4, 24);
+    }
+    const sides = this.add.graphics().setDepth(y1 + 10);
     for (const x of [x0, x1])
-      for (let y = y0 + 30; y <= y1; y += 40) {
-        low.fillStyle(PAL.ink, 1).fillRect(x - 4, y - 16, 8, 20);
-        low.fillStyle(PAL.n3, 1).fillRect(x - 2, y - 14, 4, 16);
+      for (let y = y0 + 20; y <= y1; y += 44) {
+        sides.fillStyle(PAL.ink, 1).fillRect(x - 4, y - 16, 8, 20);
+        sides.fillStyle(PAL.n3, 1).fillRect(x - 2, y - 14, 4, 16);
       }
-    g.fence = [fence, low];
-    // Canteiros (abertos = terra arada; fechados = mato) + planta + aviso
+    fade.push(back, sides);
+    // Canteiros: terra arada (aberto) ou mato (fechado) + planta + aviso
     for (let i = 0; i < 9; i++) {
       const { x, y } = plotPos(i);
-      const bed = this.add.image(x, y, "garden_locked").setScale(S).setDepth(y - 30).setAlpha(shown ? 1 : 0);
-      const plant = this.add.sprite(x, y + 14, "crop_carrot", 0).setOrigin(0.5, 1).setScale(S).setDepth(y + 14).setVisible(false);
-      const bubble = this.add.container(x + 22, y - 44).setDepth(this.D_HUD - 12).setVisible(false);
+      const bed = this.add.image(x, y, "garden_locked").setScale(S).setDepth(y - 40);
+      const plant = this.add.sprite(x, y + 16, "crop_carrot", 0).setOrigin(0.5, 1).setScale(S).setDepth(y + 16).setVisible(false);
+      const bubble = this.add.container(x + 26, y - 46).setDepth(this.D_HUD - 12).setVisible(false);
       const bg = this.add.graphics();
       bg.fillStyle(PAL.ink, 1).fillCircle(0, 0, 17);
       bg.fillStyle(PAL.cream, 1).fillCircle(0, 0, 14);
       const ic = this.add.image(0, 0, "ico_water").setScale(2);
       bubble.add([bg, ic]);
       this.tweens.add({ targets: bubble, y: bubble.y - 6, duration: 520 + i * 17, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
-      g.plots.push({ bed, plant, bubble, ic });
+      fade.push(bed);
+      g.plots.push({ bed, plant, bubble, ic, x, y });
+      this._addInteract({ x, y, top: y - 44, r: 46, plot: i, hiddenUntil: "garden", name: "", verb: "", action: () => this._plotAction(i) });
     }
-    for (let r = 0; r < 3; r++) this._solid(GX, GY + (r - 1) * ROW, 3 * COL - 8, 16);
-    // Ruína enquanto a Horta não aparece
+    // Destaque do canteiro alvo
+    g.hl = this.add.graphics().setVisible(false);
+    this.tweens.add({ targets: g.hl, alpha: 0.45, duration: 480, yoyo: true, repeat: -1 });
+    // Celeiro
+    const shadow = this.add.image(BARN_X, BARN_Y + 4, "px_shadow").setScale(8, 4).setAlpha(0.55).setDepth(BARN_Y - 1);
+    const barn = this.add.image(BARN_X, BARN_Y, "camp_barn").setOrigin(0.5, 1).setScale(S).setDepth(BARN_Y);
+    this._solid(BARN_X, BARN_Y - 14, barn.displayWidth * 0.8, 30);
+    fade.push(barn, shadow);
+    this._addInteract({ x: BARN_X, y: BARN_Y, top: BARN_Y - barn.displayHeight, r: 110, name: "CELEIRO", verb: "CELEIRO", hiddenUntil: "garden", action: () => this._showBarn() });
+    // Enquanto em ruínas: tudo escondido, ruína no meio da horta
+    if (!shown) fade.forEach((o) => o.setAlpha(0));
     g.ruin = shown ? null : this.add.image(GX, GY + 30, "camp_ruin").setOrigin(0.5, 1).setScale(S).setDepth(GY + 30);
     this.buildings.garden = {
       x: GX,
-      y: GY + 60,
+      y: GY + 40,
       img: null,
       ruin: g.ruin,
       shown,
-      dot: this._notifyDot(GX + 1.5 * COL + 20, GY - 1.5 * ROW - 40).setDepth(this.D_HUD - 10).setVisible(false),
-      reveal: () => this.tweens.add({ targets: [...g.fence, ...g.plots.map((p) => p.bed)], alpha: 1, duration: 700, delay: 300 }),
+      dot: this._notifyDot(GX + 1.5 * COL + 20, GY - 1.5 * ROW - 50).setDepth(this.D_HUD - 10).setVisible(false),
+      reveal: () => {
+        this.tweens.add({ targets: fade, alpha: (t) => (t === shadow ? 0.55 : 1), duration: 700, delay: 300 });
+        this.barnBtn?.setVisible(true);
+      },
     };
-    this._addInteract({
-      x: GX,
-      y: GY - 1.5 * ROW - 20,
-      top: GY - 1.5 * ROW - 60,
-      r: 150,
-      name: "HORTA",
-      verb: "HORTA",
-      ruinOf: "garden",
-      build: "garden",
-      action: () => (this.buildings.garden.shown ? this._showGarden() : this._say("Cure a floresta jogando partidas para revelar o que há aqui.")),
-    });
+    // Ruína: examinar (some quando a Horta aparece)
+    this._addInteract({ x: GX, y: GY + 30, top: GY - 70, r: 130, name: "HORTA", verb: "", ruinOf: "garden", hideWhenShown: "garden", action: () => this._say("Cure a floresta jogando partidas para revelar o que há aqui.") });
     this._refreshGardenWorld();
   },
 
-  // Atualiza o que se vê no mapa (chamado a cada meio segundo)
+  // Atualiza o que se vê no mapa (a cada meio segundo e após cada ação)
   _refreshGardenWorld() {
     const g = this.gardenGfx;
     if (!g) return;
     const shown = this.buildings.garden.shown;
     const gd = this.garden;
     const now = Date.now();
-    let attention = 0;
     g.plots.forEach((v, i) => {
       const open = i < gd.open;
       v.bed.setTexture(open ? "garden_plot" : "garden_locked");
       const p = open ? gd.plots[i] : null;
-      const st = open ? gd.state(i, now) : "empty";
+      const st = open ? gd.state(i, now) : "locked";
       v.plant.setVisible(shown && !!p);
       if (p) v.plant.setTexture(`crop_${p.crop}`, gd.stage(p));
       const need = st === "need" ? gd.need(p).type : null;
-      v.bubble.setVisible(shown && (need || st === "ripe"));
+      v.bubble.setVisible(shown && (!!need || st === "ripe"));
       if (need) v.ic.setTexture(NEED_ICON[need]);
       else if (st === "ripe") v.ic.setTexture(cropIcon(p.crop));
-      if (need || st === "ripe") attention++;
     });
-    this.buildings.garden.dot.setVisible(shown && !attention && gd.plots.some((p, i) => i < gd.open && !p) && this._gardenCanPlant());
+    // "!" quando há canteiro vazio e semente para plantar
+    const canPlant = gd.plots.some((p, i) => i < gd.open && !p) && gd.available().length > 0;
+    this.buildings.garden.dot.setVisible(shown && canPlant);
+    // O rótulo do botão acompanha o estado do canteiro alvo
+    const t = this._target;
+    if (t?.plot != null && this._plotLabel(t.plot).key !== t._key) this._setTarget(t, true);
   },
 
-  _gardenCanPlant() {
-    return this.garden.available().length > 0;
-  },
-
-  // ---------------------------------------------------------------------------
-  // PAINEL DA HORTA
-  // ---------------------------------------------------------------------------
-  _showGarden() {
+  // Nome/ação do canteiro (lido pelo aviso e pelo botão de ação)
+  _plotLabel(i) {
     const gd = this.garden;
-    gd.update();
-    const m = new Modal(this, {
-      title: `HORTA · NÍVEL ${this.builds.level("garden")}`,
-      subtitle: "Plante, cuide e colha · nada morre, mas cuidar em dia dá mais qualidade",
-      w: 940,
-      h: 600,
-      onClose: () => {
-        timer.remove();
-        this.input.off("pointerup", clearDrag);
-        this._refreshGardenWorld();
-        this._refreshAll();
+    if (i >= gd.open) return { key: "locked", name: "MATO", verb: "EXAMINAR" };
+    const st = gd.state(i);
+    const p = gd.plots[i];
+    if (st === "empty") return { key: st, name: "CANTEIRO VAZIO", verb: "PLANTAR" };
+    const name = GARDEN.CROPS[p.crop].name.toUpperCase();
+    if (st === "need") {
+      const type = gd.need(p).type;
+      return { key: `need_${type}`, name, verb: NEED_VERB[type] };
+    }
+    if (st === "ripe") return { key: st, name: `${name} · ${GARDEN.QUALITY[gd.quality(p)].toUpperCase()}`, verb: "COLHER" };
+    return { key: st, name, verb: "VER" };
+  },
+
+  // Destaque pulsando em volta do canteiro alvo
+  _plotHighlight(i) {
+    const hl = this.gardenGfx?.hl;
+    if (!hl) return;
+    hl.clear();
+    if (i == null) return hl.setVisible(false);
+    const v = this.gardenGfx.plots[i];
+    hl.lineStyle(4, PAL.yel3, 1).strokeRect(v.x - PLOT_W / 2 - 5, v.y - PLOT_H / 2 - 5, PLOT_W + 10, PLOT_H + 10);
+    hl.setDepth(v.y - 39).setVisible(true);
+  },
+
+  _plotAction(i) {
+    const gd = this.garden;
+    if (i >= gd.open) return this._toast("Melhore a Horta com o João-de-barro para abrir este canteiro");
+    const st = gd.state(i);
+    if (st === "empty") {
+      if (gd.available().length) this._showSeedBar(i);
+      else this._toast("Sem sementes agora");
+    } else if (st === "need") {
+      const type = gd.care(i);
+      if (type) this._plotFx(i, "care", type);
+    } else if (st === "ripe") this._harvestPlot(i);
+    else this._toast(`${GARDEN.CROPS[gd.plots[i].crop].name}: pronta em ${fmtDuration(gd.remainingMs(gd.plots[i]))}`);
+    this._refreshGardenWorld();
+  },
+
+  _harvestPlot(i) {
+    const r = this.garden.harvest(i);
+    if (!r) return;
+    this._plotFx(i, "harvest", r);
+    if (this.meta.data.stats.harvests === 1) this.time.delayedCall(700, () => this._say("Isso! Agora plante de novo: desta vez leva alguns minutos. Jogue uma partida e volte."));
+    this._refreshGardenWorld();
+  },
+
+  // Colher andando: pisar num canteiro maduro colhe (chamado pelo update)
+  _gardenWalk(px, py) {
+    const g = this.gardenGfx;
+    if (!g || !this.buildings.garden.shown) return;
+    for (let i = 0; i < this.garden.open; i++) {
+      const v = g.plots[i];
+      if (Math.abs(px - v.x) < PLOT_W / 2 && Math.abs(py - v.y) < PLOT_H / 2 && this.garden.plots[i] && this.garden.state(i) === "ripe") {
+        this._harvestPlot(i);
+        return;
+      }
+    }
+  },
+
+  // Efeitos no mapa: respingos ao cuidar; ao colher, o fruto voa até o
+  // botão do Celeiro no HUD
+  _plotFx(i, kind, r) {
+    const v = this.gardenGfx.plots[i];
+    if (kind === "care") {
+      this.sound.play("sfx_pickup", { volume: 0.45, rate: r === "water" ? 0.8 : 1.1 });
+      haptic(15);
+      const tint = { water: PAL.ice2, weed: PAL.g5, pest: PAL.g4 }[r];
+      for (let k = 0; k < 12; k++) {
+        const d = this.add.image(v.x, v.y - 10, "px_dot2").setScale(3).setTint(tint).setDepth(this.D_HUD - 11);
+        const a = Math.random() * Math.PI * 2;
+        this.tweens.add({ targets: d, x: v.x + Math.cos(a) * 44, y: v.y - 10 + Math.sin(a) * 30 - 16, alpha: 0, duration: 500, onComplete: () => d.destroy() });
+      }
+      Analytics.track("garden_care", { type: r });
+      return;
+    }
+    this.sound.play("sfx_coin", { volume: 0.5, rate: 0.9 + r.q * 0.1 });
+    haptic(25);
+    const lbl = text(this, v.x, v.y - 40, `+${r.n} ${GARDEN.CROPS[r.crop].name} · ${GARDEN.QUALITY[r.q]}`, { size: 18, color: Q_COLOR[r.q], origin: 0.5, stroke: true }).setDepth(this.D_HUD - 8);
+    this.tweens.add({ targets: lbl, y: v.y - 90, alpha: 0, duration: 1300, onComplete: () => lbl.destroy() });
+    // Da posição no mundo até o botão fixo do Celeiro
+    const cam = this.cameras.main;
+    const b = this.barnBtn;
+    const ic = this.add.image(v.x - cam.scrollX, v.y - 20 - cam.scrollY, cropIcon(r.crop)).setScale(3).setScrollFactor(0).setDepth(this.D_HUD + 1);
+    this.tweens.add({
+      targets: ic,
+      x: b.x,
+      y: b.y,
+      scale: 1.6,
+      duration: 650,
+      ease: "Cubic.easeIn",
+      onComplete: () => {
+        ic.destroy();
+        this.tweens.add({ targets: b, scale: { from: 1.15, to: 1 }, duration: 180 });
       },
     });
-    const W = m.w,
-      H = m.h;
-    // Grade 3×3 à esquerda
-    const TW = 156,
-      TH = 130,
+    Analytics.track("garden_harvest", { crop: r.crop, q: r.q });
+  },
+
+  // ---------------------------------------------------------------------------
+  // FILEIRA DE SEMENTES (pé da tela)
+  // ---------------------------------------------------------------------------
+  _showSeedBar(i) {
+    const gd = this.garden;
+    const ids = gd.available();
+    const W = this.W,
+      H = this.H;
+    const CW = 132,
+      CH = 118,
       GAP = 10;
-    const gx0 = -W / 2 + 30,
-      gy0 = m.top + 8;
-    const tiles = [];
-    let dragAct = null;
-    const clearDrag = () => (dragAct = null);
-    this.input.on("pointerup", clearDrag);
-
-    const act = (i, only) => {
-      const st = gd.state(i);
-      if (st === "need" && (!only || only === "care")) {
-        const type = gd.care(i);
-        if (type) this._gardenFx(tiles[i], "care", type);
-        return "care";
-      }
-      if (st === "ripe" && (!only || only === "harvest")) {
-        const r = gd.harvest(i);
-        if (r) this._gardenFx(tiles[i], "harvest", r);
-        if (r && this.meta.data.stats.harvests === 1) setTip("Plante de novo! Agora leva alguns minutos: jogue uma partida e volte.");
-        return "harvest";
-      }
-      if (only) return null;
-      if (st === "empty" && i < gd.open) {
-        if (gd.available().length) this._showSeedPicker(i, () => drawAll());
-        else setTip("Sem sementes disponíveis agora.");
-        return null;
-      }
-      if (st === "growing") setTip(`${GARDEN.CROPS[gd.plots[i].crop].name}: pronta em ${fmtDuration(gd.remainingMs(gd.plots[i]))}`);
-      if (i >= gd.open) setTip("Melhore a Horta com o João-de-barro para abrir mais canteiros.");
-      return null;
+    const total = ids.length * CW + (ids.length - 1) * GAP;
+    const bw = Math.min(W - 24, Math.max(total + 40, 520));
+    const c = this.add.container(W / 2, H - CH / 2 - 30).setScrollFactor(0).setDepth(this.D_HUD + 8);
+    const bg = this.add.graphics();
+    drawFrame(bg, -bw / 2, -CH / 2 - 44, bw, CH + 62, "gold", { alpha: 0.96 });
+    c.add(bg);
+    c.add(text(this, 0, -CH / 2 - 24, "PLANTAR  ·  segure para plantar em todos os vazios", { size: 16, color: CSS.goldHi, origin: 0.5 }));
+    const bar = {
+      close: () => {
+        if (bar.closed) return;
+        bar.closed = true;
+        this._modals = this._modals.filter((m) => m !== bar);
+        c.destroy();
+      },
     };
-
-    for (let i = 0; i < 9; i++) {
-      const tx = gx0 + (i % 3) * (TW + GAP),
-        ty = gy0 + Math.floor(i / 3) * (TH + GAP);
-      const c = this.add.container(tx, ty);
-      const frame = this.add.graphics();
-      const bed = this.add.image(TW / 2, TH / 2 + 8, "garden_plot").setScale(5);
-      const plant = this.add.sprite(TW / 2, TH / 2 + 26, "crop_carrot", 0).setOrigin(0.5, 1).setScale(4);
-      const label = text(this, TW / 2, TH - 15, "", { size: 16, origin: 0.5, stroke: true });
-      const need = this.add.image(TW - 28, 28, "ico_water").setScale(3);
-      const bar = this.add.graphics();
-      c.add([frame, bed, plant, need, bar, label]);
-      this.tweens.add({ targets: need, y: 20, duration: 420, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
-      // scrollFactor 0 também no filho: o teste de toque usa o do próprio objeto
-      const zone = this.add.zone(TW / 2, TH / 2, TW, TH).setScrollFactor(0).setInteractive({ useHandCursor: true });
-      c.add(zone);
+    this._modals.push(bar);
+    this._setTarget(null);
+    // Fechar
+    const x = this.add.image(bw / 2 - 26, -CH / 2 - 24, "ico_close").setScale(2.5).setInteractive({ useHandCursor: true });
+    x.on("pointerup", () => bar.close());
+    c.add(x);
+    // Um cartão por semente
+    const startX = -total / 2 + CW / 2;
+    ids.forEach((id, k) => {
+      const crop = GARDEN.CROPS[id];
+      const card = this.add.container(startX + k * (CW + GAP), 6);
+      const g = this.add.graphics();
+      drawFrame(g, -CW / 2, -CH / 2, CW, CH, crop.rare ? "gold" : "button", { noRivets: true });
+      card.add(g);
+      card.add(this.add.image(0, -26, cropIcon(id)).setScale(3.4));
+      card.add(text(this, 0, 12, crop.name, { size: 15, origin: 0.5, align: "center", wrap: CW - 10 }));
+      const seeds = this.meta.data.seeds[id] || 0;
+      card.add(text(this, 0, 38, crop.rare ? `${fmtDuration(crop.s * 1000)} · ×${seeds}` : fmtDuration(crop.s * 1000), { size: 14, color: crop.rare ? CSS.goldHi : CSS.muted, origin: 0.5 }));
+      const zone = this.add.zone(0, 0, CW, CH).setInteractive({ useHandCursor: true });
+      card.add(zone);
+      let downAt = 0;
       zone.on("pointerdown", () => {
-        haptic(10);
-        dragAct = act(i);
+        downAt = this.time.now;
+        haptic(8);
       });
-      zone.on("pointerover", (p) => {
-        if (p.isDown && dragAct) act(i, dragAct);
+      zone.on("pointerout", () => (downAt = 0));
+      zone.on("pointerup", () => {
+        if (!downAt) return;
+        const all = this.time.now - downAt >= HOLD_MS;
+        downAt = 0;
+        bar.close();
+        this._plantFromBar(i, id, all);
       });
-      m.add(c);
-      tiles.push({ c, frame, bed, plant, label, need, bar, x: tx, y: ty, w: TW, h: TH });
-    }
-
-    // Coluna da direita: celeiro + sementes raras + dica
-    const rx = gx0 + 3 * (TW + GAP) + 12,
-      rw = W / 2 - 30 - rx;
-    const side = this.add.graphics();
-    drawFrame(side, rx, gy0, rw, 3 * TH + 2 * GAP, "dark", { noRivets: true });
-    m.add(side);
-    m.add(text(this, rx + rw / 2, gy0 + 22, "CELEIRO", { size: 20, color: CSS.goldHi, origin: 0.5 }));
-    const store = this.add.container(0, 0);
-    m.add(store);
-    const tip = text(this, rx + rw / 2, gy0 + 3 * TH + 2 * GAP - 56, "", { size: 15, color: CSS.muted, origin: 0.5, align: "center", wrap: rw - 24 });
-    m.add(tip);
-    let tipUntil = 0;
-    const setTip = (s) => {
-      tip.setText(s).setColor(CSS.txt);
-      tipUntil = Date.now() + 4500;
-    };
-    this._gardenStoreAnchor = { x: rx + rw / 2, y: gy0 + 22 };
-
-    // Botão: repetir a última semente nos canteiros vazios
-    const repeatBtn = new Button(this, 0, H / 2 - 42, 380, 50, "", () => {
-      const crop = this.meta.data.lastSeed;
-      let n = 0;
-      for (let i = 0; i < gd.open; i++) if (!gd.plots[i] && gd.plant(i, crop)) n++;
-      if (n) {
-        this.sound.play("sfx_pickup", { volume: 0.5, rate: 0.7 });
-        haptic(20);
-        drawAll();
-      }
-    }, { size: 18, style: "green" }).setScrollFactor(0);
-    m.add(repeatBtn);
-
-    const drawStore = () => {
-      store.removeAll(true);
-      const d = this.meta.data;
-      const items = Object.keys(GARDEN.CROPS).filter((id) => pantryCount(d, id) > 0);
-      let y = gy0 + 54;
-      if (!items.length) {
-        store.add(text(this, rx + rw / 2, y + 10, "Vazio — colha algo!", { size: 15, color: CSS.dim, origin: 0.5 }));
-        y += 28;
-      }
-      for (const id of items) {
-        const q = d.pantry[id];
-        store.add(this.add.image(rx + 26, y + 10, cropIcon(id)).setScale(2.2));
-        store.add(text(this, rx + 48, y + 10, GARDEN.CROPS[id].name, { size: 15, origin: [0, 0.5] }));
-        const parts = q.map((n, k) => (n ? { n, k } : null)).filter(Boolean);
-        let x = rx + rw - 14;
-        for (const { n, k } of parts.reverse()) {
-          const t = text(this, x, y + 10, String(n), { size: 16, color: Q_COLOR[k], origin: [1, 0.5], stroke: true });
-          store.add(t);
-          store.add(this._qualityPip(x - t.width - 9, y + 10, k));
-          x -= t.width + 24;
-        }
-        y += 28;
-      }
-      const seeds = Object.entries(d.seeds || {}).filter(([, n]) => n > 0);
-      if (seeds.length) {
-        y += 8;
-        store.add(text(this, rx + rw / 2, y + 8, "SEMENTES RARAS", { size: 16, color: CSS.goldHi, origin: 0.5 }));
-        y += 28;
-        for (const [id, n] of seeds) {
-          store.add(this.add.image(rx + 26, y + 10, "ico_seed").setScale(2));
-          store.add(text(this, rx + 48, y + 10, GARDEN.CROPS[id].name, { size: 15, origin: [0, 0.5] }));
-          store.add(text(this, rx + rw - 14, y + 10, `×${n}`, { size: 16, color: CSS.goldHi, origin: [1, 0.5], stroke: true }));
-          y += 28;
-        }
-      }
-    };
-
-    // Legenda das qualidades (rodapé do celeiro)
-    const legend = this.add.container(0, gy0 + 3 * TH + 2 * GAP - 18);
-    let lx = 0;
-    GARDEN.QUALITY.forEach((name, k) => {
-      legend.add(this._qualityPip(lx + 7, 0, k));
-      const t = text(this, lx + 18, 0, name, { size: 14, color: Q_COLOR[k], origin: [0, 0.5] });
-      legend.add(t);
-      lx += t.width + 40;
+      c.add(card);
     });
-    legend.x = rx + rw / 2 - (lx - 22) / 2;
-    m.add(legend);
+    fixAll(c);
+    c.setAlpha(0).setY(c.y + 30);
+    this.tweens.add({ targets: c, alpha: 1, y: c.y - 30, duration: 200, ease: "Back.easeOut" });
+  },
 
-    const drawTile = (t, i, now) => {
-      const open = i < gd.open;
-      const p = open ? gd.plots[i] : null;
-      const st = open ? gd.state(i, now) : "locked";
-      t.frame.clear();
-      drawFrame(t.frame, 0, 0, t.w, t.h, st === "ripe" ? "green" : st === "need" ? "gold" : st === "locked" ? "disabled" : "button", { noRivets: true });
-      t.bed.setTexture(open ? "garden_plot" : "garden_locked");
-      t.plant.setVisible(!!p);
-      if (p) t.plant.setTexture(`crop_${p.crop}`, gd.stage(p));
-      t.need.setVisible(st === "need");
-      if (st === "need") t.need.setTexture(NEED_ICON[gd.need(p).type]);
-      t.bar.clear();
-      if (st === "growing" || st === "need") {
-        const f = Math.min(1, p.grown / p.dur);
-        t.bar.fillStyle(PAL.ink, 1).fillRect(24, t.h - 20, t.w - 48, 9);
-        t.bar.fillStyle(st === "need" ? PAL.yel1 : PAL.g5, 1).fillRect(27, t.h - 17, (t.w - 54) * f, 3);
+  // Planta no canteiro i (e, se `all`, nos outros vazios enquanto houver semente)
+  _plantFromBar(i, id, all) {
+    const gd = this.garden;
+    let n = gd.plant(i, id) ? 1 : 0;
+    if (all) for (let k = 0; k < gd.open; k++) if (!gd.plots[k] && gd.plant(k, id)) n++;
+    if (!n) return;
+    this.meta.data.lastSeed = id;
+    this.meta._save();
+    this.sound.play("sfx_pickup", { volume: 0.5, rate: 0.7 });
+    haptic(20);
+    for (let k = 0; k < gd.open; k++) {
+      if (gd.plots[k]?.crop !== id || gd.plots[k].grown > 0) continue;
+      const v = this.gardenGfx.plots[k];
+      for (let j = 0; j < 6; j++) {
+        const d = this.add.image(v.x, v.y, "px_dot2").setScale(3).setTint(PAL.n4).setDepth(v.y + 20);
+        this.tweens.add({ targets: d, x: v.x + (Math.random() - 0.5) * 50, y: v.y - 14 - Math.random() * 16, alpha: 0, duration: 420, onComplete: () => d.destroy() });
       }
-      if (st === "locked") t.label.setText(`HORTA NV ${GARDEN.PLOTS.findIndex((n) => n > i)}`).setColor(CSS.dim);
-      else if (st === "empty") t.label.setText("PLANTAR").setColor(CSS.goldHi);
-      else if (st === "ripe") t.label.setText(`COLHER · ${GARDEN.QUALITY[gd.quality(p, now)].toUpperCase()}`).setColor(Q_COLOR[gd.quality(p, now)]);
-      else t.label.setText("");
-    };
+    }
+    Analytics.track("garden_plant", { crop: id, n });
+    this._refreshGardenWorld();
+  },
 
-    const drawAll = () => {
-      const now = Date.now();
-      tiles.forEach((t, i) => drawTile(t, i, now));
-      drawStore();
-      const crop = this.meta.data.lastSeed;
-      const empty = gd.plots.filter((p) => !p).length;
-      const ok = crop && empty > 0 && gd.available().includes(crop);
-      repeatBtn.setVisible(!!ok);
-      if (ok) repeatBtn.setLabel(`PLANTAR ${GARDEN.CROPS[crop].name.toUpperCase()} NOS VAZIOS`);
-      if (Date.now() > tipUntil) tip.setText(this._gardenTip()).setColor(CSS.muted);
-    };
-    this._gardenRedraw = drawAll;
-    drawAll();
-    const timer = this.time.addEvent({ delay: 500, loop: true, callback: drawAll });
+  // ---------------------------------------------------------------------------
+  // CELEIRO (prédio + botão no HUD)
+  // ---------------------------------------------------------------------------
+  _barnHudButton(x, y) {
+    const c = this.add.container(x, y).setScrollFactor(0).setDepth(this.D_HUD);
+    const g = this.add.graphics();
+    drawFrame(g, -26, -26, 52, 52, "dark", { noRivets: true });
+    const ic = this.add.image(0, 0, "ico_basket").setScale(2.6);
+    const zone = this.add.zone(0, 0, 52, 52).setInteractive({ useHandCursor: true });
+    zone.on("pointerup", () => {
+      if (this._modals.length || this._cutscene) return;
+      this.sound.play("sfx_ui_click", { volume: 0.4 });
+      haptic(12);
+      this._showBarn();
+    });
+    c.add([g, ic, zone]);
+    fixAll(c);
+    this.barnBtn = c;
+    c.setVisible(this._isShown("garden"));
+    return c;
+  },
+
+  _showBarn() {
+    const d = this.meta.data;
+    const m = new Modal(this, { title: "CELEIRO", subtitle: "Tudo o que você colheu e as sementes guardadas", w: 760, h: 560 });
+    const list = this._modalList(m);
+    const row = (icon, name, right) =>
+      list.addRow({
+        h: 56,
+        build: (c, w) => {
+          const g = this.add.graphics();
+          drawFrame(g, 0, 0, w, 56, "dark", { noRivets: true });
+          c.add(g);
+          c.add(this.add.image(34, 28, icon).setScale(3));
+          c.add(text(this, 70, 28, name, { size: 19, origin: [0, 0.5] }));
+          right(c, w);
+        },
+      });
+    const crops = Object.keys(GARDEN.CROPS).filter((id) => pantryCount(d, id) > 0);
+    this._section(list, "COLHEITA");
+    if (!crops.length) list.addRow({ h: 40, build: (c, w) => c.add(text(this, w / 2, 20, "Nada ainda — colha na horta!", { size: 16, color: CSS.dim, origin: 0.5 })) });
+    for (const id of crops)
+      row(cropIcon(id), GARDEN.CROPS[id].name, (c, w) => {
+        let x = w - 20;
+        const q = d.pantry[id];
+        for (let k = 2; k >= 0; k--) {
+          if (!q[k]) continue;
+          const t = text(this, x, 28, String(q[k]), { size: 19, color: Q_COLOR[k], origin: [1, 0.5], stroke: true });
+          c.add(t);
+          c.add(this._qualityPip(x - t.width - 12, 28, k));
+          x -= t.width + 38;
+        }
+      });
+    const seeds = Object.entries(d.seeds || {}).filter(([, n]) => n > 0);
+    if (seeds.length) {
+      this._section(list, "SEMENTES RARAS");
+      for (const [id, n] of seeds)
+        row(cropIcon(id), GARDEN.CROPS[id].name, (c, w) => {
+          c.add(this.add.image(w - 76, 28, "ico_seed").setScale(2.2));
+          c.add(text(this, w - 20, 28, `×${n}`, { size: 19, color: CSS.goldHi, origin: [1, 0.5], stroke: true }));
+        });
+    }
+    // Legenda das qualidades
+    list.addRow({
+      h: 36,
+      build: (c, w) => {
+        const items = GARDEN.QUALITY.map((name, k) => [this._qualityPip(0, 18, k), text(this, 0, 18, name, { size: 15, color: Q_COLOR[k], origin: [0, 0.5] })]);
+        const tw = items.reduce((a, [, t]) => a + t.width + 52, -34);
+        let x = w / 2 - tw / 2;
+        for (const [pip, t] of items) {
+          pip.x = x + 6;
+          t.x = x + 18;
+          c.add([pip, t]);
+          x += t.width + 52;
+        }
+      },
+    });
   },
 
   // Bolinha da cor da qualidade (comum, prata, ouro)
   _qualityPip(x, y, q) {
     const g = this.add.graphics();
-    g.fillStyle(PAL.ink, 1).fillCircle(x, y, 7);
-    g.fillStyle([PAL.n3, PAL.s4, PAL.yel2][q], 1).fillCircle(x, y, 5);
-    g.fillStyle(PAL.white, 0.6).fillRect(x - 3, y - 3, 2, 2);
+    g.fillStyle(PAL.ink, 1).fillCircle(0, 0, 7);
+    g.fillStyle([PAL.n3, PAL.s4, PAL.yel2][q], 1).fillCircle(0, 0, 5);
+    g.fillStyle(PAL.white, 0.6).fillRect(-3, -3, 2, 2);
+    g.setPosition(x, y);
     return g;
   },
-
-  // Dica curta do momento (1 linha, sem manual)
-  _gardenTip() {
-    const gd = this.garden;
-    const sts = [];
-    for (let i = 0; i < gd.open; i++) sts.push(gd.state(i));
-    if (sts.includes("ripe")) return "Toque (ou arraste o dedo) para colher.";
-    if (sts.includes("need")) {
-      const i = sts.indexOf("need");
-      return GARDEN.NEEDS[gd.need(gd.plots[i]).type];
-    }
-    if (sts.includes("empty")) return "Toque num canteiro vazio para plantar.";
-    return "Tudo crescendo. Que tal uma partida enquanto isso?";
-  },
-
-  // Escolher a semente para o canteiro i
-  _showSeedPicker(i, onDone) {
-    const gd = this.garden;
-    const m = new Modal(this, { title: "PLANTAR", subtitle: "Curtas para agora, longas para quando for dormir", w: 720, h: 560 });
-    const list = this._modalList(m);
-    for (const id of gd.available()) {
-      const c = GARDEN.CROPS[id];
-      const seeds = this.meta.data.seeds[id] || 0;
-      list.addRow(
-        this._shopRow({
-          icon: cropIcon(id),
-          name: c.name,
-          nameColor: c.rare ? CSS.goldHi : CSS.txt,
-          desc: `${fmtDuration(c.s * 1000)} para crescer · colhe ${c.yield}${c.rare ? ` · semente rara ×${seeds}` : ""}`,
-          right: "PLANTAR",
-          style: c.rare ? "gold" : "button",
-          onTap: () => {
-            if (!gd.plant(i, id)) return;
-            this.meta.data.lastSeed = id;
-            this.meta._save();
-            this.sound.play("sfx_pickup", { volume: 0.5, rate: 0.7 });
-            haptic(20);
-            Analytics.track("garden_plant", { crop: id });
-            m.close();
-            onDone?.();
-          },
-        }),
-      );
-    }
-  },
-
-  // Efeitos de cuidar/colher dentro do painel
-  _gardenFx(t, kind, r) {
-    const m = this._modals[this._modals.length - 1];
-    if (!m) return;
-    const cx = t.x + t.w / 2,
-      cy = t.y + t.h / 2;
-    if (kind === "care") {
-      this.sound.play("sfx_pickup", { volume: 0.45, rate: r === "water" ? 0.8 : 1.1 });
-      haptic(15);
-      const tint = { water: PAL.ice2, weed: PAL.g5, pest: PAL.g4 }[r];
-      for (let k = 0; k < 10; k++) {
-        const d = this.add.image(cx, cy, "px_dot2").setScale(3).setTint(tint);
-        m.add(d);
-        const a = Math.random() * Math.PI * 2;
-        this.tweens.add({ targets: d, x: cx + Math.cos(a) * 50, y: cy + Math.sin(a) * 40 - 20, alpha: 0, duration: 500, onComplete: () => d.destroy() });
-      }
-    } else {
-      this.sound.play("sfx_coin", { volume: 0.5, rate: 0.9 + r.q * 0.1 });
-      haptic(25);
-      const ic = this.add.image(cx, cy, cropIcon(r.crop)).setScale(3);
-      m.add(ic);
-      const a = this._gardenStoreAnchor;
-      this.tweens.add({ targets: ic, x: a.x, y: a.y, scale: 1.5, duration: 520, ease: "Cubic.easeIn", onComplete: () => ic.destroy() });
-      const lbl = text(this, cx, cy - 20, `+${r.n} ${GARDEN.CROPS[r.crop].name} · ${GARDEN.QUALITY[r.q]}`, { size: 18, color: Q_COLOR[r.q], origin: 0.5, stroke: true });
-      m.add(lbl);
-      this.tweens.add({ targets: lbl, y: cy - 60, alpha: 0, duration: 1100, onComplete: () => lbl.destroy() });
-      Analytics.track("garden_harvest", { crop: r.crop, q: r.q });
-    }
-    this._gardenRedraw?.();
-  },
 };
+
+// scrollFactor 0 em tudo (o toque usa o do próprio objeto, não o do container)
+function fixAll(o) {
+  o.setScrollFactor?.(0);
+  if (o.list) o.list.forEach(fixAll);
+}
