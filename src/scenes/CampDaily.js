@@ -9,6 +9,7 @@ import { text, drawFrame, Button, haptic } from "../ui/Theme.js";
 import { Modal } from "../ui/Widgets.js";
 import { fmtDuration } from "../systems/Builds.js";
 import { Notify, NOTIFY_ID, tomorrowAt } from "../systems/Notify.js";
+import { Clock } from "../systems/Clock.js";
 
 const S = GAME.PIXEL_SCALE;
 const CHEST_X = -64,
@@ -100,6 +101,11 @@ export const CampDaily = {
   // ---------------------------------------------------------------------------
   _maybeStreak() {
     if (this._pending.length || this._cutscene || this._modals.length || this._leaving) return;
+    // Relógio voltado para trás: a floresta explica, uma vez por visita
+    if (Clock.frozenMs() > 10 * 60000) {
+      this._say(`O tempo da floresta não anda para trás. Plantas, obras e presentes vão esperar o relógio alcançar (${fmtDuration(Clock.frozenMs())}).`);
+      return;
+    }
     const d = this._daily();
     const day = d?.streakPending();
     if (!day) return;
@@ -241,7 +247,7 @@ CampDaily._offerNotify = function (kind, at = null) {
   }, { size: 20, style: "dark" }));
 };
 
-function msToMidnight(now = new Date()) {
+function msToMidnight(now = Clock.date()) {
   const t = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
   return t - now;
 }

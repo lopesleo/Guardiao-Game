@@ -2,12 +2,13 @@
 // peixe pelo horário real, tamanho, recordes e qualidade da pescaria.
 // Tudo no save: meta.data.pond = { fish, since }, meta.data.fishRecords.
 import { FISHING } from "../config.js";
+import { Clock } from "./Clock.js";
 
 export class Pond {
   constructor(meta, level = 1) {
     this.meta = meta;
     const d = meta.data;
-    d.pond ||= { fish: null, since: Date.now() };
+    d.pond ||= { fish: null, since: Clock.now() };
     d.fishRecords ||= {};
     d.pantry ||= {};
     this.setLevel(level);
@@ -26,7 +27,7 @@ export class Pond {
   }
 
   // Peixes disponíveis agora (repõe 1 a cada REGEN_MIN, sem passar do teto)
-  fish(now = Date.now()) {
+  fish(now = Clock.now()) {
     const p = this.meta.data.pond;
     const step = FISHING.REGEN_MIN * 60000;
     if (p.fish >= this.cap) {
@@ -42,13 +43,13 @@ export class Pond {
   }
 
   // Tempo até voltar um peixe (0 = tem peixe)
-  restMs(now = Date.now()) {
+  restMs(now = Clock.now()) {
     if (this.fish(now) > 0) return 0;
     return this.meta.data.pond.since + FISHING.REGEN_MIN * 60000 - now;
   }
 
   // Sorteia o peixe da vez pelo horário real (1º peixe da vida: lambari fácil)
-  roll(now = new Date()) {
+  roll(now = Clock.date()) {
     const d = this.meta.data;
     if (!d.stats.fishCaught) return { id: "lambari", tutorial: true };
     const h = now.getHours();
@@ -68,7 +69,7 @@ export class Pond {
     const record = cm > rec;
     if (record) d.fishRecords[id] = cm;
     this.fish();
-    if (d.pond.fish >= this.cap) d.pond.since = Date.now();
+    if (d.pond.fish >= this.cap) d.pond.since = Clock.now();
     d.pond.fish = Math.max(0, d.pond.fish - 1);
     const row = (d.pantry[id] ||= [0, 0, 0]);
     row[q]++;
@@ -81,7 +82,7 @@ export class Pond {
   lose() {
     const d = this.meta.data;
     this.fish();
-    if (d.pond.fish >= this.cap) d.pond.since = Date.now();
+    if (d.pond.fish >= this.cap) d.pond.since = Clock.now();
     d.pond.fish = Math.max(0, d.pond.fish - 1);
     this.meta._save();
   }

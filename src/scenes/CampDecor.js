@@ -6,13 +6,14 @@
 import { GAME, SEASONS } from "../config.js";
 import { PAL } from "../art/Palette.js";
 import { paintGround, FLAG_COUNT } from "../art/CampDecor.js";
+import { Clock } from "../systems/Clock.js";
 
 const S = GAME.PIXEL_SCALE;
 const D_NIGHT = 50000;
 const HUB = { x: 0, y: 70, r: 175 }; // terreiro em volta da fogueira
 
 // Data comemorativa de hoje (ou null). ?festa=<id> força uma (só com ?debug=1)
-export function currentSeason(date = new Date()) {
+export function currentSeason(date = Clock.date()) {
   const q = new URLSearchParams(location.search);
   if (q.get("debug") === "1" && q.get("festa")) return SEASONS.find((s) => s.id === q.get("festa")) || null;
   const md = (date.getMonth() + 1) * 100 + date.getDate();
@@ -145,7 +146,7 @@ export const CampDecor = {
 
   // Aplica o céu da hora atual (chamado ao entrar e a cada 30 s)
   _applyTimeOfDay() {
-    const now = new Date();
+    const now = Clock.date();
     const hour = this._hourOverride ?? now.getHours() + now.getMinutes() / 60;
     const sky = skyAt(hour);
     this._lightK = sky.k;

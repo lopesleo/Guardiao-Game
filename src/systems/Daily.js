@@ -1,13 +1,15 @@
 // Hábito diário: missões do dia, presente de dias seguidos e baú diário.
-// "Dia" = data LOCAL do aparelho (AAAA-MM-DD). Tudo no save:
+// "Dia" = data LOCAL (AAAA-MM-DD) pelo relógio confiável (Clock): mexer na hora
+// do celular não gera dia novo. Tudo no save:
 //   meta.data.daily  = { day, missions:[{id,n,p,claimed}], bonus, chest:{free,ad} }
 //   meta.data.streak = { last, count }
 import { DAILY, GARDEN } from "../config.js";
 import { rng } from "../art/PixelArt.js";
 import { Analytics } from "./Analytics.js";
+import { Clock } from "./Clock.js";
 
-export const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-const yesterdayKey = (d = new Date()) => dayKey(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1));
+export const dayKey = (d = Clock.date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const yesterdayKey = (d = Clock.date()) => dayKey(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1));
 const def = (id) => DAILY.MISSIONS.find((m) => m.id === id);
 // "{n}" vira o alvo; "{s}" vira plural quando o alvo passa de 1
 const fill = (t, n) => t.replace("{n}", n).replace("{s}", n > 1 ? "s" : "");
@@ -16,7 +18,7 @@ const fill = (t, n) => t.replace("{n}", n).replace("{s}", n > 1 ? "s" : "");
 export const dailyUnlocked = (d) => (d.revealed || []).includes("board");
 
 export class Daily {
-  constructor(meta, now = new Date()) {
+  constructor(meta, now = Clock.date()) {
     this.meta = meta;
     this.now = now;
     this.ensure();
