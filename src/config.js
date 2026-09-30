@@ -535,6 +535,34 @@ export const GARDEN = {
   SEEDS: { MINIBOSS: 1, GOLDEN_CHEST: 1, BOSS: 2 },
 };
 
+// Hábito diário (M4 — ver docs/PRE_LANCAMENTO.md §2). "Dia" = data LOCAL do
+// aparelho. Missões: 3 por dia (2 da floresta + 1 da Clareira quando houver),
+// sorteadas pela data; n = alvos possíveis; needs = só quando o jogador já
+// conhece aquilo. Nada vende poder: o prêmio é moeda, madeira, semente.
+export const DAILY = {
+  MISSIONS: [
+    { id: "kills", text: "Abata {n} criaturas", stat: "kills", n: [150, 300, 500], coins: 50 },
+    { id: "reactions", text: "Dispare {n} reações elementais", stat: "reactions", n: [15, 30, 50], coins: 50 },
+    { id: "vapor", text: "Faça {n} Vapores (fogo + gelo)", stat: "VAPOR", n: [8, 15], coins: 60 },
+    { id: "crystal", text: "Faça {n} Cristais (gelo + raio)", stat: "CRYSTAL", n: [5, 10], coins: 60, needs: (d) => (d.unlockedWeapons || []).includes("CHAIN") },
+    { id: "overload", text: "Faça {n} Sobrecargas (fogo + raio)", stat: "OVERLOAD", n: [5, 10], coins: 60, needs: (d) => (d.unlockedWeapons || []).includes("CHAIN") },
+    { id: "survive", text: "Sobreviva {n} minutos numa partida", stat: "minutes", n: [3, 5], coins: 50, max: true },
+    { id: "runs", text: "Jogue {n} partidas", stat: "runs", n: [2, 3], coins: 40 },
+    { id: "chests", text: "Abra {n} baús na floresta", stat: "chests", n: [2, 4], coins: 50 },
+    { id: "lanterns", text: "Quebre {n} lanternas de cogumelo", stat: "lanterns", n: [3, 6], coins: 40 },
+    { id: "boss", text: "Vença o Mapinguari", stat: "wins", n: [1], coins: 120, needs: (d) => (d.wins || 0) > 0 },
+    // Da Clareira
+    { id: "harvest", text: "Colha {n} vezes na horta", stat: "harvest", n: [2, 4], coins: 40, camp: true, needs: (d) => (d.revealed || []).includes("garden") },
+    { id: "fish", text: "Pesque {n} peixes no lago", stat: "fish", n: [2, 3], coins: 40, camp: true, needs: (d) => (d.revealed || []).includes("pond") },
+    { id: "cook", text: "Cozinhe {n} prato{s}", stat: "cook", n: [1, 2], coins: 40, camp: true, needs: (d) => (d.revealed || []).includes("kitchen") },
+  ],
+  ALL_BONUS: { coins: 80, wood: 2 }, // completar as 3 do dia
+  // Presente de dias seguidos (volta ao 1 depois do 7º ou se pular um dia)
+  STREAK: [{ coins: 40 }, { coins: 60 }, { wood: 2 }, { coins: 90 }, { seeds: 1, coins: 40 }, { coins: 120 }, { coins: 200, wood: 5, seeds: 2 }],
+  // Baú diário junto à fogueira: 1 grátis por dia + 1 com anúncio (opcional)
+  CHEST: { coins: [30, 80], woodChance: 0.4, seedChance: 0.25 },
+};
+
 // Datas comemorativas (calendário REAL): decoração temática na Clareira só
 // na época. mês/dia inclusivos. Ex.: festa junina + julina = bandeirinhas.
 export const SEASONS = [{ id: "junina", name: "Festa Junina", from: [6, 1], to: [7, 31] }];

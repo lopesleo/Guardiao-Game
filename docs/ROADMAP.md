@@ -116,11 +116,22 @@ Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
   Tucunaré, Dourado na Brasa) — 14 no total
 - ✅ Ordem de descobertas por progresso ([`RITMO_E_APRESENTACAO.md`](RITMO_E_APRESENTACAO.md)): Horta (3ª partida) → Cozinha (1ª colheita) → Lago (1ª refeição), uma por visita
 
-### M4 — Hábito diário ⬜
-- ⬜ Missões diárias (3/dia) + bônus ao completar todas
-- ⬜ Recompensa por dias seguidos (7 dias)
-- ⬜ Baú diário (grátis + 2º com anúncio)
-- ⬜ Notificações locais opcionais (pedidas no momento certo)
+### M4 — Hábito diário ✅
+Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do aparelho.
+- ✅ **Missões diárias** (aba MISSÕES do Mural): 3 por dia sorteadas pela data (2 da
+  floresta + 1 da Clareira quando houver: abates, reações, Vapor/Cristal/Sobrecarga,
+  sobreviver, baús, lanternas, vencer o Mapinguari, colher, pescar, cozinhar), prêmio
+  em moedas + **bônus ao completar as três** (moedas + madeira); o fim da partida
+  mostra "Missão: …" cumprida
+- ✅ **Presente de dias seguidos** (7 dias; 7º = 200 moedas + 5 madeira + 2 sementes
+  raras); pular um dia volta ao 1º; aparece ao chegar na Clareira
+- ✅ **Baú do dia** junto à fogueira (revelado na visita depois do Mural): 1 grátis
+  por dia + 2º com anúncio opcional (desligado junto com `ADS.ENABLED`)
+- ✅ **Notificações locais opcionais** (`@capacitor/local-notifications`): perguntadas
+  UMA vez no momento certo (abriu o baú do dia; plantou algo de 1 h+), no máximo 2
+  avisos (baú de amanhã às 10h e a colheita); chave em Opções — no app, rodar
+  `npm install` + `npm run android:sync` 👤
+- Valores em `DAILY` no config
 
 ### M5 — Monetização e medição reais 👤
 - 👤 Contas: AdMob, Firebase, perfil de pagamentos no Play Console

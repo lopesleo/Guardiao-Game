@@ -141,6 +141,7 @@ export const CampKitchen = {
             ? () => {
                 const res = k.cook(r.id);
                 if (!res) return;
+                this._dailyBump?.("cook");
                 this._buyFx();
                 Analytics.track("kitchen_cook", { id: r.id, q: res.q });
                 this._toast(`${r.name} (${GARDEN.QUALITY[res.q]}) pronto!${d.meal ? "" : " Coma antes de partir"}`);

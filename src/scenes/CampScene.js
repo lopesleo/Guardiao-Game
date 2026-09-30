@@ -26,6 +26,7 @@ import { CampGarden } from "./CampGarden.js";
 import { CampKitchen } from "./CampKitchen.js";
 import { CampPond } from "./CampPond.js";
 import { CampDecor, decorFree } from "./CampDecor.js";
+import { CampDaily } from "./CampDaily.js";
 
 const S = GAME.PIXEL_SCALE;
 const CAMP_W = 1500,
@@ -96,6 +97,7 @@ export class CampScene extends Phaser.Scene {
     this._kitchenWorld();
     this._pondWorld();
     this._decor();
+    this._dailyChestWorld();
     this._player();
     this._night();
     this._hud();
@@ -135,6 +137,7 @@ export class CampScene extends Phaser.Scene {
     cam.fadeIn(400, 10, 14, 10);
     Analytics.track("camp_enter", {});
     this.time.delayedCall(700, () => this._introSequence());
+    this.time.delayedCall(1300, () => this._maybeStreak());
   }
 
   // VOLTAR do Android: fecha o painel aberto; sem painel, volta ao título
@@ -284,7 +287,7 @@ export class CampScene extends Phaser.Scene {
     };
     B("shrine", "camp_shrine", "SANTUÁRIO", "BÊNÇÃOS E DONS", -430, -130, () => this._showBlessings(), [0, -99, 0xffe58f, 2.4]);
     B("forge", "camp_forge", "FORJA", "FORJAR ARMAS", 440, -120, () => this._showArsenal(), [-40, -24, 0xff8a3c, 2.8]);
-    B("board", "camp_board", "MURAL", "CONQUISTAS E LENDAS", -420, 280, () => this._showBoard());
+    B("board", "camp_board", "MURAL", "MISSÕES, CONQUISTAS E LENDAS", -420, 280, () => this._showBoard(this._daily() ? "missoes" : "conquistas"));
 
     // Ninho do João-de-barro (o construtor chega com as obras) + o pássaro
     const nx = 450,
@@ -448,6 +451,7 @@ export class CampScene extends Phaser.Scene {
     this._refreshGardenWorld();
     this._refreshKitchenDot();
     this._refreshPondDot();
+    this._refreshDailyDots();
   }
 
   // Trocou de guardião na Fogueira: o avatar muda na hora (com fumacinha)
@@ -832,4 +836,4 @@ export class CampScene extends Phaser.Scene {
   }
 }
 
-Object.assign(CampScene.prototype, MetaPanels, CampGarden, CampKitchen, CampPond, CampDecor);
+Object.assign(CampScene.prototype, MetaPanels, CampGarden, CampKitchen, CampPond, CampDecor, CampDaily);
