@@ -15,6 +15,7 @@ export class TitleScene extends Phaser.Scene {
   }
 
   create() {
+    this.events.once("create", () => this._maybeReopenSettings?.());
     fitCamera(this);
     this.meta = new MetaProgression();
     this.sound.volume = 1; // volumes por canal vêm de Settings (ganchos globais)

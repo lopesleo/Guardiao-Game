@@ -1,5 +1,6 @@
 // Baú lootbox com animação real (closed → half → open) e mecânica mímico.
 import { CHEST, COLORS, GAME } from '../config.js';
+import { fontFamily, fontStyle, textPx } from '../ui/Theme.js';
 
 export class Chest extends Phaser.GameObjects.Container {
   constructor(scene, x, y) {
@@ -17,8 +18,8 @@ export class Chest extends Phaser.GameObjects.Container {
     this.sprite = scene.add.sprite(0, 0, CHEST.SPRITE_TEXTURE, CHEST.SPRITE_FRAME_CLOSED)
                        .setScale(GAME.PIXEL_SCALE);
     this.prompt = scene.add.text(0, -42, '', {
-      fontFamily: '"Jersey 15", monospace',
-      fontSize: '16px', color: '#ffe58f',
+      fontFamily: fontFamily(), fontStyle: fontStyle(),
+      fontSize: `${textPx(16)}px`, color: '#ffe58f',
       stroke: '#1a1420', strokeThickness: 4, resolution: 2,
     }).setOrigin(0.5).setVisible(false);
 
