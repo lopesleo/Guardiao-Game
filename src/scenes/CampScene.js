@@ -405,6 +405,14 @@ export class CampScene extends Phaser.Scene {
   update(time, dt) {
     this.inputMgr.update();
     const p = this.player;
+    // Saindo: segue sozinho pela trilha e some no alto da tela (câmera parada)
+    if (this._exiting) {
+      p.setVelocity(0, -SPEED * 0.9);
+      if (p.anims.currentAnim?.key !== `${this.heroId}_walk`) p.play(`${this.heroId}_walk`);
+      p.setDepth(p.y + 20);
+      this.shadow.setPosition(p.x, p.y + 20).setDepth(p.y + 19);
+      return;
+    }
     const busy = this._modals.length > 0 || this._leaving;
     const mx = busy ? 0 : this.inputMgr.move.x,
       my = busy ? 0 : this.inputMgr.move.y;
@@ -428,8 +436,8 @@ export class CampScene extends Phaser.Scene {
     this._setTarget(busy ? null : best);
     if (this.inputMgr.consumeInteract() && !busy) this._interact();
 
-    // Saída: entrou na trilha ao norte
-    if (!busy && p.y < TOP + 40 && Math.abs(p.x) < TRAIL_HALF) this._play();
+    // Saída: passou entre as tochas da trilha ao norte
+    if (!busy && p.y < TOP + 130 && Math.abs(p.x) < TRAIL_HALF) this._play();
 
     // Luzes tremulando e vaga-lumes
     for (const g of this.glows) g.g.setAlpha(g.base + Math.sin(time / 90 + g.ph) * 0.06 + Math.random() * 0.04);
@@ -524,15 +532,26 @@ export class CampScene extends Phaser.Scene {
   _play() {
     if (this._leaving) return;
     this._leaving = true;
+    this._exiting = true;
     this.meta.setSelectedCharacter(this.heroId);
     haptic(30);
-    this.player.setVelocity(0, -SPEED);
-    this._go("GameScene");
+    this._setTarget(null);
+    // Câmera desliza até a boca da trilha e para: ele some no alto da tela
+    this.cameras.main.stopFollow();
+    this.cameras.main.pan(0, TOP + 170, 450, "Sine.easeInOut");
+    this.player.setCollideWorldBounds(false);
+    this.player.body.checkCollision.none = true;
+    this.player.x = Phaser.Math.Clamp(this.player.x, -TRAIL_HALF / 2, TRAIL_HALF / 2);
+    this.tweens.add({ targets: this.player, x: 0, duration: 400 }); // centraliza na trilha
+    this.tweens.add({ targets: [this.hint, this.hudInfo], alpha: 0, duration: 300 });
+    Analytics.track("camp_exit", {});
+    // Escurece enquanto ele some entre as árvores e começa a partida
+    this.time.delayedCall(650, () => this._go("GameScene"));
   }
 
   _go(key) {
     this._leaving = true;
-    this.cameras.main.fadeOut(350, 5, 8, 6);
+    this.cameras.main.fadeOut(key === "GameScene" ? 650 : 350, 5, 8, 6);
     this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start(key));
   }
 }

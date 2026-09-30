@@ -412,6 +412,18 @@ export const PASSIVES = [
   },
 ];
 
+// Entrada na floresta (continuação da saída da Clareira): o guardião chega
+// andando pela trilha e a mata se fecha atrás dele antes de a partida começar.
+// Distâncias medidas a partir da BORDA SUL da arena (y = WORLD_RADIUS).
+export const INTRO = {
+  START_OFF: -70, // nasce FORA da arena (abaixo da borda)…
+  END_OFF: 300, // …e anda até 300px para dentro
+  GATE_OFF: 150, // brecha na muralha de árvores, fechada pelos arbustos
+  PATH_HALF: 60, // meia-largura da trilha
+  WALK_MULT: 0.95,
+  CLOSE_MS: 750, // tempo da mata fechando até o controle voltar
+};
+
 // Noite Eterna (Modo Infinito): oferecida ao vencer o Ancião. A força cresce
 // de forma composta a cada minuto; eventos voltam em ciclo.
 export const ENDLESS = {

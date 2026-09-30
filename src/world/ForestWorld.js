@@ -17,6 +17,8 @@ export class ForestWorld {
     this.R = opts.radius ?? GAME.WORLD_RADIUS;
     this.keys = scene.registry.get("envKeys");
     this.r = rng(opts.seed ?? (Math.random() * 1e9) | 0);
+    // Entrada da floresta na borda sul: { half } = meia-largura da brecha
+    this.entrance = opts.entrance ?? null;
     this.trees = [];
     this.statics = []; // toda decoração fixa — culling por câmera em update()
     this._cullAt = 0;
@@ -70,7 +72,9 @@ export class ForestWorld {
   _scatter() {
     const R = this.R,
       k = this.keys;
-    const clear = (x, y, r = 240) => x * x + y * y > r * r; // spawn do player livre
+    // Livre: centro da arena e a trilha de entrada (borda sul)
+    const E = this.entrance;
+    const clear = (x, y, r = 240) => (x * x + y * y > r * r) && !(E && Math.abs(x) < E.half + 140 && y > R - 620);
     const grid = (cell, fn) => {
       for (let cy = -R; cy < R; cy += cell)
         for (let cx = -R; cx < R; cx += cell) fn(cx + this.r() * cell, cy + this.r() * cell);
@@ -131,7 +135,8 @@ export class ForestWorld {
         const inset = 30 + row * 80 + this.r() * 30;
         const j = () => t + (this.r() - 0.5) * 40;
         this._tree(j(), -R + inset, all); // topo
-        this._tree(j(), R - inset + 40, all); // base
+        const xb = j();
+        if (!this.entrance || Math.abs(xb) > this.entrance.half + 36) this._tree(xb, R - inset + 40, all); // base (com a brecha da entrada)
         this._tree(-R + inset, j(), all); // esquerda
         this._tree(R - inset, j(), all); // direita
       }
