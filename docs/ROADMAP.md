@@ -65,8 +65,15 @@ Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
   encontrar — guardiões ao liberar, minichefes e chefe ao cruzar na floresta)
 - 👤 Revisão dos textos por leitor indígena/pesquisador de folclore (ideal)
 
-### M3 — Clareira, parte 2: horta, pesca e cozinha ⬜
-- ⬜ Horta (estágios, rega, ervas daninhas, pragas, qualidade; nunca morre)
+### M3 — Clareira, parte 2: horta, pesca e cozinha 🚧
+- ✅ **Horta** revelada após a 3ª partida: canteiros no mapa (2 → 9 com obras do
+  João-de-barro), 5 plantas comuns (cenoura 5 min, milho 30 min, feijão 1 h, abóbora
+  4 h, mandioca 8 h) + 3 **mágicas** (pimenta-de-brasa, flor-de-geada, erva-do-trovão)
+  com **sementes raras** das partidas (minichefe, baú dourado, Mapinguari); 5 estágios
+  visíveis; cuidados que aparecem sozinhos (sede, erva daninha, lagarta) — pendentes
+  atrasam e custam qualidade (Comum/Prata/Ouro), **nada morre**; 1ª cenoura em 30 s
+  (tutorial); colher/cuidar arrastando o dedo; celeiro por qualidade; valores em
+  `GARDEN` no config
 - ⬜ Lago + minigame de um polegar + 7 peixes + varas + horário real
 - ⬜ Cozinha (8 receitas peixe + horta) + **buff de 1 partida**
 - ⬜ Ordem de descobertas por progresso ([`RITMO_E_APRESENTACAO.md`](RITMO_E_APRESENTACAO.md))

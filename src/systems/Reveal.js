@@ -23,6 +23,11 @@ export const REVEALS = [
     line: "Um João-de-barro! Com Madeira Ancestral, ele reconstrói a Clareira.",
   },
   {
+    id: "garden",
+    when: (d) => (d.runsPlayed || 0) >= 3 || !!d.garden?.tutorialDone || lvl(d, "garden") > 1,
+    line: "A horta voltou a brotar! Plante uma cenoura e veja crescer.",
+  },
+  {
     id: "board",
     when: (d) => (d.runsPlayed || 0) >= 4 || (d.achievements || []).length > 0,
     line: "O Mural guarda cada feito seu na floresta.",

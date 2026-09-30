@@ -37,6 +37,7 @@ export class Modal {
     this.body = scene.add.container(0, 0);
     this.root.add(this.body);
 
+    fixed(this.root);
     scene._modals = scene._modals || [];
     scene._modals.push(this);
     // Entrada
@@ -46,6 +47,7 @@ export class Modal {
   }
   add(obj) {
     this.body.add(obj);
+    fixed(obj);
     return obj;
   }
   close() {
@@ -58,6 +60,14 @@ export class Modal {
     this.root.destroy();
     this.onClose?.();
   }
+}
+
+// scrollFactor 0 em tudo dentro do modal. O Phaser testa o toque com o
+// scrollFactor do PRÓPRIO objeto (não o do container pai): sem isto, na Clareira
+// (câmera seguindo o herói) os botões do painel não respondiam ao toque.
+function fixed(obj) {
+  obj.setScrollFactor?.(0);
+  if (obj.list) for (const c of obj.list) fixed(c);
 }
 
 // Fecha o modal do topo (VOLTAR/ESC). true se fechou algum.

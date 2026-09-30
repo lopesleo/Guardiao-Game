@@ -3,11 +3,13 @@
 // controles da partida; perto de uma construção aparece o aviso para interagir
 // (E no teclado / botão de ação no toque):
 //   Fogueira → guardiões · Santuário → bênçãos e dons · Forja → armas ·
-//   Mural → Conquistas · Placa da trilha → Perigo · Anciã → conversa.
+//   Mural → Conquistas · Horta → plantar/cuidar/colher · Placa da trilha →
+//   Perigo · Anciã → conversa.
 // A trilha ao norte leva à floresta (começa a partida).
 import { GAME, CHARACTERS, DIFFICULTY, META, BLESSINGS, BUILDINGS } from "../config.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
 import { Builds, fmtDuration } from "../systems/Builds.js";
+import { Garden } from "../systems/Garden.js";
 import { REVEALS, pendingReveals } from "../systems/Reveal.js";
 import { InputManager } from "../systems/InputManager.js";
 import { VirtualJoystick } from "../ui/VirtualJoystick.js";
@@ -17,6 +19,7 @@ import { PAL, CSS, hex } from "../art/Palette.js";
 import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
 import { Modal, closeTopModal } from "../ui/Widgets.js";
 import { MetaPanels } from "../ui/MetaPanels.js";
+import { CampGarden } from "./CampGarden.js";
 
 const S = GAME.PIXEL_SCALE;
 const CAMP_W = 1500,
@@ -36,6 +39,7 @@ const ELDER_LINES = [
   "A Forja guarda armas para quem junta moedas pela mata.",
   "Dizem que, depois do Mapinguari, vem uma noite que não acaba…",
   "Uma arma no nível máximo, com a parceira certa, desperta algo maior.",
+  "Planta cuidada em dia sai com qualidade Ouro. Descuidada não morre, só perde o brilho.",
 ];
 
 export class CampScene extends Phaser.Scene {
@@ -47,6 +51,8 @@ export class CampScene extends Phaser.Scene {
     fitCamera(this);
     this.meta = new MetaProgression();
     this.builds = new Builds(this.meta);
+    this.garden = new Garden(this.meta, this.builds.level("garden"));
+    this.D_HUD = D_HUD;
     // Revelações: pendentes viram cena (1 por visita); o resto aparece normal
     this._pending = pendingReveals(this.meta.data);
     this.meta._save();
@@ -77,6 +83,7 @@ export class CampScene extends Phaser.Scene {
     this._trail();
     this._fire(0, 70);
     this._structures();
+    this._gardenWorld();
     this._player();
     this._night();
     this._hud();
@@ -438,8 +445,9 @@ export class CampScene extends Phaser.Scene {
       Object.entries(META.ABILITY_UNLOCK_COST).some(([k, cost]) => !this.meta.hasAbility(k) && coins >= cost);
     const canArsenal = META.WEAPON_UNLOCK_ORDER.some((k) => !this.meta.isUnlocked(k) && coins >= META.WEAPON_UNLOCK_COST[k]);
     this.buildings.shrine.dot.setVisible(canBless && this.buildings.shrine.shown);
-    this.buildings.nest.dot.setVisible(this.buildings.nest.shown && !this.builds.job && ["fire", "shrine", "forge"].some((id) => !this.builds.blocker(id)));
+    this.buildings.nest.dot.setVisible(this.buildings.nest.shown && !this.builds.job && this._workIds().some((id) => !this.builds.blocker(id)));
     this.buildings.forge.dot.setVisible(canArsenal && this.buildings.forge.shown);
+    this._refreshGardenWorld();
   }
 
   // Trocou de guardião na Fogueira: o avatar muda na hora (com fumacinha)
@@ -508,6 +516,7 @@ export class CampScene extends Phaser.Scene {
     if (time > (this._nextBuildTick || 0)) {
       this._nextBuildTick = time + 500;
       this._tickBuilds();
+      this._refreshGardenWorld();
     }
   }
 
@@ -550,6 +559,7 @@ export class CampScene extends Phaser.Scene {
       if (r.id === "nest") this.tweens.add({ targets: this.bird, alpha: 1, duration: 700, delay: 500 });
       if (b.img) this.tweens.add({ targets: b.img, scaleY: { from: S * 0.7, to: S }, duration: 600, delay: 300, ease: "Back.easeOut" });
       b.glow?.setVisible(true);
+      b.reveal?.();
       this.sound.play("sfx_levelup", { volume: 0.6 });
       b.shown = true;
       this.meta.data.revealed.push(r.id);
@@ -674,6 +684,7 @@ export class CampScene extends Phaser.Scene {
   // Obra pronta: festa curta + efeitos (novo guardião etc.)
   _onBuildDone(r) {
     const name = BUILDINGS[r.id].name;
+    if (r.id === "garden") this.garden.setLevel(r.to);
     const b = this.buildings[r.id];
     this.sound.play("sfx_levelup", { volume: 0.6 });
     haptic(40);
@@ -686,6 +697,11 @@ export class CampScene extends Phaser.Scene {
     Analytics.track("build_done", { id: r.id, level: r.to });
     this._refreshBuildVisuals();
     this._refreshAll();
+  }
+
+  // Construções que o João-de-barro pode melhorar (as já reveladas)
+  _workIds() {
+    return ["fire", "shrine", "forge", "garden"].filter((id) => this._isShown(id));
   }
 
   // Aviso curto no alto da tela
@@ -808,4 +824,4 @@ export class CampScene extends Phaser.Scene {
   }
 }
 
-Object.assign(CampScene.prototype, MetaPanels);
+Object.assign(CampScene.prototype, MetaPanels, CampGarden);

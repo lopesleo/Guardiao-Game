@@ -490,6 +490,7 @@ export const BUILDINGS = {
   fire: { name: "Fogueira", max: 4 },
   shrine: { name: "Santuário", max: 5 },
   forge: { name: "Forja", max: 4 },
+  garden: { name: "Horta", max: 4 }, // nível → canteiros (GARDEN.PLOTS) e plantas
 };
 
 // Madeira Ancestral: material das obras da Clareira. Rara de propósito — as
@@ -499,6 +500,38 @@ export const WOOD = {
   GOLDEN_CHEST: 2, // baú dourado
   CHEST_CHANCE: 0.25, // baú comum: 25% de chance de 1
   BOSS: 6, // o Mapinguari
+};
+
+// Horta da Clareira (M3 — ver docs/VIDA_NA_CLAREIRA.md). Tempo REAL.
+// Nada morre: descuidar só baixa a qualidade (0 comum · 1 prata · 2 ouro) e
+// atrasa. Sempre há uma planta curta e uma longa (o jogador escolhe quando volta).
+export const GARDEN = {
+  PLOTS: [0, 2, 4, 6, 9], // canteiros por nível da Horta (obra do João-de-barro)
+  TUTORIAL_S: 30, // a 1ª cenoura cresce em 30 s (ver o ciclo antes de esperar)
+  NEED_SLOW: 0.75, // com um cuidado pendente, a planta cresce a 75%
+  NEED_GRACE: 0.2, // cuidar até 20% da duração depois do aviso não perde qualidade…
+  NEED_GRACE_MIN_S: 120, // …e nunca menos de 2 min
+  RIPE_KEEP_H: 12, // madura aguenta 12 h no pé; depois cai uma estrela
+  QUALITY: ["Comum", "Prata", "Ouro"],
+  // s = tempo de crescimento; lv = nível da Horta que libera; rare = semente
+  // só vem das partidas (plantas mágicas, ligadas aos elementos)
+  CROPS: {
+    carrot: { name: "Cenoura", s: 5 * 60, needs: 1, yield: 2, lv: 1 },
+    corn: { name: "Milho", s: 30 * 60, needs: 1, yield: 2, lv: 1 },
+    cassava: { name: "Mandioca", s: 8 * 3600, needs: 1, yield: 4, lv: 1 },
+    bean: { name: "Feijão", s: 60 * 60, needs: 2, yield: 3, lv: 2 },
+    pumpkin: { name: "Abóbora", s: 4 * 3600, needs: 2, yield: 2, lv: 3 },
+    pepper: { name: "Pimenta-de-brasa", s: 2 * 3600, needs: 2, yield: 2, lv: 1, rare: true, element: "fire" },
+    frost: { name: "Flor-de-geada", s: 2 * 3600, needs: 2, yield: 2, lv: 1, rare: true, element: "ice" },
+    thunder: { name: "Erva-do-trovão", s: 2 * 3600, needs: 2, yield: 2, lv: 1, rare: true, element: "bolt" },
+  },
+  NEEDS: {
+    water: "Com sede! Toque para regar.",
+    weed: "Erva daninha! Toque para arrancar.",
+    pest: "Lagarta! Toque para tirar.",
+  },
+  // Sementes raras caem nas partidas (só depois que a Horta apareceu)
+  SEEDS: { MINIBOSS: 1, GOLDEN_CHEST: 1, BOSS: 2 },
 };
 
 // Lanternas de cogumelo: brotam fora da tela, iluminam e derrubam um item ao
