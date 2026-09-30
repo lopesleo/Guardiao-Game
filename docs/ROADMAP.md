@@ -34,8 +34,11 @@ Base para tudo que vem depois; o jogador quase não vê.
 - ✅ **Modo Infinito** (Noite Eterna) depois de vencer o Ancião: inimigos +25% vida
   e +12% dano por minuto (composto), eventos em ciclo, +15 moedas/min, recorde
 
-### M2 — Clareira, parte 1: o acampamento ⬜
-- ⬜ Cena do acampamento **substitui o menu** (Fogueira = JOGAR)
+### M2 — Clareira, parte 1: o acampamento 🚧
+- ✅ **Clareira caminhável** (hub estilo Hades/Dead Cells) entre o título e a partida:
+  Fogueira (guardiões), Santuário (bênçãos e dons), Forja (armas), Mural
+  (conquistas), placa do Perigo, Anciã (dicas); a trilha ao norte leva à floresta
+  com transição contínua (entra pela brecha da muralha sul, que se fecha)
 - ⬜ Construções com níveis: Fogueira, Santuário (Bênçãos), Forja (Arsenal), Mural
 - ⬜ **Obras com tempo** + 1º João-de-barro; partidas adiantam as obras
 - ⬜ **Madeira Ancestral** caindo nas partidas
