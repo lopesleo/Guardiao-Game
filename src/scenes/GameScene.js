@@ -22,6 +22,7 @@ import {
   GARDEN,
 } from "../config.js";
 import { randomRareSeed } from "../systems/Garden.js";
+import { recipe, mealMods, bonusText } from "../systems/Kitchen.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
 import { SpawnDirector } from "../systems/SpawnDirector.js";
@@ -140,6 +141,19 @@ export class GameScene extends Phaser.Scene {
     if (anc > 0) {
       this.player._blessingDmgMult =
         (this.player._blessingDmgMult || 1) * Math.pow(1 + ANCESTRAL.DMG_PER_LEVEL, anc);
+    }
+    // Refeição da Clareira: vale só nesta partida (consumida ao entrar)
+    const meal = this.meta.data.meal;
+    if (meal && recipe(meal.id)) {
+      const m = mealMods(meal);
+      this._applyCharacterMods(this.player, m);
+      if (m.xp) this.player._xpMult *= m.xp;
+      this.meta.data.meal = null;
+      this.meta.data.stats.mealsEaten = (this.meta.data.stats.mealsEaten || 0) + 1;
+      this.meta._save();
+      const r = recipe(meal.id);
+      this.time.delayedCall(2500, () => this._toast(`${r.name}: ${bonusText(r, meal.q)}`, 2600, "#ffc86b"));
+      Analytics.track("meal_eaten", { id: meal.id, q: meal.q });
     }
     // Locks de habilidades: bloqueia se não comprou
     this.player.dashUnlocked = this.meta.hasAbility("DASH");

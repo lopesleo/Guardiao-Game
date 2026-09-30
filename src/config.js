@@ -534,6 +534,24 @@ export const GARDEN = {
   SEEDS: { MINIBOSS: 1, GOLDEN_CHEST: 1, BOSS: 2 },
 };
 
+// Cozinha da Clareira (M3): colheita vira prato; 1 prato servido = bônus só na
+// PRÓXIMA partida (o prato é consumido ao entrar na floresta). O bônus cresce
+// com a qualidade dos ingredientes (média, arredondada para baixo).
+// bonus: hp/speed/dmg/area/xp = +%; cd = −% de recarga; crit = +chance; regen = vida/s
+export const KITCHEN = {
+  QUALITY_MULT: [1, 1.35, 1.7], // Comum, Prata, Ouro
+  RECIPES: [
+    { id: "roast_carrot", name: "Cenoura Assada", food: "carrot", needs: { carrot: 2 }, bonus: { hp: 0.2 } },
+    { id: "pamonha", name: "Pamonha", food: "corn", needs: { corn: 2 }, bonus: { speed: 0.1 } },
+    { id: "tapioca", name: "Tapioca", food: "cassava", needs: { cassava: 2 }, bonus: { regen: 0.6 } },
+    { id: "tropeiro", name: "Feijão Tropeiro", food: "bean", needs: { bean: 2, cassava: 1 }, bonus: { crit: 0.08 } },
+    { id: "quibebe", name: "Quibebe", food: "pumpkin", needs: { pumpkin: 1, cassava: 1 }, bonus: { xp: 0.15 } },
+    { id: "brasa", name: "Caldo de Brasa", food: "pepper", needs: { pepper: 1, corn: 1 }, bonus: { dmg: 0.15 } },
+    { id: "geada", name: "Chá de Geada", food: "frost", needs: { frost: 1, carrot: 1 }, bonus: { area: 0.15 } },
+    { id: "trovao", name: "Mingau do Trovão", food: "thunder", needs: { thunder: 1, cassava: 1 }, bonus: { cd: 0.1 } },
+  ],
+};
+
 // Lanternas de cogumelo: brotam fora da tela, iluminam e derrubam um item ao
 // serem tocadas. Pesos (w) = chance relativa de cada item.
 export const LANTERN = {
