@@ -577,22 +577,27 @@ export const FISHING = {
   REGEN_MIN: 20, // o lago repõe 1 peixe a cada 20 min
   BITE_S: [1.2, 3.5], // espera pela fisgada
   HOOK_S: 1.2, // tempo para puxar depois do "!"
-  FILL_S: 3, // segundos com o peixe na zona para pegar
-  DRAIN_S: 4, // segundos fora da zona para ele escapar (barra cheia → vazia)
+  // Física do minijogo = BobberBar do Stardew Valley (valores por quadro a 60 Hz,
+  // pista de 568 unidades; a zona é a fração `zone` da pista).
+  STEP_HZ: 60,
+  TRACK: 568,
+  FISH_MAX: 532, // o peixe anda de 0 a 532 (o ícone tem 32 de folga)
   START: 0.3, // progresso inicial
-  GRACE_S: 2.5, // a barra começa EM CIMA do peixe e ele fica parado por este tempo antes de se soltar
-  RISE: 2.2, // aceleração da zona segurando (barra/s²)
-  FALL: 1.8, // …e soltando
-  // move: calm (calmo) · darter (fujão: arrancadas) · jumper (saltador) · sinker (arrastador: puxa pro fundo)
+  FILL: 0.002, // por quadro com o peixe na zona (~8 s para encher de 0 a 1)
+  DRAIN: 0.003, // por quadro com o peixe fora (~5,5 s para esvaziar)
+  GRAVITY: 0.25, // segurando sobe (−), soltando cai (+)
+  IN_BAR_GRAVITY: 0.6, // com o peixe dentro, a zona pesa 40% menos
+  BOUNCE: 2 / 3, // a zona quica nas bordas com 2/3 da velocidade
+  // diff = dificuldade (0–100) · move: mixed · smooth (suave) · dart (arrancadas) · sinker (afunda) · floater (sobe)
   // w = peso no sorteio; day/night = só nesse horário (6h–18h é dia)
   FISH: {
-    lambari: { name: "Lambari", move: "calm", speed: 0.35, w: 30, cm: [8, 16] },
-    cara: { name: "Cará", move: "calm", speed: 0.5, w: 22, cm: [10, 22] },
-    tilapia: { name: "Tilápia", move: "calm", speed: 0.6, w: 18, cm: [18, 42] },
-    traira: { name: "Traíra", move: "darter", speed: 0.55, w: 14, cm: [25, 60], night: true },
-    pacu: { name: "Pacu", move: "sinker", speed: 0.5, w: 11, cm: [30, 70] },
-    tucunare: { name: "Tucunaré", move: "darter", speed: 0.75, w: 7, cm: [30, 80], day: true },
-    dourado: { name: "Dourado", move: "jumper", speed: 0.85, w: 3, cm: [50, 100], day: true },
+    lambari: { name: "Lambari", move: "mixed", diff: 15, w: 30, cm: [8, 16] },
+    cara: { name: "Cará", move: "mixed", diff: 25, w: 22, cm: [10, 22] },
+    tilapia: { name: "Tilápia", move: "smooth", diff: 35, w: 18, cm: [18, 42] },
+    traira: { name: "Traíra", move: "dart", diff: 60, w: 14, cm: [25, 60], night: true },
+    pacu: { name: "Pacu", move: "sinker", diff: 55, w: 11, cm: [30, 70] },
+    tucunare: { name: "Tucunaré", move: "dart", diff: 70, w: 7, cm: [30, 80], day: true },
+    dourado: { name: "Dourado", move: "mixed", diff: 78, w: 3, cm: [50, 100], day: true },
   },
 };
 
