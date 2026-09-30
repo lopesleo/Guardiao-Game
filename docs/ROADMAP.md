@@ -21,7 +21,7 @@ Base para tudo que vem depois; o jogador quase não vê.
   a iluminação dinâmica
 - ✅ Música pausa quando o app vai para o fundo
 
-### M1 — Profundidade da partida 🚧
+### M1 — Profundidade da partida ✅
 - ✅ **Lanternas de cogumelo** quebráveis no mapa (iluminam) com itens:
   Vácuo de Seiva, Relógio da Mata, Sopro Ancestral, caju
 - ✅ **Limite de 4 passivas** por partida
@@ -30,7 +30,8 @@ Base para tudo que vem depois; o jogador quase não vê.
 - ✅ **Dobrar moedas** no fim da partida (via `AdService`)
 - ℹ️ Ofertas de anúncio prontas, mas **desligadas** (`ADS.ENABLED = false` em
   `src/config.js`); para testar, abrir com `?ads=1`. Ligar junto com o AdMob (M5).
-- ⬜ **Modo Infinito** depois de vencer o Ancião
+- ✅ **Modo Infinito** (Noite Eterna) depois de vencer o Ancião: inimigos +25% vida
+  e +12% dano por minuto (composto), eventos em ciclo, +15 moedas/min, recorde
 
 ### M2 — Clareira, parte 1: o acampamento ⬜
 - ⬜ Cena do acampamento **substitui o menu** (Fogueira = JOGAR)
