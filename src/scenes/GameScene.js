@@ -294,13 +294,13 @@ export class GameScene extends Phaser.Scene {
     for (let y = this._introEndY - 50; y < R + 80; y += 36) {
       this.add.image((y % 3) * 5, y, "env", env.patches.dirt[(y / 36) % env.patches.dirt.length | 0]).setScale(S).setDepth(-50);
     }
-    // Árvores fechando os lados da brecha (a muralha fica contínua até a trilha)
+    // Lados da brecha: mesma regra da muralha sul (copa começando na linha do
+    // limite), em fileiras descendo — a trilha passa ENTRE as árvores
     const trees = [...env.trees, ...env.pines, ...env.pines];
-    for (let y = R + 70, i = 0; y < R + 300; y += 58, i++) {
+    for (let i = 0; i < 4; i++) {
       for (const side of [-1, 1]) {
-        const x = side * (INTRO.PATH_HALF + 44 + (i % 2) * 18);
-        this.add.image(x, y + 4, "px_shadow").setScale(7, 3).setAlpha(0.5).setDepth(y + 9999);
-        this.add.image(x, y, "env", trees[(i * 3 + (side > 0 ? 1 : 0)) % trees.length]).setOrigin(0.5, 1).setScale(S).setDepth(y + 10000).setFlipX(side > 0);
+        const x = side * (INTRO.PATH_HALF + 70 + (i % 2) * 10);
+        this.world.southTree(x, this._gateY - 4 + i * 48, trees).setFlipX(side > 0);
       }
     }
     // Some o HUD durante a entrada (volta junto com o controle)
@@ -327,20 +327,15 @@ export class GameScene extends Phaser.Scene {
     this._closeGate();
   }
 
-  // Arbustos brotam e fecham a brecha atrás do guardião — e viram parede
+  // Árvores brotam e fecham a brecha atrás do guardião — e viram parede
   _closeGate() {
     const S = GAME.PIXEL_SCALE;
     const env = this.registry.get("envKeys");
     const y = this._gateY;
     const xs = [-INTRO.PATH_HALF + 4, -18, 22, INTRO.PATH_HALF - 2];
+    // Folhas voando enquanto as árvores brotam
     xs.forEach((x, i) => {
-      const b = this.add
-        .image(x, y + (i % 2) * 8, "env", env.bushes[i % env.bushes.length])
-        .setOrigin(0.5, 1)
-        .setScale(0)
-        .setDepth(y + 10000 + i);
-      this.tweens.add({ targets: b, scale: S, duration: 380, delay: i * 90, ease: "Back.easeOut" });
-      this.time.delayedCall(i * 90, () => {
+      this.time.delayedCall(120 + i * 90, () => {
         for (let k = 0; k < 5; k++) {
           const l = this.add.image(x, y - 10, "px_leaf").setScale(3).setDepth(y + 10100);
           const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.2;
@@ -355,6 +350,12 @@ export class GameScene extends Phaser.Scene {
           });
         }
       });
+    });
+    // Árvores brotam na brecha: a muralha fica contínua, igual ao resto da borda
+    [-30, 32].forEach((x, i) => {
+      const t = this.world.southTree(x, y - 4 + i * 12, env.pines);
+      t.setScale(S, 0);
+      this.tweens.add({ targets: t, scaleY: S, duration: 520, delay: 120 + i * 140, ease: "Back.easeOut" });
     });
     // Parede física: não dá para voltar pela brecha
     const wall = this.add.zone(0, y - 10, INTRO.PATH_HALF * 2 + 90, 40);

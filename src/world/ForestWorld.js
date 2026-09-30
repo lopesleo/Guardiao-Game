@@ -124,33 +124,35 @@ export class ForestWorld {
     return im;
   }
 
+  // Árvore da muralha sul: a copa começa em topY (o tronco fica mais abaixo).
+  // Não entra na lista de "desbotar": o jogador nunca fica atrás dela.
+  southTree(x, topY, list) {
+    const f = this._pick(list);
+    const h = this.scene.textures.getFrame("env", f).height * S;
+    const y = topY + h;
+    const im = this._img(x, y, f, y + Y_SORT);
+    this._shadow(x, y - 2, im.displayWidth * 0.7);
+    return im;
+  }
+
   // Muralha de floresta nas bordas: a arena vira uma CLAREIRA fechada
   _border() {
     const R = this.R;
     const k = this.keys;
     const all = [...k.trees, ...k.pines, ...k.pines];
     const step = 74;
-    // Cerca viva contínua no sul, NA LINHA do limite físico: o limite fica
-    // visível (sem trecho de grama "aberto" antes das árvores). A única brecha
-    // é a trilha de entrada, que os arbustos fecham no início da partida.
     const E = this.entrance;
-    if (E?.y != null) {
-      for (let x = -R - 40, i = 0; x < R + 40; x += 40, i++) {
-        if (Math.abs(x) < E.half + 14) continue;
-        const y = E.y + 10 + (i % 2) * 14;
-        this._img(x, y, this._pick(k.bushes), y + Y_SORT).setFlipX(i % 3 === 0);
-      }
-    }
     for (let t = -R - 60; t < R + 60; t += step) {
       for (let row = 0; row < 2; row++) {
         const inset = 30 + row * 80 + this.r() * 30;
         const j = () => t + (this.r() - 0.5) * 40;
         this._tree(j(), -R + inset, all); // topo
+        // Sul: cada árvore é posicionada pela PRÓPRIA altura para a copa começar
+        // na linha do limite físico — a mata é a parede (sem grama aberta antes
+        // dela). Brecha no meio para a trilha de entrada.
         const xb = j();
-        // Base: mais para o sul (troncos abaixo da borda da câmera) — as copas
-        // altas terminam onde começa a área jogável, então o jogador nunca
-        // fica "dentro" delas. Com a brecha da entrada no meio.
-        if (!this.entrance || Math.abs(xb) > this.entrance.half + 36) this._tree(xb, R - inset + 210, all);
+        if (E?.y == null) this._tree(xb, R - inset + 40, all);
+        else if (Math.abs(xb) > E.half + 100) this.southTree(xb, E.y - 4 + row * 48 + this.r() * 10, all);
         this._tree(-R + inset, j(), all); // esquerda
         this._tree(R - inset, j(), all); // direita
       }
