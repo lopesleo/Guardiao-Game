@@ -39,8 +39,11 @@ Base para tudo que vem depois; o jogador quase não vê.
   Fogueira (guardiões), Santuário (bênçãos e dons), Forja (armas), Mural
   (conquistas), placa do Perigo, Anciã (dicas); a trilha ao norte leva à floresta
   com transição contínua (entra pela brecha da muralha sul, que se fecha)
-- ⬜ Construções com níveis: Fogueira, Santuário (Bênçãos), Forja (Arsenal), Mural
-- ⬜ **Obras com tempo** + 1º João-de-barro; partidas adiantam as obras
+- ✅ Construções com níveis: **Fogueira** (guardiões nv2–4), **Santuário** (teto do rank
+  das bênçãos), **Forja** (armas por nível); Mural ganha níveis com as missões (M4)
+- ✅ **Obras com tempo** (na hora / 5 min / 1 h / 4 h) + João-de-barro (1 obra por
+  vez); cada partida adianta 10 min + 1 min por minuto; conclui grátis com ≤ 2 min;
+  save v3 com migração (níveis calculados do progresso antigo)
 - ✅ **Madeira Ancestral** caindo nas partidas (minichefe 3, baú dourado 2, baú
   comum 25%, Ancião 6 — valores em `WOOD` no config)
 - ⬜ Clareira começa **em ruínas** e é revelada por progresso; guia **Anciã da Fogueira**
