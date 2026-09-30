@@ -1,6 +1,7 @@
-// Menu principal — a "vitrine" do jogo (é o que aparece nos screenshots da loja).
-// Cena: clareira noturna com floresta em camadas, lua, névoa, vaga-lumes e o
-// herói escolhido ao lado de uma fogueira. À direita, o painel de ações.
+// A Clareira do Guardião — o acampamento que substitui o menu (e é a "vitrine"
+// dos screenshots da loja). Noite, floresta em camadas, fogueira no centro com o
+// herói e a Anciã. As construções no chão são os menus: Santuário (Bênçãos),
+// Forja (Arsenal), Mural (Conquistas). A trilha à direita é o JOGAR.
 import {
   META,
   BLESSINGS,
@@ -46,9 +47,10 @@ export class MenuScene extends Phaser.Scene {
     this._modals = [];
 
     this._backdrop();
+    this._camp();
     this._heroArea();
     this._title();
-    this._actionPanel();
+    this._playPanel();
     this._topBar();
     this._refreshAll();
 
@@ -179,7 +181,7 @@ export class MenuScene extends Phaser.Scene {
     };
     frame(-30, H + 40, "tree_big", false);
     frame(W + 20, H + 30, "pine2", true);
-    frame(W * 0.08, horizon + 70, "pine1", false);
+    frame(W * 0.015, horizon + 90, "pine1", false);
 
     // Vaga-lumes
     this.flies = [];
@@ -234,7 +236,7 @@ export class MenuScene extends Phaser.Scene {
   _heroArea() {
     const W = this.W,
       H = this.H;
-    const hx = Math.round(W * 0.3),
+    const hx = Math.round(W * 0.42),
       hy = Math.round(H * 0.8);
     this.heroX = hx;
     this.heroY = hy;
@@ -277,6 +279,10 @@ export class MenuScene extends Phaser.Scene {
         }
       },
     });
+
+    // Anciã da Fogueira (guia) do outro lado do fogo, virada para ele
+    this.add.image(fx + 96, fy + 8, "px_shadow").setScale(4, 3);
+    this.elder = this.add.sprite(fx + 96, fy + 10, "camp_elder", 0).setOrigin(0.5, 1).setScale(6).setFlipX(true).play("elder_idle");
 
     this.heroLight = this.add.image(hx, hy - 20, "fx_glow").setScale(4, 3).setTint(0xffc07a).setAlpha(0.16).setBlendMode(Phaser.BlendModes.ADD);
     this.add.image(hx, hy + 4, "px_shadow").setScale(6, 4);
@@ -344,7 +350,7 @@ export class MenuScene extends Phaser.Scene {
   // TÍTULO
   // =========================================================================
   _title() {
-    const x = Math.round(this.W * 0.3);
+    const x = Math.round(Math.min(this.W * 0.3, 380));
     const glow = this.add.image(x, 110, "fx_glow").setScale(8, 2.5).setTint(0xf2c14e).setAlpha(0.14).setBlendMode(Phaser.BlendModes.ADD);
     this.tweens.add({ targets: glow, alpha: 0.24, duration: 1800, yoyo: true, repeat: -1 });
     const t1 = text(this, x, 96, "GUARDIÃO", { size: 84, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 10, shadowY: 6 });
@@ -359,41 +365,72 @@ export class MenuScene extends Phaser.Scene {
   // =========================================================================
   // PAINEL DE AÇÕES (direita)
   // =========================================================================
-  _actionPanel() {
+  // Trilha da floresta (canto inferior direito): Perigo + JOGAR
+  _playPanel() {
     const W = this.W,
       H = this.H;
-    const pw = 420,
-      ph = 492;
-    const cx = Math.round(Math.max(W * 0.74, W - pw / 2 - 40));
-    const cy = Math.round(H / 2 + 34);
-    panel(this, cx, cy, pw, ph, "glass", { center: true });
-    const top = cy - ph / 2;
-
-    // Perigo
-    this._difficultySelector(cx, top + 52, pw - 50);
-
-    this.playBtn = new Button(this, cx, top + 136, pw - 50, 78, "JOGAR", () => this._play(), { size: 38, style: "primary", color: CSS.goldHi });
+    const pw = 380;
+    const cx = Math.round(W - pw / 2 - 28);
+    // Placa da trilha apontando para a mata
+    this.add.image(cx + 120, H - 206, "px_shadow").setScale(5, 3).setAlpha(0.6);
+    this.add.image(cx + 120, H - 200, "camp_trail").setOrigin(0.5, 1).setScale(4);
+    this._difficultySelector(cx, H - 150, pw);
+    this.playBtn = new Button(this, cx, H - 58, pw, 78, "JOGAR", () => this._play(), { size: 38, style: "primary", color: CSS.goldHi });
     this.tweens.add({ targets: this.playBtn, scale: 1.03, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+  }
 
-    const bw = (pw - 62) / 2,
-      bh = 62;
-    const gx = [cx - bw / 2 - 6, cx + bw / 2 + 6];
-    const gy = [top + 222, top + 294];
-    this.btnBless = new Button(this, gx[0], gy[0], bw, bh, "BÊNÇÃOS", () => this._showBlessings(), { size: 19, icon: "ico_star", iconScale: 2.5 });
-    this.btnArsenal = new Button(this, gx[1], gy[0], bw, bh, "ARSENAL", () => this._showArsenal(), { size: 19, icon: "ico_staff", iconScale: 2.5 });
-    this.btnAch = new Button(this, gx[0], gy[1], bw, bh, "00/00", () => this._showAchievements(), { size: 19, icon: "ico_trophy", iconScale: 2.5 });
-    new Button(this, gx[1], gy[1], bw, bh, "GUIA", () => this._showGuide(), { size: 19, icon: "ico_chest", iconScale: 2.5 });
+  // =========================================================================
+  // ACAMPAMENTO: construções no chão = menus
+  // =========================================================================
+  _camp() {
+    const W = this.W,
+      H = this.H;
+    this.buildings = {};
+    const defs = [
+      { id: "shrine", tex: "camp_shrine", name: "SANTUÁRIO", x: W * 0.13, y: H * 0.7, glow: [0, -25, 0xffe58f], onTap: () => this._showBlessings() },
+      { id: "board", tex: "camp_board", name: "MURAL", x: W * 0.28, y: H * 0.61, onTap: () => this._showAchievements() },
+      { id: "forge", tex: "camp_forge", name: "FORJA", x: W * 0.74, y: H * 0.63, glow: [-3, -6, 0xff8a3c], onTap: () => this._showArsenal() },
+    ];
+    for (const d of defs) this.buildings[d.id] = this._building(d);
+  }
 
-    // Recorde
-    this.bestText = text(this, cx, top + 360, "", { size: 16, color: CSS.muted, origin: 0.5 });
-
-    const sy = top + ph - 56;
-    new Button(this, cx - bw / 2 - 6, sy, bw, 52, "OPÇÕES", () => this._showSettings(), { size: 17, icon: "ico_gear", iconScale: 2.5, style: "dark" });
-    new Button(this, cx + bw / 2 + 6, sy, bw, 52, "CRÉDITOS", () => this._showCredits(), { size: 17, style: "dark" });
-
-    // Selo "!" quando há algo comprável (puxa o jogador pra meta-progressão)
-    this.dotBless = this._notifyDot(gx[0] + bw / 2 - 6, gy[0] - bh / 2 + 6);
-    this.dotArsenal = this._notifyDot(gx[1] + bw / 2 - 6, gy[1 - 1] - bh / 2 + 6);
+  _building(d) {
+    const x = Math.round(d.x),
+      y = Math.round(d.y);
+    const S = 3;
+    this.add.image(x, y + 2, "px_shadow").setScale(9, 4).setAlpha(0.55);
+    let glow = null;
+    if (d.glow) {
+      const [gx, gy, col] = d.glow;
+      glow = this.add.image(x + gx * S, y + gy * S, "fx_glow").setScale(2.4).setTint(col).setAlpha(0.45).setBlendMode(Phaser.BlendModes.ADD);
+      this.tweens.add({ targets: glow, alpha: 0.25, scale: 2.8, duration: 1100, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    }
+    const img = this.add.image(x, y, d.tex).setOrigin(0.5, 1).setScale(S);
+    // Plaquinha com o nome
+    const label = this.add.container(x, y + 22);
+    const t = text(this, 0, 0, d.name, { size: 16, color: CSS.goldHi, origin: 0.5, stroke: true });
+    const lg = this.add.graphics();
+    drawFrame(lg, -t.width / 2 - 12, -14, t.width + 24, 28, "dark", { noRivets: true, alpha: 0.9 });
+    label.add([lg, t]);
+    const dot = this._notifyDot(x + img.displayWidth / 2 - 8, y - img.displayHeight + 8).setVisible(false);
+    // Toque: área generosa (construção + plaquinha)
+    const zone = this.add.zone(x, y - img.displayHeight / 2 + 12, img.displayWidth + 20, img.displayHeight + 40).setInteractive({ useHandCursor: true });
+    zone.on("pointerover", () => {
+      img.setTint(0xfff0d0);
+      this.tweens.add({ targets: label, scale: 1.1, duration: 120 });
+    });
+    zone.on("pointerout", () => {
+      img.clearTint();
+      this.tweens.add({ targets: label, scale: 1, duration: 120 });
+    });
+    zone.on("pointerup", () => {
+      if (this._modals.length) return;
+      this.sound.play("sfx_ui_click", { volume: 0.4 });
+      haptic(12);
+      this.tweens.add({ targets: img, scaleY: S * 0.94, scaleX: S * 1.04, duration: 80, yoyo: true });
+      d.onTap();
+    });
+    return { img, label, dot, zone, glow };
   }
 
   _notifyDot(x, y) {
@@ -449,7 +486,7 @@ export class MenuScene extends Phaser.Scene {
     this.add.image(W - 180, 40, "ico_coin").setScale(3);
     this.coinText = text(this, W - 34, 40, "", { size: 26, color: CSS.goldHi, origin: [1, 0.5], stroke: true });
     if (DEBUG) {
-      new Button(this, W - 290, 40, 150, 44, "+500 (dev)", () => {
+      new Button(this, W - 430, 40, 150, 44, "+500 (dev)", () => {
         this.meta.addCoins(500);
         this._refreshAll();
       }, { size: 14, style: "green" });
@@ -461,6 +498,12 @@ export class MenuScene extends Phaser.Scene {
     if (!isNative()) {
       new Button(this, 44, 40, 52, 52, null, () => this.scale.toggleFullscreen(), { icon: "ico_fullscreen", style: "dark", iconScale: 2.5 });
     }
+    this.bestText = text(this, Math.round(Math.min(this.W * 0.3, 380)), 232, "", { size: 16, color: CSS.muted, origin: 0.5 });
+    // Guia e opções (ícones discretos ao lado das moedas); créditos no rodapé
+    new Button(this, W - 244, 40, 52, 52, "?", () => !this._modals.length && this._showGuide(), { size: 26, style: "dark" });
+    new Button(this, W - 304, 40, 52, 52, null, () => !this._modals.length && this._showSettings(), { icon: "ico_gear", style: "dark", iconScale: 2.5 });
+    const cr = text(this, 12, this.H - 8, "Créditos", { size: 14, color: CSS.dim, origin: [0, 1], shadow: false }).setInteractive({ useHandCursor: true });
+    cr.on("pointerup", () => !this._modals.length && this._showCredits());
     text(this, W - 12, this.H - 8, "v1.0", { size: 12, color: CSS.dim, origin: [1, 1], shadow: false });
   }
 
@@ -468,9 +511,13 @@ export class MenuScene extends Phaser.Scene {
   _refreshAll() {
     this.meta.checkAchievements();
     this.coinText.setText(String(this.meta.coins));
-    this.btnAch.setLabel(`${this.meta.data.achievements.length}/${ACHIEVEMENTS.length}`);
     const best = this.meta.data.highScoreSeconds;
-    this.bestText.setText(best > 0 ? `Recorde: ${formatTime(best * 1000)}  ·  Vitórias: ${this.meta.data.wins || 0}` : "Primeira vez? Toque em JOGAR!");
+    const night = this.meta.data.bestEndlessSeconds || 0;
+    this.bestText.setText(
+      best > 0
+        ? `Recorde ${formatTime(best * 1000)}  ·  Vitórias ${this.meta.data.wins || 0}` + (night > 0 ? `  ·  Noite Eterna ${formatTime(night * 1000)}` : "")
+        : "Primeira vez? Siga a trilha: JOGAR!",
+    );
     const coins = this.meta.coins;
     const canBless =
       BLESSINGS.some((b) => {
@@ -480,8 +527,8 @@ export class MenuScene extends Phaser.Scene {
     const canArsenal =
       META.WEAPON_UNLOCK_ORDER.some((k) => !this.meta.isUnlocked(k) && coins >= META.WEAPON_UNLOCK_COST[k]) ||
       Object.entries(META.ABILITY_UNLOCK_COST).some(([k, c]) => !this.meta.hasAbility(k) && coins >= c);
-    this.dotBless.setVisible(canBless);
-    this.dotArsenal.setVisible(canArsenal);
+    this.buildings.shrine.dot.setVisible(canBless);
+    this.buildings.forge.dot.setVisible(canArsenal);
     this._refreshChar();
   }
 
