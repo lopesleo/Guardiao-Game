@@ -2,8 +2,24 @@
 // barras segmentadas e ícones. Todas as telas usam só isto — é o que dá cara
 // de produto em vez de "caixas do Phaser".
 import { PAL, CSS, hex } from "../art/Palette.js";
+import { Settings } from "../systems/Settings.js";
 
-export const FONT = '"Jersey 15", monospace';
+// Fontes selecionáveis (acessibilidade). `k` compensa o tamanho aparente: a
+// Jersey 15 é condensada e "pequena", a Atkinson (feita para baixa visão) é larga.
+export const FONTS = {
+  pixel: { label: "Pixel", family: '"Jersey 15", monospace', k: 1, style: "normal" },
+  legible: { label: "Legível", family: '"Atkinson Hyperlegible", sans-serif', k: 0.85, style: "bold" },
+};
+export const TEXT_SIZES = [
+  { label: "Normal", k: 1 },
+  { label: "Grande", k: 1.2 },
+  { label: "Muito grande", k: 1.4 },
+];
+export const MIN_TEXT = 16; // piso de leitura na escala da Jersey (antes havia 14 px)
+const MIN_PX = 14; // …e piso absoluto na tela, qualquer fonte/tamanho
+const curFont = () => FONTS[Settings.get("font")] ?? FONTS.pixel;
+export const fontFamily = () => curFont().family;
+export const fontStyle = () => curFont().style;
 export const P = 3; // 1 "pixel de arte" na UI = 3px de tela (mesma escala dos sprites)
 
 // Largura/altura visível (modo EXPAND: a largura varia com o aparelho)
@@ -30,11 +46,19 @@ export function fitCamera(scene) {
 const SMALL_SCREEN = Math.min(window.innerWidth, window.innerHeight) < 560;
 const fitSize = (s) => (SMALL_SCREEN && s <= 24 ? Math.round(s * (s <= 16 ? 1.3 : 1.18)) : s);
 
+// Tamanho final na tela: piso de leitura, ajuste da fonte e tamanho escolhido.
+// Títulos (>26) só recebem metade do aumento para não estourar as molduras.
+export function textPx(size) {
+  const base = Math.max(MIN_TEXT, fitSize(size));
+  const k = curFont().k * (TEXT_SIZES[Settings.get("textSize")]?.k ?? 1);
+  return Math.max(MIN_PX, Math.round(base * (size > 26 ? 1 + (k - 1) * 0.5 : k)));
+}
+
 export function text(scene, x, y, str, o = {}) {
   const style = {
-    fontFamily: FONT,
-    fontSize: `${fitSize(o.size ?? 18)}px`,
-    fontStyle: "normal", // fonte de peso único — negrito sintético borra
+    fontFamily: fontFamily(),
+    fontSize: `${textPx(o.size ?? 18)}px`,
+    fontStyle: fontStyle(), // pixel: peso único (negrito sintético borra); Atkinson já é Bold
     color: o.color ?? CSS.txt,
     align: o.align ?? "left",
   };
@@ -220,7 +244,7 @@ export class Button extends Phaser.GameObjects.Container {
 }
 
 function measure(scene, str, size) {
-  const t = scene.add.text(0, 0, str, { fontFamily: FONT, fontSize: `${size}px` });
+  const t = scene.add.text(0, 0, str, { fontFamily: fontFamily(), fontStyle: fontStyle(), fontSize: `${textPx(size)}px` });
   const w = t.width;
   t.destroy();
   return w;

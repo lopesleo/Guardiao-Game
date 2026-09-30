@@ -81,7 +81,7 @@ export const PAL = {
   uiGoldLo: 0x7a5a24,
   txt: 0xf4ecd6,
   txtMuted: 0x9fb4a4,
-  txtDim: 0x5d7266,
+  txtDim: 0x8aa08f, // contraste ≥ 4,5:1 sobre os painéis (era 0x5d7266, ~2,6:1)
 };
 
 // "#rrggbb" a partir do número — pra estilos de texto do Phaser

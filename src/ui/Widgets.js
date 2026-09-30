@@ -151,10 +151,11 @@ export class ScrollList {
     scene.events.on("update", this._tick);
   }
 
-  // row: { h, build(container, w), onTap?, hover?(on) }
+  // row: { h, build(container, w) → altura final opcional, onTap?, hover?(on) }
   addRow(row) {
     const c = this.scene.add.container(0, this.contentH);
-    row.build(c, this.w);
+    const nh = row.build(c, this.w); // a linha pode devolver a altura final (texto maior = linha maior)
+    if (typeof nh === "number") row.h = nh;
     row.c = c;
     row.y0 = this.contentH;
     this.content.add(c);

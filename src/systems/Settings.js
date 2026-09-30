@@ -9,6 +9,8 @@ const DEFAULTS = {
   shake: true,
   dmgNumbers: true,
   lighting: true,
+  font: "pixel", // fonte do jogo (ver FONTS em ui/Theme.js)
+  textSize: 0, // índice em TEXT_SIZES (Normal/Grande/Muito grande)
   notify: false, // avisos (só no app, só depois que o jogador aceitar)
   notifyAsked: false,
 };

@@ -12,6 +12,7 @@ export class BootScene extends Phaser.Scene {
     try {
       Promise.all([
         document.fonts.load('16px "Jersey 15"'),
+        document.fonts.load('bold 16px "Atkinson Hyperlegible"'),
       ]).then(go, go);
     } catch {
       go();

@@ -1,9 +1,10 @@
+import { fontFamily, fontStyle } from '../ui/Theme.js';
 // Damage number flutuante reutilizável (pool).
 export class DamageNumber extends Phaser.GameObjects.Text {
   constructor(scene) {
     super(scene, -9999, -9999, '', {
       resolution: 2,
-      fontFamily: '"Jersey 15", monospace',
+      fontFamily: fontFamily(), fontStyle: fontStyle(),
       fontSize: '16px', color: '#ffffff',
       stroke: '#000000', strokeThickness: 3,
     });

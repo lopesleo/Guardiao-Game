@@ -138,18 +138,24 @@ export const MetaPanels = {
       h: o.h ?? 74,
       onTap: o.onTap,
       build(c, w) {
+        // Textos primeiro: a altura da linha acompanha o tamanho do texto (acessibilidade)
+        const name = text(scene, 74, 0, o.name, { size: 20, color: o.nameColor ?? CSS.txt, origin: [0, 0] });
+        const desc = text(scene, 74, 0, o.desc, { size: 14, color: CSS.muted, origin: [0, 0], shadow: false, wrap: w - 300 });
+        const block = name.height + 3 + desc.height;
+        const h = Math.max(o.h ?? 74, Math.ceil(block + 24));
+        name.y = Math.round((h - block) / 2);
+        desc.y = name.y + name.height + 3;
         const g = scene.add.graphics();
         const draw = (hover) => {
           g.clear();
-          drawFrame(g, 0, 0, w, o.h ?? 74, hover && o.onTap ? { ...(o.styleObj ?? {}), border: PAL.uiGoldHi, body: PAL.uiPanel2, hi: 0x2b463a, lo: PAL.uiLine } : o.style ?? "dark", { noRivets: true });
+          drawFrame(g, 0, 0, w, h, hover && o.onTap ? { ...(o.styleObj ?? {}), border: PAL.uiGoldHi, body: PAL.uiPanel2, hi: 0x2b463a, lo: PAL.uiLine } : o.style ?? "dark", { noRivets: true });
         };
         draw(false);
         this.hover = draw;
         c.add(g);
-        const hh = (o.h ?? 74) / 2;
+        const hh = h / 2;
         if (o.icon) c.add(scene.add.image(40, hh, o.icon, o.iconFrame ?? 0).setScale(o.iconScale ?? 3).setAlpha(o.dim ? 0.45 : 1));
-        c.add(text(scene, 74, hh - 13, o.name, { size: 20, color: o.nameColor ?? CSS.txt, origin: [0, 0.5] }));
-        c.add(text(scene, 74, hh + 13, o.desc, { size: 14, color: CSS.muted, origin: [0, 0.5], shadow: false, wrap: w - 300 }));
+        c.add([name, desc]);
         if (o.pips != null) {
           for (let i = 0; i < o.pipsMax; i++)
             c.add(scene.add.rectangle(w - 250 + i * 18, hh, 12, 12, i < o.pips ? PAL.yel2 : PAL.inkSoft).setStrokeStyle(3, PAL.ink));
@@ -161,6 +167,7 @@ export const MetaPanels = {
           if (o.rightIcon) rc.add(scene.add.image(-rt.width - 18, 0, o.rightIcon).setScale(2.5));
           c.add(rc);
         }
+        return h;
       },
     };
   },
@@ -378,16 +385,18 @@ export const MetaPanels = {
       list.addRow({
         h: 118,
         build: (c, w) => {
+          const t1 = text(this, 120, 12, ok ? l.name : "???", { size: 21, color: ok ? CSS.goldHi : CSS.dim, origin: [0, 0] });
+          const t2 = text(this, 120, 12 + t1.height + 2, ok ? l.role : "Encontre na floresta para conhecer esta lenda.", { size: 14, color: ok ? CSS.green : CSS.dim, origin: [0, 0], wrap: w - 140 });
+          const t3 = ok ? text(this, 120, t2.y + t2.height + 4, l.origin, { size: 14, color: CSS.muted, origin: [0, 0], wrap: w - 140, shadow: false }) : null;
+          const h = Math.max(118, Math.ceil((t3 ? t3.y + t3.height : t2.y + t2.height) + 14));
           const g = this.add.graphics();
-          drawFrame(g, 0, 0, w, 118, ok ? "gold" : "dark", { noRivets: true });
-          c.add(g);
+          drawFrame(g, 0, 0, w, h, ok ? "gold" : "dark", { noRivets: true });
           const [tex, frame, sc] = l.sprite;
-          const img = this.add.image(58, 62, tex, frame).setScale(sc);
+          const img = this.add.image(58, h / 2, tex, frame).setScale(sc);
           if (!ok) img.setTintFill(0x1a1420).setAlpha(0.6);
-          c.add(img);
-          c.add(text(this, 120, 22, ok ? l.name : "???", { size: 21, color: ok ? CSS.goldHi : CSS.dim, origin: [0, 0.5] }));
-          c.add(text(this, 120, 44, ok ? l.role : "Encontre na floresta para conhecer esta lenda.", { size: 14, color: ok ? CSS.green : CSS.dim, origin: [0, 0.5] }));
-          if (ok) c.add(text(this, 120, 62, l.origin, { size: 14, color: CSS.muted, origin: [0, 0], wrap: w - 140, shadow: false }));
+          c.add([g, img, t1, t2]);
+          if (t3) c.add(t3);
+          return h;
         },
       });
     }
@@ -447,19 +456,29 @@ export const MetaPanels = {
       list.addRow({
         h: 84,
         build: (c, w) => {
+          const t1 = text(this, 80, 0, name, { size: 20, color: CSS.goldHi, origin: [0, 0] });
+          const t2 = text(this, 80, 0, desc, { size: 15, color: CSS.muted, origin: [0, 0], wrap: w - 100, shadow: false });
+          const h = Math.max(84, Math.ceil(t1.height + 4 + t2.height + 24));
+          t1.y = 12;
+          t2.y = 12 + t1.height + 4;
           const g = this.add.graphics();
-          drawFrame(g, 0, 0, w, 84, "dark", { noRivets: true });
-          c.add(g);
-          c.add(this.add.image(40, 42, icon).setScale(3));
-          c.add(text(this, 80, 20, name, { size: 20, color: CSS.goldHi, origin: [0, 0.5] }));
-          c.add(text(this, 80, 38, desc, { size: 15, color: CSS.muted, origin: [0, 0], wrap: w - 100, shadow: false }));
+          drawFrame(g, 0, 0, w, h, "dark", { noRivets: true });
+          c.add([g, this.add.image(40, h / 2, icon).setScale(3), t1, t2]);
+          return h;
         },
       });
     }
   },
 
   _showSettings() {
-    openSettings(this, { onReset: () => this._confirmReset() });
+    openSettings(this, { onReset: () => this._confirmReset(), restartable: true });
+  },
+
+  // Depois de trocar fonte/tamanho a cena recomeça; este gancho reabre as Opções.
+  _maybeReopenSettings() {
+    if (!this.registry.get("reopenSettings")) return;
+    this.registry.set("reopenSettings", false);
+    this.time.delayedCall(150, () => this._showSettings());
   },
 
   _confirmReset() {
@@ -480,7 +499,7 @@ export const MetaPanels = {
     const lines = [
       ["Design, código e arte procedural", "Leonardo Lopes"],
       ["Arte", "Heróis, criaturas, cenário, ícones e efeitos: arte própria, gerada por código"],
-      ["Fonte", "Jersey 15 — The Soft Type Project Authors (OFL 1.1)"],
+      ["Fontes", "Jersey 15 — The Soft Type Project Authors (OFL 1.1) · Atkinson Hyperlegible — Braille Institute of America (OFL 1.1)"],
       ["Música e efeitos sonoros", "Compostos e sintetizados por código para este jogo"],
       ["Motor", "Phaser 3 (MIT) · nipplejs (MIT)"],
     ];
@@ -488,8 +507,10 @@ export const MetaPanels = {
       list.addRow({
         h: 70,
         build: (c, w) => {
-          c.add(text(this, 0, 12, a, { size: 18, color: CSS.goldHi }));
-          c.add(text(this, 0, 38, b, { size: 15, color: CSS.muted, wrap: w - 10, shadow: false }));
+          const t1 = text(this, 0, 8, a, { size: 18, color: CSS.goldHi });
+          const t2 = text(this, 0, 8 + t1.height + 2, b, { size: 15, color: CSS.muted, wrap: w - 10, shadow: false });
+          c.add([t1, t2]);
+          return Math.max(70, Math.ceil(t2.y + t2.height + 10));
         },
       });
     }

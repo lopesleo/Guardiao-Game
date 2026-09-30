@@ -55,6 +55,7 @@ export class CampScene extends Phaser.Scene {
   }
 
   create() {
+    this.events.once("create", () => this._maybeReopenSettings?.());
     fitCamera(this);
     this.meta = new MetaProgression();
     this.builds = new Builds(this.meta);
