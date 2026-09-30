@@ -1,6 +1,6 @@
 // Variação por wave. Atiradores (goblin) e corvos entram cedo e ficam mais comuns
 // com o tempo, pra ter cada vez MAIS inimigos que atacam à distância.
-import { GAME, ENEMY } from '../config.js';
+import { GAME, ENEMY, ENDLESS } from '../config.js';
 
 export class SpawnDirector {
   constructor(scene, enemyPool, target) {
@@ -14,7 +14,7 @@ export class SpawnDirector {
   update(time, dt) {
     this.elapsedMs += dt;
     const tSec = this.elapsedMs / 1000;
-    const spawnMult = this.scene.diff?.spawnMult ?? 1;
+    const spawnMult = (this.scene.diff?.spawnMult ?? 1) * (this.scene.endless ? ENDLESS.SPAWN_MULT : 1);
     const rate = ENEMY.SPAWN_RATE(tSec) * spawnMult;
     this.spawnAcc += (rate * dt) / 1000;
 

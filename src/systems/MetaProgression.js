@@ -6,6 +6,7 @@ const DEFAULT = {
   saveVersion: 2,
   totalCoins: 0,
   highScoreSeconds: 0,
+  bestEndlessSeconds: 0, // recorde na Noite Eterna (Modo Infinito)
   // Cajado (fogo) + Aura (gelo) desde o início: a 1ª partida já mostra a
   // mecânica-assinatura (Fogo+Gelo = VAPOR). Antes o novato só tinha fogo.
   unlockedWeapons: ['STAFF', 'AURA'],
@@ -176,6 +177,15 @@ export class MetaProgression {
   }
 
   // difficulty = índice do nível jogado nesta run.
+  // Recorde da Noite Eterna; devolve true se bateu
+  registerEndless(seconds) {
+    const s = Math.floor(seconds);
+    if (s <= (this.data.bestEndlessSeconds || 0)) return false;
+    this.data.bestEndlessSeconds = s;
+    this._save();
+    return true;
+  }
+
   registerRun(elapsedSeconds, won, difficulty = 0) {
     if (elapsedSeconds > this.data.highScoreSeconds) {
       this.data.highScoreSeconds = Math.floor(elapsedSeconds);

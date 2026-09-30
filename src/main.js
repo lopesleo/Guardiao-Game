@@ -11,6 +11,7 @@ import { LevelUpScene } from './scenes/LevelUpScene.js';
 import { GameOverScene } from './scenes/GameOverScene.js';
 import { PauseScene } from './scenes/PauseScene.js';
 import { ReviveScene } from './scenes/ReviveScene.js';
+import { EndlessChoiceScene } from './scenes/EndlessChoiceScene.js';
 import { setupPlatform } from './systems/Platform.js';
 
 const config = {
@@ -42,6 +43,7 @@ const config = {
     GameOverScene,
     PauseScene,
     ReviveScene,
+    EndlessChoiceScene,
   ],
 };
 

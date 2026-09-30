@@ -412,6 +412,16 @@ export const PASSIVES = [
   },
 ];
 
+// Noite Eterna (Modo Infinito): oferecida ao vencer o Ancião. A força cresce
+// de forma composta a cada minuto; eventos voltam em ciclo.
+export const ENDLESS = {
+  HP_GROWTH_PER_MIN: 0.25, // +25% vida dos inimigos por minuto (composto)
+  DMG_GROWTH_PER_MIN: 0.12, // +12% dano por minuto (composto)
+  SPAWN_MULT: 1.2,
+  COINS_PER_MIN: 15, // bônus por minuto sobrevivido na Noite Eterna
+  EVENT_EVERY_S: 45, // um evento (enxame/cerco/minichefe) a cada 45 s
+};
+
 // Lanternas de cogumelo: brotam fora da tela, iluminam e derrubam um item ao
 // serem tocadas. Pesos (w) = chance relativa de cada item.
 export const LANTERN = {

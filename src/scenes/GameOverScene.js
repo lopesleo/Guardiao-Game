@@ -16,7 +16,7 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   create(data) {
-    const { won, quit, elapsedMs, kills, coinsGained, newUnlocks = [], difficulty, unlockedNextDifficulty, level = 1, weapons = [] } = data;
+    const { won, quit, elapsedMs, kills, coinsGained, newUnlocks = [], difficulty, unlockedNextDifficulty, level = 1, weapons = [], endlessS = 0, endlessRecord = false } = data;
     fitCamera(this);
     this._coinsShown = undefined;
     this._coinText = null;
@@ -27,12 +27,19 @@ export class GameOverScene extends Phaser.Scene {
     this._backdrop(won);
 
     // Título
-    const title = won ? "VITÓRIA!" : quit ? "RECUO" : "DERROTA";
+    const title = endlessS > 0 ? "NOITE ETERNA" : won ? "VITÓRIA!" : quit ? "RECUO" : "DERROTA";
     const color = won ? CSS.goldHi : quit ? CSS.muted : CSS.redHi;
     const t = text(this, cx, 78, title, { size: 80, color, origin: 0.5, stroke: true, strokeW: 10, shadowY: 6 });
     t.setScale(0.3).setAlpha(0);
     this.tweens.add({ targets: t, scale: 1, alpha: 1, duration: 420, ease: "Back.easeOut" });
-    const sub = won ? "O Ancião foi derrotado. A floresta respira." : quit ? "Você recuou para lutar outro dia." : "A floresta caiu… por enquanto.";
+    const sub =
+      endlessS > 0
+        ? `Ancião derrotado e mais ${formatTime(endlessS * 1000)} na escuridão${endlessRecord ? " — NOVO RECORDE!" : "."}`
+        : won
+          ? "O Ancião foi derrotado. A floresta respira."
+          : quit
+            ? "Você recuou para lutar outro dia."
+            : "A floresta caiu… por enquanto.";
     text(this, cx, 132, sub, { size: 22, color: CSS.muted, origin: 0.5 });
 
     // Painel de resultados
