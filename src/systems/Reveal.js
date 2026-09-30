@@ -28,6 +28,11 @@ export const REVEALS = [
     line: "A horta voltou a brotar! Plante uma cenoura e veja crescer.",
   },
   {
+    id: "kitchen",
+    when: (d) => (d.stats?.harvests || 0) >= 1 || (d.cooked || []).length > 0,
+    line: "A cozinha acendeu! Transforme a colheita num prato e coma antes da próxima partida.",
+  },
+  {
     id: "board",
     when: (d) => (d.runsPlayed || 0) >= 4 || (d.achievements || []).length > 0,
     line: "O Mural guarda cada feito seu na floresta.",

@@ -80,7 +80,11 @@ Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
 - ✅ **Celeiro**: prédio próprio ao lado da horta + botão no HUD; colheita por
   qualidade e sementes raras
 - ⬜ Lago + minigame de um polegar + 7 peixes + varas + horário real
-- ⬜ Cozinha (8 receitas peixe + horta) + **buff de 1 partida**
+- ✅ **Cozinha** (fogão de barro ao lado da horta; revelada após a 1ª colheita):
+  8 receitas da horta (Cenoura Assada, Pamonha, Tapioca, Feijão Tropeiro, Quibebe e
+  3 mágicas) → marmita por qualidade; **1 prato servido = bônus só na próxima
+  partida** (Ouro dá 1,7× o bônus); valores em `KITCHEN` no config
+- ⬜ Receitas com peixe (junto com o Lago)
 - ⬜ Ordem de descobertas por progresso ([`RITMO_E_APRESENTACAO.md`](RITMO_E_APRESENTACAO.md))
 
 ### M4 — Hábito diário ⬜

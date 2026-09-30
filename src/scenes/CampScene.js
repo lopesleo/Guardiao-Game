@@ -3,13 +3,14 @@
 // controles da partida; perto de uma construção aparece o aviso para interagir
 // (E no teclado / botão de ação no toque):
 //   Fogueira → guardiões · Santuário → bênçãos e dons · Forja → armas ·
-//   Mural → Conquistas · Horta → plantar/cuidar/colher · Placa da trilha →
-//   Perigo · Anciã → conversa.
+//   Mural → Conquistas · Horta → plantar/cuidar/colher (no chão) · Celeiro ·
+//   Cozinha → pratos · Placa da trilha → Perigo · Anciã → conversa.
 // A trilha ao norte leva à floresta (começa a partida).
 import { GAME, CHARACTERS, DIFFICULTY, META, BLESSINGS, BUILDINGS } from "../config.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
 import { Builds, fmtDuration } from "../systems/Builds.js";
 import { Garden } from "../systems/Garden.js";
+import { Kitchen } from "../systems/Kitchen.js";
 import { REVEALS, pendingReveals } from "../systems/Reveal.js";
 import { InputManager } from "../systems/InputManager.js";
 import { VirtualJoystick } from "../ui/VirtualJoystick.js";
@@ -20,6 +21,7 @@ import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.
 import { Modal, closeTopModal } from "../ui/Widgets.js";
 import { MetaPanels } from "../ui/MetaPanels.js";
 import { CampGarden } from "./CampGarden.js";
+import { CampKitchen } from "./CampKitchen.js";
 
 const S = GAME.PIXEL_SCALE;
 const CAMP_W = 1500,
@@ -52,6 +54,7 @@ export class CampScene extends Phaser.Scene {
     this.meta = new MetaProgression();
     this.builds = new Builds(this.meta);
     this.garden = new Garden(this.meta, this.builds.level("garden"));
+    this.kitchen = new Kitchen(this.meta);
     this.D_HUD = D_HUD;
     // Revelações: pendentes viram cena (1 por visita); o resto aparece normal
     this._pending = pendingReveals(this.meta.data);
@@ -84,6 +87,7 @@ export class CampScene extends Phaser.Scene {
     this._fire(0, 70);
     this._structures();
     this._gardenWorld();
+    this._kitchenWorld();
     this._player();
     this._night();
     this._hud();
@@ -449,6 +453,7 @@ export class CampScene extends Phaser.Scene {
     this.buildings.nest.dot.setVisible(this.buildings.nest.shown && !this.builds.job && this._workIds().some((id) => !this.builds.blocker(id)));
     this.buildings.forge.dot.setVisible(canArsenal && this.buildings.forge.shown);
     this._refreshGardenWorld();
+    this._refreshKitchenDot();
   }
 
   // Trocou de guardião na Fogueira: o avatar muda na hora (com fumacinha)
@@ -831,4 +836,4 @@ export class CampScene extends Phaser.Scene {
   }
 }
 
-Object.assign(CampScene.prototype, MetaPanels, CampGarden);
+Object.assign(CampScene.prototype, MetaPanels, CampGarden, CampKitchen);

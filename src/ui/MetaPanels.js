@@ -426,6 +426,8 @@ export const MetaPanels = {
     ];
     if ((this.meta.data.revealed || []).includes("garden"))
       sections.push(["ico_sprout", "Horta", "Ande até um canteiro e use o botão de ação para plantar e cuidar; passe por cima do que está maduro para colher. As plantas crescem em tempo real, mesmo com o jogo fechado. Cuidar em dia dá qualidade Ouro — nada morre, só perde qualidade. A colheita fica no Celeiro. Sementes raras caem dos minichefes, do baú dourado e do Mapinguari."]);
+    if ((this.meta.data.revealed || []).includes("kitchen"))
+      sections.push(["ico_dish_roast_carrot", "Cozinha", "Transforme a colheita em pratos. Sirva um prato e ele vale só na próxima partida — ingredientes Ouro dão um bônus maior."]);
     for (const [icon, name, desc] of sections) {
       list.addRow({
         h: 84,
