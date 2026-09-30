@@ -57,7 +57,8 @@ Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
   **Iara**, **Saci** (uma perna, sem cachimbo; pele com luz e sombra, sem caricatura)
 - ✅ Chefe **Mapinguari corrompido** (um olho, boca na barriga); vencer = libertá-lo
   (a Podridão sai dele, olho verde, some na mata)
-- ⬜ Minichefes **Mula sem Cabeça** e **Corpo-Seco**
+- ✅ Minichefes **Mula sem Cabeça** (no lugar do Lobo Alfa) e **Corpo-Seco** (no
+  lugar do Ogro Ancião)
 - ⬜ Nomes/descrições de inimigos, armas e reações revistos no tema
 - ⬜ Bestiário com a origem de cada lenda
 - 👤 Revisão dos textos por leitor indígena/pesquisador de folclore (ideal)
