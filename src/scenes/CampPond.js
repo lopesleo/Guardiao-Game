@@ -54,6 +54,7 @@ export const CampPond = {
     // Brilho da lua correndo na água (acima da noite, somando luz)
     const glint = this.add.sprite(X0, Y0, "pond_glint", 0).setOrigin(0).setScale(S).setBlendMode(Phaser.BlendModes.ADD).setDepth(D_NIGHT + 1).play("pond_glint");
     glint.setAlpha(0.5);
+    glint._dayMin = 0.45; // de dia, o sol também brilha na água
     lights.push([glint, 0.5]);
     // Reflexo da lua: um clarão largo e riscos que tremem
     const deep = { x: wx(56), y: wy(28) }; // onde a lua bate
@@ -226,9 +227,11 @@ export const CampPond = {
     this.events.on("update", (time) => {
       if (!this.buildings.pond?.shown) return;
       const t = time / 1000;
-      moon.setAlpha(0.18 + Math.sin(t * 0.9) * 0.05).setScale(3.2 + Math.sin(t * 0.7) * 0.15, 0.9);
-      lampRef.setAlpha(0.16 + Math.sin(t * 7) * 0.03 + Math.random() * 0.02);
-      bloom.setAlpha(0.28 + Math.sin(t * 1.3) * 0.08);
+      const k = this._lightK ?? 1;
+      moon.setAlpha((0.18 + Math.sin(t * 0.9) * 0.05) * k).setScale(3.2 + Math.sin(t * 0.7) * 0.15, 0.9);
+      lampRef.setAlpha((0.16 + Math.sin(t * 7) * 0.03 + Math.random() * 0.02) * k);
+      bloom.setAlpha((0.28 + Math.sin(t * 1.3) * 0.08) * k);
+      streaks.setAlpha(k);
       if (time > (this._moonTick || 0)) {
         // tracejado quebrado que tremula (atualiza em passos, como pixel-art)
         this._moonTick = time + 160;
@@ -242,14 +245,14 @@ export const CampPond = {
           if (k < 4 && Math.random() < 0.7) streaks.fillStyle(0xdff4ff, 0.2 - k * 0.04).fillRect(deep.x + (off + gap) * 3, y, Math.max(1, w - 1) * 3, 3);
         }
       }
-      for (const m of mist) m.m.setPosition(m.ox + Math.sin(t * 0.12 + m.ph) * 70, m.oy + Math.sin(t * 0.2 + m.ph) * 6).setAlpha(0.05 + Math.sin(t * 0.3 + m.ph) * 0.025);
+      for (const m of mist) m.m.setPosition(m.ox + Math.sin(t * 0.12 + m.ph) * 70, m.oy + Math.sin(t * 0.2 + m.ph) * 6).setAlpha((0.05 + Math.sin(t * 0.3 + m.ph) * 0.025) * (0.5 + k * 0.5));
       for (const f of flies) {
         const x = f.ox + Math.sin(t * 0.8 + f.ph) * 36,
           y = f.oy + Math.cos(t * 0.6 + f.ph) * 10;
         const a = 0.3 + Math.abs(Math.sin(t * 2.4 + f.ph)) * 0.7;
-        f.g.setPosition(x, y).setAlpha(a * 0.6);
-        f.c.setPosition(x, y).setAlpha(a);
-        f.ref.setPosition(x, f.oy + 30 + (30 - (y - f.oy)) * 0.4 + 18).setAlpha(a * 0.35);
+        f.g.setPosition(x, y).setAlpha(a * 0.6 * k);
+        f.c.setPosition(x, y).setAlpha(a * k);
+        f.ref.setPosition(x, f.oy + 30 + (30 - (y - f.oy)) * 0.4 + 18).setAlpha(a * 0.35 * k);
       }
     });
   },
