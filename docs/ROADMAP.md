@@ -22,8 +22,8 @@ Base para tudo que vem depois; o jogador quase não vê.
 - ✅ Música pausa quando o app vai para o fundo
 
 ### M1 — Profundidade da partida 🚧
-- ⬜ **Lanternas de cogumelo** quebráveis no mapa (iluminam) com itens:
-  Vácuo de Seiva, Relógio da Mata, Sopro Ancestral, fruta
+- ✅ **Lanternas de cogumelo** quebráveis no mapa (iluminam) com itens:
+  Vácuo de Seiva, Relógio da Mata, Sopro Ancestral, caju
 - ✅ **Limite de 4 passivas** por partida
 - ✅ **Reviver** 1× por partida (via `AdService`)
 - ✅ **Dobrar o baú** ao abrir (via `AdService`)

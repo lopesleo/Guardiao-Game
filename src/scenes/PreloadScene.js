@@ -7,6 +7,7 @@ import { registerSprites } from "../art/Sprites.js";
 import { registerHeroes } from "../art/Hero.js";
 import { registerMonsters } from "../art/Monsters.js";
 import { registerTelegraphs } from "../art/Telegraph.js";
+import { registerLanterns } from "../art/Lanterns.js";
 import { registerAudio } from "../audio/Synth.js";
 import { text, Bar, PAL, vw, vh, fitCamera } from "../ui/Theme.js";
 
@@ -32,6 +33,7 @@ export class PreloadScene extends Phaser.Scene {
       ["Despertando o Guardião…", () => registerHeroes(this)],
       ["Corrompendo criaturas…", () => registerMonsters(this)],
       ["Afiando garras…", () => registerTelegraphs(this)],
+      ["Acendendo cogumelos…", () => registerLanterns(this)],
       ["Afinando a floresta…", () => registerAudio(this.game)],
     ];
     let i = 0;
