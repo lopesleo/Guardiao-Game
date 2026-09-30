@@ -86,7 +86,7 @@ export class Garden {
       }
     }
     if (p.grown >= p.dur && p.ripeAt == null) p.ripeAt = t;
-    p.last = now;
+    p.last = Math.max(p.last, now); // nunca recua (senão o mesmo tempo contaria duas vezes)
     return p;
   }
 

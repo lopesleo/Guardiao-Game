@@ -106,6 +106,11 @@ export const CampDaily = {
       this._say(`O tempo da floresta não anda para trás. Plantas, obras e presentes vão esperar o relógio alcançar (${fmtDuration(Clock.frozenMs())}).`);
       return;
     }
+    // Avanço que ninguém confirmou (sem internet, cota esgotada)
+    if (Clock.pendingMs() > 30 * 60000) {
+      this._say("Sem internet, a floresta não conseguiu confirmar quanto tempo passou. Conecte-se e o tempo volta a andar.");
+      return;
+    }
     const d = this._daily();
     const day = d?.streakPending();
     if (!day) return;

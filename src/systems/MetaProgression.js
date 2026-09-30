@@ -161,7 +161,8 @@ export class MetaProgression {
   _save() {
     if (!this.available) return;
     try {
-      this.data.clockLast = Math.round(Clock.now()); // piso anti-recuo (ver Clock.js)
+      this.data.clock = Clock.snapshot(); // estado do relógio confiável, assinado junto (ver Clock.js)
+      delete this.data.clockLast; // formato antigo
       const { _sig, ...rest } = this.data;
       const json = JSON.stringify(rest);
       localStorage.setItem(META.STORAGE_KEY, `${json.slice(0, -1)}${json.length > 2 ? "," : ""}"_sig":"${signSave(json)}"}`);
