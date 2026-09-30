@@ -482,7 +482,7 @@ export const CampPond = {
       haptic(10);
     }
     f.inZone = inZone;
-    f.prog += inZone ? dt / F.FILL_S : grace ? 0 : -dt / F.DRAIN_S;
+    if (!grace) f.prog += inZone ? dt / F.FILL_S : -dt / F.DRAIN_S; // na espera o progresso fica congelado
     // Desenho
     const yOf = (v) => BAR_H / 2 - v * BAR_H;
     f.zoneG.clear();
