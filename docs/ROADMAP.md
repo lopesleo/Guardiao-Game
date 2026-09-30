@@ -89,7 +89,7 @@ Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
   melhor + mais peixes; valores em `FISHING` no config
 - ✅ **Cozinha** (fogão de barro ao lado da horta; revelada após a 1ª colheita):
   8 receitas da horta (Cenoura Assada, Pamonha, Tapioca, Feijão Tropeiro, Quibebe e
-  3 mágicas) → pratos prontos por qualidade; **1 prato servido = bônus só na próxima
+  3 mágicas) → pratos prontos por qualidade; **comer 1 prato = bônus só na próxima
   partida** (Ouro dá 1,7× o bônus); valores em `KITCHEN` no config
 - ✅ 6 receitas com peixe (Lambari Frito, Pirão, Caldeirada, Pacu Assado, Moqueca de
   Tucunaré, Dourado na Brasa) — 14 no total

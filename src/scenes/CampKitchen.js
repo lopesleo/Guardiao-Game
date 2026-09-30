@@ -1,6 +1,6 @@
 // Cozinha na Clareira: fogão a lenha ao lado da horta. Escolher receita é
 // naturalmente um menu, então aqui é painel: cozinhar (colheita → prato na
-// pratos prontos) e servir UM prato para a próxima partida.
+// pratos prontos) e comer UM prato antes da próxima partida.
 // Mixin da CampScene (Object.assign): usa this.meta e this.kitchen.
 import { GAME, GARDEN } from "../config.js";
 import { recipe, bonusText, itemName } from "../systems/Kitchen.js";
@@ -9,7 +9,7 @@ import { Analytics } from "../systems/Analytics.js";
 import { CSS } from "../art/Palette.js";
 import { dishIconKey } from "../art/Kitchen.js";
 import { Modal } from "../ui/Widgets.js";
-import { text } from "../ui/Theme.js";
+import { text, haptic } from "../ui/Theme.js";
 
 const S = GAME.PIXEL_SCALE;
 const KX = 310,
@@ -55,7 +55,7 @@ export const CampKitchen = {
     });
   },
 
-  // "!" quando dá para cozinhar algo e ainda não há prato servido
+  // "!" quando dá para cozinhar ou comer algo e ainda não comeu
   _refreshKitchenDot() {
     const b = this.buildings.kitchen;
     if (!b) return;
@@ -66,7 +66,7 @@ export const CampKitchen = {
   _showKitchen() {
     const k = this.kitchen;
     const d = this.meta.data;
-    const m = new Modal(this, { title: "COZINHA", subtitle: "Um prato servido vale só para a próxima partida", w: 880, h: 620 });
+    const m = new Modal(this, { title: "COZINHA", subtitle: "Coma um prato antes de partir: o bônus vale só na próxima partida", w: 880, h: 620 });
     const list = this._modalList(m);
     const reopen = () => {
       const y = list.scroll;
@@ -75,26 +75,22 @@ export const CampKitchen = {
       this._showKitchen();
       this._modals.at(-1)?.list?.setScroll(y);
     };
-    // Prato servido
+    // O que já comeu (vale na próxima partida)
     this._section(list, "PRÓXIMA PARTIDA");
     if (d.meal) {
       const r = recipe(d.meal.id);
       list.addRow(
         this._shopRow({
           icon: dishIconKey(r.id),
-          name: `${r.name} · ${GARDEN.QUALITY[d.meal.q]}`,
+          name: `Você comeu: ${r.name} · ${GARDEN.QUALITY[d.meal.q]}`,
           nameColor: CSS.goldHi,
           desc: bonusText(r, d.meal.q),
-          right: "TIRAR",
-          rightColor: CSS.muted,
+          right: "BARRIGA CHEIA",
+          rightColor: CSS.green,
           style: "green",
-          onTap: () => {
-            k.unserve();
-            reopen();
-          },
         }),
       );
-    } else list.addRow({ h: 40, build: (c, w) => c.add(text(this, w / 2, 20, "Nenhum prato servido — cozinhe ou sirva um dos pratos prontos", { size: 16, color: CSS.dim, origin: 0.5 })) });
+    } else list.addRow({ h: 40, build: (c, w) => c.add(text(this, w / 2, 20, "Você ainda não comeu — cozinhe e coma um prato antes de partir", { size: 16, color: CSS.dim, origin: 0.5 })) });
     // Pratos prontos (cozinhados e guardados)
     const ready = [];
     for (const [id, row] of Object.entries(d.dishes || {})) row.forEach((n, q) => n > 0 && ready.push({ id, q, n }));
@@ -107,13 +103,19 @@ export const CampKitchen = {
             icon: dishIconKey(id),
             name: `${r.name} · ${GARDEN.QUALITY[q]}  ×${n}`,
             desc: bonusText(r, q),
-            right: "SERVIR",
-            style: "button",
-            onTap: () => {
-              if (!k.serve(id, q)) return;
-              this.sound.play("sfx_pickup", { volume: 0.5, rate: 0.9 });
-              reopen();
-            },
+            right: d.meal ? "JÁ COMEU" : "COMER",
+            rightColor: d.meal ? CSS.dim : CSS.goldHi,
+            style: d.meal ? "dark" : "button",
+            onTap: d.meal
+              ? null
+              : () => {
+                  if (!k.eat(id, q)) return;
+                  this.sound.play("sfx_pickup", { volume: 0.5, rate: 0.9 });
+                  haptic(20);
+                  this._toast(`Hum! ${r.name}: vale na próxima partida`);
+                  Analytics.track("meal_eat", { id, q });
+                  reopen();
+                },
           }),
         );
       }
@@ -141,7 +143,7 @@ export const CampKitchen = {
                 if (!res) return;
                 this._buyFx();
                 Analytics.track("kitchen_cook", { id: r.id, q: res.q });
-                this._toast(`${r.name} (${GARDEN.QUALITY[res.q]}) pronto!${d.meal?.id === r.id && d.meal.q === res.q ? " Servido para a próxima partida" : ""}`);
+                this._toast(`${r.name} (${GARDEN.QUALITY[res.q]}) pronto!${d.meal ? "" : " Coma antes de partir"}`);
                 reopen();
               }
             : null,

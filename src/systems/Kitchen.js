@@ -1,6 +1,6 @@
 // Cozinha da Clareira: receitas com a colheita do celeiro (meta.data.pantry).
-// Prato pronto vai para a pratos prontos (meta.data.dishes, por qualidade); UM prato
-// servido (meta.data.meal) vale só para a próxima partida e é consumido nela.
+// Prato cozinhado fica guardado (meta.data.dishes, por qualidade); comer UM
+// (meta.data.meal) dá o bônus só na próxima partida, que o consome.
 import { KITCHEN, GARDEN, FISHING } from "../config.js";
 import { pantryCount } from "./Garden.js";
 
@@ -54,31 +54,20 @@ export class Kitchen {
     row[q]++;
     (d.cooked ||= []).includes(id) || d.cooked.push(id);
     d.stats.dishesCooked = (d.stats.dishesCooked || 0) + 1;
-    // Nada servido ainda: serve na hora (um toque a menos)
-    if (!d.meal) this.serve(id, q, false);
     this.meta._save();
     return { id, q };
   }
 
-  // Serve um prato da pratos prontos para a próxima partida (devolve o anterior)
-  serve(id, q, save = true) {
+  // Come um prato pronto: o bônus vale na próxima partida (1 por partida;
+  // comeu, não tem volta)
+  eat(id, q) {
     const d = this.meta.data;
     const row = d.dishes[id];
-    if (!row || row[q] <= 0) return false;
-    this.unserve(false);
+    if (d.meal || !row || row[q] <= 0) return false;
     row[q]--;
     d.meal = { id, q };
-    if (save) this.meta._save();
+    this.meta._save();
     return true;
-  }
-
-  unserve(save = true) {
-    const d = this.meta.data;
-    if (!d.meal) return;
-    const row = (d.dishes[d.meal.id] ||= [0, 0, 0]);
-    row[d.meal.q]++;
-    d.meal = null;
-    if (save) this.meta._save();
   }
 
   dishCount() {
