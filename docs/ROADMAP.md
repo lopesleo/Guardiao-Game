@@ -41,7 +41,8 @@ Base para tudo que vem depois; o jogador quase não vê.
   com transição contínua (entra pela brecha da muralha sul, que se fecha)
 - ⬜ Construções com níveis: Fogueira, Santuário (Bênçãos), Forja (Arsenal), Mural
 - ⬜ **Obras com tempo** + 1º João-de-barro; partidas adiantam as obras
-- ⬜ **Madeira Ancestral** caindo nas partidas
+- ✅ **Madeira Ancestral** caindo nas partidas (minichefe 3, baú dourado 2, baú
+  comum 25%, Ancião 6 — valores em `WOOD` no config)
 - ⬜ Clareira começa **em ruínas** e é revelada por progresso; guia **Anciã da Fogueira**
 
 ### M2.5 — Lendas da mata ⬜
