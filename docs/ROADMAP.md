@@ -34,7 +34,7 @@ Base para tudo que vem depois; o jogador quase não vê.
 - ✅ **Modo Infinito** (Noite Eterna) depois de vencer o Ancião: inimigos +25% vida
   e +12% dano por minuto (composto), eventos em ciclo, +15 moedas/min, recorde
 
-### M2 — Clareira, parte 1: o acampamento 🚧
+### M2 — Clareira, parte 1: o acampamento ✅
 - ✅ **Clareira caminhável** (hub estilo Hades/Dead Cells) entre o título e a partida:
   Fogueira (guardiões), Santuário (bênçãos e dons), Forja (armas), Mural
   (conquistas), placa do Perigo, Anciã (dicas); a trilha ao norte leva à floresta
@@ -46,7 +46,10 @@ Base para tudo que vem depois; o jogador quase não vê.
   save v3 com migração (níveis calculados do progresso antigo)
 - ✅ **Madeira Ancestral** caindo nas partidas (minichefe 3, baú dourado 2, baú
   comum 25%, Ancião 6 — valores em `WOOD` no config)
-- ⬜ Clareira começa **em ruínas** e é revelada por progresso; guia **Anciã da Fogueira**
+- ✅ Clareira começa **em ruínas** e é revelada por progresso (Santuário após a 2ª
+  partida, Forja após a 3ª, ninho com a 1ª madeira, Mural após a 4ª), uma por visita,
+  com cena e fala da **Anciã da Fogueira**; 1ª abertura vai direto para a floresta;
+  saves antigos veem tudo revelado
 
 ### M2.5 — Lendas da mata ⬜
 Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
