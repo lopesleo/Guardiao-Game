@@ -29,6 +29,16 @@ export const PAL = {
   n3: 0x875237,
   n4: 0xb07a4f,
 
+  // Palha (telhados de sapê) e barro (fornos, fogão, ninho)
+  straw0: 0x6e4f24,
+  straw1: 0x9a7438,
+  straw2: 0xc49a52,
+  straw3: 0xe3c37e,
+  clay0: 0x5e3320,
+  clay1: 0x8a5230,
+  clay2: 0xa86a3e,
+  clay3: 0xc88a5a,
+
   // Pedra
   s0: 0x262a33,
   s1: 0x3b4150,

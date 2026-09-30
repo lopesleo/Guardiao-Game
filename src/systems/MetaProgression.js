@@ -1,6 +1,21 @@
 // Persistência entre runs via localStorage.
 // Salva: moedas totais, high score (tempo), armas desbloqueadas.
 import { META, MAX_BLESSING_RANK, ANCESTRAL, ACHIEVEMENTS, BUILD } from '../config.js';
+import { Analytics } from './Analytics.js';
+import { Clock } from './Clock.js';
+
+// Assinatura do save (FNV-1a 2×32 bits com sal): não é criptografia forte —
+// o jogo é offline —, mas pega edição casual do localStorage.
+const SALT = 'mata-viva-guardiao-7f3a';
+function fnv(str, seed) {
+  let h = seed >>> 0;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, '0');
+}
+export const signSave = (json) => fnv(SALT + json, 0x811c9dc5) + fnv(json + SALT, 0x9e3779b9);
 
 const DEFAULT = {
   saveVersion: 3,
@@ -119,6 +134,17 @@ export class MetaProgression {
       raw = localStorage.getItem(META.STORAGE_KEY);
       if (!raw) return freshDefault();
       const parsed = JSON.parse(raw);
+      // Assinatura: save editado à mão fica marcado (não apagamos nada — um
+      // bug nunca pode custar o progresso de ninguém; a marca serve para
+      // placares/eventos futuros e para a medição)
+      if (parsed._sig) {
+        const { _sig, ...rest } = parsed;
+        if (_sig !== signSave(JSON.stringify(rest))) {
+          parsed.integrity = { ...(parsed.integrity || {}), tampered: ((parsed.integrity || {}).tampered || 0) + 1 };
+          Analytics.track("save_tampered", {});
+        }
+        delete parsed._sig;
+      }
       const from = parsed.saveVersion || 1;
       if (from < SAVE_VERSION) {
         try { localStorage.setItem(`${META.STORAGE_KEY}_backup_v${from}`, raw); } catch {}
@@ -134,7 +160,13 @@ export class MetaProgression {
 
   _save() {
     if (!this.available) return;
-    try { localStorage.setItem(META.STORAGE_KEY, JSON.stringify(this.data)); } catch {}
+    try {
+      this.data.clock = Clock.snapshot(); // estado do relógio confiável, assinado junto (ver Clock.js)
+      delete this.data.clockLast; // formato antigo
+      const { _sig, ...rest } = this.data;
+      const json = JSON.stringify(rest);
+      localStorage.setItem(META.STORAGE_KEY, `${json.slice(0, -1)}${json.length > 2 ? "," : ""}"_sig":"${signSave(json)}"}`);
+    } catch {}
   }
 
   // ---- Queries ----

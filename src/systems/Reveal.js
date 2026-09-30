@@ -23,9 +23,29 @@ export const REVEALS = [
     line: "Um João-de-barro! Com Madeira Ancestral, ele reconstrói a Clareira.",
   },
   {
+    id: "garden",
+    when: (d) => (d.runsPlayed || 0) >= 3 || !!d.garden?.tutorialDone || lvl(d, "garden") > 1,
+    line: "A horta voltou a brotar! Plante uma cenoura e veja crescer.",
+  },
+  {
+    id: "kitchen",
+    when: (d) => (d.stats?.harvests || 0) >= 1 || (d.cooked || []).length > 0,
+    line: "A cozinha acendeu! Transforme a colheita num prato e coma antes da próxima partida.",
+  },
+  {
+    id: "pond",
+    when: (d) => (d.stats?.mealsEaten || 0) >= 1 || (d.stats?.fishCaught || 0) > 0,
+    line: "O lago voltou a ter vida! Vá até o trapiche e jogue a linha.",
+  },
+  {
     id: "board",
     when: (d) => (d.runsPlayed || 0) >= 4 || (d.achievements || []).length > 0,
     line: "O Mural guarda cada feito seu na floresta.",
+  },
+  {
+    id: "chest",
+    when: (d) => (d.revealed || []).includes("board") && (d.runsPlayed || 0) >= 5,
+    line: "Todo dia a floresta deixa um presente aqui, junto ao fogo. Abra o baú!",
   },
 ];
 

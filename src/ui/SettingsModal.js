@@ -1,11 +1,13 @@
 // Modal de Opções — compartilhado entre Menu e Pausa.
 import { Settings } from "../systems/Settings.js";
+import { Notify } from "../systems/Notify.js";
 import { CSS } from "../art/Palette.js";
 import { text, Button } from "./Theme.js";
 import { Modal, Slider, Toggle } from "./Widgets.js";
 
 export function openSettings(scene, o = {}) {
-  const m = new Modal(scene, { title: "OPÇÕES", w: 620, h: o.onReset ? 620 : 540 });
+  const extra = Notify.available() ? 64 : 0;
+  const m = new Modal(scene, { title: "OPÇÕES", w: 620, h: (o.onReset ? 620 : 540) + extra });
   let y = m.top + 30;
   const row = (label, widget) => {
     m.add(text(scene, -m.w / 2 + 50, y, label, { size: 22, origin: [0, 0.5] }));
@@ -34,6 +36,8 @@ export function openSettings(scene, o = {}) {
     Settings.set("lighting", v);
     o.onLighting?.(v); // aplica na partida em andamento (vindo da Pausa)
   }));
+  if (Notify.available())
+    row("Avisos (baú e colheita)", new Toggle(scene, 0, 0, Notify.enabled(), (v) => (v ? Notify.enable() : Notify.disable())));
   if (o.onReset) {
     m.add(new Button(scene, 0, m.h / 2 - 50, 300, 50, "APAGAR PROGRESSO", o.onReset, { size: 18, style: "danger", color: CSS.redHi }));
   }

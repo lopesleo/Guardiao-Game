@@ -19,7 +19,11 @@ import {
   ARENA,
   WOOD,
   BUILD,
+  GARDEN,
 } from "../config.js";
+import { randomRareSeed } from "../systems/Garden.js";
+import { recipe, mealMods, bonusText } from "../systems/Kitchen.js";
+import { Daily, dailyUnlocked } from "../systems/Daily.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
 import { SpawnDirector } from "../systems/SpawnDirector.js";
@@ -42,6 +46,7 @@ import {
   XPGem,
   CoinPickup,
   WoodPickup,
+  SeedPickup,
   HeartPickup,
   AwakenOrb,
 } from "../entities/Pickups.js";
@@ -108,6 +113,14 @@ export class GameScene extends Phaser.Scene {
     this.coinPool = new Pool(() => new CoinPickup(this), 20);
     this.woodPool = new Pool(() => new WoodPickup(this), 12);
     this._woodThisRun = 0;
+    this.seedPool = new Pool(() => new SeedPickup(this), 6);
+    this._seedsThisRun = {};
+    // Para as missões do dia: o que ESTA partida fez
+    this._runChests = 0;
+    this._runLanterns = 0;
+    this._reactionsAtStart = { ...(this.meta.data.stats.reactions || {}) };
+    // Sementes raras só depois que a Horta apareceu (uma novidade por vez)
+    this._seedsOn = (this.meta.data.revealed || []).includes("garden");
     this.heartPool = new Pool(() => new HeartPickup(this), 10);
     this.awakenOrbPool = new Pool(() => new AwakenOrb(this), 10);
     this.dmgNumberPool = new Pool(() => new DamageNumber(this), 30);
@@ -133,6 +146,20 @@ export class GameScene extends Phaser.Scene {
     if (anc > 0) {
       this.player._blessingDmgMult =
         (this.player._blessingDmgMult || 1) * Math.pow(1 + ANCESTRAL.DMG_PER_LEVEL, anc);
+    }
+    // Refeição da Clareira: vale só nesta partida (consumida ao entrar)
+    const meal = this.meta.data.meal;
+    if (meal && recipe(meal.id)) {
+      const m = mealMods(meal);
+      this._applyCharacterMods(this.player, m);
+      if (m.xp) this.player._xpMult *= m.xp;
+      if (m.pickup) this.player.pickupRadius *= m.pickup;
+      this.meta.data.meal = null;
+      this.meta.data.stats.mealsEaten = (this.meta.data.stats.mealsEaten || 0) + 1;
+      this.meta._save();
+      const r = recipe(meal.id);
+      this.time.delayedCall(2500, () => this._toast(`${r.name}: ${bonusText(r, meal.q)}`, 2600, "#ffc86b"));
+      Analytics.track("meal_eaten", { id: meal.id, q: meal.q });
     }
     // Locks de habilidades: bloqueia se não comprou
     this.player.dashUnlocked = this.meta.hasAbility("DASH");
@@ -671,6 +698,20 @@ export class GameScene extends Phaser.Scene {
         this.woodPool.release(w);
       }
     });
+    // Sementes raras
+    this.seedPool.forEachActive((s) => {
+      s.update(time, dt, this.player);
+      const dx = s.x - this.player.x,
+        dy = s.y - this.player.y;
+      if (dx * dx + dy * dy < this.player.pickupRadius * this.player.pickupRadius) {
+        const id = randomRareSeed();
+        this._seedsThisRun[id] = (this._seedsThisRun[id] || 0) + 1;
+        this.sound.play("sfx_chest_reel", { volume: 0.5, rate: 1.3 });
+        this._toast(`Semente rara: ${GARDEN.CROPS[id].name}`, 1800, "#ffe58f");
+        s.pickup();
+        this.seedPool.release(s);
+      }
+    });
     // Corações
     this.heartPool.forEachActive((h) => {
       h.update(time, dt, this.player);
@@ -881,6 +922,7 @@ export class GameScene extends Phaser.Scene {
       this.coinPool.acquire().spawn(x + Math.cos(a) * 40, y + Math.sin(a) * 40);
     }
     this._spawnWood(x, y, WOOD.MINIBOSS);
+    this._spawnSeeds(x, y, GARDEN.SEEDS.MINIBOSS);
     if (this.hud.boss === e) this.hud.clearBoss();
   }
 
@@ -890,6 +932,15 @@ export class GameScene extends Phaser.Scene {
       const a = (i / Math.max(1, n)) * Math.PI * 2 + Math.random() * 0.6;
       const d = 24 + Math.random() * 26;
       this.woodPool.acquire().spawn(x + Math.cos(a) * d, y + Math.sin(a) * d);
+    }
+  }
+
+  // Sementes raras saltando em volta de (x, y)
+  _spawnSeeds(x, y, n) {
+    if (!this._seedsOn) return;
+    for (let i = 0; i < n; i++) {
+      const a = Math.random() * Math.PI * 2;
+      this.seedPool.acquire().spawn(x + Math.cos(a) * 36, y + Math.sin(a) * 30);
     }
   }
 
@@ -1000,6 +1051,12 @@ export class GameScene extends Phaser.Scene {
     this._woodThisRun += WOOD.BOSS;
     this.hud.addWood(WOOD.BOSS);
     this._toast(`+${WOOD.BOSS} Madeira Ancestral`, 2200, "#ffc86b");
+    // Sementes do Mapinguari também entram direto
+    if (this._seedsOn)
+      for (let i = 0; i < GARDEN.SEEDS.BOSS; i++) {
+        const id = randomRareSeed();
+        this._seedsThisRun[id] = (this._seedsThisRun[id] || 0) + 1;
+      }
     this.cameras.main.shake(600, 0.02);
     // Vitória: escolher entre encerrar ou seguir na Noite Eterna
     // Depois da cena de libertação (~2,4 s), a escolha da Noite Eterna
@@ -1084,6 +1141,7 @@ export class GameScene extends Phaser.Scene {
   _openChest(chest) {
     const result = chest.open();
     if (!result) return;
+    this._runChests++;
     const { kind, x, y } = result;
 
     // Som de abertura imediato
@@ -1104,7 +1162,10 @@ export class GameScene extends Phaser.Scene {
     // Loot spawnado DEPOIS dos reels (caça-níquel revela)
     this.time.delayedCall(burstDelay + 50, () => {
       this._spawnChestLoot(x, y);
-      if (kind === "golden") this._spawnWood(x, y, WOOD.GOLDEN_CHEST);
+      if (kind === "golden") {
+        this._spawnWood(x, y, WOOD.GOLDEN_CHEST);
+        this._spawnSeeds(x, y, GARDEN.SEEDS.GOLDEN_CHEST);
+      }
       else if (kind === "normal" && Math.random() < WOOD.CHEST_CHANCE) this._spawnWood(x, y, 1);
     });
     if (kind === "golden") {
@@ -1310,6 +1371,12 @@ export class GameScene extends Phaser.Scene {
     // precisam estar atualizados pros check() de vitória)
     this.meta.addCoins(coinsFinal);
     if (this._woodThisRun > 0) this.meta.addWood(this._woodThisRun);
+    const seeds = (this.meta.data.seeds ||= {});
+    let seedsGained = 0;
+    for (const [id, n] of Object.entries(this._seedsThisRun)) {
+      seeds[id] = (seeds[id] || 0) + n;
+      seedsGained += n;
+    }
     // Cada partida adianta a obra do João-de-barro (jogar acelera as obras)
     const builds = new Builds(this.meta);
     if (builds.job) {
@@ -1321,6 +1388,18 @@ export class GameScene extends Phaser.Scene {
     this.meta.registerRun(this.elapsedMs / 1000, won, this.diff.id);
     const newAchievements = this._checkAchievements(won, true);
     this._newUnlocksThisRun.push(...newAchievements.map((a) => a.name));
+    // Missões do dia (o prêmio se pega no Mural da Clareira)
+    if (dailyUnlocked(this.meta.data)) {
+      const now = this.meta.data.stats.reactions || {};
+      const byType = {};
+      let reactions = 0;
+      for (const k of Object.keys(now)) {
+        byType[k] = (now[k] || 0) - (this._reactionsAtStart[k] || 0);
+        reactions += byType[k];
+      }
+      const done = new Daily(this.meta).runEnd({ kills: this.hud.kills, reactions, byType, seconds: this.elapsedMs / 1000, chests: this._runChests, lanterns: this._runLanterns, won });
+      this._newUnlocksThisRun.push(...done.map((t) => `Missão: ${t}`));
+    }
     Analytics.track("run_end", {
       won,
       quit,
@@ -1353,6 +1432,7 @@ export class GameScene extends Phaser.Scene {
         kills: this.hud.kills,
         coinsGained: coinsFinal,
         woodGained: this._woodThisRun,
+        seedsGained,
         newUnlocks: this._newUnlocksThisRun,
         difficulty: this.diff,
         endlessS,

@@ -3,11 +3,16 @@
 // controles da partida; perto de uma construção aparece o aviso para interagir
 // (E no teclado / botão de ação no toque):
 //   Fogueira → guardiões · Santuário → bênçãos e dons · Forja → armas ·
-//   Mural → Conquistas · Placa da trilha → Perigo · Anciã → conversa.
+//   Mural → Conquistas · Horta → plantar/cuidar/colher (no chão) · Celeiro ·
+//   Cozinha → pratos · Lago → pescar (no trapiche) · Placa da trilha → Perigo ·
+//   Anciã → conversa.
 // A trilha ao norte leva à floresta (começa a partida).
 import { GAME, CHARACTERS, DIFFICULTY, META, BLESSINGS, BUILDINGS } from "../config.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
 import { Builds, fmtDuration } from "../systems/Builds.js";
+import { Garden } from "../systems/Garden.js";
+import { Kitchen } from "../systems/Kitchen.js";
+import { Pond } from "../systems/Pond.js";
 import { REVEALS, pendingReveals } from "../systems/Reveal.js";
 import { InputManager } from "../systems/InputManager.js";
 import { VirtualJoystick } from "../ui/VirtualJoystick.js";
@@ -17,6 +22,11 @@ import { PAL, CSS, hex } from "../art/Palette.js";
 import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
 import { Modal, closeTopModal } from "../ui/Widgets.js";
 import { MetaPanels } from "../ui/MetaPanels.js";
+import { CampGarden } from "./CampGarden.js";
+import { CampKitchen } from "./CampKitchen.js";
+import { CampPond } from "./CampPond.js";
+import { CampDecor, decorFree } from "./CampDecor.js";
+import { CampDaily } from "./CampDaily.js";
 
 const S = GAME.PIXEL_SCALE;
 const CAMP_W = 1500,
@@ -36,6 +46,7 @@ const ELDER_LINES = [
   "A Forja guarda armas para quem junta moedas pela mata.",
   "Dizem que, depois do Mapinguari, vem uma noite que não acaba…",
   "Uma arma no nível máximo, com a parceira certa, desperta algo maior.",
+  "Planta cuidada em dia sai com qualidade Ouro. Descuidada não morre, só perde o brilho.",
 ];
 
 export class CampScene extends Phaser.Scene {
@@ -47,6 +58,10 @@ export class CampScene extends Phaser.Scene {
     fitCamera(this);
     this.meta = new MetaProgression();
     this.builds = new Builds(this.meta);
+    this.garden = new Garden(this.meta, this.builds.level("garden"));
+    this.kitchen = new Kitchen(this.meta);
+    this.pond = new Pond(this.meta, this.builds.level("pond"));
+    this.D_HUD = D_HUD;
     // Revelações: pendentes viram cena (1 por visita); o resto aparece normal
     this._pending = pendingReveals(this.meta.data);
     this.meta._save();
@@ -62,6 +77,7 @@ export class CampScene extends Phaser.Scene {
     this._nextBuildTick = 0;
     this.scaffold = this.buildTimer = this._birdWork = null;
     this._cutscene = false;
+    this.flies = [];
     this.sayBox = null;
     this._elderLine = this.meta.data.elderLine || 0;
     this.isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
@@ -77,6 +93,11 @@ export class CampScene extends Phaser.Scene {
     this._trail();
     this._fire(0, 70);
     this._structures();
+    this._gardenWorld();
+    this._kitchenWorld();
+    this._pondWorld();
+    this._decor();
+    this._dailyChestWorld();
     this._player();
     this._night();
     this._hud();
@@ -116,6 +137,7 @@ export class CampScene extends Phaser.Scene {
     cam.fadeIn(400, 10, 14, 10);
     Analytics.track("camp_enter", {});
     this.time.delayedCall(700, () => this._introSequence());
+    this.time.delayedCall(1300, () => this._maybeStreak());
   }
 
   // VOLTAR do Android: fecha o painel aberto; sem painel, volta ao título
@@ -137,17 +159,13 @@ export class CampScene extends Phaser.Scene {
       .setDepth(-1e6);
     const env = this.registry.get("envKeys");
     const rnd = new Phaser.Math.RandomDataGenerator(["clareira"]);
-    // Terreiro de terra batida em volta da fogueira
-    for (let i = 0; i < 14; i++) {
-      const a = (i / 14) * Math.PI * 2;
-      const d = 60 + rnd.frac() * 110;
-      this.add.image(Math.cos(a) * d, 70 + Math.sin(a) * d * 0.7, "env", rnd.pick(env.patches.dirt)).setScale(S).setDepth(-9e5).setAlpha(0.9);
-    }
-    // Detalhes (sem colisão)
-    for (let i = 0; i < 70; i++) {
+    // Terreiro de terra batida + trilhas até cada lugar (uma textura só)
+    this.groundPaint = this._paintPaths({ x0: -CAMP_W / 2, top: TOP, w: CAMP_W, h: CAMP_H });
+    // Detalhes (sem colisão), fora das trilhas
+    for (let i = 0; i < 90; i++) {
       const x = rnd.between(-CAMP_W / 2 + 60, CAMP_W / 2 - 60),
         y = rnd.between(TOP + 80, CAMP_H / 2 - 40);
-      if (Math.hypot(x, y - 70) < 200 || Math.abs(x) < TRAIL_HALF + 20) continue;
+      if (Math.hypot(x, y - 70) < 200 || this.groundPaint.onPath(x, y, 12) || !decorFree(x, y)) continue;
       const list = i % 4 === 0 ? env.flowers : i % 4 === 1 ? env.shrooms : env.tufts;
       this.add.image(x, y, "env", rnd.pick(list)).setOrigin(0.5, 1).setScale(S).setDepth(y);
     }
@@ -178,10 +196,6 @@ export class CampScene extends Phaser.Scene {
 
   // Trilha de terra ao norte, com duas tochas — a saída para a floresta
   _trail() {
-    const env = this.registry.get("envKeys");
-    for (let y = TOP - 200; y < -120; y += 34) {
-      this.add.image((y % 3) * 6, y, "env", env.patches.dirt[Math.abs(y) % env.patches.dirt.length]).setScale(S).setDepth(-9e5);
-    }
     for (const side of [-1, 1]) this._torch(side * (TRAIL_HALF + 18), TOP + 120);
     // Placa: escolha do Perigo
     const sx = TRAIL_HALF + 90,
@@ -212,16 +226,10 @@ export class CampScene extends Phaser.Scene {
 
   // Fogueira central: trocar de guardião
   _fire(x, y) {
-    const g = this.add.graphics().setDepth(y);
-    this.add.image(x, y + 6, "px_shadow").setScale(6, 3).setDepth(y - 2);
-    g.fillStyle(PAL.ink, 1).fillRect(x - 24, y - 6, 48, 12);
-    g.fillStyle(PAL.n2, 1).fillRect(x - 21, y - 3, 42, 6);
-    g.fillStyle(PAL.n3, 1).fillRect(x - 21, y - 3, 42, 3);
-    for (let i = -3; i <= 3; i++) {
-      g.fillStyle(PAL.ink, 1).fillRect(x + i * 9 - 5, y + 3, 10, 8);
-      g.fillStyle(i % 2 ? PAL.s2 : PAL.s3, 1).fillRect(x + i * 9 - 3, y + 5, 6, 4);
-    }
+    // Anel de pedras com lenha cruzada (as chamas são partículas por cima)
+    this.add.image(x, y + 4, "camp_fire").setScale(S).setDepth(y - 30);
     this._glow(x, y - 16, 5.5, 0xff9a4c, true);
+    this._glow(x, y + 4, 1.6, 0xff5a1e, true); // brasa
     this._flames(x, y - 4, 22, 70, 0.25);
     this._solid(x, y, 56, 22);
     this._addInteract({ x, y, top: y - 70, r: 110, name: "FOGUEIRA", verb: "GUARDIÕES", action: () => this._showCharacters(), build: "fire" });
@@ -282,9 +290,9 @@ export class CampScene extends Phaser.Scene {
       });
       this.buildings[id] = b;
     };
-    B("shrine", "camp_shrine", "SANTUÁRIO", "BÊNÇÃOS E DONS", -430, -130, () => this._showBlessings(), [0, -75, 0xffe58f, 2.4]);
-    B("forge", "camp_forge", "FORJA", "FORJAR ARMAS", 440, -120, () => this._showArsenal(), [-8, -18, 0xff8a3c, 2.8]);
-    B("board", "camp_board", "MURAL", "CONQUISTAS E LENDAS", -420, 280, () => this._showBoard());
+    B("shrine", "camp_shrine", "SANTUÁRIO", "BÊNÇÃOS E DONS", -430, -130, () => this._showBlessings(), [0, -99, 0xffe58f, 2.4]);
+    B("forge", "camp_forge", "FORJA", "FORJAR ARMAS", 440, -120, () => this._showArsenal(), [-40, -24, 0xff8a3c, 2.8]);
+    B("board", "camp_board", "MURAL", "MISSÕES, CONQUISTAS E LENDAS", -420, 280, () => this._showBoard(this._daily() ? "missoes" : "conquistas"));
 
     // Ninho do João-de-barro (o construtor chega com as obras) + o pássaro
     const nx = 450,
@@ -331,8 +339,7 @@ export class CampScene extends Phaser.Scene {
       .setScrollFactor(0)
       .setBlendMode(Phaser.BlendModes.MULTIPLY)
       .setDepth(D_NIGHT);
-    // Vaga-lumes
-    this.flies = [];
+    // Vaga-lumes (a lista é zerada no create: a samaúma também põe os seus)
     for (let i = 0; i < 26; i++) {
       const x = Phaser.Math.Between(-CAMP_W / 2, CAMP_W / 2),
         y = Phaser.Math.Between(TOP, CAMP_H / 2);
@@ -398,9 +405,10 @@ export class CampScene extends Phaser.Scene {
     drawFrame(this.woodBox[0], W - 204, 72, 186, 44, "dark");
     fix(new Button(this, W - 244, 40, 52, 52, "?", () => !this._modals.length && this._showGuide(), { size: 26, style: "dark" }));
     fix(new Button(this, W - 304, 40, 52, 52, null, () => !this._modals.length && this._showSettings(), { icon: "ico_gear", style: "dark", iconScale: 2.5 }));
+    this._barnHudButton(W - 364, 40); // Celeiro (aparece junto com a Horta)
     if (DEBUG) {
       fix(
-        new Button(this, W - 430, 40, 150, 44, "+500 (dev)", () => {
+        new Button(this, W - 480, 40, 150, 44, "+500 (dev)", () => {
           this.meta.addCoins(500);
           this._refreshAll();
         }, { size: 14, style: "green" }),
@@ -452,8 +460,12 @@ export class CampScene extends Phaser.Scene {
       Object.entries(META.ABILITY_UNLOCK_COST).some(([k, cost]) => !this.meta.hasAbility(k) && coins >= cost);
     const canArsenal = META.WEAPON_UNLOCK_ORDER.some((k) => !this.meta.isUnlocked(k) && coins >= META.WEAPON_UNLOCK_COST[k]);
     this.buildings.shrine.dot.setVisible(canBless && this.buildings.shrine.shown);
-    this.buildings.nest.dot.setVisible(this.buildings.nest.shown && !this.builds.job && ["fire", "shrine", "forge"].some((id) => !this.builds.blocker(id)));
+    this.buildings.nest.dot.setVisible(this.buildings.nest.shown && !this.builds.job && this._workIds().some((id) => !this.builds.blocker(id)));
     this.buildings.forge.dot.setVisible(canArsenal && this.buildings.forge.shown);
+    this._refreshGardenWorld();
+    this._refreshKitchenDot();
+    this._refreshPondDot();
+    this._refreshDailyDots();
   }
 
   // Trocou de guardião na Fogueira: o avatar muda na hora (com fumacinha)
@@ -497,6 +509,7 @@ export class CampScene extends Phaser.Scene {
       bd = Infinity;
     for (const it of this.interactables) {
       if (it.hiddenUntil && !this.buildings[it.hiddenUntil]?.shown) continue;
+      if (it.hideWhenShown && this.buildings[it.hideWhenShown]?.shown) continue;
       const d = Math.hypot(p.x - it.x, p.y + 20 - it.y);
       if (d < it.r && d < bd) {
         best = it;
@@ -505,23 +518,26 @@ export class CampScene extends Phaser.Scene {
     }
     this._setTarget(busy ? null : best);
     if (this.inputMgr.consumeInteract() && !busy) this._interact();
+    if (!busy) this._gardenWalk(p.x, p.y + 20); // colher andando
 
     // Saída: passou entre as tochas da trilha ao norte
     if (!busy && p.y < TOP + 130 && Math.abs(p.x) < TRAIL_HALF) this._play();
 
     // Luzes tremulando e vaga-lumes
-    for (const g of this.glows) g.g.setAlpha(g.base + Math.sin(time / 90 + g.ph) * 0.06 + Math.random() * 0.04);
+    const k = this._lightK ?? 1; // luzes acesas conforme escurece (hora real)
+    for (const g of this.glows) g.g.setAlpha((g.base + Math.sin(time / 90 + g.ph) * 0.06 + Math.random() * 0.04) * k);
     for (const f of this.flies) {
       const x = f.ox + Math.sin(time / 1300 + f.ph) * 40,
         y = f.oy + Math.cos(time / 1700 + f.ph) * 30;
       const a = 0.3 + Math.abs(Math.sin(time / 400 + f.ph)) * 0.6;
-      f.g.setPosition(x, y).setAlpha(a * 0.6);
-      f.c.setPosition(x, y).setAlpha(a);
+      f.g.setPosition(x, y).setAlpha(a * 0.6 * k);
+      f.c.setPosition(x, y).setAlpha(a * k);
     }
     if (this.bubble.visible && this._bubbleUntil < time) this.bubble.setVisible(false);
     if (time > (this._nextBuildTick || 0)) {
       this._nextBuildTick = time + 500;
       this._tickBuilds();
+      this._refreshGardenWorld();
     }
   }
 
@@ -564,6 +580,7 @@ export class CampScene extends Phaser.Scene {
       if (r.id === "nest") this.tweens.add({ targets: this.bird, alpha: 1, duration: 700, delay: 500 });
       if (b.img) this.tweens.add({ targets: b.img, scaleY: { from: S * 0.7, to: S }, duration: 600, delay: 300, ease: "Back.easeOut" });
       b.glow?.setVisible(true);
+      b.reveal?.();
       this.sound.play("sfx_levelup", { volume: 0.6 });
       b.shown = true;
       this.meta.data.revealed.push(r.id);
@@ -688,6 +705,8 @@ export class CampScene extends Phaser.Scene {
   // Obra pronta: festa curta + efeitos (novo guardião etc.)
   _onBuildDone(r) {
     const name = BUILDINGS[r.id].name;
+    if (r.id === "garden") this.garden.setLevel(r.to);
+    if (r.id === "pond") this.pond.setLevel(r.to);
     const b = this.buildings[r.id];
     this.sound.play("sfx_levelup", { volume: 0.6 });
     haptic(40);
@@ -700,6 +719,11 @@ export class CampScene extends Phaser.Scene {
     Analytics.track("build_done", { id: r.id, level: r.to });
     this._refreshBuildVisuals();
     this._refreshAll();
+  }
+
+  // Construções que o João-de-barro pode melhorar (as já reveladas)
+  _workIds() {
+    return ["fire", "shrine", "forge", "garden", "pond"].filter((id) => this._isShown(id));
   }
 
   // Aviso curto no alto da tela
@@ -715,16 +739,20 @@ export class CampScene extends Phaser.Scene {
     this.tweens.add({ targets: c, alpha: 0, delay: 2600, duration: 400, onComplete: () => c.destroy() });
   }
 
-  _setTarget(it) {
-    if (it === this._target) return;
+  // force: redesenha o mesmo alvo (o canteiro mudou de estado)
+  _setTarget(it, force = false) {
+    if (it === this._target && !force) return;
     this._target = it;
+    this._plotHighlight(it?.plot ?? null);
     if (!it) {
       this.prompt.setVisible(false);
       this.actionBtn?.setVisible(false);
       return;
     }
+    const plot = it.plot != null ? this._plotLabel(it.plot) : null;
+    it._key = plot?.key;
     const ruin = it.ruinOf && !this.buildings[it.ruinOf]?.shown;
-    const name = ruin ? "RUÍNA" : it.build ? `${it.name} · NV ${this.builds.level(it.build)}` : it.name;
+    const name = plot ? plot.name : ruin ? "RUÍNA" : it.build ? `${it.name} · NV ${this.builds.level(it.build)}` : it.name;
     const label = this.isTouch ? name : `[E]  ${name}`;
     this.promptT.setText(label);
     const w = this.promptT.width + 28;
@@ -732,7 +760,7 @@ export class CampScene extends Phaser.Scene {
     drawFrame(this.promptG, -w / 2, -17, w, 34, "gold", { noRivets: true, alpha: 0.95 });
     this.prompt.setPosition(it.x, it.top - 24).setVisible(true).setScale(0.8);
     this.tweens.add({ targets: this.prompt, scale: 1, duration: 140, ease: "Back.easeOut" });
-    if (this.actionBtn) this.actionBtn.setLabel(ruin ? "EXAMINAR" : it.verb).setVisible(true);
+    if (this.actionBtn) this.actionBtn.setLabel(plot ? plot.verb : ruin ? "EXAMINAR" : it.verb).setVisible(true);
   }
 
   _interact() {
@@ -822,4 +850,4 @@ export class CampScene extends Phaser.Scene {
   }
 }
 
-Object.assign(CampScene.prototype, MetaPanels);
+Object.assign(CampScene.prototype, MetaPanels, CampGarden, CampKitchen, CampPond, CampDecor, CampDaily);
