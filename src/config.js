@@ -27,8 +27,9 @@ export const DIFFICULTY = [
 export const PLAYER = {
   HP_BASE: 100,
   SPEED_BASE: 160,
-  // Curva mais suave: evoluir não pode demorar tanto (feedback dos testers)
-  XP_PER_LEVEL: (lvl) => Math.floor(5 + lvl * 4 + lvl * lvl * 0.8),
+  // Estilo Megabonk: MENOS níveis por partida (~15 aos 7:00, eram ~22) e cada carta pesa
+  // mais (ver UpgradeSystem e PASSIVES). O 1º nível continua rápido (~4 abates).
+  XP_PER_LEVEL: (lvl) => Math.floor(5 + lvl * 5 + lvl * lvl * 3),
   PICKUP_RADIUS: 36,
   INVULN_MS: 350, // i-frames pós-dano — menor = tick de dano de contato mais rápido
   // Despertar (★ DIFERENCIAL) — max escala com level pra evitar spam em late game
@@ -304,6 +305,7 @@ export const CHARACTERS = [
 const r = (min, max) => Math.floor(min + Math.random() * (max - min + 1));
 const rf = (min, max) => +(min + Math.random() * (max - min)).toFixed(2);
 
+// Valores das passivas ~1,5x o de antes: menos cartas, cada uma mais marcante.
 // Máximo de passivas DIFERENTES por partida. Cheio, as cartas só oferecem as que
 // o jogador já tem — escolher vira decisão de build (como armas têm 6 espaços).
 export const PASSIVE_SLOTS = 4;
@@ -315,7 +317,7 @@ export const PASSIVES = [
     label: "Seiva Vital",
     desc: "Vida máxima maior — o bônus já chega curado.",
     roll: () => {
-      const v = r(10, 25);
+      const v = r(15, 35);
       return {
         name: `+${v}% Vida máxima`,
         apply: (p) => {
@@ -331,7 +333,7 @@ export const PASSIVES = [
     label: "Passo do Vento",
     desc: "Corra mais rápido que a horda.",
     roll: () => {
-      const v = r(8, 16);
+      const v = r(12, 24);
       return { name: `+${v}% Velocidade`, apply: (p) => (p.speed *= 1 + v / 100) };
     },
   },
@@ -340,7 +342,7 @@ export const PASSIVES = [
     label: "Ritmo Ancestral",
     desc: "Todas as armas disparam mais vezes.",
     roll: () => {
-      const v = r(8, 16);
+      const v = r(12, 24);
       return { name: `−${v}% Recarga`, apply: (p) => (p.cdMult *= 1 - v / 100) };
     },
   },
@@ -349,7 +351,7 @@ export const PASSIVES = [
     label: "Raízes Largas",
     desc: "Auras, nuvens, reações e bumerangues alcançam mais longe.",
     roll: () => {
-      const v = r(10, 25);
+      const v = r(15, 35);
       return { name: `+${v}% Área`, apply: (p) => (p.areaMult *= 1 + v / 100) };
     },
   },
@@ -364,7 +366,7 @@ export const PASSIVES = [
     label: "Sede da Mata",
     desc: "Parte do dano causado vira cura.",
     roll: () => {
-      const v = r(3, 7);
+      const v = r(4, 10);
       return { name: `+${v}% Roubo de vida`, apply: (p) => (p.lifestealPct += v / 100) };
     },
   },
@@ -373,7 +375,7 @@ export const PASSIVES = [
     label: "Musgo Curativo",
     desc: "Regenera vida continuamente.",
     roll: () => {
-      const v = rf(0.5, 1.8);
+      const v = rf(0.8, 2.6);
       return { name: `+${v} Vida/s`, apply: (p) => (p.regenPerSec += v) };
     },
   },
@@ -382,7 +384,7 @@ export const PASSIVES = [
     label: "Olho de Falcão",
     desc: "Críticos causam dano dobrado e empurram.",
     roll: () => {
-      const v = r(5, 10);
+      const v = r(8, 15);
       return { name: `+${v}% Crítico`, apply: (p) => (p.critChance += v / 100) };
     },
   },
@@ -391,7 +393,7 @@ export const PASSIVES = [
     label: "Ímã de Seiva",
     desc: "Puxa gemas e moedas de mais longe.",
     roll: () => {
-      const v = r(30, 50);
+      const v = r(45, 75);
       return { name: `+${v}% Coleta`, apply: (p) => (p.pickupRadius *= 1 + v / 100) };
     },
   },
@@ -400,7 +402,7 @@ export const PASSIVES = [
     label: "Casca de Carvalho",
     desc: "Reduz todo dano recebido (máx. 50%).",
     roll: () => {
-      const v = r(6, 10);
+      const v = r(9, 15);
       return { name: `−${v}% Dano recebido`, apply: (p) => (p.dmgTakenMult = Math.max(0.5, p.dmgTakenMult * (1 - v / 100))) };
     },
   },
@@ -409,7 +411,7 @@ export const PASSIVES = [
     label: "Trevo da Sorte",
     desc: "Mais moedas, corações e orbes caindo.",
     roll: () => {
-      const v = r(15, 25);
+      const v = r(22, 38);
       return { name: `+${v}% Sorte`, apply: (p) => (p.luck += v / 100) };
     },
   },
@@ -486,6 +488,9 @@ export const BUILD = {
   AD_SPEEDUP_MIN: 30, // anúncio opcional (desligado junto com ADS.ENABLED)
   // O que cada nível libera
   FORGE_WEAPON_LEVEL: { BOOMER: 1, CHAIN: 2, ORB: 3, FLAME: 4 }, // Forja nv mínimo
+  // Vagas de arma na partida por nível da Forja (como o Megabonk: começa com 2 e chega a 4).
+  // O herói já nasce com 1, então o nível 1 dá 1 escolha; cada vaga nova vem de obra.
+  FORGE_WEAPON_SLOTS: [0, 2, 2, 3, 4],
   FIRE_CHARACTER_LEVEL: { huntress: 2, druid: 3, shaman: 4 }, // Fogueira nv → guardião
 };
 // Santuário nv N → bênçãos até o rank N

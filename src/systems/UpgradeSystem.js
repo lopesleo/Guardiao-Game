@@ -3,14 +3,12 @@
 // Sem peso, as 11 passivas soterravam as armas — builds ficavam aleatórias.
 // Evolução elegível = carta garantida.
 import { WEAPONS, MAX_WEAPON_LEVEL, PASSIVES, PASSIVE_SLOTS } from "../config.js";
+import { weaponSlotsFor } from "./Builds.js";
 import { WEAPON_ICON, PASSIVE_ICON } from "../art/Icons.js";
 import { WEAPON_CLASSES } from "../entities/Weapons.js";
 
 // Ordem = ordem de exibição no menu de desbloqueio
 export const BASE_WEAPONS = ["STAFF", "AURA", "BOOMER", "CHAIN", "ORB", "FLAME"];
-// 4 vagas (o herói já nasce com 1): de 6 armas, escolher quais levar é decisão de build.
-// Cada evolução ocupa 2 vagas (âncora + parceira), então cabem 2 no máximo.
-export const MAX_WEAPON_SLOTS = 4;
 
 export const WEAPON_DESC = {
   STAFF: "Bola de fogo no inimigo mais próximo.",
@@ -60,7 +58,8 @@ export class UpgradeSystem {
     const unlocked = this.scene.meta?.unlocked || ["STAFF"];
     const have = new Set(player.weapons.map((w) => w.key));
     const haveBase = new Set(player.weapons.map((w) => w.baseKey ?? w.key));
-    if (player.weapons.length < MAX_WEAPON_SLOTS) {
+    // Vagas de arma vêm da Forja (2 → 4); cada evolução ocupa 2 (âncora + parceira)
+    if (player.weapons.length < weaponSlotsFor(this.scene.meta)) {
       for (const key of BASE_WEAPONS) {
         if (!unlocked.includes(key) || haveBase.has(key)) continue;
         cards.push({
@@ -84,15 +83,15 @@ export class UpgradeSystem {
       const mod = pool[Math.floor(Math.random() * pool.length)];
       let stat, apply;
       if (mod === "dmg") {
-        const v = rInt(15, 30);
+        const v = rInt(25, 45);
         stat = `+${v}% Dano`;
         apply = () => (w.dmgMult *= 1 + v / 100);
       } else if (mod === "cd") {
-        const v = rInt(10, 20);
+        const v = rInt(15, 30);
         stat = `−${v}% Recarga`;
         apply = () => (w.cdMult *= 1 - v / 100);
       } else if (mod === "range") {
-        const v = rInt(12, 22);
+        const v = rInt(18, 33);
         stat = `+${v}% Alcance`;
         apply = () => (w.rangeMult *= 1 + v / 100);
       } else {

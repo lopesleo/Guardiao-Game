@@ -5,11 +5,12 @@
 // código 1 — rode depois de mexer em dano, vida, vagas ou pratos.
 // Win rate por Perigo só sai de jogo de verdade (Analytics "run_end" / testers).
 import { readFileSync } from "node:fs";
-import { DIFFICULTY, PLAYER, ENEMY, BOSS, MAX_WEAPON_LEVEL, PASSIVE_SLOTS, WEAPONS, BLESSINGS, KITCHEN, ENDLESS } from "../src/config.js";
+import { BUILD, DIFFICULTY, PLAYER, ENEMY, BOSS, MAX_WEAPON_LEVEL, PASSIVE_SLOTS, WEAPONS, BLESSINGS, KITCHEN, ENDLESS } from "../src/config.js";
 
-// MAX_WEAPON_SLOTS mora em UpgradeSystem.js (que importa Phaser): lê o valor do texto
+// BASE_WEAPONS mora em UpgradeSystem.js (que importa Phaser): lê o valor do texto
 const slotsSrc = readFileSync(new URL("../src/systems/UpgradeSystem.js", import.meta.url), "utf8");
-const MAX_WEAPON_SLOTS = +/MAX_WEAPON_SLOTS\s*=\s*(\d+)/.exec(slotsSrc)[1];
+const SLOTS = BUILD.FORGE_WEAPON_SLOTS.slice(1); // por nível da Forja
+const MAX_WEAPON_SLOTS = Math.max(...SLOTS);
 const BASE_WEAPONS = (/BASE_WEAPONS\s*=\s*\[([^\]]*)\]/.exec(slotsSrc)[1].match(/"/g) || []).length / 2;
 
 const RUN_S = 7 * 60; // partida até o chefe
