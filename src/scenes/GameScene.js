@@ -17,6 +17,7 @@ import {
   ENDLESS,
   INTRO,
   ARENA,
+  WOOD,
 } from "../config.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
@@ -39,6 +40,7 @@ import {
 import {
   XPGem,
   CoinPickup,
+  WoodPickup,
   HeartPickup,
   AwakenOrb,
 } from "../entities/Pickups.js";
@@ -102,6 +104,8 @@ export class GameScene extends Phaser.Scene {
     this.enemyProjPool = new Pool(() => new EnemyProjectile(this), 12);
     this.xpPool = new Pool(() => new XPGem(this), 50);
     this.coinPool = new Pool(() => new CoinPickup(this), 20);
+    this.woodPool = new Pool(() => new WoodPickup(this), 12);
+    this._woodThisRun = 0;
     this.heartPool = new Pool(() => new HeartPickup(this), 10);
     this.awakenOrbPool = new Pool(() => new AwakenOrb(this), 10);
     this.dmgNumberPool = new Pool(() => new DamageNumber(this), 30);
@@ -651,6 +655,20 @@ export class GameScene extends Phaser.Scene {
         this.coinPool.release(c);
       }
     });
+    // Madeira Ancestral
+    this.woodPool.forEachActive((w) => {
+      w.update(time, dt, this.player);
+      const dx = w.x - this.player.x,
+        dy = w.y - this.player.y;
+      if (dx * dx + dy * dy < this.player.pickupRadius * this.player.pickupRadius) {
+        this._woodThisRun += 1;
+        this.hud.addWood(1);
+        this.sound.play("sfx_chest_reel", { volume: 0.5, rate: 0.8 });
+        this._hint("wood", "Madeira Ancestral! Leve para a Clareira:\nela serve para as obras do acampamento.");
+        w.pickup();
+        this.woodPool.release(w);
+      }
+    });
     // Corações
     this.heartPool.forEachActive((h) => {
       h.update(time, dt, this.player);
@@ -860,7 +878,17 @@ export class GameScene extends Phaser.Scene {
       const a = (i / 12) * Math.PI * 2;
       this.coinPool.acquire().spawn(x + Math.cos(a) * 40, y + Math.sin(a) * 40);
     }
+    this._spawnWood(x, y, WOOD.MINIBOSS);
     if (this.hud.boss === e) this.hud.clearBoss();
+  }
+
+  // Madeira Ancestral saltando em volta de (x, y)
+  _spawnWood(x, y, n) {
+    for (let i = 0; i < n; i++) {
+      const a = (i / Math.max(1, n)) * Math.PI * 2 + Math.random() * 0.6;
+      const d = 24 + Math.random() * 26;
+      this.woodPool.acquire().spawn(x + Math.cos(a) * d, y + Math.sin(a) * d);
+    }
   }
 
   // Nuvem de esporos: aviso visual e depois dano periódico no player dentro
@@ -961,6 +989,10 @@ export class GameScene extends Phaser.Scene {
     // Recompensa
     this._coinsGainedThisRun += META.COIN_BOSS_WIN;
     this.hud.addCoin(META.COIN_BOSS_WIN);
+    // Madeira do Ancião entra direto (a escolha da Noite Eterna vem em seguida)
+    this._woodThisRun += WOOD.BOSS;
+    this.hud.addWood(WOOD.BOSS);
+    this._toast(`+${WOOD.BOSS} Madeira Ancestral`, 2200, "#ffc86b");
     this.cameras.main.shake(600, 0.02);
     // Vitória: escolher entre encerrar ou seguir na Noite Eterna
     this.time.delayedCall(900, () => this._offerEndless());
@@ -1037,6 +1069,8 @@ export class GameScene extends Phaser.Scene {
     // Loot spawnado DEPOIS dos reels (caça-níquel revela)
     this.time.delayedCall(burstDelay + 50, () => {
       this._spawnChestLoot(x, y);
+      if (kind === "golden") this._spawnWood(x, y, WOOD.GOLDEN_CHEST);
+      else if (kind === "normal" && Math.random() < WOOD.CHEST_CHANCE) this._spawnWood(x, y, 1);
     });
     if (kind === "golden") {
       // JACKPOT: chips colliding + level-up + coin cascade
@@ -1240,6 +1274,7 @@ export class GameScene extends Phaser.Scene {
     // Salva meta — registerRun ANTES das conquistas (wins/winsByDifficulty
     // precisam estar atualizados pros check() de vitória)
     this.meta.addCoins(coinsFinal);
+    if (this._woodThisRun > 0) this.meta.addWood(this._woodThisRun);
     this.meta.registerRun(this.elapsedMs / 1000, won, this.diff.id);
     const newAchievements = this._checkAchievements(won, true);
     this._newUnlocksThisRun.push(...newAchievements.map((a) => a.name));
@@ -1250,6 +1285,7 @@ export class GameScene extends Phaser.Scene {
       level: this.player.level,
       kills: this.hud.kills,
       coins: coinsFinal,
+      wood: this._woodThisRun,
       difficulty: this.diff.id,
       character: this.character.id,
     });
@@ -1273,6 +1309,7 @@ export class GameScene extends Phaser.Scene {
         elapsedMs: this.elapsedMs,
         kills: this.hud.kills,
         coinsGained: coinsFinal,
+        woodGained: this._woodThisRun,
         newUnlocks: this._newUnlocksThisRun,
         difficulty: this.diff,
         endlessS,

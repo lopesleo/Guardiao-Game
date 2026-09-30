@@ -16,7 +16,7 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   create(data) {
-    const { won, quit, elapsedMs, kills, coinsGained, newUnlocks = [], difficulty, unlockedNextDifficulty, level = 1, weapons = [], endlessS = 0, endlessRecord = false } = data;
+    const { won, quit, elapsedMs, kills, coinsGained, woodGained = 0, newUnlocks = [], difficulty, unlockedNextDifficulty, level = 1, weapons = [], endlessS = 0, endlessRecord = false } = data;
     fitCamera(this);
     // O Phaser REAPROVEITA a instância da cena: todo estado de "visita" precisa
     // ser zerado aqui, senão sobra da vez anterior (ex.: herói preso andando).
@@ -59,8 +59,10 @@ export class GameOverScene extends Phaser.Scene {
       { icon: "ico_skull", label: "Abates", value: kills, fmt: (v) => String(Math.round(v)) },
       { icon: "ico_coin", label: "Moedas ganhas", value: coinsGained, fmt: (v) => `+${Math.round(v)}`, color: CSS.goldHi },
     ];
+    if (woodGained > 0) stats.push({ icon: "ico_wood", label: "Madeira Ancestral", value: woodGained, fmt: (v) => `+${Math.round(v)}`, color: "#ffc86b" });
+    const rowH = stats.length > 3 ? 44 : 52;
     stats.forEach((s, i) => {
-      const y = py + 78 + i * 52;
+      const y = py + 78 + i * rowH;
       this.add.image(px + 50, y, s.icon).setScale(3);
       text(this, px + 84, y, s.label, { size: 22, color: CSS.muted, origin: [0, 0.5] });
       const v = text(this, px + pw - 36, y, s.fmt(0), { size: 30, color: s.color ?? CSS.txt, origin: [1, 0.5], stroke: true });

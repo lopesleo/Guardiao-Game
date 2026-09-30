@@ -343,6 +343,12 @@ export class CampScene extends Phaser.Scene {
     drawFrame(cg, W - 204, 14, 186, 52, "dark");
     fix(this.add.image(W - 180, 40, "ico_coin").setScale(3));
     this.coinText = fix(text(this, W - 34, 40, "", { size: 26, color: CSS.goldHi, origin: [1, 0.5], stroke: true }));
+    this.woodBox = [
+      fix(this.add.graphics()),
+      fix(this.add.image(W - 180, 94, "ico_wood").setScale(3)),
+      fix(text(this, W - 34, 94, "", { size: 22, color: "#ffc86b", origin: [1, 0.5], stroke: true })),
+    ];
+    drawFrame(this.woodBox[0], W - 204, 72, 186, 44, "dark");
     fix(new Button(this, W - 244, 40, 52, 52, "?", () => !this._modals.length && this._showGuide(), { size: 26, style: "dark" }));
     fix(new Button(this, W - 304, 40, 52, 52, null, () => !this._modals.length && this._showSettings(), { icon: "ico_gear", style: "dark", iconScale: 2.5 }));
     if (DEBUG) {
@@ -377,6 +383,9 @@ export class CampScene extends Phaser.Scene {
   _refreshAll() {
     this.meta.checkAchievements?.();
     this.coinText.setText(String(this.meta.coins));
+    const wood = this.meta.wood;
+    this.woodBox.forEach((o) => o.setVisible(wood > 0));
+    this.woodBox[2].setText(String(wood));
     const c = CHARACTERS.find((c) => c.id === this.meta.selectedCharacter) || CHARACTERS[0];
     const d = DIFFICULTY[Math.min(this.meta.selectedDifficulty, DIFFICULTY.length - 1)];
     this.hudInfo.setText(`${c.name}  ·  Perigo: ${d.name}`);

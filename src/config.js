@@ -445,6 +445,15 @@ export const ENDLESS = {
   EVENT_EVERY_S: 45, // um evento (enxame/cerco/minichefe) a cada 45 s
 };
 
+// Madeira Ancestral: material das obras da Clareira. Rara de propósito — as
+// obras exigem JOGAR partidas, não só esperar.
+export const WOOD = {
+  MINIBOSS: 3, // por minichefe (Lobo Alfa, Ogro Ancião)
+  GOLDEN_CHEST: 2, // baú dourado
+  CHEST_CHANCE: 0.25, // baú comum: 25% de chance de 1
+  BOSS: 6, // o Ancião
+};
+
 // Lanternas de cogumelo: brotam fora da tela, iluminam e derrubam um item ao
 // serem tocadas. Pesos (w) = chance relativa de cada item.
 export const LANTERN = {

@@ -81,6 +81,8 @@ export class HUD {
     this.coinIcon = fix(scene.add.image(sx - 14, 40, "ico_coin").setScale(2.5).setOrigin(1, 0.5), 2);
     this.killText = fix(text(scene, sx, 70, "0", { size: 22, origin: [1, 0.5], stroke: true }), 2);
     this.killIcon = fix(scene.add.image(sx - 14, 70, "ico_skull").setScale(2.5).setOrigin(1, 0.5), 2);
+    this.woodText = fix(text(scene, sx, 100, "0", { size: 22, color: "#ffc86b", origin: [1, 0.5], stroke: true }), 2).setVisible(false);
+    this.woodIcon = fix(scene.add.image(sx - 14, 100, "ico_wood").setScale(2.5).setOrigin(1, 0.5), 2).setVisible(false);
 
     // ===== AÇÕES: botões de toque OU dicas de teclado =====
     if (this.isTouch) this._touchButtons();
@@ -187,6 +189,13 @@ export class HUD {
 
   addKill() {
     this.kills += 1;
+  }
+  addWood(n = 1) {
+    this.wood = (this.wood || 0) + n;
+    this.woodText.setText(String(this.wood)).setVisible(true);
+    this.woodIcon.setVisible(true);
+    this.woodIcon.x = this.woodText.x - this.woodText.width - 8;
+    this.scene.tweens.add({ targets: this.woodIcon, scale: { from: 3.6, to: 2.5 }, duration: 200 });
   }
   addCoin(n = 1) {
     this.coins += n;
