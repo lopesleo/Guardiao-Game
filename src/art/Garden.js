@@ -228,18 +228,20 @@ function cropFrames(id) {
 // ---------------------------------------------------------------------------
 // Canteiro (terra arada) e canteiro fechado (mato, pedra)
 // ---------------------------------------------------------------------------
+const BW = 24,
+  BH = 16; // canteiro (tamanho de arte; ×3 no mapa)
+
 function plotTile() {
-  const p = new Pix(20, 14);
+  const p = new Pix(BW, BH);
   const r = rng(77);
-  // Leira de terra fofa: cantos arredondados, 3 camalhões com sulcos entre eles
-  for (let y = 0; y < 14; y++)
-    for (let x = 0; x < 20; x++) {
-      const corner = (x === 0 || x === 19) && (y === 0 || y === 13);
-      if (corner) continue;
+  // Leira de terra fofa: cantos arredondados, camalhões com sulcos entre eles
+  for (let y = 0; y < BH; y++)
+    for (let x = 0; x < BW; x++) {
+      if ((x === 0 || x === BW - 1) && (y === 0 || y === BH - 1)) continue;
       p.set(x, y, PAL.n1);
     }
   for (const ry of [2, 6, 10]) {
-    for (let x = 1; x < 19; x++) {
+    for (let x = 1; x < BW - 1; x++) {
       const w = r() < 0.2 ? 1 : 0; // camalhão levemente irregular
       p.set(x, ry - w, PAL.n3);
       p.set(x, ry + 1, PAL.n2);
@@ -247,29 +249,72 @@ function plotTile() {
       if (r() < 0.18) p.set(x, ry + 1, PAL.n4); // torrão iluminado
     }
   }
-  for (let i = 0; i < 6; i++) p.set(1 + Math.floor(r() * 18), 1 + Math.floor(r() * 12), PAL.n0);
+  for (let x = 1; x < BW - 1; x++) p.set(x, 14, PAL.n2);
+  for (let i = 0; i < 7; i++) p.set(1 + Math.floor(r() * (BW - 2)), 1 + Math.floor(r() * (BH - 2)), PAL.n0);
   return p.outline(K);
 }
 
 function plotLocked() {
-  const p = new Pix(20, 14);
-  p.ellipse(10, 8, 9, 5, PAL.g2);
-  for (let y = 3; y < 14; y++)
-    for (let x = 1; x < 19; x++) if (p.get(x, y) && bayer(x, y) < 0.35) p.set(x, y, PAL.g3);
+  const p = new Pix(BW, BH);
+  p.ellipse(12, 9, 11, 6, PAL.g2);
+  for (let y = 3; y < BH; y++)
+    for (let x = 1; x < BW - 1; x++) if (p.get(x, y) && bayer(x, y) < 0.35) p.set(x, y, PAL.g3);
   // tufos de mato
-  for (const x of [3, 8, 13, 16]) {
+  for (const x of [3, 8, 13, 18, 21]) {
     p.set(x, 5, PAL.g4);
     p.set(x + 1, 4, PAL.g5);
     p.set(x - 1, 6, PAL.g4);
   }
   // pedra
-  p.ellipse(13, 9, 3, 2, PAL.s2);
-  p.set(12, 8, PAL.s3);
-  p.set(11, 9, PAL.s3);
+  p.ellipse(15, 10, 3, 2, PAL.s2);
+  p.set(14, 9, PAL.s3);
+  p.set(13, 10, PAL.s3);
   // toco
-  p.rect(4, 8, 3, 3, PAL.n3);
-  p.rect(4, 8, 3, 1, PAL.n4);
+  p.rect(5, 9, 3, 3, PAL.n3);
+  p.rect(5, 9, 3, 1, PAL.n4);
   return p.outline(K);
+}
+
+// ---------------------------------------------------------------------------
+// CELEIRO: paiol de madeira sobre pés de pedra, telhado de palha, porta aberta
+// com sacas e cestos à mostra
+// ---------------------------------------------------------------------------
+function makeBarn() {
+  const p = new Pix(40, 40);
+  // Pés de pedra
+  for (const x of [6, 18, 30]) {
+    p.rect(x, 34, 5, 5, PAL.s2);
+    p.rect(x, 34, 5, 1, PAL.s3);
+  }
+  // Corpo de tábuas
+  for (let y = 16; y < 35; y++)
+    for (let x = 4; x < 37; x++) {
+      const i = (x - 4) % 5;
+      let c = i === 0 ? PAL.n4 : i === 4 ? PAL.n1 : PAL.n3;
+      if ((x * 3 + y * 7) % 19 === 0 && i > 0 && i < 4) c = PAL.n2;
+      p.set(x, y, c);
+    }
+  p.rect(4, 26, 33, 1, PAL.n1); // travessa
+  // Porta aberta com a colheita dentro
+  p.rect(15, 21, 11, 14, PAL.n0);
+  p.ellipse(18, 32, 3, 2.5, PAL.cream); // saca
+  p.set(17, 30, PAL.n4);
+  p.ellipse(23, 33, 2.5, 1.8, PAL.org2); // cesto de cenoura/abóbora
+  p.set(22, 32, PAL.g5);
+  p.rect(20, 25, 2, 4, PAL.yel2); // espiga pendurada
+  p.rect(14, 21, 1, 14, PAL.n4);
+  p.rect(26, 21, 1, 14, PAL.n1);
+  // Telhado de palha
+  for (let i = 0; i < 14; i++) {
+    const y = 2 + i;
+    for (let x = 20 - i * 1.5 - 2; x < 20 + i * 1.5 + 2; x++) {
+      const c = (Math.floor(x) + y * 2) % 5 === 0 ? PAL.yel1 : y % 3 === 0 ? PAL.n4 : 0xc49a52; // palha
+      p.set(x, y, c);
+    }
+  }
+  for (let x = 0; x < 40; x++) p.set(x, 16, (x % 3 ? 0xa07a3e : PAL.n3));
+  p.outline(K);
+  return p;
 }
 
 // ---------------------------------------------------------------------------
@@ -377,6 +422,22 @@ const ICONS = {
     leaf(p, 6, 4, 1, 4, LEAF);
     return p.outline(K);
   },
+  basket() {
+    const p = new Pix(14, 12);
+    // cesto de palha com cenoura e espiga
+    p.rect(8, 1, 2, 5, PAL.yel2);
+    p.set(9, 0, PAL.g5);
+    thick(p, 4, 5, 6, 1, 1.4, 0.6, PAL.org2);
+    p.line(6, 1, 7, 0, PAL.g5);
+    for (let y = 5; y < 12; y++)
+      for (let x = 1; x < 13; x++) {
+        const inset = Math.max(0, y - 9);
+        if (x < 1 + inset || x > 12 - inset) continue;
+        p.set(x, y, (x + y) % 2 ? 0xc49a52 : PAL.yel1);
+      }
+    p.rect(1, 5, 12, 1, PAL.n3);
+    return p.outline(K);
+  },
   water() {
     const p = new Pix(10, 12);
     for (let y = 1; y < 11; y++) {
@@ -415,6 +476,7 @@ export function registerGarden(scene) {
   for (const id of Object.keys(CROP_ART)) registerStrip(scene, `crop_${id}`, cropFrames(id));
   plotTile().register(scene, "garden_plot");
   plotLocked().register(scene, "garden_locked");
+  makeBarn().register(scene, "camp_barn");
   for (const [k, fn] of Object.entries(ICONS)) fn().register(scene, `ico_${k}`);
 }
 
