@@ -1,6 +1,6 @@
 // Inimigos + Boss. Arte 100% própria (src/art/Monsters.js): cada tipo tem
 // uma tira "mon_<tipo>" e a animação "<tipo>_move".
-import { ENEMY, GAME, COLORS, ELITE, MIMIC } from "../config.js";
+import { ENEMY, GAME, COLORS, ELITE, MIMIC, BOSS } from "../config.js";
 import { dangerZone, shockwave, chargeLine, rootsBurst, summonPulse } from "../art/Telegraph.js";
 
 // textura + animação por tipo (mini-chefes e mímico têm arte própria)
@@ -419,7 +419,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
       .setVisible(false);
     this.maxHp = 0;
     this.hp = 0;
-    this.dmg = 12;
+    this.dmg = BOSS.DMG_MELEE; // a escala do Perigo é aplicada na GameScene
     this.speed = 60;
     this.statuses = {};
     this.phase = 1;
@@ -615,7 +615,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
       const ang = Math.atan2(target.y - this.y, target.x - this.x) + i * 0.25;
       const proj = scene.enemyProjPool.acquire();
       const sp = 220;
-      proj.fire(this.x, this.y, Math.cos(ang) * sp, Math.sin(ang) * sp, 8);
+      proj.fire(this.x, this.y, Math.cos(ang) * sp, Math.sin(ang) * sp, BOSS.DMG_PROJECTILE * (scene.diff?.dmgMult ?? 1));
     }
   }
 
@@ -630,7 +630,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
       const ang = base + (i - (n - 1) / 2) * spread;
       const proj = scene.enemyProjPool.acquire();
       const sp = 230;
-      proj.fire(this.x, this.y, Math.cos(ang) * sp, Math.sin(ang) * sp, 8);
+      proj.fire(this.x, this.y, Math.cos(ang) * sp, Math.sin(ang) * sp, BOSS.DMG_PROJECTILE * (scene.diff?.dmgMult ?? 1));
     }
   }
 
