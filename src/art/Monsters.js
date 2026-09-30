@@ -344,6 +344,114 @@ function chest(state) {
 }
 
 // ---------------------------------------------------------------------------
+// MULA SEM CABEÇA (32×22) — minichefe veloz: mula escura galopando, FOGO no
+// lugar da cabeça, crina em chamas e faíscas nas ferraduras (4 quadros)
+// ---------------------------------------------------------------------------
+const MULA = [0x120a0c, 0x24161a, 0x3a2622, 0x56382c];
+function mula(f) {
+  const p = new Pix(32, 22);
+  const bob = f % 2;
+  // Pernas em galope: pares alternam para frente/trás
+  const legs = [
+    [8, f < 2 ? -2 : 2],
+    [11, f < 2 ? 2 : -2],
+    [19, f < 2 ? 2 : -2],
+    [22, f < 2 ? -2 : 2],
+  ];
+  for (const [x0, sw] of legs) {
+    for (let y = 13 + bob; y <= 19; y++) {
+      const x = x0 + Math.round(((y - 13) / 6) * sw * 0.9);
+      p.set(x, y, MULA[1]);
+      p.set(x + 1, y, MULA[0]);
+    }
+    const hx = x0 + Math.round(sw * 0.9);
+    p.set(hx, 20, PAL.s3); // ferradura
+    p.set(hx + 1, 20, PAL.s2);
+    if ((f + x0) % 3 === 0) p.set(hx + 2, 21, PAL.yel3); // faísca
+  }
+  // Corpo
+  ell(p, 15, 10 + bob, 10, 4.6, MULA, 0.25);
+  // Rabo (pelo escuro com ponta em brasa)
+  px(p, [[4, 8 + bob], [3, 9 + bob], [3, 10 + bob], [2, 11 + bob]], MULA[1]);
+  p.set(2, 12 + bob, PAL.org1);
+  // Pescoço subindo à frente — e SEM cabeça
+  for (let i = 0; i < 6; i++) {
+    const x = 23 + Math.round(i * 0.6),
+      y = 8 + bob - i;
+    p.set(x, y, MULA[2]);
+    p.set(x + 1, y, MULA[1]);
+    p.set(x + 2, y, MULA[0]);
+  }
+  // Fogo saindo do pescoço (tremula entre quadros)
+  const fl = [PAL.red1, PAL.org1, PAL.org2, PAL.yel3];
+  // Labareda grande: a marca da lenda (base larga, pontas tremulando)
+  for (let y = 0; y <= 4; y++)
+    for (let x = 23; x <= 30; x++) {
+      const cx = 26.5 + (f % 2 ? 0.5 : -0.5);
+      const w = 1 + y * 0.65; // fina no alto, larga no pescoço
+      if (Math.abs(x - cx) > w) continue;
+      const hot = Math.abs(x - cx) < w * 0.5;
+      p.set(x, y + bob, y < 2 ? PAL.yel3 : hot ? PAL.yel3 : y === 4 ? PAL.red1 : PAL.org2);
+    }
+  // Línguas de fogo soltas nas laterais (tremulam)
+  const tips = f % 2 ? [[24, 1], [29, 2]] : [[23, 2], [30, 1]];
+  for (const [x0, top] of tips) p.set(x0, top + bob, PAL.org2);
+  // Crina em chamas ao longo do pescoço
+  for (let i = 0; i < 5; i++) p.set(22 + Math.round(i * 0.6), 7 + bob - i, i % 2 ? PAL.org2 : PAL.red1);
+  // Rachaduras da Podridão
+  px(p, [[12, 9 + bob], [13, 10 + bob], [17, 8 + bob]], ROT.hot);
+  p.outline(PAL.ink);
+  return p;
+}
+
+// ---------------------------------------------------------------------------
+// CORPO-SECO (26×32) — minichefe lento e resistente: figura ressecada que a
+// própria terra rejeitou (lenda), curvada, costelas à mostra, trapos,
+// braços longos com garras e olhos ocos com o brilho da Podridão
+// ---------------------------------------------------------------------------
+const SECO = [0x241e1a, 0x3e342c, 0x5a4c3e, 0x7a6a56];
+function corpoSeco(f) {
+  const p = new Pix(26, 32);
+  const sw = f % 2;
+  // Pernas finas
+  for (const x0 of [10, 15]) for (let y = 22; y <= 30; y++) {
+    p.set(x0 + (y > 27 && sw ? 1 : 0), y, SECO[1]);
+    p.set(x0 + 1 + (y > 27 && sw ? 1 : 0), y, SECO[0]);
+  }
+  // Trapos pendurados na cintura
+  for (let x = 8; x <= 18; x++) for (let y = 19; y <= 23 + ((x * 3) % 3); y++) p.set(x, y, RAG[(x + y) % 3 === 0 ? 2 : 1]);
+  // Tronco magro e curvado, costelas
+  ell(p, 13, 13 + sw * 0.5, 5.5, 7, SECO, 0.2);
+  for (let y = 10; y <= 16; y += 2) for (let x = 10; x <= 15; x++) if (x !== 12) p.set(x, y + sw, SECO[0]);
+  // Braços compridos até os joelhos, garras
+  const arm = (x0, dir) => {
+    for (let y = 9; y <= 25 - sw; y++) {
+      const x = x0 + dir * Math.round((y - 9) * 0.18);
+      p.set(x, y, SECO[2]);
+      p.set(x + dir, y, SECO[1]);
+    }
+    const hx = x0 + dir * 3,
+      hy = 26 - sw;
+    px(p, [[hx, hy], [hx + dir, hy + 1], [hx - dir, hy + 1]], PAL.s4);
+  };
+  arm(7, -1);
+  arm(19, 1);
+  // Cabeça caída para a frente, cabelo ralo, olhos ocos brilhando
+  ell(p, 15, 5 + sw * 0.5, 4, 4, SECO.slice(1), 0.2);
+  for (let x = 11; x <= 17; x += 2) p.set(x, 1, SECO[0]);
+  px(p, [[11, 2], [12, 3], [10, 4], [18, 3]], SECO[0]);
+  p.set(15, 5, PAL.ink);
+  p.set(17, 5, PAL.ink);
+  p.set(15, 4, ROT.glow);
+  p.set(17, 4, ROT.glow);
+  px(p, [[15, 7], [16, 7], [17, 7]], PAL.ink); // boca seca
+  // Cipós da Podridão enroscados
+  px(p, [[8, 12], [9, 13], [17, 17], [18, 18], [12, 20]], ROT.hot);
+  p.outline(PAL.ink);
+  return p;
+}
+
+// ---------------------------------------------------------------------------
 // MAPINGUARI CORROMPIDO (50×56) — gigante peludo da mata (lenda amazônica):
 // UM olho na testa, a BOCA NA BARRIGA, braços longos com garras. A Podridão
 // o tomou (rachaduras magenta); na fase 2 as rachaduras viram brasa.
@@ -458,12 +566,12 @@ export function registerMonsters(scene) {
   };
   const four = [0, 1, 2, 3];
   strip("mon_wolf", four.map((f) => wolf(f)));
-  strip("mon_alpha", four.map((f) => wolf(f, FUR_ALPHA, PAL.yel3, PAL.org2)));
+  strip("mon_alpha", four.map((f) => mula(f))); // minichefe: Mula sem Cabeça
   strip("mon_crow", [crow(0), crow(1)]);
   strip("mon_goblin", [goblin(0), goblin(1)]);
   strip("mon_mage", [witch(0), witch(1)]);
   strip("mon_brute", [troll(0), troll(1)]);
-  strip("mon_elder", [troll(0, STONE, PAL.ice2), troll(1, STONE, PAL.ice2)]);
+  strip("mon_elder", [corpoSeco(0), corpoSeco(1)]); // minichefe: Corpo-Seco
   strip("mon_bee", [bee(0), bee(1)]);
   strip("mon_shroom", [shroom(0), shroom(1)]);
   strip("mon_boss", [mapinguari(0, false), mapinguari(1, false), mapinguari(0, true), mapinguari(1, true), mapinguari(0, false, true)]);

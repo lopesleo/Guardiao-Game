@@ -160,7 +160,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.speed = alpha ? 132 : 95; // < 160 do herói: dá pra kitar
       this.contactRadius = alpha ? 50 : 62;
       this.rimColor = 0xf2c14e;
-      this.miniBoss = alpha ? "LOBO ALFA" : "OGRO ANCIÃO";
+      this.miniBoss = alpha ? "MULA SEM CABEÇA" : "CORPO-SECO";
     } else this.miniBoss = null;
 
     if (elite === "mimic") {

@@ -7,10 +7,10 @@ import { CSS } from "../art/Palette.js";
 // t = segundos de partida
 const SCRIPT = [
   { t: 70, type: "swarm", n: 10, kind: "bee", msg: "ENXAME DE VESPAS!" },
-  { t: 150, type: "miniboss", kind: "alpha", msg: "O LOBO ALFA CHEGOU!" },
+  { t: 150, type: "miniboss", kind: "alpha", msg: "A MULA SEM CABEÇA GALOPA!" },
   { t: 170, type: "ring", n: 18, kinds: ["wolf"], msg: "CERCO!" },
   { t: 222, type: "swarm", n: 18, kind: "bee", msg: "ENXAME DE VESPAS!" },
-  { t: 268, type: "miniboss", kind: "elder", msg: "O OGRO ANCIÃO DESPERTA!" },
+  { t: 268, type: "miniboss", kind: "elder", msg: "O CORPO-SECO SE LEVANTA!" },
   { t: 318, type: "ring", n: 24, kinds: ["wolf", "goblin", "shroom"], msg: "CERCO!" },
   { t: 362, type: "swarm", n: 26, kind: "bee", msg: "A COLMEIA SE ENFURECE!" },
 ];
@@ -38,7 +38,7 @@ export class RunEvents {
         const cycle = [
           { type: "swarm", n: 24, kind: "bee", msg: "A COLMEIA DA NOITE!" },
           { type: "ring", n: 28, kinds: ["wolf", "goblin", "brute"], msg: "CERCO NA ESCURIDÃO!" },
-          { type: "miniboss", kind: k % 2 ? "alpha" : "elder", msg: k % 2 ? "UM LOBO ALFA UIVA!" : "UM OGRO ANCIÃO SE ERGUE!" },
+          { type: "miniboss", kind: k % 2 ? "alpha" : "elder", msg: k % 2 ? "A MULA SEM CABEÇA VOLTOU!" : "OUTRO CORPO-SECO SE ERGUE!" },
         ];
         const ev = cycle[(k - 1) % cycle.length];
         this._run({ ...ev, n: ev.n ? Math.round(ev.n * (1 + 0.15 * Math.floor(k / 3))) : ev.n });
