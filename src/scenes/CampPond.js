@@ -413,16 +413,18 @@ export const CampPond = {
       move: roll.tutorial ? "calm" : fish.move,
       speed: roll.tutorial ? 0.2 : fish.speed,
       zh: this.pond.zone * (roll.tutorial ? 1.4 : 1),
-      z: 0.1,
+      z: 0,
       vz: 0,
       pos: 0.4,
-      target: 0.5,
+      grace: FISHING.GRACE_S,
+      target: 0.4,
       cur: 0.3,
       timer: 0.5,
       prog: FISHING.START,
       inZone: true,
       slips: 0,
     });
+    f.z = Math.max(0, Math.min(1 - f.zh, f.pos - f.zh / 2)); // zona começa centrada no peixe
     haptic(30);
     f.hint.setText(this.isTouch ? "Segure a tela para subir · solte para descer" : "Segure E / espaço / clique para subir · solte para descer").setColor(CSS.goldHi);
     // Barra na direita da tela
@@ -464,19 +466,23 @@ export const CampPond = {
     f.z += f.vz * dt;
     if (f.z < 0) (f.z = 0), (f.vz = 0);
     if (f.z > 1 - f.zh) (f.z = 1 - f.zh), (f.vz = 0);
-    // Peixe
-    f.timer -= dt;
-    if (f.timer <= 0) [f.target, f.cur, f.timer] = this._fishTarget(f);
-    const d = f.target - f.pos;
-    f.pos += Math.sign(d) * Math.min(Math.abs(d), f.cur * dt);
+    // Peixe (nos primeiros segundos ele fica parado dentro da zona: dá tempo de pegar o jeito)
+    const grace = f.grace > 0;
+    if (grace) f.grace -= dt;
+    else {
+      f.timer -= dt;
+      if (f.timer <= 0) [f.target, f.cur, f.timer] = this._fishTarget(f);
+      const d = f.target - f.pos;
+      f.pos += Math.sign(d) * Math.min(Math.abs(d), f.cur * dt);
+    }
     // Dentro da zona: enche; fora: esvazia
     const inZone = f.pos >= f.z && f.pos <= f.z + f.zh;
-    if (f.inZone && !inZone) {
+    if (f.inZone && !inZone && !grace) {
       f.slips++;
       haptic(10);
     }
     f.inZone = inZone;
-    f.prog += inZone ? dt / F.FILL_S : -dt / F.DRAIN_S;
+    f.prog += inZone ? dt / F.FILL_S : grace ? 0 : -dt / F.DRAIN_S;
     // Desenho
     const yOf = (v) => BAR_H / 2 - v * BAR_H;
     f.zoneG.clear();

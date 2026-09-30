@@ -580,6 +580,7 @@ export const FISHING = {
   FILL_S: 3, // segundos com o peixe na zona para pegar
   DRAIN_S: 4, // segundos fora da zona para ele escapar (barra cheia → vazia)
   START: 0.3, // progresso inicial
+  GRACE_S: 2.5, // a barra começa EM CIMA do peixe e ele fica parado por este tempo antes de se soltar
   RISE: 2.2, // aceleração da zona segurando (barra/s²)
   FALL: 1.8, // …e soltando
   // move: calm (calmo) · darter (fujão: arrancadas) · jumper (saltador) · sinker (arrastador: puxa pro fundo)
