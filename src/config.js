@@ -635,7 +635,7 @@ const weaponMax = (key) => (c) =>
 
 export const ACHIEVEMENTS = [
   // — Vitórias —
-  { id: "win_first", name: "Guardião de Verdade", desc: "Vença sua primeira run", check: (c) => c.wins > 0 },
+  { id: "win_first", name: "Guardião de Verdade", desc: "Vença sua primeira partida", check: (c) => c.wins > 0 },
   { id: "clear_d0", name: "Aprendiz Formado", desc: "Vença no Perigo Aprendiz", check: wonAt(0) },
   { id: "clear_d1", name: "Guardião da Floresta", desc: "Vença no Perigo Guardião", check: wonAt(1) },
   { id: "clear_d2", name: "Veterano de Guerra", desc: "Vença no Perigo Veterano", check: wonAt(2) },
@@ -646,7 +646,7 @@ export const ACHIEVEMENTS = [
   { id: "wmax_boomer", name: "Retorno Perfeito", desc: "Leve o Bumerangue ao nível 5", check: weaponMax("BOOMER") },
   { id: "wmax_chain", name: "Tempestade Viva", desc: "Leve o Raio Concentrado ao nível 5", check: weaponMax("CHAIN") },
   { id: "wmax_aura", name: "Inverno Eterno", desc: "Leve a Aura Gélida ao nível 5", check: weaponMax("AURA") },
-  { id: "arsenal", name: "Arsenal Completo", desc: "Tenha as 4 armas numa mesma run", check: (c) => !!c.run && c.run.weapons.length >= 4 },
+  { id: "arsenal", name: "Arsenal Completo", desc: "Tenha 4 armas numa mesma partida", check: (c) => !!c.run && c.run.weapons.length >= 4 },
   { id: "evolve_first", name: "Metamorfose", desc: "Evolua uma arma", check: (c) => !!c.run && c.run.weapons.some((w) => w.evolved) },
   // — Reações (cumulativo entre runs) —
   { id: "vapor_100", name: "Mestre do Vapor", desc: "Dispare a reação Vapor 100 vezes", check: (c) => (c.reactions.VAPOR || 0) >= 100, prog: (c) => [c.reactions.VAPOR || 0, 100] },
@@ -658,7 +658,7 @@ export const ACHIEVEMENTS = [
   { id: "coins_2000", name: "Tesoureiro da Mata", desc: "Ganhe 2.000 moedas no total", check: (c) => c.totalCoinsEarned >= 2000, prog: (c) => [c.totalCoinsEarned, 2000] },
   { id: "kills_1000", name: "Ceifador do Bosque", desc: "Abata 1.000 inimigos no total", check: (c) => c.totalKills >= 1000, prog: (c) => [c.totalKills, 1000] },
   // — Desafios (condições de vitória variantes) —
-  { id: "survive_10min", name: "Maratonista", desc: "Sobreviva 10:00 numa run", check: (c) => !!c.run && c.run.timeMs >= 600000 },
+  { id: "survive_10min", name: "Maratonista", desc: "Sobreviva 10:00 numa partida", check: (c) => !!c.run && c.run.timeMs >= 600000 },
   { id: "fast_win", name: "Execução Rápida", desc: "Vença em menos de 8:00", check: (c) => !!c.run && c.run.won && c.run.timeMs < 480000 },
   { id: "pacifist_hp", name: "Osso Duro", desc: "Vença no Perigo Veterano+ sem passivo de HP", check: (c) => !!c.run && c.run.won && c.run.difficultyId >= 2 && !c.run.tookHpPassive },
   { id: "solo_staff", name: "Purista", desc: "Vença usando apenas o Cajado", check: (c) => !!c.run && c.run.won && c.run.weapons.length === 1 && c.run.weapons[0].key === "STAFF" },

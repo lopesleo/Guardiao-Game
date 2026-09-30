@@ -80,7 +80,7 @@ export class HUD {
     this.coinText = fix(text(scene, sx, 40, "0", { size: 22, color: CSS.goldHi, origin: [1, 0.5], stroke: true }), 2);
     this.coinIcon = fix(scene.add.image(sx - 14, 40, "ico_coin").setScale(2.5).setOrigin(1, 0.5), 2);
     this.killText = fix(text(scene, sx, 70, "0", { size: 22, origin: [1, 0.5], stroke: true }), 2);
-    fix(scene.add.image(sx - 14, 70, "ico_skull").setScale(2.5).setOrigin(1, 0.5), 2);
+    this.killIcon = fix(scene.add.image(sx - 14, 70, "ico_skull").setScale(2.5).setOrigin(1, 0.5), 2);
 
     // ===== AÇÕES: botões de toque OU dicas de teclado =====
     if (this.isTouch) this._touchButtons();
@@ -267,8 +267,18 @@ export class HUD {
     this.lvlText.setText(`NV ${p.level}`);
     this.elapsedMs = this.scene.elapsedMs ?? this.elapsedMs; // relógio único: o da cena
     this.timerText.setText(formatTime(this.elapsedMs));
-    this.killText.setText(String(this.kills));
-    this.coinText.setText(String(this.coins));
+    // Números alinhados à direita crescem para a esquerda: o ícone anda junto
+    // (antes ficava parado e o número "entrava" nele a partir de 2 dígitos)
+    if (this._shownKills !== this.kills) {
+      this._shownKills = this.kills;
+      this.killText.setText(String(this.kills));
+      this.killIcon.x = this.killText.x - this.killText.width - 8;
+    }
+    if (this._shownCoins !== this.coins) {
+      this._shownCoins = this.coins;
+      this.coinText.setText(String(this.coins));
+      this.coinIcon.x = this.coinText.x - this.coinText.width - 8;
+    }
 
     if (this.boss && this.boss.miniBoss) {
       // Mini-chefe: barra simples; some quando ele morre

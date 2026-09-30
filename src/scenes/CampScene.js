@@ -2,7 +2,7 @@
 // de Hades ou o alojamento do Dead Cells). O jogador anda com os mesmos
 // controles da partida; perto de uma construção aparece o aviso para interagir
 // (E no teclado / botão de ação no toque):
-//   Fogueira → guardiões · Santuário → Bênçãos · Forja → Arsenal ·
+//   Fogueira → guardiões · Santuário → bênçãos e dons · Forja → armas ·
 //   Mural → Conquistas · Placa da trilha → Perigo · Anciã → conversa.
 // A trilha ao norte leva à floresta (começa a partida).
 import { GAME, CHARACTERS, DIFFICULTY, META, BLESSINGS } from "../config.js";
@@ -238,9 +238,9 @@ export class CampScene extends Phaser.Scene {
       this._addInteract({ x, y, top: y - img.displayHeight, r: 130, name, verb, action });
       this.buildings[id] = { img, dot };
     };
-    B("shrine", "camp_shrine", "SANTUÁRIO", "BÊNÇÃOS", -430, -130, () => this._showBlessings(), [0, -75, 0xffe58f, 2.4]);
-    B("forge", "camp_forge", "FORJA", "ARSENAL", 440, -120, () => this._showArsenal(), [-8, -18, 0xff8a3c, 2.8]);
-    B("board", "camp_board", "MURAL", "CONQUISTAS", -420, 280, () => this._showAchievements());
+    B("shrine", "camp_shrine", "SANTUÁRIO", "BÊNÇÃOS E DONS", -430, -130, () => this._showBlessings(), [0, -75, 0xffe58f, 2.4]);
+    B("forge", "camp_forge", "FORJA", "FORJAR ARMAS", 440, -120, () => this._showArsenal(), [-8, -18, 0xff8a3c, 2.8]);
+    B("board", "camp_board", "MURAL", "VER CONQUISTAS", -420, 280, () => this._showAchievements());
 
     // Ninho do João-de-barro (o construtor chega com as obras) + o pássaro
     const nx = 450,
@@ -379,10 +379,10 @@ export class CampScene extends Phaser.Scene {
       BLESSINGS.some((b) => {
         const cost = this.meta.blessingNextCost(b);
         return cost != null && coins >= cost;
-      }) || coins >= this.meta.ancestralCost();
-    const canArsenal =
-      META.WEAPON_UNLOCK_ORDER.some((k) => !this.meta.isUnlocked(k) && coins >= META.WEAPON_UNLOCK_COST[k]) ||
+      }) ||
+      coins >= this.meta.ancestralCost() ||
       Object.entries(META.ABILITY_UNLOCK_COST).some(([k, cost]) => !this.meta.hasAbility(k) && coins >= cost);
+    const canArsenal = META.WEAPON_UNLOCK_ORDER.some((k) => !this.meta.isUnlocked(k) && coins >= META.WEAPON_UNLOCK_COST[k]);
     this.buildings.shrine.dot.setVisible(canBless);
     this.buildings.forge.dot.setVisible(canArsenal);
   }

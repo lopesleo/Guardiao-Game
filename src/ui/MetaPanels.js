@@ -47,7 +47,7 @@ export const MetaPanels = {
         this.hover = draw;
         c.add(g);
         const hh = (o.h ?? 74) / 2;
-        if (o.icon) c.add(scene.add.image(38, hh, o.icon, o.iconFrame ?? 0).setScale(o.iconScale ?? 3).setAlpha(o.dim ? 0.45 : 1));
+        if (o.icon) c.add(scene.add.image(40, hh, o.icon, o.iconFrame ?? 0).setScale(o.iconScale ?? 3).setAlpha(o.dim ? 0.45 : 1));
         c.add(text(scene, 74, hh - 13, o.name, { size: 20, color: o.nameColor ?? CSS.txt, origin: [0, 0.5] }));
         c.add(text(scene, 74, hh + 13, o.desc, { size: 14, color: CSS.muted, origin: [0, 0.5], shadow: false, wrap: w - 300 }));
         if (o.pips != null) {
@@ -71,13 +71,46 @@ export const MetaPanels = {
   },
 
   _showBlessings() {
-    const m = new Modal(this, { title: "BÊNÇÃOS", subtitle: "Poderes permanentes — valem para todos os personagens", w: 860, h: 640 });
+    const m = new Modal(this, { title: "SANTUÁRIO", subtitle: "Bênçãos e dons permanentes — valem para todos os guardiões", w: 860, h: 640 });
     const list = this._modalList(m);
     const reopen = () => {
       m.close();
       this._refreshAll();
       this._showBlessings();
     };
+    const section = (label, color = CSS.goldHi) =>
+      list.addRow({ h: 36, build: (c, w) => c.add(text(this, w / 2, 20, label, { size: 18, color, origin: 0.5 })) });
+    // Dons: habilidades ativas liberadas uma vez (antes ficavam na Forja)
+    section("DONS DA FLORESTA");
+    const gifts = [
+      { key: "DASH", name: "Dash", icon: "ico_dash", desc: "Esquiva rápida e invulnerável (SHIFT / botão)" },
+      { key: "AWAKEN", name: "Despertar", icon: "ico_star", desc: "Modo fúria: armas disparam 2,5× mais rápido" },
+    ];
+    for (const g of gifts) {
+      const cost = META.ABILITY_UNLOCK_COST[g.key];
+      const has = this.meta.hasAbility(g.key);
+      const can = !has && this.meta.coins >= cost;
+      list.addRow(
+        this._shopRow({
+          icon: g.icon,
+          name: g.name,
+          desc: g.desc,
+          right: has ? "LIBERADO" : String(cost),
+          rightIcon: has ? null : "ico_coin",
+          rightColor: has ? CSS.green : can ? CSS.goldHi : CSS.dim,
+          style: has ? "green" : can ? "button" : "dark",
+          onTap: can
+            ? () => {
+                if (this.meta.unlockAbility(g.key, cost)) {
+                  this._buyFx();
+                  reopen();
+                }
+              }
+            : null,
+        }),
+      );
+    }
+    section("BÊNÇÃOS");
     for (const b of BLESSINGS) {
       const rank = this.meta.blessingRank(b.id);
       const cost = this.meta.blessingNextCost(b);
@@ -129,7 +162,7 @@ export const MetaPanels = {
   },
 
   _showArsenal() {
-    const m = new Modal(this, { title: "ARSENAL", subtitle: "Armas liberadas aparecem nas cartas de nível", w: 860, h: 640 });
+    const m = new Modal(this, { title: "FORJA", subtitle: "Forje armas novas: elas passam a aparecer nas cartas de nível", w: 860, h: 640 });
     const list = this._modalList(m);
     const reopen = () => {
       m.close();
@@ -141,8 +174,6 @@ export const MetaPanels = {
       { kind: "weapon", key: "STAFF", cost: 0 },
       { kind: "weapon", key: "AURA", cost: 0 },
       ...META.WEAPON_UNLOCK_ORDER.map((k) => ({ kind: "weapon", key: k, cost: META.WEAPON_UNLOCK_COST[k] })),
-      { kind: "ability", key: "DASH", cost: META.ABILITY_UNLOCK_COST.DASH, name: "Dash", icon: "ico_dash", desc: "Esquiva rápida e invulnerável (SHIFT / botão)" },
-      { kind: "ability", key: "AWAKEN", cost: META.ABILITY_UNLOCK_COST.AWAKEN, name: "Despertar", icon: "ico_star", desc: "Modo fúria: armas disparam 2,5× mais rápido" },
     ];
     for (const r of rows) {
       const has = r.kind === "weapon" ? r.cost === 0 || this.meta.isUnlocked(r.key) : this.meta.hasAbility(r.key);
@@ -153,7 +184,7 @@ export const MetaPanels = {
           icon: r.icon ?? WEAPON_ICON[r.key],
           name: r.name ?? `${def.name}  ·  ${elName[def.element]}`,
           desc: r.desc ?? WEAPON_DESC[r.key],
-          right: has ? "LIBERADA" : String(r.cost),
+          right: has ? "FORJADA" : String(r.cost),
           rightIcon: has ? null : "ico_coin",
           rightColor: has ? CSS.green : can ? CSS.goldHi : CSS.dim,
           style: has ? "green" : can ? "button" : "dark",
@@ -190,7 +221,7 @@ export const MetaPanels = {
 
   _showAchievements() {
     const done = this.meta.data.achievements;
-    const m = new Modal(this, { title: "CONQUISTAS", subtitle: `${done.length} de ${ACHIEVEMENTS.length} desbloqueadas`, w: 860, h: 640 });
+    const m = new Modal(this, { title: "MURAL", subtitle: `Conquistas: ${done.length} de ${ACHIEVEMENTS.length}`, w: 860, h: 640 });
     const list = this._modalList(m);
     const ctx = this.meta.buildAchievementCtx();
     // Desbloqueadas por último → mostra primeiro o que falta
@@ -230,9 +261,9 @@ export const MetaPanels = {
       ["ico_bolt_gold", "Sobrecarga (Fogo + Raio)", "Corrente elétrica que salta entre vários inimigos."],
       ["ico_star", "Despertar", "Reações enchem a barra dourada. Ative para disparar tudo muito mais rápido por alguns segundos."],
       ["ico_chest", "Baús", "Encoste num baú para abri-lo: tesouro, jackpot dourado… ou uma armadilha (e o temido mímico)."],
-      ["ico_heart_ice", "Evoluções", "Arma no nível 5 + a arma parceira na mesma partida = carta de EVOLUÇÃO garantida. Veja as receitas no Arsenal."],
+      ["ico_heart_ice", "Evoluções", "Arma no nível 5 + a arma parceira na mesma partida = carta de EVOLUÇÃO garantida. Veja as receitas na Forja da Clareira."],
       ["ico_skull", "O Ancião", "Aos 7:00 o chefe desperta. Derrote-o para vencer e liberar o próximo nível de Perigo."],
-      ["ico_coin", "Entre partidas", "Moedas compram Bênçãos permanentes, armas, habilidades e novos personagens."],
+      ["ico_coin", "A Clareira", "Entre partidas: Santuário (bênçãos e dons), Forja (armas), Fogueira (guardiões), Mural (conquistas). A trilha ao norte leva à floresta."],
     ];
     for (const [icon, name, desc] of sections) {
       list.addRow({
@@ -289,7 +320,7 @@ export const MetaPanels = {
   // Guardiões (na Clareira: pela Fogueira). Escolher troca na hora; os
   // bloqueados mostram o preço.
   _showCharacters() {
-    const m = new Modal(this, { title: "GUARDIÕES", subtitle: "Quem vai proteger a floresta hoje?", w: 860, h: 640 });
+    const m = new Modal(this, { title: "FOGUEIRA", subtitle: "Quem vai proteger a floresta hoje?", w: 860, h: 640 });
     const list = this._modalList(m);
     const reopen = () => {
       m.close();
@@ -302,9 +333,9 @@ export const MetaPanels = {
       const can = !owned && this.meta.coins >= c.cost;
       list.addRow(
         this._shopRow({
-          h: 92,
+          h: 84,
           icon: `hero_${c.id}`,
-          iconScale: 3,
+          iconScale: 2.2,
           dim: !owned,
           name: `${c.name}  ·  ${c.title}`,
           nameColor: sel ? CSS.goldHi : CSS.txt,
