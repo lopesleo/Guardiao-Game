@@ -132,6 +132,13 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   avisos (baú de amanhã às 10h e a colheita); chave em Opções — no app, rodar
   `npm install` + `npm run android:sync` 👤
 - Valores em `DAILY` no config
+- ✅ **Anti-trapaça de tempo** (`src/systems/Clock.js`): tudo com tempo real lê o
+  relógio confiável — com o jogo aberto o tempo anda pelo relógio monotônico (mudar
+  a hora não tem efeito); o tempo do jogo **nunca volta**: quem adianta a hora e
+  depois volta encontra a floresta parada até o relógio real alcançar (o piso fica
+  também no save); no app com internet, confere a hora pelo cabeçalho Date do
+  Google (sem enviar dados). Save **assinado**: edição manual fica marcada
+  (`integrity.tampered`, para placares futuros) sem apagar nada
 
 ### M5 — Monetização e medição reais 👤
 - 👤 Contas: AdMob, Firebase, perfil de pagamentos no Play Console

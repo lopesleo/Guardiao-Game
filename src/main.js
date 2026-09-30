@@ -14,6 +14,7 @@ import { PauseScene } from './scenes/PauseScene.js';
 import { ReviveScene } from './scenes/ReviveScene.js';
 import { EndlessChoiceScene } from './scenes/EndlessChoiceScene.js';
 import { setupPlatform } from './systems/Platform.js';
+import { Clock } from './systems/Clock.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -50,6 +51,8 @@ const config = {
 };
 
 window.addEventListener('load', () => {
+  // Relógio confiável antes de qualquer sistema com tempo real (horta, obras…)
+  Clock.init();
   // Expõe a instância (útil pra testes automatizados e depuração no console)
   window.game = new Phaser.Game(config);
   setupPlatform(window.game);

@@ -1,9 +1,11 @@
 // Horta da Clareira: canteiros com plantas que crescem em tempo REAL
-// (Date.now). Cuidados (sede, erva daninha, lagarta) aparecem sozinhos durante
-// o crescimento; pendentes, atrasam a planta e custam qualidade — mas nada
-// morre. A colheita vai para o celeiro (meta.data.pantry), por qualidade.
+// (Clock: relógio confiável, à prova de mexer na hora). Cuidados (sede, erva
+// daninha, lagarta) aparecem sozinhos durante o crescimento; pendentes,
+// atrasam a planta e custam qualidade — mas nada morre. A colheita vai para o
+// celeiro (meta.data.pantry), por qualidade.
 // Tudo mora no save: meta.data.garden = { plots: [...], tutorialDone }.
 import { GARDEN } from "../config.js";
+import { Clock } from "./Clock.js";
 
 const NEED_TYPES = Object.keys(GARDEN.NEEDS);
 
@@ -41,7 +43,7 @@ export class Garden {
       .map(([id]) => id);
   }
 
-  plant(i, crop, now = Date.now()) {
+  plant(i, crop, now = Clock.now()) {
     const c = GARDEN.CROPS[crop];
     if (!c || this.plots[i] || i >= this.open) return false;
     if (c.rare) {
@@ -66,7 +68,7 @@ export class Garden {
 
   // Avança o crescimento até `now`. Um cuidado pendente deixa a planta mais
   // lenta; o aviso nasce no instante exato em que a planta cruza a sua fração.
-  step(p, now = Date.now()) {
+  step(p, now = Clock.now()) {
     if (!p) return p;
     let t = p.last;
     while (t < now && p.grown < p.dur) {
@@ -88,13 +90,13 @@ export class Garden {
     return p;
   }
 
-  update(now = Date.now()) {
+  update(now = Clock.now()) {
     for (const p of this.plots) this.step(p, now);
   }
 
   // ---- Estado de um canteiro (lido pela UI) ----
   // "empty" · "need" (cuidado pendente) · "growing" · "ripe"
-  state(i, now = Date.now()) {
+  state(i, now = Clock.now()) {
     const p = this.step(this.plots[i], now);
     if (!p) return "empty";
     if (p.ripeAt != null) return "ripe";
@@ -116,7 +118,7 @@ export class Garden {
     return (p.dur - p.grown) / (this.need(p) ? GARDEN.NEED_SLOW : 1);
   }
   // Qualidade que sairia colhendo agora (0..2)
-  quality(p, now = Date.now()) {
+  quality(p, now = Clock.now()) {
     const grace = Math.max(GARDEN.NEED_GRACE_MIN_S * 1000, p.dur * GARDEN.NEED_GRACE);
     let q = 2;
     for (const n of p.needs) if (!n.done || n.doneAt - n.at > grace) q--;
@@ -125,7 +127,7 @@ export class Garden {
   }
 
   // Resolve o cuidado pendente (1 toque). Devolve o tipo resolvido.
-  care(i, now = Date.now()) {
+  care(i, now = Clock.now()) {
     const p = this.step(this.plots[i], now);
     const n = this.need(p);
     if (!n) return null;
@@ -136,7 +138,7 @@ export class Garden {
   }
 
   // Colhe: vai para o celeiro. Devolve { crop, n, q } ou null.
-  harvest(i, now = Date.now()) {
+  harvest(i, now = Clock.now()) {
     const p = this.step(this.plots[i], now);
     if (!p || p.ripeAt == null) return null;
     const q = this.quality(p, now);
@@ -155,7 +157,7 @@ export class Garden {
   }
 
   // Quantos canteiros pedem atenção (cuidado ou colheita) — selo "!" no mapa
-  attention(now = Date.now()) {
+  attention(now = Clock.now()) {
     let n = 0;
     for (let i = 0; i < this.open; i++) {
       const s = this.state(i, now);

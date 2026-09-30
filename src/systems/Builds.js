@@ -1,7 +1,9 @@
 // Obras da Clareira: níveis das construções, feitos pelo João-de-barro (1 obra
-// por vez) com tempo REAL (Date.now). Partidas adiantam a obra; faltando pouco,
-// conclui com um toque. Tudo mora no save (meta.data.builds / buildJob).
+// por vez) com tempo REAL (Clock, à prova de mexer na hora). Partidas adiantam
+// a obra; faltando pouco, conclui com um toque. Tudo mora no save
+// (meta.data.builds / buildJob).
 import { BUILD, BUILDINGS, CHARACTERS, WEAPONS, GARDEN, FISHING } from "../config.js";
+import { Clock } from "./Clock.js";
 
 export class Builds {
   constructor(meta) {
@@ -45,7 +47,7 @@ export class Builds {
   }
 
   // Começa a obra (paga na hora). Obras de 0 min terminam na hora.
-  start(id, now = Date.now()) {
+  start(id, now = Clock.now()) {
     if (this.blocker(id)) return null;
     const step = this.nextStep(id);
     const d = this.meta.data;
@@ -62,22 +64,22 @@ export class Builds {
     return { id, to, done: false };
   }
 
-  remainingMs(now = Date.now()) {
+  remainingMs(now = Clock.now()) {
     const j = this.job;
     return j ? Math.max(0, j.endsAt - now) : 0;
   }
 
-  canFinishFree(now = Date.now()) {
+  canFinishFree(now = Clock.now()) {
     return !!this.job && this.remainingMs(now) <= BUILD.FREE_FINISH_MIN * 60000;
   }
 
-  finishFree(now = Date.now()) {
+  finishFree(now = Clock.now()) {
     if (!this.canFinishFree(now)) return null;
     return this._finishJob();
   }
 
   // Chamado pela Clareira periodicamente: conclui se o tempo acabou
-  tick(now = Date.now()) {
+  tick(now = Clock.now()) {
     const j = this.job;
     if (!j || now < j.endsAt) return null;
     return this._finishJob();

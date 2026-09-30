@@ -8,6 +8,7 @@ import { GAME, GARDEN, FISHING } from "../config.js";
 import { fmtDuration } from "../systems/Builds.js";
 import { pantryCount } from "../systems/Garden.js";
 import { Analytics } from "../systems/Analytics.js";
+import { Clock } from "../systems/Clock.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { cropIcon } from "../art/Garden.js";
 import { text, drawFrame, haptic } from "../ui/Theme.js";
@@ -111,7 +112,7 @@ export const CampGarden = {
     if (!g) return;
     const shown = this.buildings.garden.shown;
     const gd = this.garden;
-    const now = Date.now();
+    const now = Clock.now();
     g.plots.forEach((v, i) => {
       const open = i < gd.open;
       v.bed.setTexture(open ? "garden_plot" : "garden_locked");
