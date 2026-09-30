@@ -1,0 +1,68 @@
+<!doctype html>
+<!-- Pré-visualização da arte procedural (sem o jogo): abre com o servidor local
+     em http://localhost:8000/tools/art-preview.html?keys=camp_shrine,camp_forge
+     Mostra cada textura ampliada sobre grama (dia) e com a camada de noite. -->
+<meta charset="utf-8" />
+<title>Arte — pré-visualização</title>
+<style>
+  body { margin: 0; background: #1d3926; font: 14px monospace; color: #f4ecd6; }
+  .row { display: flex; flex-wrap: wrap; gap: 24px; padding: 16px; align-items: flex-end; }
+  figure { margin: 0; text-align: center; }
+  canvas { image-rendering: pixelated; }
+  .night { background: #1d3926; }
+</style>
+<div id="day" class="row"></div>
+<div id="night" class="row night"></div>
+<script type="module">
+  const q = new URLSearchParams(location.search);
+  const want = (q.get("keys") || "").split(",").filter(Boolean);
+  const zoom = Number(q.get("zoom") || 4);
+  const made = {};
+  // "Cena" falsa: só o que Pix.register/registerStrip usam
+  const scene = {
+    textures: {
+      exists: (k) => !!made[k],
+      remove: () => {},
+      createCanvas: (k, w, h) => {
+        const c = document.createElement("canvas");
+        c.width = w;
+        c.height = h;
+        made[k] = c;
+        return { getContext: () => c.getContext("2d"), refresh() {}, add() {} };
+      },
+    },
+    anims: { exists: () => true, create() {}, generateFrameNumbers: () => [] },
+  };
+  const mods = ["Camp", "Buildings", "Garden", "Kitchen", "Pond", "CampDecor"];
+  for (const m of mods) {
+    const mod = await import(`../src/art/${m}.js`);
+    const fn = Object.entries(mod).find(([k]) => k.startsWith("register"))?.[1];
+    fn?.(scene);
+  }
+  for (const k of want.length ? want : Object.keys(made)) {
+    const src = made[k];
+    if (!src) continue;
+    for (const id of ["day", "night"]) {
+      const c = document.createElement("canvas");
+      c.width = src.width * zoom;
+      c.height = src.height * zoom;
+      const ctx = c.getContext("2d");
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(src, 0, 0, c.width, c.height);
+      if (id === "night") {
+        // mesma camada de noite da Clareira (multiply azulado) só sobre a arte
+        ctx.globalCompositeOperation = "source-atop";
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "#5a6a9a";
+        ctx.globalCompositeOperation = "multiply";
+        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.globalCompositeOperation = "destination-in";
+        ctx.drawImage(src, 0, 0, c.width, c.height);
+      }
+      const f = document.createElement("figure");
+      f.append(c, Object.assign(document.createElement("figcaption"), { textContent: k }));
+      document.getElementById(id).append(f);
+    }
+  }
+  document.title = "ok";
+</script>

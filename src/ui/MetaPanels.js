@@ -116,7 +116,7 @@ export const MetaPanels = {
       this._refreshAll();
       this._showWorks();
     };
-    for (const id of ["fire", "shrine", "forge"]) {
+    for (const id of this._workIds?.() ?? ["fire", "shrine", "forge"]) {
       this._section(list, `${BUILDINGS[id].name.toUpperCase()} · NÍVEL ${this.builds.level(id)}`);
       this._buildRow(list, id, reopen);
     }
@@ -328,9 +328,10 @@ export const MetaPanels = {
   _showBoard(tab = "conquistas") {
     const done = this.meta.data.achievements;
     const seen = LEGENDS.filter((l) => this._legendSeen(l)).length;
+    const missions = !!this._daily?.();
     const m = new Modal(this, {
       title: "MURAL",
-      subtitle: tab === "lendas" ? `Lendas da mata encontradas: ${seen} de ${LEGENDS.length}` : `Conquistas: ${done.length} de ${ACHIEVEMENTS.length}`,
+      subtitle: tab === "missoes" ? "Três missões por dia · o prêmio se pega aqui" : tab === "lendas" ? `Lendas da mata encontradas: ${seen} de ${LEGENDS.length}` : `Conquistas: ${done.length} de ${ACHIEVEMENTS.length}`,
       w: 860,
       h: 640,
     });
@@ -343,9 +344,21 @@ export const MetaPanels = {
           this._showBoard(id);
         }, { size: 18, style: tab === id ? "gold" : "dark", color: tab === id ? CSS.goldHi : CSS.muted }),
       );
-    tabBtn(-128, "conquistas", "CONQUISTAS");
-    tabBtn(128, "lendas", "LENDAS");
+    if (missions) {
+      tabBtn(-250, "missoes", "MISSÕES");
+      tabBtn(0, "conquistas", "CONQUISTAS");
+      tabBtn(250, "lendas", "LENDAS");
+    } else {
+      tabBtn(-128, "conquistas", "CONQUISTAS");
+      tabBtn(128, "lendas", "LENDAS");
+    }
     const list = this._modalList(m, m.top + 58);
+    if (tab === "missoes" && missions)
+      return this._fillMissions(list, () => {
+        m.close();
+        this._refreshAll();
+        this._showBoard("missoes");
+      });
     if (tab === "lendas") return this._fillLegends(list);
     this._fillAchievements(list);
   },
@@ -424,6 +437,12 @@ export const MetaPanels = {
       ["ico_skull", "O Mapinguari", "Aos 7:00 o gigante da mata desperta, tomado pela Podridão. Vença-o para libertá-lo e liberar o próximo Perigo."],
       ["ico_coin", "A Clareira", "Entre partidas: Santuário (bênçãos e dons), Forja (armas), Fogueira (guardiões), Mural (conquistas). A trilha ao norte leva à floresta."],
     ];
+    if ((this.meta.data.revealed || []).includes("garden"))
+      sections.push(["ico_sprout", "Horta", "Ande até um canteiro e use o botão de ação para plantar e cuidar; passe por cima do que está maduro para colher. As plantas crescem em tempo real, mesmo com o jogo fechado. Cuidar em dia dá qualidade Ouro — nada morre, só perde qualidade. A colheita fica no Celeiro. Sementes raras caem dos minichefes, do baú dourado e do Mapinguari."]);
+    if ((this.meta.data.revealed || []).includes("kitchen"))
+      sections.push(["ico_dish_roast_carrot", "Cozinha", "Transforme a colheita em pratos. Coma um antes de partir: o bônus vale só na próxima partida — ingredientes Ouro dão um bônus maior."]);
+    if ((this.meta.data.revealed || []).includes("pond"))
+      sections.push(["ico_lambari", "Lago", "No trapiche, jogue a linha e toque quando a boia afundar. Segure para subir a zona verde e solte para descer: mantenha o peixe dentro até a barra encher. Sem deixar o peixe sair = qualidade Ouro. O lago descansa depois de alguns peixes; bolhas na água mostram que eles voltaram."]);
     for (const [icon, name, desc] of sections) {
       list.addRow({
         h: 84,

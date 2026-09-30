@@ -127,6 +127,13 @@ export class WoodPickup extends Pickup {
   }
 }
 
+// Semente rara (planta mágica da Horta): cai só depois que a Horta apareceu
+export class SeedPickup extends Pickup {
+  constructor(scene) {
+    super(scene, "ico_seed", { magnet: 340, magnetMult: 5, glow: 0xffe58f, glowScale: 0.7 });
+  }
+}
+
 export class AwakenOrb extends Pickup {
   constructor(scene) {
     super(scene, "px_awaken", { anim: "awaken_spark", magnet: 320, glow: 0xffe58f, glowScale: 0.7 });

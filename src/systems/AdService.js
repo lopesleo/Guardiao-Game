@@ -12,6 +12,7 @@
 import { Analytics } from "./Analytics.js";
 import { DEBUG } from "./Platform.js";
 import { ADS } from "../config.js";
+import { Clock } from "./Clock.js";
 
 const KEY = "guardiao_ads_v1";
 
@@ -25,7 +26,7 @@ export const PLACEMENTS = {
   daily_chest: { perRun: 99, perDay: 1, label: "Baú diário" },
 };
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = () => Clock.date().toISOString().slice(0, 10);
 
 function loadState() {
   try {

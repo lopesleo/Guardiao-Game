@@ -490,6 +490,8 @@ export const BUILDINGS = {
   fire: { name: "Fogueira", max: 4 },
   shrine: { name: "Santuário", max: 5 },
   forge: { name: "Forja", max: 4 },
+  garden: { name: "Horta", max: 4 }, // nível → canteiros (GARDEN.PLOTS) e plantas
+  pond: { name: "Lago", max: 3 }, // nível → vara melhor e mais peixes (FISHING.LEVELS)
 };
 
 // Madeira Ancestral: material das obras da Clareira. Rara de propósito — as
@@ -499,6 +501,123 @@ export const WOOD = {
   GOLDEN_CHEST: 2, // baú dourado
   CHEST_CHANCE: 0.25, // baú comum: 25% de chance de 1
   BOSS: 6, // o Mapinguari
+};
+
+// Horta da Clareira (M3 — ver docs/VIDA_NA_CLAREIRA.md). Tempo REAL.
+// Nada morre: descuidar só baixa a qualidade (0 comum · 1 prata · 2 ouro) e
+// atrasa. Sempre há uma planta curta e uma longa (o jogador escolhe quando volta).
+export const GARDEN = {
+  PLOTS: [0, 2, 4, 6, 9], // canteiros por nível da Horta (obra do João-de-barro)
+  TUTORIAL_S: 30, // a 1ª cenoura cresce em 30 s (ver o ciclo antes de esperar)
+  NEED_SLOW: 0.75, // com um cuidado pendente, a planta cresce a 75%
+  NEED_GRACE: 0.2, // cuidar até 20% da duração depois do aviso não perde qualidade…
+  NEED_GRACE_MIN_S: 120, // …e nunca menos de 2 min
+  RIPE_KEEP_H: 12, // madura aguenta 12 h no pé; depois cai uma estrela
+  QUALITY: ["Comum", "Prata", "Ouro"],
+  // s = tempo de crescimento; lv = nível da Horta que libera; rare = semente
+  // só vem das partidas (plantas mágicas, ligadas aos elementos)
+  CROPS: {
+    carrot: { name: "Cenoura", s: 5 * 60, needs: 1, yield: 2, lv: 1 },
+    corn: { name: "Milho", s: 30 * 60, needs: 1, yield: 2, lv: 1 },
+    cassava: { name: "Mandioca", s: 8 * 3600, needs: 1, yield: 4, lv: 1 },
+    bean: { name: "Feijão", s: 60 * 60, needs: 2, yield: 3, lv: 2 },
+    pumpkin: { name: "Abóbora", s: 4 * 3600, needs: 2, yield: 2, lv: 3 },
+    pepper: { name: "Pimenta-de-brasa", s: 2 * 3600, needs: 2, yield: 2, lv: 1, rare: true, element: "fire" },
+    frost: { name: "Flor-de-geada", s: 2 * 3600, needs: 2, yield: 2, lv: 1, rare: true, element: "ice" },
+    thunder: { name: "Erva-do-trovão", s: 2 * 3600, needs: 2, yield: 2, lv: 1, rare: true, element: "bolt" },
+  },
+  NEEDS: {
+    water: "Com sede! Toque para regar.",
+    weed: "Erva daninha! Toque para arrancar.",
+    pest: "Lagarta! Toque para tirar.",
+  },
+  // Sementes raras caem nas partidas (só depois que a Horta apareceu)
+  SEEDS: { MINIBOSS: 1, GOLDEN_CHEST: 1, BOSS: 2 },
+};
+
+// Hábito diário (M4 — ver docs/PRE_LANCAMENTO.md §2). "Dia" = data LOCAL do
+// aparelho. Missões: 3 por dia (2 da floresta + 1 da Clareira quando houver),
+// sorteadas pela data; n = alvos possíveis; needs = só quando o jogador já
+// conhece aquilo. Nada vende poder: o prêmio é moeda, madeira, semente.
+export const DAILY = {
+  MISSIONS: [
+    { id: "kills", text: "Abata {n} criaturas", stat: "kills", n: [150, 300, 500], coins: 50 },
+    { id: "reactions", text: "Dispare {n} reações elementais", stat: "reactions", n: [15, 30, 50], coins: 50 },
+    { id: "vapor", text: "Faça {n} Vapores (fogo + gelo)", stat: "VAPOR", n: [8, 15], coins: 60 },
+    { id: "crystal", text: "Faça {n} Cristais (gelo + raio)", stat: "CRYSTAL", n: [5, 10], coins: 60, needs: (d) => (d.unlockedWeapons || []).includes("CHAIN") },
+    { id: "overload", text: "Faça {n} Sobrecargas (fogo + raio)", stat: "OVERLOAD", n: [5, 10], coins: 60, needs: (d) => (d.unlockedWeapons || []).includes("CHAIN") },
+    { id: "survive", text: "Sobreviva {n} minutos numa partida", stat: "minutes", n: [3, 5], coins: 50, max: true },
+    { id: "runs", text: "Jogue {n} partidas", stat: "runs", n: [2, 3], coins: 40 },
+    { id: "chests", text: "Abra {n} baús na floresta", stat: "chests", n: [2, 4], coins: 50 },
+    { id: "lanterns", text: "Quebre {n} lanternas de cogumelo", stat: "lanterns", n: [3, 6], coins: 40 },
+    { id: "boss", text: "Vença o Mapinguari", stat: "wins", n: [1], coins: 120, needs: (d) => (d.wins || 0) > 0 },
+    // Da Clareira
+    { id: "harvest", text: "Colha {n} vezes na horta", stat: "harvest", n: [2, 4], coins: 40, camp: true, needs: (d) => (d.revealed || []).includes("garden") },
+    { id: "fish", text: "Pesque {n} peixes no lago", stat: "fish", n: [2, 3], coins: 40, camp: true, needs: (d) => (d.revealed || []).includes("pond") },
+    { id: "cook", text: "Cozinhe {n} prato{s}", stat: "cook", n: [1, 2], coins: 40, camp: true, needs: (d) => (d.revealed || []).includes("kitchen") },
+  ],
+  ALL_BONUS: { coins: 80, wood: 2 }, // completar as 3 do dia
+  // Presente de dias seguidos (volta ao 1 depois do 7º ou se pular um dia)
+  STREAK: [{ coins: 40 }, { coins: 60 }, { wood: 2 }, { coins: 90 }, { seeds: 1, coins: 40 }, { coins: 120 }, { coins: 200, wood: 5, seeds: 2 }],
+  // Baú diário junto à fogueira: 1 grátis por dia + 1 com anúncio (opcional)
+  CHEST: { coins: [30, 80], woodChance: 0.4, seedChance: 0.25 },
+};
+
+// Datas comemorativas (calendário REAL): decoração temática na Clareira só
+// na época. mês/dia inclusivos. Ex.: festa junina + julina = bandeirinhas.
+export const SEASONS = [{ id: "junina", name: "Festa Junina", from: [6, 1], to: [7, 31] }];
+
+// Lago da Clareira (M3): pesca no chão (trapiche) + minijogo de um polegar:
+// segurar sobe a zona verde, soltar desce; manter o peixe dentro enche a barra.
+// O lago "descansa": tem poucos peixes e repõe com o tempo real (sem cronômetro
+// na cara — bolhas na água mostram que há peixe). Horário REAL muda quem aparece.
+export const FISHING = {
+  // nível do Lago (obra) → zona verde (fração da barra) e peixes no lago
+  LEVELS: [null, { zone: 0.26, cap: 4 }, { zone: 0.31, cap: 6 }, { zone: 0.36, cap: 8 }],
+  REGEN_MIN: 20, // o lago repõe 1 peixe a cada 20 min
+  BITE_S: [1.2, 3.5], // espera pela fisgada
+  HOOK_S: 1.2, // tempo para puxar depois do "!"
+  FILL_S: 3, // segundos com o peixe na zona para pegar
+  DRAIN_S: 4, // segundos fora da zona para ele escapar (barra cheia → vazia)
+  START: 0.3, // progresso inicial
+  RISE: 2.2, // aceleração da zona segurando (barra/s²)
+  FALL: 1.8, // …e soltando
+  // move: calm (calmo) · darter (fujão: arrancadas) · jumper (saltador) · sinker (arrastador: puxa pro fundo)
+  // w = peso no sorteio; day/night = só nesse horário (6h–18h é dia)
+  FISH: {
+    lambari: { name: "Lambari", move: "calm", speed: 0.35, w: 30, cm: [8, 16] },
+    cara: { name: "Cará", move: "calm", speed: 0.5, w: 22, cm: [10, 22] },
+    tilapia: { name: "Tilápia", move: "calm", speed: 0.6, w: 18, cm: [18, 42] },
+    traira: { name: "Traíra", move: "darter", speed: 0.55, w: 14, cm: [25, 60], night: true },
+    pacu: { name: "Pacu", move: "sinker", speed: 0.5, w: 11, cm: [30, 70] },
+    tucunare: { name: "Tucunaré", move: "darter", speed: 0.75, w: 7, cm: [30, 80], day: true },
+    dourado: { name: "Dourado", move: "jumper", speed: 0.85, w: 3, cm: [50, 100], day: true },
+  },
+};
+
+// Cozinha da Clareira (M3): colheita vira prato; comer 1 prato = bônus só na
+// PRÓXIMA partida (o prato é consumido ao entrar na floresta). O bônus cresce
+// com a qualidade dos ingredientes (média, arredondada para baixo).
+// bonus: hp/speed/dmg/area/xp = +%; cd = −% de recarga; crit = +chance; regen = vida/s
+export const KITCHEN = {
+  QUALITY_MULT: [1, 1.35, 1.7], // Comum, Prata, Ouro
+  RECIPES: [
+    { id: "roast_carrot", name: "Cenoura Assada", food: "carrot", needs: { carrot: 2 }, bonus: { hp: 0.2 } },
+    { id: "pamonha", name: "Pamonha", food: "corn", needs: { corn: 2 }, bonus: { speed: 0.1 } },
+    { id: "tapioca", name: "Tapioca", food: "cassava", needs: { cassava: 2 }, bonus: { regen: 0.6 } },
+    { id: "tropeiro", name: "Feijão Tropeiro", food: "bean", needs: { bean: 2, cassava: 1 }, bonus: { crit: 0.08 } },
+    { id: "quibebe", name: "Quibebe", food: "pumpkin", needs: { pumpkin: 1, cassava: 1 }, bonus: { xp: 0.15 } },
+    { id: "brasa", name: "Caldo de Brasa", food: "pepper", needs: { pepper: 1, corn: 1 }, bonus: { dmg: 0.15 } },
+    { id: "geada", name: "Chá de Geada", food: "frost", needs: { frost: 1, carrot: 1 }, bonus: { area: 0.15 } },
+    { id: "trovao", name: "Mingau do Trovão", food: "thunder", needs: { thunder: 1, cassava: 1 }, bonus: { cd: 0.1 } },
+    // Com peixe (Lago)
+    { id: "lambari_frito", name: "Lambari Frito", needs: { lambari: 3 }, bonus: { pickup: 0.3 } },
+    { id: "pirao", name: "Pirão de Peixe", needs: { tilapia: 1, cassava: 2 }, bonus: { cd: 0.08 } },
+    { id: "caldeirada", name: "Caldeirada", needs: { cara: 1, traira: 1, corn: 1 }, bonus: { regen: 0.9 } },
+    { id: "pacu_assado", name: "Pacu Assado", needs: { pacu: 1, cassava: 1 }, bonus: { hp: 0.3 } },
+    { id: "moqueca", name: "Moqueca de Tucunaré", needs: { tucunare: 1, carrot: 1, pepper: 1 }, bonus: { dmg: 0.2 } },
+    { id: "dourado_brasa", name: "Dourado na Brasa", needs: { dourado: 1 }, bonus: { crit: 0.12 } },
+  ],
 };
 
 // Lanternas de cogumelo: brotam fora da tela, iluminam e derrubam um item ao

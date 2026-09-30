@@ -9,6 +9,11 @@ import { registerMonsters } from "../art/Monsters.js";
 import { registerTelegraphs } from "../art/Telegraph.js";
 import { registerLanterns } from "../art/Lanterns.js";
 import { registerCamp } from "../art/Camp.js";
+import { registerBuildings } from "../art/Buildings.js";
+import { registerGarden } from "../art/Garden.js";
+import { registerKitchen } from "../art/Kitchen.js";
+import { registerPond } from "../art/Pond.js";
+import { registerCampDecor } from "../art/CampDecor.js";
 import { registerAudio } from "../audio/Synth.js";
 import { text, Bar, PAL, vw, vh, fitCamera } from "../ui/Theme.js";
 
@@ -36,6 +41,11 @@ export class PreloadScene extends Phaser.Scene {
       ["Afiando garras…", () => registerTelegraphs(this)],
       ["Acendendo cogumelos…", () => registerLanterns(this)],
       ["Erguendo o acampamento…", () => registerCamp(this)],
+      ["Cobrindo os telhados de sapê…", () => registerBuildings(this)],
+      ["Arando a horta…", () => registerGarden(this)],
+      ["Acendendo o fogão…", () => registerKitchen(this)],
+      ["Enchendo o lago…", () => registerPond(this)],
+      ["Pendurando as bandeirinhas…", () => registerCampDecor(this)],
       ["Afinando a floresta…", () => registerAudio(this.game)],
     ];
     let i = 0;
