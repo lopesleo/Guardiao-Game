@@ -535,6 +535,10 @@ export const GARDEN = {
   SEEDS: { MINIBOSS: 1, GOLDEN_CHEST: 1, BOSS: 2 },
 };
 
+// Datas comemorativas (calendário REAL): decoração temática na Clareira só
+// na época. mês/dia inclusivos. Ex.: festa junina + julina = bandeirinhas.
+export const SEASONS = [{ id: "junina", name: "Festa Junina", from: [6, 1], to: [7, 31] }];
+
 // Lago da Clareira (M3): pesca no chão (trapiche) + minijogo de um polegar:
 // segurar sobe a zona verde, soltar desce; manter o peixe dentro enche a barra.
 // O lago "descansa": tem poucos peixes e repõe com o tempo real (sem cronômetro

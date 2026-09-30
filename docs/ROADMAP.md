@@ -94,7 +94,8 @@ Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
   refletidos
 - ✅ **Clareira redesenhada**: rede de trilhas de terra que saem do terreiro e se
   ramificam até cada lugar; fogueira com anel de pedras e troncos de sentar; varal
-  de **bandeirinhas de festa junina** com luzinhas; **samaúma** gigante (sapopemas,
+  de **bandeirinhas com luzinhas só na festa junina/julina** (1/6 a 31/7, pela data
+  real — `SEASONS` no config, pronto para outras datas); **samaúma** gigante (sapopemas,
   cipós, bromélias, vaga-lumes na copa); helicônias, pedras com samambaia, rede
   listrada, espantalho e regador; capim balançando, folhas caindo, faíscas da forja,
   brilho do santuário e vinheta

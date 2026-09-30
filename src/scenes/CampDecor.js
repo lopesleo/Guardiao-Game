@@ -3,13 +3,21 @@
 // capim balançando, folhas caindo, faíscas da forja, brilho do santuário e
 // vinheta. Nada aqui tem regra de jogo — é só o lugar ficar vivo.
 // Mixin da CampScene (Object.assign).
-import { GAME } from "../config.js";
+import { GAME, SEASONS } from "../config.js";
 import { PAL } from "../art/Palette.js";
 import { paintGround, FLAG_COUNT } from "../art/CampDecor.js";
 
 const S = GAME.PIXEL_SCALE;
 const D_NIGHT = 50000;
 const HUB = { x: 0, y: 70, r: 175 }; // terreiro em volta da fogueira
+
+// Data comemorativa de hoje (ou null). ?festa=<id> força uma (só com ?debug=1)
+export function currentSeason(date = new Date()) {
+  const q = new URLSearchParams(location.search);
+  if (q.get("debug") === "1" && q.get("festa")) return SEASONS.find((s) => s.id === q.get("festa")) || null;
+  const md = (date.getMonth() + 1) * 100 + date.getDate();
+  return SEASONS.find((s) => md >= s.from[0] * 100 + s.from[1] && md <= s.to[0] * 100 + s.to[1]) || null;
+}
 
 // Céu pela hora REAL do aparelho: cor da camada de "noite" (multiply) e quanto
 // as luzes (fogueira, luzinhas, lamparina, lua, vaga-lumes) aparecem (k).
@@ -77,7 +85,8 @@ export const CampDecor = {
 
   _decor() {
     this._campfireSeats();
-    this._bunting();
+    // Bandeirinhas e luzinhas só na festa junina/julina (data real)
+    if ((this._seasonOverride ?? currentSeason()?.id) === "junina") this._bunting();
     // Rede listrada perto da mata, a oeste
     const hx = -600,
       hy = 90;
@@ -153,7 +162,8 @@ export const CampDecor = {
     }
   },
 
-  // Varal de bandeirinhas cruzando o terreiro (festa junina), com luzinhas
+  // Varal de bandeirinhas cruzando o terreiro (festa junina), com luzinhas.
+  // Só aparece na época (SEASONS no config)
   _bunting() {
     const poles = [
       [-215, -30],
