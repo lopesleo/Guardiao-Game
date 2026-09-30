@@ -407,25 +407,27 @@ export const CampPond = {
     f.bang?.destroy();
     const roll = this.pond.roll();
     const fish = FISHING.FISH[roll.id];
+    const F = FISHING;
+    const diff = roll.tutorial ? 15 : fish.diff;
+    const barH = Math.round(this.pond.zone * F.TRACK * (roll.tutorial ? 1.4 : 1));
     Object.assign(f, {
       state: "fight",
       fishId: roll.id,
-      move: roll.tutorial ? "calm" : fish.move,
-      speed: roll.tutorial ? 0.2 : fish.speed,
-      zh: this.pond.zone * (roll.tutorial ? 1.4 : 1),
-      z: 0,
-      vz: 0,
-      pos: 0.4,
-      grace: FISHING.GRACE_S,
-      target: 0.4,
-      cur: 0.3,
-      timer: 0.5,
-      prog: FISHING.START,
+      move: roll.tutorial ? "mixed" : fish.move,
+      diff,
+      barH,
+      // como no Stardew: a zona começa no fundo e o peixe também (já dentro dela)
+      barPos: F.TRACK - barH,
+      barSpeed: 0,
+      pos: 508,
+      target: ((100 - diff) / 100) * 548,
+      speed: 0,
+      fsa: 0, // aceleração extra de quem sobe/afunda
+      prog: F.START,
       inZone: true,
       slips: 0,
+      acc: 0,
     });
-    f.z = Math.max(0, Math.min(1 - f.zh, f.pos - f.zh / 2)); // zona começa centrada no peixe
-    haptic(30);
     f.hint.setText(this.isTouch ? "Segure a tela para subir · solte para descer" : "Segure E / espaço / clique para subir · solte para descer").setColor(CSS.goldHi);
     // Barra na direita da tela
     const x = this.W - 130,
@@ -448,49 +450,76 @@ export const CampPond = {
     this.tweens.add({ targets: c, alpha: 1, duration: 160 });
   },
 
-  _fishTarget(f) {
-    const r = Math.random();
-    const clamp = (v) => Math.max(0.03, Math.min(0.97, v));
-    const away = (d) => clamp(f.pos + (Math.random() < 0.5 ? -1 : 1) * d);
-    if (f.move === "darter" && r < 0.35) return [away(0.4 + Math.random() * 0.2), f.speed * 2.8, 0.5];
-    if (f.move === "jumper" && r < 0.28) return [away(0.45), f.speed * 6, 0.55];
-    if (f.move === "sinker") return [r < 0.8 ? Math.random() * 0.45 : Math.random(), f.speed * 0.8, 1 + Math.random()];
-    const slow = f.move === "jumper" ? 0.5 : 1;
-    return [Math.random(), f.speed * slow * (0.5 + Math.random() * 0.5), 0.8 + Math.random() * 0.8];
+  // Um quadro da física (porta do BobberBar.update do Stardew Valley).
+  _fishStep(f, hold) {
+    const F = FISHING;
+    const rnd = Math.random;
+    const ri = (a, b) => a + Math.floor(rnd() * (b - a)); // inteiro em [a, b) como o Random.Next
+    const d = f.diff;
+    // --- peixe ---
+    if (rnd() < (d * (f.move === "smooth" ? 20 : 1)) / 4000 && (f.move !== "smooth" || f.target === -1)) {
+      const below = 548 - f.pos;
+      const above = f.pos;
+      const pct = Math.min(99, d + ri(10, 45)) / 100;
+      f.target = f.pos + ri(-Math.floor(above), Math.floor(below)) * pct;
+    }
+    if (f.move === "floater") f.fsa = Math.max(f.fsa - 0.01, -1.5);
+    else if (f.move === "sinker") f.fsa = Math.min(f.fsa + 0.01, 1.5);
+    if (Math.abs(f.pos - f.target) > 3 && f.target !== -1) {
+      const accel = (f.target - f.pos) / (ri(10, 30) + (100 - Math.min(100, d)));
+      f.speed += (accel - f.speed) / 5;
+    } else if (f.move !== "smooth" && rnd() < d / 2000) {
+      f.target = f.pos + (rnd() < 0.5 ? ri(-100, -50) : ri(50, 101));
+    } else f.target = -1;
+    if (f.move === "dart" && rnd() < d / 1000) {
+      f.target = f.pos + (rnd() < 0.5 ? ri(-100 - d * 2, -50) : ri(50, 101 + d * 2));
+    }
+    f.target = Math.max(-1, Math.min(f.target, 548));
+    f.pos = Math.max(0, Math.min(f.pos + f.speed + f.fsa, F.FISH_MAX));
+    let inBar = f.pos + 12 <= f.barPos - 32 + f.barH && f.pos - 16 >= f.barPos - 32;
+    if (f.pos >= 548 - f.barH && f.barPos >= F.TRACK - f.barH - 4) inBar = true;
+    // --- zona (barra verde) ---
+    let g = hold ? -F.GRAVITY : F.GRAVITY;
+    if (hold && (f.barPos === 0 || f.barPos === F.TRACK - f.barH)) f.barSpeed = 0;
+    if (inBar) g *= F.IN_BAR_GRAVITY;
+    f.barSpeed += g;
+    f.barPos += f.barSpeed;
+    if (f.barPos + f.barH > F.TRACK) {
+      f.barPos = F.TRACK - f.barH;
+      f.barSpeed = -f.barSpeed * F.BOUNCE;
+    } else if (f.barPos < 0) {
+      f.barPos = 0;
+      f.barSpeed = -f.barSpeed * F.BOUNCE;
+    }
+    // --- progresso ---
+    if (f.inZone && !inBar) {
+      f.slips++;
+      haptic(10);
+    }
+    f.inZone = inBar;
+    f.prog = Math.max(0, Math.min(1, f.prog + (inBar ? F.FILL : -F.DRAIN)));
   },
 
   _fightUpdate(f, dt) {
     const F = FISHING;
     const hold = this.input.manager.pointers.some((pt) => pt.isDown) || f.keys.E.isDown || f.keys.SPACE.isDown;
-    f.vz = Math.max(-1.3, Math.min(1.3, f.vz + (hold ? F.RISE : -F.FALL) * dt));
-    f.z += f.vz * dt;
-    if (f.z < 0) (f.z = 0), (f.vz = 0);
-    if (f.z > 1 - f.zh) (f.z = 1 - f.zh), (f.vz = 0);
-    // Peixe (nos primeiros segundos ele fica parado dentro da zona: dá tempo de pegar o jeito)
-    const grace = f.grace > 0;
-    if (grace) f.grace -= dt;
-    else {
-      f.timer -= dt;
-      if (f.timer <= 0) [f.target, f.cur, f.timer] = this._fishTarget(f);
-      const d = f.target - f.pos;
-      f.pos += Math.sign(d) * Math.min(Math.abs(d), f.cur * dt);
+    // passo fixo de 60 Hz (a física do Stardew é por quadro)
+    f.acc += dt;
+    const step = 1 / F.STEP_HZ;
+    while (f.acc >= step && f.prog > 0 && f.prog < 1) {
+      f.acc -= step;
+      this._fishStep(f, hold);
     }
-    // Dentro da zona: enche; fora: esvazia
-    const inZone = f.pos >= f.z && f.pos <= f.z + f.zh;
-    if (f.inZone && !inZone && !grace) {
-      f.slips++;
-      haptic(10);
-    }
-    f.inZone = inZone;
-    if (!grace) f.prog += inZone ? dt / F.FILL_S : -dt / F.DRAIN_S; // na espera o progresso fica congelado
-    // Desenho
-    const yOf = (v) => BAR_H / 2 - v * BAR_H;
+    // Desenho (pista de 568 unidades escalada para BAR_H; o ícone do peixe tem 32 de folga)
+    const k = BAR_H / F.TRACK;
+    const yOf = (v) => -BAR_H / 2 + v * k;
+    const inZone = f.inZone;
     f.zoneG.clear();
-    f.zoneG.fillStyle(inZone ? PAL.g5 : PAL.g3, 0.85).fillRect(-24, yOf(f.z + f.zh), 48, f.zh * BAR_H);
-    f.zoneG.fillStyle(PAL.g6, 1).fillRect(-24, yOf(f.z + f.zh), 48, 3);
-    f.fishImg.setY(yOf(f.pos)).setX(Math.sin(this.time.now / 90) * (inZone ? 1 : 3));
+    f.zoneG.fillStyle(inZone ? PAL.g5 : PAL.g3, 0.85).fillRect(-24, yOf(f.barPos), 48, f.barH * k);
+    f.zoneG.fillStyle(PAL.g6, 1).fillRect(-24, yOf(f.barPos), 48, 3);
+    f.fishImg.setY(yOf(f.pos + 32)).setX(Math.sin(this.time.now / 90) * (inZone ? 1 : 3));
     f.progG.clear();
-    const pr = Math.max(0, Math.min(1, f.prog));
+    const pr = f.prog;
     f.progG.fillStyle(pr > 0.3 ? PAL.yel2 : PAL.red2, 1).fillRect(50, BAR_H / 2 - 10 - pr * (BAR_H - 20), 18, pr * (BAR_H - 20));
     if (f.prog >= 1) this._fishCaught(f);
     else if (f.prog <= 0) {
