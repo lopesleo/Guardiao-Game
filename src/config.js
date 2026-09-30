@@ -475,7 +475,7 @@ export const BUILDINGS = {
 // Madeira Ancestral: material das obras da Clareira. Rara de propósito — as
 // obras exigem JOGAR partidas, não só esperar.
 export const WOOD = {
-  MINIBOSS: 3, // por minichefe (Lobo Alfa, Ogro Ancião)
+  MINIBOSS: 3, // por minichefe (Mula sem Cabeça, Corpo-Seco)
   GOLDEN_CHEST: 2, // baú dourado
   CHEST_CHANCE: 0.25, // baú comum: 25% de chance de 1
   BOSS: 6, // o Mapinguari
