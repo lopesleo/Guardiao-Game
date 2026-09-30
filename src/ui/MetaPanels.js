@@ -2,7 +2,9 @@
 // Créditos, Personagens) compartilhados pela tela de título e pela Clareira.
 // Uso: Object.assign(MinhaCena.prototype, MetaPanels). A cena precisa ter
 // this.meta (MetaProgression), this.W/this.H, this._modals e this._refreshAll().
-import { META, BLESSINGS, MAX_BLESSING_RANK, ACHIEVEMENTS, CHARACTERS, WEAPONS } from "../config.js";
+import { META, BLESSINGS, MAX_BLESSING_RANK, ACHIEVEMENTS, CHARACTERS, WEAPONS, BUILD, BUILDINGS } from "../config.js";
+import { fmtDuration } from "../systems/Builds.js";
+import { AdService } from "../systems/AdService.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { WEAPON_ICON } from "../art/Icons.js";
 import { WEAPON_DESC } from "../systems/UpgradeSystem.js";
@@ -22,6 +24,104 @@ const BLESSING_ICON = {
 };
 
 export const MetaPanels = {
+  // Linha de OBRA no topo do painel de uma construção (só na Clareira, onde
+  // existe this.builds): melhorar, acompanhar a obra, concluir, adiantar.
+  _buildRow(list, id, reopen) {
+    const b = this.builds;
+    if (!b) return;
+    const name = BUILDINGS[id].name.toUpperCase();
+    const lv = b.level(id);
+    const step = b.nextStep(id);
+    const job = b.job;
+    let o;
+    if (!step) {
+      o = { icon: "ico_trophy", name: `${name} · NÍVEL ${lv} (MÁXIMO)`, desc: "Construção completa.", style: "green", nameColor: CSS.green };
+    } else if (job && job.id === id) {
+      const rem = b.remainingMs();
+      const free = b.canFinishFree();
+      o = {
+        icon: "ico_hourglass",
+        name: `EM OBRA → NÍVEL ${job.to}`,
+        desc: `${b.nextPerk(id)} · ${free ? "pronta para concluir" : "cada partida adianta a obra"}`,
+        right: free ? "CONCLUIR" : fmtDuration(rem),
+        rightColor: free ? CSS.green : CSS.gold,
+        style: free ? "green" : "dark",
+        onTap: free
+          ? () => {
+              const r = b.finishFree();
+              if (r) {
+                this._onBuildDone?.(r);
+                reopen();
+              }
+            }
+          : null,
+      };
+    } else {
+      const blk = b.blocker(id);
+      const time = step.min ? fmtDuration(step.min * 60000) : "na hora";
+      const right = { busy: "JOÃO OCUPADO", coins: "FALTAM MOEDAS", wood: "FALTA MADEIRA" }[blk] ?? "CONSTRUIR";
+      o = {
+        icon: "ico_wood",
+        name: `MELHORAR PARA O NÍVEL ${lv + 1}  ·  ${time}`,
+        desc: `${b.nextPerk(id)} · ${step.coins} moedas + ${step.wood} madeira`,
+        right,
+        rightColor: blk ? CSS.dim : CSS.goldHi,
+        nameColor: blk ? CSS.txt : CSS.goldHi,
+        style: blk ? "dark" : "gold",
+        onTap: blk
+          ? null
+          : () => {
+              const r = b.start(id);
+              if (!r) return;
+              this._buyFx();
+              if (r.done) this._onBuildDone?.(r);
+              else this._onBuildStarted?.(r);
+              reopen();
+            },
+      };
+    }
+    list.addRow(this._shopRow(o));
+    // Anúncio opcional: adiantar a obra em andamento (desligado com ADS.ENABLED)
+    if (job && job.id === id && !b.canFinishFree() && AdService.canShow("build_speed")) {
+      list.addRow(
+        this._shopRow({
+          h: 56,
+          icon: "ico_play",
+          name: `ADIANTAR ${BUILD.AD_SPEEDUP_MIN} MIN`,
+          desc: "Assista a um anúncio (opcional)",
+          style: "button",
+          onTap: async () => {
+            if (await AdService.rewarded("build_speed")) {
+              b.advance(BUILD.AD_SPEEDUP_MIN * 60000);
+              this._onBuildStarted?.(job);
+              reopen();
+            }
+          },
+        }),
+      );
+    }
+  },
+
+  // Cabeçalho de seção dentro de uma lista
+  _section(list, label, color = CSS.goldHi) {
+    list.addRow({ h: 36, build: (c, w) => c.add(text(this, w / 2, 20, label, { size: 18, color, origin: 0.5 })) });
+  },
+
+  // Ninho do João-de-barro: todas as obras num lugar só
+  _showWorks() {
+    const m = new Modal(this, { title: "JOÃO-DE-BARRO", subtitle: "O construtor da Clareira · uma obra por vez", w: 860, h: 640 });
+    const list = this._modalList(m);
+    const reopen = () => {
+      m.close();
+      this._refreshAll();
+      this._showWorks();
+    };
+    for (const id of ["fire", "shrine", "forge"]) {
+      this._section(list, `${BUILDINGS[id].name.toUpperCase()} · NÍVEL ${this.builds.level(id)}`);
+      this._buildRow(list, id, reopen);
+    }
+  },
+
   _modalList(m, rowsTop = null) {
     const W = this.W,
       H = this.H;
@@ -78,8 +178,9 @@ export const MetaPanels = {
       this._refreshAll();
       this._showBlessings();
     };
-    const section = (label, color = CSS.goldHi) =>
-      list.addRow({ h: 36, build: (c, w) => c.add(text(this, w / 2, 20, label, { size: 18, color, origin: 0.5 })) });
+    const section = (label, color = CSS.goldHi) => this._section(list, label, color);
+    this._buildRow(list, "shrine", reopen);
+    const cap = this.builds ? this.builds.shrineRankCap() : MAX_BLESSING_RANK;
     // Dons: habilidades ativas liberadas uma vez (antes ficavam na Forja)
     section("DONS DA FLORESTA");
     const gifts = [
@@ -114,7 +215,8 @@ export const MetaPanels = {
     for (const b of BLESSINGS) {
       const rank = this.meta.blessingRank(b.id);
       const cost = this.meta.blessingNextCost(b);
-      const can = cost != null && this.meta.coins >= cost;
+      const capped = cost != null && rank >= cap; // Santuário ainda baixo
+      const can = cost != null && !capped && this.meta.coins >= cost;
       list.addRow(
         this._shopRow({
           icon: BLESSING_ICON[b.id],
@@ -122,8 +224,8 @@ export const MetaPanels = {
           desc: b.desc,
           pips: rank,
           pipsMax: MAX_BLESSING_RANK,
-          right: cost == null ? "MÁX" : String(cost),
-          rightIcon: cost == null ? null : "ico_coin",
+          right: cost == null ? "MÁX" : capped ? `SANTUÁRIO NV ${rank + 1}` : String(cost),
+          rightIcon: cost == null || capped ? null : "ico_coin",
           rightColor: cost == null ? CSS.green : can ? CSS.goldHi : CSS.dim,
           style: cost == null ? "green" : can ? "button" : "dark",
           onTap: can
@@ -170,6 +272,8 @@ export const MetaPanels = {
       this._showArsenal();
     };
     const elName = { fire: "Fogo", ice: "Gelo", bolt: "Raio" };
+    this._buildRow(list, "forge", reopen);
+    this._section(list, "ARMAS");
     const rows = [
       { kind: "weapon", key: "STAFF", cost: 0 },
       { kind: "weapon", key: "AURA", cost: 0 },
@@ -177,15 +281,16 @@ export const MetaPanels = {
     ];
     for (const r of rows) {
       const has = r.kind === "weapon" ? r.cost === 0 || this.meta.isUnlocked(r.key) : this.meta.hasAbility(r.key);
-      const can = !has && this.meta.coins >= r.cost;
+      const allowed = !this.builds || r.cost === 0 || this.builds.forgeAllows(r.key);
+      const can = !has && allowed && this.meta.coins >= r.cost;
       const def = WEAPONS[r.key];
       list.addRow(
         this._shopRow({
           icon: r.icon ?? WEAPON_ICON[r.key],
           name: r.name ?? `${def.name}  ·  ${elName[def.element]}`,
           desc: r.desc ?? WEAPON_DESC[r.key],
-          right: has ? "FORJADA" : String(r.cost),
-          rightIcon: has ? null : "ico_coin",
+          right: has ? "FORJADA" : allowed ? String(r.cost) : `FORJA NV ${BUILD.FORGE_WEAPON_LEVEL[r.key]}`,
+          rightIcon: has || !allowed ? null : "ico_coin",
           rightColor: has ? CSS.green : can ? CSS.goldHi : CSS.dim,
           style: has ? "green" : can ? "button" : "dark",
           onTap: can
@@ -327,10 +432,14 @@ export const MetaPanels = {
       this._refreshAll();
       this._showCharacters();
     };
+    this._buildRow(list, "fire", reopen);
+    this._section(list, "GUARDIÕES");
     for (const c of CHARACTERS) {
       const owned = this.meta.hasCharacter(c.id);
       const sel = this.meta.selectedCharacter === c.id;
-      const can = !owned && this.meta.coins >= c.cost;
+      const needLv = BUILD.FIRE_CHARACTER_LEVEL[c.id];
+      // Sem Clareira (this.builds), mantém a compra antiga por moedas
+      const can = !owned && !this.builds && this.meta.coins >= c.cost;
       list.addRow(
         this._shopRow({
           h: 84,
@@ -340,8 +449,8 @@ export const MetaPanels = {
           name: `${c.name}  ·  ${c.title}`,
           nameColor: sel ? CSS.goldHi : CSS.txt,
           desc: `Começa com ${WEAPONS[c.weapon].name}. ${c.perk}`,
-          right: sel ? "ESCOLHIDO" : owned ? "ESCOLHER" : String(c.cost),
-          rightIcon: owned ? null : "ico_coin",
+          right: sel ? "ESCOLHIDO" : owned ? "ESCOLHER" : this.builds ? `FOGUEIRA NV ${needLv}` : String(c.cost),
+          rightIcon: owned || this.builds ? null : "ico_coin",
           rightColor: sel ? CSS.green : owned ? CSS.txt : can ? CSS.goldHi : CSS.dim,
           style: sel ? "green" : owned || can ? "button" : "dark",
           onTap:

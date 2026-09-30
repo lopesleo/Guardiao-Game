@@ -5,8 +5,9 @@
 //   Fogueira → guardiões · Santuário → bênçãos e dons · Forja → armas ·
 //   Mural → Conquistas · Placa da trilha → Perigo · Anciã → conversa.
 // A trilha ao norte leva à floresta (começa a partida).
-import { GAME, CHARACTERS, DIFFICULTY, META, BLESSINGS } from "../config.js";
+import { GAME, CHARACTERS, DIFFICULTY, META, BLESSINGS, BUILDINGS } from "../config.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
+import { Builds, fmtDuration } from "../systems/Builds.js";
 import { InputManager } from "../systems/InputManager.js";
 import { VirtualJoystick } from "../ui/VirtualJoystick.js";
 import { DEBUG } from "../systems/Platform.js";
@@ -44,6 +45,7 @@ export class CampScene extends Phaser.Scene {
   create() {
     fitCamera(this);
     this.meta = new MetaProgression();
+    this.builds = new Builds(this.meta);
     this.W = vw(this);
     this.H = vh(this);
     this._modals = [];
@@ -53,6 +55,8 @@ export class CampScene extends Phaser.Scene {
     this._exiting = false;
     this._target = null;
     this._bubbleUntil = 0;
+    this._nextBuildTick = 0;
+    this.scaffold = this.buildTimer = this._birdWork = null;
     this._elderLine = this.meta.data.elderLine || 0;
     this.isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
@@ -96,6 +100,13 @@ export class CampScene extends Phaser.Scene {
     });
 
     this._refreshAll();
+    this._refreshBuildVisuals();
+    const adv = this.meta.data.lastRunBuildAdvanceMin || 0;
+    if (adv > 0) {
+      this.meta.data.lastRunBuildAdvanceMin = 0;
+      this.meta._save();
+      if (this.builds.job) this.time.delayedCall(900, () => this._toast(`A partida adiantou a obra em ${adv} min`));
+    }
     cam.fadeIn(400, 10, 14, 10);
     Analytics.track("camp_enter", {});
   }
@@ -201,7 +212,7 @@ export class CampScene extends Phaser.Scene {
     this._glow(x, y - 16, 5.5, 0xff9a4c, true);
     this._flames(x, y - 4, 22, 70, 0.25);
     this._solid(x, y, 56, 22);
-    this._addInteract({ x, y, top: y - 70, r: 110, name: "FOGUEIRA", verb: "TROCAR GUARDIÃO", action: () => this._showCharacters() });
+    this._addInteract({ x, y, top: y - 70, r: 110, name: "FOGUEIRA", verb: "GUARDIÕES", action: () => this._showCharacters(), build: "fire" });
   }
 
   // Chamas de partículas (puffs) — mesmas da tela de título
@@ -241,8 +252,8 @@ export class CampScene extends Phaser.Scene {
       if (glow) this._glow(x + glow[0], y + glow[1], glow[3] ?? 2.6, glow[2], true);
       this._solid(x, y - 14, img.displayWidth * 0.8, 30);
       const dot = this._notifyDot(x + img.displayWidth / 2 - 10, y - img.displayHeight + 6).setDepth(D_HUD - 10).setVisible(false);
-      this._addInteract({ x, y, top: y - img.displayHeight, r: 130, name, verb, action });
-      this.buildings[id] = { img, dot };
+      this._addInteract({ x, y, top: y - img.displayHeight, r: 130, name, verb, action, build: BUILDINGS[id] ? id : null });
+      this.buildings[id] = { img, dot, x, y };
     };
     B("shrine", "camp_shrine", "SANTUÁRIO", "BÊNÇÃOS E DONS", -430, -130, () => this._showBlessings(), [0, -75, 0xffe58f, 2.4]);
     B("forge", "camp_forge", "FORJA", "FORJAR ARMAS", 440, -120, () => this._showArsenal(), [-8, -18, 0xff8a3c, 2.8]);
@@ -255,6 +266,11 @@ export class CampScene extends Phaser.Scene {
     this.add.image(nx, ny, "camp_nest").setOrigin(0.5, 1).setScale(S).setDepth(ny);
     this._solid(nx, ny - 6, 16, 10);
     this.bird = this.add.sprite(nx + 34, ny - 2, "camp_bird", 0).setOrigin(0.5, 1).setScale(S).setDepth(ny + 1).play("bird_idle");
+    this.nest = { x: nx + 34, y: ny - 2 };
+    this.buildings.nest = { dot: this._notifyDot(nx, ny - 80).setDepth(D_HUD - 10).setVisible(false) };
+    this._addInteract({ x: nx, y: ny, top: ny - 100, r: 100, name: "JOÃO-DE-BARRO", verb: "OBRAS", action: () => this._showWorks() });
+    // A fogueira também é construção (nível) — posição para a obra aparecer
+    this.buildings.fire = { x: 0, y: 70, img: null };
 
     // Anciã da Fogueira: conversa (uma dica curta por vez)
     const ex = 110,
@@ -399,6 +415,7 @@ export class CampScene extends Phaser.Scene {
       Object.entries(META.ABILITY_UNLOCK_COST).some(([k, cost]) => !this.meta.hasAbility(k) && coins >= cost);
     const canArsenal = META.WEAPON_UNLOCK_ORDER.some((k) => !this.meta.isUnlocked(k) && coins >= META.WEAPON_UNLOCK_COST[k]);
     this.buildings.shrine.dot.setVisible(canBless);
+    this.buildings.nest.dot.setVisible(!this.builds.job && ["fire", "shrine", "forge"].some((id) => !this.builds.blocker(id)));
     this.buildings.forge.dot.setVisible(canArsenal);
   }
 
@@ -464,6 +481,121 @@ export class CampScene extends Phaser.Scene {
       f.c.setPosition(x, y).setAlpha(a);
     }
     if (this.bubble.visible && this._bubbleUntil < time) this.bubble.setVisible(false);
+    if (time > (this._nextBuildTick || 0)) {
+      this._nextBuildTick = time + 500;
+      this._tickBuilds();
+    }
+  }
+
+  // =========================================================================
+  // OBRAS (João-de-barro)
+  // =========================================================================
+  // Conclui a obra quando o tempo acaba e atualiza o cronômetro no mapa
+  _tickBuilds() {
+    const done = this.builds.tick();
+    if (done) this._onBuildDone(done);
+    const job = this.builds.job;
+    if (job && this.buildTimer) {
+      const free = this.builds.canFinishFree();
+      this.buildTimer.setText(free ? "PRONTA!" : fmtDuration(this.builds.remainingMs()));
+      this.buildTimer.setColor(free ? CSS.green : CSS.goldHi);
+    }
+  }
+
+  // Mostra (ou tira) a obra no mapa: andaime, cronômetro e o pássaro trabalhando
+  _refreshBuildVisuals() {
+    this.scaffold?.destroy();
+    this.buildTimer?.destroy();
+    this.scaffold = this.buildTimer = null;
+    this.tweens.killTweensOf(this.bird);
+    this._birdWork?.remove();
+    const job = this.builds.job;
+    if (!job) {
+      // Pássaro volta para o ninho
+      this.bird.setFlipX(false);
+      this.tweens.add({ targets: this.bird, x: this.nest.x, y: this.nest.y, duration: 900, ease: "Sine.easeInOut", onUpdate: () => this.bird.setDepth(this.bird.y + 1) });
+      return;
+    }
+    const b = this.buildings[job.id];
+    const top = b.img ? b.y - b.img.displayHeight : b.y - 70;
+    const w = b.img ? b.img.displayWidth : 90;
+    // Andaime de madeira na frente da construção
+    if (b.img) {
+      const g = (this.scaffold = this.add.graphics().setDepth(b.y + 2));
+      const x0 = b.x - w / 2 + 6,
+        x1 = b.x + w / 2 - 6;
+      g.fillStyle(PAL.ink, 1);
+      for (const x of [x0, x1]) g.fillRect(x - 3, top + 10, 8, b.y - top - 6);
+      g.fillStyle(PAL.n3, 1);
+      for (const x of [x0, x1]) g.fillRect(x - 1, top + 12, 4, b.y - top - 10);
+      for (let y = top + 30; y < b.y - 10; y += 34) {
+        g.fillStyle(PAL.ink, 1).fillRect(x0 - 4, y - 3, x1 - x0 + 10, 9);
+        g.fillStyle(PAL.n4, 1).fillRect(x0 - 2, y - 1, x1 - x0 + 6, 5);
+      }
+    }
+    // Cronômetro sobre a obra
+    this.buildTimer = text(this, b.x, top - 18, "", { size: 18, color: CSS.goldHi, origin: 0.5, stroke: true }).setDepth(D_HUD - 6);
+    // O João-de-barro voa até a obra e fica martelando (lado esquerdo: o
+    // canto direito é do selo "!")
+    const bx = b.x - w / 2 + 2,
+      by = top + 34;
+    this.bird.setFlipX(bx < this.bird.x);
+    this.tweens.add({
+      targets: this.bird,
+      x: bx,
+      y: by,
+      duration: 1100,
+      ease: "Sine.easeInOut",
+      onUpdate: () => this.bird.setDepth(D_NIGHT - 1),
+      onComplete: () => {
+        this.bird.setFlipX(false);
+        this._birdWork = this.time.addEvent({
+          delay: 420,
+          loop: true,
+          callback: () => {
+            this.tweens.add({ targets: this.bird, y: by - 8, duration: 110, yoyo: true });
+            const d = this.add.image(bx + 10, by - 4, "px_dot2").setScale(3).setTint(0xc88a5a).setDepth(D_NIGHT - 1);
+            this.tweens.add({ targets: d, y: by + 14, x: bx + 20 + Math.random() * 10, alpha: 0, duration: 500, onComplete: () => d.destroy() });
+          },
+        });
+      },
+    });
+    this._tickBuilds();
+  }
+
+  _onBuildStarted() {
+    this._refreshBuildVisuals();
+    this._refreshAll();
+  }
+
+  // Obra pronta: festa curta + efeitos (novo guardião etc.)
+  _onBuildDone(r) {
+    const name = BUILDINGS[r.id].name;
+    const b = this.buildings[r.id];
+    this.sound.play("sfx_levelup", { volume: 0.6 });
+    haptic(40);
+    for (let i = 0; i < 26; i++) {
+      const c = this.add.image(b.x, b.y - 60, "px_dot2").setScale(3).setTint([0xf2c14e, 0x9ccf62, 0xff7a3c, 0x5cc8ff][i % 4]).setDepth(D_HUD - 7);
+      const a = Math.random() * Math.PI * 2;
+      this.tweens.add({ targets: c, x: b.x + Math.cos(a) * (60 + Math.random() * 80), y: b.y - 60 + Math.sin(a) * 60 + 40, alpha: 0, duration: 1000 + Math.random() * 500, ease: "Cubic.easeOut", onComplete: () => c.destroy() });
+    }
+    this._toast(`${name} chegou ao nível ${r.to}!`);
+    Analytics.track("build_done", { id: r.id, level: r.to });
+    this._refreshBuildVisuals();
+    this._refreshAll();
+  }
+
+  // Aviso curto no alto da tela
+  _toast(msg) {
+    const W = this.W;
+    const c = this.add.container(W / 2, 110).setScrollFactor(0).setDepth(D_HUD + 5);
+    const t = text(this, 0, 0, msg, { size: 22, color: CSS.goldHi, origin: 0.5, stroke: true });
+    const g = this.add.graphics();
+    drawFrame(g, -t.width / 2 - 20, -22, t.width + 40, 44, "gold", { alpha: 0.95 });
+    c.add([g, t]);
+    c.setAlpha(0).setY(90);
+    this.tweens.add({ targets: c, alpha: 1, y: 110, duration: 240, ease: "Back.easeOut" });
+    this.tweens.add({ targets: c, alpha: 0, delay: 2600, duration: 400, onComplete: () => c.destroy() });
   }
 
   _setTarget(it) {
@@ -474,7 +606,8 @@ export class CampScene extends Phaser.Scene {
       this.actionBtn?.setVisible(false);
       return;
     }
-    const label = this.isTouch ? it.name : `[E]  ${it.name}`;
+    const name = it.build ? `${it.name} · NV ${this.builds.level(it.build)}` : it.name;
+    const label = this.isTouch ? name : `[E]  ${name}`;
     this.promptT.setText(label);
     const w = this.promptT.width + 28;
     this.promptG.clear();
