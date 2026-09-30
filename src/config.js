@@ -563,7 +563,7 @@ export const FISHING = {
   },
 };
 
-// Cozinha da Clareira (M3): colheita vira prato; 1 prato servido = bônus só na
+// Cozinha da Clareira (M3): colheita vira prato; comer 1 prato = bônus só na
 // PRÓXIMA partida (o prato é consumido ao entrar na floresta). O bônus cresce
 // com a qualidade dos ingredientes (média, arredondada para baixo).
 // bonus: hp/speed/dmg/area/xp = +%; cd = −% de recarga; crit = +chance; regen = vida/s
