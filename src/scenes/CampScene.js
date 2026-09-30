@@ -397,9 +397,10 @@ export class CampScene extends Phaser.Scene {
     drawFrame(this.woodBox[0], W - 204, 72, 186, 44, "dark");
     fix(new Button(this, W - 244, 40, 52, 52, "?", () => !this._modals.length && this._showGuide(), { size: 26, style: "dark" }));
     fix(new Button(this, W - 304, 40, 52, 52, null, () => !this._modals.length && this._showSettings(), { icon: "ico_gear", style: "dark", iconScale: 2.5 }));
+    this._barnHudButton(W - 364, 40); // Celeiro (aparece junto com a Horta)
     if (DEBUG) {
       fix(
-        new Button(this, W - 430, 40, 150, 44, "+500 (dev)", () => {
+        new Button(this, W - 480, 40, 150, 44, "+500 (dev)", () => {
           this.meta.addCoins(500);
           this._refreshAll();
         }, { size: 14, style: "green" }),
@@ -491,6 +492,7 @@ export class CampScene extends Phaser.Scene {
       bd = Infinity;
     for (const it of this.interactables) {
       if (it.hiddenUntil && !this.buildings[it.hiddenUntil]?.shown) continue;
+      if (it.hideWhenShown && this.buildings[it.hideWhenShown]?.shown) continue;
       const d = Math.hypot(p.x - it.x, p.y + 20 - it.y);
       if (d < it.r && d < bd) {
         best = it;
@@ -499,6 +501,7 @@ export class CampScene extends Phaser.Scene {
     }
     this._setTarget(busy ? null : best);
     if (this.inputMgr.consumeInteract() && !busy) this._interact();
+    if (!busy) this._gardenWalk(p.x, p.y + 20); // colher andando
 
     // Saída: passou entre as tochas da trilha ao norte
     if (!busy && p.y < TOP + 130 && Math.abs(p.x) < TRAIL_HALF) this._play();
@@ -717,16 +720,20 @@ export class CampScene extends Phaser.Scene {
     this.tweens.add({ targets: c, alpha: 0, delay: 2600, duration: 400, onComplete: () => c.destroy() });
   }
 
-  _setTarget(it) {
-    if (it === this._target) return;
+  // force: redesenha o mesmo alvo (o canteiro mudou de estado)
+  _setTarget(it, force = false) {
+    if (it === this._target && !force) return;
     this._target = it;
+    this._plotHighlight(it?.plot ?? null);
     if (!it) {
       this.prompt.setVisible(false);
       this.actionBtn?.setVisible(false);
       return;
     }
+    const plot = it.plot != null ? this._plotLabel(it.plot) : null;
+    it._key = plot?.key;
     const ruin = it.ruinOf && !this.buildings[it.ruinOf]?.shown;
-    const name = ruin ? "RUÍNA" : it.build ? `${it.name} · NV ${this.builds.level(it.build)}` : it.name;
+    const name = plot ? plot.name : ruin ? "RUÍNA" : it.build ? `${it.name} · NV ${this.builds.level(it.build)}` : it.name;
     const label = this.isTouch ? name : `[E]  ${name}`;
     this.promptT.setText(label);
     const w = this.promptT.width + 28;
@@ -734,7 +741,7 @@ export class CampScene extends Phaser.Scene {
     drawFrame(this.promptG, -w / 2, -17, w, 34, "gold", { noRivets: true, alpha: 0.95 });
     this.prompt.setPosition(it.x, it.top - 24).setVisible(true).setScale(0.8);
     this.tweens.add({ targets: this.prompt, scale: 1, duration: 140, ease: "Back.easeOut" });
-    if (this.actionBtn) this.actionBtn.setLabel(ruin ? "EXAMINAR" : it.verb).setVisible(true);
+    if (this.actionBtn) this.actionBtn.setLabel(plot ? plot.verb : ruin ? "EXAMINAR" : it.verb).setVisible(true);
   }
 
   _interact() {

@@ -425,7 +425,7 @@ export const MetaPanels = {
       ["ico_coin", "A Clareira", "Entre partidas: Santuário (bênçãos e dons), Forja (armas), Fogueira (guardiões), Mural (conquistas). A trilha ao norte leva à floresta."],
     ];
     if ((this.meta.data.revealed || []).includes("garden"))
-      sections.push(["ico_sprout", "Horta", "Plante na Clareira: as plantas crescem em tempo real, mesmo com o jogo fechado. Regue, arranque o mato e tire as lagartas para colher com qualidade Ouro — nada morre, só perde qualidade. Sementes raras caem dos minichefes, do baú dourado e do Mapinguari."]);
+      sections.push(["ico_sprout", "Horta", "Ande até um canteiro e use o botão de ação para plantar e cuidar; passe por cima do que está maduro para colher. As plantas crescem em tempo real, mesmo com o jogo fechado. Cuidar em dia dá qualidade Ouro — nada morre, só perde qualidade. A colheita fica no Celeiro. Sementes raras caem dos minichefes, do baú dourado e do Mapinguari."]);
     for (const [icon, name, desc] of sections) {
       list.addRow({
         h: 84,
