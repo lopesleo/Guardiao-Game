@@ -314,7 +314,7 @@ function songGame() {
   return { bpm: 132, beats: 64, events: ev };
 }
 
-// Chefe — "O Ancião" (Mi menor, 150 BPM): baixo em 16avos, bumbo em 4, tons
+// Chefe — "Mapinguari" (Mi menor, 150 BPM): baixo em 16avos, bumbo em 4, tons
 function songBoss() {
   const prog = ["Em", "Cb", "D", "B"];
   const ev = [];

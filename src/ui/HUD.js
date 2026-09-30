@@ -221,8 +221,8 @@ export class HUD {
     });
   }
 
-  // Barra de chefe no topo — serve pro Ancião e pros mini-chefes (name)
-  setBossActive(boss, name = "O ANCIÃO") {
+  // Barra de chefe no topo — serve pro Mapinguari e pros mini-chefes (name)
+  setBossActive(boss, name = "MAPINGUARI") {
     this.boss = boss;
     this.bossName = name;
     this.bossBar.setVisible(true);
@@ -307,7 +307,7 @@ export class HUD {
       this.bossBar.setColor(phase2 ? PAL.org2 : PAL.red2);
       this.bossBar.set(shown, this.boss._transitioning);
       this.bossBar.tick(dt);
-      this.bossLabel.setText(phase2 ? "O ANCIÃO · FÚRIA" : "O ANCIÃO");
+      this.bossLabel.setText(phase2 ? "MAPINGUARI · FÚRIA" : "MAPINGUARI");
     }
 
     // Despertar

@@ -34,7 +34,7 @@ const ELDER_LINES = [
   "Lanternas de cogumelo guardam presentes. Quebre-as quando precisar de fôlego.",
   "No Santuário, as moedas viram bênçãos que ficam para sempre.",
   "A Forja guarda armas para quem junta moedas pela mata.",
-  "Dizem que, depois do Ancião, vem uma noite que não acaba…",
+  "Dizem que, depois do Mapinguari, vem uma noite que não acaba…",
   "Uma arma no nível máximo, com a parceira certa, desperta algo maior.",
 ];
 

@@ -496,7 +496,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
 
     // Tint quente + pulso de escala (êxtase)
     const base = this._bossScale;
-    // Fase 2: o Ancião RESSECA e entra em brasa (quadros próprios)
+    // Fase 2: a Podridão no Mapinguari entra em brasa (quadros próprios)
     this.play("boss_fury");
     this._furyPulse = scene.tweens.add({
       targets: this,

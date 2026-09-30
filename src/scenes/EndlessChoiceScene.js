@@ -1,4 +1,4 @@
-// Vitória sobre o Ancião: encerrar com a vitória garantida ou seguir na
+// Vitória sobre o Mapinguari: encerrar com a vitória garantida ou seguir na
 // Noite Eterna (Modo Infinito) — inimigos cada vez mais fortes, recorde próprio.
 // A vitória já conta nos dois casos; continuar só acrescenta.
 import { ENDLESS } from "../config.js";
@@ -24,7 +24,7 @@ export class EndlessChoiceScene extends Phaser.Scene {
     const t = text(this, W / 2, cy - 170, "VITÓRIA!", { size: 80, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 10, shadowY: 6 });
     t.setScale(0.3).setAlpha(0);
     this.tweens.add({ targets: t, scale: 1, alpha: 1, duration: 420, ease: "Back.easeOut" });
-    text(this, W / 2, cy - 108, "O Ancião caiu. Mas a Podridão não dorme…", { size: 24, color: CSS.muted, origin: 0.5 });
+    text(this, W / 2, cy - 108, "O Mapinguari está livre. Mas a Podridão não dorme…", { size: 24, color: CSS.muted, origin: 0.5 });
 
     const best = this.gs.meta.data.bestEndlessSeconds || 0;
     const info = [

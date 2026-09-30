@@ -344,66 +344,85 @@ function chest(state) {
 }
 
 // ---------------------------------------------------------------------------
-// O ANCIÃO (48×54) — árvore corrompida; fase 2 = ressecado e em brasa
+// MAPINGUARI CORROMPIDO (50×56) — gigante peludo da mata (lenda amazônica):
+// UM olho na testa, a BOCA NA BARRIGA, braços longos com garras. A Podridão
+// o tomou (rachaduras magenta); na fase 2 as rachaduras viram brasa.
+// Vencer = libertá-lo da Podridão (ver GameScene._onBossDeath).
 // ---------------------------------------------------------------------------
-function elder(f, fury) {
+const MAPI_FUR = [0x1e120c, 0x352014, 0x52321f, 0x74492c, 0x93603a];
+function mapinguari(f, fury, freed = false) {
   const p = new Pix(50, 56);
-  const sway = f === 1 ? 1 : 0;
-  const leaves = fury ? [0x3a1206, PAL.org1, PAL.org2, PAL.yel2] : [PAL.t0, 0x3a1a44, ROT.mid, 0x7a3a8a];
-  const eye = fury ? PAL.red3 : PAL.yel3;
-  // Raízes-pés
-  const root = (x0, dir) => {
-    for (let i = 0; i < 7; i++) p.set(x0 + i * dir, 50 + Math.floor(i / 3), BARK[1 + (i % 2)]);
-    for (let i = 0; i < 4; i++) p.set(x0 + dir * (i + 2), 52 + Math.floor(i / 2), BARK[1]);
-  };
-  root(19, -1);
-  root(30, 1);
-  root(24, 0);
-  // Tronco (corpo)
-  for (let y = 22; y <= 52; y++) {
-    const w = 8 + Math.round(((y - 22) / 30) * 4);
+  const sw = f === 1 ? 1 : 0; // respiração: ombros sobem 1px
+  const crack = fury ? [PAL.org1, PAL.org2, PAL.yel3] : [ROT.mid, ROT.hot, ROT.glow];
+  // Meia-largura do corpo por linha: ombros largos → cintura → quadril
+  const half = (y) => (y < 14 ? 0 : y < 20 ? 9 + (y - 14) * 1.4 : y < 38 ? 17 - (y - 20) * 0.06 : 16 - (y - 38) * 0.45);
+  // Pernas curtas e grossas + pés com garras para trás
+  for (const x0 of [17, 30]) {
+    for (let y = 44; y <= 52; y++) for (let x = x0; x <= x0 + 5; x++) p.set(x, y, MAPI_FUR[x === x0 ? 3 : x === x0 + 5 ? 0 : 1]);
+    for (let x = x0 - 2; x <= x0 + 6; x++) p.set(x, 53, MAPI_FUR[1]);
+    px(p, [[x0 - 3, 53], [x0 - 4, 53], [x0 - 3, 52]], PAL.s4); // garras viradas para trás
+  }
+  // Corpo peludo: fios verticais, borda desgrenhada, luz à esquerda
+  for (let y = 14 - sw; y <= 47; y++) {
+    const yy = y + sw;
+    const w = Math.round(half(yy) + (((yy * 7) % 5) === 0 ? 1 : 0));
     for (let x = 25 - w; x <= 25 + w; x++) {
-      const u = (x - (25 - w)) / (2 * w);
-      let c = u < 0.2 ? BARK[3] : u < 0.55 ? BARK[2] : u < 0.85 ? BARK[1] : BARK[0];
-      if (x % 4 === 1 && (y * 5 + x) % 9 > 1) c = BARK[0]; // veios verticais
-      p.set(x + (y < 30 ? sway : 0), y, c);
+      const u = (x - (25 - w)) / (2 * w + 1);
+      let k = u < 0.18 ? 4 : u < 0.45 ? 3 : u < 0.75 ? 2 : 1;
+      if ((x * 3 + Math.floor(y / 2)) % 5 === 0) k = Math.max(0, k - 1); // fios
+      p.set(x, y, MAPI_FUR[k]);
     }
   }
-  // Braços-galho
-  const arm = (x0, y0, dir, up) => {
-    for (let i = 0; i < 12; i++) {
-      const x = x0 + i * dir,
-        y = y0 - Math.round(i * up);
-      p.set(x, y, BARK[2]);
-      p.set(x, y + 1, BARK[1]);
+  // Franja de pelo na barra (pontas)
+  for (let x = 10; x <= 40; x += 2) p.set(x, 48 + (x % 4 === 0 ? 1 : 0), MAPI_FUR[1]);
+  // Braços grossos pendendo até o chão, garras grandes
+  const arm = (x0, dir, lift) => {
+    for (let y = 18 - sw; y <= 47 - lift; y++) {
+      const x = x0 + dir * Math.round((y - 18) * 0.12);
+      for (let k = 0; k < 4; k++) p.set(x + dir * k, y, MAPI_FUR[k === 0 ? (dir < 0 ? 4 : 2) : k === 3 ? 0 : 2]);
     }
-    const tx = x0 + 12 * dir,
-      ty = y0 - Math.round(12 * up);
-    px(p, [[tx + dir, ty - 1], [tx + dir * 2, ty - 2], [tx, ty - 2], [tx + dir, ty + 1]], BARK[2]);
+    const hx = x0 + dir * 4,
+      hy = 48 - lift;
+    for (let k = 0; k < 4; k++) p.set(hx + dir * k, hy, MAPI_FUR[1]);
+    px(p, [[hx, hy + 1], [hx + dir * 2, hy + 2], [hx + dir * 4, hy + 1], [hx + dir * 1, hy + 2]], PAL.s4);
   };
-  arm(16, 32 - sway, -1, 0.6 + sway * 0.1);
-  arm(34, 32 + sway, 1, 0.5);
-  // Copa (cachos de folhas corrompidas)
-  const blobs = [
-    [25, 12, 13, 10],
-    [14, 16, 8, 6.5],
-    [36, 15, 8, 6.5],
-    [19, 7, 7, 5.5],
-    [31, 6, 7, 5.5],
+  arm(8, -1, sw);
+  arm(42, 1, 1 - sw);
+  // Cabeça afundada nos ombros, com UM olho grande na testa
+  ell(p, 25, 11 - sw, 7.5, 6.5, MAPI_FUR.slice(1), 0.35);
+  for (let x = 19; x <= 31; x++) p.set(x, 7 - sw, MAPI_FUR[1]); // sobrancelha pesada
+  p.disc(25, 10 - sw, 3.2, PAL.ink);
+  p.disc(25, 10 - sw, 2.4, freed ? PAL.g4 : fury ? PAL.red1 : PAL.yel1);
+  p.disc(25, 10 - sw, 1.4, freed ? PAL.g6 : fury ? PAL.red3 : PAL.yel3);
+  p.set(24, 9 - sw, PAL.white);
+  // BOCA NA BARRIGA (a marca da lenda): grande, aberta, gengiva e dentes
+  const my = 32,
+    mrx = 9.5,
+    mry = 6.5;
+  for (let y = Math.floor(my - mry); y <= Math.ceil(my + mry); y++)
+    for (let x = Math.floor(25 - mrx); x <= Math.ceil(25 + mrx); x++) {
+      const dx = (x + 0.5 - 25) / mrx,
+        dy = (y + 0.5 - my) / mry;
+      const d = dx * dx + dy * dy;
+      if (d > 1) continue;
+      p.set(x, y, d > 0.72 ? PAL.red1 : d > 0.35 ? 0x2a0a10 : PAL.ink); // gengiva → garganta
+    }
+  for (let x = 17; x <= 33; x++) {
+    if (x % 2) p.set(x, my - 5, PAL.cream); // dentes de cima
+    if (x % 2 === 0 && x > 17 && x < 33) p.set(x, my + 5, PAL.cream); // de baixo
+  }
+  px(p, [[18, my - 4], [32, my - 4], [19, my + 4], [31, my + 4]], PAL.cream); // presas
+  p.disc(25, my + 1.5, 2.2, PAL.red2); // língua
+  if (!freed) p.set(25, my - 1, crack[2]); // brilho da Podridão na garganta
+  // Rachaduras/cipós da Podridão (magenta; brasa na fúria)
+  const cracks = [
+    [12, 20], [13, 21], [13, 22], [14, 23], [14, 24],
+    [37, 19], [36, 20], [36, 21], [35, 22],
+    [15, 40], [16, 41], [17, 42], [34, 40], [33, 41],
+    [5, 30], [45, 32], [6, 38], [44, 26],
   ];
-  for (const [cx, cy, rx, ry] of blobs) ell(p, cx + sway, cy, rx, ry, leaves, 0.3);
-  // Frutos/brasas
-  px(p, [[18, 12], [30, 9], [37, 16], [13, 18], [25, 4]], fury ? PAL.yel3 : ROT.glow);
-  // Rosto no tronco
-  const fy = 34;
-  px(p, [[20, fy], [21, fy], [22, fy + 1], [28, fy + 1], [29, fy], [30, fy]], BARK[0]); // sobrancelhas
-  px(p, [[21, fy + 2], [22, fy + 2], [28, fy + 2], [29, fy + 2]], eye);
-  px(p, [[21, fy + 3], [29, fy + 3]], fury ? PAL.org2 : PAL.yel2);
-  // Boca rachada com brilho
-  for (let x = 21; x <= 29; x++) p.set(x, fy + 7 + (x % 2), PAL.ink);
-  for (let x = 22; x <= 28; x += 2) p.set(x, fy + 8, fury ? PAL.org2 : ROT.hot);
-  // Musgo
-  px(p, [[17, 24], [18, 23], [33, 26], [32, 25], [20, 46], [31, 44]], fury ? PAL.n3 : PAL.g4);
+  // Libertado: sem rachaduras (a Podridão saiu dele)
+  if (!freed) cracks.forEach(([x, y], i) => p.set(x, y - (y < 30 ? sw : 0), crack[i % 4 === 3 ? 2 : 1]));
   p.outline(PAL.ink);
   return p;
 }
@@ -447,7 +466,7 @@ export function registerMonsters(scene) {
   strip("mon_elder", [troll(0, STONE, PAL.ice2), troll(1, STONE, PAL.ice2)]);
   strip("mon_bee", [bee(0), bee(1)]);
   strip("mon_shroom", [shroom(0), shroom(1)]);
-  strip("mon_boss", [elder(0, false), elder(1, false), elder(0, true), elder(1, true)]);
+  strip("mon_boss", [mapinguari(0, false), mapinguari(1, false), mapinguari(0, true), mapinguari(1, true), mapinguari(0, false, true)]);
   strip("obj_chest", [chest(0), chest(1), chest(2), chest(3), chest(4)]);
   strip("px_fireball", [fireball(0), fireball(1), fireball(2)]);
 
