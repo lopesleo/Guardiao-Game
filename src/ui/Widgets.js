@@ -217,7 +217,8 @@ export class Slider extends Phaser.GameObjects.Container {
   constructor(scene, x, y, w, value, onChange) {
     super(scene, x, y);
     scene.add.existing(this);
-    this.w = w;
+    // NÃO usar "this.w": Transform.setPosition(x, y) zera o "w" do Phaser e a barra sumia.
+    this.trackW = w;
     this.value = value;
     this.onChange = onChange;
     this.g = scene.add.graphics();
@@ -241,7 +242,7 @@ export class Slider extends Phaser.GameObjects.Container {
   }
   _draw() {
     const g = this.g,
-      w = this.w;
+      w = this.trackW;
     g.clear();
     g.fillStyle(PAL.ink, 1).fillRect(-w / 2, -6, w, 12);
     g.fillStyle(0x0b100e, 1).fillRect(-w / 2 + 3, -3, w - 6, 6);
