@@ -211,6 +211,7 @@ export class MetaProgression {
   }
 
   registerRun(elapsedSeconds, won, difficulty = 0) {
+    this.data.runsPlayed = (this.data.runsPlayed || 0) + 1; // revelações da Clareira
     if (elapsedSeconds > this.data.highScoreSeconds) {
       this.data.highScoreSeconds = Math.floor(elapsedSeconds);
     }

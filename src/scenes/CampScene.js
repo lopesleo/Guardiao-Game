@@ -8,6 +8,7 @@
 import { GAME, CHARACTERS, DIFFICULTY, META, BLESSINGS, BUILDINGS } from "../config.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
 import { Builds, fmtDuration } from "../systems/Builds.js";
+import { REVEALS, pendingReveals } from "../systems/Reveal.js";
 import { InputManager } from "../systems/InputManager.js";
 import { VirtualJoystick } from "../ui/VirtualJoystick.js";
 import { DEBUG } from "../systems/Platform.js";
@@ -46,6 +47,9 @@ export class CampScene extends Phaser.Scene {
     fitCamera(this);
     this.meta = new MetaProgression();
     this.builds = new Builds(this.meta);
+    // Revelações: pendentes viram cena (1 por visita); o resto aparece normal
+    this._pending = pendingReveals(this.meta.data);
+    this.meta._save();
     this.W = vw(this);
     this.H = vh(this);
     this._modals = [];
@@ -57,6 +61,8 @@ export class CampScene extends Phaser.Scene {
     this._bubbleUntil = 0;
     this._nextBuildTick = 0;
     this.scaffold = this.buildTimer = this._birdWork = null;
+    this._cutscene = false;
+    this.sayBox = null;
     this._elderLine = this.meta.data.elderLine || 0;
     this.isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 
@@ -109,6 +115,7 @@ export class CampScene extends Phaser.Scene {
     }
     cam.fadeIn(400, 10, 14, 10);
     Analytics.track("camp_enter", {});
+    this.time.delayedCall(700, () => this._introSequence());
   }
 
   // VOLTAR do Android: fecha o painel aberto; sem painel, volta ao título
@@ -247,13 +254,28 @@ export class CampScene extends Phaser.Scene {
   _structures() {
     this.buildings = {};
     const B = (id, tex, name, verb, x, y, action, glow) => {
-      const img = this.add.image(x, y, tex).setOrigin(0.5, 1).setScale(S).setDepth(y);
+      const shown = this._isShown(id);
+      const img = this.add.image(x, y, tex).setOrigin(0.5, 1).setScale(S).setDepth(y).setAlpha(shown ? 1 : 0);
       this.add.image(x, y + 4, "px_shadow").setScale(img.displayWidth / 16, 4).setAlpha(0.55).setDepth(y - 1);
-      if (glow) this._glow(x + glow[0], y + glow[1], glow[3] ?? 2.6, glow[2], true);
+      const g = glow ? this._glow(x + glow[0], y + glow[1], glow[3] ?? 2.6, glow[2], true) : null;
+      if (g && !shown) g.setVisible(false);
+      // Ruína tomada pela Podridão (some na cena de revelação)
+      const ruin = shown ? null : this.add.image(x, y, "camp_ruin").setOrigin(0.5, 1).setScale(S).setDepth(y);
       this._solid(x, y - 14, img.displayWidth * 0.8, 30);
       const dot = this._notifyDot(x + img.displayWidth / 2 - 10, y - img.displayHeight + 6).setDepth(D_HUD - 10).setVisible(false);
-      this._addInteract({ x, y, top: y - img.displayHeight, r: 130, name, verb, action, build: BUILDINGS[id] ? id : null });
-      this.buildings[id] = { img, dot, x, y };
+      const b = { img, dot, x, y, glow: g, ruin, shown };
+      this._addInteract({
+        x,
+        y,
+        top: y - img.displayHeight,
+        r: 130,
+        name,
+        verb,
+        ruinOf: id,
+        action: () => (b.shown ? action() : this._say("Cure a floresta jogando partidas para revelar o que há aqui.")),
+        build: BUILDINGS[id] ? id : null,
+      });
+      this.buildings[id] = b;
     };
     B("shrine", "camp_shrine", "SANTUÁRIO", "BÊNÇÃOS E DONS", -430, -130, () => this._showBlessings(), [0, -75, 0xffe58f, 2.4]);
     B("forge", "camp_forge", "FORJA", "FORJAR ARMAS", 440, -120, () => this._showArsenal(), [-8, -18, 0xff8a3c, 2.8]);
@@ -262,13 +284,14 @@ export class CampScene extends Phaser.Scene {
     // Ninho do João-de-barro (o construtor chega com as obras) + o pássaro
     const nx = 450,
       ny = 290;
-    this.add.image(nx, ny + 4, "px_shadow").setScale(4, 3).setAlpha(0.5).setDepth(ny - 1);
-    this.add.image(nx, ny, "camp_nest").setOrigin(0.5, 1).setScale(S).setDepth(ny);
+    const nestShown = this._isShown("nest");
+    const nestShadow = this.add.image(nx, ny + 4, "px_shadow").setScale(4, 3).setAlpha(nestShown ? 0.5 : 0).setDepth(ny - 1);
+    const nestImg = this.add.image(nx, ny, "camp_nest").setOrigin(0.5, 1).setScale(S).setDepth(ny).setAlpha(nestShown ? 1 : 0);
     this._solid(nx, ny - 6, 16, 10);
-    this.bird = this.add.sprite(nx + 34, ny - 2, "camp_bird", 0).setOrigin(0.5, 1).setScale(S).setDepth(ny + 1).play("bird_idle");
+    this.bird = this.add.sprite(nx + 34, ny - 2, "camp_bird", 0).setOrigin(0.5, 1).setScale(S).setDepth(ny + 1).play("bird_idle").setAlpha(nestShown ? 1 : 0);
     this.nest = { x: nx + 34, y: ny - 2 };
-    this.buildings.nest = { dot: this._notifyDot(nx, ny - 80).setDepth(D_HUD - 10).setVisible(false) };
-    this._addInteract({ x: nx, y: ny, top: ny - 100, r: 100, name: "JOÃO-DE-BARRO", verb: "OBRAS", action: () => this._showWorks() });
+    this.buildings.nest = { dot: this._notifyDot(nx, ny - 80).setDepth(D_HUD - 10).setVisible(false), img: nestImg, shadow: nestShadow, x: nx, y: ny, shown: nestShown };
+    this._addInteract({ x: nx, y: ny, top: ny - 100, r: 100, name: "JOÃO-DE-BARRO", verb: "OBRAS", action: () => this._showWorks(), hiddenUntil: "nest" });
     // A fogueira também é construção (nível) — posição para a obra aparecer
     this.buildings.fire = { x: 0, y: 70, img: null };
 
@@ -414,9 +437,9 @@ export class CampScene extends Phaser.Scene {
       coins >= this.meta.ancestralCost() ||
       Object.entries(META.ABILITY_UNLOCK_COST).some(([k, cost]) => !this.meta.hasAbility(k) && coins >= cost);
     const canArsenal = META.WEAPON_UNLOCK_ORDER.some((k) => !this.meta.isUnlocked(k) && coins >= META.WEAPON_UNLOCK_COST[k]);
-    this.buildings.shrine.dot.setVisible(canBless);
-    this.buildings.nest.dot.setVisible(!this.builds.job && ["fire", "shrine", "forge"].some((id) => !this.builds.blocker(id)));
-    this.buildings.forge.dot.setVisible(canArsenal);
+    this.buildings.shrine.dot.setVisible(canBless && this.buildings.shrine.shown);
+    this.buildings.nest.dot.setVisible(this.buildings.nest.shown && !this.builds.job && ["fire", "shrine", "forge"].some((id) => !this.builds.blocker(id)));
+    this.buildings.forge.dot.setVisible(canArsenal && this.buildings.forge.shown);
   }
 
   // Trocou de guardião na Fogueira: o avatar muda na hora (com fumacinha)
@@ -445,7 +468,7 @@ export class CampScene extends Phaser.Scene {
       this.shadow.setPosition(p.x, p.y + 20).setDepth(p.y + 19);
       return;
     }
-    const busy = this._modals.length > 0 || this._leaving;
+    const busy = this._modals.length > 0 || this._leaving || this._cutscene;
     const mx = busy ? 0 : this.inputMgr.move.x,
       my = busy ? 0 : this.inputMgr.move.y;
     p.setVelocity(mx * SPEED, my * SPEED);
@@ -459,6 +482,7 @@ export class CampScene extends Phaser.Scene {
     let best = null,
       bd = Infinity;
     for (const it of this.interactables) {
+      if (it.hiddenUntil && !this.buildings[it.hiddenUntil]?.shown) continue;
       const d = Math.hypot(p.x - it.x, p.y + 20 - it.y);
       if (d < it.r && d < bd) {
         best = it;
@@ -485,6 +509,85 @@ export class CampScene extends Phaser.Scene {
       this._nextBuildTick = time + 500;
       this._tickBuilds();
     }
+  }
+
+  // =========================================================================
+  // REVELAÇÕES (a Clareira sai das ruínas por progresso) + fala da Anciã
+  // =========================================================================
+  _isShown(id) {
+    return !REVEALS.some((r) => r.id === id) || this.meta.data.revealed.includes(id);
+  }
+
+  _introSequence() {
+    const d = this.meta.data;
+    const reveal = () => this._pending[0] && this._playReveal(this._pending[0]);
+    if (!d.campIntroSeen) {
+      d.campIntroSeen = true;
+      this.meta._save();
+      this._say("A Podridão tomou nosso lar. Cada partida devolve um pouco da floresta.", reveal);
+    } else reveal();
+  }
+
+  // Cena: câmera vai até a ruína, os cipós se desfazem, a construção aparece
+  // e a Anciã a apresenta em uma frase. Uma por visita (uma novidade por vez).
+  _playReveal(r) {
+    const b = this.buildings[r.id];
+    if (!b) return;
+    this._cutscene = true;
+    this._setTarget(null);
+    const cam = this.cameras.main;
+    cam.stopFollow();
+    cam.pan(b.x, b.y - 80, 700, "Sine.easeInOut");
+    this.time.delayedCall(800, () => {
+      // Cipós da Podridão se desfazendo
+      for (let i = 0; i < 30; i++) {
+        const p = this.add.image(b.x + (Math.random() - 0.5) * 110, b.y - Math.random() * 90, "px_dot2").setScale(3).setTint(i % 3 ? 0x8a3fa0 : 0xff7eb6).setDepth(D_HUD - 7);
+        this.tweens.add({ targets: p, y: p.y - 40 - Math.random() * 50, alpha: 0, duration: 900 + Math.random() * 500, onComplete: () => p.destroy() });
+      }
+      if (b.ruin) this.tweens.add({ targets: b.ruin, alpha: 0, duration: 600, onComplete: () => b.ruin.destroy() });
+      const show = [b.img, b.shadow].filter(Boolean);
+      this.tweens.add({ targets: show, alpha: 1, duration: 700, delay: 300 });
+      if (r.id === "nest") this.tweens.add({ targets: this.bird, alpha: 1, duration: 700, delay: 500 });
+      if (b.img) this.tweens.add({ targets: b.img, scaleY: { from: S * 0.7, to: S }, duration: 600, delay: 300, ease: "Back.easeOut" });
+      b.glow?.setVisible(true);
+      this.sound.play("sfx_levelup", { volume: 0.6 });
+      b.shown = true;
+      this.meta.data.revealed.push(r.id);
+      this.meta._save();
+      Analytics.track("camp_reveal", { id: r.id, runs: this.meta.data.runsPlayed || 0 });
+      this.time.delayedCall(900, () =>
+        this._say(r.line, () => {
+          cam.pan(this.player.x, this.player.y, 500, "Sine.easeInOut");
+          this.time.delayedCall(520, () => {
+            cam.startFollow(this.player, true, 0.14, 0.14);
+            this._cutscene = false;
+            this._refreshAll();
+          });
+        }),
+      );
+    });
+  }
+
+  // Fala da Anciã numa caixa na parte de baixo da tela (some sozinha)
+  _say(line, onDone) {
+    this.sayBox?.destroy();
+    const W = this.W,
+      H = this.H;
+    const w = Math.min(760, W - 40);
+    const c = (this.sayBox = this.add.container(W / 2, H - 92).setScrollFactor(0).setDepth(D_HUD + 6));
+    const g = this.add.graphics();
+    drawFrame(g, -w / 2, -52, w, 104, "gold", { alpha: 0.96 });
+    const face = this.add.sprite(-w / 2 + 52, 30, "camp_elder", 0).setOrigin(0.5, 1).setScale(4).setFlipX(true);
+    const who = text(this, -w / 2 + 100, -30, "ANCIÃ DA FOGUEIRA", { size: 15, color: CSS.goldHi, origin: [0, 0.5] });
+    const t = text(this, -w / 2 + 100, 8, line, { size: 19, color: CSS.txt, origin: [0, 0.5], wrap: w - 130 });
+    c.add([g, face, who, t]);
+    c.setAlpha(0).setY(H - 70);
+    this.tweens.add({ targets: c, alpha: 1, y: H - 92, duration: 220, ease: "Back.easeOut" });
+    const ms = Math.max(3200, line.length * 55);
+    this.time.delayedCall(ms, () => {
+      this.tweens.add({ targets: c, alpha: 0, duration: 300, onComplete: () => c.destroy() });
+      onDone?.();
+    });
   }
 
   // =========================================================================
@@ -606,7 +709,8 @@ export class CampScene extends Phaser.Scene {
       this.actionBtn?.setVisible(false);
       return;
     }
-    const name = it.build ? `${it.name} · NV ${this.builds.level(it.build)}` : it.name;
+    const ruin = it.ruinOf && !this.buildings[it.ruinOf]?.shown;
+    const name = ruin ? "RUÍNA" : it.build ? `${it.name} · NV ${this.builds.level(it.build)}` : it.name;
     const label = this.isTouch ? name : `[E]  ${name}`;
     this.promptT.setText(label);
     const w = this.promptT.width + 28;
@@ -614,7 +718,7 @@ export class CampScene extends Phaser.Scene {
     drawFrame(this.promptG, -w / 2, -17, w, 34, "gold", { noRivets: true, alpha: 0.95 });
     this.prompt.setPosition(it.x, it.top - 24).setVisible(true).setScale(0.8);
     this.tweens.add({ targets: this.prompt, scale: 1, duration: 140, ease: "Back.easeOut" });
-    if (this.actionBtn) this.actionBtn.setLabel(it.verb).setVisible(true);
+    if (this.actionBtn) this.actionBtn.setLabel(ruin ? "EXAMINAR" : it.verb).setVisible(true);
   }
 
   _interact() {
