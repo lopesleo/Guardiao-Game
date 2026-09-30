@@ -1,10 +1,12 @@
 // Cozinha da Clareira: receitas com a colheita do celeiro (meta.data.pantry).
-// Prato pronto vai para a marmita (meta.data.dishes, por qualidade); UM prato
+// Prato pronto vai para a pratos prontos (meta.data.dishes, por qualidade); UM prato
 // servido (meta.data.meal) vale só para a próxima partida e é consumido nela.
-import { KITCHEN, GARDEN } from "../config.js";
+import { KITCHEN, GARDEN, FISHING } from "../config.js";
 import { pantryCount } from "./Garden.js";
 
 export const recipe = (id) => KITCHEN.RECIPES.find((r) => r.id === id);
+// Nome de um ingrediente (planta da horta ou peixe do lago)
+export const itemName = (id) => GARDEN.CROPS[id]?.name ?? FISHING.FISH[id]?.name ?? id;
 
 export class Kitchen {
   constructor(meta) {
@@ -18,7 +20,10 @@ export class Kitchen {
   // Receitas à mostra: as comuns sempre; as mágicas só depois de ver a semente
   known() {
     const d = this.meta.data;
-    const seen = (k) => !GARDEN.CROPS[k]?.rare || pantryCount(d, k) > 0 || (d.seeds?.[k] || 0) > 0 || (d.garden?.plots || []).some((p) => p?.crop === k);
+    const seen = (k) => {
+      if (FISHING.FISH[k]) return (d.revealed || []).includes("pond"); // peixe: depois que o Lago aparece
+      return !GARDEN.CROPS[k]?.rare || pantryCount(d, k) > 0 || (d.seeds?.[k] || 0) > 0 || (d.garden?.plots || []).some((p) => p?.crop === k);
+    };
     return KITCHEN.RECIPES.filter((r) => (d.cooked || []).includes(r.id) || Object.keys(r.needs).every(seen));
   }
 
@@ -55,7 +60,7 @@ export class Kitchen {
     return { id, q };
   }
 
-  // Serve um prato da marmita para a próxima partida (devolve o anterior)
+  // Serve um prato da pratos prontos para a próxima partida (devolve o anterior)
   serve(id, q, save = true) {
     const d = this.meta.data;
     const row = d.dishes[id];
@@ -106,6 +111,7 @@ export function bonusText(r, q = 0) {
       if (stat === "dmg") return `+${pct(v)}% dano`;
       if (stat === "area") return `+${pct(v)}% área`;
       if (stat === "xp") return `+${pct(v)}% XP`;
+      if (stat === "pickup") return `+${pct(v)}% raio de coleta`;
       if (stat === "cd") return `−${pct(v)}% recarga`;
       if (stat === "crit") return `+${pct(v)}% crítico`;
       if (stat === "regen") return `+${(v * k).toFixed(1).replace(".", ",")} vida/s`;

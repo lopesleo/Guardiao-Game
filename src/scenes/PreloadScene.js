@@ -11,6 +11,7 @@ import { registerLanterns } from "../art/Lanterns.js";
 import { registerCamp } from "../art/Camp.js";
 import { registerGarden } from "../art/Garden.js";
 import { registerKitchen } from "../art/Kitchen.js";
+import { registerPond } from "../art/Pond.js";
 import { registerAudio } from "../audio/Synth.js";
 import { text, Bar, PAL, vw, vh, fitCamera } from "../ui/Theme.js";
 
@@ -40,6 +41,7 @@ export class PreloadScene extends Phaser.Scene {
       ["Erguendo o acampamento…", () => registerCamp(this)],
       ["Arando a horta…", () => registerGarden(this)],
       ["Acendendo o fogão…", () => registerKitchen(this)],
+      ["Enchendo o lago…", () => registerPond(this)],
       ["Afinando a floresta…", () => registerAudio(this.game)],
     ];
     let i = 0;

@@ -4,7 +4,7 @@
 // sementes no pé da tela (segurar = planta em todos os vazios).
 // O Celeiro (prédio ao lado + botão no HUD) mostra a colheita e as sementes.
 // Mixin da CampScene (Object.assign): usa this.meta, this.builds, this.garden.
-import { GAME, GARDEN } from "../config.js";
+import { GAME, GARDEN, FISHING } from "../config.js";
 import { fmtDuration } from "../systems/Builds.js";
 import { pantryCount } from "../systems/Garden.js";
 import { Analytics } from "../systems/Analytics.js";
@@ -355,7 +355,7 @@ export const CampGarden = {
           const g = this.add.graphics();
           drawFrame(g, 0, 0, w, 56, "dark", { noRivets: true });
           c.add(g);
-          c.add(this.add.image(34, 28, icon).setScale(3));
+          c.add(this.add.image(34, 28, icon).setScale(FISHING.FISH[icon.slice(4)] ? 2.4 : 3)); // peixe é comprido
           c.add(text(this, 70, 28, name, { size: 19, origin: [0, 0.5] }));
           right(c, w);
         },
@@ -375,6 +375,22 @@ export const CampGarden = {
           x -= t.width + 38;
         }
       });
+    const fish = Object.keys(FISHING.FISH).filter((id) => pantryCount(d, id) > 0 || d.fishRecords?.[id]);
+    if (fish.length) {
+      this._section(list, "PEIXES");
+      for (const id of fish)
+        row(`ico_${id}`, `${FISHING.FISH[id].name}  ·  recorde ${d.fishRecords?.[id] || 0} cm`, (c, w) => {
+          let x = w - 20;
+          const q = d.pantry[id] || [0, 0, 0];
+          for (let k = 2; k >= 0; k--) {
+            if (!q[k]) continue;
+            const t = text(this, x, 28, String(q[k]), { size: 19, color: Q_COLOR[k], origin: [1, 0.5], stroke: true });
+            c.add(t);
+            c.add(this._qualityPip(x - t.width - 12, 28, k));
+            x -= t.width + 38;
+          }
+        });
+    }
     const seeds = Object.entries(d.seeds || {}).filter(([, n]) => n > 0);
     if (seeds.length) {
       this._section(list, "SEMENTES RARAS");

@@ -148,6 +148,7 @@ export class GameScene extends Phaser.Scene {
       const m = mealMods(meal);
       this._applyCharacterMods(this.player, m);
       if (m.xp) this.player._xpMult *= m.xp;
+      if (m.pickup) this.player.pickupRadius *= m.pickup;
       this.meta.data.meal = null;
       this.meta.data.stats.mealsEaten = (this.meta.data.stats.mealsEaten || 0) + 1;
       this.meta._save();

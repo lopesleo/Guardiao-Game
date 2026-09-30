@@ -4,7 +4,7 @@
 > *"a horta e os peixes estão pequenos? queria um jogo à parte divertido"*.
 > Resposta: sim, estavam pequenos — eram só fornecedores de buff. Aqui eles viram
 > um **segundo jogo completo**, jogável por si só.
-> **Status:** Horta V1 implementada (ver `docs/ROADMAP.md`, M3); pesca e cozinha a fazer.
+> **Status:** V1 da horta, da pesca e da cozinha implementada (ver `docs/ROADMAP.md`, M3).
 
 ---
 

@@ -1,9 +1,9 @@
 // Cozinha na Clareira: fogão a lenha ao lado da horta. Escolher receita é
 // naturalmente um menu, então aqui é painel: cozinhar (colheita → prato na
-// marmita) e servir UM prato para a próxima partida.
+// pratos prontos) e servir UM prato para a próxima partida.
 // Mixin da CampScene (Object.assign): usa this.meta e this.kitchen.
 import { GAME, GARDEN } from "../config.js";
-import { recipe, bonusText } from "../systems/Kitchen.js";
+import { recipe, bonusText, itemName } from "../systems/Kitchen.js";
 import { pantryCount } from "../systems/Garden.js";
 import { Analytics } from "../systems/Analytics.js";
 import { CSS } from "../art/Palette.js";
@@ -94,12 +94,12 @@ export const CampKitchen = {
           },
         }),
       );
-    } else list.addRow({ h: 40, build: (c, w) => c.add(text(this, w / 2, 20, "Nenhum prato servido — cozinhe ou sirva um da marmita", { size: 16, color: CSS.dim, origin: 0.5 })) });
-    // Marmita (pratos prontos)
+    } else list.addRow({ h: 40, build: (c, w) => c.add(text(this, w / 2, 20, "Nenhum prato servido — cozinhe ou sirva um dos pratos prontos", { size: 16, color: CSS.dim, origin: 0.5 })) });
+    // Pratos prontos (cozinhados e guardados)
     const ready = [];
     for (const [id, row] of Object.entries(d.dishes || {})) row.forEach((n, q) => n > 0 && ready.push({ id, q, n }));
     if (ready.length) {
-      this._section(list, "MARMITA");
+      this._section(list, "PRATOS PRONTOS");
       for (const { id, q, n } of ready.sort((a, b) => b.q - a.q)) {
         const r = recipe(id);
         list.addRow(
@@ -123,7 +123,7 @@ export const CampKitchen = {
     for (const r of k.known()) {
       const can = k.canCook(r);
       const ing = Object.entries(r.needs)
-        .map(([id, n]) => `${n} ${GARDEN.CROPS[id].name} (${pantryCount(d, id)})`)
+        .map(([id, n]) => `${n} ${itemName(id)} (${pantryCount(d, id)})`)
         .join(" + ");
       list.addRow(
         this._shopRow({

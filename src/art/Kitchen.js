@@ -70,6 +70,13 @@ const DISH = {
   brasa: { food: [PAL.red0, PAL.red1, PAL.red2], bits: PAL.org3 },
   geada: { food: [PAL.ice1, PAL.ice2, PAL.ice3], bits: PAL.white },
   trovao: { food: [PAL.pur0, PAL.pur1, PAL.pur2], bits: PAL.yel3 },
+  // com peixe
+  lambari_frito: { food: [PAL.yel1, PAL.org3, PAL.yel3], bits: PAL.g5, chunky: true },
+  pirao: { food: [PAL.n4, 0xd8ccb0, PAL.cream], bits: PAL.g5 },
+  caldeirada: { food: [PAL.org1, PAL.org2, PAL.yel3], bits: PAL.s4, chunky: true },
+  pacu_assado: { food: [PAL.s1, PAL.s2, PAL.s4], bits: PAL.org2, chunky: true },
+  moqueca: { food: [PAL.red1, PAL.org2, PAL.yel2], bits: PAL.g6 },
+  dourado_brasa: { food: [PAL.yel1, PAL.yel2, PAL.yel3], bits: PAL.red2, chunky: true },
 };
 
 function dishIcon(d) {

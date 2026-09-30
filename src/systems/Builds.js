@@ -1,7 +1,7 @@
 // Obras da Clareira: níveis das construções, feitos pelo João-de-barro (1 obra
 // por vez) com tempo REAL (Date.now). Partidas adiantam a obra; faltando pouco,
 // conclui com um toque. Tudo mora no save (meta.data.builds / buildJob).
-import { BUILD, BUILDINGS, CHARACTERS, WEAPONS, GARDEN } from "../config.js";
+import { BUILD, BUILDINGS, CHARACTERS, WEAPONS, GARDEN, FISHING } from "../config.js";
 
 export class Builds {
   constructor(meta) {
@@ -131,6 +131,7 @@ export function perkText(id, lv) {
     const c = CHARACTERS.find((c) => c.id === cid);
     return c ? `Chega à Clareira: ${c.name}` : "";
   }
+  if (id === "pond") return FISHING.LEVELS[lv] ? `Vara melhor · lago com ${FISHING.LEVELS[lv].cap} peixes` : "";
   if (id === "garden") {
     const crops = Object.values(GARDEN.CROPS).filter((c) => !c.rare && c.lv === lv).map((c) => c.name);
     return `${GARDEN.PLOTS[lv]} canteiros${crops.length ? ` · ${crops.join(", ")}` : ""}`;
