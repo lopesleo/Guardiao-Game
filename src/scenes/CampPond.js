@@ -65,10 +65,10 @@ export const CampPond = {
 
     // Bica d'água nas pedras do nordeste + espuma
     const fallX = wx(90),
-      fallY = wy(3);
+      fallY = wy(5); // nasce na boca do afloramento (art/Pond.js)
     const fall = this.add.sprite(fallX, fallY, "pond_fall", 0).setOrigin(0.5, 0).setScale(S).setDepth(FLAT + 3).play("pond_fall");
     show.push(fall);
-    const fallGlow = this.add.image(fallX, fallY + 40, "fx_glow").setScale(1.2, 0.6).setTint(0x8fd0c0).setBlendMode(Phaser.BlendModes.ADD).setDepth(D_NIGHT + 1);
+    const fallGlow = this.add.image(fallX, fallY + 54, "fx_glow").setScale(1.2, 0.6).setTint(0x8fd0c0).setBlendMode(Phaser.BlendModes.ADD).setDepth(D_NIGHT + 1);
     lights.push([fallGlow, 0.25]);
 
     // Vitórias-régias e folhinhas, balançando devagar
@@ -218,7 +218,7 @@ export const CampPond = {
         }
         if (hasFish && r > 0.985) this._fishJump();
         if (Math.random() < 0.5) {
-          const f = this.add.image(fallX + (Math.random() - 0.5) * 22, fallY + 36 + Math.random() * 8, "px_dot2").setScale(2).setTint(PAL.white).setAlpha(0.8).setDepth(FLAT + 5);
+          const f = this.add.image(fallX + (Math.random() - 0.5) * 22, fallY + 46 + Math.random() * 8, "px_dot2").setScale(2).setTint(PAL.white).setAlpha(0.8).setDepth(FLAT + 5);
           this.tweens.add({ targets: f, y: f.y + 8, x: f.x + (Math.random() - 0.5) * 14, alpha: 0, duration: 600, onComplete: () => f.destroy() });
         }
       },

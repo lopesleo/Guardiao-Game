@@ -171,9 +171,18 @@ function makeBase() {
         if (bayer(x, yTop + 1) < 0.35) p.set(x, yTop + 1, PAL.g3);
       }
   };
-  boulder(97, 10, 6, true);
+  // Afloramento de pedra de onde a bica jorra (nordeste): massa de pedras com
+  // musgo, uma boca escura no meio e o lábio molhado embaixo. A água (sprite
+  // pond_fall) sai da boca e escorre pela pedra até o lago.
+  boulder(83, 8, 5, true);
+  boulder(98, 8, 5, true);
+  boulder(90, 4, 8, true);
+  boulder(90, 10, 5, false);
+  p.rect(88, 3, 5, 4, PAL.ink); // boca da bica
+  p.rect(89, 4, 3, 2, PAL.s1);
+  p.rect(87, 7, 7, 1, PAL.s4); // lábio de pedra molhado
+  p.rect(88, 8, 5, 1, PAL.ice1);
   boulder(106, 15, 5, true);
-  boulder(82, 8, 4, false);
   boulder(12, 52, 4, true);
   boulder(104, 50, 3, false);
   // Juncos e taboas em touceiras (oeste, sul e leste)
