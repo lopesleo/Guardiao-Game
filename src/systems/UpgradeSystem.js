@@ -8,7 +8,9 @@ import { WEAPON_CLASSES } from "../entities/Weapons.js";
 
 // Ordem = ordem de exibição no menu de desbloqueio
 export const BASE_WEAPONS = ["STAFF", "AURA", "BOOMER", "CHAIN", "ORB", "FLAME"];
-export const MAX_WEAPON_SLOTS = 6;
+// 4 vagas (o herói já nasce com 1): de 6 armas, escolher quais levar é decisão de build.
+// Cada evolução ocupa 2 vagas (âncora + parceira), então cabem 2 no máximo.
+export const MAX_WEAPON_SLOTS = 4;
 
 export const WEAPON_DESC = {
   STAFF: "Bola de fogo no inimigo mais próximo.",

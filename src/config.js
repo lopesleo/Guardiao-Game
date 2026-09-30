@@ -65,8 +65,11 @@ export const ENEMY = {
 export const BOSS = {
   HP: 2000,
   PHASE2_AT_HP_PCT: 0.5,
-  DMG_MELEE: 12,
-  DMG_PROJECTILE: 8,
+  // O chefe tem de bater mais forte que o inimigo comum do fim da partida
+  // (8 + 1,4 × onda ≈ 28 na onda 14). Antes: 12 e 8 fixos no código, ignorando esta config.
+  DMG_MELEE: 40,
+  DMG_PROJECTILE: 24, // × multiplicador de dano do Perigo
+
   SPEED: 60,
   ROAR_DURATION_MS: 1500,
 };
