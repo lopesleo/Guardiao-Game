@@ -86,6 +86,7 @@ export class RunEvents {
         this._spawn(p.x + Math.cos(a) * r, p.y + Math.sin(a) * r, k);
       }
     } else if (ev.type === "miniboss") {
+      s.meta?.markLegend?.(ev.kind === "alpha" ? "mula" : "corposeco");
       const a = Math.random() * Math.PI * 2;
       const e = this._spawn(p.x + Math.cos(a) * R * 0.8, p.y + Math.sin(a) * R * 0.8, "wolf", ev.kind);
       if (e) {

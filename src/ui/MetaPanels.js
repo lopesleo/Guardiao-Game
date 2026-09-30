@@ -2,7 +2,7 @@
 // Créditos, Personagens) compartilhados pela tela de título e pela Clareira.
 // Uso: Object.assign(MinhaCena.prototype, MetaPanels). A cena precisa ter
 // this.meta (MetaProgression), this.W/this.H, this._modals e this._refreshAll().
-import { META, BLESSINGS, MAX_BLESSING_RANK, ACHIEVEMENTS, CHARACTERS, WEAPONS, BUILD, BUILDINGS } from "../config.js";
+import { META, BLESSINGS, MAX_BLESSING_RANK, ACHIEVEMENTS, CHARACTERS, WEAPONS, BUILD, BUILDINGS, LEGENDS } from "../config.js";
 import { fmtDuration } from "../systems/Builds.js";
 import { AdService } from "../systems/AdService.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
@@ -324,10 +324,64 @@ export const MetaPanels = {
     }
   },
 
-  _showAchievements() {
+  // Mural: abas Conquistas | Lendas (bestiário)
+  _showBoard(tab = "conquistas") {
     const done = this.meta.data.achievements;
-    const m = new Modal(this, { title: "MURAL", subtitle: `Conquistas: ${done.length} de ${ACHIEVEMENTS.length}`, w: 860, h: 640 });
-    const list = this._modalList(m);
+    const seen = LEGENDS.filter((l) => this._legendSeen(l)).length;
+    const m = new Modal(this, {
+      title: "MURAL",
+      subtitle: tab === "lendas" ? `Lendas da mata encontradas: ${seen} de ${LEGENDS.length}` : `Conquistas: ${done.length} de ${ACHIEVEMENTS.length}`,
+      w: 860,
+      h: 640,
+    });
+    const tabY = m.top + 26;
+    const tabBtn = (x, id, label) =>
+      m.add(
+        new Button(this, x, tabY, 240, 44, label, () => {
+          if (tab === id) return;
+          m.close();
+          this._showBoard(id);
+        }, { size: 18, style: tab === id ? "gold" : "dark", color: tab === id ? CSS.goldHi : CSS.muted }),
+      );
+    tabBtn(-128, "conquistas", "CONQUISTAS");
+    tabBtn(128, "lendas", "LENDAS");
+    const list = this._modalList(m, m.top + 58);
+    if (tab === "lendas") return this._fillLegends(list);
+    this._fillAchievements(list);
+  },
+
+  _showAchievements() {
+    this._showBoard("conquistas");
+  },
+
+  _legendSeen(l) {
+    return l.char ? this.meta.hasCharacter(l.char) : (this.meta.data.legendsSeen || []).includes(l.id);
+  },
+
+  // Fichas das lendas: retrato, papel no jogo e ORIGEM da lenda
+  _fillLegends(list) {
+    for (const l of LEGENDS) {
+      const ok = this._legendSeen(l);
+      list.addRow({
+        h: 118,
+        build: (c, w) => {
+          const g = this.add.graphics();
+          drawFrame(g, 0, 0, w, 118, ok ? "gold" : "dark", { noRivets: true });
+          c.add(g);
+          const [tex, frame, sc] = l.sprite;
+          const img = this.add.image(58, 62, tex, frame).setScale(sc);
+          if (!ok) img.setTintFill(0x1a1420).setAlpha(0.6);
+          c.add(img);
+          c.add(text(this, 120, 22, ok ? l.name : "???", { size: 21, color: ok ? CSS.goldHi : CSS.dim, origin: [0, 0.5] }));
+          c.add(text(this, 120, 44, ok ? l.role : "Encontre na floresta para conhecer esta lenda.", { size: 14, color: ok ? CSS.green : CSS.dim, origin: [0, 0.5] }));
+          if (ok) c.add(text(this, 120, 62, l.origin, { size: 14, color: CSS.muted, origin: [0, 0], wrap: w - 140, shadow: false }));
+        },
+      });
+    }
+  },
+
+  _fillAchievements(list) {
+    const done = this.meta.data.achievements;
     const ctx = this.meta.buildAchievementCtx();
     // Desbloqueadas por último → mostra primeiro o que falta
     const sorted = ACHIEVEMENTS.slice().sort((a, b) => done.includes(a.id) - done.includes(b.id));

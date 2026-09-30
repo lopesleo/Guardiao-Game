@@ -279,7 +279,7 @@ export class CampScene extends Phaser.Scene {
     };
     B("shrine", "camp_shrine", "SANTUÁRIO", "BÊNÇÃOS E DONS", -430, -130, () => this._showBlessings(), [0, -75, 0xffe58f, 2.4]);
     B("forge", "camp_forge", "FORJA", "FORJAR ARMAS", 440, -120, () => this._showArsenal(), [-8, -18, 0xff8a3c, 2.8]);
-    B("board", "camp_board", "MURAL", "VER CONQUISTAS", -420, 280, () => this._showAchievements());
+    B("board", "camp_board", "MURAL", "CONQUISTAS E LENDAS", -420, 280, () => this._showBoard());
 
     // Ninho do João-de-barro (o construtor chega com as obras) + o pássaro
     const nx = 450,
