@@ -190,6 +190,13 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.hp = this.maxHp;
       this.dmg *= diff.dmgMult;
     }
+    // Noite Eterna: força composta pelo tempo além da vitória
+    const em = this.scene.endlessMult?.();
+    if (em) {
+      this.maxHp *= em.hp;
+      this.hp = this.maxHp;
+      this.dmg *= em.dmg;
+    }
 
     this._baseScale = this.scaleX; // squash de crítico é relativo a isto
     // Sombra proporcional ao tamanho final (elite/mímico são maiores)

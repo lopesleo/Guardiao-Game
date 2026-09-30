@@ -14,6 +14,7 @@ import {
   ANCESTRAL,
   CHARACTERS,
   ADS,
+  ENDLESS,
 } from "../config.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
@@ -257,6 +258,8 @@ export class GameScene extends Phaser.Scene {
       this.bgMusic.play();
     }
     this.gameOver = false;
+    this.endless = false;
+    this._endlessStartMs = 0;
     this._reviveOpen = false;
     this._chestOffer = null;
 
@@ -346,7 +349,7 @@ export class GameScene extends Phaser.Scene {
       this.hud.showBossBanner("O guardião do bosque desperta…");
     }
     // Spawn do boss aos 7:00
-    if (!this.boss && this.elapsedMs >= GAME.RUN_DURATION_S * 1000) {
+    if (!this.boss && !this.endless && this.elapsedMs >= GAME.RUN_DURATION_S * 1000) {
       this._spawnBoss();
     }
 
@@ -849,7 +852,43 @@ export class GameScene extends Phaser.Scene {
     this._coinsGainedThisRun += META.COIN_BOSS_WIN;
     this.hud.addCoin(META.COIN_BOSS_WIN);
     this.cameras.main.shake(600, 0.02);
-    this.time.delayedCall(800, () => this._onGameOver(true));
+    // Vitória: escolher entre encerrar ou seguir na Noite Eterna
+    this.time.delayedCall(900, () => this._offerEndless());
+  }
+
+  // Espera cartas de nível/pausa fecharem antes de abrir a escolha
+  _offerEndless() {
+    if (this.gameOver) return;
+    if (this.scene.isActive("LevelUpScene") || this.scene.isActive("PauseScene") || this._levelUpOpen) {
+      this.time.delayedCall(300, () => this._offerEndless());
+      return;
+    }
+    this.scene.pause();
+    this.scene.launch("EndlessChoiceScene");
+  }
+
+  // Segundos sobrevividos na Noite Eterna
+  get endlessSeconds() {
+    return this.endless ? (this.elapsedMs - this._endlessStartMs) / 1000 : 0;
+  }
+
+  // Multiplicadores de força dos inimigos na Noite Eterna (null fora dela)
+  endlessMult() {
+    if (!this.endless) return null;
+    const min = this.endlessSeconds / 60;
+    return { hp: Math.pow(1 + ENDLESS.HP_GROWTH_PER_MIN, min), dmg: Math.pow(1 + ENDLESS.DMG_GROWTH_PER_MIN, min) };
+  }
+
+  _startEndless() {
+    this.endless = true;
+    this._endlessStartMs = this.elapsedMs;
+    this.boss = null;
+    this.bgMusic?.stop();
+    this.bgMusic = this.sound.add("music_gameplay", { loop: true, volume: 0.35, rate: 0.92 });
+    this.bgMusic.play();
+    this.hud.showBossBanner("A NOITE ETERNA COMEÇA", "#e8ccff");
+    this.cameras.main.flash(400, 60, 30, 90);
+    Analytics.track("endless_start", { level: this.player.level, t: Math.floor(this.elapsedMs / 1000) });
   }
 
   _randomChestPos() {
@@ -1103,6 +1142,15 @@ export class GameScene extends Phaser.Scene {
     }
     this._reviveOpen = false;
     this.gameOver = true;
+    const endlessS = this.endlessSeconds;
+    let endlessRecord = false;
+    if (this.endless) {
+      won = true; // cair na Noite Eterna não apaga a vitória sobre o Ancião
+      const bonus = Math.floor(endlessS / 60) * ENDLESS.COINS_PER_MIN;
+      this._coinsGainedThisRun += bonus;
+      endlessRecord = this.meta.registerEndless(endlessS);
+      Analytics.track("endless_end", { s: Math.floor(endlessS), bonus, record: endlessRecord });
+    }
     // Recompensa final escalada pela dificuldade (HUD mostrou a contagem-base ao vivo)
     const coinsFinal = Math.round(this._coinsGainedThisRun * this.diff.rewardMult);
     // Detecta se ESTA vitória libera um novo nível (antes de gravar)
@@ -1149,6 +1197,8 @@ export class GameScene extends Phaser.Scene {
         coinsGained: coinsFinal,
         newUnlocks: this._newUnlocksThisRun,
         difficulty: this.diff,
+        endlessS,
+        endlessRecord,
         unlockedNextDifficulty: unlockedNewDifficulty
           ? DIFFICULTY[this.diff.id + 1].name
           : null,

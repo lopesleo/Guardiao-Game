@@ -10,7 +10,8 @@ let sink = null; // função externa (ex.: Firebase) plugada depois
 
 export const Analytics = {
   track(name, params = {}) {
-    const ev = { name, t: Date.now(), ...params };
+    // "at" = horário do evento (params costumam ter "t" = segundo da partida)
+    const ev = { ...params, name, at: Date.now() };
     buffer.push(ev);
     if (buffer.length > MAX) buffer.shift();
     if (DEBUG) console.debug("[analytics]", name, params);

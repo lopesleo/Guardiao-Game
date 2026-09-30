@@ -1,7 +1,7 @@
 // Roteiro da partida: eventos com hora marcada que quebram a monotonia do
 // spawn contínuo — enxames, cercos e mini-chefes (com baú dourado garantido).
 // Cada evento é anunciado na faixa central do HUD.
-import { GAME } from "../config.js";
+import { GAME, ENDLESS } from "../config.js";
 import { CSS } from "../art/Palette.js";
 
 // t = segundos de partida
@@ -28,6 +28,21 @@ export class RunEvents {
     while (this.idx < SCRIPT.length && t >= SCRIPT[this.idx].t) {
       this._run(SCRIPT[this.idx]);
       this.idx++;
+    }
+    // Noite Eterna: o roteiro volta em ciclo, cada vez maior
+    if (s.endless) {
+      this._nextEndless ??= t + 20;
+      if (t >= this._nextEndless) {
+        this._nextEndless = t + ENDLESS.EVENT_EVERY_S;
+        const k = (this._endlessCount = (this._endlessCount || 0) + 1);
+        const cycle = [
+          { type: "swarm", n: 24, kind: "bee", msg: "A COLMEIA DA NOITE!" },
+          { type: "ring", n: 28, kinds: ["wolf", "goblin", "brute"], msg: "CERCO NA ESCURIDÃO!" },
+          { type: "miniboss", kind: k % 2 ? "alpha" : "elder", msg: k % 2 ? "UM LOBO ALFA UIVA!" : "UM OGRO ANCIÃO SE ERGUE!" },
+        ];
+        const ev = cycle[(k - 1) % cycle.length];
+        this._run({ ...ev, n: ev.n ? Math.round(ev.n * (1 + 0.15 * Math.floor(k / 3))) : ev.n });
+      }
     }
   }
 
