@@ -7,6 +7,7 @@ const DEFAULT = {
   totalCoins: 0,
   highScoreSeconds: 0,
   bestEndlessSeconds: 0, // recorde na Noite Eterna (Modo Infinito)
+  wood: 0, // Madeira Ancestral (obras da Clareira)
   // Cajado (fogo) + Aura (gelo) desde o início: a 1ª partida já mostra a
   // mecânica-assinatura (Fogo+Gelo = VAPOR). Antes o novato só tinha fogo.
   unlockedWeapons: ['STAFF', 'AURA'],
@@ -127,6 +128,14 @@ export class MetaProgression {
   isUnlocked(weaponKey) { return this.data.unlockedWeapons.includes(weaponKey); }
 
   // ---- Mutations ----
+  get wood() {
+    return this.data.wood || 0;
+  }
+  addWood(n) {
+    this.data.wood = Math.max(0, (this.data.wood || 0) + n);
+    this._save();
+  }
+
   addCoins(n) {
     this.data.totalCoins += n;
     if (n > 0) this.data.stats.totalCoinsEarned += n;

@@ -79,6 +79,36 @@ function coinFrames() {
   return maps.map((m) => Pix.fromMap(m, legend));
 }
 
+// Madeira Ancestral: tora deitada — ponta cortada com anéis à esquerda,
+// casca com veios, rachadura dourada brilhando e um tufo de musgo.
+// A mesma arte serve de ícone (UI) e de coletável (partida).
+function woodLog() {
+  const p = new Pix(15, 11);
+  // Corpo (casca): luz em cima, sombra embaixo, veios verticais
+  for (let y = 2; y <= 8; y++)
+    for (let x = 4; x <= 13; x++) {
+      let c = y <= 3 ? PAL.n3 : y >= 7 ? PAL.n1 : PAL.n2;
+      if ((x === 7 || x === 11) && y > 3 && y < 8) c = PAL.n1;
+      p.set(x, y, c);
+    }
+  // Ponta cortada: anel de casca escura + miolo claro com anéis
+  p.ellipse(4.5, 5.5, 4.5, 5, PAL.n1);
+  p.ellipse(4.5, 5.5, 3.5, 4, PAL.n4);
+  p.ellipse(4.5, 5.5, 2.2, 2.7, 0xc99a6a);
+  p.ellipse(4.5, 5.5, 1, 1.3, PAL.n4);
+  // Rachadura dourada (brilha) na diagonal
+  const crack = [[8, 3], [9, 4], [9, 5], [10, 6], [11, 7]];
+  for (const [x, y] of crack) p.set(x, y, PAL.yel3);
+  p.set(10, 5, PAL.yel2);
+  p.set(8, 4, PAL.yel2);
+  // Musgo
+  p.set(10, 1, PAL.g4);
+  p.set(11, 1, PAL.g5);
+  p.set(12, 2, PAL.g4);
+  p.outline(K);
+  return p;
+}
+
 function heartPickup() {
   return Pix.fromMap(
     [
@@ -241,6 +271,8 @@ export function registerSprites(scene) {
   registerStrip(scene, "px_coin", coinFrames());
   registerStrip(scene, "px_awaken", awakenFrames());
   heartPickup().register(scene, "px_heart");
+  woodLog().register(scene, "px_wood");
+  woodLog().register(scene, "ico_wood");
   shadow().register(scene, "px_shadow");
   boomerang().register(scene, "px_boomer");
   enemyShot().register(scene, "px_eshot");

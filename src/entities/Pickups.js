@@ -120,6 +120,13 @@ export class HeartPickup extends Pickup {
   }
 }
 
+// Madeira Ancestral: material das obras da Clareira (rara; ímã forte)
+export class WoodPickup extends Pickup {
+  constructor(scene) {
+    super(scene, "px_wood", { magnet: 340, magnetMult: 5, glow: 0xffc86b, glowScale: 0.7 });
+  }
+}
+
 export class AwakenOrb extends Pickup {
   constructor(scene) {
     super(scene, "px_awaken", { anim: "awaken_spark", magnet: 320, glow: 0xffe58f, glowScale: 0.7 });
