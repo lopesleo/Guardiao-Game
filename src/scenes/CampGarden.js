@@ -180,8 +180,20 @@ export const CampGarden = {
     if (!r) return;
     this._plotFx(i, "harvest", r);
     this._dailyBump?.("harvest");
-    if (this.meta.data.stats.harvests === 1) this.time.delayedCall(700, () => this._say("Isso! Agora plante de novo: desta vez leva alguns minutos. Jogue uma partida e volte."));
+    if (this.meta.data.stats.harvests === 1) this._firstHarvestSay();
     this._refreshGardenWorld();
+  },
+
+  // Fala da Anciã depois da 1ª colheita. Espera a fileira de sementes fechar (senão a
+  // fala fica por cima do menu) e ajusta o texto se o jogador já replantou.
+  _firstHarvestSay() {
+    const tryIt = () => {
+      if (!this.scene.isActive()) return;
+      if (this._modals.length || this._cutscene) return void this.time.delayedCall(500, tryIt);
+      const planted = this.garden.plots.some((p, i) => i < this.garden.open && p);
+      this._say(planted ? "Isso! Desta vez leva alguns minutos. Jogue uma partida e volte." : "Isso! Agora plante de novo: desta vez leva alguns minutos. Jogue uma partida e volte.");
+    };
+    this.time.delayedCall(700, tryIt);
   },
 
   // Colher andando: pisar num canteiro maduro colhe (chamado pelo update)
