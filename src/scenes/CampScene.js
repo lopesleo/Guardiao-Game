@@ -190,6 +190,11 @@ export class CampScene extends Phaser.Scene {
     const sign = this.add.image(sx, sy, "camp_trail").setOrigin(0.5, 1).setScale(S).setDepth(sy);
     this._solid(sx, sy - 6, 20, 12);
     this._addInteract({ x: sx, y: sy, top: sy - sign.displayHeight, r: 90, name: "PERIGO", verb: "ESCOLHER PERIGO", action: () => this._showDifficulty() });
+    // Letreiro sempre visível sobre a placa: o Perigo atual (tocar também abre)
+    this.signLabel = this.add.container(sx, sy - sign.displayHeight - 26).setDepth(D_HUD - 8);
+    this.signLabelG = this.add.graphics();
+    this.signLabelT = text(this, 0, 0, "", { size: 15, color: CSS.goldHi, origin: 0.5, stroke: true });
+    this.signLabel.add([this.signLabelG, this.signLabelT]);
     // Faixa escura no fim da trilha: "a mata começa aqui"
     this.add.image(0, TOP - 40, "fx_glow").setScale(6, 3).setTint(0x000000).setAlpha(0.55).setDepth(TOP + 30);
   }
@@ -375,6 +380,9 @@ export class CampScene extends Phaser.Scene {
     // Local + resumo
     const lg = fix(this.add.graphics());
     drawFrame(lg, 14, 14, 330, 62, "dark", { alpha: 0.92 });
+    // Tocar no quadro abre a escolha de Perigo de qualquer ponto da Clareira
+    const hz = fix(this.add.zone(14, 14, 330, 62).setOrigin(0).setInteractive({ useHandCursor: true }));
+    hz.on("pointerup", () => !this._modals.length && !this._cutscene && !this._leaving && this._showDifficulty());
     fix(text(this, 30, 32, "CLAREIRA DO GUARDIÃO", { size: 20, color: CSS.goldHi, origin: [0, 0.5], stroke: true }));
     this.hudInfo = fix(text(this, 30, 58, "", { size: 14, color: CSS.muted, origin: [0, 0.5] }));
     // Moedas + guia + opções
@@ -427,7 +435,13 @@ export class CampScene extends Phaser.Scene {
     this.woodBox[2].setText(String(wood));
     const c = CHARACTERS.find((c) => c.id === this.meta.selectedCharacter) || CHARACTERS[0];
     const d = DIFFICULTY[Math.min(this.meta.selectedDifficulty, DIFFICULTY.length - 1)];
-    this.hudInfo.setText(`${c.name}  ·  Perigo: ${d.name}`);
+    this.hudInfo.setText(`${c.name}  ·  Perigo: ${d.name}  »`);
+    if (this.signLabel) {
+      this.signLabelT.setText(`PERIGO: ${d.name.toUpperCase()}`);
+      const w = this.signLabelT.width + 20;
+      this.signLabelG.clear();
+      drawFrame(this.signLabelG, -w / 2, -13, w, 26, "dark", { noRivets: true, alpha: 0.92 });
+    }
     const coins = this.meta.coins;
     const canBless =
       BLESSINGS.some((b) => {
