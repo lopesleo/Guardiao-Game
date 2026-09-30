@@ -271,7 +271,7 @@ export const MetaPanels = {
   },
 
   _showArsenal() {
-    const m = new Modal(this, { title: "FORJA", subtitle: "Forje armas novas: elas passam a aparecer nas cartas de nível", w: 860, h: 640 });
+    const m = new Modal(this, { title: "FORJA", subtitle: `Armas novas nas cartas de nível · vagas de arma na partida: ${this.builds ? this.builds.weaponSlots() : 2}`, w: 860, h: 640 });
     const list = this._modalList(m);
     const reopen = () => {
       m.close();

@@ -116,9 +116,18 @@ export class Builds {
   shrineRankCap() {
     return this.level("shrine");
   }
+  weaponSlots() {
+    return weaponSlotsFor(this.meta);
+  }
   forgeAllows(weaponKey) {
     return this.level("forge") >= (BUILD.FORGE_WEAPON_LEVEL[weaponKey] ?? 1);
   }
+}
+
+// Vagas de arma na partida (nível da Forja; sem save = 2)
+export function weaponSlotsFor(meta) {
+  const lv = meta?.data?.builds?.forge?.level ?? 1;
+  return BUILD.FORGE_WEAPON_SLOTS[lv] ?? 2;
 }
 
 // Texto do que o nível `lv` de cada construção libera
@@ -126,7 +135,12 @@ export function perkText(id, lv) {
   if (id === "shrine") return `Bênçãos até o rank ${lv}`;
   if (id === "forge") {
     const k = Object.entries(BUILD.FORGE_WEAPON_LEVEL).find(([, l]) => l === lv)?.[0];
-    return k ? `Libera forjar: ${WEAPONS[k].name}` : "";
+    const slots = BUILD.FORGE_WEAPON_SLOTS[lv];
+    const parts = [];
+    if (slots > (BUILD.FORGE_WEAPON_SLOTS[lv - 1] ?? 0)) parts.push(`${slots}ª vaga de arma na partida`);
+    if (k) parts.push(`libera forjar: ${WEAPONS[k].name}`);
+    const t = parts.join(" · ");
+    return t.charAt(0).toUpperCase() + t.slice(1);
   }
   if (id === "fire") {
     const cid = Object.entries(BUILD.FIRE_CHARACTER_LEVEL).find(([, l]) => l === lv)?.[0];

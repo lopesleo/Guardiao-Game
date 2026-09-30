@@ -1,7 +1,7 @@
 // Pausa: overlay sobre a GameScene. Mostra a build atual (armas com nível,
 // passivas acumuladas) e estatísticas; Continuar / Opções / Desistir.
 import { WEAPONS, PASSIVES, MAX_WEAPON_LEVEL, PASSIVE_SLOTS } from "../config.js";
-import { MAX_WEAPON_SLOTS } from "../systems/UpgradeSystem.js";
+import { weaponSlotsFor } from "../systems/Builds.js";
 import { formatTime } from "../utils.js";
 import { PAL, CSS } from "../art/Palette.js";
 import { WEAPON_ICON, PASSIVE_ICON } from "../art/Icons.js";
@@ -37,7 +37,7 @@ export class PauseScene extends Phaser.Scene {
       py = 132;
     const g = this.add.graphics();
     drawFrame(g, px, py, pw, ph, "gold");
-    text(this, px + 28, py + 30, `ARMAS ${p.weapons.length}/${MAX_WEAPON_SLOTS}`, { size: 20, color: CSS.goldHi, origin: [0, 0.5] });
+    text(this, px + 28, py + 30, `ARMAS ${p.weapons.length}/${weaponSlotsFor(gs.meta)}`, { size: 20, color: CSS.goldHi, origin: [0, 0.5] });
     p.weapons.forEach((w, i) => {
       const def = WEAPONS[w.key];
       const x = px + 28 + (i % 3) * ((pw - 56) / 3);
