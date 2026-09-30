@@ -116,7 +116,7 @@ export const MetaPanels = {
       this._refreshAll();
       this._showWorks();
     };
-    for (const id of ["fire", "shrine", "forge"]) {
+    for (const id of this._workIds?.() ?? ["fire", "shrine", "forge"]) {
       this._section(list, `${BUILDINGS[id].name.toUpperCase()} · NÍVEL ${this.builds.level(id)}`);
       this._buildRow(list, id, reopen);
     }
@@ -424,6 +424,8 @@ export const MetaPanels = {
       ["ico_skull", "O Mapinguari", "Aos 7:00 o gigante da mata desperta, tomado pela Podridão. Vença-o para libertá-lo e liberar o próximo Perigo."],
       ["ico_coin", "A Clareira", "Entre partidas: Santuário (bênçãos e dons), Forja (armas), Fogueira (guardiões), Mural (conquistas). A trilha ao norte leva à floresta."],
     ];
+    if ((this.meta.data.revealed || []).includes("garden"))
+      sections.push(["ico_sprout", "Horta", "Plante na Clareira: as plantas crescem em tempo real, mesmo com o jogo fechado. Regue, arranque o mato e tire as lagartas para colher com qualidade Ouro — nada morre, só perde qualidade. Sementes raras caem dos minichefes, do baú dourado e do Mapinguari."]);
     for (const [icon, name, desc] of sections) {
       list.addRow({
         h: 84,
