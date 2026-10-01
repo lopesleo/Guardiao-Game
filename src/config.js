@@ -422,6 +422,13 @@ export const PASSIVES = [
   },
 ];
 
+// Controle das cartas de nível: trocar (1× por nível, grátis) e BANIR (tirar a carta da
+// partida inteira). Banimentos: base + 1 por nível do Santuário acima do 1º.
+export const CARDS = {
+  BANISH_BASE: 2,
+  BANISH_PER_SHRINE_LEVEL: 1,
+};
+
 // Entrada na floresta (continuação da saída da Clareira): o guardião chega
 // andando pela trilha e a mata se fecha atrás dele antes de a partida começar.
 // Distâncias medidas a partir da BORDA SUL da arena (y = WORLD_RADIUS).
