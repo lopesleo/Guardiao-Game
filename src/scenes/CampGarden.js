@@ -85,6 +85,17 @@ export const CampGarden = {
     const barn = this.add.image(BARN_X, BARN_Y, "camp_barn").setOrigin(0.5, 1).setScale(S).setDepth(BARN_Y);
     this._solid(BARN_X, BARN_Y - 14, barn.displayWidth * 0.8, 30);
     fade.push(barn, shadow);
+    // Espantalho guardando a horta + regador: só existem quando a horta aparece
+    const scx = -175,
+      scy = 350;
+    const crowShadow = this.add.image(scx, scy + 4, "px_shadow").setScale(4, 2).setAlpha(0.5).setDepth(scy - 1);
+    const crow = this.add.image(scx, scy, "camp_scarecrow").setOrigin(0.5, 1).setScale(S).setDepth(scy);
+    this.tweens.add({ targets: crow, angle: { from: -2, to: 2 }, duration: 2600, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    this._solid(scx, scy - 4, 12, 10);
+    const can = this.add.image(158, 344, "camp_can").setOrigin(0.5, 1).setScale(S).setDepth(344);
+    shadow._ra = 0.55; // opacidade final de cada sombra na revelação
+    crowShadow._ra = 0.5;
+    fade.push(crow, crowShadow, can);
     this._addInteract({ x: BARN_X, y: BARN_Y, top: BARN_Y - barn.displayHeight, r: 110, name: "CELEIRO", verb: "CELEIRO", hiddenUntil: "garden", action: () => this._showBarn() });
     // Enquanto em ruínas: tudo escondido, ruína no meio da horta
     if (!shown) fade.forEach((o) => o.setAlpha(0));
@@ -97,7 +108,7 @@ export const CampGarden = {
       shown,
       dot: this._notifyDot(GX + 1.5 * COL + 20, GY - 1.5 * ROW - 50).setDepth(this.D_HUD - 10).setVisible(false),
       reveal: () => {
-        this.tweens.add({ targets: fade, alpha: (t) => (t === shadow ? 0.55 : 1), duration: 700, delay: 300 });
+        this.tweens.add({ targets: fade, alpha: (t) => t._ra ?? 1, duration: 700, delay: 300 });
         this.barnBtn?.setVisible(true);
       },
     };
