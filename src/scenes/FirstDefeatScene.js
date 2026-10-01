@@ -861,7 +861,7 @@ export class FirstDefeatScene extends Phaser.Scene {
       gone = true;
       this._stopSounds();
       // derrota: direto para a Clareira (o herói chega pela trilha); vitória: ainda mostra os resultados
-      if (this.won || this.short) this.scene.start("GameOverScene", this.next);
+      if (this.won || this.short) this.scene.start("GameOverScene", { ...this.next, won: this.won }); // won sempre coerente com a cena
       else this.scene.start("CampScene", { fromRun: true });
     };
     this.uiCam.once("camerafadeoutcomplete", go);
