@@ -8,7 +8,7 @@ import { text, Button, FONTS, TEXT_SIZES } from "./Theme.js";
 import { Modal, Slider, Toggle } from "./Widgets.js";
 
 export function openSettings(scene, o = {}) {
-  const rows = 8 + (Notify.available() ? 1 : 0) + (Telemetry.available() ? 1 : 0) + (AdMobBridge.available() ? 1 : 0);
+  const rows = 8 + (Notify.available() ? 1 : 0) + (Telemetry.available() ? 1 : 0) + (AdMobBridge.available() ? 2 : 0);
   const STEP = 54;
   const m = new Modal(scene, { title: "OPÇÕES", w: 680, h: 120 + rows * STEP + (o.onReset ? 76 : 0) });
   let y = m.top + 24;
@@ -62,8 +62,16 @@ export function openSettings(scene, o = {}) {
     row("Avisos (baú e colheita)", new Toggle(scene, 0, 0, Notify.enabled(), (v) => (v ? Notify.enable() : Notify.disable())));
   if (Telemetry.available())
     row("Dados de uso e erros", new Toggle(scene, 0, 0, Telemetry.enabled(), (v) => Telemetry.setEnabled(v)));
-  if (AdMobBridge.available())
+  if (AdMobBridge.available()) {
     row("Consentimento de anúncios", new Button(scene, 0, 0, 200, 36, "REVER", () => AdMobBridge.reviewConsent(), { size: 16 }));
+    // Diagnóstico dos anúncios: toque para tentar de novo
+    const adBtn = new Button(scene, 0, 0, 300, 36, AdMobBridge.statusText(), async () => {
+      adBtn.setLabel("tentando…");
+      if (!AdMobBridge.ready) await AdMobBridge.install();
+      adBtn.setLabel(AdMobBridge.statusText());
+    }, { size: 14 });
+    row("Anúncios", adBtn);
+  }
   if (o.onReset) {
     m.add(new Button(scene, 0, m.h / 2 - 46, 300, 50, "APAGAR PROGRESSO", o.onReset, { size: 18, style: "danger", color: CSS.redHi }));
   }
