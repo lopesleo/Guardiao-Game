@@ -173,6 +173,8 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   explica o jogo (falas com os números reais da partida). Na 1ª vitória, versão de festa.
   Usa câmera própria para a interface, faixas de cinema, grão, pós-processamento (só WebGL e fora
   de aparelho fraco) e sons novos (batimento, golpe, baque, zumbido, fogueira, passos).
+- ✅ **Queda curta nas mortes seguintes**: da 2ª derrota em diante só a queda do herói (~4 s,
+  toque pula) e logo a tela de resultados. A 1ª derrota segue o curta completo e vai para a Clareira.
 - ✅ **Animação dos guardiões** (`src/art/HeroRig.js`): queda, deitado respirando e acordar são
   QUADROS DESENHADOS (esqueleto de quadril/tronco/cabeça/braços/pernas + figurino de cada lenda),
   não o sprite de caminhada girado. Revisar as poses: `node tools/hero-sheet.mjs saida.png <id>`

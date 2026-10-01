@@ -1467,6 +1467,9 @@ export class GameScene extends Phaser.Scene {
       // Primeira queda (ou primeira vitória): cena da Anciã antes dos resultados
       if (!quit && !this.meta.data.firstDefeatSeen) {
         this.scene.start("FirstDefeatScene", { won, character: this.character.id, next: results });
+      } else if (!quit && !won) {
+        // 2ª morte em diante: só a queda do herói (curta) antes dos resultados
+        this.scene.start("FirstDefeatScene", { won: false, short: true, character: this.character.id, next: results });
       } else {
         this.scene.start("GameOverScene", results);
       }
