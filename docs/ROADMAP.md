@@ -180,7 +180,10 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   não o sprite de caminhada girado. Revisar as poses: `node tools/hero-sheet.mjs saida.png <id>`
 
 ### M5 — Monetização e medição reais 👤
-- 👤 Contas: AdMob, Firebase, perfil de pagamentos no Play Console
+- ✅ AdMob: app Android criado e **5 blocos premiados** (revive, extra_card, build_speed,
+  double_coins, daily_chest); IDs em `ADMOB` no `src/config.js`
+- 👤 Falta: ligar o app à loja (quando publicar), mensagem de consentimento (GDPR) em Privacidade e
+  mensagens, dados de pagamento e `app-ads.txt` no AdMob; contas do Firebase e do Play Console
 - ⬜ AdMob + consentimento LGPD (UMP) plugados no `AdService`
 - ⬜ Compra "Remover anúncios"
 - ⬜ Firebase Analytics + Crashlytics plugados no `Analytics`

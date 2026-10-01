@@ -798,6 +798,20 @@ export const LANTERN = {
 
 // Anúncios premiados (sempre opcionais). ENABLED = false: tudo desenvolvido,
 // mas nenhuma oferta aparece para o jogador. Para testar: ?ads=1 na URL.
+// IDs do AdMob (conta do Leonardo). Não são segredos: vão dentro do app. Cada bloco é um
+// anúncio PREMIADO e tem o mesmo nome do ponto de anúncio em AdService.PLACEMENTS.
+// Para testar no aparelho use os IDs de teste do Google, não estes (risco de suspensão).
+export const ADMOB = {
+  APP_ID: "ca-app-pub-7068898840847782~4241412114",
+  UNITS: {
+    revive: "ca-app-pub-7068898840847782/3607735722",
+    extra_card: "ca-app-pub-7068898840847782/6836709308",
+    build_speed: "ca-app-pub-7068898840847782/1448651250",
+    double_coins: "ca-app-pub-7068898840847782/9790000693",
+    daily_chest: "ca-app-pub-7068898840847782/4481833690",
+  },
+};
+
 export const ADS = {
   ENABLED: false,
   REVIVE_HP_PCT: 0.5, // volta com metade da vida
