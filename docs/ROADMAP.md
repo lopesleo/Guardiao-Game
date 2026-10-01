@@ -143,6 +143,15 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   dentro do save **assinado** (edição manual fica marcada em `integrity.tampered`,
   sem apagar nada). 👤 compilar o app para testar o plugin no aparelho
 
+### M4.5 — Pré-lançamento: duração e game feel 🚧
+- ✅ **Duração por Perigo**: 7 min (Aprendiz/Guardião), 8 (Veterano), 9 (Implacável),
+  10 (Pesadelo) — `DIFFICULTY[].durationS`. Waves, roteiro de eventos e spawn são
+  esticados por `pace = 420 / durationS` (mesma jornada, mais devagar); o chefe nasce
+  no fim da duração. Em partidas longas rendem mais níveis e moedas por tempo.
+- ⬜ Game feel (impacto, tremor, hit-stop, números de dano)
+- ⬜ Primeira derrota: a personagem desmaia e a Anciã acorda e explica tudo
+  (curta, pulável, só na 1ª vez; flag no save)
+
 ### M5 — Monetização e medição reais 👤
 - 👤 Contas: AdMob, Firebase, perfil de pagamentos no Play Console
 - ⬜ AdMob + consentimento LGPD (UMP) plugados no `AdService`

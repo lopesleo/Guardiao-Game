@@ -443,7 +443,7 @@ export const MetaPanels = {
       ["ico_star", "Despertar", "Reações enchem a barra dourada. Ative para disparar tudo muito mais rápido por alguns segundos."],
       ["ico_chest", "Baús", "Encoste num baú para abri-lo: tesouro, jackpot dourado… ou uma armadilha (e o temido mímico)."],
       ["ico_heart_ice", "Evoluções", "Arma no nível 5 + a arma parceira na mesma partida = carta de EVOLUÇÃO garantida. Veja as receitas na Forja da Clareira."],
-      ["ico_skull", "O Mapinguari", "Aos 7:00 o gigante da mata desperta, tomado pela Podridão. Vença-o para libertá-lo e liberar o próximo Perigo."],
+      ["ico_skull", "O Mapinguari", "No fim da partida (7 a 10 min, conforme o Perigo) o gigante da mata desperta, tomado pela Podridão. Vença-o para libertá-lo e liberar o próximo Perigo."],
       ["ico_coin", "A Clareira", "Entre partidas: Santuário (bênçãos e dons), Forja (armas), Fogueira (guardiões), Mural (conquistas). A trilha ao norte leva à floresta."],
     ];
     if ((this.meta.data.revealed || []).includes("garden"))

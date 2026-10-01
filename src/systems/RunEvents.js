@@ -24,7 +24,7 @@ export class RunEvents {
   update() {
     const s = this.scene;
     if (s.boss) return;
-    const t = s.elapsedMs / 1000;
+    const t = (s.elapsedMs * s.pace) / 1000; // roteiro no tempo virtual
     while (this.idx < SCRIPT.length && t >= SCRIPT[this.idx].t) {
       this._run(SCRIPT[this.idx]);
       this.idx++;
@@ -47,7 +47,7 @@ export class RunEvents {
   }
 
   _wave() {
-    return Math.floor(this.scene.elapsedMs / 30000);
+    return this.scene.waveIndex();
   }
 
   _spawn(x, y, kind, elite = false) {
