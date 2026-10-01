@@ -1,16 +1,23 @@
-// A PRIMEIRA queda (ou a primeira vitória): em vez de uma tela seca de resultados, o guardião
-// desmaia, acorda ao lado da fogueira e a Anciã explica o jogo em poucas falas. É o tutorial
-// narrativo: aparece uma vez só, é pulável e termina na tela de resultados normal.
-//   · derrota → desmaio, olhos que abrem, herói deitado que se senta
-//   · vitória → herói em pé ao lado da Anciã, tom de festa e aviso do próximo Perigo
+// A PRIMEIRA queda (ou a primeira vitória) como CENA: em vez de uma tela seca de resultados,
+// um pequeno curta. Dois planos, câmera e som próprios:
+//   1 · A QUEDA     floresta corrompida → três lobos → golpe → câmera lenta → baque → escuro
+//   2 · A CLAREIRA  título → foco volta → a Anciã chega pela mata → o guardião acorda
+// Depois vêm as falas da Anciã (o tutorial narrativo). Uma vez só, sempre pulável.
+// Os guardiões são desenhados quadro a quadro em HeroRig.js (não é o sprite de caminhada).
 import { CSS } from "../art/Palette.js";
 import { text, drawFrame, Button, vw, vh, fitCamera, haptic } from "../ui/Theme.js";
 import { formatTime } from "../utils.js";
 import { Analytics } from "../systems/Analytics.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
+import { Settings } from "../systems/Settings.js";
+import { RIG_W, RIG_H, GROUND, RIG_KEYS } from "../art/HeroRig.js";
 
 const SC = 4; // escala dos personagens (a mesma do acampamento)
 const TYPE_MS = 24; // ms por letra
+const OX = 22 / RIG_W; // origem do sprite do rig: sob o quadril, no chão
+const OY = (GROUND + 0.5) / RIG_H;
+const FRAME = (k) => RIG_KEYS.indexOf(k);
+const BAR_H = 0.1; // altura das faixas de cinema (fração da tela)
 
 export class FirstDefeatScene extends Phaser.Scene {
   constructor() {
@@ -18,18 +25,36 @@ export class FirstDefeatScene extends Phaser.Scene {
   }
 
   create(data) {
-    fitCamera(this);
     // O Phaser REAPROVEITA a instância da cena: zera todo estado de "visita"
+    this.tweens.timeScale = 1;
+    this.anims.globalTimeScale = 1;
+    fitCamera(this);
     this._leaving = false;
     this._ready = false;
     this._typing = false;
     this._idx = -1;
     this._t0 = this.time.now;
+    this._groups = {};
+    this._impacted = false;
+    this._arrived = false;
+    this._waking = false;
+    this.fx = null;
     this.won = !!data.won;
     this.charId = data.character || "guardian";
     this.next = data.next || {};
     const W = (this.W = vw(this)),
       H = (this.H = vh(this));
+
+    // Segunda câmera só para a interface: o zoom/desfoque do "filme" não a atinge
+    this.uiCam = this.cameras.add(0, 0, W, H);
+    this._onResize = () => this.uiCam.setSize(vw(this), vh(this));
+    this.scale.on("resize", this._onResize);
+    this.events.once("shutdown", () => {
+      this.scale.off("resize", this._onResize);
+      this.tweens.timeScale = 1;
+      this.anims.globalTimeScale = 1;
+      this._stopSounds();
+    });
 
     // Marca como vista já na entrada: se o app fechar no meio, não repete a cena
     const meta = new MetaProgression();
@@ -38,12 +63,12 @@ export class FirstDefeatScene extends Phaser.Scene {
     Analytics.track("first_story_start", { won: this.won });
 
     this.lines = this._script();
-    this._buildWorld();
-    this._buildDialogBox();
+    this._initFx();
+    this._buildClearing();
+    if (!this.won) this._buildForest();
+    this._buildUi();
 
-    // Pular (sempre disponível) e avançar (toque / Espaço / Enter)
-    this.skipBtn = new Button(this, W - 96, 40, 150, 48, "PULAR", () => this._finish(true), { size: 20 });
-    this.skipBtn.setDepth(1200).setAlpha(0.85);
+    // Avançar (toque / Espaço / Enter) e pular
     this.input.on("pointerdown", (p, over) => {
       if (over.length) return; // clicou num botão
       this._advance();
@@ -52,19 +77,117 @@ export class FirstDefeatScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-ENTER", () => this._advance());
     this.input.keyboard.on("keydown-ESC", () => this._finish(true));
 
-    if (this.cache.audio.exists("music_menu")) {
-      this.music = this.sound.add("music_menu", { loop: true, volume: 0 });
-      this.music.play();
-      this.tweens.add({ targets: this.music, volume: 0.28, duration: 1800 });
-    }
+    if (this.won) this._playWin();
+    else this._playDefeat();
+  }
 
-    if (this.won) this._openWin();
-    else this._fall(() => this._wake(() => this._begin()));
+  update(time) {
+    if (this.elderGlow && this.elder) {
+      this.elderGlow.setPosition(this.elder.x - 22, this.elder.y - 64 * (this.elder.scaleY / SC));
+      this.elderGlow.setAlpha(0.3 + Math.sin(time / 90) * 0.06 + Math.sin(time / 37) * 0.03);
+    }
   }
 
   onBack() {
     this._finish(true);
     return true;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Utilidades: duas câmeras, grupos de cenário, linha do tempo, som
+  // ---------------------------------------------------------------------------
+  _w(o, grp) {
+    this.uiCam.ignore(o);
+    if (grp) (this._groups[grp] ??= []).push(o);
+    return o;
+  }
+  _u(o) {
+    this.cameras.main.ignore(o);
+    return o;
+  }
+  _show(grp, on) {
+    for (const o of this._groups[grp] || []) o.setVisible(on);
+  }
+  _at(ms, fn) {
+    return this.time.delayedCall(ms, () => !this._leaving && fn());
+  }
+  _sfx(key, volume = 0.5, rate = 1) {
+    this.sound.play(key, { volume, rate });
+  }
+  _stopSounds() {
+    this.fireSnd?.stop();
+    this.music?.stop();
+    this.tinSnd?.stop();
+  }
+
+  // Efeitos de pós-processamento (só WebGL; o resto da cena funciona sem eles)
+  _initFx() {
+    const pf = this.cameras.main.postFX;
+    if (!pf || this.sys.game.renderer.type !== Phaser.WEBGL || Settings.get("lighting") === false) return;
+    this.fx = { vig: pf.addVignette(0.5, 0.5, 0.95, 0.3), color: pf.addColorMatrix(), blur: null, bloom: null };
+    this._sat = { s: 1 };
+  }
+  // Brilho suave nas chamas e lamparinas (entra devagar)
+  _bloomIn(ms = 2200) {
+    if (!this.fx || this.fx.bloom) return;
+    this.fx.bloom = this.cameras.main.postFX.addBloom(0xffffff, 1, 1, 0.8, 0, 4);
+    this.tweens.add({ targets: this.fx.bloom, strength: 0.6, duration: ms });
+  }
+  _saturate(to, ms) {
+    if (!this.fx) return;
+    this.tweens.add({
+      targets: this._sat,
+      s: to,
+      duration: ms,
+      onUpdate: () => {
+        this.fx.color.reset();
+        this.fx.color.saturate(this._sat.s - 1);
+      },
+    });
+  }
+  _vignette(radius, strength, ms) {
+    if (this.fx) this.tweens.add({ targets: this.fx.vig, radius, strength, duration: ms, ease: "Sine.easeInOut" });
+  }
+  _blurTo(from, to, ms) {
+    if (!this.fx) return;
+    if (!this.fx.blur) this.fx.blur = this.cameras.main.postFX.addBlur(1, 2, 2, from);
+    this.fx.blur.strength = from;
+    this.tweens.add({
+      targets: this.fx.blur,
+      strength: to,
+      duration: ms,
+      ease: "Sine.easeOut",
+      onComplete: () => {
+        if (to <= 0.01 && this.fx?.blur) {
+          this.cameras.main.postFX.remove(this.fx.blur);
+          this.fx.blur = null;
+        }
+      },
+    });
+  }
+
+  // Câmera lenta de verdade: animações e tweens juntos
+  _slow(k, ms = 300) {
+    const o = { v: this.tweens.timeScale };
+    this.tweens.add({
+      targets: o,
+      v: k,
+      duration: ms,
+      onUpdate: () => {
+        this.tweens.timeScale = o.v;
+        this.anims.globalTimeScale = o.v;
+      },
+    });
+  }
+  // Congelamento do impacto
+  _hitStop(ms) {
+    const prev = this.anims.globalTimeScale;
+    this.tweens.timeScale = 0.02;
+    this.anims.globalTimeScale = 0.02;
+    this.time.delayedCall(ms, () => {
+      this.tweens.timeScale = prev;
+      this.anims.globalTimeScale = prev;
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -80,13 +203,13 @@ export class FirstDefeatScene extends Phaser.Scene {
       return [
         { t: "Você conseguiu! O Mapinguari está livre da Podridão, e logo na primeira partida!" },
         { t: "Eu sou a Anciã da Fogueira. Esta é a Clareira, o último canto da floresta que a Podridão ainda não tomou." },
-        { t: `Você trouxe ${coins} moedas da mata. Com elas vamos reerguer a Clareira, peça por peça.`, sit: true },
+        { t: `Você trouxe ${coins} moedas da mata. Com elas vamos reerguer a Clareira, peça por peça.` },
         { t: "Mas a Podridão tem mais fôlego do que parece. O próximo Perigo será mais cruel. Prepare-se, guardião." },
       ];
     }
     return [
       { t: "Calma, guardião… respire. Você caiu fundo na mata, mas está a salvo ao lado da fogueira." },
-      { t: "Eu sou a Anciã da Fogueira. Esta é a Clareira, o último canto da floresta que a Podridão ainda não tomou.", sit: true },
+      { t: "Eu sou a Anciã da Fogueira. Esta é a Clareira, o último canto da floresta que a Podridão ainda não tomou." },
       { t: `Você resistiu ${time} e derrubou ${kills} criaturas, e ainda trouxe ${coins} moedas. Nada mal para a primeira vez!` },
       { t: "Lá fora, basta caminhar: suas armas atacam sozinhas, e a cada nível a floresta oferece uma carta. Misture fogo, gelo e raio: quando se encontram, nascem reações." },
       { t: "Ninguém vence a Podridão de primeira. Cada queda deixa você mais forte, e as moedas vão reerguer a Clareira. Outras lendas da mata esperam ser libertadas para lutar ao seu lado." },
@@ -95,203 +218,581 @@ export class FirstDefeatScene extends Phaser.Scene {
   }
 
   // ---------------------------------------------------------------------------
-  // Cenário: clareira à noite com a fogueira, o herói e a Anciã
+  // Plano 2 · a Clareira à noite
   // ---------------------------------------------------------------------------
-  _buildWorld() {
-    const W = this.W,
-      H = this.H;
-    const gy = Math.round(H * 0.5); // linha do horizonte
-    const key = `fd_sky_${W}x${H}`;
+  // Brilhos grandes com gradiente suave (o fx_glow de 64px fica em blocos quando ampliado)
+  _glowTex() {
+    if (this.textures.exists("fd_glow")) return;
+    const c = this.textures.createCanvas("fd_glow", 256, 256);
+    const ctx = c.getContext();
+    const g = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+    g.addColorStop(0, "rgba(255,255,255,1)");
+    g.addColorStop(0.25, "rgba(255,255,255,0.55)");
+    g.addColorStop(0.6, "rgba(255,255,255,0.14)");
+    g.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 256, 256);
+    c.refresh();
+  }
+
+  // Faixa de neblina escura na base das arvores (esconde o corte seco entre mata e chao)
+  _horizonFog(gy, G, tint = 0x000000) {
+    const key = "fd_fog";
     if (!this.textures.exists(key)) {
-      const c = this.textures.createCanvas(key, W, H);
+      const c = this.textures.createCanvas(key, 4, 128);
       const ctx = c.getContext();
-      const g = ctx.createLinearGradient(0, 0, 0, gy + 40);
-      g.addColorStop(0, "#070b14");
-      g.addColorStop(0.7, "#14213a");
-      g.addColorStop(1, "#1d3340");
+      const g = ctx.createLinearGradient(0, 0, 0, 128);
+      g.addColorStop(0, "rgba(255,255,255,0)");
+      g.addColorStop(0.5, "rgba(255,255,255,0.85)");
+      g.addColorStop(1, "rgba(255,255,255,0)");
       ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
+      ctx.fillRect(0, 0, 4, 128);
       c.refresh();
     }
-    this.add.image(0, 0, key).setOrigin(0).setDepth(0);
-    // Estrelas e lua
-    for (let i = 0; i < 46; i++) {
-      const s = this.add.image(Math.random() * W, Math.random() * (gy - 20), "px_dot1").setScale(1.5 + Math.random() * 1.5).setAlpha(0.3 + Math.random() * 0.5).setDepth(1);
-      this.tweens.add({ targets: s, alpha: 0.15, duration: 900 + Math.random() * 1500, yoyo: true, repeat: -1, delay: Math.random() * 1500 });
-    }
-    this.add.image(W * 0.82, 96, "fx_glow").setScale(2.6).setTint(0xcfe2ff).setAlpha(0.22).setBlendMode(Phaser.BlendModes.ADD).setDepth(1);
-    this.add.circle(W * 0.82, 96, 20, 0xeaf2ff).setDepth(1);
-    // Chão
-    this.add.tileSprite(0, gy, W, H - gy, "env_ground").setOrigin(0).setTileScale(3).setTint(0x3a4e6e).setDepth(2);
-    // Silhueta de árvores no horizonte
-    const env = this.registry.get("envKeys");
-    const trees = [...env.pines, ...env.trees.slice(0, 5)];
-    for (let x = -30; x < W + 60; x += 46 + Math.random() * 34) {
-      this.add.image(x, gy + 8 + Math.random() * 16, "env", trees[Math.floor(Math.random() * trees.length)]).setOrigin(0.5, 1).setScale(3 + Math.random() * 1.2).setTint(0x0b1620).setDepth(3);
-    }
-    // Fogueira
+    this._w(this.add.image(-400, gy - 36, key).setOrigin(0).setDisplaySize(this.W + 800, 150).setTint(tint).setAlpha(0.7).setDepth(6), G);
+  }
+
+  // Massa escura de mata atras das copas: tampa o ceu que aparecia entre os troncos
+  _farForest(gy, G, color) {
+    this._w(this.add.rectangle(-400, gy - 140, this.W + 800, 150, color).setOrigin(0).setDepth(2.6), G);
+  }
+
+  _buildClearing() {
+    this._glowTex();
+    const W = this.W,
+      H = this.H,
+      G = "clear";
+    const gy = Math.round(H * 0.5);
     const fx = Math.round(W / 2),
       fy = Math.round(H * 0.66);
     this.fireX = fx;
     this.fireY = fy;
-    this.add.image(fx, fy + 4, "camp_fire").setScale(3).setDepth(fy - 30);
-    this.glowBig = this.add.image(fx, fy - 18, "fx_glow").setScale(7).setTint(0xff9a4c).setAlpha(0.35).setBlendMode(Phaser.BlendModes.ADD).setDepth(fy + 5);
-    this.add.image(fx, fy + 4, "fx_glow").setScale(1.6).setTint(0xff5a1e).setAlpha(0.6).setBlendMode(Phaser.BlendModes.ADD).setDepth(fy + 5);
-    this.tweens.add({ targets: this.glowBig, alpha: 0.24, scale: 6.4, duration: 260, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
-    this.time.addEvent({ delay: 70, loop: true, callback: () => this._flame(fx, fy - 4) });
-    // Vaga-lumes
-    for (let i = 0; i < 14; i++) {
-      const p = this.add.image(Math.random() * W, gy + Math.random() * (H - gy), "px_dot2").setScale(2).setTint(0xfff5b8).setBlendMode(Phaser.BlendModes.ADD).setDepth(40);
-      this.tweens.add({ targets: p, x: p.x + (Math.random() - 0.5) * 120, y: p.y - 40 - Math.random() * 60, alpha: { from: 0.1, to: 0.9 }, duration: 2400 + Math.random() * 2400, yoyo: true, repeat: -1, delay: Math.random() * 2000 });
-    }
-    // Personagens, na altura da fogueira (um pouco à frente dela)
-    const by = fy + 26;
-    this.heroX = fx - 130;
-    this.hero = this.add.sprite(this.heroX, by, `hero_${this.charId}`, 0).setOrigin(0.5, 1).setScale(SC).setDepth(by);
-    this.elder = this.add.sprite(fx + 130, by, "camp_elder", 0).setOrigin(0.5, 1).setScale(SC).setFlipX(true).setDepth(by);
-    this.elder.play("elder_idle");
-    this.heroBaseY = by;
-    if (!this.won) {
-      // Deitado: gira em torno dos pés, com a cabeça virada para a fogueira
-      this.hero.setAngle(84).setX(this.heroX - 64);
-      this.tweens.add({ targets: this.hero, scaleY: SC * 1.03, duration: 1300, yoyo: true, repeat: -1, ease: "Sine.easeInOut" }); // respira
-    } else {
-      this.hero.play(`${this.charId}_idle`);
-    }
-    // Vinheta
-    const vk = `fd_vig_${W}x${H}`;
-    if (!this.textures.exists(vk)) {
-      const c = this.textures.createCanvas(vk, W, H);
+    const key = `fd2_sky_${W}x${H}`;
+    if (!this.textures.exists(key)) {
+      const c = this.textures.createCanvas(key, W + 800, H + 600);
       const ctx = c.getContext();
-      const g = ctx.createRadialGradient(W / 2, H * 0.6, H * 0.3, W / 2, H * 0.6, Math.max(W, H) * 0.75);
-      g.addColorStop(0, "rgba(0,0,0,0)");
-      g.addColorStop(1, "rgba(4,6,12,0.7)");
+      const g = ctx.createLinearGradient(0, 0, 0, gy + 340);
+      g.addColorStop(0, "#050810");
+      g.addColorStop(0.6, "#13203a");
+      g.addColorStop(1, "#1d3340");
       ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
+      ctx.fillRect(0, 0, W + 800, H + 600);
       c.refresh();
     }
-    this.add.image(0, 0, vk).setOrigin(0).setDepth(80);
-    // "Pálpebras": cobrem a tela inteira até o herói acordar
-    this.lidTop = this.add.rectangle(0, 0, W, H / 2 + 1, 0x000000).setOrigin(0).setDepth(900);
-    this.lidBot = this.add.rectangle(0, H / 2, W, H / 2 + 1, 0x000000).setOrigin(0).setDepth(900);
-    if (this.won) {
-      this.lidTop.setVisible(false);
-      this.lidBot.setVisible(false);
+    this._w(this.add.image(-400, -300, key).setOrigin(0).setDepth(0), G);
+    // Estrelas e lua
+    for (let i = 0; i < 70; i++) {
+      const s = this._w(this.add.image(-300 + Math.random() * (W + 600), -150 + Math.random() * (gy + 130), "px_dot1").setScale(1.4 + Math.random() * 1.6).setAlpha(0.3 + Math.random() * 0.5).setDepth(1), G);
+      this.tweens.add({ targets: s, alpha: 0.12, duration: 900 + Math.random() * 1500, yoyo: true, repeat: -1, delay: Math.random() * 1500 });
     }
+    this._w(this.add.image(W * 0.82, 96, "fx_glow").setScale(2.8).setTint(0xcfe2ff).setAlpha(0.24).setBlendMode(Phaser.BlendModes.ADD).setDepth(1), G);
+    this._w(this.add.circle(W * 0.82, 96, 20, 0xeaf2ff).setDepth(1), G);
+    // Chão e silhueta de árvores (duas camadas: profundidade)
+    this._w(this.add.tileSprite(-400, gy, W + 800, H - gy + 400, "env_ground").setOrigin(0).setTileScale(3).setTint(0x3a4e6e).setDepth(2), G);
+    const env = this.registry.get("envKeys");
+    const trees = [...env.pines, ...env.trees.slice(0, 5)];
+    for (const [layer, tint, sc, depth] of [[0, 0x0c1722, 1.7, 3], [1, 0x070e16, 2.4, 4]]) {
+      for (let x = -420; x < W + 460; x += 46 + Math.random() * 38) {
+        this._w(this.add.image(x, gy + 8 + Math.random() * 18 + layer * 6, "env", trees[Math.floor(Math.random() * trees.length)]).setOrigin(0.5, 1).setScale(sc + Math.random() * 1.1).setTint(tint).setDepth(depth), G);
+      }
+    }
+    this._farForest(gy, G, 0x0a1420);
+    this._horizonFog(gy, G, 0x050a12);
+    // Fogueira
+    this._w(this.add.image(fx, fy + 4, "camp_fire").setScale(3).setDepth(fy - 30), G);
+    // luz da fogueira no chao (elipse achatada) e no ar
+    this._w(this.add.image(fx, fy + 18, "fd_glow").setScale(7.5, 2.6).setTint(0xff8a3c).setAlpha(0.3).setBlendMode(Phaser.BlendModes.ADD).setDepth(fy - 40), G);
+    this.glowBig = this._w(this.add.image(fx, fy - 18, "fd_glow").setScale(6.4).setTint(0xff9a4c).setAlpha(0.36).setBlendMode(Phaser.BlendModes.ADD).setDepth(fy + 5), G);
+    this._w(this.add.image(fx, fy + 4, "fx_glow").setScale(1.7).setTint(0xff5a1e).setAlpha(0.6).setBlendMode(Phaser.BlendModes.ADD).setDepth(fy + 5), G);
+    this.tweens.add({ targets: this.glowBig, alpha: 0.24, scale: 5.8, duration: 260, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    this.time.addEvent({ delay: 70, loop: true, callback: () => this._flame(fx, fy - 4) });
+    // Vaga-lumes
+    for (let i = 0; i < 20; i++) {
+      const p = this._w(this.add.image(-200 + Math.random() * (W + 400), gy + Math.random() * (H - gy), "px_dot2").setScale(2).setTint(0xfff5b8).setBlendMode(Phaser.BlendModes.ADD).setDepth(40), G);
+      this.tweens.add({ targets: p, x: p.x + (Math.random() - 0.5) * 120, y: p.y - 40 - Math.random() * 60, alpha: { from: 0.1, to: 0.9 }, duration: 2400 + Math.random() * 2400, yoyo: true, repeat: -1, delay: Math.random() * 2000 });
+    }
+    // Mobilia da Clareira: toras para sentar e pedras
+    this._w(this.add.image(fx + 150, fy + 14, "camp_logseat").setScale(3).setDepth(fy + 14), G);
+    this._w(this.add.image(fx - 20, fy + 70, "camp_logseat").setScale(3).setFlipX(true).setDepth(fy + 70), G);
+    this._w(this.add.image(fx + 340, fy + 40, "camp_rocks").setScale(3).setDepth(fy + 40), G);
+    // Personagens, na altura da fogueira (um pouco à frente dela)
+    const by = fy + 26;
+    this.baseY = by;
+    this.heroX = fx - 300;
+    this.shadowH = this._w(this.add.image(this.heroX, by + 2, "px_shadow").setScale(7.5, 3).setAlpha(0.55).setDepth(by - 1), G);
+    this.hero = this._w(this.add.sprite(this.heroX, by, `herorig_${this.charId}`, FRAME("lieA")).setOrigin(OX, OY).setScale(SC).setDepth(by), G);
+    this.elderX = fx - 168;
+    this.elder = this._w(this.add.sprite(W + 160, by, "camp_elder", 0).setOrigin(0.5, 1).setScale(SC).setFlipX(true).setDepth(by), G);
+    this.elder.play("elder_idle");
+    this.elderShadow = this._w(this.add.image(W + 160, by + 2, "px_shadow").setScale(4.6, 2.4).setAlpha(0.5).setDepth(by - 1), G);
+    // a Ancia traz uma lamparina: luz quente que acompanha ela
+    this.elderGlow = this._w(this.add.image(W + 160, by - 70, "fd_glow").setScale(3.2).setTint(0xffb36b).setAlpha(0.35).setBlendMode(Phaser.BlendModes.ADD).setDepth(by + 40), G);
+    this._show(G, false);
   }
 
   _flame(x, y) {
-    const f = this.add
-      .image(x + (Math.random() - 0.5) * 20, y, "px_puff")
-      .setScale(2.2 + Math.random())
-      .setTint([0xffe58f, 0xffb36b, 0xff7a3c][Math.floor(Math.random() * 3)])
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setDepth(this.fireY + 6);
+    if (!this._groups.clear?.[0]?.visible) return;
+    const f = this._w(
+      this.add
+        .image(x + (Math.random() - 0.5) * 20, y, "px_puff")
+        .setScale(2.2 + Math.random())
+        .setTint([0xffe58f, 0xffb36b, 0xff7a3c][Math.floor(Math.random() * 3)])
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(this.fireY + 6),
+    );
     this.tweens.add({ targets: f, y: y - 36 - Math.random() * 32, x: f.x + (Math.random() - 0.5) * 12, scale: 0.4, alpha: 0, duration: 520 + Math.random() * 260, onComplete: () => f.destroy() });
     if (Math.random() < 0.22) {
-      const e = this.add.image(x, y - 14, "px_dot1").setScale(3).setTint(0xffe58f).setDepth(this.fireY + 6);
+      const e = this._w(this.add.image(x, y - 14, "px_dot1").setScale(3).setTint(0xffe58f).setDepth(this.fireY + 6));
       this.tweens.add({ targets: e, y: y - 110 - Math.random() * 60, x: x + (Math.random() - 0.5) * 60, alpha: 0, duration: 1300, onComplete: () => e.destroy() });
     }
   }
 
   // ---------------------------------------------------------------------------
-  // Queda (só na derrota): o herói cai no escuro e a tela some
+  // Plano 1 · a floresta corrompida (só na derrota)
   // ---------------------------------------------------------------------------
-  _fall(done) {
+  _buildForest() {
+    const W = this.W,
+      H = this.H,
+      G = "forest";
+    const gy = Math.round(H * 0.5);
+    this._glowTex();
+    const key = `fd2_rot_${W}x${H}`;
+    if (!this.textures.exists(key)) {
+      const c = this.textures.createCanvas(key, W + 800, H + 600);
+      const ctx = c.getContext();
+      const g = ctx.createLinearGradient(0, 0, 0, gy + 340);
+      g.addColorStop(0, "#080410");
+      g.addColorStop(0.55, "#1c0e2c");
+      g.addColorStop(1, "#1e0f28");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W + 800, H + 600);
+      c.refresh();
+    }
+    this._w(this.add.image(-400, -300, key).setOrigin(0).setDepth(0), G);
+    // brilho doentio no horizonte
+    this._w(this.add.image(W * 0.55, gy - 70, "fx_glow").setScale(18, 3.4).setTint(0x8a3a90).setAlpha(0.2).setBlendMode(Phaser.BlendModes.ADD).setDepth(1), G);
+    this._w(this.add.tileSprite(-400, gy, W + 800, H - gy + 400, "env_ground").setOrigin(0).setTileScale(3).setTint(0x4a3866).setDepth(2), G);
+    this._farForest(gy, G, 0x150b20);
+    this._horizonFog(gy, G, 0x08040e);
+    const env = this.registry.get("envKeys");
+    const trees = [...env.trees.slice(0, 6), ...env.pines];
+    this.forestLayers = [];
+    for (const [tint, sc, depth, dy] of [[0x2a1840, 2.4, 3, 0], [0x160c26, 3.5, 4, 10]]) {
+      const layer = [];
+      for (let x = -420; x < W + 460; x += 44 + Math.random() * 40) {
+        layer.push(this._w(this.add.image(x, gy + 8 + dy + Math.random() * 16, "env", trees[Math.floor(Math.random() * trees.length)]).setOrigin(0.5, 1).setScale(sc + Math.random() * 1.1).setTint(tint).setDepth(depth), G));
+      }
+      this.forestLayers.push(layer);
+    }
+    // névoa baixa arrastando
+    for (let i = 0; i < 4; i++) {
+      const f = this._w(this.add.image(-100 + i * (W / 3), gy + 50 + i * 26, "fx_glow").setScale(11, 1.5).setTint(0x8a4aa0).setAlpha(0.13).setBlendMode(Phaser.BlendModes.ADD).setDepth(5 + i), G);
+      this.tweens.add({ targets: f, x: f.x + 90 * (i % 2 ? 1 : -1), duration: 5000 + i * 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    }
+    // esporos da Podridão subindo
+    for (let i = 0; i < 40; i++) {
+      const sp = this._w(this.add.image(-300 + Math.random() * (W + 600), gy + 20 + Math.random() * (H - gy), "px_dot2").setScale(1.6 + Math.random() * 1.8).setTint([0xff7eb6, 0xc78cff, 0x8a3fa0][i % 3]).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.7).setDepth(45), G);
+      this.tweens.add({ targets: sp, y: sp.y - 120 - Math.random() * 140, x: sp.x + (Math.random() - 0.5) * 90, alpha: { from: 0.1, to: 0.85 }, duration: 3200 + Math.random() * 3200, yoyo: true, repeat: -1, delay: Math.random() * 3000 });
+    }
+    // herói em pé, de frente para o perigo
+    this.fHeroX = Math.round(W * 0.4);
+    this.fGround = Math.round(H * 0.74);
+    this.fShadow = this._w(this.add.image(this.fHeroX, this.fGround + 2, "px_shadow").setScale(5.6, 2.4).setAlpha(0.6).setDepth(this.fGround - 1), G);
+    this.fHero = this._w(this.add.sprite(this.fHeroX, this.fGround, `herorig_${this.charId}`, 0).setOrigin(OX, OY).setScale(SC).setDepth(this.fGround), G);
+    this.fHero.play(`herorig_${this.charId}_idleloop`);
+    // luz do próprio herói (chama / aura) sobre o chão
+    this.fAura = this._w(this.add.image(this.fHeroX, this.fGround - 40, "fd_glow").setScale(4.2).setTint(0xff9a4c).setAlpha(0.24).setBlendMode(Phaser.BlendModes.ADD).setDepth(this.fGround - 2), G);
+    this.tweens.add({ targets: this.fAura, alpha: 0.14, duration: 300, yoyo: true, repeat: -1 });
+    // poca de luz quente no chao sob o heroi (elipse achatada)
+    this.fPool = this._w(this.add.image(this.fHeroX, this.fGround - 2, "fd_glow").setScale(6, 1.5).setTint(0xff8a3c).setAlpha(0.2).setBlendMode(Phaser.BlendModes.ADD).setDepth(this.fGround - 3), G);
+    // luz de tocha que chega pela esquerda no fim (a Ancia), pronta e invisivel
+    this.warm = this._w(this.add.image(this.fHeroX - 760, this.fGround - 80, "fd_glow").setScale(7).setTint(0xffb36b).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD).setDepth(this.fGround + 30), G);
+    this.fWolves = [];
+    this._show(G, false);
+  }
+
+  // Lobo corrompido (silhueta roxa com olhos brilhando)
+  _wolf(x, y) {
+    const wolf = this._w(this.add.sprite(x, y, "mon_wolf", 0).setOrigin(0.5, 1).setScale(SC).setFlipX(true).setTint(0x8a6aa8).setDepth(y), "forest");
+    wolf.play("wolf_move");
+    wolf._sh = this._w(this.add.image(x, y + 2, "px_shadow").setScale(5, 2).setAlpha(0.5).setDepth(y - 1), "forest");
+    this.fWolves.push(wolf);
+    return wolf;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Interface (câmera própria): faixas de cinema, grão, título, fala, pular
+  // ---------------------------------------------------------------------------
+  _buildUi() {
     const W = this.W,
       H = this.H;
-    const cx = W / 2,
-      cy = H / 2;
-    const glow = this.add.image(cx, cy + 6, "fx_glow").setScale(6).setTint(0xe8434f).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD).setDepth(950);
-    const h = this.add.sprite(cx, cy + 56, `hero_${this.charId}`, 0).setOrigin(0.5, 1).setScale(9).setDepth(951);
-    h.play(`${this.charId}_idle`);
-    const msg = text(this, cx, H - 150, "A Podridão te alcançou…", { size: 28, color: "#c97a86", origin: 0.5, stroke: true, strokeW: 6 }).setDepth(952).setAlpha(0);
-    this.tweens.add({ targets: glow, alpha: 0.45, duration: 600 });
-    this.tweens.add({ targets: msg, alpha: 1, duration: 700, delay: 500 });
-    // golpe final
-    this.time.delayedCall(550, () => {
-      h.setTintFill(0xff5a6e);
-      this.time.delayedCall(130, () => h.clearTint());
-      this.sound.play("sfx_player_hit", { volume: 0.8, rate: 0.8 });
-      this.cameras.main.shake(200, 0.008);
-      haptic(50);
-    });
-    // cai
-    this.time.delayedCall(1000, () => {
-      h.stop();
-      this.sound.play("sfx_death", { volume: 0.5, rate: 0.7 });
-      this.tweens.add({ targets: h, angle: 84, y: cy + 92, duration: 760, ease: "Quad.easeIn" });
-      this.tweens.add({ targets: glow, alpha: 0.12, duration: 900 });
-    });
-    this.time.delayedCall(1800, () => {
-      this.sound.play("sfx_hit", { volume: 0.45, rate: 0.5 });
-      this.cameras.main.shake(120, 0.005);
-      haptic(25);
-    });
-    this.time.delayedCall(3300, () => {
-      this.tweens.add({ targets: [h, glow, msg], alpha: 0, duration: 700, onComplete: () => [h, glow, msg].forEach((o) => o.destroy()) });
-    });
-    this.time.delayedCall(4100, done);
+    const bh = Math.round(H * BAR_H);
+    this.barH = bh;
+    this.barTop = this._u(this.add.rectangle(0, -bh, W, bh, 0x000000).setOrigin(0).setDepth(1500));
+    this.barBot = this._u(this.add.rectangle(0, H, W, bh, 0x000000).setOrigin(0).setDepth(1500));
+    // grão de filme (textura de ruído, deslocada a cada ~70 ms)
+    if (!this.textures.exists("fd_grain")) {
+      const c = this.textures.createCanvas("fd_grain", 128, 128);
+      const ctx = c.getContext();
+      const id = ctx.createImageData(128, 128);
+      for (let i = 0; i < id.data.length; i += 4) {
+        const v = Math.random() * 255;
+        id.data[i] = id.data[i + 1] = id.data[i + 2] = v;
+        id.data[i + 3] = 255;
+      }
+      ctx.putImageData(id, 0, 0);
+      c.refresh();
+    }
+    this.grain = this._u(this.add.tileSprite(0, 0, W, H, "fd_grain").setOrigin(0).setAlpha(0.07).setBlendMode(Phaser.BlendModes.ADD).setDepth(1400));
+    this.time.addEvent({ delay: 70, loop: true, callback: () => this.grain.setTilePosition(Math.random() * 128, Math.random() * 128) });
+    // cortinas: preto total (transições), clarão do golpe e pulso vermelho do coração
+    this.black = this._u(this.add.rectangle(0, 0, W, H, 0x000000, 1).setOrigin(0).setDepth(1300));
+    this.flash = this._u(this.add.rectangle(0, 0, W, H, 0xffffff, 0).setOrigin(0).setDepth(1310));
+    this.heartVig = this._u(this.add.rectangle(0, 0, W, H, 0xa01830, 0).setOrigin(0).setDepth(1290));
+    // legenda / título
+    this.caption = this._u(text(this, W / 2, H - this.barH - 46, "", { size: 26, color: "#d9a0ac", origin: 0.5, stroke: true, strokeW: 6 }).setDepth(1320).setAlpha(0));
+    this.title = this._u(text(this, W / 2, H / 2 - 20, "", { size: 46, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 8 }).setDepth(1320).setAlpha(0));
+    this.subtitle = this._u(text(this, W / 2, H / 2 + 48, "", { size: 20, color: CSS.muted, origin: 0.5 }).setDepth(1320).setAlpha(0));
+    this.rule = this._u(this.add.rectangle(W / 2, H / 2 + 20, 0, 2, 0xf2c14e).setDepth(1320));
+    // caixa de fala
+    const w = Math.min(820, W - 40);
+    const c = (this.box = this.add.container(W / 2, H - 100).setDepth(1600).setAlpha(0).setVisible(false));
+    const g = this.add.graphics();
+    drawFrame(g, -w / 2, -64, w, 128, "gold", { alpha: 0.97 });
+    this.face = this.add.sprite(-w / 2 + 56, 40, "camp_elder", 0).setOrigin(0.5, 1).setScale(4).setFlipX(true);
+    this.face.play("elder_idle");
+    const who = text(this, -w / 2 + 108, -42, "ANCIÃ DA FOGUEIRA", { size: 15, color: CSS.goldHi, origin: [0, 0.5] });
+    this.lineT = text(this, -w / 2 + 108, -26, "", { size: 19, color: CSS.txt, origin: [0, 0], lineSpacing: 3 });
+    // texto invisível usado só para medir/quebrar linhas (a digitação não "pula")
+    this.measureT = this._u(text(this, 0, 0, "", { size: 19, origin: [0, 0], wrap: w - 140, lineSpacing: 3 }).setVisible(false));
+    this.more = this.add.image(w / 2 - 26, 46, "ico_play").setScale(2).setAngle(90).setVisible(false);
+    this.tweens.add({ targets: this.more, y: 52, duration: 450, yoyo: true, repeat: -1 });
+    c.add([g, this.face, who, this.lineT, this.more]);
+    this._u(c);
+    this.hint = this._u(text(this, W / 2, H - 20, "toque para continuar", { size: 14, color: CSS.muted, origin: 0.5 }).setDepth(1600).setAlpha(0));
+    this.skipBtn = new Button(this, W - 96, 40, 150, 48, "PULAR", () => this._finish(true), { size: 20 });
+    this.skipBtn.setDepth(1700).setAlpha(0);
+    this._u(this.skipBtn);
+    this.tweens.add({ targets: this.skipBtn, alpha: 0.8, duration: 600, delay: 1200 });
   }
 
-  // Olhos abrindo: duas piscadas, a segunda abre de vez
-  _wake(done) {
-    const H = this.H;
-    const openTo = (frac, ms, ease = "Sine.easeInOut") => {
-      const off = (H / 2) * frac;
-      this.tweens.add({ targets: this.lidTop, y: -off, duration: ms, ease });
-      this.tweens.add({ targets: this.lidBot, y: H / 2 + off, duration: ms, ease });
+  _bars(open, ms = 700) {
+    const h = this.barH;
+    this.tweens.add({ targets: this.barTop, y: open ? 0 : -h, duration: ms, ease: "Cubic.easeInOut" });
+    this.tweens.add({ targets: this.barBot, y: open ? this.H - h : this.H, duration: ms, ease: "Cubic.easeInOut" });
+  }
+  _fadeBlack(to, ms) {
+    this.tweens.add({ targets: this.black, alpha: to, duration: ms, ease: "Sine.easeInOut" });
+  }
+  _caption(str, inMs = 600, hold = 1500) {
+    this.caption.setText(str);
+    this.tweens.add({ targets: this.caption, alpha: 1, duration: inMs, yoyo: true, hold, ease: "Sine.easeInOut" });
+  }
+  _titleCard(main, sub, hold = 1500) {
+    this.title.setText(main.split("").join(" "));
+    this.subtitle.setText(sub);
+    this.tweens.add({ targets: this.rule, width: 220, duration: 700, ease: "Cubic.easeOut" });
+    this.tweens.add({ targets: [this.title, this.subtitle], alpha: 1, duration: 800, delay: 150, hold, yoyo: true, ease: "Sine.easeInOut" });
+    this.tweens.add({ targets: this.rule, width: 0, duration: 600, delay: 150 + 800 + hold });
+  }
+  _heartbeat(n, gap, vol, fade = 0.78) {
+    for (let i = 0; i < n; i++) {
+      this._at(i * gap, () => {
+        this._sfx("sfx_heartbeat", vol * Math.pow(fade, i), 1 - i * 0.04);
+        this.tweens.add({ targets: this.heartVig, alpha: 0.28 * Math.pow(fade, i), duration: 90, yoyo: true });
+        this.cameras.main.shake(70, 0.0015);
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // PLANO 1 + 2 (derrota)
+  // ---------------------------------------------------------------------------
+  _playDefeat() {
+    const cam = this.cameras.main;
+    const W = this.W,
+      H = this.H;
+    this._show("forest", true);
+    this._show("clear", false);
+    // plano de abertura aberto (a mata inteira, o herói pequeno); depois a câmera se aproxima
+    cam.setZoom(1);
+    cam.centerOn(W / 2, H * 0.52);
+    this._vignette(0.9, 0.45, 1);
+    this._fadeBlack(0, 900);
+    this._bars(true, 900);
+    // empurra a câmera para o herói durante todo o plano
+    cam.pan(this.fHeroX + 60, this.fGround - 70, 3800, "Sine.easeInOut");
+    cam.zoomTo(1.5, 3800, "Sine.easeInOut");
+    this.tweens.add({ targets: this.fHero, scaleY: SC * 1.012, duration: 1300, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    // parallax lento das árvores
+    this.forestLayers.forEach((layer, i) => layer.forEach((t) => this.tweens.add({ targets: t, x: t.x - 24 * (i + 1), duration: 4200, ease: "Sine.easeInOut" })));
+    this._sfx("sfx_whoosh", 0.12, 0.5);
+    this._heartbeat(3, 920, 0.5);
+
+    // três lobos chegam da direita; o da frente salta
+    const gy = this.fGround;
+    const wolves = [
+      { x: W + 520, y: gy - 26, d: 3200, delay: 600, lead: false },
+      { x: W + 420, y: gy + 22, d: 2800, delay: 450, lead: false },
+      { x: W + 260, y: gy + 2, d: 1500, delay: 750, lead: true },
+    ];
+    wolves.forEach((cfg) => {
+      this._at(cfg.delay, () => {
+        const wolf = this._wolf(cfg.x, cfg.y);
+        this._sfx("sfx_whoosh", 0.1, 0.9);
+        const toX = this.fHeroX + (cfg.lead ? 70 : 220 + Math.random() * 40);
+        this.tweens.add({
+          targets: [wolf, wolf._sh],
+          x: toX,
+          duration: cfg.d,
+          ease: cfg.lead ? "Cubic.easeIn" : "Sine.easeOut",
+          onUpdate: () => wolf.setDepth(wolf.y),
+          onComplete: () => {
+            if (cfg.lead) return this._strike(wolf);
+            wolf.stop();
+            wolf.setFrame(0);
+            this.tweens.add({ targets: wolf, scaleY: SC * 1.04, duration: 520, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+          },
+        });
+        if (cfg.lead) {
+          // salto em arco
+          this.tweens.add({ targets: wolf, y: cfg.y - 90, duration: cfg.d * 0.5, yoyo: true, ease: "Sine.easeOut" });
+        }
+      });
+    });
+  }
+
+  // O golpe: clarão, congelamento, sacudida — e a queda em câmera lenta
+  _strike(wolf) {
+    const cam = this.cameras.main;
+    this.flash.setAlpha(0.9);
+    this.tweens.add({ targets: this.flash, alpha: 0, duration: 320, ease: "Cubic.easeOut" });
+    this._sfx("sfx_strike", 0.85);
+    this._sfx("sfx_player_hit", 0.6, 0.7);
+    cam.shake(300, 0.016);
+    haptic(60);
+    // o lobo se desfaz em esporos
+    for (let i = 0; i < 16; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const p = this._w(this.add.image(wolf.x, wolf.y - 40, "px_puff").setScale(1.2 + Math.random() * 1.6).setTint([0xc78cff, 0xff7eb6, 0x8a3fa0][i % 3]).setBlendMode(Phaser.BlendModes.ADD).setDepth(wolf.y + 5));
+      this.tweens.add({ targets: p, x: p.x + Math.cos(a) * (50 + Math.random() * 70), y: p.y + Math.sin(a) * (40 + Math.random() * 50) - 20, alpha: 0, scale: 0.3, duration: 700 + Math.random() * 400, onComplete: () => p.destroy() });
+    }
+    wolf._sh.destroy();
+    wolf.destroy();
+    this._hitStop(150);
+    this.fAura.setAlpha(0.3);
+    this._at(170, () => {
+      this._slow(0.5, 260);
+      this._saturate(0.35, 1800);
+      this._vignette(0.6, 0.7, 1800);
+      this.tweens.killTweensOf(this.fHero);
+      this.fHero.setScale(SC);
+      this.fHero.play(`herorig_${this.charId}_fall`);
+      this.fHero.on("animationupdate", (anim, frame) => {
+        if (frame.index === 6) this._impact();
+      });
+      this.fHero.once("animationcomplete", () => {
+        this.fHero.play(`herorig_${this.charId}_lie`);
+        this._slow(0.8, 1200);
+      });
+      // a câmera cai junto com ele
+      cam.pan(this.fHeroX - 10, this.fGround - 34, 2600, "Sine.easeInOut");
+      cam.zoomTo(1.7, 3000, "Sine.easeInOut");
+      this.tweens.add({ targets: this.fAura, alpha: 0, duration: 1600 });
+    });
+    // depois do baque: legenda, uma luz de tocha chega e os lobos fogem
+    this._at(3300, () => this._caption("A Podridão te alcançou…", 700, 1200));
+    this._at(3900, () => this._torchLight());
+    this._at(5300, () => {
+      this._fadeBlack(1, 1100);
+      this._vignette(0.3, 1, 1100);
+      this.tinSnd = this.sound.add("sfx_tinnitus", { volume: 0 });
+      this.tinSnd.play();
+      this.tweens.add({ targets: this.tinSnd, volume: 0.1, duration: 800 });
+      this._heartbeat(3, 1050, 0.34, 0.7);
+    });
+    this._at(6500, () => this._toClearing());
+  }
+
+  // Uma luz quente chega pela esquerda: os lobos recuam e fogem para a escuridão
+  _torchLight() {
+    this.tweens.add({ targets: this.warm, x: this.fHeroX - 330, alpha: 0.62, duration: 1500, ease: "Sine.easeOut" });
+    this._sfx("sfx_step", 0.2, 1);
+    this._at(500, () => this._sfx("sfx_step", 0.2, 1.05));
+    this.fWolves.forEach((w, i) => {
+      if (!w.active) return;
+      this._at(300 + i * 160, () => {
+        this.tweens.killTweensOf(w);
+        w.setFlipX(false).setScale(SC);
+        w.play("wolf_move");
+        this._sfx("sfx_whoosh", 0.12, 1.3);
+        this.tweens.add({ targets: [w, w._sh], x: w.x + 900, duration: 1100, ease: "Quad.easeIn", onUpdate: () => w.setDepth(w.y) });
+      });
+    });
+  }
+
+  _impact() {
+    if (this._impacted) return;
+    this._impacted = true;
+    this._sfx("sfx_thud", 0.9);
+    this.cameras.main.shake(260, 0.01);
+    haptic(40);
+    // poeira e folhas voando do baque
+    const gx = this.fHeroX - 20,
+      gyy = this.fGround;
+    for (let i = 0; i < 16; i++) {
+      const dir = i % 2 ? 1 : -1;
+      const p = this._w(this.add.image(gx + dir * (8 + Math.random() * 30), gyy - 4, "px_puff").setScale(1.6 + Math.random() * 1.8).setTint(i % 3 ? 0xa89cb0 : 0x6a5a7a).setAlpha(0.8).setDepth(gyy + 4));
+      this.tweens.add({ targets: p, x: p.x + dir * (40 + Math.random() * 80), y: p.y - 10 - Math.random() * 26, alpha: 0, scale: p.scale * 2.2, duration: 900 + Math.random() * 500, ease: "Cubic.easeOut", onComplete: () => p.destroy() });
+    }
+    for (let i = 0; i < 8; i++) {
+      const l = this._w(this.add.image(gx + (Math.random() - 0.5) * 60, gyy - 10, "px_leaf").setScale(3).setTint(i % 2 ? 0x6a4a8a : 0x4a2a60).setDepth(gyy + 6));
+      this.tweens.add({ targets: l, y: l.y - 50 - Math.random() * 60, x: l.x + (Math.random() - 0.5) * 120, rotation: Math.random() * 6, duration: 600, ease: "Quad.easeOut", yoyo: true, onComplete: () => l.destroy() });
+    }
+  }
+
+  // Corte para o escuro → título → a Clareira entra em foco
+  _toClearing() {
+    const cam = this.cameras.main;
+    const W = this.W,
+      H = this.H;
+    this.tinSnd?.stop();
+    this.tweens.killTweensOf(cam);
+    this._show("forest", false);
+    this._show("clear", true);
+    this.tweens.timeScale = 1;
+    this.anims.globalTimeScale = 1;
+    if (this.fx) {
+      this._sat.s = 1;
+      this.fx.color.reset();
+    }
+    // deitado, igual ao último quadro do plano anterior
+    this.hero.play(`herorig_${this.charId}_lie`);
+    // câmera baixa e próxima do herói, bem desfocada
+    cam.setZoom(1.7);
+    cam.centerOn(this.heroX + 10, this.baseY - 36);
+    this._vignette(0.55, 0.55, 1);
+    this._blurTo(5, 0, 3400);
+    // áudio antes da imagem
+    this.fireSnd = this.sound.add("sfx_fire_loop", { loop: true, volume: 0 });
+    this.fireSnd.play();
+    this.tweens.add({ targets: this.fireSnd, volume: 0.22, duration: 2400 });
+    this._titleCard("A CLAREIRA", "o último canto da floresta", 1100);
+    this._at(2900, () => {
+      this._bloomIn();
+      this._fadeBlack(0, 1700);
+      this._vignette(0.95, 0.32, 2600);
+      cam.zoomTo(1.3, 7000, "Sine.easeOut");
+      cam.pan(this.fireX - 230, this.baseY - 92, 7000, "Sine.easeInOut");
+      if (this.cache.audio.exists("music_menu")) {
+        this.music = this.sound.add("music_menu", { loop: true, volume: 0 });
+        this.music.play();
+        this.tweens.add({ targets: this.music, volume: 0.2, duration: 3200 });
+      }
+    });
+    // a Anciã chega pela mata
+    this._at(3300, () => this._elderEnters());
+  }
+
+  _elderEnters() {
+    const W = this.W;
+    const e = this.elder,
+      sh = this.elderShadow;
+    e.setX(W + 160);
+    sh.setX(W + 160);
+    const dist = W + 160 - this.elderX;
+    const ms = Math.min(4600, dist * 5.6);
+    this.tweens.add({ targets: [e, sh], x: this.elderX, duration: ms, ease: "Sine.easeOut" });
+    // passos: balanço + som, cada vez mais espaçados ao chegar
+    let n = 0;
+    const step = () => {
+      if (this._leaving) return;
+      n++;
+      this._sfx("sfx_step", 0.26, 0.9 + Math.random() * 0.2);
+      this.tweens.add({ targets: e, y: this.baseY - 4, duration: 110, yoyo: true, ease: "Quad.easeOut" });
+      if (e.x > this.elderX + 6) this.time.delayedCall(300 + n * 18, step);
+      else this._elderArrives();
     };
-    this.sound.play("sfx_ui_hover", { volume: 0.25, rate: 0.5 });
-    openTo(0.22, 700);
-    this.time.delayedCall(1000, () => openTo(0, 380));
-    this.time.delayedCall(1550, () => {
-      openTo(1.02, 1500);
-      this.sound.play("sfx_ui_hover", { volume: 0.25, rate: 0.7 });
+    this.time.delayedCall(260, step);
+    // o guardião começa a se mexer quando ela se aproxima
+    this._at(ms * 0.45, () => this._wake());
+  }
+
+  _elderArrives() {
+    if (this._arrived) return;
+    this._arrived = true;
+    // agacha ao lado dele
+    this.tweens.add({ targets: this.elder, scaleY: SC * 0.9, scaleX: SC * 1.04, duration: 420, ease: "Sine.easeInOut" });
+  }
+
+  // O guardião acorda, desenhado quadro a quadro
+  _wake() {
+    if (this._waking) return;
+    this._waking = true;
+    this.hero.play(`herorig_${this.charId}_wake`);
+    this.hero.on("animationupdate", (anim, frame) => {
+      if (frame.index === 2) this._sfx("sfx_ui_hover", 0.18, 0.5); // primeiro movimento: respira fundo
+      if (frame.index === 3) {
+        // olhos abertos: a Anciã começa a falar
+        this._bars(false, 700);
+        this._begin();
+      }
+      if (frame.index === 5) {
+        this._sfx("sfx_dash", 0.22, 0.6);
+        // a Anciã se levanta
+        this.tweens.add({ targets: this.elder, scaleY: SC, scaleX: SC, duration: 380, ease: "Back.easeOut" });
+      }
     });
-    this.time.delayedCall(3200, done);
+    this.hero.once("animationcomplete", () => {
+      this.hero.play(`herorig_${this.charId}_idleloop`);
+      this.tweens.add({ targets: this.hero, scaleY: SC * 1.012, duration: 1300, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+      this.shadowH.setScale(5.2, 2.6);
+    });
   }
 
-  _openWin() {
-    this.cameras.main.fadeIn(900, 5, 8, 6);
-    this.time.delayedCall(1100, () => this._begin());
-  }
-
-  // Fim da cinematografia: a partir daqui o jogador conduz as falas
-  _begin() {
-    this._ready = true;
-    this._advance();
+  // ---------------------------------------------------------------------------
+  // Vitória: sem queda; o guardião de pé, a Anciã ao lado
+  // ---------------------------------------------------------------------------
+  _playWin() {
+    const cam = this.cameras.main;
+    const W = this.W,
+      H = this.H;
+    this._show("clear", true);
+    this.hero.play(`herorig_${this.charId}_idleloop`);
+    this.elder.setX(this.elderX);
+    this.elderShadow.setX(this.elderX);
+    this.shadowH.setScale(5.2, 2.6);
+    cam.setZoom(1.5);
+    cam.centerOn(this.fireX - 200, this.baseY - 90);
+    cam.zoomTo(1.3, 5200, "Sine.easeOut");
+    this._vignette(0.95, 0.3, 1);
+    this.fireSnd = this.sound.add("sfx_fire_loop", { loop: true, volume: 0 });
+    this.fireSnd.play();
+    this.tweens.add({ targets: this.fireSnd, volume: 0.2, duration: 1800 });
+    if (this.cache.audio.exists("music_menu")) {
+      this.music = this.sound.add("music_menu", { loop: true, volume: 0 });
+      this.music.play();
+      this.tweens.add({ targets: this.music, volume: 0.24, duration: 2200 });
+    }
+    this._bloomIn(1800);
+    this._fadeBlack(0, 1200);
+    this._at(1100, () => this._begin());
   }
 
   // ---------------------------------------------------------------------------
   // Diálogo
   // ---------------------------------------------------------------------------
-  _buildDialogBox() {
-    const W = this.W,
-      H = this.H;
-    const w = Math.min(820, W - 40);
-    this.boxW = w;
-    const c = (this.box = this.add.container(W / 2, H - 100).setDepth(1000).setAlpha(0).setVisible(false));
-    const g = this.add.graphics();
-    drawFrame(g, -w / 2, -64, w, 128, "gold", { alpha: 0.97 });
-    const face = this.add.sprite(-w / 2 + 56, 40, "camp_elder", 0).setOrigin(0.5, 1).setScale(4).setFlipX(true);
-    const who = text(this, -w / 2 + 108, -42, "ANCIÃ DA FOGUEIRA", { size: 15, color: CSS.goldHi, origin: [0, 0.5] });
-    this.lineT = text(this, -w / 2 + 108, -26, "", { size: 19, color: CSS.txt, origin: [0, 0], lineSpacing: 3 });
-    // texto invisível usado só para medir/quebrar linhas (a digitação não "pula")
-    this.measureT = text(this, 0, 0, "", { size: 19, origin: [0, 0], wrap: w - 140, lineSpacing: 3 }).setVisible(false);
-    this.more = this.add.image(w / 2 - 26, 46, "ico_play").setScale(2).setAngle(90);
-    this.tweens.add({ targets: this.more, y: 52, duration: 450, yoyo: true, repeat: -1 });
-    this.more.setVisible(false);
-    c.add([g, face, who, this.lineT, this.more]);
-    this.hint = text(this, W / 2, H - 20, "toque para continuar", { size: 14, color: CSS.muted, origin: 0.5 }).setDepth(1000).setAlpha(0);
+  _begin() {
+    if (this._ready) return;
+    this._ready = true;
+    this._advance();
   }
 
   _advance() {
     if (this._leaving || !this._ready) return;
     if (this._idx < 0 && !this.box.visible) {
-      // primeira fala: aparece a caixa
-      this.box.setVisible(true);
-      this.tweens.add({ targets: this.box, alpha: 1, duration: 260 });
+      this.box.setVisible(true).setY(this.H - 82);
+      this.tweens.add({ targets: this.box, alpha: 1, y: this.H - 100, duration: 320, ease: "Back.easeOut" });
       this.tweens.add({ targets: this.hint, alpha: 0.75, duration: 600, delay: 1500 });
     }
     if (this._typing) {
@@ -303,9 +804,7 @@ export class FirstDefeatScene extends Phaser.Scene {
       return;
     }
     this._idx++;
-    const L = this.lines[this._idx];
-    if (L.sit && !this.won) this._sitUp();
-    this._startLine(L.t);
+    this._startLine(this.lines[this._idx].t);
   }
 
   _startLine(str) {
@@ -316,16 +815,22 @@ export class FirstDefeatScene extends Phaser.Scene {
     this.more.setVisible(false);
     this.lineT.setText("");
     // a Anciã "fala": um pulinho a cada fala
-    this.tweens.add({ targets: this.elder, scaleY: SC * 1.06, duration: 120, yoyo: true });
+    if (this._arrived || this.won) this.tweens.add({ targets: this.elder, scaleY: this.elder.scaleY * 1.05, duration: 120, yoyo: true });
     this._typeEvt?.remove();
     this._typeEvt = this.time.addEvent({
       delay: TYPE_MS,
       loop: true,
       callback: () => {
+        const ch = this._full[this._shown];
         this._shown++;
         this.lineT.setText(this._full.slice(0, this._shown));
-        if (this._shown % 3 === 0) this.sound.play("sfx_ui_hover", { volume: 0.06, rate: 0.9 + Math.random() * 0.4 });
-        if (this._shown >= this._full.length) this._completeLine();
+        if (this._shown % 3 === 0) this._sfx("sfx_ui_hover", 0.06, 0.9 + Math.random() * 0.4);
+        if (this._shown >= this._full.length) return this._completeLine();
+        // pausa curtinha nas vírgulas e pontos: a fala "respira"
+        if (ch === "," || ch === "." || ch === "…" || ch === "!") {
+          this._typeEvt.paused = true;
+          this.time.delayedCall(ch === "," ? 120 : 230, () => this._typeEvt && (this._typeEvt.paused = false));
+        }
       },
     });
   }
@@ -337,34 +842,25 @@ export class FirstDefeatScene extends Phaser.Scene {
     this.more.setVisible(true);
   }
 
-  // O herói acorda de vez: senta/levanta ao lado da fogueira
-  _sitUp() {
-    if (this._sat) return;
-    this._sat = true;
-    this.tweens.killTweensOf(this.hero);
-    this.tweens.add({
-      targets: this.hero,
-      angle: 0,
-      x: this.heroX,
-      y: this.heroBaseY,
-      scaleY: SC,
-      duration: 700,
-      ease: "Back.easeOut",
-      onComplete: () => this.hero.play(`${this.charId}_idle`),
-    });
-    this.sound.play("sfx_dash", { volume: 0.3, rate: 0.6 });
-  }
-
   _finish(skipped) {
     if (this._leaving) return;
     this._leaving = true;
     Analytics.track("first_story_end", { won: this.won, skipped, line: this._idx + 1, of: this.lines.length, ms: Math.round(this.time.now - this._t0) });
     this._typeEvt?.remove();
-    if (this.music) this.tweens.add({ targets: this.music, volume: 0, duration: 500, onComplete: () => this.music?.stop() });
+    this.tweens.timeScale = 1;
+    this.anims.globalTimeScale = 1;
+    for (const snd of [this.music, this.fireSnd, this.tinSnd]) if (snd) this.tweens.add({ targets: snd, volume: 0, duration: 500 });
     this.cameras.main.fadeOut(550, 5, 8, 6);
-    this.cameras.main.once("camerafadeoutcomplete", () => {
-      this.music?.stop();
+    this.uiCam.fadeOut(550, 5, 8, 6);
+    // sai quando o fade termina (ou por tempo: em aparelho lento o fade pode atrasar)
+    let gone = false;
+    const go = () => {
+      if (gone) return;
+      gone = true;
+      this._stopSounds();
       this.scene.start("GameOverScene", this.next);
-    });
+    };
+    this.uiCam.once("camerafadeoutcomplete", go);
+    this.time.delayedCall(1100, go);
   }
 }
