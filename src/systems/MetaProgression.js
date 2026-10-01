@@ -60,6 +60,7 @@ function freshDefault() {
     unlockedWeapons: DEFAULT.unlockedWeapons.slice(),
     unlockedCharacters: ['guardian'],
     hintsSeen: [],
+    firstDefeatSeen: false, // cena da Anciã na 1ª queda/vitória (ver FirstDefeatScene)
     stats: { reactions: {}, totalKills: 0, totalCoinsEarned: 0 },
   };
 }
@@ -68,6 +69,8 @@ function freshDefault() {
 function withDefaults(parsed) {
   const fd = freshDefault();
   const data = { ...fd, ...parsed };
+  // Quem já jogou antes desta cena existir não a vê (só jogadores novos)
+  if (parsed.firstDefeatSeen === undefined && (parsed.runsPlayed || 0) >= 1) data.firstDefeatSeen = true;
   data.stats = { ...fd.stats, ...(parsed.stats || {}) };
   data.stats.reactions = { ...((parsed.stats || {}).reactions || {}) };
   for (const k of ['achievements', 'unlockedWeapons', 'unlockedAbilities', 'unlockedCharacters', 'hintsSeen'])

@@ -21,6 +21,14 @@ export class GameFeel {
     this._lastGemAt = 0;
     this._hurtA = 0; // 0..1, decai sozinho
     this._makeVignette();
+    // Pausa (cartas de nível, menu): a vinheta congelaria no meio do piscar
+    this._onPause = () => {
+      this._hurtA = 0;
+      this._lastA = 0;
+      this.vignette.setAlpha(0);
+    };
+    scene.events.on("pause", this._onPause);
+    scene.events.once("shutdown", () => scene.events.off("pause", this._onPause));
   }
 
   // Vinheta vermelha pré-desenhada uma vez (textura de canvas), fixa na tela.

@@ -10,6 +10,7 @@ import { GameScene } from './scenes/GameScene.js';
 import { HUDScene } from './scenes/HUDScene.js';
 import { LevelUpScene } from './scenes/LevelUpScene.js';
 import { GameOverScene } from './scenes/GameOverScene.js';
+import { FirstDefeatScene } from './scenes/FirstDefeatScene.js';
 import { PauseScene } from './scenes/PauseScene.js';
 import { ReviveScene } from './scenes/ReviveScene.js';
 import { EndlessChoiceScene } from './scenes/EndlessChoiceScene.js';
@@ -44,6 +45,7 @@ const config = {
     HUDScene,
     LevelUpScene,
     GameOverScene,
+    FirstDefeatScene,
     PauseScene,
     ReviveScene,
     EndlessChoiceScene,
