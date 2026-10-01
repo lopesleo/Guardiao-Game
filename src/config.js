@@ -6,7 +6,7 @@ export const GAME = {
   HEIGHT: 720,
   TILE: 16,
   PIXEL_SCALE: 3, // sprite 16x16 renderizado como 48x48
-  WORLD_RADIUS: 2400, // arena circular (era 1600)
+  WORLD_RADIUS: 3400, // arena circular: 2× a ÁREA de antes (raio 2400). Subir muito pesa no aparelho fraco (decoração cresce com a área)
   MAX_ENEMIES_ALIVE: 80, // cap de pooling (D18)
   // Duração-base (7 min): é nela que o roteiro, as waves e a curva de spawn foram calibrados.
   // A duração real vem do Perigo (DIFFICULTY[].durationS); o jogo "estica" a curva por
