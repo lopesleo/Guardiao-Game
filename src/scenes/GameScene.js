@@ -1141,13 +1141,18 @@ export class GameScene extends Phaser.Scene {
 
   _randomChestPos() {
     // Sempre dentro da área jogável (nunca escondido na muralha de árvores)
+    // Num mapa grande, baú aleatório "no mapa todo" quase nunca seria achado: nasce num anel
+    // ao redor do jogador (alcançável em ~3-6 s de caminhada).
     const m = 80;
+    const px = this.player?.x ?? 0,
+      py = this.player?.y ?? 0;
     for (let i = 0; i < 30; i++) {
-      const x = Phaser.Math.Between(ARENA.minX + m, ARENA.maxX - m);
-      const y = Phaser.Math.Between(ARENA.minY + m, ARENA.maxY - m);
-      const dx = x - (this.player?.x ?? 0),
-        dy = y - (this.player?.y ?? 0);
-      if (dx * dx + dy * dy > 250 * 250) return { x, y };
+      const a = Math.random() * Math.PI * 2;
+      const d = 350 + Math.random() * 650;
+      const x = px + Math.cos(a) * d;
+      const y = py + Math.sin(a) * d;
+      if (x < ARENA.minX + m || x > ARENA.maxX - m || y < ARENA.minY + m || y > ARENA.maxY - m) continue;
+      return { x, y };
     }
     return { x: 0, y: 300 };
   }
