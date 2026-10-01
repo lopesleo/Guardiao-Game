@@ -16,6 +16,7 @@ import { ReviveScene } from './scenes/ReviveScene.js';
 import { EndlessChoiceScene } from './scenes/EndlessChoiceScene.js';
 import { setupPlatform } from './systems/Platform.js';
 import { Telemetry } from './systems/Telemetry.js';
+import { AdMobBridge } from './systems/AdMobBridge.js';
 import { Clock } from './systems/Clock.js';
 
 const config = {
@@ -60,4 +61,5 @@ window.addEventListener('load', () => {
   window.game = new Phaser.Game(config);
   setupPlatform(window.game);
   Telemetry.install(); // Firebase (só no app Android)
+  AdMobBridge.install(); // consentimento (UMP) + anúncios premiados (só no app Android)
 });

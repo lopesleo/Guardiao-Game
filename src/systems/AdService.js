@@ -10,7 +10,7 @@
 //    Enquanto não estiver plugado, o app se comporta como "web".
 // A compra "Remover anúncios" (noAds) também libera direto, sem assistir.
 import { Analytics } from "./Analytics.js";
-import { DEBUG } from "./Platform.js";
+import { DEBUG, isNative } from "./Platform.js";
 import { ADS } from "../config.js";
 import { Clock } from "./Clock.js";
 
@@ -72,6 +72,8 @@ export const AdService = {
   canShow(placement) {
     const cfg = PLACEMENTS[placement];
     if (!cfg || !this.enabled) return false;
+    // No app, sem AdMob pronto (consentimento negado, sem rede, SDK falhou) NÃO há oferta nem bônus grátis
+    if (isNative() && !provider && !state.noAds) return false;
     if (state.day !== today()) state = loadState();
     const run = runCounts[placement] || 0;
     const day = state.daily[placement] || 0;
