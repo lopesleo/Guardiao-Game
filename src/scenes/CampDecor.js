@@ -105,14 +105,7 @@ export const CampDecor = {
     this.add.image(hx, hy, "camp_hammock").setOrigin(0.5, 1).setScale(S).setDepth(hy);
     this._solid(hx - 60, hy - 6, 14, 12);
     this._solid(hx + 60, hy - 6, 14, 12);
-    // Espantalho guardando a horta + regador
-    const sx = -175,
-      sy = 350;
-    this.add.image(sx, sy + 4, "px_shadow").setScale(4, 2).setAlpha(0.5).setDepth(sy - 1);
-    const crow = this.add.image(sx, sy, "camp_scarecrow").setOrigin(0.5, 1).setScale(S).setDepth(sy);
-    this.tweens.add({ targets: crow, angle: { from: -2, to: 2 }, duration: 2600, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
-    this._solid(sx, sy - 4, 12, 10);
-    this.add.image(158, 344, "camp_can").setOrigin(0.5, 1).setScale(S).setDepth(344);
+    // (o espantalho e o regador pertencem à horta: ver CampGarden, aparecem junto com ela)
     // Samaúma: a gigante da mata, marco da Clareira (a noroeste)
     const kx = -250,
       ky = -250;

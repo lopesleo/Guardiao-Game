@@ -59,6 +59,7 @@ export class FirstDefeatScene extends Phaser.Scene {
     // Marca como vista já na entrada: se o app fechar no meio, não repete a cena
     const meta = new MetaProgression();
     meta.data.firstDefeatSeen = true;
+    meta.data.campIntroSeen = true; // a Ancia ja se apresentou aqui: a Clareira nao repete a fala de boas-vindas
     meta._save();
     Analytics.track("first_story_start", { won: this.won });
 
@@ -124,14 +125,19 @@ export class FirstDefeatScene extends Phaser.Scene {
   _initFx() {
     const pf = this.cameras.main.postFX;
     if (!pf || this.sys.game.renderer.type !== Phaser.WEBGL || Settings.get("lighting") === false) return;
-    this.fx = { vig: pf.addVignette(0.5, 0.5, 0.95, 0.3), color: pf.addColorMatrix(), blur: null, bloom: null };
+    // Todos criados AGORA e mantidos até o fim: ligar/desligar efeito no meio da cena troca o
+    // modo de renderização e faz a imagem "piscar" de resolução.
+    this.fx = {
+      vig: pf.addVignette(0.5, 0.5, 1.15, 0.2),
+      color: pf.addColorMatrix(),
+      blur: pf.addBlur(1, 2, 2, 0),
+      bloom: pf.addBloom(0xffffff, 1, 1, 0.5, 0, 4),
+    };
     this._sat = { s: 1 };
   }
   // Brilho suave nas chamas e lamparinas (entra devagar)
   _bloomIn(ms = 2200) {
-    if (!this.fx || this.fx.bloom) return;
-    this.fx.bloom = this.cameras.main.postFX.addBloom(0xffffff, 1, 1, 0.8, 0, 4);
-    this.tweens.add({ targets: this.fx.bloom, strength: 0.6, duration: ms });
+    if (this.fx) this.tweens.add({ targets: this.fx.bloom, strength: 0.3, duration: ms });
   }
   _saturate(to, ms) {
     if (!this.fx) return;
@@ -150,20 +156,8 @@ export class FirstDefeatScene extends Phaser.Scene {
   }
   _blurTo(from, to, ms) {
     if (!this.fx) return;
-    if (!this.fx.blur) this.fx.blur = this.cameras.main.postFX.addBlur(1, 2, 2, from);
     this.fx.blur.strength = from;
-    this.tweens.add({
-      targets: this.fx.blur,
-      strength: to,
-      duration: ms,
-      ease: "Sine.easeOut",
-      onComplete: () => {
-        if (to <= 0.01 && this.fx?.blur) {
-          this.cameras.main.postFX.remove(this.fx.blur);
-          this.fx.blur = null;
-        }
-      },
-    });
+    this.tweens.add({ targets: this.fx.blur, strength: to, duration: ms, ease: "Sine.easeOut" });
   }
 
   // Câmera lenta de verdade: animações e tweens juntos
@@ -371,13 +365,13 @@ export class FirstDefeatScene extends Phaser.Scene {
     this._w(this.add.image(-400, -300, key).setOrigin(0).setDepth(0), G);
     // brilho doentio no horizonte
     this._w(this.add.image(W * 0.55, gy - 70, "fx_glow").setScale(18, 3.4).setTint(0x8a3a90).setAlpha(0.2).setBlendMode(Phaser.BlendModes.ADD).setDepth(1), G);
-    this._w(this.add.tileSprite(-400, gy, W + 800, H - gy + 400, "env_ground").setOrigin(0).setTileScale(3).setTint(0x4a3866).setDepth(2), G);
-    this._farForest(gy, G, 0x150b20);
-    this._horizonFog(gy, G, 0x08040e);
+    this._w(this.add.tileSprite(-400, gy, W + 800, H - gy + 400, "env_ground").setOrigin(0).setTileScale(3).setTint(0x6c5494).setDepth(2), G);
+    this._farForest(gy, G, 0x2a1640);
+    this._horizonFog(gy, G, 0x120818);
     const env = this.registry.get("envKeys");
     const trees = [...env.trees.slice(0, 6), ...env.pines];
     this.forestLayers = [];
-    for (const [tint, sc, depth, dy] of [[0x2a1840, 2.4, 3, 0], [0x160c26, 3.5, 4, 10]]) {
+    for (const [tint, sc, depth, dy] of [[0x3e2860, 2.4, 3, 0], [0x24143c, 3.5, 4, 10]]) {
       const layer = [];
       for (let x = -420; x < W + 460; x += 44 + Math.random() * 40) {
         layer.push(this._w(this.add.image(x, gy + 8 + dy + Math.random() * 16, "env", trees[Math.floor(Math.random() * trees.length)]).setOrigin(0.5, 1).setScale(sc + Math.random() * 1.1).setTint(tint).setDepth(depth), G));
@@ -401,10 +395,10 @@ export class FirstDefeatScene extends Phaser.Scene {
     this.fHero = this._w(this.add.sprite(this.fHeroX, this.fGround, `herorig_${this.charId}`, 0).setOrigin(OX, OY).setScale(SC).setDepth(this.fGround), G);
     this.fHero.play(`herorig_${this.charId}_idleloop`);
     // luz do próprio herói (chama / aura) sobre o chão
-    this.fAura = this._w(this.add.image(this.fHeroX, this.fGround - 40, "fd_glow").setScale(4.2).setTint(0xff9a4c).setAlpha(0.24).setBlendMode(Phaser.BlendModes.ADD).setDepth(this.fGround - 2), G);
-    this.tweens.add({ targets: this.fAura, alpha: 0.14, duration: 300, yoyo: true, repeat: -1 });
+    this.fAura = this._w(this.add.image(this.fHeroX, this.fGround - 40, "fd_glow").setScale(3.4).setTint(0xff9a4c).setAlpha(0.14).setBlendMode(Phaser.BlendModes.ADD).setDepth(this.fGround - 2), G);
+    this.tweens.add({ targets: this.fAura, alpha: 0.08, duration: 300, yoyo: true, repeat: -1 });
     // poca de luz quente no chao sob o heroi (elipse achatada)
-    this.fPool = this._w(this.add.image(this.fHeroX, this.fGround - 2, "fd_glow").setScale(6, 1.5).setTint(0xff8a3c).setAlpha(0.2).setBlendMode(Phaser.BlendModes.ADD).setDepth(this.fGround - 3), G);
+    this.fPool = this._w(this.add.image(this.fHeroX, this.fGround - 2, "fd_glow").setScale(5, 1.2).setTint(0xff8a3c).setAlpha(0.07).setBlendMode(Phaser.BlendModes.ADD).setDepth(this.fGround - 3), G);
     // luz de tocha que chega pela esquerda no fim (a Ancia), pronta e invisivel
     this.warm = this._w(this.add.image(this.fHeroX - 760, this.fGround - 80, "fd_glow").setScale(7).setTint(0xffb36b).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD).setDepth(this.fGround + 30), G);
     this.fWolves = [];
@@ -453,7 +447,7 @@ export class FirstDefeatScene extends Phaser.Scene {
     this.caption = this._u(text(this, W / 2, H - this.barH - 46, "", { size: 26, color: "#d9a0ac", origin: 0.5, stroke: true, strokeW: 6 }).setDepth(1320).setAlpha(0));
     this.title = this._u(text(this, W / 2, H / 2 - 20, "", { size: 46, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 8 }).setDepth(1320).setAlpha(0));
     this.subtitle = this._u(text(this, W / 2, H / 2 + 48, "", { size: 20, color: CSS.muted, origin: 0.5 }).setDepth(1320).setAlpha(0));
-    this.rule = this._u(this.add.rectangle(W / 2, H / 2 + 20, 0, 2, 0xf2c14e).setDepth(1320));
+    this.rule = this._u(this.add.rectangle(W / 2, H / 2 + 20, 220, 2, 0xf2c14e).setDepth(1320).setScale(0, 1));
     // caixa de fala
     const w = Math.min(820, W - 40);
     const c = (this.box = this.add.container(W / 2, H - 100).setDepth(1600).setAlpha(0).setVisible(false));
@@ -491,9 +485,9 @@ export class FirstDefeatScene extends Phaser.Scene {
   _titleCard(main, sub, hold = 1500) {
     this.title.setText(main.split("").join(" "));
     this.subtitle.setText(sub);
-    this.tweens.add({ targets: this.rule, width: 220, duration: 700, ease: "Cubic.easeOut" });
+    this.tweens.add({ targets: this.rule, scaleX: 1, duration: 700, ease: "Cubic.easeOut" });
     this.tweens.add({ targets: [this.title, this.subtitle], alpha: 1, duration: 800, delay: 150, hold, yoyo: true, ease: "Sine.easeInOut" });
-    this.tweens.add({ targets: this.rule, width: 0, duration: 600, delay: 150 + 800 + hold });
+    this.tweens.add({ targets: this.rule, scaleX: 0, duration: 600, delay: 150 + 800 + hold });
   }
   _heartbeat(n, gap, vol, fade = 0.78) {
     for (let i = 0; i < n; i++) {
@@ -514,15 +508,13 @@ export class FirstDefeatScene extends Phaser.Scene {
       H = this.H;
     this._show("forest", true);
     this._show("clear", false);
-    // plano de abertura aberto (a mata inteira, o herói pequeno); depois a câmera se aproxima
-    cam.setZoom(1);
-    cam.centerOn(W / 2, H * 0.52);
-    this._vignette(0.9, 0.45, 1);
+    // zoom fixo (zoom animado faz os pixels tremerem); a câmera só desliza devagar
+    cam.setZoom(1.5);
+    cam.centerOn(this.fHeroX + 150, this.fGround - 118);
     this._fadeBlack(0, 900);
     this._bars(true, 900);
     // empurra a câmera para o herói durante todo o plano
-    cam.pan(this.fHeroX + 60, this.fGround - 70, 3800, "Sine.easeInOut");
-    cam.zoomTo(1.5, 3800, "Sine.easeInOut");
+    cam.pan(this.fHeroX + 30, this.fGround - 100, 4200, "Sine.easeInOut");
     this.tweens.add({ targets: this.fHero, scaleY: SC * 1.012, duration: 1300, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
     // parallax lento das árvores
     this.forestLayers.forEach((layer, i) => layer.forEach((t) => this.tweens.add({ targets: t, x: t.x - 24 * (i + 1), duration: 4200, ease: "Sine.easeInOut" })));
@@ -580,11 +572,10 @@ export class FirstDefeatScene extends Phaser.Scene {
     wolf._sh.destroy();
     wolf.destroy();
     this._hitStop(150);
-    this.fAura.setAlpha(0.3);
+    this.fAura.setAlpha(0.2);
     this._at(170, () => {
       this._slow(0.5, 260);
       this._saturate(0.35, 1800);
-      this._vignette(0.6, 0.7, 1800);
       this.tweens.killTweensOf(this.fHero);
       this.fHero.setScale(SC);
       this.fHero.play(`herorig_${this.charId}_fall`);
@@ -596,8 +587,7 @@ export class FirstDefeatScene extends Phaser.Scene {
         this._slow(0.8, 1200);
       });
       // a câmera cai junto com ele
-      cam.pan(this.fHeroX - 10, this.fGround - 34, 2600, "Sine.easeInOut");
-      cam.zoomTo(1.7, 3000, "Sine.easeInOut");
+      cam.pan(this.fHeroX - 20, this.fGround - 70, 2600, "Sine.easeInOut");
       this.tweens.add({ targets: this.fAura, alpha: 0, duration: 1600 });
     });
     // depois do baque: legenda, uma luz de tocha chega e os lobos fogem
@@ -605,7 +595,6 @@ export class FirstDefeatScene extends Phaser.Scene {
     this._at(3900, () => this._torchLight());
     this._at(5300, () => {
       this._fadeBlack(1, 1100);
-      this._vignette(0.3, 1, 1100);
       this.tinSnd = this.sound.add("sfx_tinnitus", { volume: 0 });
       this.tinSnd.play();
       this.tweens.add({ targets: this.tinSnd, volume: 0.1, duration: 800 });
@@ -669,9 +658,8 @@ export class FirstDefeatScene extends Phaser.Scene {
     // deitado, igual ao último quadro do plano anterior
     this.hero.play(`herorig_${this.charId}_lie`);
     // câmera baixa e próxima do herói, bem desfocada
-    cam.setZoom(1.7);
-    cam.centerOn(this.heroX + 10, this.baseY - 36);
-    this._vignette(0.55, 0.55, 1);
+    cam.setZoom(1.5);
+    cam.centerOn(this.heroX + 40, this.baseY - 50);
     this._blurTo(5, 0, 3400);
     // áudio antes da imagem
     this.fireSnd = this.sound.add("sfx_fire_loop", { loop: true, volume: 0 });
@@ -681,9 +669,7 @@ export class FirstDefeatScene extends Phaser.Scene {
     this._at(2900, () => {
       this._bloomIn();
       this._fadeBlack(0, 1700);
-      this._vignette(0.95, 0.32, 2600);
-      cam.zoomTo(1.3, 7000, "Sine.easeOut");
-      cam.pan(this.fireX - 230, this.baseY - 92, 7000, "Sine.easeInOut");
+      cam.pan(this.fireX - 190, this.baseY - 86, 7000, "Sine.easeInOut");
       if (this.cache.audio.exists("music_menu")) {
         this.music = this.sound.add("music_menu", { loop: true, volume: 0 });
         this.music.play();
@@ -763,9 +749,7 @@ export class FirstDefeatScene extends Phaser.Scene {
     this.elderShadow.setX(this.elderX);
     this.shadowH.setScale(5.2, 2.6);
     cam.setZoom(1.5);
-    cam.centerOn(this.fireX - 200, this.baseY - 90);
-    cam.zoomTo(1.3, 5200, "Sine.easeOut");
-    this._vignette(0.95, 0.3, 1);
+    cam.centerOn(this.fireX - 150, this.baseY - 84);
     this.fireSnd = this.sound.add("sfx_fire_loop", { loop: true, volume: 0 });
     this.fireSnd.play();
     this.tweens.add({ targets: this.fireSnd, volume: 0.2, duration: 1800 });
@@ -858,7 +842,9 @@ export class FirstDefeatScene extends Phaser.Scene {
       if (gone) return;
       gone = true;
       this._stopSounds();
-      this.scene.start("GameOverScene", this.next);
+      // derrota: direto para a Clareira (o herói chega pela trilha); vitória: ainda mostra os resultados
+      if (this.won) this.scene.start("GameOverScene", this.next);
+      else this.scene.start("CampScene", { fromRun: true });
     };
     this.uiCam.once("camerafadeoutcomplete", go);
     this.time.delayedCall(1100, go);
