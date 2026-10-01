@@ -1,6 +1,6 @@
 // Player — Guardião da Floresta.
 // Diferenciais: Despertar (R) e Dash (Shift/Space).
-import { PLAYER, GAME, COLORS } from '../config.js';
+import { PLAYER, GAME, COLORS, RESONANCE } from '../config.js';
 
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
@@ -96,6 +96,38 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   addWeapon(weapon) {
     this.weapons.push(weapon);
     weapon.owner = this;
+    this.recomputeResonance();
+  }
+
+  // Ressonância elemental (ver RESONANCE): recalcula quando o arsenal muda.
+  recomputeResonance() {
+    const count = { fire: 0, ice: 0, bolt: 0 };
+    for (const w of this.weapons) if (w.def?.element in count) count[w.def.element]++;
+    const prev = this.resonance ?? { fire: 1, ice: 1, bolt: 1 };
+    const prevPrism = this.prism ?? 1;
+    this.resonance = {};
+    for (const el of Object.keys(count)) this.resonance[el] = 1 + RESONANCE.PER_EXTRA_WEAPON * Math.max(0, count[el] - 1);
+    this.prism = count.fire && count.ice && count.bolt ? RESONANCE.PRISM_REACTION : 1;
+    // Avisa só quando algo MELHOROU (não na carga inicial)
+    if (this._resReady) {
+      for (const el of Object.keys(count)) {
+        if (this.resonance[el] > prev[el]) {
+          const pct = Math.round((this.resonance[el] - 1) * 100);
+          this.scene._toast?.(`RESSONÂNCIA DE ${RESONANCE.NAMES[el]}: +${pct}% de dano`, 2400, "#ffe58f");
+          this.scene.sound.play("sfx_levelup", { volume: 0.4, rate: 1.4 });
+        }
+      }
+      if (this.prism > prevPrism) {
+        this.scene._toast?.(`PRISMA! Reações +${Math.round((this.prism - 1) * 100)}%`, 2600, "#e8ccff");
+        this.scene.sound.play("sfx_levelup", { volume: 0.5, rate: 1.1 });
+      }
+    }
+    this._resReady = true;
+  }
+
+  // Multiplicador de dano de arma: bênçãos × ressonância do elemento da arma
+  dmgMultFor(element) {
+    return this._blessingDmgMult * (this.resonance?.[element] ?? 1);
   }
 
   takeDamage(dmg) {

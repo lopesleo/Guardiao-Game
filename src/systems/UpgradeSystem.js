@@ -2,7 +2,7 @@
 //   nova arma (peso 3) · melhoria de arma (peso 4) · passiva (peso 1 cada).
 // Sem peso, as 11 passivas soterravam as armas — builds ficavam aleatórias.
 // Evolução elegível = carta garantida.
-import { WEAPONS, MAX_WEAPON_LEVEL, PASSIVES, PASSIVE_SLOTS, CARDS } from "../config.js";
+import { WEAPONS, MAX_WEAPON_LEVEL, PASSIVES, PASSIVE_SLOTS, CARDS, RESONANCE } from "../config.js";
 import { weaponSlotsFor, Builds } from "./Builds.js";
 import { WEAPON_ICON, PASSIVE_ICON } from "../art/Icons.js";
 import { WEAPON_CLASSES } from "../entities/Weapons.js";
@@ -72,6 +72,16 @@ export class UpgradeSystem {
     return true;
   }
 
+  // Dica na carta de arma nova: o que ela faria pela ressonância / Prisma
+  _resonanceHint(player, element) {
+    const same = player.weapons.filter((w) => w.def?.element === element).length;
+    const els = new Set(player.weapons.map((w) => w.def?.element));
+    const hints = [];
+    if (same >= 1) hints.push(`Ressonância de ${RESONANCE.NAMES[element]}: +${Math.round(RESONANCE.PER_EXTRA_WEAPON * 100)}% de dano nas armas de ${RESONANCE.NAMES[element].toLowerCase()}`);
+    if (!els.has(element) && els.size === 2) hints.push(`PRISMA: reações +${Math.round((RESONANCE.PRISM_REACTION - 1) * 100)}%`);
+    return hints.length ? "\n" + hints.join("\n") : "";
+  }
+
   // Carta nova para o lugar de uma banida: ainda não está na mesa nem foi banida
   replacement(player, current) {
     const onTable = new Set(current.map((c) => this.cardId(c)));
@@ -98,7 +108,7 @@ export class UpgradeSystem {
           type: "new",
           weaponKey: key,
           title: WEAPONS[key].name,
-          desc: WEAPON_DESC[key],
+          desc: WEAPON_DESC[key] + this._resonanceHint(player, WEAPONS[key].element),
           stat: "Nova arma",
           icon: WEAPON_ICON[key],
           element: WEAPONS[key].element,
@@ -249,6 +259,7 @@ export class UpgradeSystem {
         evo.owner = player;
         old.dispose();
         player.weapons[idx] = evo;
+        player.recomputeResonance();
         this.scene.sound.play("sfx_levelup", { volume: 0.7, rate: 0.8 });
         this.scene.cameras.main.flash(220, 216, 140, 255); // flash roxo de evolução
         this.scene._toast?.(`EVOLUÇÃO: ${def.name}!`, 2600, "#e8ccff");

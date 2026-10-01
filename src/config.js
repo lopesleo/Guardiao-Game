@@ -422,6 +422,15 @@ export const PASSIVES = [
   },
 ];
 
+// Ressonância elemental: armas do MESMO elemento se reforçam (+15% de dano por arma extra
+// daquele elemento); ter os TRÊS elementos monta o Prisma (reações +30%). Especializar ou
+// misturar é a escolha de build.
+export const RESONANCE = {
+  PER_EXTRA_WEAPON: 0.15,
+  PRISM_REACTION: 1.3,
+  NAMES: { fire: "FOGO", ice: "GELO", bolt: "RAIO" },
+};
+
 // Controle das cartas de nível: trocar (1× por nível, grátis) e BANIR (tirar a carta da
 // partida inteira). Banimentos: base + 1 por nível do Santuário acima do 1º.
 export const CARDS = {

@@ -235,7 +235,7 @@ export class Weapon {
   }
   get damage() {
     return (
-      this.def.baseDmg * this.dmgMult * (this.owner?._blessingDmgMult ?? 1)
+      this.def.baseDmg * this.dmgMult * (this.owner?.dmgMultFor?.(this.def.element) ?? this.owner?._blessingDmgMult ?? 1)
     );
   }
   get range() {
@@ -679,7 +679,7 @@ export class WinterHeart extends AuraWeapon {
     const r = this.range * this.def.nova.radiusMult;
     const rSq = r * r;
     const dmgBase =
-      this.def.nova.dmg * this.dmgMult * (this.owner?._blessingDmgMult ?? 1);
+      this.def.nova.dmg * this.dmgMult * (this.owner?.dmgMultFor?.(this.def.element) ?? this.owner?._blessingDmgMult ?? 1);
     let hits = 0;
     const strike = (t, isBoss) => {
       const dx = t.x - cx,
@@ -742,7 +742,7 @@ export class Phoenix extends Boomerang {
     const t = this.def.trail;
     const r = t.radius * (this.owner?.areaMult ?? 1);
     const rSq = r * r;
-    const dmg = t.dmgPerTick * this.dmgMult * (this.owner?._blessingDmgMult ?? 1);
+    const dmg = t.dmgPerTick * this.dmgMult * (this.owner?.dmgMultFor?.(this.def.element) ?? this.owner?._blessingDmgMult ?? 1);
     const life = t.ticks * t.tickMs;
     // Visual: mancha de chama que encolhe até sumir
     // Visual: brasa no chão (luz aditiva) + chamas pixeladas subindo
@@ -981,7 +981,7 @@ export class Inferno extends Flamethrower {
     for (let i = 1; i <= 3; i++) {
       const d = (R * i) / 3.2;
       Phoenix.prototype._firePatch.call(
-        { scene: this.scene, def: { trail: this.def.trail }, dmgMult: this.dmgMult, owner: this.owner },
+        { scene: this.scene, def: { trail: this.def.trail, element: this.def.element }, dmgMult: this.dmgMult, owner: this.owner },
         px + Math.cos(dir) * d,
         py + Math.sin(dir) * d,
       );
