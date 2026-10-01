@@ -189,7 +189,14 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
 - 👤 Falta: **criar a conta de desenvolvedor da Play Console** (taxa única + verificação de identidade) e
   cadastrar `https://lopesleo.github.io` como site do desenvolvedor; ligar o app à loja no AdMob;
   informações fiscais (CPF e W-8BEN) e forma de pagamento no AdMob; conta do Firebase
-- ⬜ AdMob + consentimento LGPD (UMP) plugados no `AdService`
+- ✅ AdMob + consentimento (UMP) plugados (`src/systems/AdMobBridge.js`): consentimento → SDK → anúncios
+  premiados nos 6 pontos; na Europa o uso de dados (Firebase) começa desligado; sem consentimento ou sem
+  AdMob pronto o app NÃO oferece anúncio. `ADS.TESTING = true` usa anúncios de TESTE do Google:
+  **trocar para false só no build de loja**. `ADS.TEST_EEA = true` simula a Europa para ver o formulário
+- ✅ App de teste compilado e `npm run android:install` (compila, instala via adb e abre). Ambiente neste
+  PC: Java 17 em `C:\Users\leona\dev-tools\jdk-17.0.20.1+1`, Android SDK em `%LOCALAPPDATA%\Android\Sdk`
+  (plataforma 34, build-tools 34.0.0). 👤 Falta instalar no celular (plugar o cabo) e testar o anúncio de
+  teste, o Firebase (DebugView) e o consentimento
 - ⬜ Compra "Remover anúncios"
 - ✅ Firebase Analytics + Crashlytics plugados (`src/systems/Telemetry.js`, plugins `@capacitor-firebase/*`):
   projeto `guardiao-da-floresta` (plano Spark, grátis), app Android `com.lopesleo.guardiao`, GA4 em conta
