@@ -2,7 +2,8 @@
 //   nova arma (peso 3) · melhoria de arma (peso 4) · passiva (peso 1 cada).
 // Sem peso, as 11 passivas soterravam as armas — builds ficavam aleatórias.
 // Evolução elegível = carta garantida.
-import { WEAPONS, MAX_WEAPON_LEVEL, PASSIVES, PASSIVE_SLOTS, CARDS, RESONANCE } from "../config.js";
+import { WEAPONS, MAX_WEAPON_LEVEL, PASSIVES, PASSIVE_SLOTS, CARDS, RESONANCE, PACTS } from "../config.js";
+import { Analytics } from "./Analytics.js";
 import { weaponSlotsFor, Builds } from "./Builds.js";
 import { WEAPON_ICON, PASSIVE_ICON } from "../art/Icons.js";
 import { WEAPON_CLASSES } from "../entities/Weapons.js";
@@ -50,6 +51,7 @@ export class UpgradeSystem {
     this.scene = scene;
     // Banir: a carta some até o fim da partida. Cargas crescem com o Santuário.
     this.banned = new Set();
+    this.pactsTaken = new Set(); // ids dos tratos aceitos nesta partida
     const shrine = scene.meta ? new Builds(scene.meta).level("shrine") : 1;
     this.banishLeft = CARDS.BANISH_BASE + CARDS.BANISH_PER_SHRINE_LEVEL * (shrine - 1);
   }
@@ -57,7 +59,7 @@ export class UpgradeSystem {
   // Identidade de uma carta para banir/evitar repetição. Banir "melhoria" de uma arma
   // tira as melhorias dela; banir "nova arma" impede que ela apareça como nova.
   cardId(c) {
-    return `${c.type}:${c.weaponKey ?? c.passiveId}`;
+    return `${c.type}:${c.weaponKey ?? c.passiveId ?? c.pactId}`;
   }
 
   // Evolução nunca é banível (é a recompensa de uma build montada)
@@ -70,6 +72,26 @@ export class UpgradeSystem {
     this.banned.add(this.cardId(card));
     this.banishLeft--;
     return true;
+  }
+
+  // Trato da Mata: sorteia (ou não) um trato ainda não aceito
+  _maybePact(player) {
+    if (player.level < PACTS.MIN_LEVEL || this.pactsTaken.size >= PACTS.MAX_PER_RUN) return null;
+    if (Math.random() >= PACTS.CHANCE) return null;
+    const free = PACTS.LIST.filter((p) => !this.pactsTaken.has(p.id) && !this.banned.has(`pact:${p.id}`));
+    if (!free.length) return null;
+    const def = free[Math.floor(Math.random() * free.length)];
+    const rolled = def.roll();
+    return {
+      type: "pact",
+      pactId: def.id,
+      title: def.label,
+      desc: def.desc,
+      stat: rolled.gain,
+      cost: rolled.cost,
+      icon: def.icon,
+      _apply: rolled.apply,
+    };
   }
 
   // Dica na carta de arma nova: o que ela faria pela ressonância / Prisma
@@ -184,11 +206,21 @@ export class UpgradeSystem {
     const allowed = cards.filter((c) => !this.banned.has(this.cardId(c)));
     const pool = allowed.length ? allowed : cards;
     const evo = this._evolutionCard(player, have);
+    const pick = (n) => {
+      const picked = weightedPick(pool, n);
+      const pact = this._maybePact(player);
+      // O trato toma o lugar de UMA das cartas comuns (a evolução nunca é trocada)
+      if (pact && picked.length) {
+        picked[picked.length - 1] = pact;
+        this.scene._hint?.("pact", "TRATO DA MATA: poder grande em troca de um custo.\nVocê pode recusar, trocar ou banir.");
+      }
+      return picked;
+    };
     if (evo) {
       this.scene._hint?.("evolution", "EVOLUÇÃO disponível! Arma no nível 5\n+ arma parceira = versão suprema.");
-      return [evo, ...weightedPick(pool, 2)];
+      return [evo, ...pick(2)];
     }
-    return weightedPick(pool, 3);
+    return pick(3);
   }
 
   // Uma carta a mais, diferente das que já estão na mesa (4ª carta)
@@ -275,6 +307,11 @@ export class UpgradeSystem {
           w.dmgMult *= 1.25;
         }
       }
+    } else if (card.type === "pact") {
+      card._apply?.(player);
+      this.pactsTaken.add(card.pactId);
+      this.scene._toast?.(`TRATO: ${card.title}`, 2200, "#ff8a8a");
+      Analytics.track("pact_taken", { id: card.pactId, level: player.level });
     } else if (card.type === "passive") {
       if (card._apply) card._apply(player);
       player.passivesTaken ??= {};
