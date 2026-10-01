@@ -2,8 +2,8 @@
 //   nova arma (peso 3) · melhoria de arma (peso 4) · passiva (peso 1 cada).
 // Sem peso, as 11 passivas soterravam as armas — builds ficavam aleatórias.
 // Evolução elegível = carta garantida.
-import { WEAPONS, MAX_WEAPON_LEVEL, PASSIVES, PASSIVE_SLOTS } from "../config.js";
-import { weaponSlotsFor } from "./Builds.js";
+import { WEAPONS, MAX_WEAPON_LEVEL, PASSIVES, PASSIVE_SLOTS, CARDS } from "../config.js";
+import { weaponSlotsFor, Builds } from "./Builds.js";
 import { WEAPON_ICON, PASSIVE_ICON } from "../art/Icons.js";
 import { WEAPON_CLASSES } from "../entities/Weapons.js";
 
@@ -48,6 +48,38 @@ function weightedPick(list, n) {
 export class UpgradeSystem {
   constructor(scene) {
     this.scene = scene;
+    // Banir: a carta some até o fim da partida. Cargas crescem com o Santuário.
+    this.banned = new Set();
+    const shrine = scene.meta ? new Builds(scene.meta).level("shrine") : 1;
+    this.banishLeft = CARDS.BANISH_BASE + CARDS.BANISH_PER_SHRINE_LEVEL * (shrine - 1);
+  }
+
+  // Identidade de uma carta para banir/evitar repetição. Banir "melhoria" de uma arma
+  // tira as melhorias dela; banir "nova arma" impede que ela apareça como nova.
+  cardId(c) {
+    return `${c.type}:${c.weaponKey ?? c.passiveId}`;
+  }
+
+  // Evolução nunca é banível (é a recompensa de uma build montada)
+  canBanish(card) {
+    return card.type !== "evolution" && this.banishLeft > 0;
+  }
+
+  banish(card) {
+    if (!this.canBanish(card)) return false;
+    this.banned.add(this.cardId(card));
+    this.banishLeft--;
+    return true;
+  }
+
+  // Carta nova para o lugar de uma banida: ainda não está na mesa nem foi banida
+  replacement(player, current) {
+    const onTable = new Set(current.map((c) => this.cardId(c)));
+    for (let i = 0; i < 25; i++) {
+      const c = this.generateCards(player).find((c) => c.type !== "evolution" && !onTable.has(this.cardId(c)));
+      if (c) return c;
+    }
+    return null;
   }
 
   generateCards(player) {
@@ -138,17 +170,20 @@ export class UpgradeSystem {
       });
     }
 
+    // Banidas saem do sorteio (se TUDO foi banido, ignora o banimento: nunca sobra mesa vazia)
+    const allowed = cards.filter((c) => !this.banned.has(this.cardId(c)));
+    const pool = allowed.length ? allowed : cards;
     const evo = this._evolutionCard(player, have);
     if (evo) {
       this.scene._hint?.("evolution", "EVOLUÇÃO disponível! Arma no nível 5\n+ arma parceira = versão suprema.");
-      return [evo, ...weightedPick(cards, 2)];
+      return [evo, ...weightedPick(pool, 2)];
     }
-    return weightedPick(cards, 3);
+    return weightedPick(pool, 3);
   }
 
   // Uma carta a mais, diferente das que já estão na mesa (4ª carta)
   extraCard(player, current) {
-    const id = (c) => `${c.type}:${c.weaponKey ?? c.passiveId}`;
+    const id = (c) => this.cardId(c);
     const taken = new Set(current.map(id));
     for (let i = 0; i < 25; i++) {
       const c = this.generateCards(player).find((c) => !taken.has(id(c)));

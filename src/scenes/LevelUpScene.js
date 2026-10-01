@@ -19,6 +19,7 @@ export class LevelUpScene extends Phaser.Scene {
     this.gameScene = data.gameScene;
     this._cardObjs = [];
     this.rerollsLeft = 1;
+    this._banishMode = false;
     this._locked = false;
     this._extraBusy = false;
     this.isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
@@ -74,11 +75,17 @@ export class LevelUpScene extends Phaser.Scene {
     const W = vw(this),
       H = vh(this);
     const offer = AdService.canShow("extra_card");
-    this.rerollBtn = new Button(this, offer ? W / 2 - 150 : W / 2, H - 34, 280, 44, "", () => this._reroll(), { size: 17, style: "ice" });
+    // 2 botões (trocar, banir) ou 3 (com "mais uma carta" por anúncio), centralizados
+    this._btnXs = offer ? [W / 2 - 320, W / 2, W / 2 + 320] : [W / 2 - 150, W / 2 + 150];
+    this.rerollBtn = new Button(this, this._btnXs[0], H - 34, 280, 44, "", () => this._reroll(), { size: 17, style: "ice" });
     this._refreshReroll();
+    this.banishBtn = new Button(this, this._btnXs[1], H - 34, 280, 44, "", () => this._toggleBanish(), { size: 17, style: "danger" });
+    this.banishHint = text(this, W / 2, H - 78, "", { size: 18, color: CSS.redHi, origin: 0.5, stroke: true });
+    this._refreshBanish();
+    this.input.keyboard.on("keydown-B", () => this._toggleBanish());
     if (offer) {
       Analytics.track("ad_offer_show", { placement: "extra_card" });
-      this.extraBtn = new Button(this, W / 2 + 150, H - 34, 280, 44, "MAIS UMA CARTA", () => this._extraCard(), {
+      this.extraBtn = new Button(this, this._btnXs[2], H - 34, 280, 44, "MAIS UMA CARTA", () => this._extraCard(), {
         size: 17,
         style: "primary",
         color: CSS.goldHi,
@@ -102,7 +109,9 @@ export class LevelUpScene extends Phaser.Scene {
     const c = this.gameScene.upgrades.extraCard(this.player, this.cards);
     this.extraBtn.destroy();
     this.extraBtn = null;
-    this.rerollBtn.x = vw(this) / 2;
+    this._btnXs = [vw(this) / 2 - 150, vw(this) / 2 + 150];
+    this.rerollBtn.x = this._btnXs[0];
+    this.banishBtn.x = this._btnXs[1];
     if (!c) return;
     this.cards = [...this.cards, c];
     this._renderCards(false);
@@ -119,9 +128,49 @@ export class LevelUpScene extends Phaser.Scene {
     else this.rerollBtn.setLabel("Sem trocas").setEnabled(false);
   }
 
+  _refreshBanish() {
+    const left = this.gameScene.upgrades.banishLeft;
+    const key = this.isTouch ? "" : " [B]";
+    if (this._banishMode) this.banishBtn.setLabel("CANCELAR").setEnabled(true);
+    else if (left > 0) this.banishBtn.setLabel(`BANIR (${left})${key}`).setEnabled(true);
+    else this.banishBtn.setLabel("Sem banimentos").setEnabled(false);
+    this.banishHint.setText(this._banishMode ? "Toque na carta que NÃO quer mais ver nesta partida" : "");
+  }
+
+  _toggleBanish() {
+    if (this._locked || (!this._banishMode && this.gameScene.upgrades.banishLeft <= 0)) return;
+    this._banishMode = !this._banishMode;
+    this.sound.play("sfx_ui_click", { volume: 0.4 });
+    // Cartas balançam no modo banir: o que vai acontecer fica evidente
+    this._cardObjs.forEach((c) => {
+      this.tweens.killTweensOf(c);
+      c.angle = 0;
+      if (this._banishMode) this.tweens.add({ targets: c, angle: { from: -1.2, to: 1.2 }, duration: 110, yoyo: true, repeat: -1 });
+    });
+    this._refreshBanish();
+  }
+
+  // Banir: a carta some e uma nova ocupa o lugar. Sai do modo ao concluir.
+  _banish(card, cont) {
+    const up = this.gameScene.upgrades;
+    if (!up.banish(card)) return;
+    Analytics.track("card_banish", { id: up.cardId(card), level: this.player.level });
+    this._banishMode = false;
+    const i = this._cardObjs.indexOf(cont);
+    const fresh = up.replacement(this.player, this.cards);
+    this.sound.play("sfx_death", { volume: 0.4, rate: 0.8 });
+    const next = fresh ? this.cards.map((c, k) => (k === i ? fresh : c)) : this.cards.filter((_, k) => k !== i);
+    if (next.length) this.cards = next; // mesa nunca fica vazia
+    this._renderCards(true);
+    this._refreshBanish();
+    this._refreshReroll();
+  }
+
   _reroll() {
     if (this._locked || (this.rerollsLeft || 0) <= 0) return;
     this.rerollsLeft -= 1;
+    this._banishMode = false;
+    this._refreshBanish();
     const extra = this.cards.length > 3; // a 4ª carta paga continua valendo na troca
     this.cards = this.gameScene.upgrades.generateCards(this.player);
     if (extra) {
@@ -139,6 +188,7 @@ export class LevelUpScene extends Phaser.Scene {
   // Confirma: carta escolhida pulsa, as outras somem, e a cena volta
   _choose(card, cont) {
     if (this._locked) return;
+    if (this._banishMode) return this._banish(card, cont);
     this._locked = true;
     this.sound.play("sfx_ui_click", { volume: 0.5 });
     this._cardObjs.forEach((c) => {
