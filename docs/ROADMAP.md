@@ -231,3 +231,21 @@ Nada disso trava o desenvolvimento; só o lançamento e a receita.
 | 5 | **Bioma 2** com chefe próprio |
 | 6 | Mutações/híbridos na horta, novos pontos de pesca, estações Cheia/Vazante |
 | 7 | Relíquias + Sementes Ancestrais; eventos temáticos; temporada com passe |
+| 8 | **Coop de 2 jogadores** com servidor Nakama (Oracle Cloud) — ver abaixo |
+
+## Coop online (ideia aprovada em 01/10/2026, depois do lançamento)
+- **Escopo:** 2 jogadores, entrada por **código de convite**, sem matchmaking com desconhecidos. 4 jogadores
+  só se o desempenho permitir (o gargalo é o celular do anfitrião, não a rede).
+- **Arquitetura:** o **anfitrião simula** o jogo; o **Nakama** (Oracle Cloud Always Free) só retransmite
+  as mensagens (partida em relay). Dificuldade escala pela **vida/dano dos inimigos**, não pela quantidade
+  (teto de inimigos vivos continua baixo). Reações elementais entre jogadores = a sinergia que vende o modo.
+- **Cartas de nível:** escolha simultânea com tempo limite (não dá para pausar o outro jogador).
+- **Pré-requisitos no código (melhoram o jogo solo também):** separar simulação e desenho no `GameScene`
+  (~1.500 linhas), gerador de números aleatórios com semente (hoje há `Math.random()` por toda parte) e
+  suporte a uma **lista de heróis** em vez de um só.
+- **Antes de investir:** protótipo de viabilidade em branch (Nakama local em Docker + dois navegadores com
+  um herói sincronizado) para sentir o atraso.
+- **Impacto de privacidade:** o jogo passa a ter identificador e dados de partida em servidor próprio;
+  atualizar a política, o consentimento e o formulário de segurança de dados da Play.
+- **Em aberto:** região da instância Oracle (latência para o Brasil), e o que acontece se o servidor cair
+  (o solo precisa continuar funcionando offline).
