@@ -26,6 +26,7 @@ import { recipe, mealMods, bonusText } from "../systems/Kitchen.js";
 import { Daily, dailyUnlocked } from "../systems/Daily.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
+import { GameFeel } from "../systems/GameFeel.js";
 import { SpawnDirector } from "../systems/SpawnDirector.js";
 import { RunEvents } from "../systems/RunEvents.js";
 import { ElementalSystem } from "../systems/ElementalSystem.js";
@@ -173,6 +174,7 @@ export class GameScene extends Phaser.Scene {
     // Spawner
     this.spawnDirector = new SpawnDirector(this, this.enemyPool, this.player);
     this.lighting = new Lighting(this, this.world);
+    this.feel = new GameFeel(this);
     // Aparelho fraco: desliga a iluminação na 1ª partida (uma vez só)
     this.quality = new QualityWatchdog(this, () => {
       this.lighting.setEnabled(false);
@@ -277,6 +279,7 @@ export class GameScene extends Phaser.Scene {
     this.events.off("resume");
     this.events.on("player:levelup", () => {
       this.lighting?.flash(this.player.x, this.player.y, 420, 0xffe58f, 500, 1);
+      this.feel.levelUp();
       this._pendingLevelUps++;
       Analytics.track("level_up", { level: this.player.level, t: Math.floor(this.elapsedMs / 1000) });
       this._openNextLevelUp();
@@ -512,6 +515,7 @@ export class GameScene extends Phaser.Scene {
       this.runEvents.update();
     }
     this.lanterns.update(time, this.elapsedMs, this.player);
+    this.feel.update(time, dt);
     this._updateSpores(time, dt);
     this.elemental.tick(time);
     this.hud.update(time, dt);
@@ -673,7 +677,7 @@ export class GameScene extends Phaser.Scene {
         this.player.pickupRadius * this.player.pickupRadius
       ) {
         this.player.gainXp(g.xpValue);
-        this.sound.play("sfx_pickup", { volume: 0.18 });
+        this.sound.play("sfx_pickup", { volume: 0.18, rate: this.feel.gem() });
         g.pickup();
         this.xpPool.release(g);
       }
@@ -888,6 +892,7 @@ export class GameScene extends Phaser.Scene {
     if (enemy.miniBoss) this._miniBossReward(enemy);
     this.sound.play("sfx_death", { volume: 0.15 });
     this.cameras.main.shake(40, 0.002);
+    if (enemy.miniBoss || enemy._elite === "mimic") this.feel.bigKill(enemy.x, enemy.y);
     this._deathPoof(enemy.x, enemy.y);
     // Drop XP sempre
     const g = this.xpPool.acquire();

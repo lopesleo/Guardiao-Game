@@ -148,7 +148,12 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   10 (Pesadelo) — `DIFFICULTY[].durationS`. Waves, roteiro de eventos e spawn são
   esticados por `pace = 420 / durationS` (mesma jornada, mais devagar); o chefe nasce
   no fim da duração. Em partidas longas rendem mais níveis e moedas por tempo.
-- ⬜ Game feel (impacto, tremor, hit-stop, números de dano)
+- ✅ **Game feel** (`src/systems/GameFeel.js`): som de acerto com tom variável (e mais grave
+  no crítico), faíscas e hit-stop curto em críticos/chefes, vinheta vermelha + tremor +
+  vibração + peso ao tomar dano (golpe forte = efeito maior), vinheta pulsando com vida
+  baixa, gemas de XP que sobem de tom em sequência, número de dano crítico que "pipoca",
+  peso extra ao abater minichefe/mímico. Hit-stop e vinheta seguem a opção "Tremor de
+  tela"; a vibração segue "Vibração". 👤 sentir no aparelho e ajustar intensidades
 - ⬜ Primeira derrota: a personagem desmaia e a Anciã acorda e explica tudo
   (curta, pulável, só na 1ª vez; flag no save)
 
