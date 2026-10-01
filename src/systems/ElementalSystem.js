@@ -132,7 +132,7 @@ export class ElementalSystem {
     const radiusSq = radius * radius;
     this._cloudFx(cx, cy, radius, def.color, def.duration);
 
-    const tickDmg = def.dmgPerTick;
+    const tickDmg = def.dmgPerTick * (scene.player?.prism ?? 1);
     const applyDmg = () => {
       if (!scene.enemyPool) return;
       scene.enemyPool.forEachActive((e) => {
@@ -267,7 +267,7 @@ export class ElementalSystem {
       if (e === target) return;
       const dx = e.x - cx, dy = e.y - cy;
       if (dx * dx + dy * dy <= radiusSq) {
-        const died = e.takeDamage(def.dmg, null);
+        const died = e.takeDamage(def.dmg * (scene.player?.prism ?? 1), null);
         if (died) scene._onEnemyDeath(e);
       }
     });
@@ -316,7 +316,7 @@ export class ElementalSystem {
       if (!best) break;
       // Raio da Sobrecarga é GROSSO e amarelo-elétrico (distinto do raio fino da arma)
       this._drawBolt(prev.x, prev.y, best.x, best.y, def.color, 6);
-      const died = best.takeDamage(def.dmgPerJump, null);
+      const died = best.takeDamage(def.dmgPerJump * (scene.player?.prism ?? 1), null);
       if (died) scene._onEnemyDeath(best);
       visited.add(best);
       prev = best;
