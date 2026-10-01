@@ -166,9 +166,16 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   +25% dano e +15% velocidade por 40 s), **Ganância** (60 s de mais drops e +35% inimigos),
   **Desafio** (elites; vencer dá baú dourado). Seta na borda da tela aponta o mais próximo.
   👤 testar o ritmo e a distância no aparelho
-- ✅ **Primeira queda** (`FirstDefeatScene`): o guardião desmaia, acorda (olhos abrem) ao lado da
-  fogueira e a Anciã explica o jogo em poucas falas com os números reais da partida; pulável,
-  aparece uma vez só (`firstDefeatSeen` no save; quem já jogou não vê). Na 1ª vitória, versão de festa.
+- ✅ **Primeira queda** (`FirstDefeatScene`): um curta em 2 planos, pulável e só na 1ª vez
+  (`firstDefeatSeen` no save; quem já jogou não vê). **A queda:** floresta corrompida, 3 lobos,
+  golpe com hit-stop, câmera lenta, baque com poeira e escuro com zumbido. **A Clareira:** título,
+  foco volta (desfoque + bloom), a Anciã chega com a lamparina e o guardião acorda; depois ela
+  explica o jogo (falas com os números reais da partida). Na 1ª vitória, versão de festa.
+  Usa câmera própria para a interface, faixas de cinema, grão, pós-processamento (só WebGL e fora
+  de aparelho fraco) e sons novos (batimento, golpe, baque, zumbido, fogueira, passos).
+- ✅ **Animação dos guardiões** (`src/art/HeroRig.js`): queda, deitado respirando e acordar são
+  QUADROS DESENHADOS (esqueleto de quadril/tronco/cabeça/braços/pernas + figurino de cada lenda),
+  não o sprite de caminhada girado. Revisar as poses: `node tools/hero-sheet.mjs saida.png <id>`
 
 ### M5 — Monetização e medição reais 👤
 - 👤 Contas: AdMob, Firebase, perfil de pagamentos no Play Console

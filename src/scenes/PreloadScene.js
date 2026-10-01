@@ -9,6 +9,7 @@ import { registerMonsters } from "../art/Monsters.js";
 import { registerTelegraphs } from "../art/Telegraph.js";
 import { registerLanterns } from "../art/Lanterns.js";
 import { registerShrines } from "../art/Shrines.js";
+import { registerHeroRig } from "../art/HeroRig.js";
 import { registerCamp } from "../art/Camp.js";
 import { registerBuildings } from "../art/Buildings.js";
 import { registerGarden } from "../art/Garden.js";
@@ -37,7 +38,7 @@ export class PreloadScene extends Phaser.Scene {
       ["Plantando a floresta…", () => this.registry.set("envKeys", registerEnvironment(this))],
       ["Talhando ícones…", () => registerIcons(this)],
       ["Acendendo vaga-lumes…", () => registerSprites(this)],
-      ["Despertando o Guardião…", () => registerHeroes(this)],
+      ["Despertando o Guardião…", () => { registerHeroes(this); registerHeroRig(this); }],
       ["Corrompendo criaturas…", () => registerMonsters(this)],
       ["Afiando garras…", () => registerTelegraphs(this)],
       ["Acendendo cogumelos…", () => registerLanterns(this)],

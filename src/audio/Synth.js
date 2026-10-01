@@ -70,6 +70,47 @@ const SFX = {
     const x = saw(osc(s, "ph", f)) * 0.7 + saw(osc(s, "ph2", f * 1.51)) * 0.35 + lp(s, noise(), 0.15) * 0.8;
     return Math.tanh(x * 2.5) * env(t, 0.08, 0.45);
   }],
+  // ---- cena da primeira queda ----
+  sfx_heartbeat: [0.95, (t, s) => {
+    // "lub-dub": duas batidas graves, a segunda mais fraca
+    const a1 = env(t, 0.004, 0.07), a2 = t >= 0.3 ? env(t - 0.3, 0.004, 0.09) * 0.7 : 0;
+    const f = 38 + 55 * Math.exp(-(t >= 0.3 ? t - 0.3 : t) * 16);
+    return Math.sin(TAU * osc(s, "ph", f)) * (a1 + a2) + lp(s, noise(), 0.05) * (a1 + a2) * 0.6;
+  }],
+  sfx_strike: [0.55, (t, s) => {
+    // golpe seco: estalo agudo + estrondo grave
+    const crack = noise() * Math.exp(-t * 90) * 0.9;
+    const boom = Math.sin(TAU * osc(s, "ph", 70 * Math.exp(-t * 6) + 34)) * env(t, 0.002, 0.16);
+    return crack + boom * 1.1 + lp(s, noise(), 0.12) * env(t, 0.003, 0.1) * 0.5;
+  }],
+  sfx_thud: [0.6, (t, s) => {
+    // corpo no chão: baque surdo + farfalhar de folhas
+    const boom = Math.sin(TAU * osc(s, "ph", 58 * Math.exp(-t * 7) + 30)) * env(t, 0.003, 0.14);
+    const leaves = lp(s, noise(), 0.35) * (t > 0.08 ? env(t - 0.08, 0.01, 0.12) * 0.35 : 0);
+    return boom * 1.2 + lp(s, noise(), 0.08, "hp") * env(t, 0.002, 0.05) + leaves;
+  }],
+  sfx_tinnitus: [3.4, (t, s) => {
+    // zumbido agudo de quem apagou: entra devagar, some devagar
+    const e = Math.min(1, t / 0.7) * Math.min(1, (3.4 - t) / 1.4);
+    return Math.sin(TAU * osc(s, "ph", 3150 + Math.sin(t * 6) * 6)) * e * 0.5 + Math.sin(TAU * osc(s, "ph2", 4720)) * e * 0.12;
+  }],
+  sfx_fire_loop: [4.2, (t, s) => {
+    // fogueira: sopro grave contínuo + estalos aleatórios
+    if (s.pop == null) s.pop = 0;
+    if (rnd() < 0.0007) s.pop = 0.5 + rnd() * 0.5;
+    s.pop *= 0.985;
+    const bed = lp(s, noise(), 0.03) * 0.5 + lp(s, noise(), 0.012, "hp") * 0.3;
+    return bed + noise() * s.pop * 0.7;
+  }],
+  sfx_step: [0.16, (t, s) => {
+    // passo na terra com folhas
+    return Math.sin(TAU * osc(s, "ph", 95 * Math.exp(-t * 20) + 55)) * env(t, 0.002, 0.04) * 0.9 + lp(s, noise(), 0.3) * env(t, 0.002, 0.05) * 0.6;
+  }],
+  sfx_whoosh: [0.32, (t, s) => {
+    // golpe de ar: ruído que sobe e desce
+    const e = Math.sin(Math.min(1, t / 0.32) * Math.PI);
+    return lp(s, noise(), 0.04 + e * 0.5) * e * 0.9;
+  }],
   sfx_chest_open: [0.32, (t, s) => {
     const f = 190 + t * 260 + Math.sin(t * 90) * 30;
     return saw(osc(s, "ph", f)) * 0.35 * (t < 0.24 ? 1 : 0) * env(t, 0.01, 0.2) + (t > 0.24 ? noise() * env(t - 0.24, 0.001, 0.02) : 0);
