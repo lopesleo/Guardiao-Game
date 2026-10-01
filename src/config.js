@@ -431,6 +431,105 @@ export const RESONANCE = {
   NAMES: { fire: "FOGO", ice: "GELO", bolt: "RAIO" },
 };
 
+// Tratos da Mata: de vez em quando uma das 3 cartas é um TRATO — poder grande em troca de
+// um custo (a Mata cobra). Aparece a partir do nível MIN_LEVEL, no máximo MAX_PER_RUN por
+// partida, cada trato uma vez só. Decisão de risco, nunca obrigatória (dá para recusar,
+// trocar ou banir). Os custos NÃO são "desvantagem fingida": mexem de verdade na build.
+export const PACTS = {
+  CHANCE: 0.22, // chance por mesa de cartas gerada
+  MIN_LEVEL: 3,
+  MAX_PER_RUN: 3,
+  LIST: [
+    {
+      id: "javali",
+      label: "Fúria do Javali",
+      icon: "ico_flame_red",
+      desc: "A Mata empresta a fúria do javali, mas cobra o seu vigor.",
+      roll: () => {
+        const g = r(30, 45), c = r(18, 26);
+        return {
+          gain: `+${g}% Dano`,
+          cost: `Em troca: −${c}% Vida máxima`,
+          apply: (p) => {
+            p._blessingDmgMult *= 1 + g / 100;
+            p.maxHp *= 1 - c / 100;
+            p.hp = Math.min(p.hp, p.maxHp);
+          },
+        };
+      },
+    },
+    {
+      id: "pes_virados",
+      label: "Pés Virados",
+      icon: "ico_dash_green",
+      desc: "Passos que ninguém segue, mas qualquer golpe pesa mais.",
+      roll: () => {
+        const g = r(22, 32), c = r(15, 22);
+        return {
+          gain: `+${g}% Velocidade`,
+          cost: `Em troca: +${c}% Dano recebido`,
+          apply: (p) => {
+            p.speed *= 1 + g / 100;
+            p.dmgTakenMult *= 1 + c / 100;
+          },
+        };
+      },
+    },
+    {
+      id: "fome",
+      label: "Fome da Mata",
+      icon: "ico_clover",
+      desc: "A floresta devora a Podridão e te dá o que ela leva, mas você fica pesado.",
+      roll: () => {
+        const g = r(45, 65), c = r(12, 18);
+        return {
+          gain: `+${g}% XP`,
+          cost: `Em troca: −${c}% Velocidade`,
+          apply: (p) => {
+            p._xpMult *= 1 + g / 100;
+            p.speed *= 1 - c / 100;
+          },
+        };
+      },
+    },
+    {
+      id: "mao_pesada",
+      label: "Mão Pesada",
+      icon: "ico_hourglass",
+      desc: "As armas disparam sem parar, mas o corpo cobra o preço.",
+      roll: () => {
+        const g = r(26, 34), c = r(18, 24);
+        return {
+          gain: `−${g}% Recarga`,
+          cost: `Em troca: −${c}% Vida máxima`,
+          apply: (p) => {
+            p.cdMult *= 1 - g / 100;
+            p.maxHp *= 1 - c / 100;
+            p.hp = Math.min(p.hp, p.maxHp);
+          },
+        };
+      },
+    },
+    {
+      id: "casca_espessa",
+      label: "Casca Espessa",
+      icon: "ico_shield",
+      desc: "A pele vira casca de árvore. Aguenta muito mais, mas pesa.",
+      roll: () => {
+        const g = r(28, 38), c = r(15, 20);
+        return {
+          gain: `−${g}% Dano recebido`,
+          cost: `Em troca: −${c}% Velocidade`,
+          apply: (p) => {
+            p.dmgTakenMult = Math.max(0.4, p.dmgTakenMult * (1 - g / 100));
+            p.speed *= 1 - c / 100;
+          },
+        };
+      },
+    },
+  ],
+};
+
 // Controle das cartas de nível: trocar (1× por nível, grátis) e BANIR (tirar a carta da
 // partida inteira). Banimentos: base + 1 por nível do Santuário acima do 1º.
 export const CARDS = {

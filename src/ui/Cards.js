@@ -9,6 +9,7 @@ const TYPE = {
   upgrade: { style: "gold", ribbon: PAL.uiGold, label: "MELHORIA", stat: CSS.goldHi },
   evolution: { style: "purple", ribbon: PAL.pur2, label: "EVOLUÇÃO", stat: hex(PAL.pur3) },
   passive: { style: "ice", ribbon: PAL.ice2, label: "PASSIVA", stat: hex(PAL.ice3) },
+  pact: { style: "danger", ribbon: PAL.red2, label: "TRATO DA MATA", stat: CSS.goldHi },
 };
 const ELEMENT_NAME = { fire: "FOGO", ice: "GELO", bolt: "RAIO" };
 
@@ -79,6 +80,11 @@ export function createCard(scene, x, y, w, h, card, onClick, index, showKey = tr
       shadow: false,
     }),
   );
+
+  // Custo do trato, em vermelho, no pé da carta
+  if (card.cost) {
+    inner.add(text(scene, 0, h / 2 - 26 * P, card.cost, { size: 18, color: CSS.redHi, origin: 0.5, align: "center", wrap: w - 28, stroke: true, strokeW: 4 }));
+  }
 
   // Pips de nível (nova arma: 0→1; melhoria: n→n+1 piscando)
   if (card.type === "upgrade" || card.type === "new") {
