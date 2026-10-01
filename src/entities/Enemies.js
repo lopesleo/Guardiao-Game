@@ -267,6 +267,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       }
     }
 
+    this.scene.feel?.hit(this, crit, !!this.miniBoss);
     if (element) this.scene.elemental?.applyStatus(this, element);
     return this.hp <= 0;
   }
@@ -464,6 +465,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
   takeDamage(dmg) {
     // Invulnerável durante o êxtase da virada de fase (a barra está recarregando)
     if (this._transitioning) return false;
+    this.scene.feel?.hit(this, false, true);
     const iceAmp = this.statuses.ice ? 1.35 : 1;
     this.hp -= dmg * iceAmp;
     this.setTintFill(0xffffff);

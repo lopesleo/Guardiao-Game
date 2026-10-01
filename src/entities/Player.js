@@ -104,6 +104,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.hp = Math.max(0, this.hp - dmg * this.dmgTakenMult);
     this.invulnUntil = now + PLAYER.INVULN_MS;
     this._hitFx(now);
+    this.scene.feel?.hurt(dmg * this.dmgTakenMult);
     return true;
   }
 

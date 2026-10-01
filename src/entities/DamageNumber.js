@@ -20,14 +20,14 @@ export class DamageNumber extends Phaser.GameObjects.Text {
     this.setStroke('#1a1420', big ? 5 : 4);
     this.setPosition(x + (Math.random() - 0.5) * 16, y - 10);
     this.setActive(true).setVisible(true);
-    this.setAlpha(1).setScale(1);
+    this.setAlpha(1).setScale(big ? 1.7 : 1); // crítico nasce grande e encolhe (pop)
     if (this._tween) this._tween.stop();
     this._tween = this.scene.tweens.add({
       targets: this,
-      y: this.y - 30,
+      y: this.y - (big ? 44 : 30),
       alpha: 0,
       scale: 0.7,
-      duration: 600,
+      duration: big ? 750 : 600,
       ease: 'Cubic.easeOut',
       onComplete: () => {
         this.setActive(false).setVisible(false);
