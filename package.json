@@ -10,6 +10,7 @@
     "balance": "node tools/balance-report.mjs",
     "android:sync": "npm run build && npx cap sync android",
     "android:open": "npx cap open android",
+    "android:install": "node tools/android-install.mjs",
     "icons": "npx @capacitor/assets generate --android --iconBackgroundColor '#10202a' --splashBackgroundColor '#070b14'"
   },
   "devDependencies": {
