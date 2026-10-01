@@ -191,7 +191,13 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   informações fiscais (CPF e W-8BEN) e forma de pagamento no AdMob; conta do Firebase
 - ⬜ AdMob + consentimento LGPD (UMP) plugados no `AdService`
 - ⬜ Compra "Remover anúncios"
-- ⬜ Firebase Analytics + Crashlytics plugados no `Analytics`
+- ✅ Firebase Analytics + Crashlytics plugados (`src/systems/Telemetry.js`, plugins `@capacitor-firebase/*`):
+  projeto `guardiao-da-floresta` (plano Spark, grátis), app Android `com.lopesleo.guardiao`, GA4 em conta
+  própria (local Brasil). Coleta desligada no manifesto e ligada pelo jogo; opção "Dados de uso e erros"
+  em Opções; erros de JS viram não fatais no Crashlytics. `android/app/google-services.json` fica fora do
+  git. 👤 **Falta testar no aparelho** (compilar no Android Studio e olhar o DebugView do Firebase) e,
+  antes de publicar, ligar o consentimento (UMP) para o EEE chamando `Telemetry.setEnabled(false)` em quem
+  recusar; vincular o app do AdMob ao Firebase quando o app estiver na loja
 - ⬜ Política de privacidade e Segurança dos dados atualizadas
 
 ### Pendências suas, adiadas (anotadas em 01/10/2026) 👤
@@ -205,7 +211,6 @@ Nada disso trava o desenvolvimento; só o lançamento e a receita.
   pagamento (conta bancária) só aparece quando os ganhos começam; pagamento mensal a partir de US$ 100
 - **Push do repositório do jogo** para a `docs/PRIVACY.md` atualizada ir ao ar (a mensagem de
   consentimento do AdMob aponta para ela)
-- Conta do **Firebase** (Analytics e Crashlytics)
 
 ### M6 — Loja e lançamento 👤
 - ⬜ Capturas de tela + imagem de destaque (geradas do jogo) + vídeo de 30 s
