@@ -182,9 +182,9 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
 ### M5 — Monetização e medição reais 👤
 - ✅ AdMob: app Android criado e **6 blocos premiados** (revive, extra_card, build_speed,
   double_coins, daily_chest, extra_reroll) + 1 intersticial pronto e desligado; IDs em `ADMOB` no `src/config.js`
-- ✅ Mensagem de consentimento europeia (GDPR) criada como **rascunho** no AdMob (Privacidade e
-  mensagens): app selecionado, URL da política, botão "Não consentir" ligado. 👤 **Falta clicar em Publicar**
-  (e dar push da `docs/PRIVACY.md` atualizada, que a mensagem referencia)
+- ✅ Mensagem de consentimento europeia (GDPR) **publicada** no AdMob (app selecionado, URL da
+  política, botão "Não consentir" ligado). Falta dar push da `docs/PRIVACY.md` atualizada (a
+  mensagem aponta para ela) e, no app, integrar o SDK da UMP no M5
 - 👤 Falta: ligar o app à loja (quando publicar), dados de pagamento e `app-ads.txt` no AdMob; contas
   do Firebase e do Play Console
 - ⬜ AdMob + consentimento LGPD (UMP) plugados no `AdService`
