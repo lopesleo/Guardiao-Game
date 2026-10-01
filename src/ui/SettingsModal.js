@@ -1,12 +1,13 @@
 // Modal de Opções — compartilhado entre Menu e Pausa.
 import { Settings } from "../systems/Settings.js";
 import { Notify } from "../systems/Notify.js";
+import { Telemetry } from "../systems/Telemetry.js";
 import { CSS } from "../art/Palette.js";
 import { text, Button, FONTS, TEXT_SIZES } from "./Theme.js";
 import { Modal, Slider, Toggle } from "./Widgets.js";
 
 export function openSettings(scene, o = {}) {
-  const rows = 8 + (Notify.available() ? 1 : 0);
+  const rows = 8 + (Notify.available() ? 1 : 0) + (Telemetry.available() ? 1 : 0);
   const STEP = 54;
   const m = new Modal(scene, { title: "OPÇÕES", w: 680, h: 120 + rows * STEP + (o.onReset ? 76 : 0) });
   let y = m.top + 24;
@@ -58,6 +59,8 @@ export function openSettings(scene, o = {}) {
   }));
   if (Notify.available())
     row("Avisos (baú e colheita)", new Toggle(scene, 0, 0, Notify.enabled(), (v) => (v ? Notify.enable() : Notify.disable())));
+  if (Telemetry.available())
+    row("Dados de uso e erros", new Toggle(scene, 0, 0, Telemetry.enabled(), (v) => Telemetry.setEnabled(v)));
   if (o.onReset) {
     m.add(new Button(scene, 0, m.h / 2 - 46, 300, 50, "APAGAR PROGRESSO", o.onReset, { size: 18, style: "danger", color: CSS.redHi }));
   }
