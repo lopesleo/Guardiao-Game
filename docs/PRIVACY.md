@@ -85,4 +85,4 @@ Se algo mudar, atualizaremos a data no topo desta página.
 
 ## Contato
 
-Dúvidas: [coloque aqui o e-mail de contato do desenvolvedor]
+Dúvidas e pedidos sobre seus dados: <lopesleo.dev@gmail.com>
