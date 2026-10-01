@@ -13,6 +13,7 @@ const DEFAULTS = {
   textSize: 0, // índice em TEXT_SIZES (Normal/Grande/Muito grande)
   notify: false, // avisos (só no app, só depois que o jogador aceitar)
   notifyAsked: false,
+  telemetry: true, // dados de uso e erros (Firebase, só no app); o jogador pode desligar
 };
 
 let cache = null;
