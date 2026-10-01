@@ -40,6 +40,8 @@ export class FirstDefeatScene extends Phaser.Scene {
     this._waking = false;
     this.fx = null;
     this.won = !!data.won;
+    // modo curto (2ª morte em diante): só o herói caindo, depois a tela de resultados
+    this.short = !!data.short;
     this.charId = data.character || "guardian";
     this.next = data.next || {};
     const W = (this.W = vw(this)),
@@ -56,22 +58,27 @@ export class FirstDefeatScene extends Phaser.Scene {
       this._stopSounds();
     });
 
-    // Marca como vista já na entrada: se o app fechar no meio, não repete a cena
-    const meta = new MetaProgression();
-    meta.data.firstDefeatSeen = true;
-    meta.data.campIntroSeen = true; // a Ancia ja se apresentou aqui: a Clareira nao repete a fala de boas-vindas
-    meta._save();
-    Analytics.track("first_story_start", { won: this.won });
+    if (this.short) {
+      Analytics.track("death_scene", {});
+    } else {
+      // Marca como vista já na entrada: se o app fechar no meio, não repete a cena
+      const meta = new MetaProgression();
+      meta.data.firstDefeatSeen = true;
+      meta.data.campIntroSeen = true; // a Anciã já se apresentou aqui: a Clareira não repete a fala de boas-vindas
+      meta._save();
+      Analytics.track("first_story_start", { won: this.won });
+    }
 
     this.lines = this._script();
     this._initFx();
-    this._buildClearing();
+    if (!this.short) this._buildClearing();
     if (!this.won) this._buildForest();
     this._buildUi();
 
     // Avançar (toque / Espaço / Enter) e pular
     this.input.on("pointerdown", (p, over) => {
       if (over.length) return; // clicou num botão
+      if (this.short) return this._finish(true); // cena curta: tocar já passa
       this._advance();
     });
     this.input.keyboard.on("keydown-SPACE", () => this._advance());
@@ -514,20 +521,22 @@ export class FirstDefeatScene extends Phaser.Scene {
     this._fadeBlack(0, 900);
     this._bars(true, 900);
     // empurra a câmera para o herói durante todo o plano
-    cam.pan(this.fHeroX + 30, this.fGround - 100, 4200, "Sine.easeInOut");
+    cam.pan(this.fHeroX + 30, this.fGround - 100, this.short ? 1800 : 4200, "Sine.easeInOut");
     this.tweens.add({ targets: this.fHero, scaleY: SC * 1.012, duration: 1300, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
     // parallax lento das árvores
     this.forestLayers.forEach((layer, i) => layer.forEach((t) => this.tweens.add({ targets: t, x: t.x - 24 * (i + 1), duration: 4200, ease: "Sine.easeInOut" })));
     this._sfx("sfx_whoosh", 0.12, 0.5);
-    this._heartbeat(3, 920, 0.5);
+    this._heartbeat(this.short ? 1 : 3, 920, 0.5);
 
-    // três lobos chegam da direita; o da frente salta
+    // três lobos chegam da direita; o da frente salta (na cena curta, só o que salta, rápido)
     const gy = this.fGround;
-    const wolves = [
-      { x: W + 520, y: gy - 26, d: 3200, delay: 600, lead: false },
-      { x: W + 420, y: gy + 22, d: 2800, delay: 450, lead: false },
-      { x: W + 260, y: gy + 2, d: 1500, delay: 750, lead: true },
-    ];
+    const wolves = this.short
+      ? [{ x: W + 260, y: gy + 2, d: 800, delay: 350, lead: true }]
+      : [
+          { x: W + 520, y: gy - 26, d: 3200, delay: 600, lead: false },
+          { x: W + 420, y: gy + 22, d: 2800, delay: 450, lead: false },
+          { x: W + 260, y: gy + 2, d: 1500, delay: 750, lead: true },
+        ];
     wolves.forEach((cfg) => {
       this._at(cfg.delay, () => {
         const wolf = this._wolf(cfg.x, cfg.y);
@@ -590,6 +599,15 @@ export class FirstDefeatScene extends Phaser.Scene {
       cam.pan(this.fHeroX - 20, this.fGround - 70, 2600, "Sine.easeInOut");
       this.tweens.add({ targets: this.fAura, alpha: 0, duration: 1600 });
     });
+    if (this.short) {
+      // cena curta: o herói cai, fica um instante no chão e a tela escurece para os resultados
+      this._at(2800, () => {
+        this._fadeBlack(1, 800);
+        this._sfx("sfx_heartbeat", 0.3, 0.9);
+      });
+      this._at(3800, () => this._finish(false));
+      return;
+    }
     // depois do baque: legenda, uma luz de tocha chega e os lobos fogem
     this._at(3300, () => this._caption("A Podridão te alcançou…", 700, 1200));
     this._at(3900, () => this._torchLight());
@@ -843,7 +861,7 @@ export class FirstDefeatScene extends Phaser.Scene {
       gone = true;
       this._stopSounds();
       // derrota: direto para a Clareira (o herói chega pela trilha); vitória: ainda mostra os resultados
-      if (this.won) this.scene.start("GameOverScene", this.next);
+      if (this.won || this.short) this.scene.start("GameOverScene", this.next);
       else this.scene.start("CampScene", { fromRun: true });
     };
     this.uiCam.once("camerafadeoutcomplete", go);
