@@ -816,7 +816,9 @@ export const ADMOB = {
 };
 
 export const ADS = {
-  ENABLED: false,
+  ENABLED: true, // ligado: no app só aparece com o AdMob pronto e consentimento ok (ver AdService.canShow)
+  TESTING: true, // anúncios de TESTE do Google. Troque para false SÓ no build de loja
+  TEST_EEA: false, // true = simula a Europa para ver o formulário de consentimento (só com TESTING)
   REVIVE_HP_PCT: 0.5, // volta com metade da vida
   REVIVE_INVULN_MS: 3000,
   REVIVE_CLEAR_RADIUS: 280, // onda que empurra/fere quem está em volta
