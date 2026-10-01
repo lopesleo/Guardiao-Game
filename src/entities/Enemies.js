@@ -81,6 +81,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   activate(x, y, kind, wave, elite = false) {
     this._kind = kind;
     this._elite = elite;
+    this._challengeId = null; // inimigo é reaproveitado (pool): zera a marca de desafio de santuário
     this.setActive(true).setVisible(true);
     this.setPosition(x, y);
     this.body.enable = true;

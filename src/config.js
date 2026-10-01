@@ -530,6 +530,24 @@ export const PACTS = {
   ],
 };
 
+// Santuários da Floresta (ver ShrineSystem): pontos de interesse espalhados pelo mapa.
+export const SHRINE = {
+  COUNT: { charge: 4, greed: 2, challenge: 3 },
+  MIN_FROM_CENTER: 700, // não nascem em cima do ponto de partida
+  MIN_SPACING: 900,
+  TOUCH_R: 56,
+  CHARGE_R: 120, // raio para carregar o santuário da Carga
+  CHARGE_MS: 3000, // tempo parado dentro do raio
+  CHARGE_BUFF: { DMG: 1.25, SPEED: 1.15, MS: 40000 },
+  GREED: { MS: 60000, SPAWN_MULT: 1.35, LUCK: 1 }, // LUCK = soma na sorte de drops (dobra a chance)
+  CHALLENGE: { ELITES: 4 },
+  TYPES: {
+    charge: { name: "Santuário da Carga", short: "CARGA", hint: "Fique perto para carregar", color: 0x9ccf62, css: "#9ccf62" },
+    greed: { name: "Santuário da Ganância", short: "GANÂNCIA", hint: "Mais moedas, mais inimigos", color: 0xf2c14e, css: "#f2c14e" },
+    challenge: { name: "Santuário do Desafio", short: "DESAFIO", hint: "Derrote os elites: baú dourado", color: 0xe8434f, css: "#e8434f" },
+  },
+};
+
 // Controle das cartas de nível: trocar (1× por nível, grátis) e BANIR (tirar a carta da
 // partida inteira). Banimentos: base + 1 por nível do Santuário acima do 1º.
 export const CARDS = {

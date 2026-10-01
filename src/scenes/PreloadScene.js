@@ -8,6 +8,7 @@ import { registerHeroes } from "../art/Hero.js";
 import { registerMonsters } from "../art/Monsters.js";
 import { registerTelegraphs } from "../art/Telegraph.js";
 import { registerLanterns } from "../art/Lanterns.js";
+import { registerShrines } from "../art/Shrines.js";
 import { registerCamp } from "../art/Camp.js";
 import { registerBuildings } from "../art/Buildings.js";
 import { registerGarden } from "../art/Garden.js";
@@ -40,6 +41,7 @@ export class PreloadScene extends Phaser.Scene {
       ["Corrompendo criaturas…", () => registerMonsters(this)],
       ["Afiando garras…", () => registerTelegraphs(this)],
       ["Acendendo cogumelos…", () => registerLanterns(this)],
+      ["Erguendo os santuários…", () => registerShrines(this)],
       ["Erguendo o acampamento…", () => registerCamp(this)],
       ["Cobrindo os telhados de sapê…", () => registerBuildings(this)],
       ["Arando a horta…", () => registerGarden(this)],

@@ -18,6 +18,7 @@ import {
   INTRO,
   ARENA,
   WOOD,
+  SHRINE,
   BUILD,
   GARDEN,
 } from "../config.js";
@@ -27,6 +28,7 @@ import { Daily, dailyUnlocked } from "../systems/Daily.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
 import { GameFeel } from "../systems/GameFeel.js";
+import { ShrineSystem } from "../systems/ShrineSystem.js";
 import { SpawnDirector } from "../systems/SpawnDirector.js";
 import { RunEvents } from "../systems/RunEvents.js";
 import { ElementalSystem } from "../systems/ElementalSystem.js";
@@ -184,6 +186,7 @@ export class GameScene extends Phaser.Scene {
     Analytics.track("run_start", { character: this.character.id, difficulty: this.diff.id });
     this.runEvents = new RunEvents(this);
     this.lanterns = new LanternSystem(this);
+    this.shrines = new ShrineSystem(this);
 
     // Baús — STARTING_COUNT espalhados aleatoriamente fora do spawn do player
     this.chests = [];
@@ -516,6 +519,7 @@ export class GameScene extends Phaser.Scene {
     }
     this.lanterns.update(time, this.elapsedMs, this.player);
     this.feel.update(time, dt);
+    this.shrines.update(time, dt, this.player);
     this._updateSpores(time, dt);
     this.elemental.tick(time);
     this.hud.update(time, dt);
@@ -899,7 +903,7 @@ export class GameScene extends Phaser.Scene {
     g.spawn(enemy.x, enemy.y);
     // Drops aleatórios
     // Sorte (passiva Trevo) escala as chances de drop
-    const r = Math.random() / (1 + (this.player.luck || 0));
+    const r = Math.random() / (1 + (this.player.luck || 0) + (this.shrines?.greedActive ? SHRINE.GREED.LUCK : 0));
     if (r < DROPS.COIN_CHANCE) {
       const c = this.coinPool.acquire();
       c.spawn(
