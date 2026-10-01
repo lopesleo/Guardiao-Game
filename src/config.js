@@ -809,7 +809,10 @@ export const ADMOB = {
     build_speed: "ca-app-pub-7068898840847782/1448651250",
     double_coins: "ca-app-pub-7068898840847782/9790000693",
     daily_chest: "ca-app-pub-7068898840847782/4481833690",
+    extra_reroll: "ca-app-pub-7068898840847782/7024236554",
   },
+  // Intersticial: pronto e DESLIGADO (começamos sem, como o Vampire Survivors; ver PRE_LANCAMENTO 1.7)
+  INTERSTITIAL: "ca-app-pub-7068898840847782/5930646735",
 };
 
 export const ADS = {
