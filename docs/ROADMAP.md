@@ -154,6 +154,18 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   baixa, gemas de XP que sobem de tom em sequência, número de dano crítico que "pipoca",
   peso extra ao abater minichefe/mímico. Hit-stop e vinheta seguem a opção "Tremor de
   tela"; a vibração segue "Vibração". 👤 sentir no aparelho e ajustar intensidades
+- ✅ **Mapa 2× maior** (área dobrada: raio 2400 → 3400 em `GAME.WORLD_RADIUS`); baús passam
+  a nascer num anel ao redor do jogador (num mapa grande, posição aleatória global não seria achada)
+- ✅ **Banir cartas**: tira a carta (ou as melhorias daquela arma) da partida inteira; 2 banimentos
+  + 1 por nível do Santuário; evolução nunca é banível (`CARDS` no config). Trocar já existia.
+- ✅ **Ressonância elemental**: +15% de dano por arma extra do mesmo elemento; Fogo+Gelo+Raio
+  monta o **Prisma** (reações +30%). Dica na carta de arma nova (`RESONANCE` no config)
+- ✅ **Tratos da Mata**: às vezes uma carta é um trato — poder grande com custo visível (ex.:
+  +37% dano / −23% vida máxima). Do nível 3, até 3 por partida, cada um uma vez (`PACTS`)
+- ✅ **Santuários da Floresta** no mapa (`ShrineSystem`, `SHRINE`): **Carga** (fique perto 3 s:
+  +25% dano e +15% velocidade por 40 s), **Ganância** (60 s de mais drops e +35% inimigos),
+  **Desafio** (elites; vencer dá baú dourado). Seta na borda da tela aponta o mais próximo.
+  👤 testar o ritmo e a distância no aparelho
 - ⬜ Primeira derrota: a personagem desmaia e a Anciã acorda e explica tudo
   (curta, pulável, só na 1ª vez; flag no save)
 
