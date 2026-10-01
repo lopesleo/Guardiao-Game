@@ -185,8 +185,10 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
 - ✅ Mensagem de consentimento europeia (GDPR) **publicada** no AdMob (app selecionado, URL da
   política, botão "Não consentir" ligado). Falta dar push da `docs/PRIVACY.md` atualizada (a
   mensagem aponta para ela) e, no app, integrar o SDK da UMP no M5
-- 👤 Falta: ligar o app à loja (quando publicar), dados de pagamento e `app-ads.txt` no AdMob; contas
-  do Firebase e do Play Console
+- ✅ `app-ads.txt` no ar em https://lopesleo.github.io/app-ads.txt (repo `lopesleo.github.io`, `public/`)
+- 👤 Falta: **criar a conta de desenvolvedor da Play Console** (taxa única + verificação de identidade) e
+  cadastrar `https://lopesleo.github.io` como site do desenvolvedor; ligar o app à loja no AdMob;
+  informações fiscais (CPF e W-8BEN) e forma de pagamento no AdMob; conta do Firebase
 - ⬜ AdMob + consentimento LGPD (UMP) plugados no `AdService`
 - ⬜ Compra "Remover anúncios"
 - ⬜ Firebase Analytics + Crashlytics plugados no `Analytics`
