@@ -186,7 +186,7 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   mensagens): app selecionado, URL da política, botão "Não consentir" ligado. 👤 **Falta clicar em Publicar**
   (e dar push da `docs/PRIVACY.md` atualizada, que a mensagem referencia)
 - 👤 Falta: ligar o app à loja (quando publicar), dados de pagamento e `app-ads.txt` no AdMob; contas
-  do Firebase e do Play Console; preencher o e-mail de contato em `docs/PRIVACY.md`
+  do Firebase e do Play Console
 - ⬜ AdMob + consentimento LGPD (UMP) plugados no `AdService`
 - ⬜ Compra "Remover anúncios"
 - ⬜ Firebase Analytics + Crashlytics plugados no `Analytics`
