@@ -180,8 +180,8 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   não o sprite de caminhada girado. Revisar as poses: `node tools/hero-sheet.mjs saida.png <id>`
 
 ### M5 — Monetização e medição reais 👤
-- ✅ AdMob: app Android criado e **5 blocos premiados** (revive, extra_card, build_speed,
-  double_coins, daily_chest); IDs em `ADMOB` no `src/config.js`
+- ✅ AdMob: app Android criado e **6 blocos premiados** (revive, extra_card, build_speed,
+  double_coins, daily_chest, extra_reroll) + 1 intersticial pronto e desligado; IDs em `ADMOB` no `src/config.js`
 - ✅ Mensagem de consentimento europeia (GDPR) criada como **rascunho** no AdMob (Privacidade e
   mensagens): app selecionado, URL da política, botão "Não consentir" ligado. 👤 **Falta clicar em Publicar**
   (e dar push da `docs/PRIVACY.md` atualizada, que a mensagem referencia)
