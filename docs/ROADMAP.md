@@ -166,8 +166,9 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   +25% dano e +15% velocidade por 40 s), **Ganância** (60 s de mais drops e +35% inimigos),
   **Desafio** (elites; vencer dá baú dourado). Seta na borda da tela aponta o mais próximo.
   👤 testar o ritmo e a distância no aparelho
-- ⬜ Primeira derrota: a personagem desmaia e a Anciã acorda e explica tudo
-  (curta, pulável, só na 1ª vez; flag no save)
+- ✅ **Primeira queda** (`FirstDefeatScene`): o guardião desmaia, acorda (olhos abrem) ao lado da
+  fogueira e a Anciã explica o jogo em poucas falas com os números reais da partida; pulável,
+  aparece uma vez só (`firstDefeatSeen` no save; quem já jogou não vê). Na 1ª vitória, versão de festa.
 
 ### M5 — Monetização e medição reais 👤
 - 👤 Contas: AdMob, Firebase, perfil de pagamentos no Play Console

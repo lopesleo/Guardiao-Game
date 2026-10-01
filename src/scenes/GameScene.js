@@ -349,7 +349,7 @@ export class GameScene extends Phaser.Scene {
     }
     // Some o HUD durante a entrada (volta junto com o controle)
     // (só o HUD: profundidade >= 50000; a camada de luz e o chão ficam)
-    this._introHud = this.children.list.filter((o) => o.scrollFactorX === 0 && o.visible && o.depth >= 50000 && o !== this.lighting?.rt);
+    this._introHud = this.children.list.filter((o) => o.scrollFactorX === 0 && o.visible && o.depth >= 50000 && o !== this.lighting?.rt && o !== this.feel?.vignette);
     this._introHud.forEach((o) => o.setAlpha(0));
   }
 
@@ -1446,7 +1446,7 @@ export class GameScene extends Phaser.Scene {
       this.tweens.timeScale = 1;
       this.bgMusic?.stop();
       this.bgMusic = null;
-      this.scene.start("GameOverScene", {
+      const results = {
         won,
         quit,
         level: this.player.level,
@@ -1463,7 +1463,13 @@ export class GameScene extends Phaser.Scene {
         unlockedNextDifficulty: unlockedNewDifficulty
           ? DIFFICULTY[this.diff.id + 1].name
           : null,
-      });
+      };
+      // Primeira queda (ou primeira vitória): cena da Anciã antes dos resultados
+      if (!quit && !this.meta.data.firstDefeatSeen) {
+        this.scene.start("FirstDefeatScene", { won, character: this.character.id, next: results });
+      } else {
+        this.scene.start("GameOverScene", results);
+      }
     });
   }
 
