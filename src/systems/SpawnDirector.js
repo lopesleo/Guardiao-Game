@@ -12,7 +12,7 @@ export class SpawnDirector {
   }
 
   update(time, dt) {
-    this.elapsedMs += dt;
+    this.elapsedMs += dt * (this.scene.pace ?? 1); // tempo "virtual" (ver GAME.RUN_DURATION_S)
     const tSec = this.elapsedMs / 1000;
     const spawnMult = (this.scene.diff?.spawnMult ?? 1) * (this.scene.endless ? ENDLESS.SPAWN_MULT : 1);
     const rate = ENEMY.SPAWN_RATE(tSec) * spawnMult;

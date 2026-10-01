@@ -175,7 +175,7 @@ export class Lighting {
 
     // Ambiente + todas as luzes numa ÚNICA passada no mapa de luz.
     // (Antes: 1 draw por luz = ~100 trocas de framebuffer/frame → travava celular.)
-    const tRun = Math.min(1, s.elapsedMs / (GAME.RUN_DURATION_S * 1000));
+    const tRun = Math.min(1, s.elapsedMs / (s.runDurationS * 1000));
     const amb = s.boss?.active ? mix(AMB_NIGHT, AMB_BOSS, 1) : mix(AMB_DUSK, AMB_NIGHT, Math.pow(tRun, 1.3));
     this.rt.fill(amb);
     if (this._n) this.rt.draw(this.stamps.slice(0, this._n));

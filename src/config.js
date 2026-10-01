@@ -8,7 +8,10 @@ export const GAME = {
   PIXEL_SCALE: 3, // sprite 16x16 renderizado como 48x48
   WORLD_RADIUS: 2400, // arena circular (era 1600)
   MAX_ENEMIES_ALIVE: 80, // cap de pooling (D18)
-  RUN_DURATION_S: 420, // 7 min até boss spawnar
+  // Duração-base (7 min): é nela que o roteiro, as waves e a curva de spawn foram calibrados.
+  // A duração real vem do Perigo (DIFFICULTY[].durationS); o jogo "estica" a curva por
+  // pace = RUN_DURATION_S / durationS, então 10 min = a mesma jornada, mais devagar.
+  RUN_DURATION_S: 420,
 };
 
 // Níveis de dificuldade ("Perigo") — ver docs/META_LOOP.md (Fase 1).
@@ -16,12 +19,14 @@ export const GAME = {
 //   HP/dano de inimigo, taxa de spawn e recompensa em moedas.
 // Cada nível libera o seguinte ao ser VENCIDO (boss morto). reward cresce mais
 // rápido que a dificuldade pra financiar os sinks de meta-progressão.
+// durationS = tempo até o chefe nascer: 7 min nos Perigos iniciais, até 10 min no Pesadelo
+// (novato = partida curta; veterano = mais profundidade).
 export const DIFFICULTY = [
-  { id: 0, name: "Aprendiz",   hpMult: 0.85, dmgMult: 0.85, spawnMult: 0.9,  rewardMult: 1.0 },
-  { id: 1, name: "Guardião",   hpMult: 1.0,  dmgMult: 1.0,  spawnMult: 1.0,  rewardMult: 1.25 },
-  { id: 2, name: "Veterano",   hpMult: 1.25, dmgMult: 1.2,  spawnMult: 1.15, rewardMult: 1.6 },
-  { id: 3, name: "Implacável", hpMult: 1.6,  dmgMult: 1.45, spawnMult: 1.3,  rewardMult: 2.1 },
-  { id: 4, name: "Pesadelo",   hpMult: 2.1,  dmgMult: 1.8,  spawnMult: 1.5,  rewardMult: 3.0 },
+  { id: 0, name: "Aprendiz",   hpMult: 0.85, dmgMult: 0.85, spawnMult: 0.9,  rewardMult: 1.0,  durationS: 420 },
+  { id: 1, name: "Guardião",   hpMult: 1.0,  dmgMult: 1.0,  spawnMult: 1.0,  rewardMult: 1.25, durationS: 420 },
+  { id: 2, name: "Veterano",   hpMult: 1.25, dmgMult: 1.2,  spawnMult: 1.15, rewardMult: 1.6,  durationS: 480 },
+  { id: 3, name: "Implacável", hpMult: 1.6,  dmgMult: 1.45, spawnMult: 1.3,  rewardMult: 2.1,  durationS: 540 },
+  { id: 4, name: "Pesadelo",   hpMult: 2.1,  dmgMult: 1.8,  spawnMult: 1.5,  rewardMult: 3.0,  durationS: 600 },
 ];
 
 export const PLAYER = {

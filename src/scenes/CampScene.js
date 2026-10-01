@@ -444,7 +444,7 @@ export class CampScene extends Phaser.Scene {
     this.woodBox[2].setText(String(wood));
     const c = CHARACTERS.find((c) => c.id === this.meta.selectedCharacter) || CHARACTERS[0];
     const d = DIFFICULTY[Math.min(this.meta.selectedDifficulty, DIFFICULTY.length - 1)];
-    this.hudInfo.setText(`${c.name}  ·  Perigo: ${d.name}  »`);
+    this.hudInfo.setText(`${c.name}  ·  Perigo: ${d.name} (${Math.round(d.durationS / 60)} min)  »`);
     if (this.signLabel) {
       this.signLabelT.setText(`PERIGO: ${d.name.toUpperCase()}`);
       const w = this.signLabelT.width + 20;

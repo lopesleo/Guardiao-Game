@@ -93,6 +93,10 @@ export class GameScene extends Phaser.Scene {
     // Dificuldade da run (clampa ao desbloqueado por segurança)
     const diffIdx = Math.min(this.meta.selectedDifficulty, DIFFICULTY.length - 1);
     this.diff = DIFFICULTY[diffIdx] || DIFFICULTY[0];
+    // Duração da partida pelo Perigo. `pace` (<= 1) estica o relógio das waves/roteiro/spawn
+    // para a mesma jornada caber em mais tempo (ver GAME.RUN_DURATION_S).
+    this.runDurationS = this.diff.durationS ?? GAME.RUN_DURATION_S;
+    this.pace = GAME.RUN_DURATION_S / this.runDurationS;
     this._coinsGainedThisRun = 0;
     this._showDmgNumbers = Settings.get("dmgNumbers");
     this._newUnlocksThisRun = [];
@@ -226,7 +230,7 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-ZERO", () => {
       // Spawna boss agora
       if (!this.boss) {
-        this.elapsedMs = GAME.RUN_DURATION_S * 1000;
+        this.elapsedMs = this.runDurationS * 1000;
         this._spawnBoss();
         this._toast("BOSS spawned");
       } else {
@@ -471,6 +475,11 @@ export class GameScene extends Phaser.Scene {
     );
   }
 
+  // Wave "esticada" pelo pace: o chefe chega na mesma wave em qualquer duração.
+  waveIndex() {
+    return Math.floor((this.elapsedMs * this.pace) / 30000);
+  }
+
   update(time, dt) {
     if (this.gameOver) return;
     if (this._intro) return this._updateIntro(time, dt);
@@ -483,16 +492,16 @@ export class GameScene extends Phaser.Scene {
       this._checkAchievements();
     }
 
-    // Aviso de boss aos 6:30
+    // Aviso de boss 30 s antes
     if (
       !this.bossWarned &&
-      this.elapsedMs >= (GAME.RUN_DURATION_S - 30) * 1000
+      this.elapsedMs >= (this.runDurationS - 30) * 1000
     ) {
       this.bossWarned = true;
       this.hud.showBossBanner("O Mapinguari corrompido desperta…");
     }
-    // Spawn do boss aos 7:00
-    if (!this.boss && !this.endless && this.elapsedMs >= GAME.RUN_DURATION_S * 1000) {
+    // Spawn do boss ao fim da duração do Perigo
+    if (!this.boss && !this.endless && this.elapsedMs >= this.runDurationS * 1000) {
       this._spawnBoss();
     }
 
@@ -1208,7 +1217,7 @@ export class GameScene extends Phaser.Scene {
         this.cameras.main.shake(280, 0.018);
       });
       this._toast("ARMADILHA!", 1500, "#ff8a8a");
-      const wave = Math.floor(this.elapsedMs / 30000);
+      const wave = this.waveIndex();
       const types = ["wolf", "crow", "goblin"];
       for (let i = 0; i < CHEST.TRAP_ENEMY_COUNT; i++) {
         if (this.enemyPool.size >= GAME.MAX_ENEMIES_ALIVE) break;
@@ -1229,7 +1238,7 @@ export class GameScene extends Phaser.Scene {
         this.cameras.main.flash(150, 200, 40, 40);
       });
       this._toast("MÍMICO!", 1800, "#ff8a8a");
-      const wave = Math.floor(this.elapsedMs / 30000);
+      const wave = this.waveIndex();
       const types = ["goblin", "wolf"];
       this.time.delayedCall(burstDelay + 200, () => {
         if (this.enemyPool.size >= GAME.MAX_ENEMIES_ALIVE) return;

@@ -691,7 +691,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
 
   _summon(kind, count) {
     const scene = this.scene;
-    const wave = Math.floor(scene.elapsedMs / 30000);
+    const wave = scene.waveIndex();
     // Aviso visual do próprio boss: pulso roxo
     summonPulse(scene, this.x, this.y);
 
