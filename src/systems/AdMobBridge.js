@@ -45,6 +45,9 @@ function gameAudio(on) {
   const snd = window.game?.sound;
   const ctx = snd?.context;
   if (!snd) return;
+  // Phaser 4: o update() do som religa o AudioContext suspenso a cada quadro enquanto o jogo
+  // "tem foco"; marcar como sem foco durante o anúncio impede a música de voltar sozinha
+  snd.gameLostFocus = !on;
   if (!ctx) return snd[on ? "resumeAll" : "pauseAll"]?.();
   if (!on && ctx.state === "running") ctx.suspend().catch(() => {});
   if (on && ctx.state === "suspended" && !snd.locked) ctx.resume().catch(() => {});

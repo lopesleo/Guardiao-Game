@@ -19,6 +19,7 @@ export function setupPlatform(game) {
   const audioCtx = () => game.sound?.context;
   const setBackground = (bg) => {
     if (bg) pauseRun();
+    if (game.sound) game.sound.gameLostFocus = bg; // Phaser 4 religaria o som sozinho (ver AdMobBridge)
     const ctx = audioCtx();
     if (!ctx) return game.sound?.[bg ? "pauseAll" : "resumeAll"]?.();
     if (bg && ctx.state === "running") ctx.suspend().catch(() => {});
