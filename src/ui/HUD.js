@@ -92,10 +92,12 @@ export class HUD {
 
     // ===== BOSS =====
     this.bossG = fix(scene.add.graphics(), 0).setVisible(false);
+    // Faixa do topo central, de cima para baixo: relógio (44–86) → nome (92) → barra (116).
+    // Antes o nome ficava com a base em 96 e encavalava no relógio.
     const bw = Math.min(620, W - 360);
-    this.bossBar = new Bar(scene, W / 2 - bw / 2, 104, bw, 8 * P, PAL.red2, { depth: D + 1, segments: 2, ghost: PAL.cream });
+    this.bossLabel = fix(text(scene, W / 2, 92, "", { size: 18, color: CSS.redHi, origin: [0.5, 0], stroke: true }), 2).setVisible(false);
+    this.bossBar = new Bar(scene, W / 2 - bw / 2, 116, bw, 7 * P, PAL.red2, { depth: D + 1, segments: 2, ghost: PAL.cream });
     this.bossBar.setVisible(false);
-    this.bossLabel = fix(text(scene, W / 2, 96, "", { size: 18, color: CSS.redHi, origin: [0.5, 1], stroke: true }), 2).setVisible(false);
 
     // ===== FAIXA DE ANÚNCIO (boss, fúria, eventos) =====
     this.banner = fix(scene.add.container(W / 2, this.H * 0.32), 10).setVisible(false);
@@ -229,6 +231,11 @@ export class HUD {
     this.bossBar.set(1, true);
     this.bossBar.setColor(boss.miniBoss ? PAL.org2 : PAL.red2);
     this.bossLabel.setVisible(true).setText(name);
+  }
+
+  // Onde termina a faixa reservada do HUD no topo (dicas e setas ficam abaixo)
+  get topBand() {
+    return this.bossBar.visible ? 150 : 100;
   }
 
   clearBoss() {
