@@ -158,6 +158,7 @@ export class Lighting {
     for (const w of p?.weapons ?? []) {
       if (w.orbs) for (const o of w.orbs) this._light(o.spr.x, o.spr.y, 110, 0x5cc8ff, 0.8);
       if (w.gfx && w.range && p) this._light(p.x, p.y, w.range * 1.5, 0x3a8ac8, 0.35); // aura gélida
+      w.lights?.((x, y, r, c, a) => this._light(x, y, r, c, a)); // vaga-lumes, redemoinhos...
     }
     for (const c of s.chests ?? []) if (!c.opened) this._light(c.x, c.y, 110, 0xf2c14e, 0.55);
     s.awakenOrbPool?.forEachActive((o) => this._light(o.x, o.y, 80, 0xffd070, 0.8));

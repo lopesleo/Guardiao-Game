@@ -33,6 +33,7 @@ import { ShrineSystem } from "../systems/ShrineSystem.js";
 import { SpawnDirector } from "../systems/SpawnDirector.js";
 import { RunEvents } from "../systems/RunEvents.js";
 import { ElementalSystem } from "../systems/ElementalSystem.js";
+import { WeaponFX } from "../systems/WeaponFX.js";
 import { UpgradeSystem } from "../systems/UpgradeSystem.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
 import { Player } from "../entities/Player.js";
@@ -135,6 +136,7 @@ export class GameScene extends Phaser.Scene {
 
     // Sistemas
     this.elemental = new ElementalSystem(this);
+    this.fx = new WeaponFX(this);
     this.upgrades = new UpgradeSystem(this);
 
     // Personagem escolhido no menu (sprite, arma inicial, viés de stats)
@@ -440,7 +442,7 @@ export class GameScene extends Phaser.Scene {
   // aguentar limpezas em massa (Sobrecarga/Vapor) sem afogar o tween manager.
   _deathPoof(x, y) {
     if (this._poofCount > 60) return;
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 3; i++) {
       this._poofCount++;
       const ang = Math.random() * Math.PI * 2;
       const d = 14 + Math.random() * 16;
@@ -536,6 +538,7 @@ export class GameScene extends Phaser.Scene {
     }
     this.lanterns.update(time, this.elapsedMs, this.player);
     this.feel.update(time, dt);
+    this.fx.update(dt);
     this.shrines.update(time, dt, this.player);
     this._updateSpores(time, dt);
     this.elemental.tick(time);
@@ -615,6 +618,7 @@ export class GameScene extends Phaser.Scene {
           const died = this.boss.takeDamage(p.dmg, null, p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
           this._showDmg(this.boss.x, this.boss.y, p.dmg, p.element, p.crit);
+          this.fx.impact(p.x, p.y, p.element, { dir: Math.atan2(p.body.velocity.y, p.body.velocity.x), power: 1.3, crit: p.crit });
           if (p.element) this.elemental.applyStatus(this.boss, p.element);
           p.onImpact?.(p.x, p.y); // hook de evolução (nuvem da Tempestade de Vapor)
           p.kill();
@@ -632,7 +636,7 @@ export class GameScene extends Phaser.Scene {
           this.player.lifestealFrom(p.dmg);
           this._showDmg(e.x, e.y, p.dmg, p.element, p.crit);
           p.onImpact?.(p.x, p.y); // hook de evolução (nuvem da Tempestade de Vapor)
-          this.lighting.flash(p.x, p.y, 120, 0xff8a3c, 120, 0.8);
+          this.fx.impact(p.x, p.y, p.element, { dir: Math.atan2(p.body.velocity.y, p.body.velocity.x), power: 1.1, crit: p.crit });
           p.kill();
           this.projectilePool.release(p);
           if (died) this._onEnemyDeath(e);
@@ -655,6 +659,7 @@ export class GameScene extends Phaser.Scene {
           this.player.lifestealFrom(p.dmg);
           this._showDmg(this.boss.x, this.boss.y, p.dmg, "fire", p.crit);
           this.elemental.applyStatus(this.boss, "fire");
+          this.fx.impact(p.x, p.y, "fire", { power: 1, crit: p.crit });
           if (died) this._onBossDeath();
         }
       }
@@ -666,6 +671,7 @@ export class GameScene extends Phaser.Scene {
           const died = e.takeDamage(p.dmg, "fire", p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
           this._showDmg(e.x, e.y, p.dmg, "fire", p.crit);
+          this.fx.impact(e.x, e.y - 6, "fire", { dir: Math.atan2(p.body.velocity.y, p.body.velocity.x), power: 0.8, crit: p.crit });
           if (died) this._onEnemyDeath(e);
         }
       });
@@ -913,8 +919,10 @@ export class GameScene extends Phaser.Scene {
     if (enemy.miniBoss) this._miniBossReward(enemy);
     this.sound.play("sfx_death", { volume: 0.15 });
     this.cameras.main.shake(40, 0.002);
+    const big = !!(enemy.miniBoss || enemy._elite);
     if (enemy.miniBoss || enemy._elite === "mimic") this.feel.bigKill(enemy.x, enemy.y);
     this._deathPoof(enemy.x, enemy.y);
+    this.fx.kill(enemy.x, enemy.y - enemy.displayHeight * 0.2, enemy._lastEl, big);
     // Drop XP sempre
     const g = this.xpPool.acquire();
     g.spawn(enemy.x, enemy.y);

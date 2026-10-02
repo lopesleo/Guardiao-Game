@@ -62,10 +62,12 @@ export class GameFeel {
     this._hitStopUntil = now + ms + HIT_STOP_COOLDOWN_MS;
     s.physics.world.timeScale = 6;
     s.tweens.timeScale = 0.15;
+    s.fx?.setTimeScale(0.15);
     s.time.delayedCall(ms, () => {
       if (s.gameOver) return; // a câmera lenta da morte cuida do resto
       s.physics.world.timeScale = 1;
       s.tweens.timeScale = 1;
+      s.fx?.setTimeScale(1);
     });
   }
 
