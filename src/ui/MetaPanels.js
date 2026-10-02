@@ -70,14 +70,15 @@ export const MetaPanels = {
         style: blk ? "dark" : "gold",
         onTap: blk
           ? null
-          : () => {
-              const r = b.start(id);
-              if (!r) return;
-              this._buyFx();
-              if (r.done) this._onBuildDone?.(r);
-              else this._onBuildStarted?.(r);
-              reopen();
-            },
+          : () =>
+              this._confirmBuild({ id, from: lv, step, time }, () => {
+                const r = b.start(id);
+                if (!r) return;
+                this._buyFx();
+                if (r.done) this._onBuildDone?.(r);
+                else this._onBuildStarted?.(r);
+                reopen();
+              }),
       };
     }
     list.addRow(this._shopRow(o));
@@ -100,6 +101,17 @@ export const MetaPanels = {
         }),
       );
     }
+  },
+
+  // Confirmação antes de gastar moedas e madeira numa obra (evita toque sem querer)
+  _confirmBuild({ id, from, step, time }, onYes) {
+    const b = this.builds;
+    const m = new Modal(this, { title: "CONSTRUIR?", subtitle: `${BUILDINGS[id].name} · nível ${from} → ${from + 1}`, w: 600, h: 400 });
+    m.add(text(this, 0, -62, b.nextPerk(id), { size: 20, color: CSS.goldHi, origin: 0.5, align: "center", wrap: 520 }));
+    m.add(text(this, 0, 4, `Custo: ${step.coins} moedas + ${step.wood} madeira
+Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
+    m.add(new Button(this, -135, 120, 240, 56, "CONSTRUIR", () => (m.close(), onYes()), { size: 20, style: "primary" }));
+    m.add(new Button(this, 135, 120, 240, 56, "VOLTAR", () => m.close(), { size: 20 }));
   },
 
   // Cabeçalho de seção dentro de uma lista
