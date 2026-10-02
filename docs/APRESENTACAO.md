@@ -50,7 +50,7 @@ A escolha do gênero *survivor-like* é a **decisão raiz** — todas as outras 
 | Combinação | Reação | Efeito de design | Papel no jogo |
 |---|---|---|---|
 | 🔥 + ❄️ | 💨 **VAPOR** | Nuvem escaldante: dano contínuo na área (5/tick) | Dano sustentado em aglomerado |
-| ❄️(congelado) + ⚡ | 💎 **CRISTAL** | O inimigo congelado estilhaça em 8 lascas (dano 20) | Burst em alvo preparado |
+| ❄️ + ⚡ | 💎 **CRISTAL** | O inimigo estilhaça e fere quem está perto (dano 20); congelado, o estilhaço é 1,8× mais forte e maior | Burst em alvo preparado |
 | 🔥 + ⚡ | ⚡ **SOBRECARGA** | Corrente que salta entre 6 inimigos (16/salto) | Recompensa de área em horda |
 
 ### Por que isso é bom design

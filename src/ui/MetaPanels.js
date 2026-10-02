@@ -454,7 +454,7 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
       ["ico_gem", "Nível", "Colete gemas verdes para subir de nível e escolher 1 de 3 cartas: novas armas, melhorias ou passivas."],
       ["ico_staff", "Elementos", "Cada arma aplica um elemento: Fogo, Gelo ou Raio. Dois elementos no mesmo inimigo disparam uma REAÇÃO."],
       ["ico_cloud", "Vapor (Fogo + Gelo)", "Nuvem escaldante que causa dano contínuo na área."],
-      ["ico_aura", "Cristal (Congelado + Raio)", "O inimigo congelado estilhaça e fere quem está perto."],
+      ["ico_aura", "Cristal (Gelo + Raio)", "O inimigo estilhaça e fere quem está perto. Congelado, o estilhaço é bem maior."],
       ["ico_bolt_gold", "Sobrecarga (Fogo + Raio)", "Corrente elétrica que salta entre vários inimigos."],
       ["ico_star", "Despertar", "Reações enchem a barra dourada. Ative para disparar tudo muito mais rápido por alguns segundos."],
       ["ico_chest", "Baús", "Encoste num baú para abri-lo: tesouro, jackpot dourado… ou uma armadilha (e o temido mímico)."],

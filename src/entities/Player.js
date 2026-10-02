@@ -133,6 +133,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   takeDamage(dmg) {
     const now = this.scene.time.now;
     if (now < this.invulnUntil) return false;
+    if (this.scene._god) return false; // debug (G): imune a TUDO (antes só ao encostão)
     this.hp = Math.max(0, this.hp - dmg * this.dmgTakenMult);
     this.invulnUntil = now + PLAYER.INVULN_MS;
     this._hitFx(now);
