@@ -22,6 +22,7 @@ import {
   BUILD,
   GARDEN,
   TREE,
+  BOSS_FIGHT,
 } from "../config.js";
 import { randomRareSeed } from "../systems/Garden.js";
 import { recipe, mealMods, bonusText } from "../systems/Kitchen.js";
@@ -32,6 +33,7 @@ import { GameFeel } from "../systems/GameFeel.js";
 import { ShrineSystem } from "../systems/ShrineSystem.js";
 import { SpawnDirector } from "../systems/SpawnDirector.js";
 import { RunEvents } from "../systems/RunEvents.js";
+import { Hazards } from "../systems/BossKit.js";
 import { ElementalSystem } from "../systems/ElementalSystem.js";
 import { WeaponFX } from "../systems/WeaponFX.js";
 import { UpgradeSystem } from "../systems/UpgradeSystem.js";
@@ -141,6 +143,8 @@ export class GameScene extends Phaser.Scene {
     // Sistemas
     this.elemental = new ElementalSystem(this);
     this.fx = new WeaponFX(this);
+    this.hazards = new Hazards(this); // fogo no chão dos golpes de chefe
+    this._bossBrains = new Set(); // cérebros de chefe vivos (luzes dos golpes)
     this.upgrades = new UpgradeSystem(this);
 
     // Personagem escolhido no menu (sprite, arma inicial, viés de stats)
@@ -265,6 +269,9 @@ export class GameScene extends Phaser.Scene {
         this._toast("Boss já está vivo");
       }
     });
+    // Minichefes na hora (testar os golpes especiais): M = Mula, C = Corpo-Seco
+    this.input.keyboard.on("keydown-M", () => this.runEvents._run({ type: "miniboss", kind: "alpha", msg: "A MULA SEM CABEÇA GALOPA!" }));
+    this.input.keyboard.on("keydown-C", () => this.runEvents._run({ type: "miniboss", kind: "elder", msg: "O CORPO-SECO SE LEVANTA!" }));
     this.input.keyboard.on("keydown-G", () => {
       // God mode toggle
       this._god = !this._god;
@@ -288,7 +295,7 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-T", () => {
       // Mostrar lista de teclas de debug
       this._toast(
-        "9=Awaken 8=+50XP 7=+20s 0=Boss G=God K=KillAll H=Heal",
+        "9=Awaken 8=+50XP 7=+20s 0=Boss M=Mula C=Corpo-Seco G=God K=KillAll H=Heal",
         4500,
       );
     });
@@ -571,6 +578,7 @@ export class GameScene extends Phaser.Scene {
     this.shrines.update(time, dt, this.player);
     this._updateSpores(time, dt);
     this.elemental.tick(time);
+    this.hazards.update(time);
     this.hud.update(time, dt);
     this.world.update(time, dt, this.player);
     this.lighting.update(time);
@@ -915,7 +923,19 @@ export class GameScene extends Phaser.Scene {
     return newly;
   }
 
+  // Golpe no PONTO FRACO de um chefe: takeDamage marca o alvo e a ampliação;
+  // o número de dano que sai logo em seguida (mesma posição) mostra o valor real.
+  _markAmp(target, amp) {
+    this._ampMark = { x: target.x, y: target.y, amp, t: this.time.now };
+  }
+
   _showDmg(x, y, dmg, element, crit = false) {
+    const m = this._ampMark;
+    if (m && element !== "heal" && m.t === this.time.now && Math.abs(m.x - x) < 1 && Math.abs(m.y - y) < 1) {
+      this._ampMark = null;
+      dmg = Math.round(dmg * m.amp);
+      crit = true; // dourado e grande: o jogador VÊ que achou o ponto fraco
+    }
     if (element !== "heal" && !this._showDmgNumbers) return;
     const n = this.dmgNumberPool.acquire();
     let color;
@@ -995,7 +1015,19 @@ export class GameScene extends Phaser.Scene {
     }
     this._spawnWood(x, y, WOOD.MINIBOSS);
     this._spawnSeeds(x, y, GARDEN.SEEDS.MINIBOSS);
+    if (e._brain?.log.flawless) this._flawlessBonus(x, y, BOSS_FIGHT.FLAWLESS_WOOD.MINIBOSS, e._brain.log);
     if (this.hud.boss === e) this.hud.clearBoss();
+  }
+
+  // "Desviou de tudo": nenhum golpe especial acertou o herói nesta luta
+  _flawlessBonus(x, y, wood, log) {
+    this.time.delayedCall(900, () => {
+      if (this.gameOver) return;
+      this._toast(`DESVIOU DE TUDO! +${wood} Madeira Ancestral`, 2600, "#c8f08c");
+      this.sound.play("sfx_levelup", { volume: 0.5, rate: 1.25 });
+      this._spawnWood(x, y, wood);
+    });
+    Analytics.track("boss_flawless", { specials: log.specials, dodges: log.dodges });
   }
 
   // Madeira Ancestral saltando em volta de (x, y)
@@ -1112,6 +1144,17 @@ export class GameScene extends Phaser.Scene {
     const bx = this.boss.x,
       by = this.boss.y,
       bs = this.boss.scaleX;
+    const log = this.boss.brain?.log;
+    if (log?.flawless) {
+      // o Mapinguari não deixa madeira no chão: entra direto, como a do chefe
+      this._woodThisRun += BOSS_FIGHT.FLAWLESS_WOOD.BOSS;
+      this.hud.addWood(BOSS_FIGHT.FLAWLESS_WOOD.BOSS);
+      this.time.delayedCall(1200, () => {
+        this._toast(`DESVIOU DE TUDO! +${BOSS_FIGHT.FLAWLESS_WOOD.BOSS} Madeira Ancestral`, 2600, "#c8f08c");
+        this.sound.play("sfx_levelup", { volume: 0.5, rate: 1.25 });
+      });
+      Analytics.track("boss_flawless", { specials: log.specials, dodges: log.dodges, boss: 1 });
+    }
     this.boss.deactivate?.();
     this.boss.setActive(false).setVisible(false);
     this.hud.clearBoss();

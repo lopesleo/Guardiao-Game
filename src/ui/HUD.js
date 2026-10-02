@@ -98,6 +98,8 @@ export class HUD {
     this.bossLabel = fix(text(scene, W / 2, 92, "", { size: 18, color: CSS.redHi, origin: [0.5, 0], stroke: true }), 2).setVisible(false);
     this.bossBar = new Bar(scene, W / 2 - bw / 2, 116, bw, 7 * P, PAL.red2, { depth: D + 1, segments: 2, ghost: PAL.cream });
     this.bossBar.setVisible(false);
+    // Nome do golpe especial da vez, logo abaixo da barra (ensina e dá sabor)
+    this.bossMoveT = fix(text(scene, W / 2, 142, "", { size: 16, color: hex(PAL.cream), origin: [0.5, 0], stroke: true, strokeW: 4 }), 2).setVisible(false);
 
     // ===== FAIXA DE ANÚNCIO (boss, fúria, eventos) =====
     this.banner = fix(scene.add.container(W / 2, this.H * 0.32), 10).setVisible(false);
@@ -256,13 +258,25 @@ export class HUD {
 
   // Onde termina a faixa reservada do HUD no topo (dicas e setas ficam abaixo)
   get topBand() {
-    return this.bossBar.visible ? 150 : 100;
+    return this.bossBar.visible ? 166 : 100;
   }
 
   clearBoss() {
     this.boss = null;
     this.bossBar.setVisible(false);
     this.bossLabel.setVisible(false);
+    this.bossMoveT.setVisible(false);
+  }
+
+  // Golpe especial anunciado: entra de cima, fica um instante e some
+  bossMove(name) {
+    if (!this.bossBar.visible) return;
+    const t = this.bossMoveT;
+    this.scene.tweens.killTweensOf(t);
+    t.setText(`« ${name} »`).setVisible(true).setAlpha(0);
+    t.y = 134;
+    this.scene.tweens.add({ targets: t, alpha: 1, y: 142, duration: 160, ease: "Cubic.easeOut" });
+    this.scene.tweens.add({ targets: t, alpha: 0, delay: 1700, duration: 400 });
   }
 
   // Slots de arma: moldura + ícone + pips de nível (★ dourado se evoluída)

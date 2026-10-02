@@ -292,6 +292,10 @@ export class Bar {
     this.g.setVisible(v);
     return this;
   }
+  // Lido pela HUD (topBand, nome do golpe do chefe); antes não existia e dava sempre undefined
+  get visible() {
+    return this.g.visible;
+  }
   _draw() {
     const { g, x, y, w, h } = this;
     const p = P;

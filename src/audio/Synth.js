@@ -187,6 +187,91 @@ const SFX = {
     const gate = Math.sin(t * 190) > 0.2 ? 1 : 0.1;
     return saw(osc(s, "ph", 110 + noise() * 20)) * gate * 0.6 * env(t, 0.01, 0.22) + noise() * 0.25 * env(t, 0.001, 0.08);
   }],
+
+  // ---- golpes dos chefes (cada golpe tem a sua "voz": dá para desviar de ouvido) ----
+  sfx_hooves: [0.62, (t, s) => {
+    // galope: 4 batidas de casco (ta-ra-ta-tá) + estalo de brasa
+    const hits = [0, 0.11, 0.3, 0.41];
+    let v = 0;
+    for (const h of hits) if (t >= h) v += Math.sin(TAU * (t - h) * (140 - (t - h) * 600)) * env(t - h, 0.001, 0.035);
+    return v * 0.9 + lp(s, noise(), 0.4) * env(t % 0.15, 0.001, 0.012) * 0.4;
+  }],
+  sfx_kick: [0.32, (t, s) => {
+    // coice: estalo seco + baque grave curto
+    const crack = noise() * Math.exp(-t * 120);
+    const boom = Math.sin(TAU * osc(s, "ph", 120 * Math.exp(-t * 14) + 45)) * env(t, 0.001, 0.08);
+    return crack * 0.8 + boom * 1.2;
+  }],
+  sfx_ember: [0.9, (t, s) => {
+    // labareda cuspindo brasas: sopro que sobe + estalos
+    if (s.pop == null) s.pop = 0;
+    if (rnd() < 0.004) s.pop = 0.7 + rnd() * 0.3;
+    s.pop *= 0.97;
+    const roar = lp(s, noise(), 0.06 + Math.min(1, t * 3) * 0.25) * env(t, 0.12, 0.35);
+    return roar + noise() * s.pop * 0.5;
+  }],
+  sfx_drain: [1.3, (t, s) => {
+    // a Seca: vento seco e grave que "suga" (frequência caindo) com chiado
+    const f = 220 * Math.exp(-t * 1.4) + 70;
+    const tone = (saw(osc(s, "ph", f)) * 0.4 + sq(osc(s, "ph2", f * 0.5), 0.3) * 0.25) * env(t, 0.15, 0.6);
+    return tone + lp(s, noise(), 0.12) * env(t, 0.3, 0.5) * 0.6;
+  }],
+  sfx_rumble: [1.0, (t, s) => {
+    // terra rugindo por baixo
+    const sub = Math.sin(TAU * osc(s, "ph", 38 + Math.sin(t * 9) * 4)) * 0.8;
+    return (sub + lp(s, noise(), 0.03) * 3) * env(t, 0.1, 0.45);
+  }],
+  sfx_erupt: [0.75, (t, s) => {
+    // a terra cospe: explosão grave + pedras caindo
+    const boom = Math.sin(TAU * osc(s, "ph", 90 * Math.exp(-t * 6) + 28)) * env(t, 0.002, 0.2);
+    if (s.pop == null) s.pop = 0;
+    if (t > 0.1 && rnd() < 0.003) s.pop = 0.6;
+    s.pop *= 0.96;
+    return boom * 1.3 + lp(s, noise(), 0.3) * env(t, 0.001, 0.07) + noise() * s.pop * 0.4;
+  }],
+  sfx_vines: [0.5, (t, s) => {
+    // cipós rasgando o chão: rangido serrilhado que sobe
+    const f = 160 + t * 500;
+    const rasp = saw(osc(s, "ph", f)) * (Math.sin(t * 260) > 0 ? 1 : 0.3);
+    return (rasp * 0.5 + lp(s, noise(), 0.5) * 0.5) * env(t, 0.01, 0.18);
+  }],
+  sfx_inhale: [1.8, (t, s) => {
+    // Bocarra puxando o ar: ruído filtrado que abre devagar e cresce
+    const e = Math.min(1, t / 1.5) * Math.min(1, (1.8 - t) / 0.12);
+    const x = lp(s, noise(), 0.02 + e * 0.25);
+    return (x * 1.6 + Math.sin(TAU * osc(s, "ph", 55 + t * 30)) * 0.25) * e;
+  }],
+  sfx_chomp: [0.4, (t, s) => {
+    // mordida: dentes batendo (estalo duplo) + baque molhado
+    const c1 = noise() * Math.exp(-t * 160),
+      c2 = t > 0.05 ? noise() * Math.exp(-(t - 0.05) * 160) * 0.8 : 0;
+    const body = Math.sin(TAU * osc(s, "ph", 70 * Math.exp(-t * 9) + 40)) * env(t, 0.002, 0.12);
+    return c1 + c2 + body * 1.2;
+  }],
+  sfx_scream: [1.1, (t, s) => {
+    // grito do Mapinguari: uivo que sobe e despenca, áspero (formantes)
+    const f = 180 + Math.sin(Math.min(1, t / 1.1) * Math.PI) * 260 + Math.sin(t * 38) * 14;
+    const x = saw(osc(s, "ph", f)) * 0.6 + saw(osc(s, "ph2", f * 1.49)) * 0.35 + sq(osc(s, "ph3", f * 0.5), 0.3) * 0.3;
+    return Math.tanh((x + lp(s, noise(), 0.3) * 0.5) * 2.2) * env(t, 0.05, 0.45);
+  }],
+  sfx_beam: [1.2, (t, s) => {
+    // olhar: zumbido elétrico grave e tremido
+    const f = 70 + Math.sin(t * 13) * 6;
+    const hum = saw(osc(s, "ph", f)) * 0.5 + sq(osc(s, "ph2", f * 3.01), 0.5) * 0.2;
+    const sizzle = lp(s, noise(), 0.6) * 0.25;
+    return (hum + sizzle) * env(t, 0.08, 0.6) * (0.75 + 0.25 * Math.sin(t * 90));
+  }],
+  sfx_dodge: [0.22, (t, s) => {
+    // desvio: assobio curto que sobe + brilho
+    const f = 900 + t * 3600;
+    return (Math.sin(TAU * osc(s, "ph", f)) * 0.4 + sq(osc(s, "ph2", f * 2), 0.25) * 0.1) * env(t, 0.005, 0.07) + lp(s, noise(), 0.5) * env(t, 0.002, 0.04) * 0.3;
+  }],
+  sfx_weak: [0.5, (t, s) => {
+    // ponto fraco aberto: "plim" duplo dourado (chama o ataque)
+    const n = t < 0.1 ? 88 : 93;
+    const tt = t < 0.1 ? t : t - 0.1;
+    return (sq(osc(s, "ph", mtof(n)), 0.25) * 0.5 + tri(osc(s, "ph2", mtof(n + 12))) * 0.3) * env(tt, 0.002, t < 0.1 ? 0.05 : 0.18);
+  }],
 };
 
 // ---------------------------------------------------------------------------

@@ -79,6 +79,7 @@ público brasileiro, com potencial internacional.
 | **Tema folclore: decisão, papéis e cuidados** | `docs/TEMA_FOLCLORE.md` |
 | Meta-progressão atual (Perigo, Bênçãos, conquistas) | `docs/META_LOOP.md` |
 | Armas, evoluções e próximos combos | `docs/ARMAS_E_COMBOS.md` |
+| **Chefes: golpes especiais e regras de justiça** | `docs/CHEFES.md` |
 
 ## Rodar e testar
 
