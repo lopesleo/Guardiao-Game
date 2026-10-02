@@ -361,7 +361,7 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
     if (tab === "missoes" && !missions) tab = "conquistas"; // aba ainda não liberada
     const m = new Modal(this, {
       title: "MURAL",
-      subtitle: tab === "missoes" ? "Três missões por dia · o prêmio se pega aqui" : tab === "lendas" ? `Lendas da mata encontradas: ${seen} de ${LEGENDS.length}` : `Conquistas: ${done.length} de ${ACHIEVEMENTS.length}`,
+      subtitle: tab === "missoes" ? "Três missões por dia · o prêmio se pega aqui" : tab === "lendas" ? `Lendas da mata encontradas: ${seen} de ${LEGENDS.length}` : `Conquistas: ${ACHIEVEMENTS.filter((a) => done.includes(a.id)).length} de ${ACHIEVEMENTS.length}`,
       w: 860,
       h: 640,
     });
