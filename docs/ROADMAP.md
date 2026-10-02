@@ -174,6 +174,16 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Evoluções: **Revoada** (+ Orbe), **Tempestade de Granizo** (+ Raio, faz Cristal sozinha) e **Redemoinho de
   Brasa** (+ Sopro, faz Sobrecarga sozinho); Orbe e Sopro viraram parceiras. Conquistas **Coração de Geada**
   (só gelo) e **Filho do Trovão** (só raio). Próximas fases: Laços, Catalisadores, mais Tratos
+- ✅ **Efeitos das armas** (`src/systems/WeaponFX.js`): emissores de partícula reaproveitados por material
+  (faísca, brasa, geada, centelha, luz de vaga-lume, lascas, folhas, fumaça, jato de fogo) e pool de clarões,
+  anéis e fantasmas — nada é criado/destruído por golpe. Cada golpe tem saída (clarão na ponta do cajado/mão),
+  rastro (cauda de cometa, fantasmas do bumerangue e dos orbes), impacto (quadro branco + estouro "POW" + riscos
+  na direção do golpe) e morte na língua do elemento (brasa e queimado, lascas e geada, centelhas). Raio em pixel
+  com galhos e piscada; Aura com anel contínuo, arcos que giram e cristais em órbita (o anel antigo era uma dúzia
+  de pontos que sumia na grama); Sopro vira jato contínuo; Redemoinho redesenhado em escala inteira 3×. Inimigo
+  "achata" no golpe e segura durante o hit-stop; tiques de status não piscam mais de branco. Emissivos ficam
+  acima do mapa de luz (brilham à noite). Com a iluminação desligada, metade das partículas. 56–60 FPS no teste
+  de carga. 👤 sentir no aparelho (S23 e um fraco)
 - ✅ **Tratos da Mata**: às vezes uma carta é um trato — poder grande com custo visível (ex.:
   +37% dano / −23% vida máxima). Do nível 3, até 3 por partida, cada um uma vez (`PACTS`)
 - ✅ **Santuários da Floresta** no mapa (`ShrineSystem`, `SHRINE`): **Carga** (fique perto 3 s:
