@@ -261,6 +261,102 @@ export const WEAPONS = {
     halfAngle: 0.85,
     trail: { radius: 40, dmgPerTick: 4, tickMs: 300, ticks: 4 },
   },
+  // ===== Leva 2: 3 por elemento (ver docs/ARMAS_E_COMBOS.md) =====
+  // Vaga-lumes: enxame TELEGUIADO — cada um persegue um inimigo diferente.
+  // DPS total ~ Raio Concentrado, mas espalhado (bom contra bando, fraco no chefe).
+  FIREFLY: {
+    name: "Vaga-lumes",
+    element: ELEMENT.BOLT,
+    baseDmg: 4,
+    cooldown: 1500,
+    range: 300, // busca de alvo
+    count: 3,
+    speed: 300,
+    turn: 7, // rad/s de curva
+    lifeMs: 2600,
+    hitRadius: 18,
+  },
+  // Granizo: pedras caem do céu em inimigos AO ACASO na tela (dano em área + gelo).
+  // Quem já estava resfriado CONGELA — combina com Aura/Orbe e prepara o Cristal.
+  HAIL: {
+    name: "Granizo",
+    element: ELEMENT.ICE,
+    baseDmg: 6,
+    cooldown: 2000,
+    range: 320,
+    count: 2,
+    radius: 44,
+    fallMs: 450,
+    freezeMs: 900,
+    freezeImmuneMs: 2600,
+  },
+  // Redemoinho (do Saci): funil que nasce no inimigo mais próximo, anda atrás do
+  // bando e PUXA quem está perto. Dano por tique em área. Controle de multidão.
+  WHIRL: {
+    name: "Redemoinho",
+    element: ELEMENT.BOLT,
+    baseDmg: 3, // por tique (tique lento: muitos inimigos piscando a 3×/s viravam ruído)
+    cooldown: 3800,
+    range: 260,
+    count: 1,
+    radius: 54,
+    durationMs: 3200,
+    tickMs: 520,
+    speed: 80,
+    pull: 45, // px/s puxando para o centro
+  },
+  // Revoada (Vaga-lumes Lv5 + Orbe): mais vaga-lumes; cada um que acerta se DIVIDE
+  // em 2 filhotes (uma vez) que caçam outros alvos.
+  SWARM: {
+    name: "Revoada",
+    element: ELEMENT.BOLT,
+    evolvesFrom: "FIREFLY",
+    partner: "ORB",
+    baseDmg: 6,
+    cooldown: 1250,
+    range: 340,
+    count: 5,
+    speed: 340,
+    turn: 8,
+    lifeMs: 3000,
+    hitRadius: 20,
+    split: { n: 2, dmgMult: 0.6 },
+  },
+  // Tempestade de Granizo (Granizo Lv5 + Raio): mais pedras e maiores, que congelam
+  // na hora; um congelado da área leva um raio do céu → CRISTAL dentro da própria arma.
+  HAILSTORM: {
+    name: "Tempestade de Granizo",
+    element: ELEMENT.ICE,
+    evolvesFrom: "HAIL",
+    partner: "CHAIN",
+    baseDmg: 9,
+    cooldown: 1600,
+    range: 360,
+    count: 4,
+    radius: 54,
+    fallMs: 380,
+    freezeMs: 1100,
+    freezeImmuneMs: 2400,
+    freezeOnHit: true, // a pedra da evolução congela direto (sem precisar resfriar antes)
+    strike: { max: 1, dmg: 10 }, // raio por pedra (só em congelado) → Cristal
+  },
+  // Redemoinho de Brasa (Redemoinho Lv5 + Sopro): funil maior que alterna FOGO e
+  // RAIO a cada tique → dispara SOBRECARGA sozinho.
+  FIRE_WHIRL: {
+    name: "Redemoinho de Brasa",
+    element: ELEMENT.BOLT,
+    evolvesFrom: "WHIRL",
+    partner: "FLAME",
+    baseDmg: 4,
+    cooldown: 3200,
+    range: 300,
+    count: 1,
+    radius: 70,
+    durationMs: 4400,
+    tickMs: 420,
+    speed: 95,
+    pull: 70,
+  },
 };
 
 export const MAX_WEAPON_LEVEL = 5;
@@ -644,7 +740,7 @@ export const BUILD = {
   FREE_FINISH_MIN: 2, // menor que a obra mais curta (5 min), senão ela vira instantânea
   AD_SPEEDUP_MIN: 30, // anúncio opcional (desligado junto com ADS.ENABLED)
   // O que cada nível libera
-  FORGE_WEAPON_LEVEL: { BOOMER: 1, CHAIN: 2, ORB: 3, FLAME: 4 }, // Forja nv mínimo
+  FORGE_WEAPON_LEVEL: { BOOMER: 1, CHAIN: 2, FIREFLY: 2, ORB: 3, HAIL: 3, FLAME: 4, WHIRL: 4 }, // Forja nv mínimo
   // Vagas de arma na partida por nível da Forja (como o Megabonk: começa com 2 e chega a 4).
   // O herói já nasce com 1, então o nível 1 dá 1 escolha; cada vaga nova vem de obra.
   FORGE_WEAPON_SLOTS: [0, 2, 2, 3, 4],
@@ -907,8 +1003,8 @@ export const META = {
   COIN_VALUE: 1,
   COIN_BOSS_WIN: 80,
   COIN_BOSS_LOSS: 10,
-  WEAPON_UNLOCK_COST: { BOOMER: 30, CHAIN: 60, ORB: 140, FLAME: 180 },
-  WEAPON_UNLOCK_ORDER: ["BOOMER", "CHAIN", "ORB", "FLAME"], // Aura já vem liberada
+  WEAPON_UNLOCK_COST: { BOOMER: 30, CHAIN: 60, FIREFLY: 90, ORB: 140, HAIL: 150, FLAME: 180, WHIRL: 220 },
+  WEAPON_UNLOCK_ORDER: ["BOOMER", "CHAIN", "FIREFLY", "ORB", "HAIL", "FLAME", "WHIRL"], // Aura já vem liberada
   ABILITY_UNLOCK_COST: { DASH: 50, AWAKEN: 80 },
 };
 
@@ -1012,9 +1108,11 @@ export const ANCESTRAL = {
 // prog(c) (opcional) retorna [atual, meta] pra mostrar progresso no menu.
 // Adaptações sobre o spec original (impossíveis com as regras atuais):
 //   · speedrun "< 6:00" → "vencer em < 8:00" (boss só nasce aos 7:00)
-//   · mono-elemento gelo/raio → Piromante (só fogo) + Purista (só Cajado),
-//     porque o Cajado (fogo) é a arma inicial forçada de toda run.
+//   · mono-elemento: começou só com Piromante (só fogo) + Purista (só Cajado); com
+//     3 armas por elemento e heróis que nascem com gelo (Iara) e raio (Saci),
+//     mono-gelo e mono-raio viraram possíveis (leva 2 de armas).
 const wonAt = (idx) => (c) => (c.winsByDifficulty[String(idx)] || 0) > 0;
+const monoWin = (el) => (c) => !!c.run && c.run.won && c.run.weapons.length >= 2 && c.run.weapons.every((w) => w.element === el);
 // baseKey cobre armas EVOLUÍDAS: a evolução substitui a âncora Lv5, então
 // "Cajado no Lv5" também vale se a run terminar com Tempestade de Vapor.
 const weaponMax = (key) => (c) =>
@@ -1052,7 +1150,9 @@ export const ACHIEVEMENTS = [
   { id: "fast_win", name: "Execução Rápida", desc: "Vença em menos de 8:00", check: (c) => !!c.run && c.run.won && c.run.timeMs < 480000 },
   { id: "pacifist_hp", name: "Osso Duro", desc: "Vença no Perigo Veterano+ sem passivo de HP", check: (c) => !!c.run && c.run.won && c.run.difficultyId >= 2 && !c.run.tookHpPassive },
   { id: "solo_staff", name: "Purista", desc: "Vença usando apenas o Cajado", check: (c) => !!c.run && c.run.won && c.run.weapons.length === 1 && c.run.weapons[0].key === "STAFF" },
-  { id: "mono_fire", name: "Piromante", desc: "Vença com 2+ armas, todas de fogo", check: (c) => !!c.run && c.run.won && c.run.weapons.length >= 2 && c.run.weapons.every((w) => w.element === ELEMENT.FIRE) },
+  { id: "mono_fire", name: "Piromante", desc: "Vença com 2+ armas, todas de fogo", check: monoWin(ELEMENT.FIRE) },
+  { id: "mono_ice", name: "Coração de Geada", desc: "Vença com 2+ armas, todas de gelo", check: monoWin(ELEMENT.ICE) },
+  { id: "mono_bolt", name: "Filho do Trovão", desc: "Vença com 2+ armas, todas de raio", check: monoWin(ELEMENT.BOLT) },
 ];
 
 export const COLORS = {

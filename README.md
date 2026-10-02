@@ -12,8 +12,10 @@ Roda 100% offline.
 
 ## Conteúdo
 
-- **6 armas** (Cajado, Aura Gélida, Bumerangue, Raio, Orbe Gélido, Sopro
-  Flamejante) e **6 evoluções** (arma nível 5 + arma parceira)
+- **9 armas**, 3 por elemento (fogo: Cajado, Bumerangue, Sopro Flamejante;
+  gelo: Aura Gélida, Orbe Gélido, Granizo; raio: Raio Concentrado, Vaga-lumes,
+  Redemoinho) e **9 evoluções** (arma nível 5 + arma parceira) — ver
+  `docs/ARMAS_E_COMBOS.md`
 - **4 personagens** jogáveis, cada um com arma inicial e estilo próprios
 - **Roteiro de partida**: enxames, cercos, mini-chefes (Lobo Alfa, Ogro Ancião)
   e o chefe final, o Ancião, aos 7:00
