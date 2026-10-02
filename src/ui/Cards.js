@@ -16,7 +16,7 @@ const ELEMENT_NAME = { fire: "FOGO", ice: "GELO", bolt: "RAIO" };
 export function createCard(scene, x, y, w, h, card, onClick, index, showKey = true) {
   const t = TYPE[card.type] || TYPE.passive;
   const c = scene.add.container(Math.round(x), Math.round(y));
-  const inner = scene.add.container(0, 0);
+  let inner = scene.add.container(0, 0);
   c.add(inner);
 
   // Moldura
@@ -36,6 +36,12 @@ export function createCard(scene, x, y, w, h, card, onClick, index, showKey = tr
   label.setY(-h / 2 + 5 * P + rh / 2);
   inner.add(label);
 
+  // Corpo (medalhão → descrição) num container próprio: no fim, centralizado
+  // entre a fita e o rodapé da carta
+  const body = scene.add.container(0, 0);
+  const outer = inner;
+  inner = body; // o que vem abaixo entra no corpo
+  const ribBottom = -h / 2 + 5 * P + rh;
   // Medalhão com ícone
   const my = -h / 2 + 42 * P;
   const med = scene.add.graphics();
@@ -84,6 +90,14 @@ export function createCard(scene, x, y, w, h, card, onClick, index, showKey = tr
     shadow: false,
   });
   inner.add(descT);
+  // Centraliza o corpo no espaço livre (acima dos pips/custo/atalho)
+  inner = outer;
+  inner.add(body);
+  const bodyTop = my - 44,
+    bodyBottom = descT.y + descT.height;
+  const footer = h / 2 - (card.cost ? 70 : 24 * P);
+  const free = footer - ribBottom - (bodyBottom - bodyTop);
+  if (free > 0) body.y = ribBottom + free * 0.42 - bodyTop;
 
   // Custo do trato, em vermelho, no pé da carta. Fica sempre ABAIXO da descrição: se faltar
   // espaço (descrição longa / fonte ampliada), a descrição encolhe em vez de sobrepor.
@@ -145,6 +159,6 @@ export function createCard(scene, x, y, w, h, card, onClick, index, showKey = tr
     haptic(18);
     onClick(card, c);
   });
-  c.inner = inner;
+  c.inner = outer;
   return c;
 }

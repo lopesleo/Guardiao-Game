@@ -127,7 +127,8 @@ export const CampTree = {
       const a = Phaser.Math.DegToRad(-90 + i * STEP);
       const [top, ...rest] = s.label.split(" ");
       const t = text(this, Math.cos(a) * R * 0.66, Math.sin(a) * R * 0.66, `${top}\n${rest.join(" ")}`, { size: 16, color: CSS.ink, origin: 0.5, align: "center", shadow: false });
-      t.setRotation(a + Math.PI / 2);
+      // Tangente ao aro; metade de baixo virada 180° (sem texto de cabeça para baixo)
+      t.setRotation(a + Math.PI / 2 + (Math.sin(a) > 0.01 ? Math.PI : 0));
       wheel.add(t);
     });
     // Luzinhas na borda (piscam alternadas)

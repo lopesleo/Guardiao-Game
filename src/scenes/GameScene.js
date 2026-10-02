@@ -78,6 +78,8 @@ export class GameScene extends Phaser.Scene {
 
   create() {
     fitCamera(this);
+    this._hintQueue = []; // a cena é reaproveitada em "Jogar de novo"
+    this._hintOn = null;
     const WS = GAME.WORLD_RADIUS * 2;
     // Limite físico na face de dentro da muralha (ver ARENA em config.js)
     this.physics.world.setBounds(ARENA.minX, ARENA.minY, ARENA.maxX - ARENA.minX, ARENA.maxY - ARENA.minY);
@@ -475,6 +477,18 @@ export class GameScene extends Phaser.Scene {
     if (seen.includes(id)) return;
     seen.push(id);
     this.meta._save();
+    // Uma dica por vez: fila que anda quando a da tela SOME (o hit-stop desacelera
+    // os tweens, então um prazo fixo deixava duas empilhadas)
+    (this._hintQueue ||= []).push([msg, ms]);
+    if (!this._hintOn?.active) this._nextHint();
+  }
+
+  _nextHint() {
+    const next = this._hintQueue?.shift();
+    if (next) this._hintOn = this._showHint(...next);
+  }
+
+  _showHint(msg, ms) {
     const W = vw(this);
     const c = this.add.container(W / 2, 150).setScrollFactor(0).setDepth(60500);
     const t = text(this, 0, 0, msg, { size: 22, origin: 0.5, align: "center", wrap: Math.min(700, W - 80) });
@@ -483,9 +497,22 @@ export class GameScene extends Phaser.Scene {
     const g = this.add.graphics();
     drawFrame(g, -w / 2, -h / 2, w, h, "gold", { alpha: 0.92 });
     c.add([g, t]);
-    c.setAlpha(0).setY(130);
-    this.tweens.add({ targets: c, alpha: 1, y: 150, duration: 260, ease: "Back.easeOut" });
-    this.tweens.add({ targets: c, alpha: 0, delay: ms, duration: 400, onComplete: () => c.destroy() });
+    // Sempre abaixo da faixa onde a barra de chefe pode surgir (se ela aparecer
+    // depois da dica, não a cobre)
+    const y = 164 + h / 2;
+    c.setAlpha(0).setY(y - 20);
+    this.tweens.add({ targets: c, alpha: 1, y, duration: 260, ease: "Back.easeOut" });
+    this.tweens.add({
+      targets: c,
+      alpha: 0,
+      delay: ms,
+      duration: 400,
+      onComplete: () => {
+        c.destroy();
+        this._nextHint();
+      },
+    });
+    return c;
   }
 
   _showOnboarding() {

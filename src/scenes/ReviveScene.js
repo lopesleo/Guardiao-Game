@@ -3,7 +3,7 @@
 // sem resposta, a partida termina normalmente. Só aparece se AdService.enabled.
 import { ADS } from "../config.js";
 import { CSS } from "../art/Palette.js";
-import { text, dim, Button, vw, vh, fitCamera, haptic } from "../ui/Theme.js";
+import { text, dim, Button, vw, vh, fitCamera, haptic, drawFrame } from "../ui/Theme.js";
 import { AdService } from "../systems/AdService.js";
 import { Analytics } from "../systems/Analytics.js";
 
@@ -23,6 +23,8 @@ export class ReviveScene extends Phaser.Scene {
     Analytics.track("ad_offer_show", { placement: "revive" });
 
     const cy = H / 2 - 40;
+    const pg = this.add.graphics();
+    drawFrame(pg, W / 2 - 300, cy - 206, 600, 486, "danger", { alpha: 0.96 });
     text(this, W / 2, cy - 150, "VOCÊ CAIU…", { size: 64, color: CSS.redHi, origin: 0.5, stroke: true, strokeW: 8 });
     text(this, W / 2, cy - 92, "A floresta ainda precisa de você.", { size: 22, color: CSS.muted, origin: 0.5 });
 

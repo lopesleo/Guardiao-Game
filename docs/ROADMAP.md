@@ -184,6 +184,13 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   "achata" no golpe e segura durante o hit-stop; tiques de status não piscam mais de branco. Emissivos ficam
   acima do mapa de luz (brilham à noite). Com a iluminação desligada, metade das partículas. 56–60 FPS no teste
   de carga. 👤 sentir no aparelho (S23 e um fraco)
+- ✅ **Revisão das telas (HUD e painéis)**: as listas roláveis vazavam por cima do título e da borda de TODOS
+  os painéis (no Phaser 4/WebGL `setMask` não recorta) — agora a lista é desenhada numa RenderTexture do tamanho
+  da janela; painéis com lista curta encolhem até o conteúdo (Obras, Celeiro, Perigo, Créditos); roleta da
+  Samaúma sem rótulo de cabeça para baixo; Mural não abre aba inexistente. Na partida: nome do chefe abaixo do
+  relógio (encavalava), dicas sempre abaixo da barra do chefe e em fila (uma por vez), seta do santuário fora
+  da faixa do HUD, título do nível numa placa própria, conteúdo das cartas centralizado, "Você caiu" com painel.
+  Conferido em 1911×1002 e 844×390 (celular)
 - ✅ **Tratos da Mata**: às vezes uma carta é um trato — poder grande com custo visível (ex.:
   +37% dano / −23% vida máxima). Do nível 3, até 3 por partida, cada um uma vez (`PACTS`)
 - ✅ **Santuários da Floresta** no mapa (`ShrineSystem`, `SHRINE`): **Carga** (fique perto 3 s:

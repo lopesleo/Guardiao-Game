@@ -3,7 +3,7 @@
 // "Mais uma carta" (anúncio premiado, 1× por partida) revela uma 4ª opção.
 // Banir: 1 grátis por partida; acabou, o botão oferece +1 por anúncio (1× por partida).
 import { createCard } from "../ui/Cards.js";
-import { text, dim, Button, vw, vh, fitCamera } from "../ui/Theme.js";
+import { text, dim, Button, vw, vh, fitCamera, drawFrame } from "../ui/Theme.js";
 import { CSS } from "../art/Palette.js";
 import { AdService } from "../systems/AdService.js";
 import { Analytics } from "../systems/Analytics.js";
@@ -30,10 +30,15 @@ export class LevelUpScene extends Phaser.Scene {
     const bg = dim(this, 0.0);
     this.tweens.add({ targets: bg, fillAlpha: 0.72, duration: 200 });
 
+    // Placa do título: fundo próprio sobre o HUD congelado (relógio/chefe atrás)
+    const plaque = this.add.graphics();
+    drawFrame(plaque, W / 2 - 250, 20, 500, 104, "gold", { alpha: 0.97 });
+    plaque.setAlpha(0);
+    this.tweens.add({ targets: plaque, alpha: 1, duration: 160 });
     // Título com raios de luz girando atrás
     const rays = this.add.image(W / 2, 64, "fx_glow").setScale(6, 2).setTint(0xf2c14e).setAlpha(0.35).setBlendMode(Phaser.BlendModes.ADD);
     this.tweens.add({ targets: rays, alpha: 0.15, duration: 900, yoyo: true, repeat: -1 });
-    const title = text(this, W / 2, 58, `NÍVEL ${this.player.level}!`, { size: 44, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 7 });
+    const title = text(this, W / 2, 60, `NÍVEL ${this.player.level}!`, { size: 44, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 7 });
     title.setScale(0.5);
     this.tweens.add({ targets: title, scale: 1, duration: 260, ease: "Back.easeOut" });
     text(this, W / 2, 102, "Escolha uma bênção da floresta", { size: 18, color: CSS.muted, origin: 0.5 });

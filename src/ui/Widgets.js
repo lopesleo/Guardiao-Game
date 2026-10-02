@@ -32,6 +32,9 @@ export class Modal {
       const close = new Button(scene, this.w / 2 - 34, -this.h / 2 + 34, 44, 44, null, () => this.close(), { icon: "ico_close", style: "dark" });
       this.root.add(close);
     }
+    this._frame = g;
+    this._style = o.style ?? "gold";
+    this._minH = o.minH ?? 240;
     // Área de conteúdo (coordenadas locais ao root)
     this.top = -this.h / 2 + (o.subtitle ? 88 : 70);
     this.body = scene.add.container(0, 0);
@@ -49,6 +52,23 @@ export class Modal {
     this.body.add(obj);
     fixed(obj);
     return obj;
+  }
+
+  // Encolhe a janela até o fim da lista (só encolhe; nunca passa da altura pedida).
+  // Tudo que está no painel é ancorado no TOPO, então desce junto com a borda.
+  fitToList() {
+    const L = this.list;
+    if (!L || L.contentH >= L.h) return;
+    const spare = L.h - Math.max(L.contentH, 0) - 8;
+    const newH = Math.max(this._minH, Math.round(this.h - spare));
+    if (newH >= this.h - 4) return;
+    const delta = (this.h - newH) / 2;
+    this.h = newH;
+    this.top += delta;
+    this._frame.clear();
+    drawFrame(this._frame, -this.w / 2, -this.h / 2, this.w, this.h, this._style);
+    for (const c of this.root.list) if (c !== this._frame) c.y += delta;
+    L.setRect(L.x, L.y + delta, L.w, L.h - spare);
   }
   close() {
     if (this._closed) return;
@@ -94,13 +114,13 @@ export class ScrollList {
     this.rows = [];
     this.scroll = 0;
     this.contentH = 0;
-    // Tudo fixo na tela (scrollFactor 0): funciona também em cenas com câmera
-    // que segue o jogador (a Clareira)
-    this.content = scene.add.container(x, y).setDepth(depth).setScrollFactor(0);
-    const maskG = scene.make.graphics({ add: false }).setScrollFactor(0);
-    maskG.fillStyle(0xffffff).fillRect(x, y, w, h);
-    this.content.setMask(maskG.createGeometryMask());
-    this._maskG = maskG;
+    // RECORTE: o conteúdo fica FORA da tela e é desenhado numa RenderTexture do
+    // tamanho exato da janela (ela corta sozinha o que passa da borda).
+    // Phaser 4 + WebGL: setMask NÃO recorta (só avisa no console) — as linhas
+    // vazavam por cima do título e pela base de TODOS os painéis com lista.
+    this.content = scene.make.container({ x: 0, y: 0 }, false);
+    this.rt = scene.add.renderTexture(x, y, w, h).setOrigin(0).setDepth(depth).setScrollFactor(0);
+    this._dirty = true;
     // Barra de rolagem
     this.bar = scene.add.graphics().setDepth(depth + 1).setScrollFactor(0);
 
@@ -147,6 +167,7 @@ export class ScrollList {
         this.setScroll(this.scroll - this._fling);
         this._fling *= 0.92;
       }
+      this._redraw();
     };
     scene.events.on("update", this._tick);
   }
@@ -165,11 +186,33 @@ export class ScrollList {
     return row;
   }
 
+  // Move/redimensiona a janela da lista (Modal.fitToList)
+  setRect(x, y, w, h) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = Math.max(1, Math.round(h));
+    this.rt.setPosition(x, y);
+    this.rt.resize(w, this.h);
+    this.zone.setPosition(x, y).setSize(w, this.h);
+    this.zone.input?.hitArea?.setSize(w, this.h);
+    this.setScroll(this.scroll);
+  }
+
   setScroll(v) {
     const max = Math.max(0, this.contentH - this.h);
     this.scroll = Phaser.Math.Clamp(v, 0, max);
-    this.content.y = Math.round(this.y - this.scroll);
     this._drawBar();
+    this._redraw();
+  }
+
+  // Desenha a "janela" da lista na RenderTexture (todo quadro: hover e linhas
+  // animadas também aparecem; listas são curtas, custo baixo)
+  _redraw() {
+    if (!this.rt?.active) return;
+    this.rt.clear();
+    this.rt.draw(this.content, 0, -Math.round(this.scroll));
+    this.rt.render(); // Phaser 4: no modo padrão a RT só exibe; render() executa os desenhos
   }
 
   _rowAt(p) {
@@ -205,9 +248,9 @@ export class ScrollList {
   destroy() {
     this.scene.events.off("update", this._tick);
     this.content.destroy();
+    this.rt.destroy();
     this.bar.destroy();
     this.zone.destroy();
-    this._maskG.destroy();
   }
 }
 

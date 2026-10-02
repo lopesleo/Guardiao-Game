@@ -214,13 +214,14 @@ export class ShrineSystem {
     const W = vw(s),
       H = vh(s);
     const m = 60;
+    const top = (s.hud?.topBand ?? 100) + 40; // em cima, abaixo do HUD (relógio, chefe)
     const ang = Math.atan2(best.y - player.y, best.x - player.x);
     // Projeta a direção até o retângulo da tela (com margem)
     const cx = W / 2,
       cy = H / 2;
     const dx = Math.cos(ang),
       dy = Math.sin(ang);
-    const t = Math.min((cx - m) / Math.abs(dx || 1e-6), (cy - m) / Math.abs(dy || 1e-6));
+    const t = Math.min((cx - m) / Math.abs(dx || 1e-6), (dy < 0 ? cy - top : cy - m) / Math.abs(dy || 1e-6));
     const ax = cx + dx * t,
       ay = cy + dy * t;
     const c = best.def.color;
