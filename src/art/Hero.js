@@ -1,6 +1,6 @@
 // Os quatro guardiões são LENDAS DA MATA (ver docs/TEMA_FOLCLORE.md):
 //   guardian → Curupira (cabelo de fogo, pés virados para trás, cajado)
-//   huntress → Caipora (cabeleira de folhas, protetora dos bichos, bumerangue)
+//   huntress → Caipora (cabeleira de folhas, protetora dos bichos, vara encantada)
 //   druid    → Iara (senhora das águas, cabelo longo, vestido de escamas)
 //   shaman   → Saci (uma perna só, gorro vermelho, redemoinho elétrico)
 // Retratos respeitosos: heróis espertos e poderosos, sem caricatura; Saci sem
@@ -122,7 +122,7 @@ function drawCurupira(pose, flick) {
 
 // ---------------------------------------------------------------------------
 // CAIPORA — protetora dos bichos: cabeleira longa de folhas e cipós, túnica de
-// fibra trançada, colar de urucum, bumerangue de madeira em brasa
+// fibra trançada, colar de urucum, vara encantada (forquilha com folhas, brasa do fumo)
 // ---------------------------------------------------------------------------
 function drawCaipora(pose) {
   const p = new Pix(HERO_W, HERO_H);
@@ -142,21 +142,16 @@ function drawCaipora(pose) {
     for (let x = 8; x <= 15; x++) if (p.get(x, y) && (x + y) % 4 === 0) p.set(x, y, PAL.n2);
   // Colar de urucum
   for (let x = 10; x <= 14; x++) p.set(x, 12 + b, x % 2 ? PAL.red2 : PAL.red1);
-  // Bumerangue em brasa na mão
+  // Vara encantada na mão: forquilha com folhas no alto, brasa do fumo no pé
   for (let x = 16; x <= 18; x++) p.set(x, 14 + b, SKIN_DARK.base);
-  const bx = 19,
-    by = 11 + b;
-  const boom = [
-    [0, 0],
-    [1, 0],
-    [2, 1],
-    [2, 2],
-    [3, 3],
-    [0, 1],
-  ];
-  for (const [dx, dy] of boom) p.set(bx + dx, by + dy, PAL.n3);
-  p.set(bx + 2, by + 1, PAL.org2);
-  p.set(bx + 3, by + 3, PAL.org3);
+  for (let i = 0; i <= 11; i++) p.set(19 + Math.round(i * 0.18), 20 + b - i, i % 3 ? PAL.n3 : PAL.n4);
+  p.set(20, 8 + b, PAL.n2); // forquilha
+  p.set(22, 8 + b, PAL.n2);
+  p.set(21, 7 + b, PAL.g5);
+  p.set(19, 7 + b, PAL.g6); // folhas
+  p.set(22, 7 + b, PAL.g5);
+  p.set(19, 21 + b, PAL.org2); // brasa
+  p.set(19, 22 + b, PAL.yel3);
   // Cabeça
   head(p, 11.5, 8.5 + b, 4, 3.8, SKIN_DARK);
   eye(p, 13, 8 + b);

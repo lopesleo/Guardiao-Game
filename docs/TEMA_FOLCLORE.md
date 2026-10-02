@@ -25,12 +25,49 @@ mata). Isso evita demonizar mitos de origem indígena e africana.
 | Personagem inicial (fogo) | O Guardião | **Curupira** — cabelo de fogo, pés virados |
 | Personagem (gelo) | Druida da Geada | **Iara** — senhora das águas |
 | Personagem (raio) | Xamã do Trovão | **Saci** — uma perna só, gorro vermelho, redemoinho; esperto e poderoso, nunca piada |
-| Personagem (bumerangue) | Caçadora | **Caipora** — protetora dos animais |
+| Personagem (vara encantada) | Caçadora | **Caipora** — protetora dos animais |
 | Chefe final | O Ancião | **Mapinguari corrompido** → ao vencer, a Podridão sai dele e ele volta a proteger a mata |
 | Minichefes | Lobo Alfa, Ogro Ancião | **Mula sem Cabeça** (investidas em chamas) e **Corpo-Seco** (este sim da Podridão) |
 | Reação Sobrecarga | Sobrecarga | pode ganhar o apelido de **Fúria do Boitatá** |
 | Guia da Clareira | Anciã da Fogueira | **continua a Anciã** — uma pessoa da mata que conhece as lendas (não colocamos falas de tutorial na boca de figuras sagradas) |
 | Inimigos comuns | lobos, corvos, goblins… | bichos e seres **tomados pela Podridão** (mesma arte, nomes/descrições revistos) |
+
+## Personagens: a lore pede a arma? (revisão de 02/10/2026)
+
+Pesquisa nas fontes abaixo; para cada guardião, o que a lenda conta, a arma que ele
+tinha e o veredito.
+
+| Guardião | O que a lenda conta | Arma inicial | Veredito |
+|---|---|---|---|
+| **Curupira** | Menino de cabelo de fogo, pés virados para trás (o rastro engana quem o segue), assobio que assusta, protetor da mata; citado por Anchieta em 1560 | Cajado (bola de fogo) | ✅ **Faz sentido**: o fogo vem do cabelo. **Novo:** no Dash ele deixa **pegadas apontando para trás** |
+| **Caipora** | "Habitante do mato" (tupi *caapora*), protetora dos bichos contra a caça; anda montada num porco-do-mato e **sempre tem uma vara**; recebe fumo de oferenda e fuma cachimbo; derivada do Curupira | Bumerangue em brasa | ❌ **Não fazia**: bumerangue é dos povos aborígenes da Austrália. **Agora: Vara Encantada** — a vara da lenda, acesa no fumo do cachimbo; mesma mecânica (gira, atravessa, volta), nova arte na mão, no voo e no ícone |
+| **Iara** | "Senhora das águas" (tupi), mãe-d'água dos rios amazônicos, canto que encanta e paralisa; na origem, guerreira transformada pelos peixes | Aura Gélida (campo frio; quem demora dentro congela) | ✅ **Faz sentido**: águas frias, e quem fica "ouvindo" o canto é paralisado (congela). Atributos também batem: mais área e cura, **mais lenta em terra** |
+| **Saci** | Viaja **dentro dos redemoinhos** de vento; gorro vermelho que dá poder; assobio, travessuras, guardião das ervas; do Jaxy Jaterê guarani | Raio Concentrado | ❌ **Não fazia**: o próprio jogo chama o Redemoinho de "Redemoinho do Saci" e a arte dele já tem um redemoinho de raios no pé. **Agora começa com o Redemoinho** (continua raio: as conquistas de raio seguem possíveis). Medido: com 1 arma nível 1, aos 1:00, o Redemoinho mata 26 em 40 s (Raio 20, Cajado 22) — dentro da faixa |
+
+Evolução: **Fênix → Boitatá**. A fênix é grega; o Boitatá ("cobra de fogo" em tupi)
+é a serpente de fogo que guarda os campos — e a evolução já era isso: a vara deixa
+um **rastro de chamas** serpenteando pelo caminho.
+
+### O sistema-base (reações) conversa com as lendas
+- **Curupira (fogo) + Iara (água fria) = Vapor** — fogo com água vira vapor: a dupla
+  mais intuitiva do jogo, e é a primeira que o jogador monta (Cajado + Aura).
+- **Iara (gelo) + Saci (raio) = Cristal**; **Curupira (fogo) + Saci (raio) =
+  Sobrecarga**. Cada par de guardiões tem uma reação própria: escolher o guardião
+  já sugere a segunda arma.
+- Gelo no Brasil é raro, mas existe (geada e granizo no Sul) e o jogo o trata como
+  "água fria". Mantido.
+- A Sobrecarga **não** vira "Fúria do Boitatá" (o nome agora é da evolução).
+
+Fontes: [National Geographic Brasil — Curupira](https://www.nationalgeographicbrasil.com/cultura/2025/08/qual-e-a-origem-do-curupira-no-dia-do-folclore-saiba-mais-sobre-o-curioso-personagem) ·
+[Toda Matéria — Curupira](https://www.todamateria.com.br/curupira/) ·
+[Toda Matéria — Caipora](https://www.todamateria.com.br/caipora/) ·
+[Portal Amazônia — Caipora](https://portalamazonia.com/amazonia/relembre-quem-e-caipora-a-guardia-dos-animais-da-floresta/) ·
+[HandWiki — Caipora](https://handwiki.org/wiki/Religion:Caipora) ·
+[Toda Matéria — Iara](https://www.todamateria.com.br/lenda-da-iara/) ·
+[Cultura Genial — Iara](https://www.culturagenial.com/lenda-da-iara-analisada) ·
+[Toda Matéria — Saci](https://www.todamateria.com.br/saci-perere/) ·
+[UFRGS — Jaxy e Jaxy Jaterê](https://seer.ufrgs.br/index.php/EspacoAmerindio/article/view/122910) ·
+[Significados — personagens do folclore (Boitatá)](https://www.significados.com.br/personagens-do-folclore-brasileiro/)
 
 ## Cuidados (checklist de revisão de texto e arte)
 - [ ] Saci com **uma perna**, retratado como herói esperto — sem traços caricatos.

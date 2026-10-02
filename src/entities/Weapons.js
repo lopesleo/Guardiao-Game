@@ -152,7 +152,7 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
   constructor(scene) {
     super(scene, -9999, -9999);
     scene.add.existing(this);
-    // Bumerangue de madeira com fio em brasa (pixel-art) + brilho quente
+    // Vara Encantada da Caipora girando (pixel-art) + brilho quente da brasa
     this.glow = scene.add
       .image(0, 0, "fx_glow")
       .setScale(0.7)
@@ -176,7 +176,7 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     this.deadline = 0;
     this.crit = false;
     this.lastHit = new Map();
-    // Rastro (evolução Fênix): callback que solta zonas de fogo pelo caminho
+    // Rastro (evolução Boitatá): callback que solta zonas de fogo pelo caminho
     this.trailFn = null;
     this.trailIntervalMs = 150;
     this._nextTrailAt = 0;
@@ -225,7 +225,7 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     }
     fx?.trail(this, this.x, this.y, "fire", 40);
 
-    // Rastro de chamas (Fênix)
+    // Rastro de chamas (Boitatá)
     if (this.trailFn && time >= this._nextTrailAt) {
       this._nextTrailAt = time + this.trailIntervalMs;
       this.trailFn(this.x, this.y);
@@ -599,7 +599,7 @@ export class AuraWeapon extends Weapon {
 }
 
 export class Boomerang extends Weapon {
-  // defKey parametrizado pra evolução (Fênix) reusar o voo
+  // defKey parametrizado pra evolução (Boitatá) reusar o voo
   constructor(scene, defKey = "BOOMER") {
     super(scene, defKey);
   }
@@ -612,7 +612,7 @@ export class Boomerang extends Weapon {
     const len = Math.hypot(dx, dy) || 1;
     const { dmg, crit } = this.rollHit();
     proj.fire(this.owner.x, this.owner.y, dx / len, dy / len, dmg, crit);
-    // Hook das evoluções (Fênix seta o rastro de chamas)
+    // Hook das evoluções (Boitatá seta o rastro de chamas)
     this._decorateProj?.(proj);
     return true;
   }
@@ -845,7 +845,7 @@ export class WinterHeart extends AuraWeapon {
   }
 }
 
-// FÊNIX (Bumerangue+Cajado): o bumerangue deixa um rastro de zonas de fogo que
+// BOITATÁ (Vara Encantada+Cajado): a cobra de fogo da lenda — a vara deixa um rastro de zonas de fogo que
 // queimam (dano + status fire) quem cruza o caminho de ida E de volta.
 export class Phoenix extends Boomerang {
   constructor(scene) {
@@ -1096,7 +1096,7 @@ export class Flamethrower extends Weapon {
   }
 }
 
-// INFERNO (Sopro+Bumerangue): cone mais largo que deixa o chão em chamas
+// INFERNO (Sopro+Vara Encantada): cone mais largo que deixa o chão em chamas
 export class Inferno extends Flamethrower {
   constructor(scene) {
     super(scene, "INFERNO");

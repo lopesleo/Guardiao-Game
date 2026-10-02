@@ -194,7 +194,7 @@ const STYLE = {
     taper(p, ...k.armF.mid, ...k.armF.end, 2.2, 2, [sk.base, sk.light, sk.shade]);
     return k.armF.end;
   },
-  // CAIPORA — cabeleira de folhas, túnica de palha, colar de urucum, bumerangue
+  // CAIPORA — cabeleira de folhas, túnica de palha, colar de urucum, vara encantada
   huntress(p, pose, k, t) {
     const sk = SKIN_DARK;
     const straw = [PAL.straw3, PAL.straw2, PAL.straw1];
@@ -313,16 +313,23 @@ function prop(p, id, pose, hand, t) {
     p.disc(x1 + d[0] * 0.3, y1 + d[1] * 0.3, 1.8, PAL.org2);
     p.set(Math.round(x1 - 0.5), Math.round(y1 - 0.5), PAL.yel3);
   } else if (id === "huntress") {
-    // bumerangue de madeira em brasa
-    const a2 = rad(pose.propAngle ?? 8);
-    const rot = (x, y) => [px + x * Math.cos(a2) - y * Math.sin(a2), py - 1 + x * Math.sin(a2) + y * Math.cos(a2)];
-    const arm = (pts, col) => pts.forEach(([x, y]) => { const [rx, ry] = rot(x, y); p.rect(Math.round(rx - 1), Math.round(ry - 1), 2, 2, col); });
-    arm([[0, 0], [1.6, -0.6], [3, -2], [3.6, -3.8], [4, -5.6]], PAL.n3);
-    arm([[-1.6, -0.6], [-3, -2], [-3.8, -3.6]], PAL.n2);
-    const [ex, ey] = rot(3, -2);
-    p.set(Math.round(ex - 0.5), Math.round(ey - 0.5), PAL.org2);
-    const [fx, fy] = rot(4, -5.6);
-    p.set(Math.round(fx - 0.5), Math.round(fy - 0.5), PAL.org3);
+    // vara encantada: fina (o cajado do Curupira é grosso), forquilha com folhas
+    // no alto e a brasa do fumo no pé
+    const x1 = px + d[0] * 9,
+      y1 = py + d[1] * 9,
+      x0 = px - d[0] * 3,
+      y0 = py - d[1] * 3;
+    taper(p, x0, y0, x1, y1, 1.1, 1.1, [PAL.n3, PAL.n4, PAL.n2]);
+    const side = [d[1], -d[0]]; // perpendicular ao cabo
+    for (const k of [-1, 1]) {
+      const fx = x1 + d[0] * 2 + side[0] * k * 2,
+        fy = y1 + d[1] * 2 + side[1] * k * 2;
+      p.set(Math.round(fx - 0.5), Math.round(fy - 0.5), PAL.n2);
+      p.set(Math.round(fx + side[0] * k - 0.5), Math.round(fy + side[1] * k - 0.5), PAL.g5);
+    }
+    p.set(Math.round(x1 + d[0] * 3 - 0.5), Math.round(y1 + d[1] * 3 - 0.5), PAL.g6);
+    p.set(Math.round(x0 - 0.5), Math.round(y0 - 0.5), PAL.org2);
+    p.set(Math.round(x0 - d[0] - 0.5), Math.round(y0 - d[1] - 0.5), PAL.yel3);
   } else if (id === "druid") {
     // gotas/aura de gelo na palma
     p.set(Math.round(px + 1 - 0.5), Math.round(py - 1 - 0.5), PAL.white);

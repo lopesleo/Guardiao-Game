@@ -187,8 +187,10 @@ export const WEAPONS = {
     freezeMs: 1300,
     freezeImmuneMs: 3000,
   },
+  // Vara Encantada (da Caipora): a lenda dá a ela uma vara mágica; aqui ela vem
+  // acesa no fumo do cachimbo, gira, atravessa o bando e volta para a mão.
   BOOMER: {
-    name: "Bumerangue",
+    name: "Vara Encantada",
     element: ELEMENT.FIRE,
     baseDmg: 3, // era 4: atravessa o bando e queima todos (era o mais forte no bando)
     cooldown: 1600,
@@ -249,10 +251,10 @@ export const WEAPONS = {
     freezeImmuneMs: 2800,
     nova: { everyMs: 2800, dmg: 14, radiusMult: 2.2, shards: 12 },
   },
-  // Fênix: o bumerangue deixa um RASTRO DE CHAMAS no trajeto — zonas que
+  // Boitatá (a cobra de fogo que guarda a mata): a vara deixa um RASTRO DE CHAMAS no trajeto — zonas que
   // queimam (dano + status fire) quem cruza o caminho.
   PHOENIX: {
-    name: "Fênix",
+    name: "Boitatá",
     element: ELEMENT.FIRE,
     evolvesFrom: "BOOMER",
     partner: "STAFF",
@@ -297,7 +299,7 @@ export const WEAPONS = {
     freezeMs: 1100,
     freezeImmuneMs: 2600,
   },
-  // Inferno (Sopro Lv5 + Bumerangue): cone largo que deixa o chão em chamas.
+  // Inferno (Sopro Lv5 + Vara Encantada): cone largo que deixa o chão em chamas.
   INFERNO: {
     name: "Inferno",
     element: ELEMENT.FIRE,
@@ -443,7 +445,7 @@ export const CHARACTERS = [
     id: "shaman",
     name: "Saci",
     title: "Redemoinho travesso",
-    weapon: "CHAIN",
+    weapon: "WHIRL", // a lenda: o Saci viaja dentro do redemoinho (antes começava com o Raio)
     cost: 1200,
     perk: "−15% recarga · +15% dano · −25% vida",
     mods: { cd: 0.85, dmg: 1.15, hp: 0.75 },
@@ -498,7 +500,7 @@ export const PASSIVES = [
   {
     id: "area",
     label: "Raízes Largas",
-    desc: "Auras, nuvens, reações e bumerangues alcançam mais longe.",
+    desc: "Auras, nuvens, reações e a vara alcançam mais longe.",
     roll: () => {
       const v = r(15, 35);
       return { name: `+${v}% Área`, apply: (p) => (p.areaMult *= 1 + v / 100) };
@@ -764,11 +766,11 @@ export const ENDLESS = {
 export const LEGENDS = [
   { id: "curupira", char: "guardian", name: "Curupira", sprite: ["hero_guardian", 0, 2.2], role: "Guardião da mata · fogo",
     origin: "Lenda de origem tupi, registrada já no século XVI. Protege as matas e os bichos; os pés virados para trás deixam rastros que confundem os caçadores." },
-  { id: "caipora", char: "huntress", name: "Caipora", sprite: ["hero_huntress", 0, 2.2], role: "Protetora dos bichos · bumerangue",
+  { id: "caipora", char: "huntress", name: "Caipora", sprite: ["hero_huntress", 0, 2.2], role: "Protetora dos bichos · vara encantada",
     origin: "Do tupi ka'apora, \"habitante do mato\". Protetora dos animais contra a caça em excesso; em muitas regiões anda montada num porco-do-mato." },
   { id: "iara", char: "druid", name: "Iara", sprite: ["hero_druid", 0, 2.2], role: "Senhora das águas · gelo",
     origin: "Do tupi y-îara, \"senhora das águas\". Vive nos rios da Amazônia e encanta com seu canto; a lenda somou traços europeus e africanos com o tempo." },
-  { id: "saci", char: "shaman", name: "Saci", sprite: ["hero_shaman", 0, 2.2], role: "Redemoinho travesso · raio",
+  { id: "saci", char: "shaman", name: "Saci", sprite: ["hero_shaman", 0, 2.2], role: "Redemoinho travesso · redemoinho de raios",
     origin: "Nasceu do Jaxy Jaterê guarani e ganhou traços africanos e europeus ao longo dos séculos. Esperto e brincalhão, vive dentro dos redemoinhos de vento." },
   { id: "mula", name: "Mula sem Cabeça", sprite: ["mon_alpha", 0, 2.2], role: "Minichefe · galope em chamas, coice e chuva de brasas",
     origin: "Lenda de origem ibérica espalhada pelo interior do Brasil: uma mula que solta fogo pelo pescoço e galopa pelos campos em noites escuras." },
@@ -1213,7 +1215,7 @@ export const ACHIEVEMENTS = [
   { id: "clear_d4", name: "Senhor do Pesadelo", desc: "Vença no Perigo Pesadelo", check: wonAt(4) },
   // — Armas —
   { id: "wmax_staff", name: "Cajado Ancestral", desc: "Leve o Cajado ao nível 5", check: weaponMax("STAFF") },
-  { id: "wmax_boomer", name: "Retorno Perfeito", desc: "Leve o Bumerangue ao nível 5", check: weaponMax("BOOMER") },
+  { id: "wmax_boomer", name: "Retorno Perfeito", desc: "Leve a Vara Encantada ao nível 5", check: weaponMax("BOOMER") },
   { id: "wmax_chain", name: "Tempestade Viva", desc: "Leve o Raio Concentrado ao nível 5", check: weaponMax("CHAIN") },
   { id: "wmax_aura", name: "Inverno Eterno", desc: "Leve a Aura Gélida ao nível 5", check: weaponMax("AURA") },
   { id: "arsenal", name: "Arsenal Completo", desc: "Tenha 4 armas numa mesma partida", check: (c) => !!c.run && c.run.weapons.length >= 4 },

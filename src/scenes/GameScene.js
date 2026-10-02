@@ -681,7 +681,7 @@ export class GameScene extends Phaser.Scene {
       });
     });
 
-    // Bumerangues — atravessam inimigos, podem re-hit após cooldown
+    // Varas Encantadas (voo de ida e volta) — atravessam inimigos, podem re-hit após cooldown
     this.boomerPool.forEachActive((p) => {
       p.update(time, dt);
       if (!p.active) {
