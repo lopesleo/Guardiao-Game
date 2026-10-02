@@ -333,6 +333,12 @@ export class Bar {
 export function haptic(ms = 20) {
   try {
     if (localStorage.getItem("guardiao_haptics") === "0") return;
+    // No app: vibrador nativo (o navigator.vibrate do WebView é ignorado em vários aparelhos)
+    const native = window.Capacitor?.Plugins?.Haptics;
+    if (native?.vibrate) {
+      native.vibrate({ duration: ms }).catch?.(() => {});
+      return;
+    }
     navigator.vibrate?.(ms);
   } catch {}
 }
