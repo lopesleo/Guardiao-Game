@@ -156,8 +156,12 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   tela"; a vibração segue "Vibração". 👤 sentir no aparelho e ajustar intensidades
 - ✅ **Mapa 2× maior** (área dobrada: raio 2400 → 3400 em `GAME.WORLD_RADIUS`); baús passam
   a nascer num anel ao redor do jogador (num mapa grande, posição aleatória global não seria achada)
-- ✅ **Banir cartas**: tira a carta (ou as melhorias daquela arma) da partida inteira; 2 banimentos
-  + 1 por nível do Santuário; evolução nunca é banível (`CARDS` no config). Trocar já existia.
+- ✅ **Banir cartas**: tira a carta (ou as melhorias daquela arma) da partida inteira; **1 grátis por
+  partida + 1 por anúncio** ("BANIR +1", `extra_banish`); só a carta banida é trocada (as outras ficam
+  na mesa); evolução nunca é banível (`CARDS` no config). Trocar já existia.
+- ✅ **Roleta da Samaúma** (Clareira, depois do Baú do Dia): por anúncio, sorteia 1 de 8 bênçãos para a
+  próxima partida (dano, XP, moedas, vida, +1 banir, ímã, velocidade, defesa); recarrega **de hora em
+  hora** e guarda uma bênção por vez (`TREE` no config, `src/scenes/CampTree.js`)
 - ✅ **Ressonância elemental**: +15% de dano por arma extra do mesmo elemento; Fogo+Gelo+Raio
   monta o **Prisma** (reações +30%). Dica na carta de arma nova (`RESONANCE` no config)
 - ✅ **Tratos da Mata**: às vezes uma carta é um trato — poder grande com custo visível (ex.:
@@ -180,8 +184,8 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   não o sprite de caminhada girado. Revisar as poses: `node tools/hero-sheet.mjs saida.png <id>`
 
 ### M5 — Monetização e medição reais 👤
-- ✅ AdMob: app Android criado e **6 blocos premiados** (revive, extra_card, build_speed,
-  double_coins, daily_chest, extra_reroll) + 1 intersticial pronto e desligado; IDs em `ADMOB` no `src/config.js`
+- ✅ AdMob: app Android criado e **8 blocos premiados** (revive, extra_card, build_speed,
+  double_coins, daily_chest, extra_reroll, extra_banish, tree_spin) + 1 intersticial pronto e desligado; IDs em `ADMOB` no `src/config.js`
 - ✅ Mensagem de consentimento europeia (GDPR) **publicada** no AdMob (app selecionado, URL da
   política, botão "Não consentir" ligado). Falta dar push da `docs/PRIVACY.md` atualizada (a
   mensagem aponta para ela) e, no app, integrar o SDK da UMP no M5
@@ -190,7 +194,7 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   cadastrar `https://lopesleo.github.io` como site do desenvolvedor; ligar o app à loja no AdMob;
   informações fiscais (CPF e W-8BEN) e forma de pagamento no AdMob; conta do Firebase
 - ✅ AdMob + consentimento (UMP) plugados (`src/systems/AdMobBridge.js`): consentimento → SDK → anúncios
-  premiados nos 6 pontos; na Europa o uso de dados (Firebase) começa desligado; sem consentimento ou sem
+  premiados em todos os pontos; na Europa o uso de dados (Firebase) começa desligado; sem consentimento ou sem
   AdMob pronto o app NÃO oferece anúncio. `ADS.TESTING = true` usa anúncios de TESTE do Google:
   **trocar para false só no build de loja**. `ADS.TEST_EEA = true` simula a Europa para ver o formulário
 - ✅ App de teste compilado e `npm run android:install` (compila, instala via adb e abre). Ambiente neste

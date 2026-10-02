@@ -47,6 +47,11 @@ export const REVEALS = [
     when: (d) => (d.revealed || []).includes("board") && (d.runsPlayed || 0) >= 5,
     line: "Todo dia a floresta deixa um presente aqui, junto ao fogo. Abra o baú!",
   },
+  {
+    id: "tree",
+    when: (d) => (d.revealed || []).includes("chest") && (d.runsPlayed || 0) >= 6,
+    line: "A Samaúma acordou! De hora em hora ela pode abençoar a sua próxima partida.",
+  },
 ];
 
 export function isRevealed(id, data) {
