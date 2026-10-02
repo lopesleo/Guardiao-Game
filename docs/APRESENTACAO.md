@@ -8,7 +8,7 @@
 
 ## 1. Resumo executivo (o "pitch")
 
-**Guardião da Floresta: Despertar** é um *survivor-like* top-down de navegador (JavaScript + Phaser 3), em arena fixa, no qual o jogador sobrevive a hordas crescentes por ~7 minutos até um boss final. O jogador **apenas se move**: as armas atacam sozinhas, e a única decisão tática real acontece nas **cartas de level-up**.
+**Guardião da Floresta: Despertar** é um *survivor-like* top-down de navegador (JavaScript + Phaser 4), em arena fixa, no qual o jogador sobrevive a hordas crescentes por ~7 minutos até um boss final. O jogador **apenas se move**: as armas atacam sozinhas, e a única decisão tática real acontece nas **cartas de level-up**.
 
 O diferencial que separa o jogo de uma cópia genérica do gênero é a **mecânica-assinatura de Reações Elementais**: cada arma carrega um elemento (🔥 fogo, ❄️ gelo, ⚡ raio); quando um inimigo acumula dois status diferentes, uma **reação dispara automaticamente** (Vapor, Cristal, Sobrecarga).
 
@@ -214,7 +214,7 @@ Todos os assets são **livres e creditados** (lista completa em `docs/CREDITS.md
 - **Sprites:** Kenney (Tiny Dungeon, Tiny Town) + Clint Bellanger / Pimen (Tiny Creatures) — **CC0**.
 - **SFX:** Kenney Impact Sounds + complementos CC0.
 - **Música:** JaggedStone (CC0) + Thalon (CC-BY 4.0).
-- **Fonte:** Press Start 2P (OFL). **Engine:** Phaser 3 (MIT) + nipplejs (MIT).
+- **Fonte:** Press Start 2P (OFL). **Engine:** Phaser 4 (MIT) + nipplejs (MIT).
 
 ---
 

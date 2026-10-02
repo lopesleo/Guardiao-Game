@@ -1,6 +1,6 @@
 // Service worker: guarda o jogo no cache pra rodar OFFLINE na versão web.
 // No app Android (Capacitor) os arquivos já vêm no pacote — o SW não é usado.
-const CACHE = "guardiao-v2";
+const CACHE = "guardiao-v3";
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (e) => {

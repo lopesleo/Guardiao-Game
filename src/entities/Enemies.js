@@ -208,7 +208,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     if (this.rimColor) {
       this.rim
         .setTexture(this.texture.key, this.frame.name)
-        .setTintFill(this.rimColor)
+        .setTint(this.rimColor).setTintMode(Phaser.TintModes.FILL)
         .setVisible(true);
       this._syncRim(0);
     } else this.rim.setVisible(false);
@@ -239,7 +239,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.hp -= dmg * iceAmp;
 
     // FLASH: branco normal, DOURADO se crit
-    this.setTintFill(crit ? 0xffd96b : 0xffffff);
+    this.setTint(crit ? 0xffd96b : 0xffffff).setTintMode(Phaser.TintModes.FILL);
     this.scene.time.delayedCall(crit ? 110 : 60, () => {
       if (!this.active) return;
       this.scene.elemental?._updateTint(this);
@@ -469,7 +469,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this.scene.feel?.hit(this, false, true);
     const iceAmp = this.statuses.ice ? 1.35 : 1;
     this.hp -= dmg * iceAmp;
-    this.setTintFill(0xffffff);
+    this.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL);
     this.scene.time.delayedCall(50, () => {
       if (!this.active) return;
       this.scene.elemental?._updateTint(this);

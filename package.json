@@ -2,7 +2,7 @@
   "name": "guardiao-da-floresta",
   "version": "1.0.0",
   "private": true,
-  "description": "Guardião da Floresta — survivor-like de reações elementais (Phaser 3).",
+  "description": "Guardião da Floresta — survivor-like de reações elementais (Phaser 4).",
   "type": "module",
   "scripts": {
     "serve": "npx serve . -l 8000",
