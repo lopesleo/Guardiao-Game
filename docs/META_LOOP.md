@@ -142,7 +142,7 @@ profundidade percebida (e a Steam **espera** conquistas; alimentam o algoritmo).
 | Vitórias (6) | primeira vitória + vencer cada um dos 5 níveis de Perigo |
 | Armas (5) | cada arma no Lv5 (×4) · as 4 armas numa mesma run |
 | Reações (3) | disparar Vapor / Cristal / Sobrecarga 100× (cumulativo) |
-| Meta (3) | trilha de Bênção rank 5 · Tesouro Ancestral nv 10 · 2.000 moedas ganhas |
+| Meta (3) | trilha de Bênção no máximo · Tesouro Ancestral nv 10 · 25.000 moedas ganhas |
 | Desafios (5) | sobreviver 10:00 · vencer < 8:00 · quase-pacifista (Veterano+ sem passivo de HP) · Purista (só Cajado) · Piromante (2+ armas, todas fogo) |
 | Diversos (1) | 1.000 kills cumulativos |
 

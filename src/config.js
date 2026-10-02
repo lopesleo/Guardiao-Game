@@ -1164,7 +1164,8 @@ export const ACHIEVEMENTS = [
   // — Meta-progressão —
   { id: "bless_max", name: "Bênção Suprema", desc: "Maximize uma trilha de Bênção (rank 10)", check: (c) => c.maxBlessingRank >= MAX_BLESSING_RANK },
   { id: "ancestral_10", name: "Herdeiro Ancestral", desc: "Tesouro Ancestral no nível 10", check: (c) => c.ancestralLevel >= 10, prog: (c) => [c.ancestralLevel, 10] },
-  { id: "coins_2000", name: "Tesoureiro da Mata", desc: "Ganhe 2.000 moedas no total", check: (c) => c.totalCoinsEarned >= 2000, prog: (c) => [c.totalCoinsEarned, 2000] },
+  // Meta subida com a economia 2026-10 (2.000 saía em 2–3 partidas; 25.000 ≈ 8º dia do jogador médio)
+  { id: "coins_25000", name: "Tesoureiro da Mata", desc: "Ganhe 25.000 moedas no total", check: (c) => c.totalCoinsEarned >= 25000, prog: (c) => [c.totalCoinsEarned, 25000] },
   { id: "kills_1000", name: "Ceifador do Bosque", desc: "Abata 1.000 inimigos no total", check: (c) => c.totalKills >= 1000, prog: (c) => [c.totalKills, 1000] },
   // — Desafios (condições de vitória variantes) —
   { id: "survive_10min", name: "Maratonista", desc: "Sobreviva 10:00 numa partida", check: (c) => !!c.run && c.run.timeMs >= 600000 },
