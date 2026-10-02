@@ -277,15 +277,14 @@ export const CampGarden = {
     drawFrame(bg, -bw / 2, -CH / 2 - 44, bw, CH + 62, "gold", { alpha: 0.96 });
     c.add(bg);
     const tut = !gd.data.tutorialDone; // 1º plantio: acelerado, só para ensinar o ciclo
-    c.add(
-      text(this, 0, -CH / 2 - 24, tut ? "PRIMEIRO PLANTIO  ·  a Anciã acelera a mata: cresce em 30 s" : "PLANTAR  ·  segure para plantar em todos os vazios", {
-        size: 16,
-        color: CSS.goldHi,
-        origin: 0.5,
-        align: "center",
-        wrap: bw - 90,
-      }),
-    );
+    // Uma linha só (em tela pequena quebrava e a 2ª linha subia na moldura e no X)
+    const head = text(this, 0, -CH / 2 - 24, tut ? "PRIMEIRO PLANTIO  ·  a Anciã acelera a mata: cresce em 30 s" : "PLANTAR  ·  segure para plantar em todos os vazios", {
+      size: 16,
+      color: CSS.goldHi,
+      origin: 0.5,
+    });
+    if (head.width > bw - 110) head.setScale((bw - 110) / head.width);
+    c.add(head);
     const bar = {
       close: () => {
         if (bar.closed) return;

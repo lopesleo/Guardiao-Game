@@ -1,7 +1,24 @@
 // Hábito diário na Clareira: aba MISSÕES no Mural, o Baú do Dia junto à
 // fogueira e o presente de dias seguidos ao chegar. Só depois que o Mural
 // apareceu (uma novidade por vez). Mixin da CampScene (Object.assign).
-import { GAME, DAILY } from "../config.js";
+import { GAME, DAILY, KITCHEN } from "../config.js";
+import { dishIconKey } from "../art/Kitchen.js";
+
+// Ícone de cada missão = o que ela pede (antes: caveira ou broto para todas)
+const MISSION_ICON = {
+  kills: "ico_skull",
+  reactions: "ico_star",
+  vapor: "ico_cloud",
+  crystal: "ico_aura",
+  overload: "ico_bolt",
+  survive: "ico_hourglass",
+  runs: "ico_sword",
+  chests: "ico_chest",
+  lanterns: "px_lantern",
+  boss: "ico_trophy",
+  harvest: "ico_sprout",
+  fish: "ico_lambari",
+};
 import { Daily, dailyUnlocked, rewardText } from "../systems/Daily.js";
 import { AdService } from "../systems/AdService.js";
 import { PAL, CSS } from "../art/Palette.js";
@@ -179,7 +196,9 @@ export const CampDaily = {
           const g = this.add.graphics();
           drawFrame(g, 0, 0, w, 84, m.claimed ? "green" : done ? "gold" : "dark", { noRivets: true });
           c.add(g);
-          c.add(this.add.image(40, 42, m.claimed ? "ico_check" : m.def.camp ? "ico_sprout" : "ico_skull").setScale(3));
+          const key = m.claimed ? "ico_check" : m.def.id === "cook" ? dishIconKey(KITCHEN.RECIPES[0].id) : (MISSION_ICON[m.def.id] ?? "ico_star");
+          const ico = this.add.image(40, 42, key, 0);
+          c.add(ico.setScale(Math.min(3, 44 / Math.max(ico.width, ico.height))));
           c.add(text(this, 76, 26, m.text, { size: 20, color: m.claimed ? CSS.green : CSS.txt, origin: [0, 0.5] }));
           // barra de progresso
           const bw = w - 330;

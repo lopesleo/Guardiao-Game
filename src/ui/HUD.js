@@ -145,21 +145,27 @@ export class HUD {
       const ico = s.add.image(x, y, iconKey).setScale(scale * 0.95).setScrollFactor(0).setDepth(D + 3);
       const lock = s.add.image(x + 9 * scale, y + 9 * scale, "ico_lock").setScale(2).setScrollFactor(0).setDepth(D + 4).setVisible(false);
       const r = 13 * scale;
-      const zone = s.add.zone(x, y, r * 2.4, r * 2.4).setScrollFactor(0).setDepth(D + 5).setInteractive();
-      zone.on("pointerdown", (p, lx, ly, ev) => {
-        ev?.stopPropagation?.();
-        base.setScale(scale * 0.92);
-        ico.setScale(scale * 0.88);
-        haptic(15);
-        onTap();
-      });
+      const btn = { base, cd, ico, lock, x, y, r };
       const up = () => {
         base.setScale(scale);
         ico.setScale(scale * 0.95);
       };
+      btn.press = () => {
+        base.setScale(scale * 0.92);
+        ico.setScale(scale * 0.88);
+        haptic(15);
+        onTap();
+        s.time.delayedCall(120, up);
+      };
+      // Toque: tratado no listener nativo abaixo. A zona fica só para o mouse.
+      const zone = s.add.zone(x, y, r * 2.4, r * 2.4).setScrollFactor(0).setDepth(D + 5).setInteractive();
+      zone.on("pointerdown", (p, lx, ly, ev) => {
+        ev?.stopPropagation?.();
+        if (!p.wasTouch) btn.press();
+      });
       zone.on("pointerup", up);
       zone.on("pointerout", up);
-      return { base, cd, ico, lock, x, y, r };
+      return btn;
     };
     const W = this.W,
       H = this.H;
@@ -169,6 +175,21 @@ export class HUD {
     this.btnAwaken = mk(W - 212, H - 70, 2.6, "ico_star", () => {
       this.scene.inputMgr.awakenPressed = true;
     });
+    // Toque NATIVO nos botões: cada dedo novo é testado contra os botões, sem passar
+    // pelo controle de ponteiros do Phaser (vagas limitadas que podiam ficar presas
+    // com um dedo no joystick) — dash ANDANDO funciona sempre.
+    const btns = [this.btnDash, this.btnAwaken];
+    this._onTouch = (e) => {
+      if (!s.scene.isActive() || s.scene.isPaused()) return;
+      for (const t of e.changedTouches) {
+        const gx = s.scale.transformX(t.pageX),
+          gy = s.scale.transformY(t.pageY);
+        const b = btns.find((b) => (gx - b.x) ** 2 + (gy - b.y) ** 2 <= (b.r * 1.25) ** 2);
+        if (b) b.press();
+      }
+    };
+    window.addEventListener("touchstart", this._onTouch, { passive: true, capture: true });
+    s.events.once("shutdown", () => window.removeEventListener("touchstart", this._onTouch, { capture: true }));
   }
 
   // Fatia de recarga sobre o botão redondo (0 = pronto, 1 = recém-usado)

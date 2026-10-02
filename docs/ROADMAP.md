@@ -202,6 +202,12 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   41–55% do dano, e com três elementos as três reações aparecem. Debug G agora protege de todo dano
 - ✅ **Cajado com alcance menor** (280 → 210; Tempestade de Vapor 300 → 240) e a bola de fogo some logo depois
   do alcance (voava 600 px). Listas dos painéis redesenhadas só quando mudam (Forja aberta: 1,6 → 0,7 ms/quadro)
+- ✅ **Revisão das telas, rodada 2**: resultado da partida com altura calculada (com Madeira + Sementes a
+  5ª linha caía sobre as armas); Pausa com armas e passivas no mesmo padrão (ícone, nome, nível); custo do
+  Trato acima do selo da tecla; escolha da Noite Eterna com painel; ícone próprio em cada missão; título da
+  barra de sementes em uma linha. **Controles:** teclas de movimento lidas na janela (segurar D durante as
+  cartas/pausa não "perde" mais a tecla); dash e Despertar no celular pelo toque nativo (funcionam andando,
+  mesmo se o Phaser perder um "soltar dedo")
 - ✅ **Tratos da Mata**: às vezes uma carta é um trato — poder grande com custo visível (ex.:
   +37% dano / −23% vida máxima). Do nível 3, até 3 por partida, cada um uma vez (`PACTS`)
 - ✅ **Santuários da Floresta** no mapa (`ShrineSystem`, `SHRINE`): **Carga** (fique perto 3 s:

@@ -3,7 +3,7 @@
 // A vitória já conta nos dois casos; continuar só acrescenta.
 import { ENDLESS } from "../config.js";
 import { CSS, PAL, hex } from "../art/Palette.js";
-import { text, dim, Button, vw, vh, fitCamera, haptic } from "../ui/Theme.js";
+import { text, dim, Button, vw, vh, fitCamera, haptic, drawFrame } from "../ui/Theme.js";
 import { formatTime } from "../utils.js";
 import { Analytics } from "../systems/Analytics.js";
 
@@ -21,6 +21,10 @@ export class EndlessChoiceScene extends Phaser.Scene {
     dim(this, 0.8);
 
     const cy = H / 2 - 30;
+    // Painel próprio (antes o texto flutuava sobre o jogo e a dica do HUD aparecia atrás)
+    const pg = this.add.graphics();
+    const pw = Math.min(860, W - 40);
+    drawFrame(pg, W / 2 - pw / 2, cy - 236, pw, 440, "purple", { alpha: 0.97 });
     const t = text(this, W / 2, cy - 170, "VITÓRIA!", { size: 80, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 10, shadowY: 6 });
     t.setScale(0.3).setAlpha(0);
     this.tweens.add({ targets: t, scale: 1, alpha: 1, duration: 420, ease: "Back.easeOut" });

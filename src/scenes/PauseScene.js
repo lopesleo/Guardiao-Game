@@ -30,44 +30,52 @@ export class PauseScene extends Phaser.Scene {
       origin: 0.5,
     });
 
-    // Painel da build
-    const pw = Math.min(760, W - 60),
-      ph = 330;
+    // Painel da build: ARMAS e PASSIVAS no MESMO padrão (moldura + ícone, nome, nível),
+    // grade de 3 colunas; a altura sai do conteúdo. Antes as passivas eram só ícones
+    // com um "×2" em cima da moldura e o nome só aparecia passando o mouse.
+    const pw = Math.min(760, W - 60);
     const px = W / 2 - pw / 2,
-      py = 132;
-    const g = this.add.graphics();
-    drawFrame(g, px, py, pw, ph, "gold");
-    text(this, px + 28, py + 30, `ARMAS ${p.weapons.length}/${weaponSlotsFor(gs.meta)}`, { size: 20, color: CSS.goldHi, origin: [0, 0.5] });
-    p.weapons.forEach((w, i) => {
-      const def = WEAPONS[w.key];
-      const x = px + 28 + (i % 3) * ((pw - 56) / 3);
-      const y = py + 58 + Math.floor(i / 3) * 70;
-      const sg = this.add.graphics();
-      drawFrame(sg, x, y, 52, 52, def.evolvesFrom ? "purple" : "dark", { noRivets: true });
-      this.add.image(x + 26, y + 26, WEAPON_ICON[w.key] ?? "ico_staff").setScale(2.8);
-      text(this, x + 64, y + 14, def.name, { size: 18, origin: [0, 0.5] });
-      const lv = def.evolvesFrom ? "EVOLUÍDA" : `Nível ${w.level}/${MAX_WEAPON_LEVEL}`;
-      text(this, x + 64, y + 38, lv, { size: 15, color: def.evolvesFrom ? CSS.gold : CSS.muted, origin: [0, 0.5] });
-    });
-
+      py = 128;
+    const COLS = 3,
+      ROW = 64,
+      HEAD = 40,
+      PAD = 18;
+    const colW = (pw - 56) / COLS;
     const taken = p.passivesTaken || {};
     const ids = Object.keys(taken);
-    const ty = py + 210;
-    text(this, px + 28, ty, `PASSIVAS ${ids.length}/${PASSIVE_SLOTS}`, { size: 20, color: hexIce(), origin: [0, 0.5] });
-    if (!ids.length) text(this, px + 28, ty + 40, "Nenhuma ainda — escolha passivas nas cartas de nível.", { size: 16, color: CSS.dim, origin: [0, 0.5] });
-    ids.forEach((id, i) => {
-      const x = px + 40 + i * 64;
-      const def = PASSIVES.find((d) => d.id === id);
+    const rows = (n) => Math.max(1, Math.ceil(n / COLS));
+    const wRows = rows(p.weapons.length),
+      pRows = rows(ids.length);
+    const ph = PAD + HEAD + wRows * ROW + 10 + HEAD + pRows * ROW + PAD - 6;
+    const g = this.add.graphics();
+    drawFrame(g, px, py, pw, ph, "gold");
+    const slot = (i, y0, frame, icon, name, sub, subColor) => {
+      const x = px + 28 + (i % COLS) * colW;
+      const y = y0 + Math.floor(i / COLS) * ROW;
       const sg = this.add.graphics();
-      drawFrame(sg, x - 26, ty + 16, 52, 52, "ice", { noRivets: true });
-      this.add.image(x, ty + 42, PASSIVE_ICON[id] ?? "ico_plus").setScale(2.6);
-      text(this, x + 20, ty + 62, `×${taken[id]}`, { size: 15, origin: 0.5, stroke: true });
-      // Nome ao passar o dedo/mouse
-      const z = this.add.zone(x, ty + 42, 52, 52).setInteractive();
-      z.on("pointerover", () => this._tip?.setText(def?.label ?? id));
-      z.on("pointerout", () => this._tip?.setText(""));
+      drawFrame(sg, x, y, 52, 52, frame, { noRivets: true });
+      this.add.image(x + 26, y + 26, icon).setScale(2.8);
+      const nt = text(this, x + 64, y + 14, name, { size: 18, origin: [0, 0.5] });
+      if (nt.width > colW - 72) nt.setScale((colW - 72) / nt.width);
+      text(this, x + 64, y + 38, sub, { size: 15, color: subColor, origin: [0, 0.5] });
+    };
+    let y = py + PAD;
+    text(this, px + 28, y + 12, `ARMAS ${p.weapons.length}/${weaponSlotsFor(gs.meta)}`, { size: 20, color: CSS.goldHi, origin: [0, 0.5] });
+    y += HEAD;
+    p.weapons.forEach((w, i) => {
+      const def = WEAPONS[w.key];
+      slot(i, y, def.evolvesFrom ? "purple" : "dark", WEAPON_ICON[w.key] ?? "ico_staff", def.name, def.evolvesFrom ? "EVOLUÍDA" : `Nível ${w.level}/${MAX_WEAPON_LEVEL}`, def.evolvesFrom ? CSS.gold : CSS.muted);
     });
-    this._tip = text(this, px + pw - 28, ty, "", { size: 16, color: CSS.muted, origin: [1, 0.5] });
+    y += wRows * ROW + 10;
+    // separador entre as seções
+    g.fillStyle(PAL.ink, 0.6).fillRect(px + 24, y - 6, pw - 48, 2);
+    text(this, px + 28, y + 12, `PASSIVAS ${ids.length}/${PASSIVE_SLOTS}`, { size: 20, color: hexIce(), origin: [0, 0.5] });
+    y += HEAD;
+    if (!ids.length) text(this, px + 28, y + 20, "Nenhuma ainda — escolha passivas nas cartas de nível.", { size: 16, color: CSS.dim, origin: [0, 0.5] });
+    ids.forEach((id, i) => {
+      const def = PASSIVES.find((d) => d.id === id);
+      slot(i, y, "ice", PASSIVE_ICON[id] ?? "ico_plus", def?.label ?? id, `Nível ${taken[id]}`, hexIce());
+    });
 
     // Botões
     const by = H - 150;
