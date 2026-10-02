@@ -141,6 +141,9 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
     const y = H / 2 + (rowsTop ?? m.top) + 6;
     const list = new ScrollList(this, x, y, m.w - 76, H / 2 + m.h / 2 - 24 - y, m.root.depth + 3);
     m.list = list;
+    // Lista curta: depois que as linhas forem montadas (fim desta chamada), a
+    // janela encolhe até o conteúdo — sem o vazio enorme embaixo (Obras, Celeiro…)
+    queueMicrotask(() => !m._closed && m.fitToList?.());
     return list;
   },
 
@@ -348,6 +351,7 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
     const done = this.meta.data.achievements;
     const seen = LEGENDS.filter((l) => this._legendSeen(l)).length;
     const missions = !!this._daily?.();
+    if (tab === "missoes" && !missions) tab = "conquistas"; // aba ainda não liberada
     const m = new Modal(this, {
       title: "MURAL",
       subtitle: tab === "missoes" ? "Três missões por dia · o prêmio se pega aqui" : tab === "lendas" ? `Lendas da mata encontradas: ${seen} de ${LEGENDS.length}` : `Conquistas: ${done.length} de ${ACHIEVEMENTS.length}`,
@@ -513,7 +517,7 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
       ["Arte", "Heróis, criaturas, cenário, ícones e efeitos: arte própria, gerada por código"],
       ["Fontes", "Jersey 15 — The Soft Type Project Authors (OFL 1.1) · Atkinson Hyperlegible — Braille Institute of America (OFL 1.1)"],
       ["Música e efeitos sonoros", "Compostos e sintetizados por código para este jogo"],
-      ["Motor", "Phaser 3 (MIT) · nipplejs (MIT)"],
+      ["Motor", "Phaser 4 (MIT) · nipplejs (MIT)"],
     ];
     for (const [a, b] of lines) {
       list.addRow({
