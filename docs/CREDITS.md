@@ -9,7 +9,7 @@ Mantemos esta lista atualizada conforme novos assets são adicionados.
 
 | Item | Autor | Versão | Licença | URL |
 |---|---|---|---|---|
-| Phaser | Photon Storm | 3.80.1 | MIT | <https://phaser.io/> |
+| Phaser | Photon Storm | 4.2.1 | MIT | <https://phaser.io/> |
 | nipplejs | Yoann Moïnet | 0.10.2 | MIT | <https://github.com/yoannmoinet/nipplejs> |
 
 ---

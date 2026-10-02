@@ -50,9 +50,9 @@ export class ElementalSystem {
   }
 
   _updateTint(enemy) {
-    if (enemy.statuses.fire) enemy.setTint(0xff9966);
-    else if (enemy.statuses.ice) enemy.setTint(0x9ad4ff);
-    else if (enemy.statuses.bolt) enemy.setTint(0xd8a8ff);
+    // Phaser 4: o flash de dano usa tintMode FILL; os tints de status são MULTIPLY
+    const c = enemy.statuses.fire ? 0xff9966 : enemy.statuses.ice ? 0x9ad4ff : enemy.statuses.bolt ? 0xd8a8ff : null;
+    if (c !== null) enemy.setTint(c).setTintMode(Phaser.TintModes.MULTIPLY);
     else enemy.clearTint();
   }
 

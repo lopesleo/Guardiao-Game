@@ -393,7 +393,7 @@ export const MetaPanels = {
           drawFrame(g, 0, 0, w, h, ok ? "gold" : "dark", { noRivets: true });
           const [tex, frame, sc] = l.sprite;
           const img = this.add.image(58, h / 2, tex, frame).setScale(sc);
-          if (!ok) img.setTintFill(0x1a1420).setAlpha(0.6);
+          if (!ok) img.setTint(0x1a1420).setTintMode(Phaser.TintModes.FILL).setAlpha(0.6);
           c.add([g, img, t1, t2]);
           if (t3) c.add(t3);
           return h;

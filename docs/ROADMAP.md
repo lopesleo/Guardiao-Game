@@ -21,6 +21,10 @@ Base para tudo que vem depois; o jogador quase não vê.
   a iluminação dinâmica
 - ✅ Música pausa quando o app vai para o fundo
 
+- ✅ **Motor atualizado para Phaser 4.2.1** (era 3.80.1). Ajustes: `setTintFill` →
+  `setTintMode(FILL)`, `postFX` → `camera.filters` e **`render.batchSize: 2048`** em
+  `src/main.js` (o padrão do v4 derrubava o S23 para 14 FPS; agora 60–120)
+
 ### M1 — Profundidade da partida ✅
 - ✅ **Lanternas de cogumelo** quebráveis no mapa (iluminam) com itens:
   Vácuo de Seiva, Relógio da Mata, Sopro Ancestral, caju

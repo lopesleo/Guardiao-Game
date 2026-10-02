@@ -5,7 +5,7 @@ Você só se move; as armas atacam sozinhas; cada nível traz uma escolha. A
 mecânica-assinatura são as **Reações Elementais**: dois elementos no mesmo
 inimigo disparam Vapor, Cristal ou Sobrecarga.
 
-Feito em **JavaScript + Phaser 3**, empacotado para Android com **Capacitor**.
+Feito em **JavaScript + Phaser 4**, empacotado para Android com **Capacitor**.
 Roda 100% offline.
 
 **Jogue no navegador:** <https://lopesleo.github.io/Guardiao-Game/>
@@ -79,6 +79,6 @@ ela. Músicas e efeitos sonoros são sintetizados no carregamento
 
 Lista completa em [`docs/CREDITS.md`](docs/CREDITS.md) e no menu → Créditos.
 **Arte e áudio 100% próprios**, gerados por código (`src/art/`, `src/audio/`) ·
-Fonte: Jersey 15 (OFL) · Motor: Phaser 3 (MIT) · nipplejs (MIT).
+Fonte: Jersey 15 (OFL) · Motor: Phaser 4 (MIT) · nipplejs (MIT).
 
 **Autor:** Leonardo Lopes

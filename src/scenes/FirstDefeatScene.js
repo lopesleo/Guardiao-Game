@@ -130,15 +130,24 @@ export class FirstDefeatScene extends Phaser.Scene {
 
   // Efeitos de pós-processamento (só WebGL; o resto da cena funciona sem eles)
   _initFx() {
-    const pf = this.cameras.main.postFX;
-    if (!pf || this.sys.game.renderer.type !== Phaser.WEBGL || Settings.get("lighting") === false) return;
-    // Todos criados AGORA e mantidos até o fim: ligar/desligar efeito no meio da cena troca o
-    // modo de renderização e faz a imagem "piscar" de resolução.
+    const cam = this.cameras.main;
+    if (!cam.filters || this.sys.game.renderer.type !== Phaser.WEBGL || Settings.get("lighting") === false) return;
+    // Phaser 4: efeitos de câmera são filtros (camera.filters.external). Todos criados AGORA e
+    // mantidos até o fim: ligar/desligar efeito no meio da cena troca o modo de renderização.
+    const ext = cam.filters.external;
+    const cm = ext.addColorMatrix();
+    const blur = ext.addBlur(1, 2, 2, 0);
+    const bloom = Phaser.Actions.AddEffectBloom(cam, { threshold: 0.5, blurRadius: 2, blurSteps: 4, blendAmount: 0 })[0];
     this.fx = {
-      vig: pf.addVignette(0.5, 0.5, 1.15, 0.2),
-      color: pf.addColorMatrix(),
-      blur: pf.addBlur(1, 2, 2, 0),
-      bloom: pf.addBloom(0xffffff, 1, 1, 0.5, 0, 4),
+      vig: ext.addVignette(0.5, 0.5, 1.15, 0.2),
+      // mesma interface de antes (reset/saturate), agora sobre a matriz do filtro
+      color: { reset: () => cm.colorMatrix.reset(), saturate: (v) => cm.colorMatrix.saturate(v) },
+      blur,
+      // "strength" do bloom = quanto do brilho é somado à imagem
+      bloom: {
+        get strength() { return bloom.parallelFilters.blend.amount / 0.5; },
+        set strength(v) { bloom.parallelFilters.blend.amount = v * 0.5; }, // 0.5: o bloom do v4 soma mais que o do v3
+      },
     };
     this._sat = { s: 1 };
   }
