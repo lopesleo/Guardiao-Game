@@ -4,13 +4,17 @@ import { STATUS, REACTION, COLORS, PLAYER, ELEMENT } from "../config.js";
 import { text } from "../ui/Theme.js";
 import { hex } from "../art/Palette.js";
 
-// Reações por COEXISTÊNCIA de status. (gelo+bolt NÃO está aqui: CRISTAL agora é
-// "inimigo CONGELADO leva raio → estilhaça", tratado em applyStatus.)
+// Reações por COEXISTÊNCIA de status — as três funcionam do mesmo jeito: dois
+// elementos no mesmo inimigo. CRISTAL antes exigia o inimigo CONGELADO (na prática
+// só a Aura congelava, e Orbe/Granizo + Raio nunca reagiam); agora gelo + raio já
+// estilhaça, e congelado + raio estilhaça MAIS FORTE (recompensa por congelar).
 const REACTION_MAP = {
   "fire+ice": "VAPOR",
   "ice+fire": "VAPOR",
   "fire+bolt": "OVERLOAD",
   "bolt+fire": "OVERLOAD",
+  "ice+bolt": "CRYSTAL",
+  "bolt+ice": "CRYSTAL",
 };
 
 export class ElementalSystem {
@@ -30,24 +34,30 @@ export class ElementalSystem {
     const def = STATUS[element.toUpperCase()];
     if (!def) return;
 
+    const prev = enemy.statuses[element];
     enemy.statuses[element] = {
       until: now + def.duration,
       def,
-      lastTickAt: now,
+      lastTickAt: prev?.lastTickAt ?? now,
+      since: prev?.since ?? now, // reapplicar não "rejuvenesce": decide a ordem das reações
     };
     enemy._lastEl = element; // a morte "fala" a língua do último elemento
 
     // Tinta visual baseada no status dominante
     this._updateTint(enemy);
 
-    // CRISTAL: raio (bolt) num inimigo CONGELADO → estilhaça (quebra + lascas curtas)
-    if (element === ELEMENT.BOLT && enemy.isFrozen?.(now)) {
-      this._shatter(enemy, REACTION.CRYSTAL);
+    // CRISTAL forte: raio num inimigo CONGELADO estilhaça mesmo sem o status de gelo
+    if (element === ELEMENT.BOLT && enemy.isFrozen?.(now) && now >= (enemy._reactUntil ?? 0)) {
+      delete enemy.statuses.bolt;
+      delete enemy.statuses.ice;
+      enemy._reactUntil = now + REACTION.LOCK_MS;
+      this._updateTint(enemy);
+      this._shatter(enemy, REACTION.CRYSTAL, true);
       return;
     }
 
-    // Checa reação por coexistência de status (Vapor / Sobrecarga)
-    this._checkReaction(enemy);
+    // Checa reação por coexistência de status
+    this._checkReaction(enemy, element);
   }
 
   _updateTint(enemy) {
@@ -57,25 +67,31 @@ export class ElementalSystem {
     else enemy.clearTint();
   }
 
-  _checkReaction(enemy) {
+  // Fôlego por inimigo (REACTION.LOCK_MS): logo depois de reagir, os status ainda
+  // pegam mas não reagem. Sem isso, a Aura (gelo em todo o bando a cada 1,2 s) +
+  // qualquer fogo virava Vapor em todo golpe e as outras reações sumiam.
+  _checkReaction(enemy, incoming = null) {
     const keys = Object.keys(enemy.statuses);
     if (keys.length < 2) return;
+    const now = this.scene.time.now;
+    if (now < (enemy._reactUntil ?? 0)) return;
 
-    // Procura QUALQUER par mapeado — não só os 2 primeiros. Com fogo+gelo+raio
-    // juntos, pegar [a,b] = keys podia ler um par não-mapeado (ex.: ice+bolt) e
-    // engolir silenciosamente uma reação válida (fire+ice / fire+bolt).
-    for (let i = 0; i < keys.length; i++) {
-      for (let j = i + 1; j < keys.length; j++) {
-        const reactionKey = REACTION_MAP[`${keys[i]}+${keys[j]}`];
-        if (!reactionKey) continue;
-
-        // Consome os status do par (evita disparo contínuo)
-        delete enemy.statuses[keys[i]];
-        delete enemy.statuses[keys[j]];
-        this._updateTint(enemy);
-        this._trigger(enemy, reactionKey);
-        return;
-      }
+    // O elemento que CHEGOU reage com o que já estava lá há mais tempo
+    // (antes: a ordem das chaves decidia, e o Vapor sempre ganhava o gelo)
+    const a = incoming && enemy.statuses[incoming] ? incoming : null;
+    const others = keys.filter((k) => k !== a).sort((x, y) => enemy.statuses[x].since - enemy.statuses[y].since);
+    const pairs = a ? others.map((o) => [a, o]) : others.flatMap((x, i) => others.slice(i + 1).map((y) => [x, y]));
+    for (const [x, y] of pairs) {
+      const reactionKey = REACTION_MAP[`${x}+${y}`];
+      if (!reactionKey) continue;
+      // Consome os status do par (evita disparo contínuo)
+      delete enemy.statuses[x];
+      delete enemy.statuses[y];
+      enemy._reactUntil = now + REACTION.LOCK_MS;
+      this._updateTint(enemy);
+      if (reactionKey === "CRYSTAL") this._shatter(enemy, REACTION.CRYSTAL, enemy.isFrozen?.(now));
+      else this._trigger(enemy, reactionKey);
+      return;
     }
   }
 
@@ -127,10 +143,22 @@ export class ElementalSystem {
   // VAPOR = nuvem ESCALDANTE: dano contínuo (DoT) na área. Não causa mais slow.
   _vapor(enemy, def, areaMult = 1) {
     const scene = this.scene;
+    const now = scene.time.now;
     const cx = enemy.x,
       cy = enemy.y;
     const radius = def.radius * areaMult;
     const radiusSq = radius * radius;
+    // Nuvens NÃO se empilham: perto de uma nuvem viva, só renova a duração dela.
+    // (Antes 20+ nuvens sobrepostas no mesmo bando somavam o dano — o Vapor
+    // chegava a 2/3 do dano da partida.)
+    this._clouds = (this._clouds || []).filter((c) => c.until > now);
+    const near = this._clouds.find((c) => (c.x - cx) ** 2 + (c.y - cy) ** 2 < (c.r * def.mergeDist) ** 2);
+    if (near) {
+      near.until = Math.max(near.until, now + def.duration * 0.6);
+      return;
+    }
+    const cloud = { x: cx, y: cy, r: radius, until: now + def.duration };
+    this._clouds.push(cloud);
     this._cloudFx(cx, cy, radius, def.color, def.duration);
 
     const tickDmg = def.dmgPerTick * (scene.player?.prism ?? 1);
@@ -154,10 +182,13 @@ export class ElementalSystem {
       }
     };
     applyDmg();
-    scene.time.addEvent({
+    const ev = scene.time.addEvent({
       delay: def.tickMs,
-      repeat: Math.floor(def.duration / def.tickMs),
-      callback: applyDmg,
+      loop: true,
+      callback: () => {
+        if (scene.time.now > cloud.until) return ev.remove();
+        applyDmg();
+      },
     });
   }
 
@@ -215,7 +246,7 @@ export class ElementalSystem {
 
   // CRISTAL = o inimigo CONGELADO leva raio e ESTILHAÇA: lascas curtas em todas as
   // direções, DANO BAIXO. É recompensa de combo (Aura congela → Raio quebra), não dano bruto.
-  _shatter(target, def) {
+  _shatter(target, def, frozen = false) {
     const scene = this.scene;
     const now = scene.time.now;
     // Conquistas (Fase 3): Cristal não passa por _trigger, conta aqui
@@ -224,24 +255,25 @@ export class ElementalSystem {
     // Anti-spam por TIPO
     if (now - this.lastReactionAt.CRYSTAL < this.reactionCdMs) {
       // ainda aplica mecânica, sem texto/shake
-      this._shatterMechanic(target, def, false);
+      this._shatterMechanic(target, def, false, frozen);
       return;
     }
     this.lastReactionAt.CRYSTAL = now;
-    this._shatterMechanic(target, def, true);
+    this._shatterMechanic(target, def, true, frozen);
   }
 
-  _shatterMechanic(target, def, showFx) {
+  _shatterMechanic(target, def, showFx, frozen = false) {
     const scene = this.scene;
     const cx = target.x, cy = target.y;
     const areaMult = scene.player?.areaMult ?? 1;
-    const radius = def.radius * areaMult;
+    const fm = frozen ? def.frozenMult : 1; // congelado: estilhaço maior e mais forte
+    const radius = def.radius * areaMult * (frozen ? def.frozenRadiusMult : 1);
     const radiusSq = radius * radius;
 
     // O alvo "quebra": leva um golpe de estilhaçamento (e perde o congelamento)
     target._frozenUntil = 0;
     target._freezeLockUntil = scene.time.now + 2000; // breve imunidade pós-quebra
-    const tdied = target.takeDamage(def.selfDmg, null);
+    const tdied = target.takeDamage(def.selfDmg * fm * (scene.player?.prism ?? 1), null);
     if (tdied) scene._onEnemyDeath(target);
 
     // O gelo quebra: lascas voando + estalo + anel de geada no chão
@@ -259,7 +291,7 @@ export class ElementalSystem {
       if (e === target) return;
       const dx = e.x - cx, dy = e.y - cy;
       if (dx * dx + dy * dy <= radiusSq) {
-        const died = e.takeDamage(def.dmg * (scene.player?.prism ?? 1), null);
+        const died = e.takeDamage(def.dmg * fm * (scene.player?.prism ?? 1), null);
         if (died) scene._onEnemyDeath(e);
       }
     });

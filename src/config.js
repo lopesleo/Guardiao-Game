@@ -90,29 +90,35 @@ export const STATUS = {
 };
 
 export const REACTION = {
+  // Fôlego por inimigo depois de reagir: os status pegam, mas só reagem de novo depois disto
+  LOCK_MS: 900,
   // FIRE + ICE => Vapor: nuvem ESCALDANTE que causa dano contínuo na área (não dá mais slow)
   VAPOR: {
     color: 0xffc8a0,
     radius: 80,
     duration: 2200, // era 3000: nuvens não têm cap de concorrência, encurtar evita carpete de DoT
-    dmgPerTick: 5,
+    dmgPerTick: 4,
     tickMs: 300,
+    mergeDist: 0.8, // Vapor novo a menos de 0,8 raio de uma nuvem viva só a renova
     label: "VAPOR!",
   },
-  // CONGELADO + BOLT => Cristal: o inimigo congelado ESTILHAÇA em lascas curtas (dano BAIXO)
+  // GELO + RAIO => Cristal: o inimigo ESTILHAÇA em lascas que ferem quem está perto.
+  // CONGELADO + raio = estilhaço forte (frozenMult / frozenRadiusMult).
   CRYSTAL: {
     color: 0x9fe8ff,
-    radius: 70,
-    dmg: 20, // era 12
-    selfDmg: 0, // era 14: auto-dano > dano fazia a reação ter EV negativo (armadilha)
+    radius: 76,
+    dmg: 20,
+    selfDmg: 14, // o próprio alvo também quebra
+    frozenMult: 1.8,
+    frozenRadiusMult: 1.3,
     shards: 8,
     label: "CRISTAL!",
   },
   // FIRE + BOLT => Sobrecarga: a recompensa em ÁREA — corrente forte entre muitos inimigos
   OVERLOAD: {
     color: 0xffe24c,
-    jumps: 6,
-    dmgPerJump: 16,
+    jumps: 4, // era 6: com armas de área (Redemoinho, Sopro) virava 70% do dano
+    dmgPerJump: 13,
     jumpRange: 220,
     label: "SOBRECARGA!",
   },
@@ -123,7 +129,7 @@ export const WEAPONS = {
   STAFF: {
     name: "Cajado",
     element: ELEMENT.FIRE,
-    baseDmg: 7,
+    baseDmg: 10, // era 7: alvo único precisa render no chefe (laboratório de equilíbrio)
     cooldown: 1100,
     range: 280,
     projSpeed: 300,
@@ -142,7 +148,7 @@ export const WEAPONS = {
   BOOMER: {
     name: "Bumerangue",
     element: ELEMENT.FIRE,
-    baseDmg: 4,
+    baseDmg: 3, // era 4: atravessa o bando e queima todos (era o mais forte no bando)
     cooldown: 1600,
     range: 240,
     projSpeed: 280,
@@ -151,7 +157,7 @@ export const WEAPONS = {
   CHAIN: {
     name: "Raio Concentrado",
     element: ELEMENT.BOLT,
-    baseDmg: 15,
+    baseDmg: 20, // era 15: o melhor contra o chefe, fraco no bando
     cooldown: 1800,
     range: 190,
   },
@@ -295,7 +301,7 @@ export const WEAPONS = {
   WHIRL: {
     name: "Redemoinho",
     element: ELEMENT.BOLT,
-    baseDmg: 3, // por tique (tique lento: muitos inimigos piscando a 3×/s viravam ruído)
+    baseDmg: 2, // por tique; era 3 (2× o dano das outras armas de área no bando)
     cooldown: 3800,
     range: 260,
     count: 1,

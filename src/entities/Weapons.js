@@ -684,10 +684,10 @@ export class ChainLightning extends Weapon {
 
   // Quanto o Raio "quer" acertar este alvo (gera reação ou aproveita controle)
   _affinity(e, now) {
-    if (e.isFrozen?.(now)) return 3; // congelado + raio → CRISTAL (estilhaça)
+    if (e.isFrozen?.(now)) return 3; // congelado + raio → CRISTAL forte
     const s = e.statuses || {};
-    if (s.fire) return 2; // fogo + raio → SOBRECARGA
-    if (s.ice || s.bolt) return 1; // já afetado por algum status
+    if (s.fire || s.ice) return 2; // fogo + raio → SOBRECARGA · gelo + raio → CRISTAL
+    if (s.bolt) return 1; // já afetado
     return 0;
   }
 }
