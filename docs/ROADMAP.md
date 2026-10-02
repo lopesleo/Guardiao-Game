@@ -195,8 +195,12 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   **trocar para false só no build de loja**. `ADS.TEST_EEA = true` simula a Europa para ver o formulário
 - ✅ App de teste compilado e `npm run android:install` (compila, instala via adb e abre). Ambiente neste
   PC: Java 17 em `C:\Users\leona\dev-tools\jdk-17.0.20.1+1`, Android SDK em `%LOCALAPPDATA%\Android\Sdk`
-  (plataforma 34, build-tools 34.0.0). 👤 Falta instalar no celular (plugar o cabo) e testar o anúncio de
-  teste, o Firebase (DebugView) e o consentimento
+  (plataforma 34, build-tools 34.0.0).
+- ✅ **Validado no aparelho (S23 Ultra, 01/10/2026):** consentimento "não necessário" no Brasil, SDK iniciado,
+  anúncio premiado de TESTE carregado → exibido → recompensa → fechado → 4ª carta liberada; eventos
+  `ad_offer_show/accept/ad_reward` enviados ao Firebase. Com bloqueador de anúncios (ex.: DNS privado
+  AdGuard) o anúncio não carrega e o jogo avisa "Anúncio indisponível agora" (sem bônus grátis).
+  👤 Falta: ver o formulário europeu (`ADS.TEST_EEA = true`) e conferir os eventos no painel do Firebase
 - ⬜ Compra "Remover anúncios"
 - ✅ Firebase Analytics + Crashlytics plugados (`src/systems/Telemetry.js`, plugins `@capacitor-firebase/*`):
   projeto `guardiao-da-floresta` (plano Spark, grátis), app Android `com.lopesleo.guardiao`, GA4 em conta
