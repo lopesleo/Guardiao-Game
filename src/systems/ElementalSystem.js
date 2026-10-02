@@ -35,6 +35,7 @@ export class ElementalSystem {
       def,
       lastTickAt: now,
     };
+    enemy._lastEl = element; // a morte "fala" a língua do último elemento
 
     // Tinta visual baseada no status dominante
     this._updateTint(enemy);
@@ -139,7 +140,7 @@ export class ElementalSystem {
         const dx = e.x - cx,
           dy = e.y - cy;
         if (dx * dx + dy * dy <= radiusSq) {
-          const died = e.takeDamage(tickDmg, null);
+          const died = e.takeDamage(tickDmg, null, null, null, false, true);
           if (died) scene._onEnemyDeath(e);
         }
       });
@@ -243,23 +244,14 @@ export class ElementalSystem {
     const tdied = target.takeDamage(def.selfDmg, null);
     if (tdied) scene._onEnemyDeath(target);
 
-    // O gelo quebra: esguicha LASCAS-LOSANGO voando em todas as direções
-    const n = def.shards ?? 8;
-    for (let i = 0; i < n; i++) {
-      const ang = (i / n) * Math.PI * 2 + Math.random() * 0.3;
-      const ex = cx + Math.cos(ang) * radius;
-      const ey = cy + Math.sin(ang) * radius;
-      const shard = scene.add
-        .image(cx, cy, "px_shard")
-        .setScale(3)
-        .setDepth(61)
-        .setRotation(ang);
-      scene.tweens.add({
-        targets: shard,
-        x: ex, y: ey, alpha: 0, rotation: ang + 0.6,
-        duration: 280, ease: "Cubic.easeOut",
-        onComplete: () => shard.destroy(),
-      });
+    // O gelo quebra: lascas voando + estalo + anel de geada no chão
+    const fx = scene.fx;
+    if (fx) {
+      fx.burst("shard", cx, cy - 6, (def.shards ?? 8) + 4, null, 360, { min: 140, max: 320 });
+      fx.burst("frost", cx, cy, 10, null, 360, { min: 30, max: 120 });
+      fx.star(cx, cy - 6, 0xffffff, 0.8, showFx ? 3.2 : 2, 160, Math.PI / 4);
+      fx.ring(cx, cy + 4, 0xbfeaff, 10, radius, 260);
+      fx.decal("fx_frost", cx, cy + 6, radius * 0.55, 1600, 0.55);
     }
 
     // Dano BAIXO em área curta nos vizinhos
@@ -300,6 +292,8 @@ export class ElementalSystem {
       duration: 300,
       onComplete: () => flash.destroy(),
     });
+    scene.fx?.ring(enemy.x, enemy.y + 4, def.color, 10, 70 * areaMult, 240);
+    scene.fx?.burst("zap", enemy.x, enemy.y, 12);
     for (let i = 0; i < def.jumps; i++) {
       let best = null,
         bestSq = jumpMaxSq;
@@ -316,7 +310,8 @@ export class ElementalSystem {
       if (!best) break;
       // Raio da Sobrecarga é GROSSO e amarelo-elétrico (distinto do raio fino da arma)
       this._drawBolt(prev.x, prev.y, best.x, best.y, def.color, 6);
-      const died = best.takeDamage(def.dmgPerJump * (scene.player?.prism ?? 1), null);
+      const died = best.takeDamage(def.dmgPerJump * (scene.player?.prism ?? 1), null, prev.x, prev.y);
+      scene.fx?.impact(best.x, best.y - 6, "bolt", { power: 1 });
       if (died) scene._onEnemyDeath(best);
       visited.add(best);
       prev = best;
@@ -325,6 +320,13 @@ export class ElementalSystem {
 
   _drawBolt(x1, y1, x2, y2, color, width = 3) {
     const scene = this.scene;
+    // Raio em pixel com galhos (WeaponFX); o antigo (linhas lisas) fica de reserva
+    if (scene.fx) {
+      scene.fx.bolt(x1, y1, x2, y2, color, Math.max(2, Math.round(width * 0.75)), width >= 5 ? 3 : 2);
+      scene.fx.burst("zap", x2, y2, 4 + width);
+      scene.fx.star(x2, y2, 0xffffff, 0.5, 1.6, 110, Math.PI / 4);
+      return;
+    }
     const g = scene.add.graphics().setDepth(60).setBlendMode(Phaser.BlendModes.ADD);
     // zig-zag (mesmos pontos pra halo e núcleo)
     const segs = 6;
@@ -358,11 +360,33 @@ export class ElementalSystem {
     });
   }
 
+  // Matéria dos status (só na tela): quem queima solta brasa, quem está
+  // eletrizado estala, quem está gelado cintila. Ritmo próprio por inimigo.
+  _statusFx(e, time, view) {
+    const fx = this.scene.fx;
+    const st = e.statuses;
+    if (!fx || time < (e._stFxAt ?? 0) || !view.contains(e.x, e.y)) return;
+    const h = e.displayHeight;
+    const x = e.x + (Math.random() - 0.5) * e.displayWidth * 0.5,
+      y = e.y - h * (0.1 + Math.random() * 0.35);
+    if (st.fire) {
+      fx.burst("ember", x, y, 1, -Math.PI / 2, 60, { min: 20, max: 60 });
+      e._stFxAt = time + 260;
+    } else if (st.bolt) {
+      fx.burst("zap", x, y, 2, null, 360, { min: 60, max: 140 });
+      e._stFxAt = time + 300;
+    } else if (st.ice) {
+      fx.burst("frost", x, y, 1, null, 360, { min: 0, max: 20 });
+      e._stFxAt = time + 380;
+    }
+  }
+
   // Tick periódico — processa expiração + DoT de fire/bolt
   tick(time) {
     if (time - this.lastTickAt < this.tickInterval) return;
     this.lastTickAt = time;
     const scene = this.scene;
+    const view = scene.cameras.main.worldView;
 
     scene.enemyPool.forEachActive((enemy) => {
       let changed = false;
@@ -380,7 +404,7 @@ export class ElementalSystem {
           time - s.lastTickAt >= s.def.tickMs
         ) {
           s.lastTickAt = time;
-          const died = enemy.takeDamage(s.def.dmgPerTick, null);
+          const died = enemy.takeDamage(s.def.dmgPerTick, null, null, null, false, true);
           if (died) {
             scene._onEnemyDeath(enemy);
             break;
@@ -388,6 +412,7 @@ export class ElementalSystem {
         }
       }
       if (changed) this._updateTint(enemy);
+      if (enemy.active) this._statusFx(enemy, time, view);
     });
   }
 }

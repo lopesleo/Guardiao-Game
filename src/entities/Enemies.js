@@ -89,6 +89,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.hp = this.maxHp;
     this.dmg = ENEMY.DMG(wave);
     this.statuses = {};
+    this._lastEl = null; // elemento do último golpe (decide o efeito da morte)
+    this._punch = 0; // "soco" visual do último golpe (achata e volta)
     this.lastTouchAt = 0;
     this._lastShotAt = 0;
     this._casting = false;
@@ -234,9 +236,25 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 
   // Aplicar dano. crit = true ativa BONK (knockback + squash forte + flash dourado).
-  takeDamage(dmg, element = null, fromX = null, fromY = null, crit = false) {
+  // soft = tique (queimadura, choque, nuvem): sem pisca-branco nem som de golpe —
+  // 8 tiques/s piscando viravam ruído e escondiam os golpes de verdade.
+  takeDamage(dmg, element = null, fromX = null, fromY = null, crit = false, soft = false) {
     const iceAmp = this.statuses.ice ? 1.35 : 1;
     this.hp -= dmg * iceAmp;
+
+    // "Soco": achata e volta (em update). Golpe empurra 3px no sentido dele.
+    this._punch = Math.max(this._punch || 0, soft ? 0.3 : crit ? 1.6 : 1);
+    if (soft) {
+      if (element) this.scene.elemental?.applyStatus(this, element);
+      return this.hp <= 0;
+    }
+    if (fromX != null && fromY != null && !this.isFrozen(this.scene.time.now)) {
+      const dx = this.x - fromX,
+        dy = this.y - fromY;
+      const len = Math.hypot(dx, dy) || 1;
+      this.x += (dx / len) * 3;
+      this.y += (dy / len) * 3;
+    }
 
     // FLASH: branco normal, DOURADO se crit
     this.setTint(crit ? 0xffd96b : 0xffffff).setTintMode(Phaser.TintModes.FILL);
@@ -246,15 +264,6 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     });
 
     if (crit) {
-      // SQUASH forte
-      this.scene.tweens.add({
-        targets: this,
-        scaleX: (this._baseScale ?? GAME.PIXEL_SCALE) * 1.3,
-        scaleY: (this._baseScale ?? GAME.PIXEL_SCALE) * 0.75,
-        duration: 80,
-        yoyo: true,
-        onComplete: () => this.active && this.setScale(this._baseScale ?? GAME.PIXEL_SCALE),
-      });
       // KNOCKBACK
       if (fromX != null && fromY != null && this.body?.enable) {
         const dx = this.x - fromX,
@@ -276,6 +285,15 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   update(time, dt, target) {
     if (!this.active || !target?.active) return;
     this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46);
+    // Soco do golpe: segura durante o hit-stop (relógio dos tweens) e volta
+    if (this._punch > 0) {
+      this._punch = Math.max(0, this._punch - (dt * (this.scene.tweens.timeScale ?? 1)) / 120);
+      if (!this._casting) {
+        const b = this._baseScale ?? GAME.PIXEL_SCALE,
+          k = this._punch;
+        this.setScale(b * (1 + 0.2 * k), b * (1 - 0.15 * k));
+      }
+    }
 
     // CONGELADO: para tudo (não anda, não atira), mas continua tomando dano.
     if (this.isFrozen(time)) {
