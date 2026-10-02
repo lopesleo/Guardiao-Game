@@ -8,7 +8,7 @@ import { Analytics } from "../systems/Analytics.js";
 import { Clock } from "../systems/Clock.js";
 import { fmtDuration } from "../systems/Builds.js";
 import { PAL, CSS } from "../art/Palette.js";
-import { text, Button, haptic } from "../ui/Theme.js";
+import { text, Button, haptic, drawFrame } from "../ui/Theme.js";
 import { Modal } from "../ui/Widgets.js";
 
 const TX = -250,
@@ -29,24 +29,79 @@ export const CampTree = {
     return { kind: "ready" };
   },
 
+  // A Samaúma desperta muda de cara: flores, fitinhas, espiral e contas de luz (arte em
+  // src/art/CampDecor.js), anel de luz no chão, faíscas subindo e uma plaquinha com o estado.
   _treeWorld() {
     const shown = this._isShown("tree");
-    // Brilho na copa enquanto a árvore pode abençoar
-    const glow = this.add.image(TX, TY - 190, "fx_glow").setScale(4.2).setTint(0xd8ffb0).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD).setDepth(50001);
-    this.tweens.add({ targets: glow, scale: 4.8, duration: 1400, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
-    const dot = this._notifyDot(TX + 70, TY - 300).setDepth(this.D_HUD - 10).setVisible(false);
-    this.buildings.tree = { x: TX, y: TY, shown, glow, dot, reveal: () => this._refreshTree() };
+    const S = this._kapok.scaleY;
+    const glow = this.add.image(TX, TY, "camp_kapok_glow").setOrigin(0.5, 1).setScale(S).setDepth(50001).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0);
+    // anel de luz + poça de luz suave no chão (os dois pulsam juntos)
+    const pool = this.add.image(TX, TY + 4, "fx_glow").setScale(5.5, 1.6).setTint(0xd8ffb0).setDepth(50000.5).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0);
+    const ring = this.add.image(TX, TY + 4, "camp_blessring").setScale(S).setDepth(50001).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0);
+    // o brilho balança junto com a copa
+    this.tweens.killTweensOf(this._kapok);
+    this.tweens.add({ targets: [this._kapok, glow], scaleX: { from: S, to: S * 1.01 }, duration: 3000, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    const tag = this.add.container(TX, TY - 330).setDepth(this.D_HUD - 10).setVisible(false);
+    const tagG = this.add.graphics();
+    const tagT = text(this, 0, 0, "", { size: 16, origin: 0.5 });
+    tag.add([tagG, tagT]);
+    this.tweens.add({ targets: tag, y: TY - 338, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    const b = (this.buildings.tree = { x: TX, y: TY, shown, glow, ring, pool, tag, tagG, tagT, mode: null });
+    b.reveal = () => {
+      b.shown = true;
+      this._kapok.setTexture("camp_kapok_blessed");
+      this._refreshTree();
+    };
+    if (shown) this._kapok.setTexture("camp_kapok_blessed");
     this._addInteract({ x: TX, y: TY, top: TY - 300, r: 125, name: "SAMAÚMA", verb: "BÊNÇÃO", hiddenUntil: "tree", action: () => this._showTree() });
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this._refreshTree() });
+    // Faíscas subindo do anel até a copa enquanto a bênção está pronta
+    this.time.addEvent({
+      delay: 260,
+      loop: true,
+      callback: () => {
+        if (b.mode !== "ready") return;
+        const a = Math.random() * Math.PI * 2;
+        const x = TX + Math.cos(a) * 120,
+          y = TY + 4 + Math.sin(a) * 34;
+        const s = this.add.image(x, y, "px_dot1").setScale(3).setTint(Math.random() < 0.5 ? PAL.yel3 : PAL.g6).setBlendMode(Phaser.BlendModes.ADD).setDepth(50002);
+        this.tweens.add({ targets: s, x: TX + (x - TX) * 0.3 + (Math.random() - 0.5) * 60, y: TY - 150 - Math.random() * 120, alpha: 0, duration: 1800 + Math.random() * 900, ease: "Sine.easeIn", onComplete: () => s.destroy() });
+      },
+    });
     this._refreshTree();
   },
 
   _refreshTree() {
     const b = this.buildings.tree;
     if (!b) return;
-    const ready = b.shown && this._treeState().kind === "ready" && AdService.canShow("tree_spin");
-    b.glow.setAlpha(ready ? 0.42 : 0);
-    b.dot.setVisible(ready);
+    if (!b.shown) {
+      b.tag.setVisible(false);
+      return;
+    }
+    const st = this._treeState();
+    const mode = st.kind === "ready" && !AdService.canShow("tree_spin") ? "off" : st.kind;
+    // Plaquinha: pronta (dourada), descansando (contagem), guardada (verde)
+    const label = { ready: "BÊNÇÃO PRONTA", rest: `BÊNÇÃO EM ${Math.ceil((st.left || 0) / 60000)} MIN`, pending: "BÊNÇÃO GUARDADA", off: "SAMAÚMA" }[mode];
+    if (label !== b.tagT.text || mode !== b.mode) {
+      b.tagT.setText(label).setColor(mode === "ready" ? CSS.goldHi : mode === "pending" ? CSS.green : CSS.muted);
+      const w = b.tagT.width + 24;
+      b.tagG.clear();
+      drawFrame(b.tagG, -w / 2, -15, w, 30, mode === "ready" ? "gold" : "dark", { noRivets: mode !== "ready", alpha: 0.94 });
+    }
+    b.tag.setVisible(true);
+    if (mode === b.mode) return;
+    b.mode = mode;
+    // Brilho da árvore: pulsa forte quando pronta, fica de leve quando descansa
+    this.tweens.killTweensOf([b.glow, b.ring, b.pool]);
+    if (mode === "ready") {
+      this.tweens.add({ targets: b.glow, alpha: { from: 0.55, to: 1 }, duration: 1100, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+      this.tweens.add({ targets: b.ring, alpha: { from: 0.45, to: 0.95 }, duration: 1100, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+      this.tweens.add({ targets: b.pool, alpha: { from: 0.18, to: 0.4 }, duration: 1100, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    } else {
+      b.glow.setAlpha(mode === "pending" ? 0.45 : 0.22);
+      b.ring.setAlpha(mode === "pending" ? 0.3 : 0.1);
+      b.pool.setAlpha(mode === "pending" ? 0.12 : 0);
+    }
   },
 
   _showTree() {

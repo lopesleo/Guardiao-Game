@@ -110,7 +110,7 @@ export const CampDecor = {
     const kx = -250,
       ky = -250;
     this.add.image(kx, ky + 6, "px_shadow").setScale(18, 6).setAlpha(0.5).setDepth(ky - 1);
-    const kapok = this.add.image(kx, ky, "camp_kapok").setOrigin(0.5, 1).setScale(S).setDepth(ky);
+    const kapok = (this._kapok = this.add.image(kx, ky, "camp_kapok").setOrigin(0.5, 1).setScale(S).setDepth(ky));
     this._solid(kx, ky - 16, 90, 28);
     this.tweens.add({ targets: kapok, scaleX: { from: S, to: S * 1.01 }, duration: 3000, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
     // Vaga-lumes rondando a copa (entram no mesmo balé dos outros)
