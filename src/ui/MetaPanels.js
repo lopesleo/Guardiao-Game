@@ -172,8 +172,15 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
         if (o.icon) c.add(scene.add.image(40, hh, o.icon, o.iconFrame ?? 0).setScale(o.iconScale ?? 3).setAlpha(o.dim ? 0.45 : 1));
         c.add([name, desc]);
         if (o.pips != null) {
-          for (let i = 0; i < o.pipsMax; i++)
-            c.add(scene.add.rectangle(w - 250 + i * 18, hh, 12, 12, i < o.pips ? PAL.yel2 : PAL.inkSoft).setStrokeStyle(3, PAL.ink));
+          // Até 5 numa linha; mais que isso (bênçãos: 10 ranks) em duas linhas de 5,
+          // ocupando a mesma largura (a direita da linha é do preço)
+          const perRow = Math.min(5, o.pipsMax);
+          const rows = Math.ceil(o.pipsMax / perRow);
+          for (let i = 0; i < o.pipsMax; i++) {
+            const row = Math.floor(i / perRow);
+            const y = hh + (row - (rows - 1) / 2) * 17;
+            c.add(scene.add.rectangle(w - 250 + (i % perRow) * 18, y, 12, 12, i < o.pips ? PAL.yel2 : PAL.inkSoft).setStrokeStyle(3, PAL.ink));
+          }
         }
         if (o.right) {
           const rc = scene.add.container(w - 20, hh);
@@ -246,7 +253,7 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
           desc: b.desc,
           pips: rank,
           pipsMax: MAX_BLESSING_RANK,
-          right: cost == null ? "MÁX" : capped ? `SANTUÁRIO NV ${rank + 1}` : String(cost),
+          right: cost == null ? "MÁX" : capped ? `SANTUÁRIO NV ${Math.ceil((rank + 1) / 2)}` : String(cost),
           rightIcon: cost == null || capped ? null : "ico_coin",
           rightColor: cost == null ? CSS.green : can ? CSS.goldHi : CSS.dim,
           style: cost == null ? "green" : can ? "button" : "dark",

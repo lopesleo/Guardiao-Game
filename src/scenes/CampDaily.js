@@ -181,6 +181,12 @@ export const CampDaily = {
       h: 34,
       build: (c, w) => c.add(text(this, w / 2, 16, `Dias seguidos: ${s?.count || 0}   ·   novas missões em ${fmtDuration(msToMidnight())}`, { size: 16, color: CSS.muted, origin: 0.5 })),
     });
+    const rested = d.restedLeft();
+    if (rested > 0)
+      list.addRow({
+        h: 30,
+        build: (c, w) => c.add(text(this, w / 2, 14, `Descansado: ${rested === 1 ? "a próxima partida rende" : `as próximas ${rested} partidas rendem`} +${Math.round((DAILY.RESTED.MULT - 1) * 100)}% de moedas`, { size: 16, color: CSS.goldHi, origin: 0.5 })),
+      });
     d.missions.forEach((m, i) => {
       const done = m.done;
       list.addRow({

@@ -457,7 +457,8 @@ export class CampScene extends Phaser.Scene {
     const canBless =
       BLESSINGS.some((b) => {
         const cost = this.meta.blessingNextCost(b);
-        return cost != null && coins >= cost;
+        // Rank travado pelo Santuário não acende o aviso (não dá para comprar)
+        return cost != null && coins >= cost && this.meta.blessingRank(b.id) < this.builds.shrineRankCap();
       }) ||
       coins >= this.meta.ancestralCost() ||
       Object.entries(META.ABILITY_UNLOCK_COST).some(([k, cost]) => !this.meta.hasAbility(k) && coins >= cost);
@@ -808,7 +809,10 @@ export class CampScene extends Phaser.Scene {
           dim: !open,
           name: d.name,
           nameColor: open ? colors[d.id] : CSS.dim,
-          desc: open ? `Inimigos ${Math.round(d.hpMult * 100)}% de vida · Recompensa ×${d.rewardMult}` : "Vença o Perigo anterior para liberar",
+          desc: open
+            ? `Inimigos ${Math.round(d.hpMult * 100)}% de vida · Moedas ×${String(d.rewardMult).replace(".", ",")}` +
+              (d.firstClear && !((this.meta.data.winsByDifficulty || {})[String(d.id)] > 0) ? ` · Primeira vitória: +${d.firstClear}` : "")
+            : "Vença o Perigo anterior para liberar",
           right: sel ? "ESCOLHIDO" : open ? "ESCOLHER" : "",
           rightColor: sel ? CSS.green : CSS.txt,
           style: sel ? "green" : open ? "button" : "dark",

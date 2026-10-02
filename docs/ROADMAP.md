@@ -208,6 +208,13 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   barra de sementes em uma linha. **Controles:** teclas de movimento lidas na janela (segurar D durante as
   cartas/pausa não "perde" mais a tecla); dash e Despertar no celular pelo toque nativo (funcionam andando,
   mesmo se o Phaser perder um "soltar dedo")
+- ✅ **Economia rebalanceada por simulação** (ver `META_LOOP.md`, "Economia 2026-10"): a loja inteira
+  acabava em 4–8 dias; agora 20 / 35 / 59 dias (hardcore / médio / casual, 30 min por dia), sem o jogador
+  ficar muitas partidas sem comprar. Início igual; armas, guardiões e obras mais caros; **bênçãos com 10
+  ranks** (metade do efeito, mesmo máximo) e **imposto de coleção** de 2%; recompensa dos Perigos achatada
+  + **prêmio da 1ª vitória**; hábito diário ×2 e **bônus de descanso** (2 primeiras partidas do dia +50%).
+  Save v4 dobra os ranks antigos (ninguém perde poder). Tela de resultado com linha própria do prêmio.
+  👤 conferir no aparelho e, com testadores, comparar `run_end` com a simulação
 - ✅ **Tratos da Mata**: às vezes uma carta é um trato — poder grande com custo visível (ex.:
   +37% dano / −23% vida máxima). Do nível 3, até 3 por partida, cada um uma vez (`PACTS`)
 - ✅ **Santuários da Floresta** no mapa (`ShrineSystem`, `SHRINE`): **Carga** (fique perto 3 s:

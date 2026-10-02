@@ -113,8 +113,9 @@ export class Builds {
   }
 
   // ---- Travas lidas pelos painéis ----
+  // Santuário nível N → bênçãos até o rank 2N (10 ranks em 5 níveis)
   shrineRankCap() {
-    return this.level("shrine");
+    return shrineRankCapFor(this.level("shrine"));
   }
   weaponSlots() {
     return weaponSlotsFor(this.meta);
@@ -124,6 +125,8 @@ export class Builds {
   }
 }
 
+export const shrineRankCapFor = (lv) => lv * 2;
+
 // Vagas de arma na partida (nível da Forja; sem save = 2)
 export function weaponSlotsFor(meta) {
   const lv = meta?.data?.builds?.forge?.level ?? 1;
@@ -132,7 +135,7 @@ export function weaponSlotsFor(meta) {
 
 // Texto do que o nível `lv` de cada construção libera
 export function perkText(id, lv) {
-  if (id === "shrine") return `Bênçãos até o rank ${lv}`;
+  if (id === "shrine") return `Bênçãos até o rank ${shrineRankCapFor(lv)}`;
   if (id === "forge") {
     const keys = Object.entries(BUILD.FORGE_WEAPON_LEVEL).filter(([, l]) => l === lv).map(([k]) => k);
     const slots = BUILD.FORGE_WEAPON_SLOTS[lv];

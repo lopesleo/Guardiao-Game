@@ -16,7 +16,7 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   create(data) {
-    const { won, quit, elapsedMs, kills, coinsGained, woodGained = 0, seedsGained = 0, newUnlocks = [], difficulty, unlockedNextDifficulty, level = 1, weapons = [], endlessS = 0, endlessRecord = false } = data;
+    const { won, quit, elapsedMs, kills, coinsGained, coinsDoubleable = coinsGained, restedMult = 1, firstClear = 0, woodGained = 0, seedsGained = 0, newUnlocks = [], difficulty, unlockedNextDifficulty, level = 1, weapons = [], endlessS = 0, endlessRecord = false } = data;
     fitCamera(this);
     // O Phaser REAPROVEITA a instância da cena: todo estado de "visita" precisa
     // ser zerado aqui, senão sobra da vez anterior (ex.: herói preso andando).
@@ -54,30 +54,33 @@ export class GameOverScene extends Phaser.Scene {
     const stats = [
       { icon: "ico_hourglass", label: "Tempo", value: elapsedMs / 1000, fmt: (v) => formatTime(v * 1000) },
       { icon: "ico_skull", label: "Abates", value: kills, fmt: (v) => String(Math.round(v)) },
-      { icon: "ico_coin", label: "Moedas ganhas", value: coinsGained, fmt: (v) => `+${Math.round(v)}`, color: CSS.goldHi },
+      // Moedas da PARTIDA (é o que o anúncio dobra); o prêmio da 1ª vitória vem em linha própria
+      { icon: "ico_coin", label: restedMult > 1 ? `Moedas · descansado +${Math.round((restedMult - 1) * 100)}%` : "Moedas ganhas", value: coinsDoubleable, fmt: (v) => `+${Math.round(v)}`, color: CSS.goldHi },
     ];
+    if (firstClear > 0) stats.push({ icon: "ico_trophy", label: `Primeira vitória no ${difficulty?.name ?? "Perigo"}`, value: firstClear, fmt: (v) => `+${Math.round(v)}`, color: CSS.goldHi });
     if (woodGained > 0) stats.push({ icon: "ico_wood", label: "Madeira Ancestral", value: woodGained, fmt: (v) => `+${Math.round(v)}`, color: "#ffc86b" });
     if (seedsGained > 0) stats.push({ icon: "ico_seed", label: "Sementes raras", value: seedsGained, fmt: (v) => `+${Math.round(v)}`, color: "#ffe58f" });
     // Orçamento vertical: tudo acima do botão de anúncio (ou dos botões finais)
     const unlocks = [...newUnlocks];
     if (unlockedNextDifficulty) unlocks.unshift(`Novo Perigo: ${unlockedNextDifficulty}`);
-    const adShown = !quit && coinsGained > 0 && AdService.canShow("double_coins");
+    const adShown = !quit && coinsDoubleable > 0 && AdService.canShow("double_coins");
     const limit = (adShown ? H - 134 - 30 : H - 62 - 36) - 12;
     const HEAD = 62, // faixa "PERIGO · NÍVEL"
       BUILD = weapons.length ? 66 : 0, // fileira de armas
       FOOT = 14,
       UNL = unlocks.length ? 70 : 0;
-    const rowH = Phaser.Math.Clamp(Math.floor((limit - py - HEAD - BUILD - FOOT - UNL) / stats.length), 34, 52);
+    const rowH = Phaser.Math.Clamp(Math.floor((limit - py - HEAD - BUILD - FOOT - UNL) / stats.length), 28, 52); // 28: até 6 linhas cabem no celular deitado
     const ph = HEAD + stats.length * rowH + BUILD + FOOT;
     const g = this.add.graphics();
     drawFrame(g, px, py, pw, ph, won ? "gold" : "dark");
     text(this, cx, py + 30, `PERIGO: ${(difficulty?.name ?? "").toUpperCase()}   ·   NÍVEL ${level}`, { size: 18, color: CSS.muted, origin: 0.5 });
-    const small = rowH < 44;
+    const small = rowH < 44,
+      tiny = rowH < 34;
     stats.forEach((s, i) => {
       const y = py + HEAD + rowH * (i + 0.5);
-      this.add.image(px + 50, y, s.icon).setScale(small ? 2.5 : 3);
-      text(this, px + 84, y, s.label, { size: small ? 20 : 22, color: CSS.muted, origin: [0, 0.5] });
-      const v = text(this, px + pw - 36, y, s.fmt(0), { size: small ? 26 : 30, color: s.color ?? CSS.txt, origin: [1, 0.5], stroke: true });
+      this.add.image(px + 50, y, s.icon).setScale(tiny ? 2.2 : small ? 2.5 : 3);
+      text(this, px + 84, y, s.label, { size: tiny ? 18 : small ? 20 : 22, color: CSS.muted, origin: [0, 0.5] });
+      const v = text(this, px + pw - 36, y, s.fmt(0), { size: tiny ? 22 : small ? 26 : 30, color: s.color ?? CSS.txt, origin: [1, 0.5], stroke: true });
       const o = { n: 0 };
       this.tweens.add({
         targets: o,
@@ -126,7 +129,7 @@ export class GameOverScene extends Phaser.Scene {
     // Dobrar moedas (anúncio premiado, opcional) — só com moedas ganhas
     if (adShown) {
       Analytics.track("ad_offer_show", { placement: "double_coins" });
-      const db = new Button(this, cx, H - 134, 360, 54, `DOBRAR MOEDAS  +${coinsGained}`, async () => {
+      const db = new Button(this, cx, H - 134, 360, 54, `DOBRAR MOEDAS  +${coinsDoubleable}`, async () => {
         if (db._used) return;
         db._used = true;
         db.setEnabled(false);
@@ -136,8 +139,8 @@ export class GameOverScene extends Phaser.Scene {
           db.setEnabled(true);
           return;
         }
-        new MetaProgression().addCoins(coinsGained);
-        this._coinsShown = coinsGained * 2;
+        new MetaProgression().addCoins(coinsDoubleable);
+        this._coinsShown = coinsDoubleable * 2;
         db.setLabel("MOEDAS DOBRADAS!");
         this._coinText?.setText(`+${this._coinsShown}`);
         if (this._coinText) this.tweens.add({ targets: this._coinText, scale: { from: 1.5, to: 1 }, duration: 260, ease: "Back.easeOut" });

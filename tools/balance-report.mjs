@@ -5,7 +5,7 @@
 // código 1 — rode depois de mexer em dano, vida, vagas ou pratos.
 // Win rate por Perigo só sai de jogo de verdade (Analytics "run_end" / testers).
 import { readFileSync } from "node:fs";
-import { BUILD, DIFFICULTY, PLAYER, ENEMY, BOSS, MAX_WEAPON_LEVEL, PASSIVE_SLOTS, WEAPONS, BLESSINGS, KITCHEN, ENDLESS } from "../src/config.js";
+import { BUILD, DIFFICULTY, PLAYER, ENEMY, BOSS, MAX_WEAPON_LEVEL, PASSIVE_SLOTS, WEAPONS, BLESSINGS, MAX_BLESSING_RANK, KITCHEN, ENDLESS } from "../src/config.js";
 
 // BASE_WEAPONS mora em UpgradeSystem.js (que importa Phaser): lê o valor do texto
 const slotsSrc = readFileSync(new URL("../src/systems/UpgradeSystem.js", import.meta.url), "utf8");
@@ -74,7 +74,7 @@ h1("Poder permanente × prato (valores no máximo)");
 const rank = (id, f) => {
   const b = BLESSINGS.find((x) => x.id === id);
   const p = { maxHp: PLAYER.HP_BASE, hp: PLAYER.HP_BASE, speed: 1, critChance: 0, pickupRadius: 1 };
-  b.apply(p, 5);
+  b.apply(p, MAX_BLESSING_RANK);
   return f(p);
 };
 const dmgBless = rank("dmg1", (p) => p._blessingDmgMult - 1);
