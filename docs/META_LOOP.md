@@ -142,8 +142,10 @@ profundidade percebida (e a Steam **espera** conquistas; alimentam o algoritmo).
 - ~~Speedrun "matar boss < 6:00"~~ → **vencer em < 8:00**. O boss só nasce aos
   7:00 fixos — a versão original era literalmente impossível.
 - ~~Mono-elemento ×3~~ → **Piromante** (só fogo) + **Purista** (só Cajado).
-  O Cajado (fogo) é arma inicial forçada de toda run: mono-gelo e mono-raio
-  eram impossíveis.
+  O Cajado (fogo) era arma inicial forçada de toda run: mono-gelo e mono-raio
+  eram impossíveis. Com a leva 2 de armas (3 por elemento, ver
+  [`ARMAS_E_COMBOS.md`](ARMAS_E_COMBOS.md)) voltaram: **Coração de Geada** (só gelo)
+  e **Filho do Trovão** (só raio).
 
 **Encanamento implementado:**
 - `ACHIEVEMENTS` em `config.js`: `{ id, name, desc, check(ctx), prog?(ctx) }`.

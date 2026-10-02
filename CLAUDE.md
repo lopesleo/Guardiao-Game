@@ -78,6 +78,7 @@ público brasileiro, com potencial internacional.
 | Pesquisa de mercado e ideias de retenção/tema | `docs/IDEIAS_RETENCAO.md` |
 | **Tema folclore: decisão, papéis e cuidados** | `docs/TEMA_FOLCLORE.md` |
 | Meta-progressão atual (Perigo, Bênçãos, conquistas) | `docs/META_LOOP.md` |
+| Armas, evoluções e próximos combos | `docs/ARMAS_E_COMBOS.md` |
 
 ## Rodar e testar
 

@@ -168,6 +168,12 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   hora** e guarda uma bênção por vez (`TREE` no config, `src/scenes/CampTree.js`)
 - ✅ **Ressonância elemental**: +15% de dano por arma extra do mesmo elemento; Fogo+Gelo+Raio
   monta o **Prisma** (reações +30%). Dica na carta de arma nova (`RESONANCE` no config)
+- ✅ **Armas, leva 2** ([`ARMAS_E_COMBOS.md`](ARMAS_E_COMBOS.md)): **3 armas por elemento** (eram 3 de fogo,
+  2 de gelo e 1 de raio). Novas: **Vaga-lumes** (raio, teleguiados), **Granizo** (gelo, chuva em área que
+  congela quem já está gelado) e **Redemoinho** (raio, funil que persegue e puxa o bando), na Forja nv 2/3/4.
+  Evoluções: **Revoada** (+ Orbe), **Tempestade de Granizo** (+ Raio, faz Cristal sozinha) e **Redemoinho de
+  Brasa** (+ Sopro, faz Sobrecarga sozinho); Orbe e Sopro viraram parceiras. Conquistas **Coração de Geada**
+  (só gelo) e **Filho do Trovão** (só raio). Próximas fases: Laços, Catalisadores, mais Tratos
 - ✅ **Tratos da Mata**: às vezes uma carta é um trato — poder grande com custo visível (ex.:
   +37% dano / −23% vida máxima). Do nível 3, até 3 por partida, cada um uma vez (`PACTS`)
 - ✅ **Santuários da Floresta** no mapa (`ShrineSystem`, `SHRINE`): **Carga** (fique perto 3 s:
