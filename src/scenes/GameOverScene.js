@@ -45,14 +45,11 @@ export class GameOverScene extends Phaser.Scene {
             : "A floresta caiu… por enquanto.";
     text(this, cx, 132, sub, { size: 22, color: CSS.muted, origin: 0.5 });
 
-    // Painel de resultados
-    const pw = Math.min(700, W - 60),
-      ph = 300;
+    // Painel de resultados — altura CALCULADA (antes: fixa em 300, e com Madeira +
+    // Sementes a 5ª linha caía em cima da fileira de armas)
+    const pw = Math.min(700, W - 60);
     const px = cx - pw / 2,
       py = 164;
-    const g = this.add.graphics();
-    drawFrame(g, px, py, pw, ph, won ? "gold" : "dark");
-    text(this, cx, py + 30, `PERIGO: ${(difficulty?.name ?? "").toUpperCase()}   ·   NÍVEL ${level}`, { size: 18, color: CSS.muted, origin: 0.5 });
 
     const stats = [
       { icon: "ico_hourglass", label: "Tempo", value: elapsedMs / 1000, fmt: (v) => formatTime(v * 1000) },
@@ -61,12 +58,26 @@ export class GameOverScene extends Phaser.Scene {
     ];
     if (woodGained > 0) stats.push({ icon: "ico_wood", label: "Madeira Ancestral", value: woodGained, fmt: (v) => `+${Math.round(v)}`, color: "#ffc86b" });
     if (seedsGained > 0) stats.push({ icon: "ico_seed", label: "Sementes raras", value: seedsGained, fmt: (v) => `+${Math.round(v)}`, color: "#ffe58f" });
-    const rowH = stats.length > 3 ? 44 : 52;
+    // Orçamento vertical: tudo acima do botão de anúncio (ou dos botões finais)
+    const unlocks = [...newUnlocks];
+    if (unlockedNextDifficulty) unlocks.unshift(`Novo Perigo: ${unlockedNextDifficulty}`);
+    const adShown = !quit && coinsGained > 0 && AdService.canShow("double_coins");
+    const limit = (adShown ? H - 134 - 30 : H - 62 - 36) - 12;
+    const HEAD = 62, // faixa "PERIGO · NÍVEL"
+      BUILD = weapons.length ? 66 : 0, // fileira de armas
+      FOOT = 14,
+      UNL = unlocks.length ? 70 : 0;
+    const rowH = Phaser.Math.Clamp(Math.floor((limit - py - HEAD - BUILD - FOOT - UNL) / stats.length), 34, 52);
+    const ph = HEAD + stats.length * rowH + BUILD + FOOT;
+    const g = this.add.graphics();
+    drawFrame(g, px, py, pw, ph, won ? "gold" : "dark");
+    text(this, cx, py + 30, `PERIGO: ${(difficulty?.name ?? "").toUpperCase()}   ·   NÍVEL ${level}`, { size: 18, color: CSS.muted, origin: 0.5 });
+    const small = rowH < 44;
     stats.forEach((s, i) => {
-      const y = py + 78 + i * rowH;
-      this.add.image(px + 50, y, s.icon).setScale(3);
-      text(this, px + 84, y, s.label, { size: 22, color: CSS.muted, origin: [0, 0.5] });
-      const v = text(this, px + pw - 36, y, s.fmt(0), { size: 30, color: s.color ?? CSS.txt, origin: [1, 0.5], stroke: true });
+      const y = py + HEAD + rowH * (i + 0.5);
+      this.add.image(px + 50, y, s.icon).setScale(small ? 2.5 : 3);
+      text(this, px + 84, y, s.label, { size: small ? 20 : 22, color: CSS.muted, origin: [0, 0.5] });
+      const v = text(this, px + pw - 36, y, s.fmt(0), { size: small ? 26 : 30, color: s.color ?? CSS.txt, origin: [1, 0.5], stroke: true });
       const o = { n: 0 };
       this.tweens.add({
         targets: o,
@@ -85,8 +96,12 @@ export class GameOverScene extends Phaser.Scene {
       });
     });
 
-    // Build final (ícones)
-    const wy = py + ph - 44;
+    // Build final (ícones), numa faixa própria abaixo dos números
+    const wy = py + HEAD + stats.length * rowH + BUILD / 2 + 4;
+    if (weapons.length) {
+      const sep = this.add.graphics();
+      sep.fillStyle(PAL.ink, 0.6).fillRect(px + 24, wy - BUILD / 2 - 2, pw - 48, 2);
+    }
     weapons.forEach((w, i) => {
       const x = cx + (i - (weapons.length - 1) / 2) * 60;
       const sg = this.add.graphics();
@@ -95,8 +110,6 @@ export class GameOverScene extends Phaser.Scene {
     });
 
     // Desbloqueios
-    const unlocks = [...newUnlocks];
-    if (unlockedNextDifficulty) unlocks.unshift(`Novo Perigo: ${unlockedNextDifficulty}`);
     if (unlocks.length) {
       const uy = py + ph + 40;
       const uw = Math.min(pw, W - 60);
@@ -111,7 +124,7 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     // Dobrar moedas (anúncio premiado, opcional) — só com moedas ganhas
-    if (!quit && coinsGained > 0 && AdService.canShow("double_coins")) {
+    if (adShown) {
       Analytics.track("ad_offer_show", { placement: "double_coins" });
       const db = new Button(this, cx, H - 134, 360, 54, `DOBRAR MOEDAS  +${coinsGained}`, async () => {
         if (db._used) return;

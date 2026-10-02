@@ -95,7 +95,7 @@ export function createCard(scene, x, y, w, h, card, onClick, index, showKey = tr
   inner.add(body);
   const bodyTop = my - 44,
     bodyBottom = descT.y + descT.height;
-  const footer = h / 2 - (card.cost ? 70 : 24 * P);
+  const footer = h / 2 - (card.cost ? 12 * P + 84 : 24 * P);
   const free = footer - ribBottom - (bodyBottom - bodyTop);
   if (free > 0) body.y = ribBottom + free * 0.42 - bodyTop;
 
@@ -103,7 +103,8 @@ export function createCard(scene, x, y, w, h, card, onClick, index, showKey = tr
   // espaço (descrição longa / fonte ampliada), a descrição encolhe em vez de sobrepor.
   if (card.cost) {
     const costT = text(scene, 0, 0, card.cost, { size: 18, color: CSS.redHi, origin: 0.5, align: "center", wrap: w - 70, stroke: true, strokeW: 4 });
-    costT.setY(h / 2 - 14 - costT.height / 2);
+    // Acima do selo da tecla (canto inferior) — antes encostava nele
+    costT.setY(h / 2 - 12 * P - 14 - costT.height / 2);
     let fs = parseInt(descT.style.fontSize, 10);
     while (descT.y + descT.height > costT.y - costT.height / 2 - 8 && fs > 12) {
       fs -= 1;
