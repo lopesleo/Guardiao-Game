@@ -131,7 +131,7 @@ export const WEAPONS = {
     element: ELEMENT.FIRE,
     baseDmg: 10, // era 7: alvo único precisa render no chefe (laboratório de equilíbrio)
     cooldown: 1100,
-    range: 280,
+    range: 210, // era 280: atirava em inimigo quase na borda da tela
     projSpeed: 300,
   },
   // Aura Gélida: campo de CONTROLE. Dano de chip + slow; quem fica 1s dentro CONGELA.
@@ -174,7 +174,7 @@ export const WEAPONS = {
     partner: "AURA",
     baseDmg: 12,
     cooldown: 850,
-    range: 300,
+    range: 240, // era 300 (acompanha o Cajado, 280 → 210)
     projSpeed: 320,
     cloud: { radius: 55, dmgPerTick: 4, tickMs: 300, duration: 1400, color: 0xffc8a0 },
   },
