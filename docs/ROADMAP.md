@@ -223,6 +223,16 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   o jogador pode pagar moedas e **escolher** a bênção da próxima partida. Mesma regra para anúncio e
   oferenda: **uma bênção por partida** (a recarga de 1 hora do anúncio saiu; o teto diário de 24 fica); preço 150 × (1 + 5% por rank de bênção comprado), ~750 no fim. "+40% moedas" fica de fora
   (moeda por moeda daria lucro). Sem anúncio no aparelho, a Samaúma continua útil
+- ✅ **Golpes especiais dos chefes** ([`CHEFES.md`](CHEFES.md)): Mula sem Cabeça (Galope em Chamas com rastro
+  de fogo, Coice, Chuva de Brasas), Corpo-Seco (A Seca, A Terra o Rejeita, Cipós da Podridão) e Mapinguari
+  (Bocarra da Barriga, Grito com brecha, Olhar da Podridão na fúria, mais Baque, Raízes, Investida, Leque).
+  Regras de justiça: aviso com forma própria e no mesmo relógio do golpe, acima do mapa de luz; tudo se
+  desvia só andando (raízes não prendem mais quem não tem Dash); a área desenhada é a que fere; um golpe
+  por vez. Recompensa: **ponto fraco** depois dos golpes grandes (+50%, número dourado; a Bocarra aberta
+  +70%), "DESVIOU!" enche o Despertar, **desviou de tudo** = +1 Madeira (minichefe) / +2 (Mapinguari).
+  Arte nova (Mula empinada e no coice, Corpo-Seco de braços erguidos, Mapinguari de bocarra e gritando),
+  13 sons novos, nome do golpe sob a barra. Verificado com um robô que só anda e reage em 250 ms: 0 acertos
+  em 73 casos; parado, os golpes acertam. Debug: M = Mula, C = Corpo-Seco. 👤 sentir no aparelho
 - ✅ **Tratos da Mata**: às vezes uma carta é um trato — poder grande com custo visível (ex.:
   +37% dano / −23% vida máxima). Do nível 3, até 3 por partida, cada um uma vez (`PACTS`)
 - ✅ **Santuários da Floresta** no mapa (`ShrineSystem`, `SHRINE`): **Carga** (fique perto 3 s:

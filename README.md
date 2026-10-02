@@ -17,8 +17,9 @@ Roda 100% offline.
   Redemoinho) e **9 evoluções** (arma nível 5 + arma parceira) — ver
   `docs/ARMAS_E_COMBOS.md`
 - **4 personagens** jogáveis, cada um com arma inicial e estilo próprios
-- **Roteiro de partida**: enxames, cercos, mini-chefes (Lobo Alfa, Ogro Ancião)
-  e o chefe final, o Ancião, aos 7:00
+- **Roteiro de partida**: enxames, cercos, minichefes (Mula sem Cabeça, Corpo-Seco)
+  e o chefe final, o Mapinguari, no fim da partida — cada um com **golpes especiais
+  próprios**, avisos claros e ponto fraco (ver `docs/CHEFES.md`)
 - **11 passivas**, baús (normal, dourado, armadilha, mímico)
 - **Meta-progressão**: 5 níveis de Perigo, Bênçãos em 10 ranks, Tesouro
   Ancestral infinito, 24 conquistas
