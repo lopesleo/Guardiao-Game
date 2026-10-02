@@ -414,7 +414,8 @@ export class Staff extends Weapon {
         Math.sin(a) * sp,
         dmg,
         ELEMENT.FIRE,
-        2000,
+        // Some logo depois do alcance (antes voava 2 s = 600 px, o dobro do alcance)
+        ((this.range * 1.35) / sp) * 1000,
         COLORS.FIRE,
         crit,
       );

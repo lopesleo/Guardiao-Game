@@ -162,12 +162,18 @@ export class ScrollList {
       this._hoverRow = null;
     });
     this.zone.on("wheel", (p, dx, dy) => this.setScroll(this.scroll + dy * 0.6));
-    this._tick = () => {
+    // Redesenho SÓ quando muda (rolagem, linha nova, hover animando) + a cada 250 ms
+    // para textos que mudam sozinhos (contagem de obra). Antes: todo quadro com a lista aberta.
+    this._tick = (time) => {
       if (Math.abs(this._fling || 0) > 0.3) {
         this.setScroll(this.scroll - this._fling);
         this._fling *= 0.92;
       }
-      this._redraw();
+      if (this._dirty || time < (this._liveUntil ?? 0) || time >= (this._nextAuto ?? 0)) {
+        this._dirty = false;
+        this._nextAuto = time + 250;
+        this._redraw();
+      }
     };
     scene.events.on("update", this._tick);
   }
@@ -183,6 +189,7 @@ export class ScrollList {
     this.rows.push(row);
     this.contentH += row.h + (row.gap ?? 8);
     this._drawBar();
+    this._dirty = true;
     return row;
   }
 
@@ -203,11 +210,10 @@ export class ScrollList {
     const max = Math.max(0, this.contentH - this.h);
     this.scroll = Phaser.Math.Clamp(v, 0, max);
     this._drawBar();
-    this._redraw();
+    this._dirty = true;
   }
 
-  // Desenha a "janela" da lista na RenderTexture (todo quadro: hover e linhas
-  // animadas também aparecem; listas são curtas, custo baixo)
+  // Desenha a "janela" da lista na RenderTexture
   _redraw() {
     if (!this.rt?.active) return;
     this.rt.clear();
@@ -232,6 +238,7 @@ export class ScrollList {
     this._hoverRow?.hover?.(false);
     this._hoverRow = r;
     r?.hover?.(true);
+    this._liveUntil = this.scene.time.now + 260; // acompanha a animação do hover
   }
 
   _drawBar() {
