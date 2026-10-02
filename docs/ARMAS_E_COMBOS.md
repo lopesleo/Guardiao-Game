@@ -10,6 +10,10 @@ Levantamento de 02/10/2026: o jogo tinha **6 armas e 6 evoluções**, com 4 vaga
 arma por partida. Em 3 a 5 partidas o jogador já tinha visto todas, e as builds
 se repetiam. Os elementos também estavam desequilibrados:
 
+> Nomes atuais (out/2026, revisão de lore): o **Bumerangue** virou a **Vara Encantada**
+> (da Caipora) e a evolução **Fênix** virou **Boitatá**. Mecânica igual; ids internos
+> `BOOMER`/`PHOENIX` mantidos (save). Ver `TEMA_FOLCLORE.md`.
+
 | Elemento | Antes | Depois da leva 2 |
 |---|---|---|
 | Fogo | Cajado, Bumerangue, Sopro | Cajado, Bumerangue, Sopro |

@@ -226,8 +226,27 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.invulnUntil = Math.max(this.invulnUntil, now + PLAYER.DASH_INVULN_MS);
     // trilha + SFX whoosh real
     this._dashTrail();
+    if (this.heroId === 'guardian') this._backwardTracks();
     this.scene.sound.play('sfx_dash', { volume: 0.5 });
     return true;
+  }
+
+  // Curupira: os pés virados para trás deixam pegadas apontando para o lado
+  // OPOSTO de onde ele foi (a lenda: quem segue o rastro se perde)
+  _backwardTracks() {
+    const scene = this.scene;
+    const dx = this.dashDirX,
+      dy = this.dashDirY;
+    const rot = Math.atan2(-dy, -dx) + Math.PI / 2; // dedos para trás
+    for (let i = 0; i < 4; i++) {
+      scene.time.delayedCall(i * 45, () => {
+        const side = i % 2 ? 6 : -6;
+        const x = this.x - dy * side,
+          y = this.y + this.displayHeight * 0.42 + dx * side;
+        const f = scene.add.image(x, y, 'px_foot').setScale(3).setRotation(rot).setAlpha(0.9).setDepth(5);
+        scene.tweens.add({ targets: f, alpha: 0, delay: 1400, duration: 900, onComplete: () => f.destroy() });
+      });
+    }
   }
 
   _dashTrail() {

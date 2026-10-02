@@ -184,7 +184,7 @@ mecânicas novas de verdade, uma por arma-âncora:
 | Tempestade de Vapor | Cajado Lv5 + Aura | projéteis explodem em nuvem escaldante (DoT em área) no impacto |
 | Sobrecarga Eterna | Raio Lv5 + Cajado | o raio encadeia: alvo prioritário + 4 saltos com falloff, bolt em todos |
 | Coração do Inverno | Aura Lv5 + Raio | campo normal + nova periódica de estilhaços (dano+gelo em raio 2,2×) |
-| Fênix | Bumerangue Lv5 + Cajado | rastro de zonas de fogo no trajeto (dano + status fire) |
+| Boitatá (era Fênix) | Vara Encantada (era Bumerangue) Lv5 + Cajado | rastro de zonas de fogo no trajeto (dano + status fire) |
 
 **Regras:**
 - Receita: âncora no **Lv5** + parceira presente na run → a carta ★ EVOLUÇÃO é

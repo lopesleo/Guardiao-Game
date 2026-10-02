@@ -233,6 +233,11 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Arte nova (Mula empinada e no coice, Corpo-Seco de braços erguidos, Mapinguari de bocarra e gritando),
   13 sons novos, nome do golpe sob a barra. Verificado com um robô que só anda e reage em 250 ms: 0 acertos
   em 73 casos; parado, os golpes acertam. Debug: M = Mula, C = Corpo-Seco. 👤 sentir no aparelho
+- ✅ **Lendas × armas** (pesquisa de lore em `TEMA_FOLCLORE.md`): **Saci começa com o Redemoinho** (era o
+  Raio; a lenda e a própria arte dele são o redemoinho), o **Bumerangue virou a Vara Encantada** da Caipora
+  (bumerangue é australiano; a lenda dá a ela uma vara) com arte nova na mão, no voo e no ícone, a evolução
+  **Fênix virou Boitatá** (a cobra de fogo) e o **Curupira deixa pegadas viradas para trás** no Dash.
+  Curupira (Cajado de fogo) e Iara (Aura de águas frias) já batiam com a lenda
 - ✅ **Tratos da Mata**: às vezes uma carta é um trato — poder grande com custo visível (ex.:
   +37% dano / −23% vida máxima). Do nível 3, até 3 por partida, cada um uma vez (`PACTS`)
 - ✅ **Santuários da Floresta** no mapa (`ShrineSystem`, `SHRINE`): **Carga** (fique perto 3 s:

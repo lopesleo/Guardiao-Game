@@ -164,21 +164,22 @@ function shadow() {
   return p;
 }
 
-// Bumerangue de madeira com fio em brasa
+// Vara Encantada da Caipora (gira no voo): forquilha com folhas numa ponta,
+// brasa do fumo na outra
 function boomerang() {
   return Pix.fromMap(
     [
-      "kkkk......",
-      "khhok.....",
-      "kmnnok....",
-      ".kmnnok...",
-      "..kmnnok..",
-      "..kmnnnokk",
-      "...kmnnnhk",
-      "....kmmnnk",
-      ".....kkkkk",
+      "..............gk",
+      ".............gNk",
+      "............kNk.",
+      "kkkkkkkkkkkkNk..",
+      "yhonmnmnmnmnnNk.",
+      "kkkkkkkkkkkkNk..",
+      "............kNk.",
+      ".............gNk",
+      "..............gk",
     ],
-    { k: K, h: PAL.org3, o: PAL.org2, m: PAL.n4, n: PAL.n3 },
+    { k: K, h: PAL.org3, o: PAL.org2, y: PAL.yel3, m: PAL.n4, n: PAL.n3, N: PAL.n2, g: PAL.g5 },
   );
 }
 
@@ -352,6 +353,8 @@ export function registerSprites(scene) {
   woodLog().register(scene, "ico_wood");
   shadow().register(scene, "px_shadow");
   boomerang().register(scene, "px_boomer");
+  // Pegada do Curupira (dedos para CIMA; girada no uso — os pés dele são virados)
+  Pix.fromMap(["d.d.d", ".....", ".kkk.", "kkkkk", ".kkk.", "..k..", ".kkk.", ".kkk."], { k: PAL.n0, d: PAL.n1 }).register(scene, "px_foot");
   enemyShot().register(scene, "px_eshot");
   iceOrb().register(scene, "px_iceorb");
   dot(1).register(scene, "px_dot1");
