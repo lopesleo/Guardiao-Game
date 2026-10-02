@@ -107,6 +107,8 @@ export class GameScene extends Phaser.Scene {
     this._coinsGainedThisRun = 0;
     this._showDmgNumbers = Settings.get("dmgNumbers");
     this._newUnlocksThisRun = [];
+    // Feitos da Forja ainda abertos: no fim da partida avisa os que esta partida cumpriu
+    this._deedsOpen = META.WEAPON_UNLOCK_ORDER.filter((k) => !this.meta.isUnlocked(k) && !this.meta.deedDone(k));
     // Conquistas (Fase 3): flags observadas pelos check() de ACHIEVEMENTS
     this._runFlags = { tookHpPassive: false };
     this._survive10Checked = false;
@@ -1478,6 +1480,7 @@ export class GameScene extends Phaser.Scene {
       this.meta._save();
     }
     this.meta.registerRun(this.elapsedMs / 1000, won, this.diff.id);
+    for (const k of this._deedsOpen || []) if (this.meta.deedDone(k)) this._newUnlocksThisRun.push(`Feito cumprido: ${WEAPONS[k].name} na Forja`);
     const newAchievements = this._checkAchievements(won, true);
     this._newUnlocksThisRun.push(...newAchievements.map((a) => a.name));
     // Missões do dia (o prêmio se pega no Mural da Clareira)

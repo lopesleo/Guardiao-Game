@@ -215,6 +215,10 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   + **prêmio da 1ª vitória**; hábito diário ×2 e **bônus de descanso** (2 primeiras partidas do dia +50%).
   Save v4 dobra os ranks antigos (ninguém perde poder). Tela de resultado com linha própria do prêmio.
   👤 conferir no aparelho e, com testadores, comparar `run_end` com a simulação
+- ✅ **Feitos da Forja** (desbloqueio por desafio, como no Megabonk; `META.WEAPON_DEED`): além de moedas e
+  do nível da Forja, Vaga-lumes pede 1.500 abates, Orbe 60 Vapores, Granizo 40 Cristais, Sopro Flamejante
+  vencer no Perigo Guardião ou acima e Redemoinho 60 Sobrecargas (acumulados entre partidas). A Forja mostra
+  o feito e o progresso; o fim da partida avisa quando um feito é cumprido. Os feitos ensinam as reações
 - ✅ **Oferenda na Samaúma** (`TREE.OFFERING`): além de girar a roleta com anúncio (sorteio grátis),
   o jogador pode pagar moedas e **escolher** a bênção da próxima partida. Sem recarga, uma bênção guardada
   por vez; preço 150 × (1 + 5% por rank de bênção comprado), ~750 no fim. "+40% moedas" fica de fora
