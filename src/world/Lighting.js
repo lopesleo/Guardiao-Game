@@ -164,6 +164,10 @@ export class Lighting {
     s.awakenOrbPool?.forEachActive((o) => this._light(o.x, o.y, 80, 0xffd070, 0.8));
     s.heartPool?.forEachActive((h) => this._light(h.x, h.y, 60, 0xff5060, 0.6));
     s.lanterns?.lights((x, y, r, c, a) => this._light(x, y, r, c, a));
+    // Golpes de chefe: fogo no chão, brasas voando, olhar, bocarra
+    const add = (x, y, r, c, a) => this._light(x, y, r, c, a);
+    s.hazards?.lights(add);
+    if (s._bossBrains) for (const b of s._bossBrains) b.lights(add);
     // Brilho fraco da corrupção em cada inimigo: legibilidade no escuro
     s.enemyPool?.forEachActive((e) => {
       if (e.active) this._light(e.x, e.y - e.displayHeight * 0.15, e.miniBoss ? 150 : 58, e.miniBoss ? 0xf2c14e : 0xb0308a, e.miniBoss ? 0.6 : 0.4);

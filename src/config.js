@@ -81,6 +81,47 @@ export const BOSS = {
   ROAR_DURATION_MS: 1500,
 };
 
+// Golpes especiais dos chefes (ver docs/CHEFES.md). Regras de JUSTIÇA que valem para todos:
+//  · todo golpe avisa antes, com forma própria (círculo, cone, faixa, anel com brecha, leque)
+//    e som próprio; o aviso e o golpe andam no MESMO relógio (hit-stop/congelar pausam os dois);
+//  · todo golpe dá para evitar SÓ ANDANDO (o Dash é desbloqueável); o Dash facilita;
+//  · um golpe por vez: o próximo só começa depois que o anterior termina (+ fôlego);
+//  · golpes grandes deixam o chefe EXPOSTO (ponto fraco): leva mais dano por um instante.
+// Dano: "× dano" multiplica o dano de contato do chefe (que já tem Perigo e onda embutidos).
+export const BOSS_FIGHT = {
+  EXPOSED_MULT: 1.5, // dano recebido com o ponto fraco à mostra
+  DODGE_AWAKEN: 6, // desviar de um golpe enche o Despertar (reação dá 12)
+  DODGE_FEEDBACK_GAP_MS: 500,
+  // "Desviou de tudo": nenhum golpe especial acertou (com pelo menos MIN_SPECIALS tentados)
+  FLAWLESS_MIN_SPECIALS: 3,
+  FLAWLESS_WOOD: { MINIBOSS: 1, BOSS: 2 },
+  ENGAGE_DIST: 560, // minichefe só usa especial dentro da tela (nunca de fora da visão)
+
+  MULA: {
+    GAP_MS: [1700, 1100], // fôlego entre golpes (fase 1, fase 2 abaixo de 50%)
+    CHARGE: { windupMs: 800, rewindMs: 620, len: 520, width: 92, speed: 680, dmg: 1.3, chain: [1, 3], exposedMs: 900 },
+    TRAIL: { every: 34, r: 24, lifeMs: 2400, tickMs: 400, dmg: 0.22 }, // rastro de fogo do galope
+    KICK: { windupMs: 850, range: 150, halfAngle: 0.8, dmg: 1.5, push: 110, exposedMs: 500 },
+    EMBERS: { windupMs: 1000, staggerMs: 130, n: [5, 7], r: 54, sep: 2.25, spread: 240, dmg: 1.0, fireMs: 1800 },
+  },
+  SECO: {
+    GAP_MS: [1900, 1300],
+    DRAIN: { warnMs: 760, channelMs: 1800, r: 190, tickMs: 300, dmg: 0.12, heal: 3, exposedMs: 1800 },
+    BURROW: { sinkMs: 560, travelMs: 1500, speed: 150, warnMs: 820, r: 108, dmg: 1.0, exposedMs: 1700 },
+    VINES: { windupMs: 900, len: 540, width: 54, dmg: 0.7, liveMs: 520, secondDelayMs: 650 },
+  },
+  MAPI: {
+    GAP_MS: [1500, 900],
+    SLAM: { windupMs: 760, r: 180, dmg: 1.0 },
+    ROOTS: { warnMs: 1100, r: 95, rootMs: 1200, slamDelayMs: 450 },
+    LUNGE: { windupMs: 800, len: 420, width: 120, speed: 640, dmg: 1.0, exposedMs: 1000 },
+    MAW: { openMs: 520, inhaleMs: 1900, pull: 92, r: 100, dmg: 1.4, exposedMult: 1.7 },
+    SCREAM: { windupMs: 950, rings: [3, 4], everyMs: 820, speed: 290, maxR: 900, band: 24, gap: 1.35, shift: 0.75, shiftPx: 80, dmg: 0.75 },
+    GAZE: { windupMs: 1250, sweepMs: 1150, arc: 1.7, len: 600, blind: 80, startPx: 90, halfWidth: 0.075, dmg: 1.3, exposedMs: 1300 },
+    FAN: { windupMs: 720, n: 7, spread: 0.16, speed: 230 },
+  },
+};
+
 // Elementos & reações (D11, D21)
 export const ELEMENT = { FIRE: "fire", ICE: "ice", BOLT: "bolt" };
 
@@ -729,11 +770,11 @@ export const LEGENDS = [
     origin: "Do tupi y-îara, \"senhora das águas\". Vive nos rios da Amazônia e encanta com seu canto; a lenda somou traços europeus e africanos com o tempo." },
   { id: "saci", char: "shaman", name: "Saci", sprite: ["hero_shaman", 0, 2.2], role: "Redemoinho travesso · raio",
     origin: "Nasceu do Jaxy Jaterê guarani e ganhou traços africanos e europeus ao longo dos séculos. Esperto e brincalhão, vive dentro dos redemoinhos de vento." },
-  { id: "mula", name: "Mula sem Cabeça", sprite: ["mon_alpha", 0, 2.2], role: "Minichefe · investidas em chamas",
+  { id: "mula", name: "Mula sem Cabeça", sprite: ["mon_alpha", 0, 2.2], role: "Minichefe · galope em chamas, coice e chuva de brasas",
     origin: "Lenda de origem ibérica espalhada pelo interior do Brasil: uma mula que solta fogo pelo pescoço e galopa pelos campos em noites escuras." },
-  { id: "corposeco", name: "Corpo-Seco", sprite: ["mon_elder", 0, 2], role: "Minichefe · lento e resistente",
+  { id: "corposeco", name: "Corpo-Seco", sprite: ["mon_elder", 0, 2], role: "Minichefe · seca a vida, foge pela terra, solta cipós",
     origin: "Contada no interior do Sudeste: alguém tão cruel em vida que nem a terra o aceitou, e ficou seco, vagando. Aqui, a Podridão o levantou." },
-  { id: "mapinguari", name: "Mapinguari", sprite: ["mon_boss", 4, 1.2], role: "Chefe · corrompido pela Podridão",
+  { id: "mapinguari", name: "Mapinguari", sprite: ["mon_boss", 4, 1.2], role: "Chefe · bocarra na barriga, grito e o olho da Podridão",
     origin: "Gigante da Amazônia, peludo, com um olho na testa e a boca na barriga. Há quem ligue a lenda às preguiças-gigantes extintas. Vencê-lo o liberta." },
 ];
 

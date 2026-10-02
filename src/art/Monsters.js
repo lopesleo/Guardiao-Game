@@ -31,6 +31,24 @@ function ell(p, cx, cy, rx, ry, ramp, jitter = 0.18) {
 }
 const px = (p, list, c) => list.forEach(([x, y]) => p.set(x, y, c));
 
+// Elipse girada (ang em rad), mesma luz de cima-esquerda — poses de chefe
+function rell(p, cx, cy, rx, ry, ang, ramp, jitter = 0.2) {
+  const R = Math.max(rx, ry) + 1;
+  const c = Math.cos(ang),
+    sn = Math.sin(ang);
+  for (let y = Math.floor(cy - R); y <= Math.ceil(cy + R); y++)
+    for (let x = Math.floor(cx - R); x <= Math.ceil(cx + R); x++) {
+      const X = x + 0.5 - cx,
+        Y = y + 0.5 - cy;
+      const u = (X * c + Y * sn) / rx,
+        v = (-X * sn + Y * c) / ry;
+      if (u * u + v * v > 1) continue;
+      let t = (-(X / R) * 0.55 - (Y / R) * 0.75 + 0.9) / 1.8;
+      t += (bayer(x, y) - 0.5) * jitter;
+      p.set(x, y, ramp[Math.max(0, Math.min(ramp.length - 1, Math.floor(t * ramp.length)))]);
+    }
+}
+
 // ---------------------------------------------------------------------------
 // LOBO SOMBRIO (24×16) — corrida em 4 quadros
 // ---------------------------------------------------------------------------
@@ -404,15 +422,115 @@ function mula(f) {
   return p;
 }
 
+// Quadros de golpe da Mula (32×28; os de galope são colados 6px abaixo):
+// 4 = EMPINADA (aviso do galope e da chuva de brasas: patas da frente no ar,
+//     labareda alta); 5 = COICE (traseiro no alto, cascos estendidos para trás)
+const MULA_H = 28;
+function mulaTall(f) {
+  const p = new Pix(32, MULA_H);
+  p.blit(mula(f), 0, MULA_H - 22);
+  return p;
+}
+function mulaFlame(p, cx, top, h, f) {
+  for (let y = 0; y <= h; y++)
+    for (let x = cx - 5; x <= cx + 5; x++) {
+      const w = 1 + y * (4.5 / h);
+      const ccx = cx + (f % 2 ? 0.5 : -0.5) * (1 - y / h);
+      if (Math.abs(x - ccx) > w) continue;
+      const hot = Math.abs(x - ccx) < w * 0.45;
+      p.set(x, top + y, y < h * 0.35 || hot ? PAL.yel3 : y === h ? PAL.red1 : PAL.org2);
+    }
+  p.set(cx - 3, top + 1, PAL.org2);
+  p.set(cx + 3, top + 2, PAL.org2);
+}
+function mulaRear(f = 0) {
+  const p = new Pix(32, MULA_H);
+  // patas de trás firmes no chão
+  for (const x0 of [8, 11]) {
+    for (let y = 19; y <= 25; y++) {
+      p.set(x0 + (y > 22 ? -1 : 0), y, MULA[1]);
+      p.set(x0 + 1 + (y > 22 ? -1 : 0), y, MULA[0]);
+    }
+    p.set(x0 - 1, 26, PAL.s3);
+    p.set(x0, 26, PAL.s2);
+  }
+  // corpo inclinado: traseiro embaixo, peito no alto
+  rell(p, 14, 17, 10, 4.6, -0.6, MULA, 0.25);
+  // rabo baixo, chicoteando
+  px(p, [[5, 21], [4, 22], [3, 23], [3, 24]], MULA[1]);
+  p.set(2, 25, PAL.org1);
+  // patas da frente dobradas no ar (casco brilhando)
+  for (const [x0, y0, d] of [[18, 15, 1], [21, 13, 0]]) {
+    // coxa para a frente e para cima, canela pendendo, casco aceso
+    const c = MULA[2 - d];
+    p.line(x0, y0, x0 + 4, y0 - 3, c);
+    p.line(x0, y0 + 1, x0 + 4, y0 - 2, MULA[0]);
+    p.line(x0 + 5, y0 - 3, x0 + 6, y0 + 1, c);
+    p.line(x0 + 6, y0 - 3, x0 + 7, y0 + 1, MULA[0]);
+    p.set(x0 + 6, y0 + 2, PAL.s3);
+    p.set(x0 + 7, y0 + 2, PAL.s4);
+    p.set(x0 + 8, y0 + 3, PAL.yel3);
+  }
+  // pescoço erguido e a labareda ALTA (o golpe vem dela)
+  for (let i = 0; i < 6; i++) {
+    const x = 20 + Math.round(i * 0.45),
+      y = 11 - i;
+    p.set(x, y, MULA[2]);
+    p.set(x + 1, y, MULA[1]);
+    p.set(x + 2, y, MULA[0]);
+  }
+  mulaFlame(p, 23, 0, 6, f);
+  px(p, [[12, 15], [13, 16], [16, 13]], ROT.hot);
+  p.outline(PAL.ink);
+  return p;
+}
+function mulaKick() {
+  const p = new Pix(32, MULA_H);
+  // patas da frente fincadas
+  for (const x0 of [19, 22]) {
+    for (let y = 19; y <= 25; y++) {
+      p.set(x0, y, MULA[1]);
+      p.set(x0 + 1, y, MULA[0]);
+    }
+    p.set(x0, 26, PAL.s3);
+    p.set(x0 + 1, 26, PAL.s2);
+  }
+  // corpo inclinado para a frente: traseiro no alto
+  rell(p, 16, 16, 10, 4.6, 0.38, MULA, 0.25);
+  // patas de trás estendidas para trás e para cima — o coice
+  for (const [y0, k] of [[13, 0], [15, 1]]) {
+    for (let i = 0; i < 7; i++) {
+      p.set(8 - i, y0 - Math.round(i * 0.45), MULA[2 - k]);
+      p.set(8 - i, y0 + 1 - Math.round(i * 0.45), MULA[0]);
+    }
+    p.set(1, y0 - 3, PAL.s3);
+    p.set(0, y0 - 3, PAL.s4);
+  }
+  // faíscas dos cascos
+  px(p, [[0, 7], [2, 6], [1, 13]], PAL.yel3);
+  // rabo erguido em brasa
+  px(p, [[6, 9], [5, 8], [5, 7]], MULA[1]);
+  p.set(4, 6, PAL.org1);
+  // pescoço baixo, labareda curta para a frente
+  for (let i = 0; i < 4; i++) {
+    p.set(24 + i, 15 + Math.round(i * 0.3), MULA[2]);
+    p.set(24 + i, 16 + Math.round(i * 0.3), MULA[0]);
+  }
+  mulaFlame(p, 28, 9, 6, 1);
+  px(p, [[13, 15], [14, 16], [18, 14]], ROT.hot);
+  p.outline(PAL.ink);
+  return p;
+}
+
 // ---------------------------------------------------------------------------
 // CORPO-SECO (26×32) — minichefe lento e resistente: figura ressecada que a
 // própria terra rejeitou (lenda), curvada, costelas à mostra, trapos,
 // braços longos com garras e olhos ocos com o brilho da Podridão
 // ---------------------------------------------------------------------------
 const SECO = [0x241e1a, 0x3e342c, 0x5a4c3e, 0x7a6a56];
-function corpoSeco(f) {
+function corpoSeco(f, cast = false) {
   const p = new Pix(26, 32);
-  const sw = f % 2;
+  const sw = cast ? 0 : f % 2;
   // Pernas finas
   for (const x0 of [10, 15]) for (let y = 22; y <= 30; y++) {
     p.set(x0 + (y > 27 && sw ? 1 : 0), y, SECO[1]);
@@ -434,8 +552,24 @@ function corpoSeco(f) {
       hy = 26 - sw;
     px(p, [[hx, hy], [hx + dir, hy + 1], [hx - dir, hy + 1]], PAL.s4);
   };
-  arm(7, -1);
-  arm(19, 1);
+  // Braços erguidos (A Seca, os Cipós, a volta da terra): garras acesas de Podridão
+  const armUp = (x0, dir) => {
+    for (let y = 10; y >= 1; y--) {
+      const x = x0 + dir * Math.round((10 - y) * 0.45);
+      p.set(x, y, SECO[2]);
+      p.set(x + dir, y, SECO[1]);
+    }
+    const hx = x0 + dir * 4;
+    px(p, [[hx, 0], [hx + dir, 0], [hx + dir * 2, 1], [hx - dir, 1]], PAL.s4);
+    px(p, [[hx, 1], [hx + dir, 2]], ROT.glow);
+  };
+  if (cast) {
+    armUp(7, -1);
+    armUp(19, 1);
+  } else {
+    arm(7, -1);
+    arm(19, 1);
+  }
   // Cabeça caída para a frente, cabelo ralo, olhos ocos brilhando
   ell(p, 15, 5 + sw * 0.5, 4, 4, SECO.slice(1), 0.2);
   for (let x = 11; x <= 17; x += 2) p.set(x, 1, SECO[0]);
@@ -458,9 +592,11 @@ function corpoSeco(f) {
 // Vencer = libertá-lo da Podridão (ver GameScene._onBossDeath).
 // ---------------------------------------------------------------------------
 const MAPI_FUR = [0x1e120c, 0x352014, 0x52321f, 0x74492c, 0x93603a];
-function mapinguari(f, fury, freed = false) {
+// pose: null | "maw" (Bocarra: boca enorme, braços abertos) | "scream" (Grito/Olhar:
+// braços erguidos, olho em brasa)
+function mapinguari(f, fury, freed = false, pose = null) {
   const p = new Pix(50, 56);
-  const sw = f === 1 ? 1 : 0; // respiração: ombros sobem 1px
+  const sw = pose ? 0 : f === 1 ? 1 : 0; // respiração: ombros sobem 1px
   const crack = fury ? [PAL.org1, PAL.org2, PAL.yel3] : [ROT.mid, ROT.hot, ROT.glow];
   // Meia-largura do corpo por linha: ombros largos → cintura → quadril
   const half = (y) => (y < 14 ? 0 : y < 20 ? 9 + (y - 14) * 1.4 : y < 38 ? 17 - (y - 20) * 0.06 : 16 - (y - 38) * 0.45);
@@ -494,8 +630,25 @@ function mapinguari(f, fury, freed = false) {
     for (let k = 0; k < 4; k++) p.set(hx + dir * k, hy, MAPI_FUR[1]);
     px(p, [[hx, hy + 1], [hx + dir * 2, hy + 2], [hx + dir * 4, hy + 1], [hx + dir * 1, hy + 2]], PAL.s4);
   };
-  arm(8, -1, sw);
-  arm(42, 1, 1 - sw);
+  // Braços erguidos (grito): sobem dos ombros até acima da cabeça
+  const armUp = (x0, dir) => {
+    for (let y = 19; y >= 3; y--) {
+      const x = x0 + dir * Math.round((19 - y) * 0.28);
+      for (let k = 0; k < 4; k++) p.set(x + dir * k, y, MAPI_FUR[k === 0 ? (dir < 0 ? 4 : 2) : k === 3 ? 0 : 2]);
+    }
+    const hx = x0 + dir * 5;
+    px(p, [[hx, 1], [hx + dir, 0], [hx + dir * 2, 1], [hx + dir * 3, 0], [hx + dir * 4, 2]], PAL.s4);
+  };
+  if (pose === "scream") {
+    armUp(8, -1);
+    armUp(39, 1);
+  } else if (pose === "maw") {
+    arm(6, -1, 5); // abertos e erguidos: "venha"
+    arm(44, 1, 5);
+  } else {
+    arm(8, -1, sw);
+    arm(42, 1, 1 - sw);
+  }
   // Cabeça afundada nos ombros, com UM olho grande na testa
   ell(p, 25, 11 - sw, 7.5, 6.5, MAPI_FUR.slice(1), 0.35);
   for (let x = 19; x <= 31; x++) p.set(x, 7 - sw, MAPI_FUR[1]); // sobrancelha pesada
@@ -503,10 +656,16 @@ function mapinguari(f, fury, freed = false) {
   p.disc(25, 10 - sw, 2.4, freed ? PAL.g4 : fury ? PAL.red1 : PAL.yel1);
   p.disc(25, 10 - sw, 1.4, freed ? PAL.g6 : fury ? PAL.red3 : PAL.yel3);
   p.set(24, 9 - sw, PAL.white);
+  if (pose === "scream") {
+    // olho em brasa: miolo branco e raios
+    p.disc(25, 10, 1.6, PAL.white);
+    const ray = fury ? PAL.red3 : PAL.yel3;
+    px(p, [[25, 4], [20, 10], [30, 10], [21, 6], [29, 6], [21, 14], [29, 14]], ray);
+  }
   // BOCA NA BARRIGA (a marca da lenda): grande, aberta, gengiva e dentes
-  const my = 32,
-    mrx = 9.5,
-    mry = 6.5;
+  const my = pose === "maw" ? 31 : 32,
+    mrx = pose === "maw" ? 12 : pose === "scream" ? 8.5 : 9.5,
+    mry = pose === "maw" ? 9.5 : pose === "scream" ? 7.5 : 6.5;
   for (let y = Math.floor(my - mry); y <= Math.ceil(my + mry); y++)
     for (let x = Math.floor(25 - mrx); x <= Math.ceil(25 + mrx); x++) {
       const dx = (x + 0.5 - 25) / mrx,
@@ -515,13 +674,22 @@ function mapinguari(f, fury, freed = false) {
       if (d > 1) continue;
       p.set(x, y, d > 0.72 ? PAL.red1 : d > 0.35 ? 0x2a0a10 : PAL.ink); // gengiva → garganta
     }
-  for (let x = 17; x <= 33; x++) {
-    if (x % 2) p.set(x, my - 5, PAL.cream); // dentes de cima
-    if (x % 2 === 0 && x > 17 && x < 33) p.set(x, my + 5, PAL.cream); // de baixo
+  const ty = Math.round(mry) - 1; // dentes acompanham a abertura da boca
+  for (let x = 25 - Math.round(mrx) + 2; x <= 25 + Math.round(mrx) - 2; x++) {
+    if (x % 2) p.set(x, my - ty, PAL.cream); // dentes de cima
+    if (x % 2 === 0) p.set(x, my + ty, PAL.cream); // de baixo
   }
-  px(p, [[18, my - 4], [32, my - 4], [19, my + 4], [31, my + 4]], PAL.cream); // presas
-  p.disc(25, my + 1.5, 2.2, PAL.red2); // língua
-  if (!freed) p.set(25, my - 1, crack[2]); // brilho da Podridão na garganta
+  const fx = Math.round(mrx) - 2;
+  px(p, [[25 - fx, my - ty + 1], [25 + fx, my - ty + 1], [25 - fx + 1, my + ty - 1], [25 + fx - 1, my + ty - 1]], PAL.cream); // presas
+  if (pose === "maw") {
+    // garganta acesa: o ponto fraco à vista
+    p.disc(25, my, 3.4, ROT.hot);
+    p.disc(25, my, 2, ROT.glow);
+    p.set(25, my, PAL.white);
+  } else {
+    p.disc(25, my + 1.5, 2.2, PAL.red2); // língua
+    if (!freed) p.set(25, my - 1, crack[2]); // brilho da Podridão na garganta
+  }
   // Rachaduras/cipós da Podridão (magenta; brasa na fúria)
   const cracks = [
     [12, 20], [13, 21], [13, 22], [14, 23], [14, 24],
@@ -530,7 +698,8 @@ function mapinguari(f, fury, freed = false) {
     [5, 30], [45, 32], [6, 38], [44, 26],
   ];
   // Libertado: sem rachaduras (a Podridão saiu dele)
-  if (!freed) cracks.forEach(([x, y], i) => p.set(x, y - (y < 30 ? sw : 0), crack[i % 4 === 3 ? 2 : 1]));
+  // over(): só sobre o pelo (nos quadros de pose os braços saem do lugar)
+  if (!freed) cracks.forEach(([x, y], i) => p.over(x, y - (y < 30 ? sw : 0), crack[i % 4 === 3 ? 2 : 1]));
   p.outline(PAL.ink);
   return p;
 }
@@ -566,15 +735,20 @@ export function registerMonsters(scene) {
   };
   const four = [0, 1, 2, 3];
   strip("mon_wolf", four.map((f) => wolf(f)));
-  strip("mon_alpha", four.map((f) => mula(f))); // minichefe: Mula sem Cabeça
+  strip("mon_alpha", [...four.map((f) => mulaTall(f)), mulaRear(0), mulaKick()]); // minichefe: Mula sem Cabeça (4 = empinada, 5 = coice)
   strip("mon_crow", [crow(0), crow(1)]);
   strip("mon_goblin", [goblin(0), goblin(1)]);
   strip("mon_mage", [witch(0), witch(1)]);
   strip("mon_brute", [troll(0), troll(1)]);
-  strip("mon_elder", [corpoSeco(0), corpoSeco(1)]); // minichefe: Corpo-Seco
+  strip("mon_elder", [corpoSeco(0), corpoSeco(1), corpoSeco(0, true)]); // minichefe: Corpo-Seco (2 = braços erguidos)
   strip("mon_bee", [bee(0), bee(1)]);
   strip("mon_shroom", [shroom(0), shroom(1)]);
-  strip("mon_boss", [mapinguari(0, false), mapinguari(1, false), mapinguari(0, true), mapinguari(1, true), mapinguari(0, false, true)]);
+  // 0-1 parado · 2-3 fúria · 4 libertado · 5 bocarra · 6 grito · 7 bocarra (fúria) · 8 grito (fúria)
+  strip("mon_boss", [
+    mapinguari(0, false), mapinguari(1, false), mapinguari(0, true), mapinguari(1, true), mapinguari(0, false, true),
+    mapinguari(0, false, false, "maw"), mapinguari(0, false, false, "scream"),
+    mapinguari(0, true, false, "maw"), mapinguari(0, true, false, "scream"),
+  ]);
   strip("obj_chest", [chest(0), chest(1), chest(2), chest(3), chest(4)]);
   strip("px_fireball", [fireball(0), fireball(1), fireball(2)]);
 

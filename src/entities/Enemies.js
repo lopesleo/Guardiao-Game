@@ -1,7 +1,10 @@
-// Inimigos + Boss. Arte 100% própria (src/art/Monsters.js): cada tipo tem
+// Inimigos (o chefe está em Bosses.js). Arte 100% própria (src/art/Monsters.js): cada tipo tem
 // uma tira "mon_<tipo>" e a animação "<tipo>_move".
-import { ENEMY, GAME, COLORS, ELITE, MIMIC, BOSS } from "../config.js";
-import { dangerZone, shockwave, chargeLine, rootsBurst, summonPulse } from "../art/Telegraph.js";
+import { ENEMY, GAME, ELITE, MIMIC, BOSS_FIGHT } from "../config.js";
+import { MulaBrain, SecoBrain } from "./Bosses.js";
+
+// O chefe (Mapinguari) mora em Bosses.js junto com os golpes dos minichefes
+export { BossEnt } from "./Bosses.js";
 
 // textura + animação por tipo (mini-chefes e mímico têm arte própria)
 const LOOK = {
@@ -165,6 +168,12 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.rimColor = 0xf2c14e;
       this.miniBoss = alpha ? "MULA SEM CABEÇA" : "CORPO-SECO";
     } else this.miniBoss = null;
+    // Cérebro de golpes especiais (só minichefes; criado depois da escala final)
+    this._brain?.dispose();
+    this._brain = null;
+    this._exposedUntil = 0;
+    this._buried = false;
+    this.setAlpha(1).setAngle(0);
 
     if (elite === "mimic") {
       this._look("mimic");
@@ -202,6 +211,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     }
 
     this._baseScale = this.scaleX; // squash de crítico é relativo a isto
+    if (elite === "alpha") this._brain = new MulaBrain(this);
+    else if (elite === "elder") this._brain = new SecoBrain(this);
     // Sombra proporcional ao tamanho final (elite/mímico são maiores)
     this.shadow
       .setScale((this.displayWidth * 0.8) / 14, GAME.PIXEL_SCALE * (this.displayWidth > 90 ? 1.4 : 1))
@@ -224,10 +235,14 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       .setScale(this.scaleX * k, this.scaleY * k)
       .setFlipX(this.flipX)
       .setDepth(this.depth - 1)
-      .setAlpha(0.65 + Math.sin(time / 120) * 0.3);
+      .setAlpha((0.65 + Math.sin(time / 120) * 0.3) * this.alpha); // some junto (Corpo-Seco afundando)
   }
 
   deactivate() {
+    this._brain?.dispose();
+    this._brain = null;
+    this._buried = false;
+    this.setAlpha(1).setAngle(0);
     this.setActive(false).setVisible(false);
     this.body.enable = false;
     this.setVelocity(0, 0);
@@ -240,7 +255,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   // 8 tiques/s piscando viravam ruído e escondiam os golpes de verdade.
   takeDamage(dmg, element = null, fromX = null, fromY = null, crit = false, soft = false) {
     const iceAmp = this.statuses.ice ? 1.35 : 1;
-    this.hp -= dmg * iceAmp;
+    // Ponto fraco aberto (golpe especial de minichefe): leva mais dano
+    const amp = this.scene.time.now < this._exposedUntil ? this._exposedMult ?? BOSS_FIGHT.EXPOSED_MULT : 1;
+    this.hp -= dmg * iceAmp * amp;
+    if (amp > 1) this.scene._markAmp?.(this, amp);
 
     // "Soco": achata e volta (em update). Golpe empurra 3px no sentido dele.
     this._punch = Math.max(this._punch || 0, soft ? 0.3 : crit ? 1.6 : 1);
@@ -256,8 +274,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.y += (dy / len) * 3;
     }
 
-    // FLASH: branco normal, DOURADO se crit
-    this.setTint(crit ? 0xffd96b : 0xffffff).setTintMode(Phaser.TintModes.FILL);
+    // FLASH: branco normal, DOURADO se crit ou no ponto fraco
+    this.setTint(crit || amp > 1 ? 0xffd96b : 0xffffff).setTintMode(Phaser.TintModes.FILL);
     this.scene.time.delayedCall(crit ? 110 : 60, () => {
       if (!this.active) return;
       this.scene.elemental?._updateTint(this);
@@ -288,7 +306,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     // Soco do golpe: segura durante o hit-stop (relógio dos tweens) e volta
     if (this._punch > 0) {
       this._punch = Math.max(0, this._punch - (dt * (this.scene.tweens.timeScale ?? 1)) / 120);
-      if (!this._casting) {
+      if (!this._casting && !this._brain?.move) {
         const b = this._baseScale ?? GAME.PIXEL_SCALE,
           k = this._punch;
         this.setScale(b * (1 + 0.2 * k), b * (1 - 0.15 * k));
@@ -311,6 +329,14 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this._frozenVisual = false;
       this.anims.resume();
       this.scene.elemental?._updateTint(this);
+    }
+
+    // Minichefe: o cérebro anda e golpeia (congelar pausa o golpe junto)
+    if (this._brain) {
+      this._brain.update(time, dt);
+      this.setDepth(this.y + this.displayHeight * 0.45 + 10000);
+      if (this.rimColor && !this._buried) this._syncRim(time);
+      return;
     }
 
     // Slow apenas do gelo (Aura Gélida). Vapor agora causa dano, não slow.
@@ -415,318 +441,6 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       2.2,
       0xc26bff,
     );
-  }
-}
-
-// ============================================================================
-// BOSS — Ent (criatura-árvore), 2 fases
-// ============================================================================
-
-export class BossEnt extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene, x, y) {
-    super(scene, x, y, "mon_boss", 0);
-    scene.add.existing(this);
-    scene.physics.add.existing(this);
-    this._bossScale = GAME.PIXEL_SCALE * 1.1; // arte de 50×56 → ~165px: chefe tem que impor
-    this.setScale(this._bossScale);
-    this.body.setCircle(10, 15, 34);
-    this.play("boss_idle");
-    // Sombra grande do boss (mesma mecânica dos inimigos comuns)
-    this.shadow = scene.add
-      .image(x, y, "px_shadow")
-      .setScale((GAME.PIXEL_SCALE * this.displayWidth) / 48)
-      .setDepth(4)
-      .setVisible(false);
-    this.maxHp = 0;
-    this.hp = 0;
-    this.dmg = BOSS.DMG_MELEE; // a escala do Perigo é aplicada na GameScene
-    this.speed = 60;
-    this.statuses = {};
-    this.phase = 1;
-    this.lastSpecialAt = 0;
-    this.lastTouchAt = 0;
-    this.contactCooldownMs = 450; // boss bate um pouco mais lento que os comuns
-    this._kind = "boss";
-    this._lungeUntil = 0;
-    this._lungeVX = 0;
-    this._lungeVY = 0;
-    // Transição de fase ("êxtase"): boss invulnerável e parado enquanto a barra recarrega
-    this._transitioning = false;
-    this._transitionEnd = 0;
-    this._displayFill = 1; // fração da barra controlada pela animação de recarga
-    this._furyPulse = null;
-  }
-
-  activate(maxHp) {
-    this.maxHp = maxHp;
-    this.hp = maxHp;
-    this.statuses = {};
-    this.phase = 1;
-    this.lastSpecialAt = 0;
-    this.lastTouchAt = 0;
-    this._lungeUntil = 0;
-    this._transitioning = false;
-    this._transitionEnd = 0;
-    this._displayFill = 1;
-    this._furyPulse?.stop();
-    this._furyPulse = null;
-    this.clearTint();
-    this.play("boss_idle");
-    this.setActive(true).setVisible(true);
-    this.body.enable = true;
-    this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46).setVisible(true);
-  }
-
-  deactivate() {
-    this.shadow.setVisible(false);
-  }
-
-  takeDamage(dmg) {
-    // Invulnerável durante o êxtase da virada de fase (a barra está recarregando)
-    if (this._transitioning) return false;
-    this.scene.feel?.hit(this, false, true);
-    const iceAmp = this.statuses.ice ? 1.35 : 1;
-    this.hp -= dmg * iceAmp;
-    this.setTint(0xffffff).setTintMode(Phaser.TintModes.FILL);
-    this.scene.time.delayedCall(50, () => {
-      if (!this.active) return;
-      this.scene.elemental?._updateTint(this);
-    });
-    if (this.hp <= 0) return true;
-    // Transição de fase — entra em FÚRIA (êxtase) e a barra recarrega 0→100%
-    if (this.phase === 1 && this.hp <= this.maxHp * 0.5) {
-      this._enterFury();
-    }
-    return false;
-  }
-
-  // Êxtase da virada: boss parado e invulnerável ~1.3s, pulsando, enquanto a
-  // barra de vida recarrega de 0 a 100% (ver HUD lê _transitioning/_displayFill).
-  _enterFury() {
-    const scene = this.scene;
-    const DURATION = 1300;
-    this.phase = 2;
-    this.speed = 90;
-    this._transitioning = true;
-    this._transitionEnd = scene.time.now + DURATION;
-    this._displayFill = 0;
-    this.setVelocity(0, 0);
-    scene.cameras.main.shake(500, 0.014);
-    scene.sound.play("sfx_boss_roar", { volume: 0.85 });
-    scene.hud?.showBossBanner("FÚRIA!");
-
-    // Tint quente + pulso de escala (êxtase)
-    const base = this._bossScale;
-    // Fase 2: a Podridão no Mapinguari entra em brasa (quadros próprios)
-    this.play("boss_fury");
-    this._furyPulse = scene.tweens.add({
-      targets: this,
-      scaleX: base * 1.14,
-      scaleY: base * 1.14,
-      duration: 200,
-      yoyo: true,
-      repeat: -1,
-      ease: "Sine.easeInOut",
-    });
-    // Barra recarrega 0→100% (anima a propriedade lida pela HUD)
-    scene.tweens.add({
-      targets: this,
-      _displayFill: 1,
-      duration: DURATION,
-      ease: "Cubic.easeOut",
-    });
-    // Anel de energia expandindo
-    shockwave(scene, this.x, this.y, 240, 0xff8a1e);
-    scene.time.delayedCall(250, () => this.active && shockwave(scene, this.x, this.y, 180, 0xffb24c));
-  }
-
-  // Encerra o êxtase: para o pulso, normaliza escala/tint, libera o boss.
-  _endFury() {
-    this._transitioning = false;
-    this._displayFill = 1;
-    this._furyPulse?.stop();
-    this._furyPulse = null;
-    this.setScale(this._bossScale);
-    this.scene.elemental?._updateTint(this);
-  }
-
-  update(time, dt, target) {
-    if (!this.active || !target?.active) return;
-    this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46);
-
-    // ÊXTASE: parado, invulnerável e pulsando enquanto a barra recarrega
-    if (this._transitioning) {
-      if (time >= this._transitionEnd) {
-        this._endFury();
-      } else {
-        this.setVelocity(0, 0);
-        this.setFlipX(target.x - this.x < 0);
-        this.setDepth(this.y + this.displayHeight * 0.45 + 10000);
-        return;
-      }
-    }
-
-    // INVESTIDA: durante a lunge, voa em linha reta (não persegue, não usa especial)
-    if (time < this._lungeUntil) {
-      this.setVelocity(this._lungeVX, this._lungeVY);
-      this.setFlipX(this._lungeVX < 0);
-      this.setDepth(this.y + this.displayHeight * 0.45 + 10000);
-      return;
-    }
-
-    let slow = 1;
-    if (this.statuses.ice) slow *= 0.5;
-    const dx = target.x - this.x,
-      dy = target.y - this.y;
-    const len = Math.hypot(dx, dy) || 1;
-    const sp = this.speed * slow;
-    this.setVelocity((dx / len) * sp, (dy / len) * sp);
-    this.setFlipX(dx < 0);
-    this.setDepth(this.y + this.displayHeight * 0.45 + 10000);
-
-    // Especiais — rotação por fase
-    const interval = this.phase === 1 ? 3500 : 2000;
-    if (time - this.lastSpecialAt > interval) {
-      this.lastSpecialAt = time;
-      const c = (this._specialCount = (this._specialCount || 0) + 1);
-      if (this.phase === 1) {
-        // slam → invoca → RAÍZES (prende o player)
-        const pick = c % 3;
-        if (pick === 0) this._aoeSlam();
-        else if (pick === 1) this._summon("wolf", 3);
-        else this._roots();
-      } else {
-        // Fase 2: mais agressivo — leque, raízes (com combo), investida, slam
-        const pick = c % 5;
-        if (pick === 0) {
-          this._summon("crow", 3);
-          this._fanVolley();
-        } else if (pick === 1) this._aoeSlam();
-        else if (pick === 2) this._roots();
-        else if (pick === 3) this._lunge();
-        else {
-          this._summon("wolf", 2);
-          this._fanVolley();
-        }
-      }
-    }
-  }
-
-  // BAQUE: zona carrega por 600ms; quem estiver dentro no fim leva o golpe
-  _aoeSlam(cx = this.x, cy = this.y) {
-    const scene = this.scene;
-    const r = 180;
-    dangerZone(scene, cx, cy, r, 600, 0xff7a3c, () => {
-      if (!this.active) return;
-      shockwave(scene, cx, cy, r);
-      scene.cameras.main.shake(180, 0.008);
-      const dx = scene.player.x - cx,
-        dy = scene.player.y - cy;
-      if (dx * dx + dy * dy <= r * r) {
-        scene.player.takeDamage(this.dmg);
-        if (scene.player.isDead()) scene._onGameOver();
-      }
-    });
-  }
-
-  _volley() {
-    const scene = this.scene;
-    const target = scene.player;
-    for (let i = -1; i <= 1; i++) {
-      const ang = Math.atan2(target.y - this.y, target.x - this.x) + i * 0.25;
-      const proj = scene.enemyProjPool.acquire();
-      const sp = 220;
-      proj.fire(this.x, this.y, Math.cos(ang) * sp, Math.sin(ang) * sp, BOSS.DMG_PROJECTILE * (scene.diff?.dmgMult ?? 1));
-    }
-  }
-
-  // Fase 2: LEQUE de tiros — arco largo de 7 projéteis mirado no player
-  _fanVolley() {
-    const scene = this.scene;
-    const target = scene.player;
-    const base = Math.atan2(target.y - this.y, target.x - this.x);
-    const n = 7,
-      spread = 0.16;
-    for (let i = 0; i < n; i++) {
-      const ang = base + (i - (n - 1) / 2) * spread;
-      const proj = scene.enemyProjPool.acquire();
-      const sp = 230;
-      proj.fire(this.x, this.y, Math.cos(ang) * sp, Math.sin(ang) * sp, BOSS.DMG_PROJECTILE * (scene.diff?.dmgMult ?? 1));
-    }
-  }
-
-  // CONTROLE: telegrafa uma área na posição do player; se ele ficar, RAÍZES prendem.
-  // Escapa saindo da área durante o aviso OU usando o DASH depois de preso.
-  _roots() {
-    const scene = this.scene;
-    const px = scene.player.x,
-      py = scene.player.y;
-    const r = 95;
-    dangerZone(scene, px, py, r, 720, 0x9ccf62);
-    // Durante o aviso, quem está na área é AGARRADO (anda devagar) — dasha pra sair!
-    const r2 = r * r;
-    scene.time.addEvent({
-      delay: 80,
-      repeat: 8,
-      callback: () => {
-        const dx = scene.player.x - px,
-          dy = scene.player.y - py;
-        if (dx * dx + dy * dy <= r2) scene.player.grabSlow(160);
-      },
-    });
-    scene.time.delayedCall(720, () => {
-      const dx = scene.player.x - px,
-        dy = scene.player.y - py;
-      if (dx * dx + dy * dy <= r2) {
-        const dur = 1300;
-        const lx = scene.player.x,
-          ly = scene.player.y;
-        scene.player.root(dur);
-        scene.sound.play("sfx_boss_roar", { volume: 0.4, rate: 1.5 });
-        this._rootVisual(lx, ly, dur);
-        // COMBO Raiz→Baque: preso, leva o slam no local (devia ter desviado a tempo!)
-        scene.time.delayedCall(400, () => this._aoeSlam(lx, ly));
-      }
-    });
-  }
-
-  _rootVisual(x, y, dur) {
-    rootsBurst(this.scene, x, y, 60, dur);
-  }
-
-  // INVESTIDA: telegrafa uma linha na direção do player e avança rápido — desvie de lado!
-  _lunge() {
-    const scene = this.scene;
-    const target = scene.player;
-    const ang = Math.atan2(target.y - this.y, target.x - this.x);
-    chargeLine(scene, this.x, this.y, ang, 340, 600);
-    scene.time.delayedCall(600, () => {
-      if (!this.active) return;
-      const sp = 620;
-      this._lungeVX = Math.cos(ang) * sp;
-      this._lungeVY = Math.sin(ang) * sp;
-      this._lungeUntil = scene.time.now + 420;
-      scene.sound.play("sfx_boss_roar", { volume: 0.5, rate: 1.1 });
-    });
-  }
-
-  _summon(kind, count) {
-    const scene = this.scene;
-    const wave = scene.waveIndex();
-    // Aviso visual do próprio boss: pulso roxo
-    summonPulse(scene, this.x, this.y);
-
-    for (let i = 0; i < count; i++) {
-      if (scene.enemyPool.size >= GAME.MAX_ENEMIES_ALIVE) break;
-      const ang = (i / count) * Math.PI * 2 + Math.random() * 0.5;
-      const sx = this.x + Math.cos(ang) * 90;
-      const sy = this.y + Math.sin(ang) * 90;
-      // Marca visual no ponto de spawn
-      summonPulse(scene, sx, sy);
-
-      const e = scene.enemyPool.acquire();
-      e.activate(sx, sy, kind, wave);
-    }
   }
 }
 

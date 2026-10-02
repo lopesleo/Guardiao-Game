@@ -63,6 +63,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.dashDirX = 1; this.dashDirY = 0;
     this._rootedUntil = 0;   // preso por raízes (imóvel) — dash não quebra
     this._grabSlowUntil = 0; // área de raízes agarrando: anda devagar, precisa dashar pra sair
+    // Forças externas dos chefes: sucção (por quadro) e empurrão (decai sozinho)
+    this._pullX = 0;
+    this._pullY = 0;
+    this._shove = null; // { vx, vy, t0, ms }
 
     // Passivas acumuláveis
     this.lifestealPct = 0;
@@ -199,6 +203,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   isGrabbed() { return this.scene.time.now < this._grabSlowUntil; }
   grabSlow(durMs) { this._grabSlowUntil = this.scene.time.now + durMs; }
 
+  // --- Forças dos chefes ---
+  // Sucção (Bocarra do Mapinguari): somada só neste quadro; andar contra ela vence
+  addPull(vx, vy) { this._pullX += vx; this._pullY += vy; }
+  // Empurrão (coice, investida): velocidade que cai a zero em ms
+  shove(vx, vy, ms = 220) { this._shove = { vx, vy, t0: this.scene.time.now, ms }; }
+
   // --- Dash ---
   isDashing() { return this.scene.time.now < this.dashUntil; }
   dashReady() { return this.dashUnlocked && this.scene.time.now >= this.dashCdUntil; }
@@ -268,6 +278,23 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.setVelocity(vx, vy);
       if (input.move.x !== 0) this.facingX = Math.sign(input.move.x);
     }
+    // Forças dos chefes (não valem no Dash nem preso pelas raízes)
+    if (!this.isDashing() && !this.isRooted()) {
+      let ex = this._pullX,
+        ey = this._pullY;
+      const sh = this._shove;
+      if (sh) {
+        const k = 1 - (time - sh.t0) / sh.ms;
+        if (k <= 0) this._shove = null;
+        else {
+          ex += sh.vx * k;
+          ey += sh.vy * k;
+        }
+      }
+      if (ex || ey) this.setVelocity(this.body.velocity.x + ex, this.body.velocity.y + ey);
+    }
+    this._pullX = 0;
+    this._pullY = 0;
     this.setFlipX(this.facingX < 0);
     // Anima: andando vs. parado (troca só quando muda, pra não reiniciar o ciclo)
     const anim = `${this.heroId}_${this.isMoving || this.isDashing() ? 'walk' : 'idle'}`;
