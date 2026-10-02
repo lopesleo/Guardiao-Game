@@ -3,7 +3,7 @@
 // "Tremor de tela"; a vibração segue "Vibração" (ver Settings / Theme.haptic).
 import { GAME } from "../config.js";
 import { PAL } from "../art/Palette.js";
-import { haptic } from "../ui/Theme.js";
+import { haptic, vw, vh } from "../ui/Theme.js";
 import { Settings } from "./Settings.js";
 
 const HIT_SFX_GAP_MS = 55; // acertos em rajada não viram um chiado só
@@ -45,12 +45,12 @@ export class GameFeel {
       ctx.fillRect(0, 0, 256, 144);
       c.refresh();
     }
-    this.vignette = s.add
-      .image(GAME.WIDTH / 2, GAME.HEIGHT / 2, "fx_hurt_vignette")
-      .setDisplaySize(GAME.WIDTH, GAME.HEIGHT)
-      .setScrollFactor(0)
-      .setDepth(70000)
-      .setAlpha(0);
+    // Cobre a tela INTEIRA: com scale EXPAND a largura real passa de GAME.WIDTH (celular 19.5:9)
+    this.vignette = s.add.image(0, 0, "fx_hurt_vignette").setScrollFactor(0).setDepth(70000).setAlpha(0);
+    const fit = () => this.vignette.setPosition(vw(s) / 2, vh(s) / 2).setDisplaySize(vw(s), vh(s));
+    fit();
+    s.scale.on("resize", fit);
+    s.events.once("shutdown", () => s.scale.off("resize", fit));
   }
 
   // Congela o mundo por alguns ms (golpe forte "pesa"). Física e tweens quase param;
