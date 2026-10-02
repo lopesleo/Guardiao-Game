@@ -1272,6 +1272,15 @@ export class GameScene extends Phaser.Scene {
       const wave = this.waveIndex();
       const types = ["goblin", "wolf"];
       this.time.delayedCall(burstDelay + 200, () => {
+        // o baú VIRA o mímico: some no instante em que o inimigo nasce no lugar dele
+        this.tweens.add({
+          targets: chest, alpha: 0, scaleX: 1.3, scaleY: 0.6, duration: 140,
+          onComplete: () => {
+            const i = this.chests.indexOf(chest);
+            if (i >= 0) this.chests.splice(i, 1);
+            chest.destroy();
+          },
+        });
         if (this.enemyPool.size >= GAME.MAX_ENEMIES_ALIVE) return;
         const e = this.enemyPool.acquire();
         const k = types[Math.floor(Math.random() * types.length)];
