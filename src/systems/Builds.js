@@ -134,11 +134,11 @@ export function weaponSlotsFor(meta) {
 export function perkText(id, lv) {
   if (id === "shrine") return `Bênçãos até o rank ${lv}`;
   if (id === "forge") {
-    const k = Object.entries(BUILD.FORGE_WEAPON_LEVEL).find(([, l]) => l === lv)?.[0];
+    const keys = Object.entries(BUILD.FORGE_WEAPON_LEVEL).filter(([, l]) => l === lv).map(([k]) => k);
     const slots = BUILD.FORGE_WEAPON_SLOTS[lv];
     const parts = [];
     if (slots > (BUILD.FORGE_WEAPON_SLOTS[lv - 1] ?? 0)) parts.push(`${slots}ª vaga de arma na partida`);
-    if (k) parts.push(`libera forjar: ${WEAPONS[k].name}`);
+    if (keys.length) parts.push(`libera forjar: ${keys.map((k) => WEAPONS[k].name).join(" e ")}`);
     const t = parts.join(" · ");
     return t.charAt(0).toUpperCase() + t.slice(1);
   }

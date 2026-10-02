@@ -9,7 +9,7 @@ import { WEAPON_ICON, PASSIVE_ICON } from "../art/Icons.js";
 import { WEAPON_CLASSES } from "../entities/Weapons.js";
 
 // Ordem = ordem de exibição no menu de desbloqueio
-export const BASE_WEAPONS = ["STAFF", "AURA", "BOOMER", "CHAIN", "ORB", "FLAME"];
+export const BASE_WEAPONS = ["STAFF", "AURA", "BOOMER", "CHAIN", "ORB", "FLAME", "FIREFLY", "HAIL", "WHIRL"];
 
 export const WEAPON_DESC = {
   STAFF: "Bola de fogo no inimigo mais próximo.",
@@ -18,6 +18,9 @@ export const WEAPON_DESC = {
   CHAIN: "Raio de dano alto; prefere alvos já afetados.",
   ORB: "Orbes de gelo giram ao seu redor e resfriam quem tocam.",
   FLAME: "Sopro de fogo em cone na direção em que você anda.",
+  FIREFLY: "Vaga-lumes teleguiados caçam inimigos diferentes.",
+  HAIL: "Granizo cai em inimigos pela tela; congela quem já está gelado.",
+  WHIRL: "Redemoinho do Saci persegue o bando e puxa todos para o centro.",
 };
 
 const WEAPON_MODS = {
@@ -27,7 +30,13 @@ const WEAPON_MODS = {
   CHAIN: ["dmg", "cd", "range", "proj"],
   ORB: ["dmg", "proj", "range"],
   FLAME: ["dmg", "cd", "range"],
+  FIREFLY: ["dmg", "cd", "range", "proj"],
+  HAIL: ["dmg", "cd", "range", "proj"],
+  WHIRL: ["dmg", "cd", "range", "proj"],
 };
+
+// Texto da melhoria "+1" de cada arma (o padrão é projétil)
+const PROJ_LABEL = { ORB: "+1 Orbe", FIREFLY: "+1 Vaga-lume", HAIL: "+1 Pedra", WHIRL: "+1 Redemoinho" };
 
 // Sorteio ponderado sem reposição
 function weightedPick(list, n) {
@@ -159,7 +168,7 @@ export class UpgradeSystem {
         stat = `+${v}% Alcance`;
         apply = () => (w.rangeMult *= 1 + v / 100);
       } else {
-        stat = w.key === "ORB" ? "+1 Orbe" : "+1 Projétil";
+        stat = PROJ_LABEL[w.key] ?? "+1 Projétil";
         apply = () => (w.extraProj += 1);
       }
       cards.push({
@@ -265,6 +274,9 @@ export class UpgradeSystem {
         PHOENIX: "O bumerangue deixa um RASTRO DE CHAMAS pelo caminho.",
         GLACIER: "Os orbes crescem e CONGELAM na hora quem tocam.",
         INFERNO: "O sopro vira um INFERNO que deixa o chão em chamas.",
+        SWARM: "Mais vaga-lumes; cada um que acerta se DIVIDE em dois.",
+        HAILSTORM: "Pedras que CONGELAM na hora, e um RAIO do céu as estilhaça.",
+        FIRE_WHIRL: "Funil de BRASA: alterna fogo e raio e causa SOBRECARGA.",
       }[key] || WEAPONS[key].name
     );
   }

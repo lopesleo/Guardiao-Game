@@ -1,4 +1,4 @@
-// Armas: Staff(🔥), Aura(❄️), Boomerang(🔥), ChainLightning(⚡) + evoluções (D3).
+// Armas: 3 de fogo, 3 de gelo, 3 de raio + evoluções. Números em WEAPONS (config.js).
 import { WEAPONS, COLORS, GAME, ELEMENT } from "../config.js";
 import { shockwave } from "../art/Telegraph.js";
 
@@ -262,6 +262,30 @@ export class Weapon {
   // Limpeza ao ser SUBSTITUÍDA por uma evolução (armas com gfx persistente
   // sobrescrevem — ex.: círculo da Aura).
   dispose() {}
+
+  // Todo alvo vivo (inimigos do pool + chefe): fn(alvo, éChefe)
+  _eachTarget(fn) {
+    this.scene.enemyPool.forEachActive((e) => e.active && fn(e, false));
+    const boss = this.scene.boss;
+    if (boss?.active) fn(boss, true);
+  }
+
+  // Acerto padrão: crítico, roubo de vida, número (opcional; crítico sempre mostra),
+  // status e morte
+  _hit(t, base, element, fromX, fromY, showNum = true) {
+    const isBoss = t === this.scene.boss;
+    const crit = Math.random() < (this.owner?.critChance ?? 0);
+    const dmg = crit ? base * (this.owner?.critMult ?? 2) : base;
+    const died = t.takeDamage(dmg, isBoss ? undefined : null, fromX, fromY, crit);
+    this.owner?.lifestealFrom(dmg);
+    if (showNum || crit) this.scene._showDmg(t.x, t.y, dmg, element, crit);
+    this.scene.elemental.applyStatus(t, element);
+    if (died) {
+      if (isBoss) this.scene._onBossDeath();
+      else this.scene._onEnemyDeath(t);
+    }
+    return died;
+  }
 
   _nearestEnemyInRange() {
     const range = this.range;
@@ -989,6 +1013,442 @@ export class Inferno extends Flamethrower {
   }
 }
 
+
+// ============================================================================
+// LEVA 2 — Vaga-lumes, Granizo, Redemoinho (+ evoluções). Ver docs/ARMAS_E_COMBOS.md
+// ============================================================================
+
+// VAGA-LUMES (raio): enxame teleguiado. Cada vaga-lume escolhe um alvo diferente,
+// voa em curva (virada limitada + bamboleio) e some ao acertar. Alvo morto = caça
+// o mais próximo dele. Simulação própria (sem física) — barata no celular.
+const MAX_FIREFLIES = 28;
+export class Fireflies extends Weapon {
+  constructor(scene, defKey = "FIREFLY") {
+    super(scene, defKey);
+    this.flies = [];
+  }
+  get count() {
+    return this.def.count + (this.owner?.extraProj ?? 0) + this.extraProj;
+  }
+  dispose() {
+    for (const f of this.flies) this._despawn(f);
+    this.flies = [];
+  }
+  _fire() {
+    if (!this.owner) return false;
+    const targets = this._spreadTargets(this.count);
+    if (!targets.length) return false;
+    const dmg = this.damage;
+    targets.forEach((t, i) => {
+      // Saem em leque, cada um para um lado, e depois fazem a curva até o alvo
+      const a =
+        Math.atan2(t.y - this.owner.y, t.x - this.owner.x) +
+        (i - (targets.length - 1) / 2) * 0.6 +
+        (Math.random() - 0.5) * 0.4;
+      this._spawn(this.owner.x, this.owner.y - 10, a, t, dmg, 0);
+    });
+    this.scene.sound.play("sfx_bolt_attack", { volume: 0.18, rate: 1.6 + Math.random() * 0.3 });
+    return true;
+  }
+  // Até n alvos distintos no alcance, os mais próximos primeiro
+  _spreadTargets(n, from = this.owner, exclude = null, range = this.range) {
+    const rSq = range * range;
+    const list = [];
+    this._eachTarget((e) => {
+      if (exclude?.has(e)) return;
+      const d2 = (e.x - from.x) ** 2 + (e.y - from.y) ** 2;
+      if (d2 <= rSq) list.push({ e, d2 });
+    });
+    list.sort((a, b) => a.d2 - b.d2);
+    const out = list.slice(0, n).map((o) => o.e);
+    // Menos inimigos que vaga-lumes: os que sobram repetem alvos
+    const distinct = out.length;
+    for (let i = 0; distinct && out.length < n; i++) out.push(out[i % distinct]);
+    return out;
+  }
+  _spawn(x, y, ang, target, dmg, gen) {
+    if (this.flies.length >= MAX_FIREFLIES) return;
+    const scene = this.scene;
+    const glow = scene.add
+      .image(x, y, "fx_glow")
+      .setScale(gen ? 0.6 : 0.85)
+      .setTint(0xf4ff9a)
+      .setAlpha(0.8)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(60);
+    const spr = scene.add.image(x, y, "px_firefly").setScale(gen ? 2.4 : 3.2);
+    const sp = this.def.speed * (gen ? 1.1 : 1);
+    this.flies.push({
+      x,
+      y,
+      vx: Math.cos(ang) * sp,
+      vy: Math.sin(ang) * sp,
+      sp,
+      target,
+      dmg,
+      gen,
+      glow,
+      spr,
+      until: scene.time.now + this.def.lifeMs,
+      seed: Math.random() * 10,
+    });
+  }
+  _despawn(f) {
+    f.glow.destroy();
+    f.spr.destroy();
+  }
+  update(time, dt) {
+    super.update(time, dt);
+    if (!this.flies.length) return;
+    const s = dt / 1000;
+    const hitSq = this.def.hitRadius * this.def.hitRadius;
+    const keep = [];
+    for (const f of this.flies) {
+      if (time >= f.until) {
+        this._despawn(f);
+        continue;
+      }
+      if (!f.target?.active) f.target = this._spreadTargets(1, f, null, 260)[0] ?? null;
+      if (f.target) {
+        // Virada limitada até o alvo + bamboleio de inseto
+        const want = Math.atan2(f.target.y - f.y, f.target.x - f.x);
+        const cur = Math.atan2(f.vy, f.vx);
+        let da = Math.atan2(Math.sin(want - cur), Math.cos(want - cur));
+        const maxTurn = this.def.turn * s;
+        da = Math.max(-maxTurn, Math.min(maxTurn, da)) + Math.sin(time / 90 + f.seed) * 0.05;
+        const a = cur + da;
+        f.vx = Math.cos(a) * f.sp;
+        f.vy = Math.sin(a) * f.sp;
+      }
+      f.x += f.vx * s;
+      f.y += f.vy * s;
+      f.spr.setPosition(f.x, f.y).setDepth(f.y + 10020).setFlipX(f.vx < 0);
+      f.glow.setPosition(f.x, f.y).setAlpha(0.55 + Math.sin(time / 70 + f.seed) * 0.2);
+      const t = f.target;
+      // Raio de acerto = vaga-lume + corpo do inimigo (~12px)
+      if (t?.active && (t.x - f.x) ** 2 + (t.y - f.y) ** 2 <= hitSq + 140) {
+        this._impact(f, t);
+        this._despawn(f);
+        continue;
+      }
+      keep.push(f);
+    }
+    this.flies = keep;
+  }
+  _impact(f, t) {
+    const scene = this.scene;
+    this._hit(t, f.dmg, ELEMENT.BOLT, f.x, f.y);
+    // Faísca lilás no ponto do choque
+    const star = scene.add
+      .image(f.x, f.y, "px_spark")
+      .setScale(2.4)
+      .setTint(COLORS.BOLT)
+      .setDepth(61)
+      .setBlendMode(Phaser.BlendModes.ADD);
+    scene.tweens.add({ targets: star, scale: 5, alpha: 0, angle: 45, duration: 220, onComplete: () => star.destroy() });
+    this._afterImpact?.(f, t);
+  }
+}
+
+// REVOADA (Vaga-lumes + Orbe): cada vaga-lume adulto que acerta se divide em
+// filhotes que caçam OUTROS alvos (uma geração só — sem reação em cadeia infinita).
+export class Swarm extends Fireflies {
+  constructor(scene) {
+    super(scene, "SWARM");
+    this.baseKey = this.def.evolvesFrom;
+  }
+  _afterImpact(f, t) {
+    if (f.gen > 0) return;
+    const sp = this.def.split;
+    const targets = this._spreadTargets(sp.n, f, new Set([t]), 240);
+    targets.forEach((nt, i) => {
+      const a = Math.atan2(nt.y - f.y, nt.x - f.x) + (i ? 0.9 : -0.9);
+      this._spawn(f.x, f.y, a, nt, f.dmg * sp.dmgMult, 1);
+    });
+  }
+}
+
+// GRANIZO (gelo): marca inimigos ao acaso no alcance; a sombra cresce no chão e a
+// pedra cai. Dano em área + gelo; quem JÁ estava resfriado congela.
+export class Hail extends Weapon {
+  constructor(scene, defKey = "HAIL") {
+    super(scene, defKey);
+  }
+  get count() {
+    return this.def.count + (this.owner?.extraProj ?? 0) + this.extraProj;
+  }
+  get radius() {
+    return this.def.radius * Math.sqrt(this.rangeMult) * (this.owner?.areaMult ?? 1);
+  }
+  _fire() {
+    if (!this.owner) return false;
+    const rSq = this.range * this.range;
+    const pool = [];
+    this._eachTarget((e) => {
+      if ((e.x - this.owner.x) ** 2 + (e.y - this.owner.y) ** 2 <= rSq) pool.push(e);
+    });
+    if (!pool.length) return false;
+    const n = this.count;
+    for (let i = 0; i < n; i++) {
+      // Sorteia sem repetir enquanto houver alvos; depois, cai perto do herói
+      const t = pool.length ? pool.splice(Math.floor(Math.random() * pool.length), 1)[0] : null;
+      const x = t ? t.x : this.owner.x + (Math.random() - 0.5) * 220;
+      const y = t ? t.y : this.owner.y + (Math.random() - 0.5) * 160;
+      this.scene.time.delayedCall(i * 110, () => this._drop(x, y));
+    }
+    return true;
+  }
+  _drop(x, y) {
+    const scene = this.scene;
+    const R = this.radius;
+    const fall = this.def.fallMs;
+    // Sombra que cresce = onde vai cair (azul, não vermelha: o ataque é NOSSO)
+    const shadow = scene.add.image(x, y, "px_shadow").setScale(0.4).setAlpha(0.2).setTint(0x1f3b66).setDepth(44);
+    scene.tweens.add({ targets: shadow, scaleX: (R * 2) / 16, scaleY: (R * 1.1) / 8, alpha: 0.45, duration: fall });
+    const stone = scene.add.image(x + 60, y - 280, "px_hail").setScale(3.2).setDepth(y + 10030);
+    const glow = scene.add
+      .image(stone.x, stone.y, "fx_glow")
+      .setScale(0.7)
+      .setTint(COLORS.ICE)
+      .setAlpha(0.5)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(60);
+    scene.tweens.add({
+      targets: [stone, glow],
+      x,
+      y,
+      duration: fall,
+      ease: "Quad.easeIn",
+      onComplete: () => {
+        stone.destroy();
+        glow.destroy();
+        shadow.destroy();
+        this._impact(x, y, R);
+      },
+    });
+  }
+  _impact(x, y, R) {
+    const scene = this.scene;
+    if (!scene.player?.active) return;
+    const now = scene.time.now;
+    const rSq = R * R;
+    const dmg = this.damage;
+    let hits = 0;
+    const frozen = [];
+    this._eachTarget((e, isBoss) => {
+      if ((e.x - x) ** 2 + (e.y - y) ** 2 > rSq) return;
+      const chilled = !!e.statuses?.ice;
+      const died = this._hit(e, dmg, ELEMENT.ICE, x, y);
+      hits++;
+      if (died || isBoss || !e.freeze) return;
+      if ((chilled || this.def.freezeOnHit) && !e.isFrozen(now) && now >= e._freezeLockUntil)
+        e.freeze(now, this.def.freezeMs, this.def.freezeImmuneMs);
+      if (e.isFrozen(now)) frozen.push(e);
+    });
+    // Estilhaços + poeira de gelo
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + Math.random() * 0.5;
+      const sh = scene.add.image(x, y, "px_shard").setScale(2.2).setRotation(a).setDepth(61);
+      scene.tweens.add({
+        targets: sh,
+        x: x + Math.cos(a) * R * 0.9,
+        y: y + Math.sin(a) * R * 0.6,
+        alpha: 0,
+        duration: 300,
+        ease: "Cubic.easeOut",
+        onComplete: () => sh.destroy(),
+      });
+    }
+    const puff = scene.add
+      .image(x, y, "fx_glow")
+      .setScale((R * 2) / 64)
+      .setTint(0xbfeaff)
+      .setAlpha(0.5)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(45);
+    scene.tweens.add({ targets: puff, alpha: 0, scale: puff.scale * 1.3, duration: 260, onComplete: () => puff.destroy() });
+    scene.sound.play("sfx_ice_attack", { volume: hits ? 0.28 : 0.12, rate: 1.15 + Math.random() * 0.2 });
+    this._afterImpact?.(x, y, frozen);
+  }
+}
+
+// TEMPESTADE DE GRANIZO (Granizo + Raio): as pedras congelam na hora e um raio do
+// céu cai em até `strike.max` congelados da área → CRISTAL sem precisar do Raio.
+export class Hailstorm extends Hail {
+  constructor(scene) {
+    super(scene, "HAILSTORM");
+    this.baseKey = this.def.evolvesFrom;
+  }
+  _afterImpact(x, y, frozen) {
+    const st = this.def.strike;
+    const scene = this.scene;
+    const dmg = st.dmg * this.dmgMult * (this.owner?.dmgMultFor?.(ELEMENT.BOLT) ?? 1);
+    frozen.slice(0, st.max).forEach((e, i) => {
+      scene.time.delayedCall(90 + i * 70, () => {
+        if (!e.active) return;
+        scene.elemental._drawBolt(e.x + 30, e.y - 260, e.x, e.y, COLORS.BOLT, 4);
+        this._hit(e, dmg, ELEMENT.BOLT, e.x, e.y - 40);
+      });
+    });
+    if (frozen.length) scene.sound.play("sfx_bolt_attack", { volume: 0.3, rate: 0.8 });
+  }
+}
+
+// REDEMOINHO (raio): funil que nasce no inimigo mais próximo e anda atrás do
+// bando; a cada tique causa dano em área e PUXA quem está em volta (chefe e
+// minichefes não são puxados). `extraProj` = mais funis ao mesmo tempo.
+export class Whirlwind extends Weapon {
+  constructor(scene, defKey = "WHIRL") {
+    super(scene, defKey);
+    this.whirls = [];
+    this._tex = "px_whirl";
+    this._anim = "whirl_spin";
+    this._glowTint = COLORS.BOLT;
+  }
+  get count() {
+    return this.def.count + this.extraProj;
+  }
+  get radius() {
+    return this.def.radius * Math.sqrt(this.rangeMult) * (this.owner?.areaMult ?? 1);
+  }
+  dispose() {
+    for (const w of this.whirls) this._despawn(w);
+    this.whirls = [];
+  }
+  _fire() {
+    if (!this.owner) return false;
+    const first = this._nearestEnemyInRange();
+    if (!first) return false;
+    const scene = this.scene;
+    const n = this.count;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      const x = first.x + (i ? Math.cos(a) * 90 : 0),
+        y = first.y + (i ? Math.sin(a) * 90 : 0);
+      const ground = scene.add
+        .image(x, y, "fx_glow")
+        .setTint(this._glowTint)
+        .setAlpha(0)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(44);
+      const spr = scene.add.sprite(x, y, this._tex).setOrigin(0.5, 0.92).setScale(0.5).play(this._anim);
+      scene.tweens.add({ targets: spr, scale: this._sprScale(), duration: 220, ease: "Back.easeOut" });
+      scene.tweens.add({ targets: ground, alpha: 0.3, duration: 220 });
+      this.whirls.push({
+        x,
+        y,
+        spr,
+        ground,
+        until: scene.time.now + this.def.durationMs * Math.sqrt(this.rangeMult),
+        nextTick: 0,
+        tick: 0,
+        seed: Math.random() * 10,
+      });
+    }
+    scene.sound.play("sfx_whoosh", { volume: 0.35, rate: 0.7 });
+    return true;
+  }
+  _sprScale() {
+    return (this.radius * 1.7) / 24;
+  }
+  _despawn(w) {
+    this.scene.tweens.add({
+      targets: [w.spr, w.ground],
+      alpha: 0,
+      duration: 200,
+      onComplete: () => {
+        w.spr.destroy();
+        w.ground.destroy();
+      },
+    });
+  }
+  update(time, dt) {
+    super.update(time, dt);
+    if (!this.whirls.length) return;
+    const s = dt / 1000;
+    const R = this.radius;
+    const keep = [];
+    for (const w of this.whirls) {
+      if (time >= w.until) {
+        this._despawn(w);
+        continue;
+      }
+      // Anda atrás do inimigo mais próximo DELE (com zigue-zague de vento)
+      let best = null,
+        bestSq = 320 * 320;
+      this._eachTarget((e) => {
+        const d2 = (e.x - w.x) ** 2 + (e.y - w.y) ** 2;
+        if (d2 < bestSq) {
+          bestSq = d2;
+          best = e;
+        }
+      });
+      if (best) {
+        const dx = best.x - w.x,
+          dy = best.y - w.y;
+        const len = Math.hypot(dx, dy) || 1;
+        const sp = this.def.speed * Math.min(1, len / 20);
+        w.x += (dx / len) * sp * s;
+        w.y += (dy / len) * sp * s;
+      }
+      w.x += Math.sin(time / 260 + w.seed) * 30 * s;
+      w.spr.setPosition(w.x, w.y).setDepth(w.y + 10010);
+      w.ground.setPosition(w.x, w.y).setScale((R * 2.2) / 64, (R * 1.3) / 64);
+      this._pull(w, R, s);
+      if (time >= w.nextTick) {
+        w.nextTick = time + this.def.tickMs;
+        this._tick(w, R, w.tick++);
+      }
+      keep.push(w);
+    }
+    this.whirls = keep;
+  }
+  // Puxa para o centro (mexe na posição: a IA reescreve a velocidade todo quadro)
+  _pull(w, R, s) {
+    const pr = R * 1.6,
+      prSq = pr * pr;
+    const k = this.def.pull * s;
+    this.scene.enemyPool.forEachActive((e) => {
+      if (!e.active || e.miniBoss) return;
+      const dx = w.x - e.x,
+        dy = w.y - e.y;
+      const d2 = dx * dx + dy * dy;
+      if (d2 > prSq || d2 < 36) return;
+      const d = Math.sqrt(d2);
+      e.x += (dx / d) * k;
+      e.y += (dy / d) * k;
+    });
+  }
+  _tickElement() {
+    return ELEMENT.BOLT;
+  }
+  _tick(w, R, n) {
+    const rSq = R * R;
+    const dmg = this.damage;
+    const el = this._tickElement(n);
+    this._eachTarget((e) => {
+      if ((e.x - w.x) ** 2 + (e.y - w.y) ** 2 > rSq) return;
+      // Número só no crítico: o funil tica muito e poluiria a tela
+      this._hit(e, dmg, el, w.x, w.y, false);
+    });
+  }
+}
+
+// REDEMOINHO DE BRASA (Redemoinho + Sopro): maior, puxa mais e alterna FOGO e RAIO
+// a cada tique — fogo + raio no mesmo inimigo = SOBRECARGA.
+export class FireWhirl extends Whirlwind {
+  constructor(scene) {
+    super(scene, "FIRE_WHIRL");
+    this.baseKey = this.def.evolvesFrom;
+    this._tex = "px_whirl_fire";
+    this._anim = "whirl_fire_spin";
+    this._glowTint = COLORS.FIRE;
+  }
+  _tickElement(n) {
+    return n % 2 ? ELEMENT.BOLT : ELEMENT.FIRE;
+  }
+}
+
 // Fábrica
 export const WEAPON_CLASSES = {
   STAFF: Staff,
@@ -1004,4 +1464,10 @@ export const WEAPON_CLASSES = {
   FLAME: Flamethrower,
   GLACIER: Glacier,
   INFERNO: Inferno,
+  FIREFLY: Fireflies,
+  HAIL: Hail,
+  WHIRL: Whirlwind,
+  SWARM: Swarm,
+  HAILSTORM: Hailstorm,
+  FIRE_WHIRL: FireWhirl,
 };
