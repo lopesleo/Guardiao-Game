@@ -288,7 +288,7 @@ function makeCan() {
 // SAMAÚMA: a gigante da mata (marco da Clareira). Sapopemas (raízes em aba)
 // abertas no chão, tronco claro e liso, copa larga de guarda-chuva e cipós
 // ---------------------------------------------------------------------------
-function makeKapok() {
+function makeKapok(glow = null) {
   const W = 84,
     H = 104;
   const p = new Pix(W, H);
@@ -371,7 +371,91 @@ function makeKapok() {
     p.set(x + 1, y - 1, PAL.g4);
     p.set(x, y - 2, PAL.red2);
   }
+  if (glow) blessKapok(p, glow, cx, r);
   return p.outline(K);
+}
+
+// Samaúma desperta (roleta de bênçãos): flores na copa, contas de luz nos cipós, a
+// espiral da mata entalhada no tronco e fitinhas coloridas amarradas (promessa/bênção).
+// O que brilha também vai para `glow`, uma camada à parte que a cena faz pulsar.
+function blessKapok(p, glow, cx, r) {
+  const lit = (x, y, c, g = c) => {
+    p.set(x, y, c);
+    glow.set(x, y, g);
+  };
+  // Flores da samaúma (rosa-claro com miolo creme) só onde há folha
+  const leafy = new Set([PAL.g2, PAL.g3, PAL.g4, PAL.g5, PAL.g6]);
+  let n = 0;
+  for (let k = 0; k < 400 && n < 22; k++) {
+    const x = 4 + Math.floor(r() * 76),
+      y = 4 + Math.floor(r() * 28);
+    if (!leafy.has(p.rgb(x, y)) || !leafy.has(p.rgb(x + 1, y + 1))) continue;
+    n++;
+    const big = n % 3 === 0;
+    lit(x, y, PAL.cream, PAL.yel3);
+    p.set(x - 1, y, PAL.pink);
+    p.set(x + 1, y, PAL.pink);
+    if (big) {
+      p.set(x, y - 1, PAL.pink);
+      p.set(x, y + 1, PAL.pink);
+      glow.set(x - 1, y, PAL.pink);
+      glow.set(x + 1, y, PAL.pink);
+    }
+  }
+  // Contas de luz nos cipós (a cada poucos pixels da trepadeira)
+  for (let y = 31; y < 60; y += 3)
+    for (let x = 0; x < p.w; x++) if (p.rgb(x, y) === PAL.t3 && (x + y) % 2 === 0) lit(x, y, PAL.yel3, PAL.yel3);
+  // Espiral entalhada no tronco (a "assinatura" da mata), brilho dourado
+  const sx = cx,
+    sy = 50;
+  for (let a = 0; a < Math.PI * 3.2; a += 0.12) {
+    const rad = 0.6 + a * 0.55;
+    const x = Math.round(sx + Math.cos(a) * rad * 0.8),
+      y = Math.round(sy + Math.sin(a) * rad);
+    lit(x, y, a > Math.PI * 2.2 ? PAL.yel2 : PAL.yel3);
+  }
+  // Fitinhas amarradas em volta do tronco, com pontas soltas ao vento
+  const RIB = [PAL.red2, PAL.yel2, PAL.ice2, PAL.g6, PAL.pur2, PAL.pink];
+  const ty = 76;
+  const half = 5 + Math.max(0, (ty - 70) / 8);
+  for (let x = Math.floor(cx - half); x <= cx + half; x++) {
+    const c = RIB[(x - Math.floor(cx - half)) % RIB.length];
+    lit(x, ty, c);
+    lit(x, ty + 1, c);
+  }
+  RIB.forEach((c, i) => {
+    const x0 = Math.round(cx - half + 1 + i * ((2 * half - 2) / (RIB.length - 1)));
+    const dir = i < RIB.length / 2 ? -1 : 1;
+    const len = 6 + ((i * 5) % 5);
+    for (let k = 0; k < len; k++) lit(x0 + dir * Math.floor(k / 2.5) + (k > 3 && k % 3 === 0 ? dir : 0), ty + 2 + k, c);
+  });
+}
+
+// Anel de luz no chão, aos pés da Samaúma (só a camada de brilho; a cena usa blend ADD)
+function makeBlessRing() {
+  const W = 96,
+    H = 30;
+  const p = new Pix(W, H);
+  const cx = W / 2,
+    cy = H / 2;
+  for (let k = 0; k < 28; k++) {
+    const a = (k / 28) * Math.PI * 2;
+    const x = cx + Math.cos(a) * 44,
+      y = cy + Math.sin(a) * 12;
+    const c = k % 4 === 0 ? PAL.yel3 : k % 2 ? PAL.g6 : PAL.yel2;
+    p.set(x, y, c);
+    if (k % 4 === 0) {
+      p.set(x - 1, y, PAL.yel2);
+      p.set(x + 1, y, PAL.yel2);
+      p.set(x, y - 1, PAL.yel2);
+    }
+  }
+  // segundo anel, mais fechado e pontilhado (dá profundidade sem virar "grade")
+  for (let k = 0; k < 16; k++) {
+    const a = (k / 16) * Math.PI * 2 + 0.2;
+    p.set(cx + Math.cos(a) * 30, cy + Math.sin(a) * 8, k % 2 ? PAL.g5 : PAL.g6);
+  }
+  return p;
 }
 
 // Helicônia (bananeirinha-do-mato): folhas em remo e brácteas em zigue-zague
@@ -455,6 +539,10 @@ export function registerCampDecor(scene) {
   makeBulb().register(scene, "camp_bulb");
   FLAG_COLORS.forEach((c, i) => makeFlag(c).register(scene, `camp_flag${i}`));
   makeKapok().register(scene, "camp_kapok");
+  const glow = new Pix(84, 104);
+  makeKapok(glow).register(scene, "camp_kapok_blessed");
+  glow.register(scene, "camp_kapok_glow");
+  makeBlessRing().register(scene, "camp_blessring");
   makeHeliconia(true).register(scene, "camp_heliconia0");
   makeHeliconia(false).register(scene, "camp_heliconia1");
   makeRocks().register(scene, "camp_rocks");
