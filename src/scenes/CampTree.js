@@ -1,8 +1,10 @@
 // Roleta da Samaúma: por anúncio premiado (opcional), a árvore gigante sorteia UMA bênção
 // para a próxima partida. Recarrega de hora em hora (relógio confiável, Clock). Só uma
 // bênção guardada por vez: usou na partida, pode girar de novo quando a árvore descansar.
+// Oferenda: em vez do anúncio, o jogador paga moedas e ESCOLHE a bênção (sem recarga;
+// ainda uma bênção guardada por vez).
 // Aparece depois do Baú do Dia (uma novidade por vez). Mixin da CampScene (Object.assign).
-import { TREE } from "../config.js";
+import { TREE, offeringPrice } from "../config.js";
 import { AdService } from "../systems/AdService.js";
 import { Analytics } from "../systems/Analytics.js";
 import { Clock } from "../systems/Clock.js";
@@ -18,6 +20,7 @@ const N = TREE.SLICES.length;
 const STEP = 360 / N;
 
 const slice = (id) => TREE.SLICES.find((s) => s.id === id);
+const SLICE_ICON = { dmg: "ico_sword", xp: "ico_gem", hp: "ico_heart", banish: "ico_skull", magnet: "ico_magnet", speed: "ico_dash_green", guard: "ico_shield" };
 
 export const CampTree = {
   // Estado da árvore: "pending" (bênção guardada), "rest" (descansando) ou "ready"
@@ -160,18 +163,23 @@ export const CampTree = {
     m.add(hub);
 
     const status = m.add(text(this, 0, cy + R + 40, "", { size: 19, color: CSS.txt, origin: 0.5, align: "center", wrap: m.w - 60 }));
-    const btn = m.add(new Button(this, 0, m.h / 2 - 50, 300, 54, "GIRAR", () => this._spinTree(m, wheel, status, btn, refresh), { size: 20, style: "primary", color: CSS.goldHi, icon: "ico_play", iconScale: 2 }));
+    m._status = status;
+    const by = m.h / 2 - 50;
+    const btn = m.add(new Button(this, -146, by, 270, 54, "GIRAR", () => this._spinTree(m, wheel, status, btn, refresh), { size: 20, style: "primary", color: CSS.goldHi, icon: "ico_play", iconScale: 2 }));
+    const offer = m.add(new Button(this, 146, by, 270, 54, `OFERENDA  ${this._offeringPrice()}`, () => this._showOffering(m, wheel, refresh), { size: 20, icon: "ico_coin", iconScale: 2.2 }));
     let spinning = false;
     const refresh = (isSpinning = spinning) => {
       spinning = isSpinning;
       if (!status.active || spinning) return;
       const st = this._treeState();
       const canAd = AdService.canShow("tree_spin");
-      if (st.kind === "pending") status.setText(`Bênção guardada: ${st.buff.short}\nVale na próxima partida`).setColor(CSS.goldHi);
-      else if (st.kind === "rest") status.setText(`A Samaúma descansa. Nova bênção em ${fmtDuration(st.left)}`).setColor(CSS.muted);
-      else if (!canAd) status.setText("Sem anúncio disponível agora. Tente mais tarde.").setColor(CSS.muted);
-      else status.setText(`Assista a um anúncio e gire: uma bênção para a próxima partida\nRecarrega a cada ${TREE.COOLDOWN_MIN} min`).setColor(CSS.txt);
+      const price = this._offeringPrice();
+      offer.setEnabled(st.kind !== "pending" && this.meta.coins >= price);
       btn.setEnabled(st.kind === "ready" && canAd);
+      if (st.kind === "pending") status.setText(`Bênção guardada: ${st.buff.short}\nVale na próxima partida`).setColor(CSS.goldHi);
+      else if (st.kind === "rest") status.setText(`A roleta descansa (${fmtDuration(st.left)}).\nCom uma oferenda você escolhe a bênção agora.`).setColor(CSS.muted);
+      else if (!canAd) status.setText(`Sem anúncio agora. Com uma oferenda de ${price} moedas\nvocê escolhe a bênção da próxima partida.`).setColor(CSS.muted);
+      else status.setText(`Gire com um anúncio (sorteio grátis, a cada ${TREE.COOLDOWN_MIN} min)\nou faça uma oferenda e escolha a bênção.`).setColor(CSS.txt);
     };
     refresh();
     const ev = this.time.addEvent({ delay: 1000, loop: true, callback: () => (status.active ? refresh() : ev.remove()) });
@@ -196,19 +204,65 @@ export const CampTree = {
     Analytics.track("tree_spin", { id: won.id });
     this._refreshTree();
     if (!wheel.active) return this._toast(`Bênção da Samaúma: ${won.short}`);
+    this._spinWheelTo(m, wheel, status, k, won, refresh, 3600, 5);
+  },
 
+  _offeringPrice() {
+    return offeringPrice(this.meta.totalBlessingRanks);
+  },
+
+  // Oferenda: escolhe a bênção pagando moedas. Abre por cima da roleta.
+  _showOffering(parent, wheel, refresh) {
+    const price = this._offeringPrice();
+    const m = new Modal(this, { title: "OFERENDA", subtitle: `${price} moedas: escolha a bênção da próxima partida`, w: 700, h: 600 });
+    const list = this._modalList(m);
+    TREE.SLICES.forEach((s, k) => {
+      if (TREE.OFFERING.EXCLUDE.includes(s.id)) return;
+      const can = this._treeState().kind !== "pending" && this.meta.coins >= price;
+      list.addRow(
+        this._shopRow({
+          icon: SLICE_ICON[s.id],
+          name: s.short,
+          desc: "Só na próxima partida",
+          right: String(price),
+          rightIcon: "ico_coin",
+          rightColor: can ? CSS.goldHi : CSS.dim,
+          style: can ? "button" : "dark",
+          onTap: can
+            ? () => {
+                if (this._treeState().kind === "pending" || !this.meta.spendCoins(price)) return;
+                const d = this.meta.data;
+                d.treeBuff = s.id;
+                d.stats.treeOfferings = (d.stats.treeOfferings || 0) + 1;
+                this.meta._save();
+                Analytics.track("tree_offering", { id: s.id, price });
+                this._buyFx();
+                m.close();
+                this._refreshAll?.();
+                this._refreshTree();
+                if (wheel.active) this._spinWheelTo(parent, wheel, parent._status, k, s, refresh, 1400, 1);
+                else this._toast(`Bênção da Samaúma: ${s.short}`);
+              }
+            : null,
+        }),
+      );
+    });
+  },
+
+  // Gira a roleta até a fatia k (sorteio do anúncio ou escolha da oferenda) e festeja
+  _spinWheelTo(m, wheel, status, k, won, refresh, duration, turns) {
     refresh(true);
-    status.setText("").setColor(CSS.txt);
+    if (status?.active) status.setText("").setColor(CSS.txt);
     // Fatia k para no ponteiro: ângulo final ≡ -k·STEP, com 5 voltas e um desvio dentro da fatia
     const cur = wheel.angle;
     const target = -k * STEP + (Math.random() - 0.5) * STEP * 0.6;
     const w = Phaser.Math.Angle.WrapDegrees(target - cur);
-    const delta = 360 * 5 + (w < 0 ? w + 360 : w);
+    const delta = 360 * turns + (w < 0 ? w + 360 : w);
     let lastTick = Math.floor((cur + STEP / 2) / STEP);
     this.tweens.addCounter({
       from: cur,
       to: cur + delta,
-      duration: 3600,
+      duration,
       ease: "Quart.easeOut",
       onUpdate: (tw) => {
         if (!wheel.active) return;

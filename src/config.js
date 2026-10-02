@@ -675,7 +675,14 @@ export const TREE = {
     { id: "speed", label: "+15% VELOC.", short: "Velocidade +15%", color: 0xff7a3c, mods: { speed: 1.15 } },
     { id: "guard", label: "+15% DEFESA", short: "Dano sofrido -15%", color: 0xb3bac4, mods: { guard: 0.85 } },
   ],
+  // Oferenda: pagar moedas para ESCOLHER a bênção (o anúncio continua sorteando de graça).
+  // Não usa a recarga do anúncio; vale a mesma regra de uma bênção guardada por vez.
+  // Preço cresce com os ranks de bênção comprados (acompanha a renda do jogador:
+  // 150 no começo, ~750 com tudo). "Moedas" fica de fora: comprar moeda com moeda
+  // daria lucro garantido.
+  OFFERING: { BASE: 150, PER_RANK: 0.05, EXCLUDE: ["coins"] },
 };
+export const offeringPrice = (blessingRanks) => Math.round((TREE.OFFERING.BASE * (1 + TREE.OFFERING.PER_RANK * blessingRanks)) / 5) * 5;
 
 // Entrada na floresta (continuação da saída da Clareira): o guardião chega
 // andando pela trilha e a mata se fecha atrás dele antes de a partida começar.

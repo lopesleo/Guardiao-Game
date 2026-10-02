@@ -202,6 +202,14 @@ export class MetaProgression {
     return true;
   }
 
+  // Gasto avulso (Oferenda da Samaúma). false = moedas insuficientes.
+  spendCoins(n) {
+    if (n <= 0 || this.data.totalCoins < n) return false;
+    this.data.totalCoins -= n;
+    this._save();
+    return true;
+  }
+
   addCoins(n) {
     this.data.totalCoins += n;
     if (n > 0) this.data.stats.totalCoinsEarned += n;
