@@ -50,7 +50,7 @@ export const REVEALS = [
   {
     id: "tree",
     when: (d) => (d.revealed || []).includes("chest") && (d.runsPlayed || 0) >= 6,
-    line: "A Samaúma acordou! De hora em hora ela pode abençoar a sua próxima partida.",
+    line: "A Samaúma acordou! Antes de cada partida ela pode abençoar você.",
   },
 ];
 
