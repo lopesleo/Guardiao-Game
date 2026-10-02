@@ -7,7 +7,7 @@ máquina/conta para publicar.
 
 | Item | Onde |
 |---|---|
-| Projeto Android (Capacitor 6) | `android/` · `capacitor.config.json` |
+| Projeto Android (Capacitor 8, alvo Android 16 / API 36, mínimo Android 7 / API 24) | `android/` · `capacitor.config.json` |
 | ID do app | `com.lopesleo.guardiao` (**definitivo depois do 1º upload** — troque antes se quiser) |
 | Paisagem fixa, tela cheia imersiva, tela sempre ligada | `AndroidManifest.xml` · `MainActivity.java` |
 | Pausa ao minimizar, botão Voltar do Android | `src/systems/Platform.js` |
@@ -18,7 +18,7 @@ máquina/conta para publicar.
 
 ## Gerar o AAB (uma vez por versão)
 
-Pré-requisitos: **Node 18+** e **Android Studio** (traz Java e o Android SDK).
+Pré-requisitos: **Node 22+**, **JDK 21** e **Android Studio** recente (Gradle 8.14, AGP 8.13).
 
 ```bash
 npm install
