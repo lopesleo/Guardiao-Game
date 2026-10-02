@@ -549,10 +549,29 @@ export const SHRINE = {
 };
 
 // Controle das cartas de nível: trocar (1× por nível, grátis) e BANIR (tirar a carta da
-// partida inteira). Banimentos: base + 1 por nível do Santuário acima do 1º.
+// partida inteira). 1 banimento grátis por partida + 1 extra por anúncio (AdService
+// "extra_banish"). A bênção da Samaúma pode dar mais um.
 export const CARDS = {
-  BANISH_BASE: 2,
-  BANISH_PER_SHRINE_LEVEL: 1,
+  BANISH_BASE: 1,
+  BANISH_PER_SHRINE_LEVEL: 0,
+};
+
+// Roleta da Samaúma (Clareira): por anúncio premiado, sorteia UMA bênção para a próxima
+// partida. Recarrega de hora em hora (relógio confiável). Fatias de peso igual, todas boas.
+export const TREE = {
+  COOLDOWN_MIN: 60,
+  // mods: dmg/hp/speed multiplicam; xp, pickup (ímã) e coins também; banish soma; guard
+  // multiplica o dano sofrido. Cores da paleta (Palette.js).
+  SLICES: [
+    { id: "dmg", label: "+20% DANO", short: "Dano +20%", color: 0xe8434f, mods: { dmg: 1.2 } },
+    { id: "xp", label: "+30% XP", short: "XP +30%", color: 0x5cc8ff, mods: { xp: 1.3 } },
+    { id: "coins", label: "+40% MOEDAS", short: "Moedas +40%", color: 0xf2c14e, mods: { coins: 1.4 } },
+    { id: "hp", label: "+25% VIDA", short: "Vida +25%", color: 0x9ccf62, mods: { hp: 1.25 } },
+    { id: "banish", label: "+1 BANIR", short: "+1 banimento", color: 0xc78cff, mods: { banish: 1 } },
+    { id: "magnet", label: "+60% ÍMÃ", short: "Ímã +60%", color: 0xff7eb6, mods: { pickup: 1.6 } },
+    { id: "speed", label: "+15% VELOC.", short: "Velocidade +15%", color: 0xff7a3c, mods: { speed: 1.15 } },
+    { id: "guard", label: "+15% DEFESA", short: "Dano sofrido -15%", color: 0xb3bac4, mods: { guard: 0.85 } },
+  ],
 };
 
 // Entrada na floresta (continuação da saída da Clareira): o guardião chega
@@ -810,6 +829,8 @@ export const ADMOB = {
     double_coins: "ca-app-pub-7068898840847782/9790000693",
     daily_chest: "ca-app-pub-7068898840847782/4481833690",
     extra_reroll: "ca-app-pub-7068898840847782/7024236554",
+    extra_banish: "ca-app-pub-7068898840847782/6544975979",
+    tree_spin: "ca-app-pub-7068898840847782/7068468581",
   },
   // Intersticial: pronto e DESLIGADO (começamos sem, como o Vampire Survivors; ver PRE_LANCAMENTO 1.7)
   INTERSTITIAL: "ca-app-pub-7068898840847782/5930646735",

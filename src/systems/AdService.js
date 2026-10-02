@@ -24,6 +24,9 @@ export const PLACEMENTS = {
   double_coins: { perRun: 1, perDay: 20, label: "Dobrar moedas" },
   extra_reroll: { perRun: 3, perDay: 20, label: "Troca extra" },
   daily_chest: { perRun: 99, perDay: 1, label: "Baú diário" },
+  extra_banish: { perRun: 1, perDay: 20, label: "Banir extra" },
+  // a recarga de 1 hora fica na própria roleta (CampTree); aqui só um teto de segurança
+  tree_spin: { perRun: 99, perDay: 24, label: "Roleta da Samaúma" },
 };
 
 const today = () => Clock.date().toISOString().slice(0, 10);

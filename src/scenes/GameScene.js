@@ -21,6 +21,7 @@ import {
   SHRINE,
   BUILD,
   GARDEN,
+  TREE,
 } from "../config.js";
 import { randomRareSeed } from "../systems/Garden.js";
 import { recipe, mealMods, bonusText } from "../systems/Kitchen.js";
@@ -167,6 +168,22 @@ export class GameScene extends Phaser.Scene {
       const r = recipe(meal.id);
       this.time.delayedCall(2500, () => this._toast(`${r.name}: ${bonusText(r, meal.q)}`, 2600, "#ffc86b"));
       Analytics.track("meal_eaten", { id: meal.id, q: meal.q });
+    }
+    // Bênção da Samaúma (roleta na Clareira): vale só nesta partida (consumida ao entrar)
+    const tree = TREE.SLICES.find((s) => s.id === this.meta.data.treeBuff);
+    this._treeCoinMult = 1;
+    if (tree) {
+      const m = tree.mods;
+      this._applyCharacterMods(this.player, m);
+      if (m.xp) this.player._xpMult *= m.xp;
+      if (m.pickup) this.player.pickupRadius *= m.pickup;
+      if (m.guard) this.player.dmgTakenMult *= m.guard;
+      if (m.banish) this.upgrades.banishLeft += m.banish;
+      if (m.coins) this._treeCoinMult = m.coins;
+      this.meta.data.treeBuff = null;
+      this.meta._save();
+      this.time.delayedCall(meal ? 5400 : 2500, () => this._toast(`Bênção da Samaúma: ${tree.short}`, 2600, "#ffe58f"));
+      Analytics.track("tree_buff_used", { id: tree.id });
     }
     // Locks de habilidades: bloqueia se não comprou
     this.player.dashUnlocked = this.meta.hasAbility("DASH");
@@ -1383,7 +1400,7 @@ export class GameScene extends Phaser.Scene {
       Analytics.track("endless_end", { s: Math.floor(endlessS), bonus, record: endlessRecord });
     }
     // Recompensa final escalada pela dificuldade (HUD mostrou a contagem-base ao vivo)
-    const coinsFinal = Math.round(this._coinsGainedThisRun * this.diff.rewardMult);
+    const coinsFinal = Math.round(this._coinsGainedThisRun * this.diff.rewardMult * (this._treeCoinMult || 1));
     // Detecta se ESTA vitória libera um novo nível (antes de gravar)
     const prevMaxCleared = this.meta.data.maxDifficultyCleared;
     const unlockedNewDifficulty =

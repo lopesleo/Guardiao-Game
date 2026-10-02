@@ -49,7 +49,7 @@ function weightedPick(list, n) {
 export class UpgradeSystem {
   constructor(scene) {
     this.scene = scene;
-    // Banir: a carta some até o fim da partida. Cargas crescem com o Santuário.
+    // Banir: a carta some até o fim da partida (1 grátis; +1 por anúncio ou pela Samaúma).
     this.banned = new Set();
     this.pactsTaken = new Set(); // ids dos tratos aceitos nesta partida
     const shrine = scene.meta ? new Builds(scene.meta).level("shrine") : 1;

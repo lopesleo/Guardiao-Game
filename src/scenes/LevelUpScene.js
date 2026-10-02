@@ -1,6 +1,7 @@
 // Level-up: pausa a GameScene e oferece 3 cartas (clique/toque ou teclas 1-2-3).
 // Troca de cartas (R) 1× por level-up. D24: ESC desabilitado aqui.
 // "Mais uma carta" (anúncio premiado, 1× por partida) revela uma 4ª opção.
+// Banir: 1 grátis por partida; acabou, o botão oferece +1 por anúncio (1× por partida).
 import { createCard } from "../ui/Cards.js";
 import { text, dim, Button, vw, vh, fitCamera } from "../ui/Theme.js";
 import { CSS } from "../art/Palette.js";
@@ -47,21 +48,28 @@ export class LevelUpScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-R", () => this._reroll());
   }
 
+  // Posição das cartas na mesa (n cartas centralizadas)
+  _layout(n) {
+    const W = vw(this),
+      H = vh(this);
+    const gap = 24;
+    const cw = Math.min(300, Math.floor((W - 80 - gap * (n - 1)) / n));
+    const totalW = cw * n + gap * (n - 1);
+    const startX = (W - totalW) / 2 + cw / 2;
+    return { cw, ch: 450, y: H / 2 + 38, x: (i) => startX + i * (cw + gap) };
+  }
+
+  _makeCard(i) {
+    const L = this._layout(this.cards.length);
+    return createCard(this, L.x(i), L.y, L.cw, L.ch, this.cards[i], (card, cont) => this._choose(card, cont), i, !this.isTouch);
+  }
+
   _renderCards(animate) {
     this._cardObjs.forEach((c) => c.destroy());
     this._cardObjs = [];
-    const W = vw(this),
-      H = vh(this);
-    const n = this.cards.length;
-    const gap = 24;
-    const cw = Math.min(300, Math.floor((W - 80 - gap * (n - 1)) / n));
-    const ch = 450;
-    const totalW = cw * n + gap * (n - 1);
-    const startX = (W - totalW) / 2 + cw / 2;
-    const y = H / 2 + 38;
-    for (let i = 0; i < n; i++) {
-      const x = startX + i * (cw + gap);
-      const obj = createCard(this, x, y, cw, ch, this.cards[i], (card, cont) => this._choose(card, cont), i, !this.isTouch);
+    const { y } = this._layout(this.cards.length);
+    for (let i = 0; i < this.cards.length; i++) {
+      const obj = this._makeCard(i);
       if (animate) {
         obj.y = y + 60;
         obj.setAlpha(0);
@@ -79,7 +87,7 @@ export class LevelUpScene extends Phaser.Scene {
     this._btnXs = offer ? [W / 2 - 320, W / 2, W / 2 + 320] : [W / 2 - 150, W / 2 + 150];
     this.rerollBtn = new Button(this, this._btnXs[0], H - 34, 280, 44, "", () => this._reroll(), { size: 17, style: "ice" });
     this._refreshReroll();
-    this.banishBtn = new Button(this, this._btnXs[1], H - 34, 280, 44, "", () => this._toggleBanish(), { size: 17, style: "danger" });
+    this._makeBanishBtn(false);
     this.banishHint = text(this, W / 2, H - 78, "", { size: 18, color: CSS.redHi, origin: 0.5, stroke: true });
     this._refreshBanish();
     this.input.keyboard.on("keydown-B", () => this._toggleBanish());
@@ -111,7 +119,7 @@ export class LevelUpScene extends Phaser.Scene {
     this.extraBtn = null;
     this._btnXs = [vw(this) / 2 - 150, vw(this) / 2 + 150];
     this.rerollBtn.x = this._btnXs[0];
-    this.banishBtn.x = this._btnXs[1];
+    this.banishBtn.x = this.banishBtn._baseX = this._btnXs[1];
     if (!c) return;
     this.cards = [...this.cards, c];
     this._renderCards(false);
@@ -128,40 +136,88 @@ export class LevelUpScene extends Phaser.Scene {
     else this.rerollBtn.setLabel("Sem trocas").setEnabled(false);
   }
 
+  // Botão de banir: normal ou, sem banimentos, "BANIR +1" por anúncio
+  _makeBanishBtn(ad) {
+    const x = this.banishBtn?._baseX ?? this._btnXs[1];
+    this.banishBtn?.destroy();
+    this._banishAd = ad;
+    this.banishBtn = ad
+      ? new Button(this, x, vh(this) - 34, 280, 44, "BANIR +1", () => this._adBanish(), { size: 17, style: "danger", color: CSS.redHi, icon: "ico_play", iconScale: 2 })
+      : new Button(this, x, vh(this) - 34, 280, 44, "", () => this._toggleBanish(), { size: 17, style: "danger" });
+    this.banishBtn._baseX = x;
+    if (ad) Analytics.track("ad_offer_show", { placement: "extra_banish" });
+  }
+
   _refreshBanish() {
     const left = this.gameScene.upgrades.banishLeft;
     const key = this.isTouch ? "" : " [B]";
-    if (this._banishMode) this.banishBtn.setLabel("CANCELAR").setEnabled(true);
+    const offerAd = !this._banishMode && left <= 0 && AdService.canShow("extra_banish");
+    if (offerAd !== !!this._banishAd) this._makeBanishBtn(offerAd);
+    if (offerAd) this.banishBtn.setEnabled(!this._adBusy && !this._locked);
+    else if (this._banishMode) this.banishBtn.setLabel("CANCELAR").setEnabled(true);
     else if (left > 0) this.banishBtn.setLabel(`BANIR (${left})${key}`).setEnabled(true);
     else this.banishBtn.setLabel("Sem banimentos").setEnabled(false);
     this.banishHint.setText(this._banishMode ? "Toque na carta que NÃO quer mais ver nesta partida" : "");
   }
 
-  _toggleBanish() {
-    if (this._locked || (!this._banishMode && this.gameScene.upgrades.banishLeft <= 0)) return;
-    this._banishMode = !this._banishMode;
-    this.sound.play("sfx_ui_click", { volume: 0.4 });
-    // Cartas balançam no modo banir: o que vai acontecer fica evidente
+  // Anúncio premiado → +1 banimento e já entra no modo banir
+  async _adBanish() {
+    if (this._locked || this._adBusy) return;
+    this._adBusy = true;
+    this.banishBtn.setEnabled(false);
+    const ok = await AdService.rewarded("extra_banish");
+    this._adBusy = false;
+    if (!this.scene.isActive() || this._locked) return;
+    if (ok) this.gameScene.upgrades.banishLeft += 1;
+    this._refreshBanish();
+    if (ok) this._toggleBanish();
+  }
+
+  // Cartas balançam no modo banir: o que vai acontecer fica evidente
+  _wobble(on) {
     this._cardObjs.forEach((c) => {
       this.tweens.killTweensOf(c);
       c.angle = 0;
-      if (this._banishMode) this.tweens.add({ targets: c, angle: { from: -1.2, to: 1.2 }, duration: 110, yoyo: true, repeat: -1 });
+      if (on) this.tweens.add({ targets: c, angle: { from: -1.2, to: 1.2 }, duration: 110, yoyo: true, repeat: -1 });
     });
+  }
+
+  _toggleBanish() {
+    if (this._banishAd) return this._adBanish();
+    if (this._locked || (!this._banishMode && this.gameScene.upgrades.banishLeft <= 0)) return;
+    this._banishMode = !this._banishMode;
+    this.sound.play("sfx_ui_click", { volume: 0.4 });
+    this._wobble(this._banishMode);
     this._refreshBanish();
   }
 
-  // Banir: a carta some e uma nova ocupa o lugar. Sai do modo ao concluir.
+  // Banir: SÓ a carta banida sai (cai e some) e uma nova surge no mesmo lugar; as outras
+  // continuam onde estavam. Sai do modo ao concluir.
   _banish(card, cont) {
     const up = this.gameScene.upgrades;
-    if (!up.banish(card)) return;
+    const i = this._cardObjs.indexOf(cont);
+    if (i < 0 || !up.banish(card)) return;
     Analytics.track("card_banish", { id: up.cardId(card), level: this.player.level });
     this._banishMode = false;
-    const i = this._cardObjs.indexOf(cont);
-    const fresh = up.replacement(this.player, this.cards);
+    this._wobble(false);
     this.sound.play("sfx_death", { volume: 0.4, rate: 0.8 });
-    const next = fresh ? this.cards.map((c, k) => (k === i ? fresh : c)) : this.cards.filter((_, k) => k !== i);
-    if (next.length) this.cards = next; // mesa nunca fica vazia
-    this._renderCards(true);
+    const fresh = up.replacement(this.player, this.cards);
+    if (!fresh) {
+      // nada para repor: tira a carta e reorganiza a mesa (que nunca fica vazia)
+      if (this.cards.length > 1) this.cards = this.cards.filter((_, k) => k !== i);
+      this._renderCards(true);
+    } else {
+      this.cards = this.cards.map((c, k) => (k === i ? fresh : c));
+      cont.disableInteractive?.();
+      cont.list?.forEach((o) => o.disableInteractive?.());
+      this.tweens.add({ targets: cont, y: cont.y + 120, angle: 8, alpha: 0, scale: 0.85, duration: 260, ease: "Cubic.easeIn", onComplete: () => cont.destroy() });
+      const obj = this._makeCard(i);
+      const y = obj.y;
+      obj.setScale(0.7).setAlpha(0).setY(y + 30);
+      this.tweens.add({ targets: obj, scale: 1, alpha: 1, y, delay: 200, duration: 320, ease: "Back.easeOut" });
+      this.time.delayedCall(200, () => this.sound.play("sfx_ui_click", { volume: 0.5, rate: 1.3 }));
+      this._cardObjs[i] = obj;
+    }
     this._refreshBanish();
     this._refreshReroll();
   }

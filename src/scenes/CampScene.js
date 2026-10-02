@@ -27,6 +27,7 @@ import { CampKitchen } from "./CampKitchen.js";
 import { CampPond } from "./CampPond.js";
 import { CampDecor, decorFree } from "./CampDecor.js";
 import { CampDaily } from "./CampDaily.js";
+import { CampTree } from "./CampTree.js";
 
 const S = GAME.PIXEL_SCALE;
 const CAMP_W = 1500,
@@ -99,6 +100,7 @@ export class CampScene extends Phaser.Scene {
     this._pondWorld();
     this._decor();
     this._dailyChestWorld();
+    this._treeWorld();
     this._player();
     this._night();
     this._hud();
@@ -577,7 +579,7 @@ export class CampScene extends Phaser.Scene {
       }
       if (b.ruin) this.tweens.add({ targets: b.ruin, alpha: 0, duration: 600, onComplete: () => b.ruin.destroy() });
       const show = [b.img, b.shadow].filter(Boolean);
-      this.tweens.add({ targets: show, alpha: 1, duration: 700, delay: 300 });
+      if (show.length) this.tweens.add({ targets: show, alpha: 1, duration: 700, delay: 300 });
       if (r.id === "nest") this.tweens.add({ targets: this.bird, alpha: 1, duration: 700, delay: 500 });
       if (b.img) this.tweens.add({ targets: b.img, scaleY: { from: S * 0.7, to: S }, duration: 600, delay: 300, ease: "Back.easeOut" });
       b.glow?.setVisible(true);
@@ -851,4 +853,4 @@ export class CampScene extends Phaser.Scene {
   }
 }
 
-Object.assign(CampScene.prototype, MetaPanels, CampGarden, CampKitchen, CampPond, CampDecor, CampDaily);
+Object.assign(CampScene.prototype, MetaPanels, CampGarden, CampKitchen, CampPond, CampDecor, CampDaily, CampTree);
