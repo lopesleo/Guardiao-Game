@@ -39,6 +39,17 @@ async function askConsent(AdMob) {
   return info?.status ?? "UNKNOWN";
 }
 
+// Som do jogo durante o anúncio: o anúncio abre uma tela própria DENTRO do app, então o Android não
+// avisa "app em segundo plano" e a música continuaria tocando por baixo do anúncio
+function gameAudio(on) {
+  const snd = window.game?.sound;
+  const ctx = snd?.context;
+  if (!snd) return;
+  if (!ctx) return snd[on ? "resumeAll" : "pauseAll"]?.();
+  if (!on && ctx.state === "running") ctx.suspend().catch(() => {});
+  if (on && ctx.state === "suspended" && !snd.locked) ctx.resume().catch(() => {});
+}
+
 // Um anúncio premiado: resolve true só se o jogador GANHOU a recompensa (assistiu até o fim)
 function showRewarded(placement) {
   const AdMob = plugin();
@@ -54,6 +65,7 @@ function showRewarded(placement) {
       done = true;
       handles.forEach((h) => h?.remove?.());
       state.busy = false;
+      gameAudio(true);
       // Falha de carga (sem rede, bloqueador de anúncios, sem anúncio no momento): avisa o jogador
       if (failed && !ok) notice("Anúncio indisponível agora. Tente mais tarde.");
       resolve(ok);
@@ -65,6 +77,7 @@ function showRewarded(placement) {
         handles.push(await AdMob.addListener("onRewardedVideoAdDismissed", () => finish(rewarded)));
         handles.push(await AdMob.addListener("onRewardedVideoAdFailedToShow", () => finish(false, true)));
         await AdMob.prepareRewardVideoAd({ adId, isTesting: ADS.TESTING });
+        gameAudio(false); // silencia o jogo só quando o anúncio vai mesmo aparecer
         await AdMob.showRewardVideoAd();
       } catch (e) {
         state.error = String(e?.message ?? e); // aparece em Opções (ex.: "no fill")
