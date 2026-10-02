@@ -276,7 +276,16 @@ export const CampGarden = {
     const bg = this.add.graphics();
     drawFrame(bg, -bw / 2, -CH / 2 - 44, bw, CH + 62, "gold", { alpha: 0.96 });
     c.add(bg);
-    c.add(text(this, 0, -CH / 2 - 24, "PLANTAR  ·  segure para plantar em todos os vazios", { size: 16, color: CSS.goldHi, origin: 0.5 }));
+    const tut = !gd.data.tutorialDone; // 1º plantio: acelerado, só para ensinar o ciclo
+    c.add(
+      text(this, 0, -CH / 2 - 24, tut ? "PRIMEIRO PLANTIO  ·  a Anciã acelera a mata: cresce em 30 s" : "PLANTAR  ·  segure para plantar em todos os vazios", {
+        size: 16,
+        color: CSS.goldHi,
+        origin: 0.5,
+        align: "center",
+        wrap: bw - 90,
+      }),
+    );
     const bar = {
       close: () => {
         if (bar.closed) return;
@@ -302,7 +311,7 @@ export const CampGarden = {
       card.add(this.add.image(0, -26, cropIcon(id)).setScale(3.4));
       card.add(text(this, 0, 12, crop.name, { size: 15, origin: 0.5, align: "center", wrap: CW - 10 }));
       const seeds = this.meta.data.seeds[id] || 0;
-      card.add(text(this, 0, 38, crop.rare ? `${fmtDuration(crop.s * 1000)} · ×${seeds}` : fmtDuration(crop.s * 1000), { size: 14, color: crop.rare ? CSS.goldHi : CSS.muted, origin: 0.5 }));
+      card.add(text(this, 0, 38, crop.rare ? `${fmtDuration(crop.s * 1000)} · ×${seeds}` : fmtDuration((tut ? GARDEN.TUTORIAL_S : crop.s) * 1000), { size: 14, color: crop.rare ? CSS.goldHi : CSS.muted, origin: 0.5 }));
       const zone = this.add.zone(0, 0, CW, CH).setInteractive({ useHandCursor: true });
       card.add(zone);
       let downAt = 0;
@@ -313,7 +322,7 @@ export const CampGarden = {
       zone.on("pointerout", () => (downAt = 0));
       zone.on("pointerup", () => {
         if (!downAt) return;
-        const all = this.time.now - downAt >= HOLD_MS;
+        const all = !tut && this.time.now - downAt >= HOLD_MS;
         downAt = 0;
         bar.close();
         this._plantFromBar(i, id, all);

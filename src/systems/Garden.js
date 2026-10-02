@@ -38,6 +38,8 @@ export class Garden {
 
   // Plantas que o jogador pode plantar agora (comuns do nível + raras com semente)
   available() {
+    // 1º plantio da vida (cresce em segundos): só a cenoura, para o atalho não render mandioca
+    if (!this.data.tutorialDone) return ["carrot"];
     return Object.entries(GARDEN.CROPS)
       .filter(([id, c]) => (c.rare ? (this.meta.data.seeds[id] || 0) > 0 : c.lv <= this.level))
       .map(([id]) => id);
