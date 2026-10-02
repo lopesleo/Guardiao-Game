@@ -25,11 +25,16 @@ export function createCard(scene, x, y, w, h, card, onClick, index, showKey = tr
   inner.add(g);
 
   // Fita do tipo
-  const rib = scene.add.graphics();
+  // A altura da fita acompanha o texto: em tela pequena a fonte é ampliada e estourava a faixa fixa
   const rw = w - 12 * P;
-  drawFrame(rib, -rw / 2, -h / 2 + 5 * P, rw, 10 * P, { border: PAL.ink, body: t.ribbon, hi: 0xffffff, lo: PAL.ink }, { noRivets: true });
+  const label = text(scene, 0, 0, card.ribbon ?? t.label, { size: 15, color: CSS.ink, origin: 0.5, shadow: false });
+  if (label.width > rw - 8 * P) label.setScale((rw - 8 * P) / label.width);
+  const rh = Math.max(10 * P, Math.ceil((label.displayHeight + 6 * P) / P) * P);
+  const rib = scene.add.graphics();
+  drawFrame(rib, -rw / 2, -h / 2 + 5 * P, rw, rh, { border: PAL.ink, body: t.ribbon, hi: 0xffffff, lo: PAL.ink }, { noRivets: true });
   inner.add(rib);
-  inner.add(text(scene, 0, -h / 2 + 10 * P, card.ribbon ?? t.label, { size: 15, color: CSS.ink, origin: 0.5, shadow: false }));
+  label.setY(-h / 2 + 5 * P + rh / 2);
+  inner.add(label);
 
   // Medalhão com ícone
   const my = -h / 2 + 42 * P;
@@ -69,21 +74,28 @@ export function createCard(scene, x, y, w, h, card, onClick, index, showKey = tr
   cy += 34;
 
   // Descrição
-  inner.add(
-    text(scene, 0, cy, card.desc ?? "", {
-      size: 16,
-      color: CSS.muted,
-      origin: [0.5, 0],
-      align: "center",
-      wrap: w - 36,
-      lineSpacing: 4,
-      shadow: false,
-    }),
-  );
+  const descT = text(scene, 0, cy, card.desc ?? "", {
+    size: 16,
+    color: CSS.muted,
+    origin: [0.5, 0],
+    align: "center",
+    wrap: w - 36,
+    lineSpacing: 4,
+    shadow: false,
+  });
+  inner.add(descT);
 
-  // Custo do trato, em vermelho, no pé da carta
+  // Custo do trato, em vermelho, no pé da carta. Fica sempre ABAIXO da descrição: se faltar
+  // espaço (descrição longa / fonte ampliada), a descrição encolhe em vez de sobrepor.
   if (card.cost) {
-    inner.add(text(scene, 0, h / 2 - 26 * P, card.cost, { size: 18, color: CSS.redHi, origin: 0.5, align: "center", wrap: w - 28, stroke: true, strokeW: 4 }));
+    const costT = text(scene, 0, 0, card.cost, { size: 18, color: CSS.redHi, origin: 0.5, align: "center", wrap: w - 70, stroke: true, strokeW: 4 });
+    costT.setY(h / 2 - 14 - costT.height / 2);
+    let fs = parseInt(descT.style.fontSize, 10);
+    while (descT.y + descT.height > costT.y - costT.height / 2 - 8 && fs > 12) {
+      fs -= 1;
+      descT.setFontSize(fs);
+    }
+    inner.add(costT);
   }
 
   // Pips de nível (nova arma: 0→1; melhoria: n→n+1 piscando)
