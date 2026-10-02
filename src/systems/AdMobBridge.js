@@ -10,6 +10,19 @@ import { AdService } from "./AdService.js";
 import { Analytics } from "./Analytics.js";
 import { Settings } from "./Settings.js";
 import { Telemetry } from "./Telemetry.js";
+import { text, vw, vh } from "../ui/Theme.js";
+import { CSS } from "../art/Palette.js";
+
+// Aviso curto na cena que está por cima (ex.: tela de cartas), sem depender de cada cena
+function notice(msg) {
+  const scenes = window.game?.scene?.getScenes(true) ?? [];
+  const s = scenes[scenes.length - 1];
+  if (!s) return;
+  const t = text(s, vw(s) / 2, vh(s) * 0.2, msg, { size: 20, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 5 })
+    .setDepth(99999)
+    .setScrollFactor(0);
+  s.tweens.add({ targets: t, alpha: 0, delay: 2200, duration: 500, onComplete: () => t.destroy() });
+}
 
 const plugin = () => window.Capacitor?.Plugins?.AdMob;
 
@@ -36,11 +49,13 @@ function showRewarded(placement) {
     const handles = [];
     let rewarded = false;
     let done = false;
-    const finish = (ok) => {
+    const finish = (ok, failed = false) => {
       if (done) return;
       done = true;
       handles.forEach((h) => h?.remove?.());
       state.busy = false;
+      // Falha de carga (sem rede, bloqueador de anúncios, sem anúncio no momento): avisa o jogador
+      if (failed && !ok) notice("Anúncio indisponível agora. Tente mais tarde.");
       resolve(ok);
     };
     (async () => {
@@ -48,12 +63,12 @@ function showRewarded(placement) {
         state.step = "anúncio";
         handles.push(await AdMob.addListener("onRewardedVideoAdReward", () => (rewarded = true)));
         handles.push(await AdMob.addListener("onRewardedVideoAdDismissed", () => finish(rewarded)));
-        handles.push(await AdMob.addListener("onRewardedVideoAdFailedToShow", () => finish(false)));
+        handles.push(await AdMob.addListener("onRewardedVideoAdFailedToShow", () => finish(false, true)));
         await AdMob.prepareRewardVideoAd({ adId, isTesting: ADS.TESTING });
         await AdMob.showRewardVideoAd();
       } catch (e) {
         state.error = String(e?.message ?? e); // aparece em Opções (ex.: "no fill")
-        finish(rewarded); // sem anúncio disponível (falha ao carregar) = sem recompensa
+        finish(rewarded, true); // sem anúncio disponível (falha ao carregar) = sem recompensa
       }
     })();
   });
