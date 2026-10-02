@@ -278,19 +278,20 @@ function hailstone() {
 // um fio de luz correndo pelos anéis e folhas sendo levantadas na base.
 // cols = [clara, média, escura]; o mesmo desenho serve à evolução em brasa.
 function whirlFrames(cols, debris = PAL.g5) {
-  const W = 24,
-    H = 30,
+  // Desenhado para escala INTEIRA 3× (escala quebrada deixava faixas de pixel desiguais)
+  const W = 30,
+    H = 38,
     N = 6;
   const frames = [];
   for (let f = 0; f < N; f++) {
     const p = new Pix(W, H);
     const ph = (f / N) * Math.PI * 2;
     const rings = [];
-    for (let y = 2; y < H - 3; y += 2.6) {
+    for (let y = 2; y < H - 3; y += 3) {
       const t = (y - 2) / (H - 5); // 0 = topo · 1 = base
-      const rx = 1.2 + Math.pow(1 - t, 1.35) * 9.6;
+      const rx = 1.4 + Math.pow(1 - t, 1.45) * 12.4;
       // A onda desce pelo funil (fase anda para baixo a cada frame)
-      const cx = W / 2 + Math.sin(t * 5 - ph) * 2.8 * (0.3 + t * 0.7);
+      const cx = W / 2 + Math.sin(t * 5 - ph) * 3.4 * (0.3 + t * 0.7);
       rings.push({ y, t, rx, ry: Math.max(0.7, rx * 0.3), cx });
     }
     // Miolo translúcido bem leve (só dá corpo, não vira cunha)
@@ -313,7 +314,7 @@ function whirlFrames(cols, debris = PAL.g5) {
     // Fiapos soltos na boca do funil
     for (let k = 0; k < 2; k++) {
       const a = ph + k * Math.PI;
-      p.set(W / 2 + Math.cos(a) * 11, 1 + Math.sin(a) * 1.5, cols[0], 200);
+      p.set(W / 2 + Math.cos(a) * 14, 1 + Math.sin(a) * 1.5, cols[0], 200);
     }
     // Folhas e poeira girando na base
     for (let k = 0; k < 3; k++) {

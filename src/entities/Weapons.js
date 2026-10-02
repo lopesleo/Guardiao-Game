@@ -1,6 +1,54 @@
 // Armas: 3 de fogo, 3 de gelo, 3 de raio + evoluções. Números em WEAPONS (config.js).
 import { WEAPONS, COLORS, GAME, ELEMENT } from "../config.js";
 import { shockwave } from "../art/Telegraph.js";
+import { Pix } from "../art/PixelArt.js";
+import { PAL } from "../art/Palette.js";
+
+// Anel do campo gélido como TEXTURA (uma por raio, em cache): um Graphics
+// redesenhado todo quadro com centenas de retângulos sumia no Phaser 4 (WebGL).
+// Imagem girando é mais barata e sempre aparece. strong = Coração do Inverno.
+function auraRingTexture(scene, r, strong) {
+  const R = Math.round(r);
+  const key = `fx_aura_ring_${R}_${strong ? 1 : 0}`;
+  if (scene.textures.exists(key)) return key;
+  const S = R * 2 + 10,
+    c = S / 2;
+  const p = new Pix(S, S);
+  const dot = (x, y, rgb, size = 2) => {
+    const px = Math.round(x / size) * size,
+      py = Math.round(y / size) * size;
+    for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) p.set(px + i, py + j, rgb);
+  };
+  const step = 0.8 / R; // ~1 px de arco por passo: linha CONTÍNUA (antes: 18 pontos soltos)
+  // Contorno escuro por fora: separa o anel da grama
+  for (let a = 0; a < Math.PI * 2; a += step) dot(c + Math.cos(a) * (R + 2), c + Math.sin(a) * (R + 2), PAL.ice0);
+  // Linha base
+  for (let a = 0; a < Math.PI * 2; a += step) dot(c + Math.cos(a) * R, c + Math.sin(a) * R, PAL.ice1);
+  // Arcos claros (6 ou 8) com ponta branca — a imagem gira, então "correm" pelo anel
+  const arcs = strong ? 8 : 6,
+    len = 0.32;
+  for (let k = 0; k < arcs; k++) {
+    const a0 = (k / arcs) * Math.PI * 2;
+    for (let a = a0; a < a0 + len; a += step) {
+      const t = (a - a0) / len;
+      dot(c + Math.cos(a) * R, c + Math.sin(a) * R, t > 0.82 ? PAL.white : t > 0.4 ? PAL.ice3 : PAL.ice2);
+    }
+  }
+  // Pontilhado interno (geada no chão), bem discreto
+  for (let a = 0; a < Math.PI * 2; a += 9 / R) dot(c + Math.cos(a) * (R - 7), c + Math.sin(a) * (R - 7), PAL.ice1);
+  p.register(scene, key);
+  return key;
+}
+function auraCrystalTexture(scene) {
+  if (scene.textures.exists("fx_aura_crystal")) return "fx_aura_crystal";
+  Pix.fromMap(["...k...", "..kbk..", ".kbcbk.", "kbcwcbk", ".kbcbk.", "..kbk..", "...k..."], {
+    k: PAL.ice1,
+    b: PAL.ice2,
+    c: PAL.ice3,
+    w: PAL.white,
+  }).register(scene, "fx_aura_crystal");
+  return "fx_aura_crystal";
+}
 
 // ============================================================================
 // Projétil reutilizável (graphics container)
@@ -82,6 +130,10 @@ export class Projectile extends Phaser.GameObjects.Container {
   update(time) {
     if (!this.active) return;
     if (time >= this.lifeUntil) this.kill();
+    // Cauda nasce ATRÁS do projétil (na frente, cobria o sprite de branco)
+    const v = this.body.velocity,
+      vl = Math.hypot(v.x, v.y) || 1;
+    this.scene.fx?.trail(this, this.x - (v.x / vl) * 9, this.y - (v.y / vl) * 9, this.element ?? "fire", 14);
     if (this._isFire) {
 
       this.fball.setRotation(
@@ -165,6 +217,13 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     if (!this.active) return;
     // Rotação visual
     this.rotation += dt * 0.03;
+    // Rastro: fantasmas do giro (lê a velocidade) + brasas
+    const fx = this.scene.fx;
+    if (fx && time >= (this._ghostAt ?? 0)) {
+      this._ghostAt = time + 45;
+      fx.ghost("px_boomer", this.x, this.y, this.rotation, GAME.PIXEL_SCALE, 0xff9a4a, 170, 0.42);
+    }
+    fx?.trail(this, this.x, this.y, "fire", 40);
 
     // Rastro de chamas (Fênix)
     if (this.trailFn && time >= this._nextTrailAt) {
@@ -339,14 +398,18 @@ export class Staff extends Weapon {
 
     const total = 1 + (this.owner?.extraProj ?? 0) + this.extraProj;
     const spread = 0.18;
+    // Sai da ponta do cajado (à frente e acima do corpo), não do umbigo
+    const ox = this.owner.x + Math.cos(baseAng) * 16,
+      oy = this.owner.y - 12 + Math.sin(baseAng) * 10;
+    this.scene.fx?.muzzle(ox, oy, baseAng, "fire");
     for (let i = 0; i < total; i++) {
       const offset = (i - (total - 1) / 2) * spread;
       const a = baseAng + offset;
       const proj = this.scene.projectilePool.acquire();
       const { dmg, crit } = this.rollHit();
       proj.fire(
-        this.owner.x,
-        this.owner.y,
+        ox,
+        oy,
         Math.cos(a) * sp,
         Math.sin(a) * sp,
         dmg,
@@ -374,27 +437,44 @@ export class AuraWeapon extends Weapon {
       .setAlpha(0.22)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(40);
-    this.ring = scene.add.graphics().setDepth(41);
+    // Acima do mapa de luz: o campo é magia, tem que brilhar no escuro
+    this.ring = scene.add.image(0, 0, "fx_star").setDepth(48550).setVisible(false);
+    this.crystals = [];
+    this._ringKey = null;
     this._ringStrong = false;
   }
   dispose() {
     this.gfx.destroy();
     this.ring.destroy();
+    for (const c of this.crystals) c.destroy();
+    this.crystals = [];
   }
   // Anel pontilhado em "pixels" (quadrados de 3px) que gira devagar
   _drawRing(time) {
-    const g = this.ring;
     const r = this.range;
-    g.clear();
-    const n = Math.max(18, Math.round(r / 7));
-    const rot = time / 2600;
-    for (let i = 0; i < n; i++) {
-      if (i % 3 === 2) continue; // tracejado
-      const a = rot + (i / n) * Math.PI * 2;
-      const x = Math.round((this.owner.x + Math.cos(a) * r) / 3) * 3;
-      const y = Math.round((this.owner.y + Math.sin(a) * r) / 3) * 3;
-      g.fillStyle(i % 3 === 0 ? 0xbfeaff : 0x5cc8ff, this._ringStrong ? 0.95 : 0.7);
-      g.fillRect(x - 1, y - 1, 3, 3);
+    const ox = this.owner.x,
+      oy = this.owner.y;
+    // Textura do raio atual (o raio só muda com cartas de área/alcance)
+    const key = auraRingTexture(this.scene, r, this._ringStrong);
+    if (key !== this._ringKey) {
+      this._ringKey = key;
+      this.ring.setTexture(key).setVisible(true);
+    }
+    this.ring.setPosition(ox, oy).setRotation(time / 2600);
+    // Cristais em órbita, no sentido contrário do tracejado
+    const k = this._ringStrong ? 6 : 4;
+    while (this.crystals.length < k)
+      this.crystals.push(this.scene.add.image(0, 0, auraCrystalTexture(this.scene)).setScale(1.5).setDepth(48551));
+    for (let i = 0; i < k; i++) {
+      const a = -time / 1700 + (i / k) * Math.PI * 2;
+      this.crystals[i].setPosition(Math.round(ox + Math.cos(a) * r), Math.round(oy + Math.sin(a) * r));
+    }
+    // Geada subindo dentro do campo (o ar está frio)
+    if (time >= (this._moteAt ?? 0)) {
+      this._moteAt = time + 120;
+      const a = Math.random() * Math.PI * 2,
+        d = Math.sqrt(Math.random()) * r * 0.95;
+      this.scene.fx?.burst("frost", ox + Math.cos(a) * d, oy + Math.sin(a) * d, 1, -Math.PI / 2, 30, { min: 8, max: 26 });
     }
   }
   // AuraWeapon sobrescreve range pra incluir areaMult do player
@@ -417,6 +497,7 @@ export class AuraWeapon extends Weapon {
     const freezeAfter = this.def.freezeAfterMs ?? 1000;
     let hits = 0;
     let froze = false;
+    const fx = this.scene.fx;
     this.scene.enemyPool.forEachActive((e) => {
       const dx = e.x - this.owner.x,
         dy = e.y - this.owner.y;
@@ -427,6 +508,7 @@ export class AuraWeapon extends Weapon {
       this.owner.lifestealFrom(dmg);
       this.scene._showDmg(e.x, e.y, dmg, ELEMENT.ICE, crit);
       this.scene.elemental.applyStatus(e, ELEMENT.ICE);
+      if (hits < 6) fx?.impact(e.x, e.y - 6, "ice", { power: 0.35, crit });
       hits++;
       if (died) {
         this.scene._onEnemyDeath(e);
@@ -445,6 +527,8 @@ export class AuraWeapon extends Weapon {
           this.def.freezeImmuneMs ?? 3000,
         );
         this._iceStreak(this.owner.x, this.owner.y, e.x, e.y);
+        fx?.ring(e.x, e.y + 4, 0xbfeaff, 6, 26, 220);
+        fx?.burst("frost", e.x, e.y - 6, 5);
         froze = true;
       }
     });
@@ -469,6 +553,15 @@ export class AuraWeapon extends Weapon {
       }
     }
     if (froze) this.scene.sound.play("sfx_ice_attack", { volume: 0.4 });
+    // Pulso do campo: anel que corre até a borda + geada subindo dentro
+    if (hits > 0 && fx) {
+      fx.ring(this.owner.x, this.owner.y, 0x9fdcff, this.range * 0.45, this.range, 380, 1, 0.55); // redondo como o campo
+      for (let i = 0; i < 3; i++) {
+        const a = Math.random() * Math.PI * 2,
+          d = Math.random() * this.range * 0.9;
+        fx.burst("frost", this.owner.x + Math.cos(a) * d, this.owner.y + Math.sin(a) * d * 0.7, 1, -Math.PI / 2, 40, { min: 10, max: 40 });
+      }
+    }
     return hits > 0;
   }
 
@@ -539,14 +632,12 @@ export class ChainLightning extends Weapon {
     if (!targets.length) return false;
     this.scene.sound.play("sfx_bolt_attack", { volume: 0.5, rate: 0.9 + Math.random() * 0.2 });
     const dmg = this.damage;
+    const hx = this.owner.x,
+      hy = this.owner.y - 14; // sai da mão erguida
+    this.scene.fx?.muzzle(hx, hy, Math.atan2(targets[0].y - hy, targets[0].x - hx), "bolt");
     for (const cur of targets) {
-      this.scene.elemental._drawBolt(
-        this.owner.x,
-        this.owner.y,
-        cur.x,
-        cur.y,
-        COLORS.BOLT,
-      );
+      this.scene.elemental._drawBolt(hx, hy, cur.x, cur.y - 6, COLORS.BOLT, 4);
+      this.scene.fx?.impact(cur.x, cur.y - 6, "bolt", { power: 1.3, dir: Math.atan2(cur.y - hy, cur.x - hx) });
       const isBoss = cur === this.scene.boss;
       const isCrit = Math.random() < (this.owner?.critChance ?? 0);
       const finalDmg = isCrit ? dmg * this.owner.critMult : dmg;
@@ -633,6 +724,7 @@ export class OverloadX extends ChainLightning {
     const first = this._priorityTargets(1)[0];
     if (!first) return false;
     this.scene.sound.play("sfx_bolt_attack", { volume: 0.45, rate: 0.9 });
+    this.scene.fx?.muzzle(this.owner.x, this.owner.y - 14, Math.atan2(first.y - this.owner.y, first.x - this.owner.x), "bolt");
     const jumpR = this.def.jumpRange * (this.owner?.areaMult ?? 1);
     const jumpRSq = jumpR * jumpR;
     const visited = new Set();
@@ -729,6 +821,8 @@ export class WinterHeart extends AuraWeapon {
     // Visual: anel expansivo + estilhaços voando pra fora (mesmo estilo do Cristal)
     if (hits > 0) scene.sound.play("sfx_ice_attack", { volume: 0.35, rate: 1.1 });
     shockwave(scene, cx, cy, r, COLORS.ICE);
+    scene.fx?.ring(cx, cy + 6, 0xffffff, 12, r, 300, 0.62, 1);
+    scene.fx?.burst("frost", cx, cy, 14, null, 360, { min: 80, max: 220 });
     const n = this.def.nova.shards;
     for (let i = 0; i < n; i++) {
       const ang = (i / n) * Math.PI * 2;
@@ -778,7 +872,8 @@ export class Phoenix extends Boomerang {
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(45);
     scene.tweens.add({ targets: patch, alpha: 0, scale: patch.scale * 0.5, duration: life, onComplete: () => patch.destroy() });
-    for (let i = 0; i < 3; i++) {
+    scene.fx?.burst("ember", x, y, 2, -Math.PI / 2, 70, { min: 20, max: 70 });
+    for (let i = 0; i < 2; i++) {
       const f = scene.add
         .image(x + (Math.random() - 0.5) * r, y + (Math.random() - 0.5) * r * 0.6, "px_puff")
         .setScale(1.6)
@@ -793,7 +888,7 @@ export class Phoenix extends Boomerang {
         const dx = e.x - x,
           dy = e.y - y;
         if (dx * dx + dy * dy > rSq) return;
-        const died = e.takeDamage(dmg, null);
+        const died = e.takeDamage(dmg, null, null, null, false, true);
         scene.elemental.applyStatus(e, ELEMENT.FIRE);
         if (died) scene._onEnemyDeath(e);
       });
@@ -868,6 +963,12 @@ export class OrbitalIce extends Weapon {
       const o = this.orbs[i];
       o.spr.setPosition(x, y).setDepth(y + 14 + 10000).setRotation(a * 2);
       o.glow.setPosition(x, y);
+      this.scene.fx?.trail(o, x, y, "ice", 45);
+      // Fantasmas do giro: leem a velocidade da órbita
+      if (time >= (o._ghostAt ?? 0)) {
+        o._ghostAt = time + 40;
+        this.scene.fx?.ghost("px_iceorb", x, y, a * 2, (this._orbScale ?? 3) * 0.9, 0x7fd0ff, 150, 0.4);
+      }
       const strike = (e, isBoss) => {
         const dx = e.x - x,
           dy = e.y - y;
@@ -880,6 +981,7 @@ export class OrbitalIce extends Weapon {
         this.owner.lifestealFrom(dmg);
         this.scene._showDmg(e.x, e.y, dmg, ELEMENT.ICE, crit);
         this.scene.elemental.applyStatus(e, ELEMENT.ICE);
+        this.scene.fx?.impact(x, y, "ice", { power: 0.8, crit, dir: a + Math.PI / 2 });
         this._onOrbHit?.(e, time, isBoss);
         if (died) {
           if (isBoss) this.scene._onBossDeath();
@@ -945,6 +1047,7 @@ export class Flamethrower extends Weapon {
       this.owner.lifestealFrom(dmg);
       scene._showDmg(e.x, e.y, dmg, ELEMENT.FIRE, crit);
       scene.elemental.applyStatus(e, ELEMENT.FIRE);
+      scene.fx?.impact(e.x, e.y - 6, "fire", { power: 0.5, crit, dir });
       if (died) {
         if (isBoss) scene._onBossDeath();
         else scene._onEnemyDeath(e);
@@ -953,6 +1056,16 @@ export class Flamethrower extends Weapon {
     scene.enemyPool.forEachActive((e) => e.active && strike(e, false));
     if (scene.boss?.active) strike(scene.boss, true);
     this._flameFx(px, py, dir, R, half);
+    // Brasas varrendo o cone + fumaça na ponta + luz quente ao longo do sopro
+    const fx = scene.fx;
+    if (fx) {
+      const sx = px + Math.cos(dir) * 14,
+        sy = py - 8 + Math.sin(dir) * 14;
+      fx.burst("ember", sx, sy, 10, dir, half * 2 * 57.3 * 0.9, { min: R * 0.9, max: R * 1.9 });
+      fx.burst("spark", sx, sy, 4, dir, half * 57.3, { min: R, max: R * 2.2 }, [0xffffff, 0xffe58f]);
+      fx.burst("smoke", px + Math.cos(dir) * R * 0.85, py + Math.sin(dir) * R * 0.85, 2, -Math.PI / 2, 90);
+      fx.light(px + Math.cos(dir) * R * 0.5, py + Math.sin(dir) * R * 0.5, R * 1.1, 0xff7a3c, 260, 1);
+    }
     this._afterBurst?.(px, py, dir, R);
     scene.sound.play("sfx_fire_attack", { volume: 0.22, rate: 0.8 + Math.random() * 0.15 });
     return true;
@@ -960,35 +1073,22 @@ export class Flamethrower extends Weapon {
   // Leque de "puffs" de fogo que voam pelo cone e se apagam
   _flameFx(px, py, dir, R, half) {
     const scene = this.scene;
-    const n = 14;
-    for (let i = 0; i < n; i++) {
-      const a = dir + (Math.random() * 2 - 1) * half * 0.85;
-      const dist = R * (0.45 + Math.random() * 0.55);
-      const tint = [0xffe58f, 0xffb36b, 0xff7a3c, 0xc4511e][i % 4];
-      const f = scene.add
-        .image(px + Math.cos(dir) * 14, py + Math.sin(dir) * 14, "px_puff")
-        .setScale(1.2)
-        .setTint(tint)
-        .setDepth(py + 10003)
-        .setBlendMode(i % 2 ? Phaser.BlendModes.ADD : Phaser.BlendModes.NORMAL);
-      scene.tweens.add({
-        targets: f,
-        x: px + Math.cos(a) * dist,
-        y: py + Math.sin(a) * dist - 6,
-        scale: 3.2 + Math.random() * 1.5,
-        alpha: 0,
-        delay: i * 12,
-        duration: 320 + Math.random() * 120,
-        ease: "Quad.easeOut",
-        onComplete: () => f.destroy(),
-      });
-    }
+    // Jato: bolas de fogo opacas que saem pequenas do bocal e crescem pelo cone
+    // (branco → amarelo → laranja → vinho). Velocidade casada com o alcance.
+    const jet = () => {
+      if (!this.owner) return;
+      const ox = this.owner.x + Math.cos(dir) * 12,
+        oy = this.owner.y - 8 + Math.sin(dir) * 12;
+      scene.fx?.burst("jet_fire", ox, oy, 4, dir, half * 2 * 57.3 * 0.7, { min: R * 1.1, max: R * 3.3 });
+    };
+    // Cinco levas em ~120 ms e rapidez bem variada: uma COLUNA contínua, não uma bola
+    for (let i = 0; i < 5; i++) scene.time.delayedCall(i * 30, jet);
     const glow = scene.add
       .image(px + Math.cos(dir) * R * 0.5, py + Math.sin(dir) * R * 0.5, "fx_glow")
       .setScale(R / 22, R / 40)
       .setRotation(dir)
       .setTint(0xff7a3c)
-      .setAlpha(0.45)
+      .setAlpha(0.22)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(60);
     scene.tweens.add({ targets: glow, alpha: 0, duration: 380, onComplete: () => glow.destroy() });
@@ -1097,6 +1197,10 @@ export class Fireflies extends Weapon {
     f.glow.destroy();
     f.spr.destroy();
   }
+  // Luz no mapa de luz (Lighting chama para cada arma)
+  lights(add) {
+    for (const f of this.flies) add(f.x, f.y, f.gen ? 50 : 70, 0xe8ff8a, 0.75);
+  }
   update(time, dt) {
     super.update(time, dt);
     if (!this.flies.length) return;
@@ -1124,6 +1228,7 @@ export class Fireflies extends Weapon {
       f.y += f.vy * s;
       f.spr.setPosition(f.x, f.y).setDepth(f.y + 10020).setFlipX(f.vx < 0);
       f.glow.setPosition(f.x, f.y).setAlpha(0.55 + Math.sin(time / 70 + f.seed) * 0.2);
+      this.scene.fx?.trail(f, f.x, f.y, "firefly", f.gen ? 40 : 26);
       const t = f.target;
       // Raio de acerto = vaga-lume + corpo do inimigo (~12px)
       if (t?.active && (t.x - f.x) ** 2 + (t.y - f.y) ** 2 <= hitSq + 140) {
@@ -1138,14 +1243,12 @@ export class Fireflies extends Weapon {
   _impact(f, t) {
     const scene = this.scene;
     this._hit(t, f.dmg, ELEMENT.BOLT, f.x, f.y);
-    // Faísca lilás no ponto do choque
-    const star = scene.add
-      .image(f.x, f.y, "px_spark")
-      .setScale(2.4)
-      .setTint(COLORS.BOLT)
-      .setDepth(61)
-      .setBlendMode(Phaser.BlendModes.ADD);
-    scene.tweens.add({ targets: star, scale: 5, alpha: 0, angle: 45, duration: 220, onComplete: () => star.destroy() });
+    // Choque: faíscas lilás no sentido do voo + estouro de luz amarela do vaga-lume
+    const fx = scene.fx;
+    if (fx) {
+      fx.impact(f.x, f.y, "bolt", { power: f.gen ? 0.6 : 0.9, dir: Math.atan2(f.vy, f.vx) });
+      fx.burst("glow", f.x, f.y, f.gen ? 3 : 5, null, 360, { min: 30, max: 90 });
+    }
     this._afterImpact?.(f, t);
   }
 }
@@ -1203,8 +1306,10 @@ export class Hail extends Weapon {
     const R = this.radius;
     const fall = this.def.fallMs;
     // Sombra que cresce = onde vai cair (azul, não vermelha: o ataque é NOSSO)
-    const shadow = scene.add.image(x, y, "px_shadow").setScale(0.4).setAlpha(0.2).setTint(0x1f3b66).setDepth(44);
-    scene.tweens.add({ targets: shadow, scaleX: (R * 2) / 16, scaleY: (R * 1.1) / 8, alpha: 0.45, duration: fall });
+    const shadow = scene.add.image(x, y, "px_shadow").setScale(0.4).setAlpha(0.35).setDepth(44);
+    scene.tweens.add({ targets: shadow, scaleX: (R * 1.6) / 16, scaleY: (R * 0.9) / 8, alpha: 0.75, duration: fall });
+    // Mira de geada fechando sobre o ponto (azul: é ataque NOSSO, não perigo)
+    scene.fx?.ring(x, y, 0x9fdcff, R * 1.2, R * 0.35, fall, 0.55, 0.45);
     const stone = scene.add.image(x + 60, y - 280, "px_hail").setScale(3.2).setDepth(y + 10030);
     const glow = scene.add
       .image(stone.x, stone.y, "fx_glow")
@@ -1213,12 +1318,14 @@ export class Hail extends Weapon {
       .setAlpha(0.5)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(60);
+    const tr = {};
     scene.tweens.add({
       targets: [stone, glow],
       x,
       y,
       duration: fall,
       ease: "Quad.easeIn",
+      onUpdate: () => scene.fx?.trail(tr, stone.x, stone.y, "ice", 22),
       onComplete: () => {
         stone.destroy();
         glow.destroy();
@@ -1245,28 +1352,17 @@ export class Hail extends Weapon {
         e.freeze(now, this.def.freezeMs, this.def.freezeImmuneMs);
       if (e.isFrozen(now)) frozen.push(e);
     });
-    // Estilhaços + poeira de gelo
-    for (let i = 0; i < 6; i++) {
-      const a = (i / 6) * Math.PI * 2 + Math.random() * 0.5;
-      const sh = scene.add.image(x, y, "px_shard").setScale(2.2).setRotation(a).setDepth(61);
-      scene.tweens.add({
-        targets: sh,
-        x: x + Math.cos(a) * R * 0.9,
-        y: y + Math.sin(a) * R * 0.6,
-        alpha: 0,
-        duration: 300,
-        ease: "Cubic.easeOut",
-        onComplete: () => sh.destroy(),
-      });
+    // Pancada no chão: estalo, anel de onda, lascas saltando, poeira e geada
+    const fx = scene.fx;
+    if (fx) {
+      fx.star(x, y - 4, 0xffffff, 0.7, 2.4, 120, Math.PI / 4);
+      fx.ring(x, y + 2, 0xbfeaff, 6, R, 240, 0.55, 0.7);
+      fx.burst("shard", x, y - 4, 7, -Math.PI / 2, 200, { min: 110, max: 260 });
+      fx.burst("frost", x, y, 6, null, 360, { min: 40, max: 120 });
+      fx.burst("smoke", x, y, 2, -Math.PI / 2, 160);
+      fx.decal("fx_frost", x, y, R * 0.75, 1500, 0.6);
+      fx.light(x, y, R * 2.4, 0x5cc8ff, 200, 1);
     }
-    const puff = scene.add
-      .image(x, y, "fx_glow")
-      .setScale((R * 2) / 64)
-      .setTint(0xbfeaff)
-      .setAlpha(0.5)
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setDepth(45);
-    scene.tweens.add({ targets: puff, alpha: 0, scale: puff.scale * 1.3, duration: 260, onComplete: () => puff.destroy() });
     scene.sound.play("sfx_ice_attack", { volume: hits ? 0.28 : 0.12, rate: 1.15 + Math.random() * 0.2 });
     this._afterImpact?.(x, y, frozen);
   }
@@ -1304,6 +1400,7 @@ export class Whirlwind extends Weapon {
     this._tex = "px_whirl";
     this._anim = "whirl_spin";
     this._glowTint = COLORS.BOLT;
+    this._debris = "leaf"; // o que o vento arranca do chão
   }
   get count() {
     return this.def.count + this.extraProj;
@@ -1334,6 +1431,9 @@ export class Whirlwind extends Weapon {
       const spr = scene.add.sprite(x, y, this._tex).setOrigin(0.5, 0.92).setScale(0.5).play(this._anim);
       scene.tweens.add({ targets: spr, scale: this._sprScale(), duration: 220, ease: "Back.easeOut" });
       scene.tweens.add({ targets: ground, alpha: 0.3, duration: 220 });
+      scene.fx?.ring(x, y, this._glowTint, 8, this.radius * 1.3, 320, 0.5, 0.9);
+      scene.fx?.burst("smoke", x, y, 4, null, 360, { min: 30, max: 90 });
+      scene.fx?.burst(this._debris, x, y, 6, -Math.PI / 2, 160);
       this.whirls.push({
         x,
         y,
@@ -1349,7 +1449,8 @@ export class Whirlwind extends Weapon {
     return true;
   }
   _sprScale() {
-    return (this.radius * 1.7) / 24;
+    // 3× exato no raio base (pixel do mesmo tamanho dos outros sprites)
+    return 3 * Math.sqrt(this.radius / this.def.radius);
   }
   _despawn(w) {
     this.scene.tweens.add({
@@ -1394,6 +1495,14 @@ export class Whirlwind extends Weapon {
       w.x += Math.sin(time / 260 + w.seed) * 30 * s;
       w.spr.setPosition(w.x, w.y).setDepth(w.y + 10010);
       w.ground.setPosition(w.x, w.y).setScale((R * 2.2) / 64, (R * 1.3) / 64);
+      // Detritos saindo pela tangente da base (o vento "arranca" do chão)
+      if (time >= (w._debrisAt ?? 0)) {
+        w._debrisAt = time + 70 / (this.scene.fx?.q ?? 1);
+        const a = time / 120 + w.seed;
+        const bx = w.x + Math.cos(a) * R * 0.5,
+          by = w.y + Math.sin(a) * R * 0.25;
+        this.scene.fx?.burst(this._debris, bx, by, 1, a + Math.PI / 2 - 0.5, 50, { min: 60, max: 150 });
+      }
       this._pull(w, R, s);
       if (time >= w.nextTick) {
         w.nextTick = time + this.def.tickMs;
@@ -1426,11 +1535,16 @@ export class Whirlwind extends Weapon {
     const rSq = R * R;
     const dmg = this.damage;
     const el = this._tickElement(n);
+    let shown = 0;
     this._eachTarget((e) => {
       if ((e.x - w.x) ** 2 + (e.y - w.y) ** 2 > rSq) return;
       // Número só no crítico: o funil tica muito e poluiria a tela
       this._hit(e, dmg, el, w.x, w.y, false);
+      if (shown++ < 4) this.scene.fx?.impact(e.x, e.y - 8, el, { power: 0.45 });
     });
+  }
+  lights(add) {
+    for (const w of this.whirls) add(w.x, w.y - 20, this.radius * 2.2, this._glowTint, 0.55);
   }
 }
 
@@ -1443,6 +1557,7 @@ export class FireWhirl extends Whirlwind {
     this._tex = "px_whirl_fire";
     this._anim = "whirl_fire_spin";
     this._glowTint = COLORS.FIRE;
+    this._debris = "ember";
   }
   _tickElement(n) {
     return n % 2 ? ELEMENT.BOLT : ELEMENT.FIRE;
