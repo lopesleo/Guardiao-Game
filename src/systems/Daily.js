@@ -27,6 +27,23 @@ export class Daily {
     return this.meta.data;
   }
 
+  // Bônus de descanso: as DAILY.RESTED.RUNS primeiras partidas do dia rendem
+  // DAILY.RESTED.MULT× moedas. Premia voltar; quem segue jogando não perde nada.
+  restedLeft() {
+    const r = this.d.rested;
+    return r?.day === dayKey(this.now) ? Math.max(0, DAILY.RESTED.RUNS - r.runs) : DAILY.RESTED.RUNS;
+  }
+  // Gasta 1 partida descansada (se houver) e devolve o multiplicador de moedas
+  takeRested() {
+    if (!this.restedLeft()) return 1;
+    const today = dayKey(this.now);
+    const r = this.d.rested?.day === today ? this.d.rested : { day: today, runs: 0 };
+    r.runs++;
+    this.d.rested = r;
+    this.meta._save();
+    return DAILY.RESTED.MULT;
+  }
+
   // Novo dia → sorteia as missões (a mesma data dá as mesmas missões)
   ensure() {
     const today = dayKey(this.now);

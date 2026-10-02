@@ -20,7 +20,7 @@ Roda 100% offline.
 - **Roteiro de partida**: enxames, cercos, mini-chefes (Lobo Alfa, Ogro Ancião)
   e o chefe final, o Ancião, aos 7:00
 - **11 passivas**, baús (normal, dourado, armadilha, mímico)
-- **Meta-progressão**: 5 níveis de Perigo, Bênçãos em 5 ranks, Tesouro
+- **Meta-progressão**: 5 níveis de Perigo, Bênçãos em 10 ranks, Tesouro
   Ancestral infinito, 24 conquistas
 - Dicas contextuais na primeira partida; Guia completo no menu
 

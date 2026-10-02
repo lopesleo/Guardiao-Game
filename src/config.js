@@ -17,16 +17,18 @@ export const GAME = {
 // Níveis de dificuldade ("Perigo") — ver docs/META_LOOP.md (Fase 1).
 // Multiplicadores GLOBAIS aplicados sobre as fórmulas paramétricas (D16):
 //   HP/dano de inimigo, taxa de spawn e recompensa em moedas.
-// Cada nível libera o seguinte ao ser VENCIDO (boss morto). reward cresce mais
-// rápido que a dificuldade pra financiar os sinks de meta-progressão.
+// Cada nível libera o seguinte ao ser VENCIDO (boss morto). rewardMult é ACHATADO
+// (econ. 2026-10): spawn × duração já pagam mais moedas por minuto nos Perigos altos;
+// com 3,0× o Pesadelo rendia 4,2× o Aprendiz por minuto e esgotava a loja em dias.
+// O grande prêmio para subir é firstClear: moedas pagas UMA vez, na 1ª vitória.
 // durationS = tempo até o chefe nascer: 7 min nos Perigos iniciais, até 10 min no Pesadelo
 // (novato = partida curta; veterano = mais profundidade).
 export const DIFFICULTY = [
-  { id: 0, name: "Aprendiz",   hpMult: 0.85, dmgMult: 0.85, spawnMult: 0.9,  rewardMult: 1.0,  durationS: 420 },
-  { id: 1, name: "Guardião",   hpMult: 1.0,  dmgMult: 1.0,  spawnMult: 1.0,  rewardMult: 1.25, durationS: 420 },
-  { id: 2, name: "Veterano",   hpMult: 1.25, dmgMult: 1.2,  spawnMult: 1.15, rewardMult: 1.6,  durationS: 480 },
-  { id: 3, name: "Implacável", hpMult: 1.6,  dmgMult: 1.45, spawnMult: 1.3,  rewardMult: 2.1,  durationS: 540 },
-  { id: 4, name: "Pesadelo",   hpMult: 2.1,  dmgMult: 1.8,  spawnMult: 1.5,  rewardMult: 3.0,  durationS: 600 },
+  { id: 0, name: "Aprendiz",   hpMult: 0.85, dmgMult: 0.85, spawnMult: 0.9,  rewardMult: 1.0,  firstClear: 150,  durationS: 420 },
+  { id: 1, name: "Guardião",   hpMult: 1.0,  dmgMult: 1.0,  spawnMult: 1.0,  rewardMult: 1.15, firstClear: 300,  durationS: 420 },
+  { id: 2, name: "Veterano",   hpMult: 1.25, dmgMult: 1.2,  spawnMult: 1.15, rewardMult: 1.35, firstClear: 600,  durationS: 480 },
+  { id: 3, name: "Implacável", hpMult: 1.6,  dmgMult: 1.45, spawnMult: 1.3,  rewardMult: 1.6,  firstClear: 1000, durationS: 540 },
+  { id: 4, name: "Pesadelo",   hpMult: 2.1,  dmgMult: 1.8,  spawnMult: 1.5,  rewardMult: 1.9,  firstClear: 1500, durationS: 600 },
 ];
 
 export const PLAYER = {
@@ -65,7 +67,6 @@ export const ENEMY = {
   SPEED_GOBLIN: 105,
   SPAWN_RATE: (t) => 0.6 + t / 75,
   XP_VALUE: 3,
-  COIN_DROP_CHANCE: 0.05,
 };
 
 export const BOSS = {
@@ -384,7 +385,7 @@ export const CHARACTERS = [
     name: "Caipora",
     title: "Protetora dos bichos",
     weapon: "BOOMER",
-    cost: 120,
+    cost: 250,
     perk: "+12% velocidade · +8% crítico · −10% vida",
     mods: { speed: 1.12, crit: 0.08, hp: 0.9 },
   },
@@ -393,7 +394,7 @@ export const CHARACTERS = [
     name: "Iara",
     title: "Senhora das águas",
     weapon: "AURA",
-    cost: 180,
+    cost: 600,
     perk: "+20% área · +1 Vida/s · −15% velocidade",
     mods: { area: 1.2, regen: 1, speed: 0.85 },
   },
@@ -402,7 +403,7 @@ export const CHARACTERS = [
     name: "Saci",
     title: "Redemoinho travesso",
     weapon: "CHAIN",
-    cost: 260,
+    cost: 1200,
     perk: "−15% recarga · +15% dano · −25% vida",
     mods: { cd: 0.85, dmg: 1.15, hp: 0.75 },
   },
@@ -737,13 +738,13 @@ export const BUILD = {
   STEPS: [
     null,
     { coins: 40, wood: 2, min: 0 },
-    { coins: 120, wood: 5, min: 5 },
-    { coins: 280, wood: 10, min: 60 },
-    { coins: 550, wood: 18, min: 240 },
+    { coins: 250, wood: 6, min: 10 },
+    { coins: 800, wood: 15, min: 120 },
+    { coins: 2000, wood: 30, min: 480 },
   ],
   RUN_SPEEDUP_MIN: 10, // cada partida adianta a obra em 10 min…
   RUN_SPEEDUP_PER_MIN: 1, // …+1 min por minuto sobrevivido
-  FREE_FINISH_MIN: 2, // menor que a obra mais curta (5 min), senão ela vira instantânea
+  FREE_FINISH_MIN: 2, // menor que a obra mais curta (10 min), senão ela vira instantânea
   AD_SPEEDUP_MIN: 30, // anúncio opcional (desligado junto com ADS.ENABLED)
   // O que cada nível libera
   FORGE_WEAPON_LEVEL: { BOOMER: 1, CHAIN: 2, FIREFLY: 2, ORB: 3, HAIL: 3, FLAME: 4, WHIRL: 4 }, // Forja nv mínimo
@@ -806,28 +807,33 @@ export const GARDEN = {
 // aparelho. Missões: 3 por dia (2 da floresta + 1 da Clareira quando houver),
 // sorteadas pela data; n = alvos possíveis; needs = só quando o jogador já
 // conhece aquilo. Nada vende poder: o prêmio é moeda, madeira, semente.
+// Valores dobrados na economia 2026-10 (os preços subiram ~5×; o hábito diário
+// precisa pesar no bolso).
 export const DAILY = {
   MISSIONS: [
-    { id: "kills", text: "Abata {n} criaturas", stat: "kills", n: [150, 300, 500], coins: 50 },
-    { id: "reactions", text: "Dispare {n} reações elementais", stat: "reactions", n: [15, 30, 50], coins: 50 },
-    { id: "vapor", text: "Faça {n} Vapores (fogo + gelo)", stat: "VAPOR", n: [8, 15], coins: 60 },
-    { id: "crystal", text: "Faça {n} Cristais (gelo + raio)", stat: "CRYSTAL", n: [5, 10], coins: 60, needs: (d) => (d.unlockedWeapons || []).includes("CHAIN") },
-    { id: "overload", text: "Faça {n} Sobrecargas (fogo + raio)", stat: "OVERLOAD", n: [5, 10], coins: 60, needs: (d) => (d.unlockedWeapons || []).includes("CHAIN") },
-    { id: "survive", text: "Sobreviva {n} minutos numa partida", stat: "minutes", n: [3, 5], coins: 50, max: true },
-    { id: "runs", text: "Jogue {n} partidas", stat: "runs", n: [2, 3], coins: 40 },
-    { id: "chests", text: "Abra {n} baús na floresta", stat: "chests", n: [2, 4], coins: 50 },
-    { id: "lanterns", text: "Quebre {n} lanternas de cogumelo", stat: "lanterns", n: [3, 6], coins: 40 },
-    { id: "boss", text: "Vença o Mapinguari", stat: "wins", n: [1], coins: 120, needs: (d) => (d.wins || 0) > 0 },
+    { id: "kills", text: "Abata {n} criaturas", stat: "kills", n: [150, 300, 500], coins: 100 },
+    { id: "reactions", text: "Dispare {n} reações elementais", stat: "reactions", n: [15, 30, 50], coins: 100 },
+    { id: "vapor", text: "Faça {n} Vapores (fogo + gelo)", stat: "VAPOR", n: [8, 15], coins: 120 },
+    { id: "crystal", text: "Faça {n} Cristais (gelo + raio)", stat: "CRYSTAL", n: [5, 10], coins: 120, needs: (d) => (d.unlockedWeapons || []).includes("CHAIN") },
+    { id: "overload", text: "Faça {n} Sobrecargas (fogo + raio)", stat: "OVERLOAD", n: [5, 10], coins: 120, needs: (d) => (d.unlockedWeapons || []).includes("CHAIN") },
+    { id: "survive", text: "Sobreviva {n} minutos numa partida", stat: "minutes", n: [3, 5], coins: 100, max: true },
+    { id: "runs", text: "Jogue {n} partidas", stat: "runs", n: [2, 3], coins: 80 },
+    { id: "chests", text: "Abra {n} baús na floresta", stat: "chests", n: [2, 4], coins: 100 },
+    { id: "lanterns", text: "Quebre {n} lanternas de cogumelo", stat: "lanterns", n: [3, 6], coins: 80 },
+    { id: "boss", text: "Vença o Mapinguari", stat: "wins", n: [1], coins: 240, needs: (d) => (d.wins || 0) > 0 },
     // Da Clareira
-    { id: "harvest", text: "Colha {n} vezes na horta", stat: "harvest", n: [2, 4], coins: 40, camp: true, needs: (d) => (d.revealed || []).includes("garden") },
-    { id: "fish", text: "Pesque {n} peixes no lago", stat: "fish", n: [2, 3], coins: 40, camp: true, needs: (d) => (d.revealed || []).includes("pond") },
-    { id: "cook", text: "Cozinhe {n} prato{s}", stat: "cook", n: [1, 2], coins: 40, camp: true, needs: (d) => (d.revealed || []).includes("kitchen") },
+    { id: "harvest", text: "Colha {n} vezes na horta", stat: "harvest", n: [2, 4], coins: 80, camp: true, needs: (d) => (d.revealed || []).includes("garden") },
+    { id: "fish", text: "Pesque {n} peixes no lago", stat: "fish", n: [2, 3], coins: 80, camp: true, needs: (d) => (d.revealed || []).includes("pond") },
+    { id: "cook", text: "Cozinhe {n} prato{s}", stat: "cook", n: [1, 2], coins: 80, camp: true, needs: (d) => (d.revealed || []).includes("kitchen") },
   ],
-  ALL_BONUS: { coins: 80, wood: 2 }, // completar as 3 do dia
+  ALL_BONUS: { coins: 160, wood: 2 }, // completar as 3 do dia
+  // Bônus de descanso: as primeiras partidas de cada dia rendem mais moedas.
+  // Premia VOLTAR sem limitar quem quer jogar mais (nada de energia nem teto diário).
+  RESTED: { RUNS: 2, MULT: 1.5 },
   // Presente de dias seguidos (volta ao 1 depois do 7º ou se pular um dia)
-  STREAK: [{ coins: 40 }, { coins: 60 }, { wood: 2 }, { coins: 90 }, { seeds: 1, coins: 40 }, { coins: 120 }, { coins: 200, wood: 5, seeds: 2 }],
+  STREAK: [{ coins: 80 }, { coins: 120 }, { wood: 2 }, { coins: 180 }, { seeds: 1, coins: 80 }, { coins: 240 }, { coins: 400, wood: 5, seeds: 2 }],
   // Baú diário junto à fogueira: 1 grátis por dia + 1 com anúncio (opcional)
-  CHEST: { coins: [30, 80], woodChance: 0.4, seedChance: 0.25 },
+  CHEST: { coins: [60, 160], woodChance: 0.4, seedChance: 0.25 },
 };
 
 // Datas comemorativas (calendário REAL): decoração temática na Clareira só
@@ -1008,101 +1014,110 @@ export const META = {
   STORAGE_KEY: "guardiao_save_v1",
   COIN_VALUE: 1,
   COIN_BOSS_WIN: 80,
-  COIN_BOSS_LOSS: 10,
-  WEAPON_UNLOCK_COST: { BOOMER: 30, CHAIN: 60, FIREFLY: 90, ORB: 140, HAIL: 150, FLAME: 180, WHIRL: 220 },
+  // Início barato (1ª compra logo na 1ª partida); o resto cresce com a Forja
+  WEAPON_UNLOCK_COST: { BOOMER: 30, CHAIN: 60, FIREFLY: 150, ORB: 300, HAIL: 400, FLAME: 600, WHIRL: 900 },
   WEAPON_UNLOCK_ORDER: ["BOOMER", "CHAIN", "FIREFLY", "ORB", "HAIL", "FLAME", "WHIRL"], // Aura já vem liberada
-  ABILITY_UNLOCK_COST: { DASH: 50, AWAKEN: 80 },
+  ABILITY_UNLOCK_COST: { DASH: 50, AWAKEN: 100 },
 };
 
-// Bênçãos persistentes — trilhas de 5 ranks (Fase 2, ver docs/META_LOOP.md).
+// Bênçãos persistentes — trilhas de 10 ranks (Fase 2, ver docs/META_LOOP.md).
 // Compradas no menu; `apply(player, rank)` é chamado uma vez no início da run e
-// aplica o efeito CUMULATIVO do rank atingido. Custo do rank R = costs[R-1].
-export const MAX_BLESSING_RANK = 5;
+// aplica o efeito CUMULATIVO do rank atingido. Custo-base do rank R = costs[R-1].
+// Economia 2026-10: eram 5 ranks; viraram 10 com METADE do efeito cada (o máximo
+// final é o mesmo). Mais degraus = a jornada fica longa sem o jogador ficar muitas
+// partidas sem comprar nada. Preço cresce 1,5× por rank.
+export const MAX_BLESSING_RANK = 10;
+// Imposto de coleção (como os PowerUps do Vampire Survivors): cada rank já comprado,
+// em QUALQUER trilha, encarece as bênçãos em TAX × o preço-base. A ordem de compra
+// não importa e a curva final fica exponencial sem tabelas gigantes.
+export const BLESSING_TAX = 0.02;
+export const blessingPrice = (base, ranksOwned) => Math.round((base * (1 + BLESSING_TAX * ranksOwned)) / 5) * 5;
 
 export const BLESSINGS = [
   {
     id: "hp1",
     name: "Vigor da Mata",
-    desc: "+15 HP máximo por rank",
-    costs: [40, 70, 120, 200, 320],
+    desc: "+8 HP máximo por rank",
+    costs: [40, 60, 90, 135, 200, 305, 455, 685, 1025, 1540],
     apply: (p, rank) => {
-      p.maxHp += 15 * rank;
+      p.maxHp += 8 * rank;
       p.hp = p.maxHp;
     },
   },
   {
     id: "spd1",
     name: "Pés Ligeiros",
-    desc: "+6% velocidade por rank",
-    costs: [60, 100, 170, 290, 490],
+    desc: "+3% velocidade por rank",
+    costs: [60, 90, 135, 200, 305, 455, 685, 1025, 1540, 2305],
     apply: (p, rank) => {
-      p.speed *= Math.pow(1.06, rank);
+      p.speed *= Math.pow(1.03, rank);
     },
   },
   {
     id: "dmg1",
     name: "Cólera Antiga",
-    desc: "+8% dano de arma por rank",
-    costs: [90, 150, 255, 435, 740],
+    desc: "+4% dano de arma por rank",
+    costs: [90, 135, 200, 305, 455, 685, 1025, 1540, 2305, 3460],
     apply: (p, rank) => {
-      p._blessingDmgMult = (p._blessingDmgMult || 1) * Math.pow(1.08, rank);
+      p._blessingDmgMult = (p._blessingDmgMult || 1) * Math.pow(1.04, rank);
     },
   },
   {
     id: "pickup",
     name: "Olhar de Coruja",
-    desc: "+25% raio de coleta por rank",
-    costs: [50, 85, 145, 245, 415],
+    desc: "+12% raio de coleta por rank",
+    costs: [50, 75, 110, 170, 255, 380, 570, 855, 1280, 1920],
     apply: (p, rank) => {
-      p.pickupRadius *= Math.pow(1.25, rank);
+      p.pickupRadius *= Math.pow(1.12, rank);
     },
   },
   {
     id: "awaken1",
     name: "Eco do Despertar",
-    desc: "+15% ganho de Despertar por rank",
-    costs: [80, 135, 230, 390, 665],
+    desc: "+7% ganho de Despertar por rank",
+    costs: [80, 120, 180, 270, 405, 610, 910, 1365, 2050, 3075],
     apply: (p, rank) => {
-      p._awakenGainMult = (p._awakenGainMult || 1) * Math.pow(1.15, rank);
+      p._awakenGainMult = (p._awakenGainMult || 1) * Math.pow(1.07, rank);
     },
   },
   {
     id: "dash1",
     name: "Sopro do Vento",
-    desc: "−10% recarga do dash por rank",
-    costs: [70, 120, 200, 340, 580],
+    desc: "−5% recarga do dash por rank",
+    costs: [70, 105, 160, 235, 355, 530, 795, 1195, 1795, 2690],
     apply: (p, rank) => {
-      p._dashCdMult = (p._dashCdMult || 1) * Math.pow(0.9, rank);
+      p._dashCdMult = (p._dashCdMult || 1) * Math.pow(0.95, rank);
     },
   },
   {
     id: "xp1",
     name: "Sabedoria",
-    desc: "+10% XP por rank",
-    costs: [100, 170, 290, 490, 830],
+    desc: "+5% XP por rank",
+    costs: [100, 150, 225, 340, 505, 760, 1140, 1710, 2565, 3845],
     apply: (p, rank) => {
-      p._xpMult = (p._xpMult || 1) * Math.pow(1.1, rank);
+      p._xpMult = (p._xpMult || 1) * Math.pow(1.05, rank);
     },
   },
   {
     id: "crit1",
     name: "Olhar do Caçador",
-    desc: "+6% chance de crítico por rank",
-    costs: [90, 150, 255, 435, 740],
+    desc: "+3% chance de crítico por rank",
+    costs: [90, 135, 200, 305, 455, 685, 1025, 1540, 2305, 3460],
     apply: (p, rank) => {
-      p.critChance += 0.06 * rank;
+      p.critChance += 0.03 * rank;
     },
   },
 ];
 
 // Tesouro Ancestral — sink INFINITO (Fase 2). +2% dano geral por nível; custo
 // cresce 1,15× por compra. Auto-limita pelo custo, nunca esgota: moeda nunca
-// vira lixo. Aplicado via _blessingDmgMult no início da run.
+// vira lixo. Aplicado via _blessingDmgMult no início da run. Base 100 → 250 na
+// economia 2026-10 (com 100 ele ficava mais barato que as bênçãos do meio).
 export const ANCESTRAL = {
   DMG_PER_LEVEL: 0.02,
-  BASE_COST: 100,
+  BASE_COST: 250,
   COST_GROWTH: 1.15,
-  cost: (level) => Math.floor(100 * Math.pow(1.15, level)),
+  cost: (level) => Math.floor(ANCESTRAL.BASE_COST * Math.pow(ANCESTRAL.COST_GROWTH, level)),
 };
 
 // Conquistas (Fase 3 — ver docs/META_LOOP.md). Avaliadas por MetaProgression.
@@ -1147,7 +1162,7 @@ export const ACHIEVEMENTS = [
   { id: "crystal_100", name: "Quebra-Gelo", desc: "Dispare a reação Cristal 100 vezes", check: (c) => (c.reactions.CRYSTAL || 0) >= 100, prog: (c) => [c.reactions.CRYSTAL || 0, 100] },
   { id: "overload_100", name: "Eletricista", desc: "Dispare a reação Sobrecarga 100 vezes", check: (c) => (c.reactions.OVERLOAD || 0) >= 100, prog: (c) => [c.reactions.OVERLOAD || 0, 100] },
   // — Meta-progressão —
-  { id: "bless_max", name: "Bênção Suprema", desc: "Maximize uma trilha de Bênção (rank 5)", check: (c) => c.maxBlessingRank >= MAX_BLESSING_RANK },
+  { id: "bless_max", name: "Bênção Suprema", desc: "Maximize uma trilha de Bênção (rank 10)", check: (c) => c.maxBlessingRank >= MAX_BLESSING_RANK },
   { id: "ancestral_10", name: "Herdeiro Ancestral", desc: "Tesouro Ancestral no nível 10", check: (c) => c.ancestralLevel >= 10, prog: (c) => [c.ancestralLevel, 10] },
   { id: "coins_2000", name: "Tesoureiro da Mata", desc: "Ganhe 2.000 moedas no total", check: (c) => c.totalCoinsEarned >= 2000, prog: (c) => [c.totalCoinsEarned, 2000] },
   { id: "kills_1000", name: "Ceifador do Bosque", desc: "Abata 1.000 inimigos no total", check: (c) => c.totalKills >= 1000, prog: (c) => [c.totalKills, 1000] },

@@ -48,13 +48,16 @@ Maior impacto, menor esforço. Converte um jogo de 30 min numa escada de maestri
 de 10+ h reaproveitando 100% do conteúdo. Implementado como **multiplicadores
 globais** sobre as fórmulas paramétricas existentes (D16).
 
-| Nível | HP inim.× | Dano inim.× | Spawn× | Recompensa× | Desbloqueio |
-|---|---|---|---|---|---|
-| 0 — Aprendiz   | 0,85 | 0,85 | 0,90 | 1,0  | aberto (modo fácil) |
-| 1 — Guardião   | 1,0  | 1,0  | 1,0  | 1,25 | aberto (padrão = balanceamento atual) |
-| 2 — Veterano   | 1,25 | 1,2  | 1,15 | 1,6  | vencer Guardião |
-| 3 — Implacável | 1,6  | 1,45 | 1,3  | 2,1  | vencer Veterano |
-| 4 — Pesadelo   | 2,1  | 1,8  | 1,5  | 3,0  | vencer Implacável |
+| Nível | HP inim.× | Dano inim.× | Spawn× | Recompensa× | 1ª vitória | Desbloqueio |
+|---|---|---|---|---|---|---|
+| 0 — Aprendiz   | 0,85 | 0,85 | 0,90 | 1,0  | +150  | aberto (modo fácil) |
+| 1 — Guardião   | 1,0  | 1,0  | 1,0  | 1,15 | +300  | aberto (padrão = balanceamento atual) |
+| 2 — Veterano   | 1,25 | 1,2  | 1,15 | 1,35 | +600  | vencer Guardião |
+| 3 — Implacável | 1,6  | 1,45 | 1,3  | 1,6  | +1.000 | vencer Veterano |
+| 4 — Pesadelo   | 2,1  | 1,8  | 1,5  | 1,9  | +1.500 | vencer Implacável |
+
+Recompensa× e 1ª vitória são da **economia 2026-10** (ver a seção no fim). Antes:
+1,0 · 1,25 · 1,6 · 2,1 · 3,0, sem prêmio de 1ª vitória.
 
 O **cursor de desbloqueio** (`maxDifficultyCleared`) começa em 0 → Aprendiz e
 Guardião já abertos. Cada vitória num nível ainda não vencido avança 1.
@@ -77,8 +80,9 @@ Guardião já abertos. Cada vitória num nível ainda não vencido avança 1.
   destaca "NÍVEL DESBLOQUEADO".
 
 **Princípio da curva de recompensa:** moedas devem correr sempre **um pouco atrás**
-do custo. `rewardMult` cresce mais rápido que a dificuldade pra compensar runs mais
-curtas/arriscadas em níveis altos e financiar os sinks da Fase 2.
+do custo. Spawn × duração já pagam mais por minuto nos Perigos altos; `rewardMult`
+só completa. O incentivo forte para subir é o prêmio único da 1ª vitória
+(`DIFFICULTY[].firstClear`).
 
 ---
 
@@ -105,6 +109,10 @@ habilidades (Dash/Awaken).
 
 **8 trilhas × 5 ranks = 10.830 moedas de sink** (vs. 900 antes — número real,
 medido do `config.js`).
+
+> **Substituído pela economia 2026-10:** as trilhas têm **10 ranks com metade do
+> efeito cada** (máximo final igual), preço `base × 1,5^(R-1)` e imposto de coleção.
+> A tabela acima é histórica; os valores vivos estão em `config.js BLESSINGS`.
 
 **Sink infinito — *Tesouro Ancestral*:** +2% dano geral por compra, custo
 `100 × 1,15^n`. Auto-limita pelo custo, nunca acaba — moeda nunca vira lixo
@@ -207,6 +215,49 @@ HUD mostra `★ MAX` dourado. `Cards.js` já tinha a tag ★ EVOLUÇÃO.
 **Regra de ouro:** a todo momento o jogador deve estar a ~1–2 runs de *uma* compra
 ou *um* clear. Dificuldade estica a curva de habilidade; trilhas + sink infinito
 esticam a de poder; conquistas dão metas discretas entre as duas.
+
+---
+
+## Economia 2026-10 — rebalanceamento por simulação  ✅ IMPLEMENTADO
+
+**Diagnóstico.** Simulação de jornada (Monte Carlo com os números do `config.js`:
+spawn por Perigo, drops, baús a cada 50 abates, minichefes, chefe, renda diária e
+obras com tempo real; perfis casual/intermediário/hardcore, 30 min/dia): o catálogo
+de **14.860 moedas** acabava em **8 / 5 / 4 dias** (34 / 20 / 16 partidas). No D7
+o jogador médio não tinha mais nada para comprar. O Pesadelo rendia 4,2× o Aprendiz
+por minuto (spawn ×1,5 × duração × recompensa ×3,0).
+
+**Mudanças** (todas em `config.js`):
+- **Início igual** (1ª compra na 1ª partida): Bumerangue 30, Raio 60, Dash 50, rank 1
+  das bênçãos. Despertar 80 → 100.
+- **Meio:** armas Vagalume 150 · Orbe 300 · Granizo 400 · Chama 600 · Redemoinho 900;
+  guardiões Caipora 250 · Iara 600 · Saci 1.200; obras 40 / 250 / 800 / 2.000 moedas,
+  madeira 2 / 6 / 15 / 30, tempo 0 / 10 / 120 / 480 min.
+- **Fim:** bênçãos com **10 ranks** (metade do efeito, preço ×1,5 por rank) e
+  **imposto de coleção** (`BLESSING_TAX` 2%: cada rank comprado encarece todas as
+  bênçãos em 2% do preço-base, como os PowerUps do Vampire Survivors). Santuário
+  nível N libera até o rank 2N. Tesouro Ancestral: base 100 → 250.
+- **Recompensa achatada** (tabela da Fase 1) + **prêmio da 1ª vitória** por Perigo.
+- **Hábito diário ×2** (missões, bônus das 3, sequência, baú) e **bônus de descanso**
+  (`DAILY.RESTED`): as 2 primeiras partidas do dia rendem +50%. Sem energia, sem
+  teto diário, sem taxa para jogar (regra de justiça do projeto).
+- O anúncio "Dobrar moedas" dobra as moedas da partida (com descanso), não o prêmio
+  da 1ª vitória.
+- Save v4: rank antigo R vira 2R (o jogador mantém exatamente o poder que tinha).
+
+**Resultado simulado** (dias para comprar tudo, mediana; 30 min/dia):
+
+| Perfil | Antes | Depois | Horas de tela | Maior espera sem compra |
+|---|---|---|---|---|
+| Casual | 8 | **59** | 4,6 → 34 h | 2 → 11 partidas |
+| Intermediário | 5 | **35** | 2,9 → 20 h | 2 → 6 partidas |
+| Hardcore | 4 | **20** | 2,3 → 12 h | 3 → 4 partidas |
+
+Com anúncio de dobrar em metade das partidas: 43 / 26 / 15 dias. Com renda 25%
+menor que a suposta: 69 / 42 / 25 dias. Pesadelo passa a render 2,6× o Aprendiz por
+minuto. **Validar com dados reais:** o evento `run_end` (Firebase) traz `coins`,
+`kills`, `t`, `won`, `difficulty`, `rested` e `first_clear`; se a renda real fugir
+muito da simulada, o primeiro ajuste é `BLESSING_TAX` (1% ≈ casual em 47 dias).
 
 ---
 

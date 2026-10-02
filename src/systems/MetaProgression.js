@@ -1,6 +1,6 @@
 // Persistência entre runs via localStorage.
 // Salva: moedas totais, high score (tempo), armas desbloqueadas.
-import { META, MAX_BLESSING_RANK, ANCESTRAL, ACHIEVEMENTS, BUILD } from '../config.js';
+import { META, MAX_BLESSING_RANK, ANCESTRAL, ACHIEVEMENTS, BUILD, blessingPrice } from '../config.js';
 import { Analytics } from './Analytics.js';
 import { Clock } from './Clock.js';
 
@@ -18,7 +18,7 @@ function fnv(str, seed) {
 export const signSave = (json) => fnv(SALT + json, 0x811c9dc5) + fnv(json + SALT, 0x9e3779b9);
 
 const DEFAULT = {
-  saveVersion: 3,
+  saveVersion: 4,
   totalCoins: 0,
   highScoreSeconds: 0,
   bestEndlessSeconds: 0, // recorde na Noite Eterna (Modo Infinito)
@@ -81,7 +81,7 @@ function withDefaults(parsed) {
 
 // Versão do formato do save. Ao mudar a estrutura: SAVE_VERSION++ e adicionar
 // MIGRATIONS[versãoAnterior] que transforma o objeto no formato novo.
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 const MIGRATIONS = {
   // v1 → v2: tudo que antes era corrigido "no susto" ao carregar
   1: (d) => {
@@ -109,6 +109,13 @@ const MIGRATIONS = {
       fire: { level: clamp(Math.max(0, ...chars.map((c) => BUILD.FIRE_CHARACTER_LEVEL[c] || 1)), 4) },
     };
     d.buildJob = null;
+  },
+  // v3 → v4: bênçãos passaram de 5 para 10 ranks com metade do efeito cada.
+  // Rank antigo R vira 2R: o jogador mantém exatamente o poder que tinha
+  // (o Santuário nível N agora libera até o rank 2N, então nada fica acima do teto).
+  3: (d) => {
+    const r = d.blessingRanks || {};
+    for (const id of Object.keys(r)) r[id] = Math.min(MAX_BLESSING_RANK, (r[id] || 0) * 2);
   },
 };
 
@@ -297,16 +304,20 @@ export class MetaProgression {
 
   // Bênçãos (trilhas de rank, Fase 2)
   blessingRank(id) { return this.data.blessingRanks[id] || 0; }
-  // Custo do PRÓXIMO rank, ou null se no máximo.
+  // Ranks comprados somando todas as trilhas (base do imposto de coleção)
+  get totalBlessingRanks() {
+    return Object.values(this.data.blessingRanks).reduce((a, r) => a + (r || 0), 0);
+  }
+  // Custo do PRÓXIMO rank (com o imposto de coleção), ou null se no máximo.
   blessingNextCost(blessing) {
     const rank = this.blessingRank(blessing.id);
     if (rank >= MAX_BLESSING_RANK) return null;
-    return blessing.costs[rank];
+    return blessingPrice(blessing.costs[rank], this.totalBlessingRanks);
   }
   rankUpBlessing(blessing) {
     const rank = this.blessingRank(blessing.id);
-    if (rank >= MAX_BLESSING_RANK) return false;
-    const cost = blessing.costs[rank];
+    const cost = this.blessingNextCost(blessing);
+    if (cost == null) return false;
     if (this.data.totalCoins < cost) return false;
     this.data.totalCoins -= cost;
     this.data.blessingRanks[blessing.id] = rank + 1;

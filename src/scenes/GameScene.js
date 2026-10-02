@@ -1444,7 +1444,15 @@ export class GameScene extends Phaser.Scene {
       Analytics.track("endless_end", { s: Math.floor(endlessS), bonus, record: endlessRecord });
     }
     // Recompensa final escalada pela dificuldade (HUD mostrou a contagem-base ao vivo)
-    const coinsFinal = Math.round(this._coinsGainedThisRun * this.diff.rewardMult * (this._treeCoinMult || 1));
+    const runCoinsBase = Math.round(this._coinsGainedThisRun * this.diff.rewardMult * (this._treeCoinMult || 1));
+    // Bônus de descanso (primeiras partidas do dia, depois que o Mural apareceu).
+    // Recuo nos 2 primeiros minutos não gasta o bônus.
+    const restedMult =
+      runCoinsBase > 0 && dailyUnlocked(this.meta.data) && (!quit || this.elapsedMs >= 120000) ? new Daily(this.meta).takeRested() : 1;
+    const runCoins = Math.round(runCoinsBase * restedMult);
+    // 1ª vitória neste Perigo: prêmio único (antes de registerRun contar a vitória)
+    const firstClear = won && !((this.meta.data.winsByDifficulty || {})[String(this.diff.id)] > 0) ? this.diff.firstClear || 0 : 0;
+    const coinsFinal = runCoins + firstClear;
     // Detecta se ESTA vitória libera um novo nível (antes de gravar)
     const prevMaxCleared = this.meta.data.maxDifficultyCleared;
     const unlockedNewDifficulty =
@@ -1491,6 +1499,8 @@ export class GameScene extends Phaser.Scene {
       level: this.player.level,
       kills: this.hud.kills,
       coins: coinsFinal,
+      rested: restedMult > 1,
+      first_clear: firstClear,
       wood: this._woodThisRun,
       difficulty: this.diff.id,
       character: this.character.id,
@@ -1515,6 +1525,9 @@ export class GameScene extends Phaser.Scene {
         elapsedMs: this.elapsedMs,
         kills: this.hud.kills,
         coinsGained: coinsFinal,
+        coinsDoubleable: runCoins, // o anúncio dobra a partida, não o prêmio da 1ª vitória
+        restedMult,
+        firstClear,
         woodGained: this._woodThisRun,
         seedsGained,
         newUnlocks: this._newUnlocksThisRun,
