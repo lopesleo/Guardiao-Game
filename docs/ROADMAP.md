@@ -215,6 +215,10 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   + **prêmio da 1ª vitória**; hábito diário ×2 e **bônus de descanso** (2 primeiras partidas do dia +50%).
   Save v4 dobra os ranks antigos (ninguém perde poder). Tela de resultado com linha própria do prêmio.
   👤 conferir no aparelho e, com testadores, comparar `run_end` com a simulação
+- ✅ **Oferenda na Samaúma** (`TREE.OFFERING`): além de girar a roleta com anúncio (sorteio grátis),
+  o jogador pode pagar moedas e **escolher** a bênção da próxima partida. Sem recarga, uma bênção guardada
+  por vez; preço 150 × (1 + 5% por rank de bênção comprado), ~750 no fim. "+40% moedas" fica de fora
+  (moeda por moeda daria lucro). Sem anúncio no aparelho, a Samaúma continua útil
 - ✅ **Tratos da Mata**: às vezes uma carta é um trato — poder grande com custo visível (ex.:
   +37% dano / −23% vida máxima). Do nível 3, até 3 por partida, cada um uma vez (`PACTS`)
 - ✅ **Santuários da Floresta** no mapa (`ShrineSystem`, `SHRINE`): **Carga** (fique perto 3 s:
