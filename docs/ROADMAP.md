@@ -191,6 +191,15 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   relógio (encavalava), dicas sempre abaixo da barra do chefe e em fila (uma por vez), seta do santuário fora
   da faixa do HUD, título do nível numa placa própria, conteúdo das cartas centralizado, "Você caiu" com painel.
   Conferido em 1911×1002 e 844×390 (celular)
+- ✅ **Equilíbrio das reações e armas** (medido num laboratório: partidas simuladas de 50 s no meio da partida,
+  semente fixa, dano atribuído por fonte). Problemas: Cristal só acontecia com a Aura (exigia CONGELADO; Orbe e
+  Granizo + Raio davam 0 cristais) e o Vapor dominava (Aura põe gelo no bando todo; nuvens se empilhavam; chegava
+  a 2/3 do dano). Agora: **gelo + raio = Cristal** como as outras reações (congelado = estilhaço 1,8× e maior);
+  nuvens de Vapor não se empilham (renovam a vizinha); **fôlego de 0,9 s por inimigo** depois de reagir; o
+  elemento que chega reage com o mais antigo. Valores por disparo aproximados (Sobrecarga 6→4 saltos, Cristal
+  20 de dano + 14 no alvo, Vapor 4/tique). Armas: Cajado 7→10, Raio 15→20 (alvo único rende no chefe),
+  Bumerangue 4→3, Redemoinho 3→2 por tique. Resultado: duplas entre 37 e 58 de dano/s (antes 29–74), reação =
+  41–55% do dano, e com três elementos as três reações aparecem. Debug G agora protege de todo dano
 - ✅ **Tratos da Mata**: às vezes uma carta é um trato — poder grande com custo visível (ex.:
   +37% dano / −23% vida máxima). Do nível 3, até 3 por partida, cada um uma vez (`PACTS`)
 - ✅ **Santuários da Floresta** no mapa (`ShrineSystem`, `SHRINE`): **Carga** (fique perto 3 s:
