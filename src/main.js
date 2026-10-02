@@ -24,6 +24,9 @@ const config = {
   parent: 'game',
   backgroundColor: COLORS.BG,
   pixelArt: true,
+  // Phaser 4: o lote padrão (16384 quads) faz o upload de buffers enormes por quadro e derruba
+  // o FPS em GPUs mobile (S23: 14 FPS no título). 2048 → ~75 FPS no título, 120 na partida.
+  render: { batchSize: 2048 },
   roundPixels: true,
   // EXPAND: altura lógica fixa (720) e largura acompanha a proporção da tela
   // (celulares 19.5:9 ganham campo de visão lateral em vez de tarjas pretas).
