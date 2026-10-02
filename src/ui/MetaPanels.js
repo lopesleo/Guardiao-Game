@@ -311,15 +311,19 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
     for (const r of rows) {
       const has = r.kind === "weapon" ? r.cost === 0 || this.meta.isUnlocked(r.key) : this.meta.hasAbility(r.key);
       const allowed = !this.builds || r.cost === 0 || this.builds.forgeAllows(r.key);
-      const can = !has && allowed && this.meta.coins >= r.cost;
+      // Feito da Forja ainda por cumprir: mostra o desafio e o progresso, sem deixar comprar
+      const deed = has ? null : this.meta.weaponDeed(r.key);
+      const deedOpen = deed && !deed.done;
+      const can = !has && allowed && !deedOpen && this.meta.coins >= r.cost;
       const def = WEAPONS[r.key];
       list.addRow(
         this._shopRow({
           icon: r.icon ?? WEAPON_ICON[r.key],
           name: r.name ?? `${def.name}  ·  ${elName[def.element]}`,
-          desc: r.desc ?? WEAPON_DESC[r.key],
-          right: has ? "FORJADA" : allowed ? String(r.cost) : `FORJA NV ${BUILD.FORGE_WEAPON_LEVEL[r.key]}`,
-          rightIcon: has || !allowed ? null : "ico_coin",
+          desc: deedOpen ? `${WEAPON_DESC[r.key]}
+Feito para forjar: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLocaleString("pt-BR")})` : r.desc ?? WEAPON_DESC[r.key],
+          right: has ? "FORJADA" : !allowed ? `FORJA NV ${BUILD.FORGE_WEAPON_LEVEL[r.key]}` : deedOpen ? "FALTA O FEITO" : String(r.cost),
+          rightIcon: has || !allowed || deedOpen ? null : "ico_coin",
           rightColor: has ? CSS.green : can ? CSS.goldHi : CSS.dim,
           style: has ? "green" : can ? "button" : "dark",
           onTap: can

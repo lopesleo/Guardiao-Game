@@ -300,8 +300,24 @@ export class MetaProgression {
     return idx <= this.data.maxDifficultyCleared + 1;
   }
 
+  // Feito da Forja de uma arma: { text, p, n, done } (sem feito = null)
+  weaponDeed(weaponKey) {
+    const def = META.WEAPON_DEED?.[weaponKey];
+    if (!def) return null;
+    const s = this.data.stats;
+    const p =
+      def.stat === "kills" ? s.totalKills || 0
+      : def.stat === "win1" ? Object.entries(this.data.winsByDifficulty || {}).reduce((a, [k, v]) => a + (Number(k) >= 1 ? v : 0), 0)
+      : (s.reactions || {})[def.stat] || 0;
+    return { text: def.text.replace("{n}", def.n.toLocaleString("pt-BR")), p: Math.min(p, def.n), n: def.n, done: p >= def.n };
+  }
+  deedDone(weaponKey) {
+    return this.weaponDeed(weaponKey)?.done ?? true;
+  }
+
   unlock(weaponKey) {
     if (this.data.unlockedWeapons.includes(weaponKey)) return false;
+    if (!this.deedDone(weaponKey)) return false;
     const cost = META.WEAPON_UNLOCK_COST[weaponKey] ?? 0;
     if (this.data.totalCoins < cost) return false;
     this.data.totalCoins -= cost;

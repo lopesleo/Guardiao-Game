@@ -1024,6 +1024,19 @@ export const META = {
   // Início barato (1ª compra logo na 1ª partida); o resto cresce com a Forja
   WEAPON_UNLOCK_COST: { BOOMER: 30, CHAIN: 60, FIREFLY: 150, ORB: 300, HAIL: 400, FLAME: 600, WHIRL: 900 },
   WEAPON_UNLOCK_ORDER: ["BOOMER", "CHAIN", "FIREFLY", "ORB", "HAIL", "FLAME", "WHIRL"], // Aura já vem liberada
+  // Feitos da Forja (desbloqueio por desafio, como no Megabonk): além de moedas e do
+  // nível da Forja, as armas do meio em diante pedem um feito ACUMULADO entre partidas.
+  // Os feitos ensinam a mecânica-assinatura (cada reação) e nunca pedem o que o jogador
+  // ainda não pode fazer: Vapor = Cajado + Aura (início); Cristal/Sobrecarga = + Raio (60).
+  // stat: "kills" (abates no total), "VAPOR"/"CRYSTAL"/"OVERLOAD" (reações no total) ou
+  // "win1" (vitórias no Perigo Guardião ou acima).
+  WEAPON_DEED: {
+    FIREFLY: { stat: "kills", n: 1500, text: "Abata {n} criaturas" },
+    ORB: { stat: "VAPOR", n: 60, text: "Faça {n} Vapores (fogo + gelo)" },
+    HAIL: { stat: "CRYSTAL", n: 40, text: "Faça {n} Cristais (gelo + raio)" },
+    FLAME: { stat: "win1", n: 1, text: "Vença o Mapinguari no Perigo Guardião ou acima" },
+    WHIRL: { stat: "OVERLOAD", n: 60, text: "Faça {n} Sobrecargas (fogo + raio)" },
+  },
   ABILITY_UNLOCK_COST: { DASH: 50, AWAKEN: 100 },
 };
 

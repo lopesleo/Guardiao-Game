@@ -462,7 +462,9 @@ export class CampScene extends Phaser.Scene {
       }) ||
       coins >= this.meta.ancestralCost() ||
       Object.entries(META.ABILITY_UNLOCK_COST).some(([k, cost]) => !this.meta.hasAbility(k) && coins >= cost);
-    const canArsenal = META.WEAPON_UNLOCK_ORDER.some((k) => !this.meta.isUnlocked(k) && coins >= META.WEAPON_UNLOCK_COST[k]);
+    const canArsenal = META.WEAPON_UNLOCK_ORDER.some(
+      (k) => !this.meta.isUnlocked(k) && coins >= META.WEAPON_UNLOCK_COST[k] && this.builds.forgeAllows(k) && this.meta.deedDone(k),
+    );
     this.buildings.shrine.dot.setVisible(canBless && this.buildings.shrine.shown);
     this.buildings.nest.dot.setVisible(this.buildings.nest.shown && !this.builds.job && this._workIds().some((id) => !this.builds.blocker(id)));
     this.buildings.forge.dot.setVisible(canArsenal && this.buildings.forge.shown);
