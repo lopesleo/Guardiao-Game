@@ -202,8 +202,11 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   AdMob pronto o app NÃO oferece anúncio. `ADS.TESTING = true` usa anúncios de TESTE do Google:
   **trocar para false só no build de loja**. `ADS.TEST_EEA = true` simula a Europa para ver o formulário
 - ✅ App de teste compilado e `npm run android:install` (compila, instala via adb e abre). Ambiente neste
-  PC: Java 17 em `C:\Users\leona\dev-tools\jdk-17.0.20.1+1`, Android SDK em `%LOCALAPPDATA%\Android\Sdk`
-  (plataforma 34, build-tools 34.0.0).
+  PC: Node 22, Java 21 em `C:\Program Files\Microsoft\jdk-21.*` (o script acha sozinho), Android SDK em
+  `%LOCALAPPDATA%\Android\Sdk`.
+- ✅ **Capacitor 8.5** (era 6): alvo **Android 16 (API 36)**, exigido pela Play para apps novos; mínimo Android 7
+  (API 24); Gradle 8.14.3, AGP 8.13, Java 21; plugins na v8. No app o cenário vai até a borda (por baixo do furo
+  da câmera). Validado no S23 Ultra em 02/10/2026 (AdMob, consentimento, Firebase, vibração e ElapsedClock ok)
 - ✅ **Validado no aparelho (S23 Ultra, 01/10/2026):** consentimento "não necessário" no Brasil, SDK iniciado,
   anúncio premiado de TESTE carregado → exibido → recompensa → fechado → 4ª carta liberada; eventos
   `ad_offer_show/accept/ad_reward` enviados ao Firebase. Com bloqueador de anúncios (ex.: DNS privado

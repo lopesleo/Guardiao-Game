@@ -34,6 +34,10 @@
       right: env(safe-area-inset-right, 0px);
       height: calc(var(--vvh, 100dvh) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
     }
+    /* No app Android o cenário vai até a borda, por baixo do furo da câmera (o Capacitor 8
+       informa o recorte como safe-area e deixava uma faixa preta); a interface já fica
+       longe das bordas. */
+    html.native #game { top: 0; left: 0; right: 0; height: var(--vvh, 100dvh); }
     #game canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
 
     #rotate-overlay {
@@ -47,6 +51,10 @@
       #rotate-overlay { display: grid; }
     }
   </style>
+  <script>
+    // a ponte do Capacitor é injetada antes da página: marca o app nativo já no primeiro desenho
+    if (window.Capacitor?.isNativePlatform?.()) document.documentElement.classList.add("native");
+  </script>
 </head>
 <body>
   <div id="game"></div>

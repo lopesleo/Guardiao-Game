@@ -1,13 +1,16 @@
 // Compila o app de TESTE (debug) e instala no celular via adb.
 // Uso: npm run android:install     (celular com depuração USB ligada, plugado e autorizado)
-// Procura o Java 17 e o Android SDK nos lugares onde foram instalados neste PC; se estiverem em
-// outro lugar, defina JAVA_HOME e ANDROID_HOME antes de rodar.
+// Procura o Java 21 (exigido pelo Capacitor 8) e o Android SDK nos lugares onde foram instalados
+// neste PC; se estiverem em outro lugar, defina JAVA21_HOME e ANDROID_HOME antes de rodar.
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const home = process.env.USERPROFILE || process.env.HOME || "";
-const JAVA_HOME = process.env.JAVA_HOME || join(home, "dev-tools", "jdk-17.0.20.1+1");
+// o JAVA_HOME do sistema aponta para o 17; prefere um JDK 21 instalado pelo winget
+const MS_JDKS = "C:\\Program Files\\Microsoft";
+const jdk21 = existsSync(MS_JDKS) && readdirSync(MS_JDKS).filter((d) => d.startsWith("jdk-21")).sort().pop();
+const JAVA_HOME = process.env.JAVA21_HOME || (jdk21 ? join(MS_JDKS, jdk21) : process.env.JAVA_HOME || "");
 const SDK = process.env.ANDROID_HOME || join(home, "AppData", "Local", "Android", "Sdk");
 const ADB = join(SDK, "platform-tools", process.platform === "win32" ? "adb.exe" : "adb");
 const APK = join("android", "app", "build", "outputs", "apk", "debug", "app-debug.apk");
@@ -20,7 +23,7 @@ const need = (p, what) => {
     process.exit(1);
   }
 };
-need(JAVA_HOME, "o Java 17 (JAVA_HOME)");
+need(JAVA_HOME, "o Java 21 (JAVA21_HOME)");
 need(ADB, "o adb (ANDROID_HOME)");
 
 const run = (cmd, args, opts = {}) => {
