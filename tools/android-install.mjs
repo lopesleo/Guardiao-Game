@@ -38,7 +38,8 @@ console.log("Celular:", list[0].split(/\s+/)[0]);
 
 // 2) sincroniza o jogo e compila
 run("npm", ["run", "android:sync"]);
-run(process.platform === "win32" ? "gradlew.bat" : "./gradlew", ["assembleDebug", "--console=plain"], { cwd: "android" });
+// caminho completo: o cmd do Windows pode não procurar comandos na pasta atual
+run(join(process.cwd(), "android", process.platform === "win32" ? "gradlew.bat" : "gradlew"), ["assembleDebug", "--console=plain"], { cwd: "android" });
 
 // 3) instala (mantém os dados do jogo) e abre
 run(ADB, ["install", "-r", APK]);
