@@ -250,6 +250,82 @@ function leaf() {
   return Pix.fromMap([".gg", "gGk"], { g: PAL.g5, G: PAL.g3, k: PAL.g2 });
 }
 
+// Vaga-lume (arma de raio): asas cinza, cabeça escura e o "lampião" aceso
+function firefly() {
+  return Pix.fromMap(["aa.aa", ".aka.", ".zwz.", ".zzz.", "..e.."], {
+    a: PAL.s4,
+    k: K,
+    z: PAL.yel3,
+    w: PAL.white,
+    e: PAL.g6,
+  });
+}
+
+// Pedra de granizo: gelo opaco com reflexo
+function hailstone() {
+  return Pix.fromMap([".kkkk.", "kcwbbk", "kwbbBk", "kbbBBk", "kbBBDk", ".kkkk."], {
+    k: K,
+    w: PAL.white,
+    c: PAL.ice3,
+    b: PAL.ice2,
+    B: PAL.ice1,
+    D: PAL.ice0,
+  });
+}
+
+// Redemoinho do Saci: anéis de vento empilhados (largo em cima, fino embaixo) que
+// serpenteiam e giram — 6 frames. Corpo translúcido, frente clara, fundo escuro,
+// um fio de luz correndo pelos anéis e folhas sendo levantadas na base.
+// cols = [clara, média, escura]; o mesmo desenho serve à evolução em brasa.
+function whirlFrames(cols, debris = PAL.g5) {
+  const W = 24,
+    H = 30,
+    N = 6;
+  const frames = [];
+  for (let f = 0; f < N; f++) {
+    const p = new Pix(W, H);
+    const ph = (f / N) * Math.PI * 2;
+    const rings = [];
+    for (let y = 2; y < H - 3; y += 2.6) {
+      const t = (y - 2) / (H - 5); // 0 = topo · 1 = base
+      const rx = 1.2 + Math.pow(1 - t, 1.35) * 9.6;
+      // A onda desce pelo funil (fase anda para baixo a cada frame)
+      const cx = W / 2 + Math.sin(t * 5 - ph) * 2.8 * (0.3 + t * 0.7);
+      rings.push({ y, t, rx, ry: Math.max(0.7, rx * 0.3), cx });
+    }
+    // Miolo translúcido bem leve (só dá corpo, não vira cunha)
+    for (const r of rings)
+      for (let x = Math.floor(r.cx - r.rx * 0.45); x <= Math.ceil(r.cx + r.rx * 0.45); x++) p.set(x, r.y, cols[1], 55);
+    // Anéis ABERTOS: cada um tem uma falha que gira — lê como vento, não como sólido
+    for (const r of rings) {
+      const n = Math.max(10, Math.round(r.rx * 7));
+      const gapAt = ph * 2 + r.t * 4;
+      for (let i = 0; i < n; i++) {
+        const th = (i / n) * Math.PI * 2;
+        const rel = (((th - gapAt) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        if (rel > Math.PI * 1.55) continue; // falha (~22% do anel)
+        const x = r.cx + Math.cos(th) * r.rx,
+          y = r.y + Math.sin(th) * r.ry;
+        if (Math.sin(th) <= 0) p.set(x, y, cols[2], 150);
+        else p.set(x, y, rel < 0.7 ? PAL.white : cols[0], 255);
+      }
+    }
+    // Fiapos soltos na boca do funil
+    for (let k = 0; k < 2; k++) {
+      const a = ph + k * Math.PI;
+      p.set(W / 2 + Math.cos(a) * 11, 1 + Math.sin(a) * 1.5, cols[0], 200);
+    }
+    // Folhas e poeira girando na base
+    for (let k = 0; k < 3; k++) {
+      const a = ph * 1.5 + (k / 3) * Math.PI * 2;
+      const base = rings[rings.length - 1];
+      p.set(base.cx + Math.cos(a) * (3 + k), H - 3 + Math.sin(a) * 1.2, k === 1 ? cols[2] : debris);
+    }
+    frames.push(p);
+  }
+  return frames;
+}
+
 // Brilho suave (NÃO-pixel, gradiente radial) — só pra luz aditiva
 function registerGlow(scene) {
   if (scene.textures.exists("fx_glow")) return;
@@ -283,6 +359,10 @@ export function registerSprites(scene) {
   puff().register(scene, "px_puff");
   ring().register(scene, "px_ring");
   shard().register(scene, "px_shard");
+  firefly().register(scene, "px_firefly");
+  hailstone().register(scene, "px_hail");
+  registerStrip(scene, "px_whirl", whirlFrames([PAL.pur3, PAL.pur2, PAL.pur1]));
+  registerStrip(scene, "px_whirl_fire", whirlFrames([PAL.yel3, PAL.org2, PAL.org1], PAL.red2));
   leaf().register(scene, "px_leaf");
   registerGlow(scene);
 
@@ -300,4 +380,6 @@ export function registerSprites(scene) {
   anim("gem_gold_shine", "px_gem_gold", 6, [0, 1, 2, 3, 0, 0, 0, 0]);
   anim("coin_spin", "px_coin", 8, [0, 1, 2, 3]);
   anim("awaken_spark", "px_awaken", 4, [0, 1]);
+  anim("whirl_spin", "px_whirl", 14, [0, 1, 2, 3, 4, 5]);
+  anim("whirl_fire_spin", "px_whirl_fire", 18, [0, 1, 2, 3, 4, 5]);
 }

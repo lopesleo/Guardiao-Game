@@ -324,6 +324,53 @@ const MAPS = {
     ".kaaaaaaaak.",
     "..kkkkkkkk..",
   ],
+  // Vaga-lumes (raio): inseto visto de cima, lampião aceso no abdômen
+  firefly: [
+    "...k...k...",
+    "....k.k....",
+    "....kkk....",
+    "...kxxxk...",
+    ".kkkSxSkkk.",
+    "kaaakxkaaak",
+    "kaaakPkaaak",
+    ".kaakzkaak.",
+    "..kkzzzkk..",
+    "...kzwzk...",
+    "...kezek...",
+    "....kkk....",
+  ],
+  // Granizo (gelo): nuvem soltando pedras
+  hail: [
+    "....kkkk....",
+    "..kkaaaakk..",
+    ".kaaaaaaaak.",
+    "kaaaaaaaaaak",
+    "ksssaaaasssk",
+    ".kkkkkkkkkk.",
+    "..kk....kk..",
+    ".kwbk..kwbk.",
+    ".kbBk..kbBk.",
+    "..kk.kk.kk..",
+    ".....kwbk...",
+    ".....kbBk...",
+    "......kk....",
+  ],
+  // Redemoinho (raio): funil do Saci
+  whirl: [
+    "kkkkkkkkkkk.",
+    "kqqpppppppk.",
+    ".kkkkkkkkk..",
+    "..kqpppppPk.",
+    "...kkkkkkk..",
+    "..kqpppPk...",
+    "...kkkkk....",
+    "....kqpPk...",
+    ".....kkk....",
+    "....kqPk....",
+    "....kkk.....",
+    "...kpk......",
+    "...kk.......",
+  ],
   // ---- Passivas ----
   hourglass: [
     "kkkkkkkk",
@@ -472,6 +519,9 @@ const RECOLOR = {
   arrow_left: { base: "arrow", flip: true },
   orb_frost: { base: "orb", swap: { b: "c", B: "b", c: "w" } },
   flame_red: { base: "flame", swap: { o: "R", h: "r", y: "o", O: "d" } },
+  firefly_gold: { base: "firefly", swap: { a: "z", S: "Y", x: "y" } }, // Revoada
+  hail_storm: { base: "hail", swap: { a: "p", s: "P" } }, // Tempestade de Granizo
+  whirl_fire: { base: "whirl", swap: { q: "z", p: "o", P: "O" } }, // Redemoinho de Brasa
 };
 
 export function registerIcons(scene) {
@@ -505,6 +555,12 @@ export const WEAPON_ICON = {
   PHOENIX: "ico_flame_pink",
   GLACIER: "ico_orb_frost",
   INFERNO: "ico_flame_red",
+  FIREFLY: "ico_firefly",
+  HAIL: "ico_hail",
+  WHIRL: "ico_whirl",
+  SWARM: "ico_firefly_gold",
+  HAILSTORM: "ico_hail_storm",
+  FIRE_WHIRL: "ico_whirl_fire",
 };
 
 export const PASSIVE_ICON = {
