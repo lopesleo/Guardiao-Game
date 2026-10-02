@@ -220,8 +220,8 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   vencer no Perigo Guardião ou acima e Redemoinho 60 Sobrecargas (acumulados entre partidas). A Forja mostra
   o feito e o progresso; o fim da partida avisa quando um feito é cumprido. Os feitos ensinam as reações
 - ✅ **Oferenda na Samaúma** (`TREE.OFFERING`): além de girar a roleta com anúncio (sorteio grátis),
-  o jogador pode pagar moedas e **escolher** a bênção da próxima partida. Sem recarga, uma bênção guardada
-  por vez; preço 150 × (1 + 5% por rank de bênção comprado), ~750 no fim. "+40% moedas" fica de fora
+  o jogador pode pagar moedas e **escolher** a bênção da próxima partida. Mesma regra para anúncio e
+  oferenda: **uma bênção por partida** (a recarga de 1 hora do anúncio saiu; o teto diário de 24 fica); preço 150 × (1 + 5% por rank de bênção comprado), ~750 no fim. "+40% moedas" fica de fora
   (moeda por moeda daria lucro). Sem anúncio no aparelho, a Samaúma continua útil
 - ✅ **Tratos da Mata**: às vezes uma carta é um trato — poder grande com custo visível (ex.:
   +37% dano / −23% vida máxima). Do nível 3, até 3 por partida, cada um uma vez (`PACTS`)

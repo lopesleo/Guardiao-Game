@@ -1,14 +1,11 @@
-// Roleta da Samaúma: por anúncio premiado (opcional), a árvore gigante sorteia UMA bênção
-// para a próxima partida. Recarrega de hora em hora (relógio confiável, Clock). Só uma
-// bênção guardada por vez: usou na partida, pode girar de novo quando a árvore descansar.
-// Oferenda: em vez do anúncio, o jogador paga moedas e ESCOLHE a bênção (sem recarga;
-// ainda uma bênção guardada por vez).
+// Roleta da Samaúma: a árvore gigante dá UMA bênção para a próxima partida — sorteada por
+// anúncio premiado (opcional, grátis) ou escolhida numa Oferenda de moedas. Mesma regra
+// para os dois: uma bênção guardada por vez; usou na partida, pode pegar outra.
 // Aparece depois do Baú do Dia (uma novidade por vez). Mixin da CampScene (Object.assign).
 import { TREE, offeringPrice } from "../config.js";
 import { AdService } from "../systems/AdService.js";
 import { Analytics } from "../systems/Analytics.js";
 import { Clock } from "../systems/Clock.js";
-import { fmtDuration } from "../systems/Builds.js";
 import { PAL, CSS } from "../art/Palette.js";
 import { text, Button, haptic, drawFrame } from "../ui/Theme.js";
 import { Modal } from "../ui/Widgets.js";
@@ -23,12 +20,10 @@ const slice = (id) => TREE.SLICES.find((s) => s.id === id);
 const SLICE_ICON = { dmg: "ico_sword", xp: "ico_gem", hp: "ico_heart", banish: "ico_skull", magnet: "ico_magnet", speed: "ico_dash_green", guard: "ico_shield" };
 
 export const CampTree = {
-  // Estado da árvore: "pending" (bênção guardada), "rest" (descansando) ou "ready"
+  // Estado da árvore: "pending" (bênção guardada) ou "ready"
   _treeState() {
     const d = this.meta.data;
     if (slice(d.treeBuff)) return { kind: "pending", buff: slice(d.treeBuff) };
-    const left = (d.treeSpinAt || 0) + TREE.COOLDOWN_MIN * 60000 - Clock.now();
-    if (left > 0) return { kind: "rest", left };
     return { kind: "ready" };
   },
 
@@ -82,9 +77,11 @@ export const CampTree = {
       return;
     }
     const st = this._treeState();
-    const mode = st.kind === "ready" && !AdService.canShow("tree_spin") ? "off" : st.kind;
-    // Plaquinha: pronta (dourada), descansando (contagem), guardada (verde)
-    const label = { ready: "BÊNÇÃO PRONTA", rest: `BÊNÇÃO EM ${Math.ceil((st.left || 0) / 60000)} MIN`, pending: "BÊNÇÃO GUARDADA", off: "SAMAÚMA" }[mode];
+    // Pronta = dá para girar (anúncio) ou fazer a oferenda (moedas)
+    const can = AdService.canShow("tree_spin") || this.meta.coins >= this._offeringPrice();
+    const mode = st.kind === "ready" && !can ? "off" : st.kind;
+    // Plaquinha: pronta (dourada), guardada (verde)
+    const label = { ready: "BÊNÇÃO PRONTA", pending: "BÊNÇÃO GUARDADA", off: "SAMAÚMA" }[mode];
     if (label !== b.tagT.text || mode !== b.mode) {
       b.tagT.setText(label).setColor(mode === "ready" ? CSS.goldHi : mode === "pending" ? CSS.green : CSS.muted);
       const w = b.tagT.width + 24;
@@ -177,9 +174,8 @@ export const CampTree = {
       offer.setEnabled(st.kind !== "pending" && this.meta.coins >= price);
       btn.setEnabled(st.kind === "ready" && canAd);
       if (st.kind === "pending") status.setText(`Bênção guardada: ${st.buff.short}\nVale na próxima partida`).setColor(CSS.goldHi);
-      else if (st.kind === "rest") status.setText(`A roleta descansa (${fmtDuration(st.left)}).\nCom uma oferenda você escolhe a bênção agora.`).setColor(CSS.muted);
       else if (!canAd) status.setText(`Sem anúncio agora. Com uma oferenda de ${price} moedas\nvocê escolhe a bênção da próxima partida.`).setColor(CSS.muted);
-      else status.setText(`Gire com um anúncio (sorteio grátis, a cada ${TREE.COOLDOWN_MIN} min)\nou faça uma oferenda e escolha a bênção.`).setColor(CSS.txt);
+      else status.setText(`Uma bênção por partida: gire com um anúncio (sorteio grátis)\nou faça uma oferenda e escolha a bênção.`).setColor(CSS.txt);
     };
     refresh();
     const ev = this.time.addEvent({ delay: 1000, loop: true, callback: () => (status.active ? refresh() : ev.remove()) });

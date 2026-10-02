@@ -659,10 +659,11 @@ export const CARDS = {
   BANISH_PER_SHRINE_LEVEL: 0,
 };
 
-// Roleta da Samaúma (Clareira): por anúncio premiado, sorteia UMA bênção para a próxima
-// partida. Recarrega de hora em hora (relógio confiável). Fatias de peso igual, todas boas.
+// Roleta da Samaúma (Clareira): UMA bênção para a próxima partida — sorteada com um anúncio
+// premiado ou escolhida com uma Oferenda de moedas. A regra é a mesma para os dois: uma
+// bênção guardada por vez (usou na partida, pode pegar outra). Sem recarga por tempo: o
+// anúncio não pode ser mais travado que a moeda. Fatias de peso igual, todas boas.
 export const TREE = {
-  COOLDOWN_MIN: 60,
   // mods: dmg/hp/speed multiplicam; xp, pickup (ímã) e coins também; banish soma; guard
   // multiplica o dano sofrido. Cores da paleta (Palette.js).
   SLICES: [
@@ -676,7 +677,6 @@ export const TREE = {
     { id: "guard", label: "+15% DEFESA", short: "Dano sofrido -15%", color: 0xb3bac4, mods: { guard: 0.85 } },
   ],
   // Oferenda: pagar moedas para ESCOLHER a bênção (o anúncio continua sorteando de graça).
-  // Não usa a recarga do anúncio; vale a mesma regra de uma bênção guardada por vez.
   // Preço cresce com os ranks de bênção comprados (acompanha a renda do jogador:
   // 150 no começo, ~750 com tudo). "Moedas" fica de fora: comprar moeda com moeda
   // daria lucro garantido.
