@@ -339,6 +339,28 @@ const SFX = {
     const crack = t > 0.08 ? noise() * Math.exp(-(t - 0.08) * 60) : 0;
     return Math.tanh((wind + crack) * 1.4);
   }],
+  sfx_splash: [0.7, (t, s) => {
+    // pancada d'água: baque grave + espirro de ruído que cai em gotas
+    const thump = Math.sin(TAU * osc(s, "ph", 70 * Math.exp(-t * 8) + 30)) * env(t, 0.002, 0.12);
+    if (s.drop == null) s.drop = 0;
+    if (t > 0.08 && rnd() < 0.004) s.drop = 0.7;
+    s.drop *= 0.93;
+    const drip = Math.sin(TAU * osc(s, "ph2", 900 + s.drop * 1400)) * s.drop * 0.3;
+    return thump * 1.1 + lp(s, noise(), 0.35) * env(t, 0.004, 0.16) * 0.9 + drip;
+  }],
+  sfx_wave: [1.1, (t, s) => {
+    // a cheia passando: ruído largo que cresce e arrebenta
+    const e = Math.sin(Math.min(1, t / 1.1) * Math.PI) ** 0.7;
+    const x = lp(s, noise(), 0.08 + e * 0.3);
+    return (x * 1.5 + Math.sin(TAU * osc(s, "ph", 48 + t * 20)) * 0.3) * e;
+  }],
+  sfx_carranca: [0.6, (t, s) => {
+    // madeira rachando (estalos secos) + o "susto" do Caboclo (gemido que cai)
+    const crack = noise() * (Math.exp(-t * 90) + (t > 0.07 ? Math.exp(-(t - 0.07) * 120) * 0.7 : 0));
+    const f = 320 * Math.exp(-t * 2.5) + 90;
+    const moan = (saw(osc(s, "ph", f)) * 0.4 + saw(osc(s, "ph2", f * 1.5)) * 0.2) * env(t, 0.06, 0.25);
+    return crack * 1.2 + moan;
+  }],
   sfx_weak: [0.5, (t, s) => {
     // ponto fraco aberto: "plim" duplo dourado (chama o ataque)
     const n = t < 0.1 ? 88 : 93;
@@ -540,6 +562,76 @@ function songBoss() {
   return { bpm: 150, beats: 64, events: ev };
 }
 
+// Caatinga — "Baião do Sertão" (Sol mixolídio, 116 BPM): zabumba (grave no 1 e no
+// "e-meio", bacalhau no contratempo), triângulo em semicolcheias, sanfona na melodia.
+function songCaatinga() {
+  const prog = ["G", "G", "F", "F", "C", "C", "D", "D"]; // I – bVII – IV – V (mixolídio)
+  const tri3 = { G: [43, 47, 50], F: [41, 45, 48], C: [36, 40, 43], D: [38, 42, 45] };
+  const ev = [];
+  for (let bar = 0; bar < 16; bar++) {
+    const ch = tri3[prog[bar % 8]];
+    const b0 = bar * 4;
+    // zabumba: tum(0) . . tum(0,75) tum(1) | bacalhau no 1,5 e 3,5
+    for (const h of [0, 2]) {
+      ev.push({ beat: b0 + h, drum: "kick", vol: 0.85 });
+      ev.push({ beat: b0 + h + 0.75, drum: "kick", vol: 0.55 });
+      ev.push({ beat: b0 + h + 1, drum: "tom", vol: 0.45 });
+      ev.push({ beat: b0 + h + 1.5, drum: "snare", vol: 0.28 });
+    }
+    // triângulo: abre no contratempo
+    for (let i = 0; i < 16; i++) ev.push({ beat: b0 + i * 0.25, drum: "hat", vol: i % 2 ? 0.32 : 0.14 });
+    // baixo do baião (fundamental e quinta, mesma célula da zabumba)
+    [[0, 0], [0.75, 7], [1, 12], [2, 0], [2.75, 7], [3, 10]].forEach(([o, iv]) =>
+      ev.push({ beat: b0 + o, len: 0.5, midi: ch[0] - 12 + iv, inst: "bass", vol: 0.25, cut: 0.3 }));
+    // sanfona: acordes curtos no contratempo
+    for (const o of [0.5, 1.5, 2.5, 3.5]) ch.forEach((m) => ev.push({ beat: b0 + o, len: 0.3, midi: m + 12, inst: "lead2", vol: 0.035, cut: 0.25 }));
+  }
+  // melodia em Sol mixolídio (Fá natural) com a 4ª aumentada de passagem (Dó#): cara de sertão
+  const tune = [
+    [67, 0.5], [71, 0.5], [74, 1], [72, 0.5], [71, 0.5], [69, 1],
+    [67, 0.5], [65, 0.5], [67, 1], [null, 1], [62, 1],
+    [65, 0.5], [69, 0.5], [72, 1], [71, 0.5], [69, 0.5], [67, 1],
+    [72, 0.5], [73, 0.5], [74, 1], [72, 1], [69, 1],
+    [67, 0.5], [71, 0.5], [74, 1], [77, 1], [76, 0.5], [74, 0.5],
+    [72, 1], [71, 0.5], [69, 0.5], [67, 1], [65, 1],
+    [64, 0.5], [67, 0.5], [72, 1], [71, 0.5], [69, 0.5], [67, 1],
+    [66, 1], [69, 1], [67, 2],
+  ];
+  ev.push(...melody(tune, 0, "lead2", 0.1, { rel: 0.08 }));
+  ev.push(...melody(tune.map(([m, l]) => [m == null ? null : m + 12, l]), 32, "lead", 0.08, { rel: 0.08 }));
+  return { bpm: 116, beats: 64, events: ev };
+}
+
+// Chefe da Caatinga — "Cheia" (Mi frígio-dominante, 152 BPM): xaxado acelerado,
+// zabumba dobrada e a sanfona em escala nordestina (2ª menor + 3ª maior)
+function songBossCaatinga() {
+  const prog = ["E", "E", "F", "E", "E", "E", "D", "E"];
+  const tri3 = { E: [40, 44, 47], F: [41, 45, 48], D: [38, 41, 45] };
+  const ev = [];
+  for (let bar = 0; bar < 16; bar++) {
+    const ch = tri3[prog[bar % 8]];
+    const b0 = bar * 4;
+    for (const h of [0, 1, 2, 3]) {
+      ev.push({ beat: b0 + h, drum: "kick", vol: h % 2 ? 0.6 : 0.95 });
+      ev.push({ beat: b0 + h + 0.75, drum: "tom", vol: 0.4 });
+    }
+    for (const o of [1, 3]) ev.push({ beat: b0 + o, drum: "snare", vol: 0.5 });
+    for (let i = 0; i < 16; i++) ev.push({ beat: b0 + i * 0.25, drum: "hat", vol: i % 2 ? 0.3 : 0.12 });
+    for (let i = 0; i < 8; i++) ev.push({ beat: b0 + i * 0.5, len: 0.4, midi: ch[0] - 12 + (i % 4 === 3 ? 7 : 0), inst: "bass", vol: 0.26, cut: 0.38 });
+    if (bar % 4 === 3) [0, 0.25, 0.5, 0.75].forEach((o, k) => ev.push({ beat: b0 + 3 + o, drum: "tom", vol: 0.6 - k * 0.08 }));
+    ch.forEach((m) => ev.push({ beat: b0, len: 4, midi: m + 24, inst: "pad", vol: 0.05, atk: 0.1, cut: 0.1 }));
+  }
+  const riff = [
+    [76, 0.5], [77, 0.5], [80, 1], [79, 0.5], [77, 0.5], [76, 1],
+    [74, 0.5], [76, 0.5], [77, 1], [76, 1], [null, 1],
+    [76, 0.5], [80, 0.5], [83, 1], [81, 0.5], [80, 0.5], [77, 1],
+    [76, 2], [71, 1], [76, 1],
+  ];
+  ev.push(...melody(riff, 16, "lead2", 0.11));
+  ev.push(...melody(riff.map(([m, l]) => [m == null ? null : m + 12, l]), 48, "lead2", 0.1));
+  return { bpm: 152, beats: 64, events: ev };
+}
+
 // ---------------------------------------------------------------------------
 // Registro no cache de áudio do Phaser (só WebAudio — todo Android moderno)
 // ---------------------------------------------------------------------------
@@ -558,5 +650,7 @@ export function registerAudio(game) {
   game.cache.audio.add("music_menu", toBuffer(renderSong(songMenu())));
   game.cache.audio.add("music_gameplay", toBuffer(renderSong(songGame())));
   game.cache.audio.add("music_boss", toBuffer(renderSong(songBoss())));
+  game.cache.audio.add("music_caatinga", toBuffer(renderSong(songCaatinga())));
+  game.cache.audio.add("music_boss_caatinga", toBuffer(renderSong(songBossCaatinga())));
   return true;
 }
