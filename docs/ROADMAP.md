@@ -239,6 +239,11 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   chefe **Caboclo d'Água** com 5 golpes de água e as **carrancas** (atraia o Arrastão para uma: ele
   se espanta e fica exposto), baião e xaxado no Synth, 2 conquistas. Framework: ficha `BIOMES`,
   `registerBoss`, `npm run check` confere biomas. Robô justo: 0 acertos em 101 casos
+- ✅ **Caatinga, parte 2 — o sertão na Clareira e na partida**: minichefe **Cabra Cabriola** (golpes da
+  Mula), **candeeiros de barro** no lugar das lanternas, sementes de **umbu** e **caju** (só da Caatinga),
+  peixes do **São Francisco** no Lago depois de libertar o Caboclo (curimatã, piau, surubim) e 5 pratos
+  (Umbuzada, Cajuína, Curimatã Assada, Piau Frito, Surubim com Caju). `npm run check` confere a arte
+  de toda planta, peixe e prato
 - ✅ **Iluminação de volta**: desde a migração para o Phaser 4 o mapa de luz não aparecia (a
   RenderTexture só executa o desenho com `render()`). Corrigido, com ambiente mais claro que o
   original (o jogo foi equilibrado "aceso"): entardecer → noite → chefe, legível no celular.

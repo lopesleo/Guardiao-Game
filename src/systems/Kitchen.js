@@ -3,6 +3,7 @@
 // (meta.data.meal) dá o bônus só na próxima partida, que o consome.
 import { KITCHEN, GARDEN, FISHING } from "../config.js";
 import { pantryCount } from "./Garden.js";
+import { riverOpen } from "./Pond.js";
 
 export const recipe = (id) => KITCHEN.RECIPES.find((r) => r.id === id);
 // Nome de um ingrediente (planta da horta ou peixe do lago)
@@ -21,7 +22,7 @@ export class Kitchen {
   known() {
     const d = this.meta.data;
     const seen = (k) => {
-      if (FISHING.FISH[k]) return (d.revealed || []).includes("pond"); // peixe: depois que o Lago aparece
+      if (FISHING.FISH[k]) return (d.revealed || []).includes("pond") && riverOpen(d, FISHING.FISH[k]); // peixe: depois que o Lago aparece (e o rio dele)
       return !GARDEN.CROPS[k]?.rare || pantryCount(d, k) > 0 || (d.seeds?.[k] || 0) > 0 || (d.garden?.plots || []).some((p) => p?.crop === k);
     };
     return KITCHEN.RECIPES.filter((r) => (d.cooked || []).includes(r.id) || Object.keys(r.needs).every(seen));

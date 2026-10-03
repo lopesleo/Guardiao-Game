@@ -581,7 +581,7 @@ export class CampScene extends Phaser.Scene {
   // Cena: câmera vai até a ruína, os cipós se desfazem, a construção aparece
   // e a Anciã a apresenta em uma frase. Uma por visita (uma novidade por vez).
   _playReveal(r) {
-    const b = this.buildings[r.id];
+    const b = this.buildings[r.at ?? r.id];
     if (!b) return;
     this._cutscene = true;
     this._setTarget(null);
@@ -589,9 +589,10 @@ export class CampScene extends Phaser.Scene {
     cam.stopFollow();
     cam.pan(b.x, b.y - 80, 700, "Sine.easeInOut");
     this.time.delayedCall(800, () => {
-      // Cipós da Podridão se desfazendo
+      // Cipós da Podridão se desfazendo (novidade num lugar já aberto: gotas d'água)
+      const tint = r.at ? [0x4aa2b0, 0x86d0d4] : [0x8a3fa0, 0xff7eb6];
       for (let i = 0; i < 30; i++) {
-        const p = this.add.image(b.x + (Math.random() - 0.5) * 110, b.y - Math.random() * 90, "px_dot2").setScale(3).setTint(i % 3 ? 0x8a3fa0 : 0xff7eb6).setDepth(D_HUD - 7);
+        const p = this.add.image(b.x + (Math.random() - 0.5) * 110, b.y - Math.random() * 90, "px_dot2").setScale(3).setTint(i % 3 ? tint[0] : tint[1]).setDepth(D_HUD - 7);
         this.tweens.add({ targets: p, y: p.y - 40 - Math.random() * 50, alpha: 0, duration: 900 + Math.random() * 500, onComplete: () => p.destroy() });
       }
       if (b.ruin) this.tweens.add({ targets: b.ruin, alpha: 0, duration: 600, onComplete: () => b.ruin.destroy() });
@@ -600,9 +601,9 @@ export class CampScene extends Phaser.Scene {
       if (r.id === "nest") this.tweens.add({ targets: this.bird, alpha: 1, duration: 700, delay: 500 });
       if (b.img) this.tweens.add({ targets: b.img, scaleY: { from: S * 0.7, to: S }, duration: 600, delay: 300, ease: "Back.easeOut" });
       b.glow?.setVisible(true);
-      b.reveal?.();
+      if (!r.at) b.reveal?.();
       this.sound.play("sfx_levelup", { volume: 0.6 });
-      b.shown = true;
+      if (!r.at) b.shown = true;
       this.meta.data.revealed.push(r.id);
       this.meta._save();
       Analytics.track("camp_reveal", { id: r.id, runs: this.meta.data.runsPlayed || 0 });

@@ -409,6 +409,10 @@ const FISH_ART = {
   pacu: { body: [PAL.s0, PAL.s1, PAL.s2], belly: PAL.org2, tail: PAL.s1, len: 13, ht: 4.4 },
   tucunare: { body: [PAL.g3, PAL.g5, PAL.yel2], belly: PAL.yel3, tail: PAL.org2, len: 16, ht: 3, bars: PAL.ink, eyespot: true },
   dourado: { body: [PAL.yel1, PAL.yel2, PAL.yel3], belly: PAL.cream, tail: PAL.org2, len: 16, ht: 3, shine: true },
+  // do Rio São Francisco
+  curimata: { body: [PAL.s1, PAL.s3, PAL.s4], belly: PAL.white, tail: PAL.s2, len: 14, ht: 3.4, shine: true },
+  piau: { body: [PAL.s2, PAL.s3, PAL.yel3], belly: PAL.cream, tail: PAL.red1, len: 14, ht: 2.8, spots: PAL.ink },
+  surubim: { body: [PAL.s0, PAL.s1, PAL.s3], belly: PAL.cream, tail: PAL.s1, len: 20, ht: 2.6, spots: PAL.ink, whiskers: true },
 };
 
 function fishIcon(a) {
@@ -434,6 +438,12 @@ function fishIcon(a) {
     p.set(tx + k, Math.floor(cy), k < 2 ? a.body[0] : 0);
   }
   if (a.eyespot) p.set(tx - 1, Math.floor(cy) - 1, PAL.org2);
+  if (a.whiskers) {
+    // barbilhões do surubim (bagre): dois fios saindo da boca
+    p.set(0, Math.floor(cy) + 1, a.body[1]);
+    p.set(0, Math.floor(cy) + 2, a.body[1]);
+    p.set(1, Math.floor(cy) + 3, a.body[1]);
+  }
   p.set(Math.round(cx), Math.floor(cy - a.ht), a.body[0]);
   p.set(Math.round(cx) + 1, Math.floor(cy - a.ht), a.body[0]);
   p.set(Math.round(cx - a.len / 2 + 2), Math.floor(cy) - 1, K);

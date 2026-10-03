@@ -31,6 +31,7 @@ mata). Isso evita demonizar mitos de origem indígena e africana.
 | Minichefes | Lobo Alfa, Ogro Ancião | **Mula sem Cabeça** (investidas em chamas) e **Corpo-Seco** (este sim da Podridão) |
 | Chefe da Caatinga | — | **Caboclo d'Água corrompido** — guardião do Rio São Francisco; ao vencer, volta para o rio |
 | Bichos da Caatinga | lobo, corvo, cogumelo | **calango**, **carcará**, **cabeça-de-frade** (mesmo comportamento) |
+| Minichefe da Caatinga | — | **Cabra Cabriola** (no lugar da Mula): cabra que salta e solta fogo pelos olhos; vencida, volta a ser só uma cabra |
 | Reação Sobrecarga | Sobrecarga | pode ganhar o apelido de **Fúria do Boitatá** |
 | Guia da Clareira | Anciã da Fogueira | **continua a Anciã** — uma pessoa da mata que conhece as lendas (não colocamos falas de tutorial na boca de figuras sagradas) |
 | Inimigos comuns | lobos, corvos, goblins… | bichos e seres **tomados pela Podridão** (mesma arte, nomes/descrições revistos) |
@@ -104,6 +105,8 @@ Fontes: [National Geographic Brasil — Curupira](https://www.nationalgeographic
       é o nome da lenda. Ficaram de fora as versões em que ele ataca mulheres.
       **Carrancas**: arte do Rio São Francisco (Mestre Guarany e outros carranqueiros) —
       desenho próprio, sem copiar peças reais. Bom ponto para o leitor de folclore. 👤
+- [ ] **Cabra Cabriola**: fica só a cabra de fogo que salta; a parte da lenda em que ela
+      come crianças NÃO entra (nem em texto, nem em arte).
 - [ ] Idealmente, um leitor indígena ou pesquisador de folclore revisa os textos
       antes do lançamento. 👤
 - [ ] Consultar o nome final do jogo no **INPI** antes de publicar. 👤

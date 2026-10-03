@@ -4,6 +4,10 @@
 import { FISHING } from "../config.js";
 import { Clock } from "./Clock.js";
 
+// Peixe de outro bioma (f.biome) só aparece depois que o chefe de lá foi libertado
+// (o Caboclo d'Água traz os peixes do São Francisco para o Lago)
+export const riverOpen = (d, f) => !f.biome || (d.winsByBiome?.[f.biome] || 0) > 0;
+
 export class Pond {
   constructor(meta, level = 1) {
     this.meta = meta;
@@ -54,7 +58,7 @@ export class Pond {
     if (!d.stats.fishCaught) return { id: "lambari", tutorial: true };
     const h = now.getHours();
     const day = h >= 6 && h < 18;
-    const pool = Object.entries(FISHING.FISH).filter(([, f]) => (!f.day || day) && (!f.night || !day));
+    const pool = Object.entries(FISHING.FISH).filter(([, f]) => (!f.day || day) && (!f.night || !day) && riverOpen(d, f));
     let r = Math.random() * pool.reduce((a, [, f]) => a + f.w, 0);
     for (const [id, f] of pool) if ((r -= f.w) < 0) return { id };
     return { id: pool[0][0] };

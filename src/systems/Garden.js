@@ -175,9 +175,12 @@ export function pantryCount(data, item) {
 }
 
 // Sorteia uma semente rara (planta mágica) — drop das partidas
-export function randomRareSeed() {
-  const ids = Object.entries(GARDEN.CROPS)
-    .filter(([, c]) => c.rare)
-    .map(([id]) => id);
+// Semente rara da partida. Num bioma com frutas próprias (crop.biome), a maioria vem
+// dele; as mágicas (elementos) caem em qualquer mapa. Frutas de outro bioma, nunca.
+export function randomRareSeed(biome = "amazonia") {
+  const rare = Object.entries(GARDEN.CROPS).filter(([, c]) => c.rare);
+  const own = rare.filter(([, c]) => c.biome === biome).map(([id]) => id);
+  const any = rare.filter(([, c]) => !c.biome).map(([id]) => id);
+  const ids = own.length && Math.random() < GARDEN.BIOME_SEED_CHANCE ? own : any;
   return ids[Math.floor(Math.random() * ids.length)];
 }

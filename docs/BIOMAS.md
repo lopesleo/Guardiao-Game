@@ -80,9 +80,23 @@ usar em campanha*. Festa Junina (junho) casa com a Caatinga/Nordeste.
   "Cheia" na luta (xaxado acelerado, escala nordestina).
 - **Conquistas:** *Cabra da Peste* (libertar o Caboclo) e *Mestre Carranqueiro*
   (espantá-lo com carrancas 10 vezes).
-- **Fica para depois:** recursos da Caatinga na Clareira (umbu, caju na Horta; peixes do
-  São Francisco no Lago), minichefes próprios (hoje seguem Mula sem Cabeça e Corpo-Seco —
-  a Mula é contada no Nordeste; o Corpo-Seco é mais do Sudeste), lanternas com outra arte.
+- **Minichefe próprio — Cabra Cabriola** (no lugar da Mula sem Cabeça): assombração de
+  origem ibérica contada em Pernambuco, a cabra que salta e solta fogo pelos olhos. Usa os
+  golpes da Mula (galope em chamas, coice, chuva de brasas), com arte, nome, faixa e
+  bestiário próprios. O **Corpo-Seco** continua: "A Seca" é a cara do sertão.
+- **Candeeiros de barro** no lugar das lanternas de cogumelo (mesmos presentes; luz quente).
+- **Na Clareira:**
+  - **Horta:** sementes raras de **umbu** e **caju**. Só caem nas partidas da Caatinga
+    (60% das sementes raras de lá; as mágicas de elemento caem nos dois mapas).
+  - **Lago:** libertar o Caboclo d'Água traz os peixes do **Rio São Francisco** —
+    **curimatã**, **piau** e **surubim** (este só à noite, difícil). A Anciã anuncia no Lago.
+    O **pirá** (endêmico e ameaçado) ficou de fora de propósito: não vira prato.
+  - **Cozinha:** **Umbuzada** (vida/s), **Cajuína** (XP; a bebida clarificada de caju do
+    Piauí, sem álcool), **Curimatã Assada** (vida), **Piau Frito** (velocidade) e
+    **Surubim com Caju** (crítico). Dentro dos limites do `npm run balance`.
+- **Ainda dá para crescer:** um 2º minichefe do sertão no lugar do Corpo-Seco, bicho da
+  Caatinga resgatável para a Clareira (quando os bichos entrarem), carnaúba/mandacaru
+  como decoração da Clareira.
 
 ## Como adicionar um bioma (o framework)
 
@@ -104,6 +118,13 @@ pantanal: {
 }
 ```
 
+0. **Coisas da Clareira** (opcional): plantas raras e peixes com `biome: "<id>"` em
+   `GARDEN.CROPS` / `FISHING.FISH` (sementes caem só nas partidas daquele bioma; peixes
+   chegam ao Lago quando o chefe de lá é libertado), receitas em `KITCHEN.RECIPES`, arte em
+   `Garden.js` (`CROP_ART` + `ICONS`), `Pond.js` (`FISH_ART`) e `Kitchen.js` (`DISH`).
+   Minichefe próprio: `minis: { alpha|elder: { legend, name, msg, again, rage } }` +
+   `looks.alpha|elder` + tira de 6 quadros no formato da Mula/Corpo-Seco. Lanternas:
+   `lantern: { tex, broken, anim, color, spark, hint }`.
 1. **Cenário:** um `src/art/Env<Bioma>.js` com `register<Bioma>(scene)` devolvendo as
    mesmas categorias de `registerEnvironment` (`trees, pines, bushes, rocks, flowers,
    tufts, shrooms, stumps, logs, patches{dark,dirt,moss}` + `atlas` e `ground`). Registre

@@ -38,7 +38,7 @@ export class RunEvents {
         const cycle = [
           { type: "swarm", n: 24, kind: "bee", msg: "A COLMEIA DA NOITE!" },
           { type: "ring", n: 28, kinds: ["wolf", "goblin", "brute"], msg: "CERCO NA ESCURIDÃO!" },
-          { type: "miniboss", kind: k % 2 ? "alpha" : "elder", msg: k % 2 ? "A MULA SEM CABEÇA VOLTOU!" : "OUTRO CORPO-SECO SE ERGUE!" },
+          { type: "miniboss", kind: k % 2 ? "alpha" : "elder", again: true, msg: k % 2 ? "A MULA SEM CABEÇA VOLTOU!" : "OUTRO CORPO-SECO SE ERGUE!" },
         ];
         const ev = cycle[(k - 1) % cycle.length];
         this._run({ ...ev, n: ev.n ? Math.round(ev.n * (1 + 0.15 * Math.floor(k / 3))) : ev.n });
@@ -64,7 +64,8 @@ export class RunEvents {
     // Tamanho do evento acompanha o Perigo escolhido
     ev = { ...ev, n: Math.round((ev.n ?? 0) * (s.diff?.spawnMult ?? 1)) };
     const p = s.player;
-    s.hud.showBossBanner(ev.msg, ev.type === "miniboss" ? CSS.goldHi : CSS.redHi);
+    const mini = ev.type === "miniboss" ? s.biome?.minis?.[ev.kind] : null; // minichefe próprio do bioma
+    s.hud.showBossBanner(mini ? (ev.again ? mini.again : mini.msg) : ev.msg, ev.type === "miniboss" ? CSS.goldHi : CSS.redHi);
     s.sound.play("sfx_boss_roar", { volume: 0.4, rate: ev.type === "miniboss" ? 0.8 : 1.3 });
     const cam = s.cameras.main;
     const R = Math.max(cam.width, cam.height) * 0.55;
@@ -86,7 +87,8 @@ export class RunEvents {
         this._spawn(p.x + Math.cos(a) * r, p.y + Math.sin(a) * r, k);
       }
     } else if (ev.type === "miniboss") {
-      s.meta?.markLegend?.(ev.kind === "alpha" ? "mula" : "corposeco");
+      const mini = s.biome?.minis?.[ev.kind];
+      s.meta?.markLegend?.(mini?.legend ?? (ev.kind === "alpha" ? "mula" : "corposeco"));
       const a = Math.random() * Math.PI * 2;
       const e = this._spawn(p.x + Math.cos(a) * R * 0.8, p.y + Math.sin(a) * R * 0.8, "wolf", ev.kind);
       if (e) {

@@ -314,6 +314,147 @@ function carranca(broken = false) {
   return p;
 }
 
+// ---------------------------------------------------------------------------
+// CABRA CABRIOLA (32×28, mesmos quadros da Mula: 0-3 galope, 4 empinada, 5 coice)
+// Assombração de Pernambuco: cabra que salta e solta FOGO pelos olhos e pela boca.
+// ---------------------------------------------------------------------------
+const GOAT = [0x2a2420, 0x4a3e34, 0x6e5e4c, 0x948068];
+const GOAT_H = 28;
+function rell(p, cx, cy, rx, ry, ang, ramp, jitter = 0.2) {
+  const R = Math.max(rx, ry) + 1;
+  const c = Math.cos(ang),
+    sn = Math.sin(ang);
+  for (let y = Math.floor(cy - R); y <= Math.ceil(cy + R); y++)
+    for (let x = Math.floor(cx - R); x <= Math.ceil(cx + R); x++) {
+      const X = x + 0.5 - cx,
+        Y = y + 0.5 - cy;
+      const u = (X * c + Y * sn) / rx,
+        v = (-X * sn + Y * c) / ry;
+      if (u * u + v * v > 1) continue;
+      let t = (-(X / R) * 0.55 - (Y / R) * 0.75 + 0.9) / 1.8;
+      t += (bayer(x, y) - 0.5) * jitter;
+      p.set(x, y, ramp[Math.max(0, Math.min(ramp.length - 1, Math.floor(t * ramp.length)))]);
+    }
+}
+// cabeça de cabra virada para a direita em (hx, hy): chifres curvos para trás,
+// barbicha, olho em brasa; fire = tamanho da labareda saindo da boca
+function goatHead(p, hx, hy, fire, f) {
+  ell(p, hx, hy, 3.4, 2.6, GOAT);
+  // focinho comprido
+  for (let k = 1; k <= 3; k++) {
+    p.set(hx + 2 + k, hy, GOAT[2]);
+    p.set(hx + 2 + k, hy + 1, GOAT[1]);
+  }
+  // chifres: arco para trás e para baixo
+  for (const [dx, c] of [[0, PAL.s3], [-1, PAL.s2]]) {
+    const pts = [[hx + dx, hy - 3], [hx + dx - 1, hy - 4], [hx + dx - 2, hy - 5], [hx + dx - 3, hy - 5], [hx + dx - 4, hy - 4], [hx + dx - 5, hy - 3]];
+    for (const [x, y] of pts) p.set(x, y, c);
+  }
+  // orelha caída e barbicha
+  p.set(hx - 3, hy, GOAT[1]);
+  p.set(hx - 4, hy + 1, GOAT[1]);
+  p.set(hx + 3, hy + 2, GOAT[3]);
+  p.set(hx + 3, hy + 3, GOAT[2]);
+  // olho de FOGO
+  p.set(hx + 1, hy - 1, PAL.yel3);
+  p.set(hx + 2, hy - 1, PAL.org2);
+  p.set(hx + 1, hy - 2, PAL.org1);
+  // labareda pela boca: pluma que abre para a frente (miolo claro, borda laranja, ponta vermelha)
+  for (let i = 0; i < fire; i++) {
+    const w = Math.min(3, Math.floor(i / 1.5));
+    const wob = f % 2 && i > 2 ? 1 : 0;
+    for (let j = -w; j <= w; j++)
+      p.set(hx + 6 + i, hy + 1 + j + wob, i === fire - 1 ? PAL.red1 : Math.abs(j) < w * 0.5 || i < 2 ? PAL.yel3 : PAL.org2);
+  }
+}
+function cabra(f) {
+  const p = new Pix(32, GOAT_H);
+  const oy = GOAT_H - 22;
+  const bob = f % 2;
+  // pernas finas em salto (pares alternam)
+  const legs = [[8, f < 2 ? -2 : 2], [11, f < 2 ? 2 : -2], [19, f < 2 ? 2 : -2], [22, f < 2 ? -2 : 2]];
+  for (const [x0, sw] of legs) {
+    for (let y = 13 + bob; y <= 19; y++) {
+      const x = x0 + Math.round(((y - 13) / 6) * sw * 0.9);
+      p.set(x, oy + y, GOAT[1]);
+    }
+    p.set(x0 + Math.round(sw * 0.9), oy + 20, PAL.ink); // casco
+    if ((f + x0) % 3 === 0) p.set(x0 + Math.round(sw * 0.9) + 1, oy + 21, PAL.yel3); // faísca
+  }
+  // corpo + barriga clara
+  ell(p, 15, oy + 10 + bob, 9.5, 4.2, GOAT, 0.25);
+  for (let x = 10; x <= 20; x++) p.over(x, oy + 13 + bob, GOAT[3]);
+  // rabinho em pé
+  p.set(5, oy + 7 + bob, GOAT[2]);
+  p.set(5, oy + 6 + bob, GOAT[3]);
+  // pescoço para a frente e cabeça
+  for (let i = 0; i < 3; i++) {
+    p.set(20 + i, oy + 7 + bob - i, GOAT[2]);
+    p.set(20 + i, oy + 8 + bob - i, GOAT[1]);
+  }
+  // crina em brasa ao longo do lombo (a cabra é de fogo)
+  for (let x = 9; x <= 22; x += 2) p.set(x, oy + 5 + bob + (x > 19 ? -1 : 0), (x + f) % 4 === 1 ? PAL.yel3 : PAL.org2);
+  goatHead(p, 21, oy + 3 + bob, 5 + (f % 2), f);
+  // rachaduras da Podridão
+  px(p, [[12, oy + 9 + bob], [13, oy + 10 + bob], [17, oy + 8 + bob]], ROT.hot);
+  p.outline(PAL.ink);
+  return p;
+}
+function cabraRear(f = 0) {
+  const p = new Pix(32, GOAT_H);
+  for (const x0 of [8, 11]) {
+    for (let y = 19; y <= 25; y++) p.set(x0 + (y > 22 ? -1 : 0), y, GOAT[1]);
+    p.set(x0 - 1, 26, PAL.ink);
+  }
+  rell(p, 14, 17, 9.5, 4.2, -0.6, GOAT, 0.25);
+  p.set(5, 21, GOAT[2]);
+  p.set(4, 20, GOAT[3]);
+  // patas da frente dobradas no ar
+  for (const [x0, y0] of [[18, 14], [21, 12]]) {
+    p.line(x0, y0, x0 + 3, y0 - 3, GOAT[2]);
+    p.line(x0 + 4, y0 - 3, x0 + 5, y0 + 1, GOAT[1]);
+    p.set(x0 + 5, y0 + 2, PAL.ink);
+  }
+  for (let i = 0; i < 5; i++) {
+    p.set(20 + Math.round(i * 0.5), 11 - i, GOAT[2]);
+    p.set(21 + Math.round(i * 0.5), 11 - i, GOAT[1]);
+  }
+  goatHead(p, 22, 7, 3, f);
+  // jato de FOGO para o alto (é dele que vem o golpe): base na boca, largo em cima
+  for (let y = 0; y <= 7; y++)
+    for (let x = 23; x <= 31; x++) {
+      const cx = 27.5 + (f % 2 ? 0.5 : -0.5) * (y / 7);
+      const w = 1 + (7 - y) * 0.5;
+      if (Math.abs(x - cx) > w) continue;
+      p.set(x, y, y < 2 ? PAL.yel3 : Math.abs(x - cx) < w * 0.45 ? PAL.yel3 : y === 7 ? PAL.red1 : PAL.org2);
+    }
+  for (let x = 10; x <= 18; x += 2) p.set(x, 12 - Math.round((x - 10) * 0.6), PAL.org2); // crina
+  px(p, [[12, 15], [13, 16], [16, 13]], ROT.hot);
+  p.outline(PAL.ink);
+  return p;
+}
+function cabraKick() {
+  const p = new Pix(32, GOAT_H);
+  for (const x0 of [19, 22]) {
+    for (let y = 19; y <= 25; y++) p.set(x0, y, GOAT[1]);
+    p.set(x0, 26, PAL.ink);
+  }
+  rell(p, 16, 16, 9.5, 4.2, 0.38, GOAT, 0.25);
+  // patas de trás no coice
+  for (const [y0, k] of [[13, 0], [15, 1]]) {
+    for (let i = 0; i < 7; i++) p.set(8 - i, y0 - Math.round(i * 0.45), GOAT[2 - k]);
+    p.set(1, y0 - 3, PAL.ink);
+  }
+  px(p, [[0, 7], [2, 6], [1, 13]], PAL.yel3);
+  p.set(6, 9, GOAT[3]);
+  // cabeça baixa à frente (chifrada) com fogo curto
+  for (let i = 0; i < 3; i++) p.set(21 + i, 14 + i, GOAT[2]);
+  goatHead(p, 21, 17, 5, 1);
+  px(p, [[13, 15], [14, 16], [18, 14]], ROT.hot);
+  p.outline(PAL.ink);
+  return p;
+}
+
 // Coluna d'água da Tromba (18×36, 3 quadros girando)
 function waterSpout(f) {
   const p = new Pix(18, 36);
@@ -340,6 +481,7 @@ export function registerCaatingaMonsters(scene) {
   strip("mon_calango", four.map((f) => calango(f)));
   strip("mon_carcara", [carcara(0), carcara(1)]);
   strip("mon_frade", [frade(0), frade(1)]);
+  strip("mon_cabra", [cabra(0), cabra(1), cabra(2), cabra(3), cabraRear(0), cabraKick()]); // minichefe (golpes da Mula)
   // 0-1 parado · 2-3 fúria · 4 libertado · 5 chama a água · 6 arrastão · 7 chama (fúria) · 8 arrastão (fúria)
   strip("mon_caboclo", [
     caboclo(0, false), caboclo(1, false), caboclo(0, true), caboclo(1, true), caboclo(0, false, true),
@@ -351,6 +493,7 @@ export function registerCaatingaMonsters(scene) {
   anim("calango_move", "mon_calango", four, 14);
   anim("carcara_move", "mon_carcara", [0, 1], 8);
   anim("frade_move", "mon_frade", [0, 1], 5);
+  anim("cabra_move", "mon_cabra", four, 10);
   anim("caboclo_idle", "mon_caboclo", [0, 1], 2);
   anim("caboclo_fury", "mon_caboclo", [2, 3], 4);
   anim("spout_spin", "px_spout", [0, 1, 2], 12);

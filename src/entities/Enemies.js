@@ -22,6 +22,7 @@ const LOOK = {
   calango: ["mon_calango", "calango_move"],
   carcara: ["mon_carcara", "carcara_move"],
   frade: ["mon_frade", "frade_move"],
+  cabra: ["mon_cabra", "cabra_move"],
 };
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
@@ -77,6 +78,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   // Aplica a arte do tipo: textura, animação e corpo físico no "pé" do sprite
   _look(type) {
     const [tex, anim] = LOOK[this.scene.biome?.looks?.[type] ?? type] ?? LOOK.wolf;
+    this._moveAnim = anim; // os cérebros de minichefe voltam para esta animação
     this.setTexture(tex, 0);
     this.play({ key: anim, startFrame: Math.floor(Math.random() * 2) });
     const w = this.frame.width,
@@ -173,7 +175,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.speed = alpha ? 132 : 95; // < 160 do herói: dá pra kitar
       this.contactRadius = alpha ? 50 : 62;
       this.rimColor = 0xf2c14e;
-      this.miniBoss = alpha ? "MULA SEM CABEÇA" : "CORPO-SECO";
+      this.miniBoss = this.scene.biome?.minis?.[elite]?.name ?? (alpha ? "MULA SEM CABEÇA" : "CORPO-SECO");
     } else this.miniBoss = null;
     // Cérebro de golpes especiais (só minichefes; criado depois da escala final)
     this._brain?.dispose();
