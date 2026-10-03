@@ -233,6 +233,10 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Arte nova (Mula empinada e no coice, Corpo-Seco de braços erguidos, Mapinguari de bocarra e gritando),
   13 sons novos, nome do golpe sob a barra. Verificado com um robô que só anda e reage em 250 ms: 0 acertos
   em 73 casos; parado, os golpes acertam. Debug: M = Mula, C = Corpo-Seco. 👤 sentir no aparelho
+- ✅ **Iluminação de volta**: desde a migração para o Phaser 4 o mapa de luz não aparecia (a
+  RenderTexture só executa o desenho com `render()`). Corrigido, com ambiente mais claro que o
+  original (o jogo foi equilibrado "aceso"): entardecer → noite → chefe, legível no celular.
+  A opção "Iluminação" e o desligamento automático em aparelho fraco seguem valendo
 - ✅ **Vento, o 4º elemento** (ver `ARMAS_E_COMBOS.md`): status "ventado" (arrasta para longe), reações
   **Labareda** (fogo+vento), **Geada** (gelo+vento) e **Temporal** (raio+vento); Prisma com 3 dos 4 elementos;
   Redemoinho vira vento (o Saci é o guardião do vento); armas novas **Assobio da Mata**, **Folhas ao Vento** e
