@@ -91,14 +91,15 @@ export class LanternSystem {
         y = player.y + Math.sin(ang) * d;
       if (x < ARENA.minX + m || x > ARENA.maxX - m || y < ARENA.minY + m || y > ARENA.maxY - m) continue;
       if (this.list.some((l) => (l.x - x) ** 2 + (l.y - y) ** 2 < 300 * 300)) continue;
-      const spr = s.add.sprite(x, y, "px_lantern", 0).setScale(S).setOrigin(0.5, 0.9);
+      const L = this._skin();
+      const spr = s.add.sprite(x, y, L.tex, 0).setScale(S).setOrigin(0.5, 0.9);
       spr.setDepth(y + 10000);
-      spr.play({ key: "lantern_glow", startFrame: Math.floor(Math.random() * 2) });
+      spr.play({ key: L.anim, startFrame: Math.floor(Math.random() * 2) });
       // Halo aditivo nos chapéus: é o que faz a lanterna "chamar" de longe
       const halo = s.add
         .image(x, y - 12 * S, "fx_glow")
         .setScale(2.2)
-        .setTint(0x5cc8ff)
+        .setTint(L.color)
         .setBlendMode(Phaser.BlendModes.ADD)
         .setDepth(y + 10001)
         .setAlpha(0);
@@ -116,12 +117,13 @@ export class LanternSystem {
     this.list.splice(i, 1);
     this._killHalo(l);
     l.spr.stop();
-    l.spr.setTexture("px_lantern_broken");
+    const L = this._skin();
+    l.spr.setTexture(L.broken);
     s.tweens.add({ targets: l.spr, alpha: 0, delay: 2500, duration: 800, onComplete: () => l.spr.destroy() });
     // Estouro de esporos luminosos
     for (let k = 0; k < 10; k++) {
       const a = Math.random() * Math.PI * 2;
-      const p = s.add.image(l.x, l.y - 24, "px_dot2").setScale(3).setTint(0xbfeaff).setDepth(l.y + 10500);
+      const p = s.add.image(l.x, l.y - 24, "px_dot2").setScale(3).setTint(L.spark).setDepth(l.y + 10500);
       s.tweens.add({
         targets: p,
         x: l.x + Math.cos(a) * (30 + Math.random() * 30),
@@ -132,10 +134,10 @@ export class LanternSystem {
         onComplete: () => p.destroy(),
       });
     }
-    s.lighting?.flash(l.x, l.y - 20, 200, 0x5cc8ff, 400, 1);
+    s.lighting?.flash(l.x, l.y - 20, 200, L.color, 400, 1);
     s.sound.play("sfx_chest_reel", { volume: 0.5, rate: 1.4 });
     this._dropItem(l.x, l.y, pickWeighted(LANTERN.DROPS));
-    s._hint?.("lantern", "Lanternas de cogumelo guardam presentes da floresta.\nEncoste para quebrar!");
+    s._hint?.(L.hintId, L.hint);
   }
 
   _killHalo(l) {
@@ -205,8 +207,23 @@ export class LanternSystem {
   }
 
   // Luzes para o mapa de iluminação
+  // Arte da lanterna pelo bioma (BIOMES[id].lantern); padrão: cogumelos da mata
+  _skin() {
+    const b = this.scene.biome?.lantern;
+    return {
+      tex: b?.tex ?? "px_lantern",
+      broken: b?.broken ?? "px_lantern_broken",
+      anim: b?.anim ?? "lantern_glow",
+      color: b?.color ?? 0x5cc8ff,
+      spark: b?.spark ?? 0xbfeaff,
+      hint: b?.hint ?? "Lanternas de cogumelo guardam presentes da floresta.\nEncoste para quebrar!",
+      hintId: b ? `lantern_${this.scene.biomeId}` : "lantern",
+    };
+  }
+
   lights(add) {
-    for (const l of this.list) add(l.x, l.y - 30, LANTERN.LIGHT_R, 0x5cc8ff, 0.8);
+    const c = this._skin().color;
+    for (const l of this.list) add(l.x, l.y - 30, LANTERN.LIGHT_R, c, 0.8);
     for (const it of this.items) add(it.spr.x, it.spr.y, 90, it.color, 0.7);
   }
 }

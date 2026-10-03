@@ -171,7 +171,7 @@ export class MulaBrain extends Brain {
   checkPhase() {
     if (this.phase === 1 && this.o.hp < this.o.maxHp * 0.5) {
       this.phase = 2;
-      this.s.hud?.showBossBanner("A MULA DISPARA!", "#ffb36b");
+      this.s.hud?.showBossBanner(this.s.biome?.minis?.alpha?.rage ?? "A MULA DISPARA!", "#ffb36b");
       this.sfx("sfx_boss_roar", { volume: 0.45, rate: 1.2 });
       shockwave(this.s, this.o.x, this.o.y, 140, PAL.org2);
       this.s.fx?.burst("ember", this.o.x, this.o.y - 20, 18);
@@ -187,7 +187,7 @@ export class MulaBrain extends Brain {
     const o = this.o;
     o.setVelocity(0, 0);
     o.anims.timeScale = 1;
-    if (o.active) o.play({ key: "alpha_move", startFrame: 0 });
+    if (o.active) o.play({ key: o._moveAnim ?? "alpha_move", startFrame: 0 });
   }
   neck() {
     const o = this.o;
