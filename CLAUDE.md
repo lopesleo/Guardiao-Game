@@ -81,6 +81,7 @@ público brasileiro, com potencial internacional.
 | Armas, evoluções e próximos combos | `docs/ARMAS_E_COMBOS.md` |
 | **Chefes: golpes especiais e regras de justiça** | `docs/CHEFES.md` |
 | **Como adicionar armas, laços, guardiões e desbloqueios** (`npm run check`) | `docs/CONTEUDO.md` |
+| Biomas: pesquisa e proposta de novos mapas | `docs/BIOMAS.md` |
 
 ## Rodar e testar
 
