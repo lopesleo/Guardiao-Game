@@ -12,6 +12,8 @@ Roda 100% offline.
 
 ## Conteúdo
 
+- **2 mapas (biomas)**: a Floresta Amazônica (chefe Mapinguari) e a **Caatinga**
+  (chefe Caboclo d'Água, redemoinhos de poeira), aberta pela obra da Trilha do Sertão
 - **4 elementos** (fogo, gelo, raio e vento) e **6 reações**; **18 armas** (fogo:
   Cajado, Vara Encantada, Sopro Flamejante, Açoite de Urtiga, Fogueira de São João;
   gelo: Aura Gélida, Orbe Gélido, Granizo, Miragem, Boleadeira; raio: Raio

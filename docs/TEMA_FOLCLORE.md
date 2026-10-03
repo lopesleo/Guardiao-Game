@@ -29,6 +29,8 @@ mata). Isso evita demonizar mitos de origem indígena e africana.
 | Personagens da leva 3 | — | **Comadre Fulozinha** (açoite de urtiga), **Mãe-do-Ouro** (bola de ouro), **Anhangá** (miragem) |
 | Chefe final | O Ancião | **Mapinguari corrompido** → ao vencer, a Podridão sai dele e ele volta a proteger a mata |
 | Minichefes | Lobo Alfa, Ogro Ancião | **Mula sem Cabeça** (investidas em chamas) e **Corpo-Seco** (este sim da Podridão) |
+| Chefe da Caatinga | — | **Caboclo d'Água corrompido** — guardião do Rio São Francisco; ao vencer, volta para o rio |
+| Bichos da Caatinga | lobo, corvo, cogumelo | **calango**, **carcará**, **cabeça-de-frade** (mesmo comportamento) |
 | Reação Sobrecarga | Sobrecarga | pode ganhar o apelido de **Fúria do Boitatá** |
 | Guia da Clareira | Anciã da Fogueira | **continua a Anciã** — uma pessoa da mata que conhece as lendas (não colocamos falas de tutorial na boca de figuras sagradas) |
 | Inimigos comuns | lobos, corvos, goblins… | bichos e seres **tomados pela Podridão** (mesma arte, nomes/descrições revistos) |
@@ -97,6 +99,11 @@ Fontes: [National Geographic Brasil — Curupira](https://www.nationalgeographic
 - [ ] Bestiário cita a **origem** de cada lenda ("lenda de origem tupi…").
 - [ ] Sem rituais, cantos ou símbolos sagrados específicos de um povo.
 - [ ] Sem estereótipo de "índio genérico".
+- [ ] **Caboclo d'Água**: desenhado como **bicho do rio** (pele de lama e limo, barbatanas,
+      bigode de bagre), nunca como caricatura de uma pessoa ou de um povo; "caboclo" aqui
+      é o nome da lenda. Ficaram de fora as versões em que ele ataca mulheres.
+      **Carrancas**: arte do Rio São Francisco (Mestre Guarany e outros carranqueiros) —
+      desenho próprio, sem copiar peças reais. Bom ponto para o leitor de folclore. 👤
 - [ ] Idealmente, um leitor indígena ou pesquisador de folclore revisa os textos
       antes do lançamento. 👤
 - [ ] Consultar o nome final do jogo no **INPI** antes de publicar. 👤
