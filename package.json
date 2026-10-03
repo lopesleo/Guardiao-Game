@@ -8,6 +8,7 @@
     "serve": "npx serve . -l 8000",
     "build": "node tools/build-www.mjs",
     "balance": "node tools/balance-report.mjs",
+    "check": "node tools/check-content.mjs",
     "android:sync": "npm run build && npx cap sync android",
     "android:open": "npx cap open android",
     "android:install": "node tools/android-install.mjs",

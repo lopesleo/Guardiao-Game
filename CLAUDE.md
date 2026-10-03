@@ -80,6 +80,7 @@ público brasileiro, com potencial internacional.
 | Meta-progressão atual (Perigo, Bênçãos, conquistas) | `docs/META_LOOP.md` |
 | Armas, evoluções e próximos combos | `docs/ARMAS_E_COMBOS.md` |
 | **Chefes: golpes especiais e regras de justiça** | `docs/CHEFES.md` |
+| **Como adicionar armas, laços, guardiões e desbloqueios** (`npm run check`) | `docs/CONTEUDO.md` |
 
 ## Rodar e testar
 

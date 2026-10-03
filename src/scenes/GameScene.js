@@ -34,6 +34,7 @@ import { ShrineSystem } from "../systems/ShrineSystem.js";
 import { SpawnDirector } from "../systems/SpawnDirector.js";
 import { RunEvents } from "../systems/RunEvents.js";
 import { Hazards } from "../systems/BossKit.js";
+import "../entities/WeaponsLeva3.js"; // registra as armas da leva 3 (registerWeapon)
 import { ElementalSystem } from "../systems/ElementalSystem.js";
 import { WeaponFX } from "../systems/WeaponFX.js";
 import { UpgradeSystem } from "../systems/UpgradeSystem.js";
@@ -111,6 +112,7 @@ export class GameScene extends Phaser.Scene {
     this._newUnlocksThisRun = [];
     // Feitos da Forja ainda abertos: no fim da partida avisa os que esta partida cumpriu
     this._deedsOpen = META.WEAPON_UNLOCK_ORDER.filter((k) => !this.meta.isUnlocked(k) && !this.meta.deedDone(k));
+    this._charDeedsOpen = CHARACTERS.filter((c) => !this.meta.hasCharacter(c.id) && this.meta.characterDeed(c.id) && !this.meta.characterDeed(c.id).done);
     // Conquistas (Fase 3): flags observadas pelos check() de ACHIEVEMENTS
     this._runFlags = { tookHpPassive: false };
     this._survive10Checked = false;
@@ -838,6 +840,7 @@ export class GameScene extends Phaser.Scene {
     if (m.regen) p.regenPerSec += m.regen;
     if (m.cd) p.cdMult *= m.cd;
     if (m.dmg) p._blessingDmgMult = (p._blessingDmgMult || 1) * m.dmg;
+    if (m.luck) p.luck = (p.luck || 0) + m.luck;
   }
 
   _openNextLevelUp() {
@@ -874,11 +877,13 @@ export class GameScene extends Phaser.Scene {
   // Empilha pra cima se vários chegarem juntos.
   _toast(msg, ms = 1600, color = "#ffe58f") {
     this._toasts = (this._toasts || []).filter((t) => t.active);
-    const y = vh(this) - 130 - this._toasts.length * 44;
-    const c = this.add.container(vw(this) / 2, y).setScrollFactor(0).setDepth(60000);
-    const t = text(this, 0, 0, msg, { size: 18, color, origin: 0.5 });
+    // Quebra linha em textos longos (laços trazem nome + o que fazem); empilha pela altura real
+    const t = text(this, 0, 0, msg, { size: 18, color, origin: 0.5, align: "center", wrap: Math.min(vw(this) - 80, 640) });
     const w = t.width + 36,
-      h = 38;
+      h = Math.max(38, t.height + 14);
+    const y = vh(this) - 130 - this._toasts.reduce((a, o) => a + (o._h ?? 38) + 6, 0) - (h - 38) / 2;
+    const c = this.add.container(vw(this) / 2, y).setScrollFactor(0).setDepth(60000);
+    c._h = h;
     const g = this.add.graphics();
     drawFrame(g, -w / 2, -h / 2, w, h, "glass");
     c.add([g, t]);
@@ -1015,12 +1020,14 @@ export class GameScene extends Phaser.Scene {
     }
     this._spawnWood(x, y, WOOD.MINIBOSS);
     this._spawnSeeds(x, y, GARDEN.SEEDS.MINIBOSS);
+    this.meta.recordStat("miniBosses"); // feitos: Açoite / Comadre Fulozinha
     if (e._brain?.log.flawless) this._flawlessBonus(x, y, BOSS_FIGHT.FLAWLESS_WOOD.MINIBOSS, e._brain.log);
     if (this.hud.boss === e) this.hud.clearBoss();
   }
 
   // "Desviou de tudo": nenhum golpe especial acertou o herói nesta luta
   _flawlessBonus(x, y, wood, log) {
+    this.meta.recordStat("flawless"); // feitos: Miragem / Anhangá
     this.time.delayedCall(900, () => {
       if (this.gameOver) return;
       this._toast(`DESVIOU DE TUDO! +${wood} Madeira Ancestral`, 2600, "#c8f08c");
@@ -1146,6 +1153,7 @@ export class GameScene extends Phaser.Scene {
       bs = this.boss.scaleX;
     const log = this.boss.brain?.log;
     if (log?.flawless) {
+      this.meta.recordStat("flawless");
       // o Mapinguari não deixa madeira no chão: entra direto, como a do chefe
       this._woodThisRun += BOSS_FIGHT.FLAWLESS_WOOD.BOSS;
       this.hud.addWood(BOSS_FIGHT.FLAWLESS_WOOD.BOSS);
@@ -1262,6 +1270,7 @@ export class GameScene extends Phaser.Scene {
     const result = chest.open();
     if (!result) return;
     this._runChests++;
+    this.meta.recordStat("chests"); // feitos: Bola de Ouro / Mãe-do-Ouro
     const { kind, x, y } = result;
 
     // Som de abertura imediato
@@ -1524,6 +1533,7 @@ export class GameScene extends Phaser.Scene {
     }
     this.meta.registerRun(this.elapsedMs / 1000, won, this.diff.id);
     for (const k of this._deedsOpen || []) if (this.meta.deedDone(k)) this._newUnlocksThisRun.push(`Feito cumprido: ${WEAPONS[k].name} na Forja`);
+    for (const c of this._charDeedsOpen || []) if (this.meta.characterDeed(c.id)?.done) this._newUnlocksThisRun.push(`Feito cumprido: ${c.name} na Fogueira`);
     const newAchievements = this._checkAchievements(won, true);
     this._newUnlocksThisRun.push(...newAchievements.map((a) => a.name));
     // Missões do dia (o prêmio se pega no Mural da Clareira)

@@ -1,4 +1,6 @@
-// Armas: 3 de fogo, 3 de gelo, 3 de raio + evoluções. Números em WEAPONS (config.js).
+// Armas: classes das armas da leva 1 e 2 + evoluções (a leva 3 mora em WeaponsLeva3.js).
+// Números e ficha (texto, ícone, desbloqueio) em WEAPONS (config.js). Para criar uma
+// arma nova: ver docs/CONTEUDO.md — classe que estende Weapon + registerWeapon().
 import { WEAPONS, COLORS, GAME, ELEMENT } from "../config.js";
 import { shockwave } from "../art/Telegraph.js";
 import { Pix } from "../art/PixelArt.js";
@@ -246,7 +248,12 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
         const newSp = Math.max(0, speed - d);
         this.body.setVelocity((vx / speed) * newSp, (vy / speed) * newSp);
       }
-      if (speed < 80) this.phase = "back";
+      if (speed < 80) {
+        this.phase = "back";
+        // Laços: "a vara fez a volta" (ex.: Rastro Falso deixa uma miragem aqui)
+        const links = owner.links;
+        if (links?.active.size) links.emit("boomer:turn", { weapon: null, x: this.x, y: this.y });
+      }
     } else {
       // Persegue player com aceleração crescente
       const dx = owner.x - this.x,
@@ -339,11 +346,27 @@ export class Weapon {
     this.owner?.lifestealFrom(dmg);
     if (showNum || crit) this.scene._showDmg(t.x, t.y, dmg, element, crit);
     this.scene.elemental.applyStatus(t, element);
+    this._applyAlso(t);
     if (died) {
       if (isBoss) this.scene._onBossDeath();
       else this.scene._onEnemyDeath(t);
     }
     return died;
+  }
+
+  // Elementos extras da ficha (def.also): a evolução aplica dois elementos no mesmo
+  // golpe e a REAÇÃO sai sozinha (Laçada = fogo + gelo → Vapor etc.)
+  _applyAlso(t) {
+    const also = this.def.also;
+    if (!also || !t.active) return;
+    for (const el of also) this.scene.elemental.applyStatus(t, el);
+  }
+
+  // Avisa os LAÇOS (systems/Links.js). Barato quando nenhum laço está ativo.
+  _emit(event, ev) {
+    const links = this.owner?.links;
+    if (!links?.active.size) return ev;
+    return links.emit(event, ev);
   }
 
   _nearestEnemyInRange() {
@@ -422,7 +445,19 @@ export class Staff extends Weapon {
       // Hook das evoluções (ex.: Tempestade de Vapor seta onImpact)
       this._decorateProj?.(proj);
     }
+    this._emit("staff:fire", { weapon: this, target });
     return true;
+  }
+  // Uma bola de fogo saindo de outro ponto (laço Brasa de São João: da fogueira)
+  shootFrom(x, y, target) {
+    if (!target?.active) return;
+    const a = Math.atan2(target.y - y, target.x - x);
+    const sp = this.def.projSpeed;
+    const { dmg, crit } = this.rollHit();
+    const proj = this.scene.projectilePool.acquire();
+    proj.fire(x, y, Math.cos(a) * sp, Math.sin(a) * sp, dmg, ELEMENT.FIRE, ((this.range * 1.35) / sp) * 1000, COLORS.FIRE, crit);
+    this._decorateProj?.(proj);
+    this.scene.fx?.muzzle(x, y, a, "fire");
   }
 }
 
@@ -641,7 +676,7 @@ export class ChainLightning extends Weapon {
       this.scene.fx?.impact(cur.x, cur.y - 6, "bolt", { power: 1.3, dir: Math.atan2(cur.y - hy, cur.x - hx) });
       const isBoss = cur === this.scene.boss;
       const isCrit = Math.random() < (this.owner?.critChance ?? 0);
-      const finalDmg = isCrit ? dmg * this.owner.critMult : dmg;
+      const finalDmg = this._emit("chain:damage", { weapon: this, target: cur, dmg: isCrit ? dmg * this.owner.critMult : dmg }).dmg;
       const died = cur.takeDamage(
         finalDmg,
         isBoss ? undefined : null,
@@ -736,7 +771,7 @@ export class OverloadX extends ChainLightning {
       this.scene.elemental._drawBolt(prev.x, prev.y, cur.x, cur.y, COLORS.BOLT, 4);
       const isBoss = cur === this.scene.boss;
       const isCrit = Math.random() < (this.owner?.critChance ?? 0);
-      const finalDmg = isCrit ? dmg * this.owner.critMult : dmg;
+      const finalDmg = this._emit("chain:damage", { weapon: this, target: cur, dmg: isCrit ? dmg * this.owner.critMult : dmg }).dmg;
       const died = cur.takeDamage(
         finalDmg,
         isBoss ? undefined : null,
@@ -1056,6 +1091,7 @@ export class Flamethrower extends Weapon {
     };
     scene.enemyPool.forEachActive((e) => e.active && strike(e, false));
     if (scene.boss?.active) strike(scene.boss, true);
+    this._lastBurst = { t: scene.time.now, dir, R, half };
     this._flameFx(px, py, dir, R, half);
     // Brasas varrendo o cone + fumaça na ponta + luz quente ao longo do sopro
     const fx = scene.fx;
@@ -1071,6 +1107,19 @@ export class Flamethrower extends Weapon {
     scene.sound.play("sfx_fire_attack", { volume: 0.22, rate: 0.8 + Math.random() * 0.15 });
     return true;
   }
+  // O ponto está no cone do sopro que acabou de sair? (laço Ouro Derretido)
+  inCone(x, y) {
+    const b = this._lastBurst;
+    if (!b || !this.owner || this.scene.time.now - b.t > 450) return false;
+    const dx = x - this.owner.x,
+      dy = y - this.owner.y;
+    const d = Math.hypot(dx, dy);
+    if (d > b.R) return false;
+    let da = Math.atan2(dy, dx) - b.dir;
+    da = Math.atan2(Math.sin(da), Math.cos(da));
+    return Math.abs(da) <= b.half;
+  }
+
   // Leque de "puffs" de fogo que voam pelo cone e se apagam
   _flameFx(px, py, dir, R, half) {
     const scene = this.scene;
@@ -1228,6 +1277,7 @@ export class Fireflies extends Weapon {
       f.x += f.vx * s;
       f.y += f.vy * s;
       f.spr.setPosition(f.x, f.y).setDepth(f.y + 10020).setFlipX(f.vx < 0);
+      if (this.owner?.links?.active.size) this._emit("firefly:move", { weapon: this, fly: f });
       f.glow.setPosition(f.x, f.y).setAlpha(0.55 + Math.sin(time / 70 + f.seed) * 0.2);
       this.scene.fx?.trail(f, f.x, f.y, "firefly", f.gen ? 40 : 26);
       const t = f.target;
@@ -1244,6 +1294,7 @@ export class Fireflies extends Weapon {
   _impact(f, t) {
     const scene = this.scene;
     this._hit(t, f.dmg, ELEMENT.BOLT, f.x, f.y);
+    this._emit("firefly:hit", { weapon: this, fly: f, target: t });
     // Choque: faíscas lilás no sentido do voo + estouro de luz amarela do vaga-lume
     const fx = scene.fx;
     if (fx) {
@@ -1293,13 +1344,17 @@ export class Hail extends Weapon {
     });
     if (!pool.length) return false;
     const n = this.count;
+    const points = [];
     for (let i = 0; i < n; i++) {
       // Sorteia sem repetir enquanto houver alvos; depois, cai perto do herói
       const t = pool.length ? pool.splice(Math.floor(Math.random() * pool.length), 1)[0] : null;
-      const x = t ? t.x : this.owner.x + (Math.random() - 0.5) * 220;
-      const y = t ? t.y : this.owner.y + (Math.random() - 0.5) * 160;
-      this.scene.time.delayedCall(i * 110, () => this._drop(x, y));
+      points.push({
+        x: t ? t.x : this.owner.x + (Math.random() - 0.5) * 220,
+        y: t ? t.y : this.owner.y + (Math.random() - 0.5) * 160,
+      });
     }
+    this._emit("hail:targets", { weapon: this, points }); // laço Olho do Furacão
+    points.forEach((pt, i) => this.scene.time.delayedCall(i * 110, () => this._drop(pt.x, pt.y)));
     return true;
   }
   _drop(x, y) {
@@ -1527,6 +1582,7 @@ export class Whirlwind extends Weapon {
       const d = Math.sqrt(d2);
       e.x += (dx / d) * k;
       e.y += (dy / d) * k;
+      if (this.owner?.links?.active.size) this._emit("whirl:pull", { weapon: this, enemy: e, whirl: w });
     });
   }
   _tickElement() {
@@ -1565,7 +1621,10 @@ export class FireWhirl extends Whirlwind {
   }
 }
 
-// Fábrica
+// Registro de classes (fábrica). Armas de outros arquivos entram com registerWeapon().
+export function registerWeapon(key, cls) {
+  WEAPON_CLASSES[key] = cls;
+}
 export const WEAPON_CLASSES = {
   STAFF: Staff,
   AURA: AuraWeapon,

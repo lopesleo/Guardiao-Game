@@ -353,6 +353,47 @@ export function registerSprites(scene) {
   woodLog().register(scene, "ico_wood");
   shadow().register(scene, "px_shadow");
   boomerang().register(scene, "px_boomer");
+  // ---- leva 3 ----
+  // Bola de Ouro: bola de fogo dourada (e a versão gelada do Ouro Encantado)
+  const goldBall = (warm) =>
+    Pix.fromMap(
+      ["..kkk..", ".kyzyk.", "kyzwzyk", "kzwwwzk", "kyzwzyO", ".kyyyO.", "..kOO.."],
+      warm
+        ? { k: K, y: PAL.yel2, z: PAL.yel3, w: PAL.white, O: PAL.org2 }
+        : { k: K, y: PAL.ice2, z: PAL.ice3, w: PAL.white, O: PAL.ice1 },
+    );
+  goldBall(true).register(scene, "px_goldball");
+  goldBall(false).register(scene, "px_goldball_ice");
+  // Miragem: o veado branco do Anhangá, de olho de fogo (fantasma, vai meio transparente)
+  Pix.fromMap(
+    [
+      "...........k..k...",
+      "..........kck.kck.",
+      "...........kckck..",
+      "............kcck..",
+      "...........kwwwwk.",
+      "...........kwowwkk",
+      "..kkkkkkkkkwwwwwk.",
+      ".kwwwwwwwwwwwwkk..",
+      "kcwwwwwwwwwwwk....",
+      "kccwwwwwwwwwck....",
+      ".kcccccccccck.....",
+      ".kwk.kwk.kwk.kwk..",
+      ".kck.kck..kck.kck.",
+      ".kk..kk...kk..kk..",
+    ],
+    { k: PAL.ice1, w: PAL.white, c: PAL.ice3, o: PAL.org2 },
+  ).register(scene, "px_mirage");
+  // Fogueira de São João: toras empilhadas com brasa e pedrinhas em volta
+  Pix.fromMap(
+    ["...kkkkkkkk...", "..kmnnnnnnmk..", ".kkkkkkkkkkkk.", "kmnnnnoonnnnmk", "kkkkkkkkkkkkkk", ".ss........ss."],
+    { k: K, m: PAL.n4, n: PAL.n3, o: PAL.org2, s: PAL.s3 },
+  ).register(scene, "px_logs");
+  // Boleadeira: três pedras presas numa corda
+  Pix.fromMap(
+    ["...kk....", "..kssk...", "..kask...", "...kk....", "...ll....", "..l..l...", ".kk...kk.", "kssk.kssk", "kask.kask", ".kk...kk."],
+    { k: K, s: PAL.s3, a: PAL.s4, l: PAL.straw2 },
+  ).register(scene, "px_bolas");
   // Pegada do Curupira (dedos para CIMA; girada no uso — os pés dele são virados)
   Pix.fromMap(["d.d.d", ".....", ".kkk.", "kkkkk", ".kkk.", "..k..", ".kkk.", ".kkk."], { k: PAL.n0, d: PAL.n1 }).register(scene, "px_foot");
   enemyShot().register(scene, "px_eshot");

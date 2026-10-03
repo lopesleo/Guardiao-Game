@@ -1,10 +1,11 @@
-// Folha de contato das tiras de criaturas (quadros de golpe dos chefes inclusos),
+// Folha de contato das tiras de criaturas e heróis (quadros de golpe dos chefes inclusos),
 // sem navegador: registerMonsters() roda contra uma "cena" falsa que só guarda os pixels.
 // Uso: node tools/monster-sheet.mjs <saída.png> [chave1,chave2,...] [escala]
 //   ex.: node tools/monster-sheet.mjs chefes.png mon_alpha,mon_elder,mon_boss 5
 import fs from "node:fs";
 import zlib from "node:zlib";
 import { registerMonsters } from "../src/art/Monsters.js";
+import { registerHeroes } from "../src/art/Hero.js";
 
 const [out = "monster-sheet.png", keysArg = "mon_alpha,mon_elder,mon_boss", scaleArg = "5"] = process.argv.slice(2);
 const S = Number(scaleArg);
@@ -37,6 +38,7 @@ const scene = {
   anims: { exists: () => true, create: () => {}, generateFrameNumbers: () => [] },
 };
 registerMonsters(scene);
+registerHeroes(scene); // hero_<id>: 0-1 parado, 2-5 andando
 
 // Uma linha por tira; quadros lado a lado sobre fundo noturno com chão
 const rows = wanted.map((k) => strips[k]).filter(Boolean);

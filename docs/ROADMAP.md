@@ -233,6 +233,19 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Arte nova (Mula empinada e no coice, Corpo-Seco de braços erguidos, Mapinguari de bocarra e gritando),
   13 sons novos, nome do golpe sob a barra. Verificado com um robô que só anda e reage em 250 ms: 0 acertos
   em 73 casos; parado, os golpes acertam. Debug: M = Mula, C = Corpo-Seco. 👤 sentir no aparelho
+- ✅ **Framework de conteúdo** (`docs/CONTEUDO.md`): cada arma tem UMA ficha em `WEAPONS` (números, texto,
+  ícone, melhorias, desbloqueio com feito) e cada guardião uma ficha em `CHARACTERS` (arma, viés, desbloqueio,
+  bestiário); Forja, Fogueira, cartas, ícones e bestiário leem delas (as tabelas antigas viraram derivadas).
+  Laços por **eventos** (`src/systems/Links.js`); evolução faz reação com `also`; `registerWeapon()`;
+  verificador `npm run check` (ficha incompleta, parceira inexistente, laço com evento que ninguém emite,
+  guardião sem arte...)
+- ✅ **Leva 3** ([`ARMAS_E_COMBOS.md`](ARMAS_E_COMBOS.md)): **5 armas por elemento** — Açoite de Urtiga,
+  Fogueira de São João, Miragem, Boleadeira, Bola de Ouro, Tambor do Trovão (verbos novos: corpo a corpo,
+  armadilha, isca, amarrar, ricochete, onda); **6 evoluções em ciclo** que fazem reação sozinhas; **10 laços**
+  de dupla (aviso, pausa e carta); **3 guardiões** — Comadre Fulozinha, Mãe-do-Ouro e Anhangá (o veado
+  branco, com poses de queda próprias) — liberados na Fogueira nv 4 com **feito** (minichefes, baús, "desviou
+  de tudo") + moedas. Medido no laboratório (dentro da faixa das antigas). Elemento novo: analisado e
+  **adiado** (ver a análise no doc). 👤 sentir no aparelho; rever preços com a simulação de economia
 - ✅ **Lendas × armas** (pesquisa de lore em `TEMA_FOLCLORE.md`): **Saci começa com o Redemoinho** (era o
   Raio; a lenda e a própria arte dele são o redemoinho), o **Bumerangue virou a Vara Encantada** da Caipora
   (bumerangue é australiano; a lenda dá a ela uma vara) com arte nova na mão, no voo e no ícone, a evolução

@@ -1,5 +1,6 @@
 // Player — Guardião da Floresta.
 // Diferenciais: Despertar (R) e Dash (Shift/Space).
+import { LinkSet } from '../systems/Links.js';
 import { PLAYER, GAME, COLORS, RESONANCE } from '../config.js';
 
 
@@ -75,6 +76,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.critChance = 0.08;   // 8% base
     this.critMult = 2.0;      // 2x dano
     this.dmgTakenMult = 1;    // Casca de Carvalho (armadura %)
+    this.links = new LinkSet(this); // laços de dupla (systems/Links.js)
     this.luck = 0;            // Trevo da Sorte (+% drops)
 
     // Multiplicadores de bênçãos (setados via BLESSINGS.apply)
@@ -103,8 +105,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.recomputeResonance();
   }
 
+  // Arma do arsenal pela chave BASE (a evolução responde pela base dela)
+  weaponOf(baseKey) {
+    return this.weapons.find((w) => (w.baseKey ?? w.key) === baseKey) ?? null;
+  }
+
   // Ressonância elemental (ver RESONANCE): recalcula quando o arsenal muda.
   recomputeResonance() {
+    this.links.recompute(); // laços dependem do mesmo arsenal
     const count = { fire: 0, ice: 0, bolt: 0 };
     for (const w of this.weapons) if (w.def?.element in count) count[w.def.element]++;
     const prev = this.resonance ?? { fire: 1, ice: 1, bolt: 1 };

@@ -12,11 +12,14 @@ Roda 100% offline.
 
 ## Conteúdo
 
-- **9 armas**, 3 por elemento (fogo: Cajado, Vara Encantada, Sopro Flamejante;
-  gelo: Aura Gélida, Orbe Gélido, Granizo; raio: Raio Concentrado, Vaga-lumes,
-  Redemoinho) e **9 evoluções** (arma nível 5 + arma parceira) — ver
-  `docs/ARMAS_E_COMBOS.md`
-- **4 personagens** jogáveis (Curupira, Caipora, Iara, Saci), cada um com a arma
+- **15 armas**, 5 por elemento (fogo: Cajado, Vara Encantada, Sopro Flamejante,
+  Açoite de Urtiga, Fogueira de São João; gelo: Aura Gélida, Orbe Gélido, Granizo,
+  Miragem, Boleadeira; raio: Raio Concentrado, Vaga-lumes, Redemoinho, Bola de Ouro,
+  Tambor do Trovão), **15 evoluções** (arma nível 5 + parceira) e **10 laços** de
+  dupla — ver `docs/ARMAS_E_COMBOS.md`; para criar conteúdo, `docs/CONTEUDO.md`
+  e `npm run check`
+- **7 personagens** jogáveis (Curupira, Caipora, Iara, Saci, Comadre Fulozinha,
+  Mãe-do-Ouro, Anhangá), cada um com a arma
   da sua lenda e estilo próprios — ver `docs/TEMA_FOLCLORE.md`
 - **Roteiro de partida**: enxames, cercos, minichefes (Mula sem Cabeça, Corpo-Seco)
   e o chefe final, o Mapinguari, no fim da partida — cada um com **golpes especiais

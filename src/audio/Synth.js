@@ -266,6 +266,42 @@ const SFX = {
     const f = 900 + t * 3600;
     return (Math.sin(TAU * osc(s, "ph", f)) * 0.4 + sq(osc(s, "ph2", f * 2), 0.25) * 0.1) * env(t, 0.005, 0.07) + lp(s, noise(), 0.5) * env(t, 0.002, 0.04) * 0.3;
   }],
+  // ---- armas da leva 3 ----
+  sfx_lash: [0.26, (t, s) => {
+    // açoite: sopro curto que sobe e um ESTALO seco no fim
+    const swish = lp(s, noise(), 0.05 + Math.min(1, t / 0.12) * 0.5) * (t < 0.12 ? t / 0.12 : 0) * 0.6;
+    const crack = t > 0.11 ? noise() * Math.exp(-(t - 0.11) * 140) * 1.2 : 0;
+    return swish + crack;
+  }],
+  sfx_goldball: [0.4, (t, s) => {
+    // bola de ouro: plim metálico (dois parciais inarmônicos)
+    return (Math.sin(TAU * osc(s, "ph", 1320)) * 0.5 + Math.sin(TAU * osc(s, "ph2", 3170)) * 0.25) * env(t, 0.002, 0.12);
+  }],
+  sfx_mirage: [0.9, (t, s) => {
+    // miragem: acorde trêmulo que aparece e some (assombração)
+    const trem = 0.6 + 0.4 * Math.sin(t * 38);
+    const x = Math.sin(TAU * osc(s, "ph", 660)) + Math.sin(TAU * osc(s, "ph2", 663.5)) * 0.8 + Math.sin(TAU * osc(s, "ph3", 990)) * 0.5;
+    return x * 0.3 * trem * Math.sin(Math.min(1, t / 0.9) * Math.PI);
+  }],
+  sfx_bonfire: [0.6, (t, s) => {
+    // fogueira acendendo: sopro grave que cresce + estalos
+    if (s.pop == null) s.pop = 0;
+    if (rnd() < 0.003) s.pop = 0.6 + rnd() * 0.4;
+    s.pop *= 0.96;
+    return lp(s, noise(), 0.05 + t * 0.4) * env(t, 0.08, 0.25) * 1.2 + noise() * s.pop * 0.4;
+  }],
+  sfx_bolas: [0.45, (t, s) => {
+    // boleadeira: zumbido de corda girando (ruído modulado pelo giro)
+    const spin = 0.5 + 0.5 * Math.sin(t * 2 * Math.PI * (14 + t * 20));
+    return lp(s, noise(), 0.3) * spin * env(t, 0.02, 0.2);
+  }],
+  sfx_drum: [0.7, (t, s) => {
+    // tambor do trovão: pancada grave de pele + ribombo
+    const hit = Math.sin(TAU * osc(s, "ph", 62 + 70 * Math.exp(-t * 20))) * env(t, 0.002, 0.22);
+    const skin = lp(s, noise(), 0.2) * env(t, 0.001, 0.03);
+    const rumble = lp(s, noise(), 0.03, "hp") * 4 * env(t, 0.05, 0.3);
+    return Math.tanh((hit * 1.3 + skin + rumble) * 1.4);
+  }],
   sfx_weak: [0.5, (t, s) => {
     // ponto fraco aberto: "plim" duplo dourado (chama o ataque)
     const n = t < 0.1 ? 88 : 93;
