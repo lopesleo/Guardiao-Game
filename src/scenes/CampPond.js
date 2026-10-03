@@ -330,8 +330,18 @@ export const CampPond = {
     });
     this.sound.play("sfx_dash", { volume: 0.3, rate: 1.4 });
     f.hint = text(this, this.W / 2, this.H - 40, "Espere a boia afundar…", { size: 20, color: CSS.goldHi, origin: 0.5, stroke: true }).setScrollFactor(0).setDepth(this.D_HUD + 8);
-    f.onDown = () => this._fishTap();
+    // "Segurar" = um dedo que DESCEU no jogo durante a pescaria. Antes valia qualquer
+    // ponteiro pressionado, e o polegar apoiado no joystick (zona fora do canvas, que o
+    // Phaser também registra) deixava a zona verde subindo sem parar.
+    f.held = new Set();
+    f.onDown = (pt) => {
+      f.held.add(pt.id);
+      this._fishTap();
+    };
+    f.onUp = (pt) => f.held.delete(pt.id);
     this.input.on("pointerdown", f.onDown);
+    this.input.on("pointerup", f.onUp);
+    this.input.on("pointerupoutside", f.onUp);
     f.onKey = () => this._fishTap();
     f.keys.E.on("down", f.onKey);
     f.keys.SPACE.on("down", f.onKey);
@@ -502,7 +512,10 @@ export const CampPond = {
 
   _fightUpdate(f, dt) {
     const F = FISHING;
-    const hold = this.input.manager.pointers.some((pt) => pt.isDown) || f.keys.E.isDown || f.keys.SPACE.isDown;
+    // um dedo que o Phaser já dá como solto sai da conta (evento de soltar perdido)
+    const ptrs = this.input.manager.pointers;
+    for (const id of f.held) if (!ptrs[id]?.isDown) f.held.delete(id);
+    const hold = f.held.size > 0 || f.keys.E.isDown || f.keys.SPACE.isDown;
     // passo fixo de 60 Hz (a física do Stardew é por quadro)
     f.acc += dt;
     const step = 1 / F.STEP_HZ;
@@ -571,6 +584,8 @@ export const CampPond = {
     f.ending = true;
     const done = () => {
       this.input.off("pointerdown", f.onDown);
+      this.input.off("pointerup", f.onUp);
+      this.input.off("pointerupoutside", f.onUp);
       f.keys.E.off("down", f.onKey);
       f.keys.SPACE.off("down", f.onKey);
       this.events.off("update", f.tick);

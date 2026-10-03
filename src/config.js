@@ -79,6 +79,15 @@ export const BOSS = {
 
   SPEED: 60,
   ROAR_DURATION_MS: 1500,
+
+  // Couraça da Podridão: com vida fixa, uma build forte (~300 de dano/s no alvo, nível 15)
+  // libertava o chefe em ~7 s, antes de ver um golpe. O chefe mede o dano que vem levando
+  // (média móvel de TAU_S) e, acima do ritmo de referência (vida ÷ TARGET_S), resiste ao
+  // excesso: dano efetivo = ref × (ritmo/ref)^KEEP. Quem bate mais ainda vence antes
+  // (lab 2026-10-02, Guardião, herói circulando o chefe: ~35 dano/s → ~60 s, ~120 → ~45 s,
+  // ~300 → ~35 s), mas sempre há luta. O ponto fraco (EXPOSTO) multiplica DEPOIS da
+  // couraça: desviar continua valendo.
+  ARMOR: { TARGET_S: 60, KEEP: 0.25, TAU_S: 3 },
 };
 
 // Golpes especiais dos chefes (ver docs/CHEFES.md). Regras de JUSTIÇA que valem para todos:
@@ -96,6 +105,13 @@ export const BOSS_FIGHT = {
   FLAWLESS_MIN_SPECIALS: 3,
   FLAWLESS_WOOD: { MINIBOSS: 1, BOSS: 2 },
   ENGAGE_DIST: 560, // minichefe só usa especial dentro da tela (nunca de fora da visão)
+  AIM_BIAS: 0.4, // mira automática: o chefe "conta" como se estivesse a 40% da distância
+  // Horda ao nascer o chefe: antes sumia TODA e a luta ficava vazia e fácil. Ele espanta os
+  // de tiro (tiro somado aos avisos dos golpes deixaria de ser "evitável andando"), os do
+  // lugar onde chega (CLEAR_R) e o excesso: ficam os MAX_ALIVE mais perto do herói. Não nasce
+  // horda nova na luta (lab 2026-10-02: com reforço contínuo os lobos "comiam" a mira
+  // automática e builds fracas levavam 2–5 min); os reforços são os que o chefe invoca.
+  ADDS: { MAX_ALIVE: 8, CLEAR_R: 300, RANGED: ["goblin", "crow", "mage"] },
 
   MULA: {
     GAP_MS: [1700, 1100], // fôlego entre golpes (fase 1, fase 2 abaixo de 50%)

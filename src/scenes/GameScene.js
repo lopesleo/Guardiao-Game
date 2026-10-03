@@ -1151,8 +1151,24 @@ export class GameScene extends Phaser.Scene {
     this.bgMusic = this.sound.add(this.biome.bossMusic ?? "music_boss", { loop: true, volume: 0.4 });
     this.bgMusic.play();
     this.cameras.main.shake(500, 0.015);
-    // Limpa hordas para o boss respirar
+    // O chefe espanta os de tiro (tiro + avisos dos golpes deixaria de ser justo), os do
+    // lugar onde ele chega e o excesso; os mais perto do herói ficam (ver BOSS_FIGHT.ADDS)
+    const A = BOSS_FIGHT.ADDS;
+    // minichefe também sai: dois chefes de uma vez não é justo
+    this._scatter((e) => e.miniBoss || A.RANGED.includes(e._kind) || Phaser.Math.Distance.Between(e.x, e.y, bx, by) <= A.CLEAR_R);
+    const rest = [];
+    this.enemyPool.forEachActive((e) => rest.push(e));
+    const d2 = (e) => (e.x - this.player.x) ** 2 + (e.y - this.player.y) ** 2;
+    const keep = new Set(rest.sort((a, b) => d2(a) - d2(b)).slice(0, A.MAX_ALIVE));
+    this._scatter((e) => !keep.has(e));
+  }
+
+  // Inimigos que a Podridão larga: somem numa fumacinha (sem abate, sem gema)
+  _scatter(filter = () => true) {
     this.enemyPool.forEachActive((e) => {
+      if (!filter(e)) return;
+      const puff = this.add.image(e.x, e.y, "px_puff").setScale(3).setTint(0x8a3fa0).setDepth(e.y + 1);
+      this.tweens.add({ targets: puff, y: e.y - 30, alpha: 0, scale: 1, duration: 500, onComplete: () => puff.destroy() });
       e.deactivate();
       this.enemyPool.release(e);
     });
@@ -1178,6 +1194,7 @@ export class GameScene extends Phaser.Scene {
     this.boss.deactivate?.();
     this.boss.setActive(false).setVisible(false);
     this.hud.clearBoss();
+    this._scatter(); // liberto o chefe, a horda que ele trazia se desfaz
     this._freeBoss(bx, by, bs);
     // Recompensa
     this._coinsGainedThisRun += META.COIN_BOSS_WIN;

@@ -40,6 +40,25 @@ não tinha como escapar.**
   +1 Madeira Ancestral no minichefe, +2 no Mapinguari.
 - **Nome do golpe** aparece sob a barra do chefe (ensina e dá sabor).
 
+## Força do chefe e a horda
+
+- **Couraça da Podridão** (`BOSS.ARMOR`): com vida fixa, uma build forte (nível 15, ~300
+  de dano/s no chefe) libertava o Mapinguari em ~7 s, antes de ver um golpe. O chefe mede
+  o dano que vem levando (média dos últimos ~3 s) e, acima do ritmo que daria uma luta de
+  60 s, resiste ao excesso: dano efetivo = ref × (ritmo/ref)^0,25. Quem bate mais ainda vence
+  antes, mas sempre há luta. O ponto fraco multiplica **depois** da couraça. A barra não
+  mostra números, então o ajuste é contínuo e sem saltos. Vale para todo chefe de bioma.
+- **A horda não some mais** (`BOSS_FIGHT.ADDS`): ao nascer, o chefe espanta os inimigos de
+  tiro (tiro + aviso de golpe deixaria de ser "evitável andando"), os minichefes, os que estão
+  onde ele chega e o excesso; ficam os 8 mais perto do herói. Não nasce horda nova durante a
+  luta: com reforço contínuo os lobos "comiam" a mira automática e builds fracas levavam de
+  2 a 5 min. Libertado o chefe, a horda dele se desfaz.
+- **Mira automática** conta a distância até a **borda** do chefe, com preferência (×0,4), para
+  a mira não largar o chefe com lobos em volta.
+- **Medido** (lab 2026-10-02, partida simulada de 7 min com cartas ao acaso, herói circulando
+  o chefe parado, Guardião): ~35–50 dano/s → 55–65 s; ~100–140 → 45–50 s; ~300–370 → ~30 s;
+  ~600 (Aprendiz) → 24 s. Antes: 300 de dano/s → 7 s.
+
 ## Repertório
 
 ### Mula sem Cabeça (minichefe, veloz, fogo)

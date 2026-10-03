@@ -1,7 +1,7 @@
 // Armas: classes das armas da leva 1 e 2 + evoluções (a leva 3 mora em WeaponsLeva3.js).
 // Números e ficha (texto, ícone, desbloqueio) em WEAPONS (config.js). Para criar uma
 // arma nova: ver docs/CONTEUDO.md — classe que estende Weapon + registerWeapon().
-import { WEAPONS, COLORS, GAME, ELEMENT } from "../config.js";
+import { WEAPONS, COLORS, GAME, ELEMENT, BOSS_FIGHT } from "../config.js";
 import { shockwave } from "../art/Telegraph.js";
 import { Pix } from "../art/PixelArt.js";
 import { PAL } from "../art/Palette.js";
@@ -388,14 +388,15 @@ export class Weapon {
         best = e;
       }
     });
-    // Boss (não está no pool — checado separado)
+    // Boss (não está no pool — checado separado). Conta da BORDA do corpo (ele é grande)
+    // e com preferência de mira: com a horda em volta, a mira não pode largar o chefe
     const boss = this.scene.boss;
     if (boss && boss.active) {
-      const dx = boss.x - this.owner.x,
-        dy = boss.y - this.owner.y;
-      const d2 = dx * dx + dy * dy;
-      if (d2 < bestSq && d2 <= rangeSq) {
-        bestSq = d2;
+      const edge = Math.max(0, Math.hypot(boss.x - this.owner.x, boss.y - this.owner.y) - (boss.body?.halfWidth ?? 0));
+      const d2 = edge * edge;
+      const pref = edge * BOSS_FIGHT.AIM_BIAS;
+      if (pref * pref < bestSq && d2 <= rangeSq) {
+        bestSq = pref * pref;
         best = boss;
       }
     }
