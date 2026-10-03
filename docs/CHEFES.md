@@ -43,6 +43,8 @@ não tinha como escapar.**
 ## Repertório
 
 ### Mula sem Cabeça (minichefe, veloz, fogo)
+Na Caatinga ela vira a **Cabra Cabriola**: mesmos golpes e números, arte, nome e faixas
+próprios (`BIOMES.caatinga.minis`).
 | Golpe | Aviso | Como escapar | Depois |
 |---|---|---|---|
 | **Galope em Chamas** | empina; faixa travada na direção do herói | passo para o lado | deixa **rastro de fogo**; fica OFEGANTE (ponto fraco) |
