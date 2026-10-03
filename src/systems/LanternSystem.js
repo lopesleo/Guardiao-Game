@@ -5,14 +5,15 @@
 // Dá motivo para andar pelo mapa e momentos de alívio no meio da horda.
 import { LANTERN, GAME, ARENA } from "../config.js";
 import { Analytics } from "./Analytics.js";
+import { tr } from "../i18n/i18n.js";
 
 const S = GAME.PIXEL_SCALE;
 
 const ITEMS = {
-  fruit: { tex: "px_item_fruit", glow: 0xe8434f, name: "Caju" },
-  vacuum: { tex: "px_item_vacuum", glow: 0x9ccf62, name: "Vácuo de Seiva" },
-  clock: { tex: "px_item_clock", glow: 0x5cc8ff, name: "Relógio da Mata" },
-  breath: { tex: "px_item_breath", glow: 0xffe58f, name: "Sopro Ancestral" },
+  fruit: { tex: "px_item_fruit", glow: 0xe8434f, name: tr("Caju") },
+  vacuum: { tex: "px_item_vacuum", glow: 0x9ccf62, name: tr("Vácuo de Seiva") },
+  clock: { tex: "px_item_clock", glow: 0x5cc8ff, name: tr("Relógio da Mata") },
+  breath: { tex: "px_item_breath", glow: 0xffe58f, name: tr("Sopro Ancestral") },
 };
 
 function pickWeighted(table) {
@@ -216,7 +217,7 @@ export class LanternSystem {
       anim: b?.anim ?? "lantern_glow",
       color: b?.color ?? 0x5cc8ff,
       spark: b?.spark ?? 0xbfeaff,
-      hint: b?.hint ?? "Lanternas de cogumelo guardam presentes da floresta.\nEncoste para quebrar!",
+      hint: b?.hint ?? tr("Lanternas de cogumelo guardam presentes da floresta.\nEncoste para quebrar!"),
       hintId: b ? `lantern_${this.scene.biomeId}` : "lantern",
     };
   }

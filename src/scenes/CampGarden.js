@@ -13,6 +13,7 @@ import { PAL, CSS, hex } from "../art/Palette.js";
 import { cropIcon } from "../art/Garden.js";
 import { text, drawFrame, haptic } from "../ui/Theme.js";
 import { Modal } from "../ui/Widgets.js";
+import { tr } from "../i18n/i18n.js";
 
 const S = GAME.PIXEL_SCALE;
 const GX = 20,
@@ -24,7 +25,7 @@ const PLOT_W = 72,
 const BARN_X = -300,
   BARN_Y = 450;
 const NEED_ICON = { water: "ico_water", weed: "ico_weed", pest: "ico_pest" };
-const NEED_VERB = { water: "REGAR", weed: "ARRANCAR MATO", pest: "TIRAR LAGARTA" };
+const NEED_VERB = { water: tr("REGAR"), weed: tr("ARRANCAR MATO"), pest: tr("TIRAR LAGARTA") };
 const Q_COLOR = [CSS.muted, hex(PAL.s4), CSS.goldHi];
 const HOLD_MS = 450; // segurar a semente = plantar em todos os vazios
 
@@ -96,7 +97,7 @@ export const CampGarden = {
     shadow._ra = 0.55; // opacidade final de cada sombra na revelação
     crowShadow._ra = 0.5;
     fade.push(crow, crowShadow, can);
-    this._addInteract({ x: BARN_X, y: BARN_Y, top: BARN_Y - barn.displayHeight, r: 110, name: "CELEIRO", verb: "CELEIRO", hiddenUntil: "garden", action: () => this._showBarn() });
+    this._addInteract({ x: BARN_X, y: BARN_Y, top: BARN_Y - barn.displayHeight, r: 110, name: tr("CELEIRO"), verb: tr("CELEIRO"), hiddenUntil: "garden", action: () => this._showBarn() });
     // Enquanto em ruínas: tudo escondido, ruína no meio da horta
     if (!shown) fade.forEach((o) => o.setAlpha(0));
     g.ruin = shown ? null : this.add.image(GX, GY + 30, "camp_ruin").setOrigin(0.5, 1).setScale(S).setDepth(GY + 30);
@@ -113,7 +114,7 @@ export const CampGarden = {
       },
     };
     // Ruína: examinar (some quando a Horta aparece)
-    this._addInteract({ x: GX, y: GY + 30, top: GY - 70, r: 130, name: "HORTA", verb: "", ruinOf: "garden", hideWhenShown: "garden", action: () => this._say("Cure a floresta jogando partidas para revelar o que há aqui.") });
+    this._addInteract({ x: GX, y: GY + 30, top: GY - 70, r: 130, name: tr("HORTA"), verb: "", ruinOf: "garden", hideWhenShown: "garden", action: () => this._say(tr("Cure a floresta jogando partidas para revelar o que há aqui.")) });
     this._refreshGardenWorld();
   },
 
@@ -147,17 +148,17 @@ export const CampGarden = {
   // Nome/ação do canteiro (lido pelo aviso e pelo botão de ação)
   _plotLabel(i) {
     const gd = this.garden;
-    if (i >= gd.open) return { key: "locked", name: "MATO", verb: "EXAMINAR" };
+    if (i >= gd.open) return { key: "locked", name: tr("MATO"), verb: tr("EXAMINAR") };
     const st = gd.state(i);
     const p = gd.plots[i];
-    if (st === "empty") return { key: st, name: "CANTEIRO VAZIO", verb: "PLANTAR" };
+    if (st === "empty") return { key: st, name: tr("CANTEIRO VAZIO"), verb: tr("PLANTAR") };
     const name = GARDEN.CROPS[p.crop].name.toUpperCase();
     if (st === "need") {
       const type = gd.need(p).type;
       return { key: `need_${type}`, name, verb: NEED_VERB[type] };
     }
-    if (st === "ripe") return { key: st, name: `${name} · ${GARDEN.QUALITY[gd.quality(p)].toUpperCase()}`, verb: "COLHER" };
-    return { key: st, name, verb: "VER" };
+    if (st === "ripe") return { key: st, name: `${name} · ${GARDEN.QUALITY[gd.quality(p)].toUpperCase()}`, verb: tr("COLHER") };
+    return { key: st, name, verb: tr("VER") };
   },
 
   // Destaque pulsando em volta do canteiro alvo
@@ -173,16 +174,16 @@ export const CampGarden = {
 
   _plotAction(i) {
     const gd = this.garden;
-    if (i >= gd.open) return this._toast("Melhore a Horta com o João-de-barro para abrir este canteiro");
+    if (i >= gd.open) return this._toast(tr("Melhore a Horta com o João-de-barro para abrir este canteiro"));
     const st = gd.state(i);
     if (st === "empty") {
       if (gd.available().length) this._showSeedBar(i);
-      else this._toast("Sem sementes agora");
+      else this._toast(tr("Sem sementes agora"));
     } else if (st === "need") {
       const type = gd.care(i);
       if (type) this._plotFx(i, "care", type);
     } else if (st === "ripe") this._harvestPlot(i);
-    else this._toast(`${GARDEN.CROPS[gd.plots[i].crop].name}: pronta em ${fmtDuration(gd.remainingMs(gd.plots[i]))}`);
+    else this._toast(tr("{0}: pronta em {1}", GARDEN.CROPS[gd.plots[i].crop].name, fmtDuration(gd.remainingMs(gd.plots[i]))));
     this._refreshGardenWorld();
   },
 
@@ -202,7 +203,7 @@ export const CampGarden = {
       if (!this.scene.isActive()) return;
       if (this._modals.length || this._cutscene) return void this.time.delayedCall(500, tryIt);
       const planted = this.garden.plots.some((p, i) => i < this.garden.open && p);
-      this._say(planted ? "Isso! Desta vez leva alguns minutos. Jogue uma partida e volte." : "Isso! Agora plante de novo: desta vez leva alguns minutos. Jogue uma partida e volte.");
+      this._say(planted ? tr("Isso! Desta vez leva alguns minutos. Jogue uma partida e volte.") : tr("Isso! Agora plante de novo: desta vez leva alguns minutos. Jogue uma partida e volte."));
     };
     this.time.delayedCall(700, tryIt);
   },
@@ -278,7 +279,7 @@ export const CampGarden = {
     c.add(bg);
     const tut = !gd.data.tutorialDone; // 1º plantio: acelerado, só para ensinar o ciclo
     // Uma linha só (em tela pequena quebrava e a 2ª linha subia na moldura e no X)
-    const head = text(this, 0, -CH / 2 - 24, tut ? "PRIMEIRO PLANTIO  ·  a Anciã acelera a mata: cresce em 30 s" : "PLANTAR  ·  segure para plantar em todos os vazios", {
+    const head = text(this, 0, -CH / 2 - 24, tut ? tr("PRIMEIRO PLANTIO  ·  a Anciã acelera a mata: cresce em 30 s") : tr("PLANTAR  ·  segure para plantar em todos os vazios"), {
       size: 16,
       color: CSS.goldHi,
       origin: 0.5,
@@ -382,7 +383,7 @@ export const CampGarden = {
 
   _showBarn() {
     const d = this.meta.data;
-    const m = new Modal(this, { title: "CELEIRO", subtitle: "Tudo o que você colheu e as sementes guardadas", w: 760, h: 560 });
+    const m = new Modal(this, { title: tr("CELEIRO"), subtitle: tr("Tudo o que você colheu e as sementes guardadas"), w: 760, h: 560 });
     const list = this._modalList(m);
     const row = (icon, name, right) =>
       list.addRow({
@@ -397,8 +398,8 @@ export const CampGarden = {
         },
       });
     const crops = Object.keys(GARDEN.CROPS).filter((id) => pantryCount(d, id) > 0);
-    this._section(list, "COLHEITA");
-    if (!crops.length) list.addRow({ h: 40, build: (c, w) => c.add(text(this, w / 2, 20, "Nada ainda — colha na horta!", { size: 16, color: CSS.dim, origin: 0.5 })) });
+    this._section(list, tr("COLHEITA"));
+    if (!crops.length) list.addRow({ h: 40, build: (c, w) => c.add(text(this, w / 2, 20, tr("Nada ainda — colha na horta!"), { size: 16, color: CSS.dim, origin: 0.5 })) });
     for (const id of crops)
       row(cropIcon(id), GARDEN.CROPS[id].name, (c, w) => {
         let x = w - 20;
@@ -413,9 +414,9 @@ export const CampGarden = {
       });
     const fish = Object.keys(FISHING.FISH).filter((id) => pantryCount(d, id) > 0 || d.fishRecords?.[id]);
     if (fish.length) {
-      this._section(list, "PEIXES");
+      this._section(list, tr("PEIXES"));
       for (const id of fish)
-        row(`ico_${id}`, `${FISHING.FISH[id].name}  ·  recorde ${d.fishRecords?.[id] || 0} cm`, (c, w) => {
+        row(`ico_${id}`, tr("{0}  ·  recorde {1} cm", FISHING.FISH[id].name, d.fishRecords?.[id] || 0), (c, w) => {
           let x = w - 20;
           const q = d.pantry[id] || [0, 0, 0];
           for (let k = 2; k >= 0; k--) {
@@ -429,7 +430,7 @@ export const CampGarden = {
     }
     const seeds = Object.entries(d.seeds || {}).filter(([, n]) => n > 0);
     if (seeds.length) {
-      this._section(list, "SEMENTES RARAS");
+      this._section(list, tr("SEMENTES RARAS"));
       for (const [id, n] of seeds)
         row(cropIcon(id), GARDEN.CROPS[id].name, (c, w) => {
           c.add(this.add.image(w - 76, 28, "ico_seed").setScale(2.2));

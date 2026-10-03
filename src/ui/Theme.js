@@ -3,17 +3,24 @@
 // de produto em vez de "caixas do Phaser".
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { Settings } from "../systems/Settings.js";
+import { tr, lang, isCJK, cjkWrap } from "../i18n/i18n.js";
 
 // Fontes selecionáveis (acessibilidade). `k` compensa o tamanho aparente: a
 // Jersey 15 é condensada e "pequena", a Atkinson (feita para baixa visão) é larga.
+// Japonês e chinês: Fusion Pixel 12px (OFL; recortada só com os caracteres do jogo,
+// ver tools/font-subset.py) nas duas opções; a "Legível" só fica maior.
+const CJK = { ja: '"Fusion Pixel JA", "Jersey 15", monospace', zh: '"Fusion Pixel ZH", "Jersey 15", monospace' };
+const CJK_K = 1;
+// Nomes dos idiomas (日本語, 简体中文) em qualquer idioma: recorte mínimo da Fusion Pixel
+export const LANG_FONT = '"Jersey 15", "Fusion Pixel Langs", monospace';
 export const FONTS = {
-  pixel: { label: "Pixel", family: '"Jersey 15", monospace', k: 1, style: "normal" },
-  legible: { label: "Legível", family: '"Atkinson Hyperlegible", sans-serif', k: 0.85, style: "bold" },
+  pixel: { label: tr("Pixel"), family: isCJK ? CJK[lang] : '"Jersey 15", monospace', k: isCJK ? CJK_K : 1, style: "normal" },
+  legible: { label: tr("Legível"), family: isCJK ? CJK[lang] : '"Atkinson Hyperlegible", sans-serif', k: isCJK ? CJK_K * 1.15 : 0.85, style: isCJK ? "normal" : "bold" },
 };
 export const TEXT_SIZES = [
-  { label: "Normal", k: 1 },
-  { label: "Grande", k: 1.2 },
-  { label: "Muito grande", k: 1.4 },
+  { label: tr("Normal"), k: 1 },
+  { label: tr("Grande"), k: 1.2 },
+  { label: tr("Muito grande"), k: 1.4 },
 ];
 export const MIN_TEXT = 16; // piso de leitura na escala da Jersey (antes havia 14 px)
 const MIN_PX = 14; // …e piso absoluto na tela, qualquer fonte/tamanho
@@ -51,18 +58,22 @@ const fitSize = (s) => (SMALL_SCREEN && s <= 24 ? Math.round(s * (s <= 16 ? 1.3 
 export function textPx(size) {
   const base = Math.max(MIN_TEXT, fitSize(size));
   const k = curFont().k * (TEXT_SIZES[Settings.get("textSize")]?.k ?? 1);
-  return Math.max(MIN_PX, Math.round(base * (size > 26 ? 1 + (k - 1) * 0.5 : k)));
+  const px = Math.max(MIN_PX, Math.round(base * (size > 26 ? 1 + (k - 1) * 0.5 : k)));
+  // Fusion Pixel tem grade de 12 px: com o texto em resolução 2, múltiplos de 6 dão pixel
+  // inteiro por ponto da fonte (fora disso uns traços engrossam e outros somem)
+  return isCJK ? Math.max(12, Math.round(px / 6) * 6) : px;
 }
 
 export function text(scene, x, y, str, o = {}) {
   const style = {
-    fontFamily: fontFamily(),
+    fontFamily: o.family ?? fontFamily(),
     fontSize: `${textPx(o.size ?? 18)}px`,
     fontStyle: fontStyle(), // pixel: peso único (negrito sintético borra); Atkinson já é Bold
     color: o.color ?? CSS.txt,
     align: o.align ?? "left",
   };
-  if (o.wrap) style.wordWrap = { width: o.wrap, useAdvancedWrap: true };
+  // japonês/chinês não têm espaços: quebra por caractere
+  if (o.wrap) style.wordWrap = isCJK ? { width: o.wrap, callback: cjkWrap } : { width: o.wrap, useAdvancedWrap: true };
   if (o.lineSpacing != null) style.lineSpacing = o.lineSpacing;
   if (o.stroke !== false && (o.stroke || o.size >= 28)) {
     style.stroke = o.stroke === true || !o.stroke ? CSS.ink : o.stroke;
@@ -184,6 +195,7 @@ export class Button extends Phaser.GameObjects.Container {
     if (label != null) {
       this.label = text(scene, lx, -1, label, {
         size,
+        family: o.family,
         color: o.color ?? CSS.txt,
         origin: 0.5,
         align: "center",

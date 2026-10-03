@@ -9,6 +9,7 @@ import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.
 import { AdService } from "../systems/AdService.js";
 import { Analytics } from "../systems/Analytics.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
+import { tr } from "../i18n/i18n.js";
 
 export class GameOverScene extends Phaser.Scene {
   constructor() {
@@ -30,19 +31,19 @@ export class GameOverScene extends Phaser.Scene {
     this._backdrop(won);
 
     // Título
-    const title = endlessS > 0 ? "NOITE ETERNA" : won ? "VITÓRIA!" : quit ? "RECUO" : "DERROTA";
+    const title = endlessS > 0 ? tr("NOITE ETERNA") : won ? tr("VITÓRIA!") : quit ? tr("RECUO") : tr("DERROTA");
     const color = won ? CSS.goldHi : quit ? CSS.muted : CSS.redHi;
     const t = text(this, cx, 78, title, { size: 80, color, origin: 0.5, stroke: true, strokeW: 10, shadowY: 6 });
     t.setScale(0.3).setAlpha(0);
     this.tweens.add({ targets: t, scale: 1, alpha: 1, duration: 420, ease: "Back.easeOut" });
     const sub =
       endlessS > 0
-        ? `${biome?.bossName ?? "Mapinguari"} libertado e mais ${formatTime(endlessS * 1000)} na escuridão${endlessRecord ? " — NOVO RECORDE!" : "."}`
+        ? tr("{0} libertado e mais {1} na escuridão{2}", biome?.bossName ?? tr("Mapinguari"), formatTime(endlessS * 1000), endlessRecord ? tr(" — NOVO RECORDE!") : ".")
         : won
-          ? biome?.freed ?? "O Mapinguari está livre da Podridão. A floresta respira."
+          ? biome?.freed ?? tr("O Mapinguari está livre da Podridão. A floresta respira.")
           : quit
-            ? "Você recuou para lutar outro dia."
-            : "A floresta caiu… por enquanto.";
+            ? tr("Você recuou para lutar outro dia.")
+            : tr("A floresta caiu… por enquanto.");
     text(this, cx, 132, sub, { size: 22, color: CSS.muted, origin: 0.5 });
 
     // Painel de resultados — altura CALCULADA (antes: fixa em 300, e com Madeira +
@@ -52,17 +53,17 @@ export class GameOverScene extends Phaser.Scene {
       py = 164;
 
     const stats = [
-      { icon: "ico_hourglass", label: "Tempo", value: elapsedMs / 1000, fmt: (v) => formatTime(v * 1000) },
-      { icon: "ico_skull", label: "Abates", value: kills, fmt: (v) => String(Math.round(v)) },
+      { icon: "ico_hourglass", label: tr("Tempo"), value: elapsedMs / 1000, fmt: (v) => formatTime(v * 1000) },
+      { icon: "ico_skull", label: tr("Abates"), value: kills, fmt: (v) => String(Math.round(v)) },
       // Moedas da PARTIDA (é o que o anúncio dobra); o prêmio da 1ª vitória vem em linha própria
-      { icon: "ico_coin", label: restedMult > 1 ? `Moedas · descansado +${Math.round((restedMult - 1) * 100)}%` : "Moedas ganhas", value: coinsDoubleable, fmt: (v) => `+${Math.round(v)}`, color: CSS.goldHi },
+      { icon: "ico_coin", label: restedMult > 1 ? tr("Moedas · descansado +{0}%", Math.round((restedMult - 1) * 100)) : tr("Moedas ganhas"), value: coinsDoubleable, fmt: (v) => `+${Math.round(v)}`, color: CSS.goldHi },
     ];
-    if (firstClear > 0) stats.push({ icon: "ico_trophy", label: `Primeira vitória no ${difficulty?.name ?? "Perigo"}`, value: firstClear, fmt: (v) => `+${Math.round(v)}`, color: CSS.goldHi });
-    if (woodGained > 0) stats.push({ icon: "ico_wood", label: "Madeira Ancestral", value: woodGained, fmt: (v) => `+${Math.round(v)}`, color: "#ffc86b" });
-    if (seedsGained > 0) stats.push({ icon: "ico_seed", label: "Sementes raras", value: seedsGained, fmt: (v) => `+${Math.round(v)}`, color: "#ffe58f" });
+    if (firstClear > 0) stats.push({ icon: "ico_trophy", label: tr("Primeira vitória no {0}", difficulty?.name ?? tr("Perigo")), value: firstClear, fmt: (v) => `+${Math.round(v)}`, color: CSS.goldHi });
+    if (woodGained > 0) stats.push({ icon: "ico_wood", label: tr("Madeira Ancestral"), value: woodGained, fmt: (v) => `+${Math.round(v)}`, color: "#ffc86b" });
+    if (seedsGained > 0) stats.push({ icon: "ico_seed", label: tr("Sementes raras"), value: seedsGained, fmt: (v) => `+${Math.round(v)}`, color: "#ffe58f" });
     // Orçamento vertical: tudo acima do botão de anúncio (ou dos botões finais)
     const unlocks = [...newUnlocks];
-    if (unlockedNextDifficulty) unlocks.unshift(`Novo Perigo: ${unlockedNextDifficulty}`);
+    if (unlockedNextDifficulty) unlocks.unshift(tr("Novo Perigo: {0}", unlockedNextDifficulty));
     const adShown = !quit && coinsDoubleable > 0 && AdService.canShow("double_coins");
     const limit = (adShown ? H - 134 - 30 : H - 62 - 36) - 12;
     const HEAD = 62, // faixa "PERIGO · NÍVEL"
@@ -73,7 +74,7 @@ export class GameOverScene extends Phaser.Scene {
     const ph = HEAD + stats.length * rowH + BUILD + FOOT;
     const g = this.add.graphics();
     drawFrame(g, px, py, pw, ph, won ? "gold" : "dark");
-    text(this, cx, py + 30, `PERIGO: ${(difficulty?.name ?? "").toUpperCase()}   ·   NÍVEL ${level}`, { size: 18, color: CSS.muted, origin: 0.5 });
+    text(this, cx, py + 30, tr("PERIGO: {0}   ·   NÍVEL {1}", (difficulty?.name ?? "").toUpperCase(), level), { size: 18, color: CSS.muted, origin: 0.5 });
     const small = rowH < 44,
       tiny = rowH < 34;
     stats.forEach((s, i) => {
@@ -129,7 +130,7 @@ export class GameOverScene extends Phaser.Scene {
     // Dobrar moedas (anúncio premiado, opcional) — só com moedas ganhas
     if (adShown) {
       Analytics.track("ad_offer_show", { placement: "double_coins" });
-      const db = new Button(this, cx, H - 134, 360, 54, `DOBRAR MOEDAS  +${coinsDoubleable}`, async () => {
+      const db = new Button(this, cx, H - 134, 360, 54, tr("DOBRAR MOEDAS  +{0}", coinsDoubleable), async () => {
         if (db._used) return;
         db._used = true;
         db.setEnabled(false);
@@ -141,7 +142,7 @@ export class GameOverScene extends Phaser.Scene {
         }
         new MetaProgression().addCoins(coinsDoubleable);
         this._coinsShown = coinsDoubleable * 2;
-        db.setLabel("MOEDAS DOBRADAS!");
+        db.setLabel(tr("MOEDAS DOBRADAS!"));
         this._coinText?.setText(`+${this._coinsShown}`);
         if (this._coinText) this.tweens.add({ targets: this._coinText, scale: { from: 1.5, to: 1 }, duration: 260, ease: "Back.easeOut" });
         this.sound.play("sfx_coin_cascade", { volume: 0.7 });
@@ -151,8 +152,8 @@ export class GameOverScene extends Phaser.Scene {
 
     // Botões
     const by = H - 62;
-    const again = new Button(this, cx - 170, by, 310, 66, "JOGAR DE NOVO", () => this._go("GameScene"), { size: 26, style: "primary", color: CSS.goldHi });
-    new Button(this, cx + 170, by, 310, 66, "CLAREIRA", () => this._go("CampScene"), { size: 26 });
+    const again = new Button(this, cx - 170, by, 310, 66, tr("JOGAR DE NOVO"), () => this._go("GameScene"), { size: 26, style: "primary", color: CSS.goldHi });
+    new Button(this, cx + 170, by, 310, 66, tr("CLAREIRA"), () => this._go("CampScene"), { size: 26 });
     this.tweens.add({ targets: again, scale: 1.04, duration: 800, yoyo: true, repeat: -1, delay: 1500 });
     this.input.keyboard.on("keydown-ENTER", () => this._go("GameScene"));
     this.input.keyboard.on("keydown-ESC", () => this._go("CampScene"));

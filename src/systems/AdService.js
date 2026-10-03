@@ -13,20 +13,21 @@ import { Analytics } from "./Analytics.js";
 import { DEBUG, isNative } from "./Platform.js";
 import { ADS } from "../config.js";
 import { Clock } from "./Clock.js";
+import { tr } from "../i18n/i18n.js";
 
 const KEY = "guardiao_ads_v1";
 
 // Limites por ponto de anúncio: por partida e por dia (evita abuso e cansaço)
 export const PLACEMENTS = {
-  revive: { perRun: 1, perDay: 99, label: "Reviver" },
-  extra_card: { perRun: 1, perDay: 20, label: "Mais uma carta" },
-  build_speed: { perRun: 99, perDay: 3, label: "Adiantar obra" },
-  double_coins: { perRun: 1, perDay: 20, label: "Dobrar moedas" },
-  extra_reroll: { perRun: 3, perDay: 20, label: "Troca extra" },
-  daily_chest: { perRun: 99, perDay: 1, label: "Baú diário" },
-  extra_banish: { perRun: 1, perDay: 20, label: "Banir extra" },
+  revive: { perRun: 1, perDay: 99, label: tr("Reviver") },
+  extra_card: { perRun: 1, perDay: 20, label: tr("Mais uma carta") },
+  build_speed: { perRun: 99, perDay: 3, label: tr("Adiantar obra") },
+  double_coins: { perRun: 1, perDay: 20, label: tr("Dobrar moedas") },
+  extra_reroll: { perRun: 3, perDay: 20, label: tr("Troca extra") },
+  daily_chest: { perRun: 99, perDay: 1, label: tr("Baú diário") },
+  extra_banish: { perRun: 1, perDay: 20, label: tr("Banir extra") },
   // a roleta vale 1 bênção por partida (CampTree); aqui só um teto de segurança por dia
-  tree_spin: { perRun: 99, perDay: 24, label: "Roleta da Samaúma" },
+  tree_spin: { perRun: 99, perDay: 24, label: tr("Roleta da Samaúma") },
 };
 
 const today = () => Clock.date().toISOString().slice(0, 10);

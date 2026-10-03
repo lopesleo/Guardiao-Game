@@ -6,24 +6,25 @@ import { Notify } from "../systems/Notify.js";
 import { Telemetry } from "../systems/Telemetry.js";
 import { AdMobBridge } from "../systems/AdMobBridge.js";
 import { CSS } from "../art/Palette.js";
-import { text, Button, FONTS, TEXT_SIZES } from "./Theme.js";
+import { text, Button, FONTS, TEXT_SIZES, LANG_FONT } from "./Theme.js";
 import { Modal, Slider, Toggle } from "./Widgets.js";
+import { tr, lang, LANGS, setLang } from "../i18n/i18n.js";
 
 let lastTab = "tela";
 
 export function openSettings(scene, o = {}) {
   const privacyRows = (Telemetry.available() ? 1 : 0) + (AdMobBridge.available() ? 1 : 0);
   const tabs = [
-    ["tela", "ÁUDIO E TELA"],
-    ["jogo", "JOGO"],
+    ["tela", tr("ÁUDIO E TELA")],
+    ["jogo", tr("JOGO")],
   ];
-  if (privacyRows || o.onReset) tabs.push(["dados", "PRIVACIDADE"]);
+  if (privacyRows || o.onReset) tabs.push(["dados", tr("PRIVACIDADE")]);
   const want = o.tab ?? lastTab;
   const tab = tabs.some(([id]) => id === want) ? want : "tela";
   lastTab = tab;
 
   const STEP = 62;
-  const m = new Modal(scene, { title: "OPÇÕES", w: 760, h: 560 });
+  const m = new Modal(scene, { title: tr("OPÇÕES"), w: 760, h: 560 });
 
   // Abas
   const tabW = Math.min(230, (m.w - 60) / tabs.length - 12);
@@ -57,7 +58,7 @@ export function openSettings(scene, o = {}) {
     if (o.restartable) {
       scene.registry.set("reopenSettings", true);
       scene.scene.restart();
-    } else scene._toast?.("Vale a partir da próxima tela");
+    } else scene._toast?.(tr("Vale a partir da próxima tela"));
   };
   const cycle = (label, keys, get, set) => {
     const b = new Button(scene, 0, 0, 220, 44, label(get()), () => {
@@ -70,9 +71,9 @@ export function openSettings(scene, o = {}) {
   };
 
   if (tab === "tela") {
-    row("Música", new Slider(scene, 0, 0, 220, Settings.get("music"), (v) => Settings.set("music", v)));
+    row(tr("Música"), new Slider(scene, 0, 0, 220, Settings.get("music"), (v) => Settings.set("music", v)));
     row(
-      "Efeitos",
+      tr("Efeitos"),
       new Slider(scene, 0, 0, 220, Settings.get("sfx"), (v) => {
         Settings.set("sfx", v);
         if (!scene._sfxPreview || scene.time.now - scene._sfxPreview > 150) {
@@ -81,47 +82,64 @@ export function openSettings(scene, o = {}) {
         }
       }),
     );
-    row("Fonte", cycle((k) => FONTS[k].label, Object.keys(FONTS), () => Settings.get("font"), (k) => Settings.set("font", k)));
-    row("Tamanho do texto", cycle((i) => TEXT_SIZES[i].label, TEXT_SIZES.map((_, i) => i), () => Settings.get("textSize"), (i) => Settings.set("textSize", i)));
+    row(tr("Fonte"), cycle((k) => FONTS[k].label, Object.keys(FONTS), () => Settings.get("font"), (k) => Settings.set("font", k)));
+    row(tr("Tamanho do texto"), cycle((i) => TEXT_SIZES[i].label, TEXT_SIZES.map((_, i) => i), () => Settings.get("textSize"), (i) => Settings.set("textSize", i)));
     row(
-      "Iluminação dinâmica",
+      tr("Iluminação dinâmica"),
       new Toggle(scene, 0, 0, Settings.get("lighting"), (v) => {
         Settings.set("lighting", v);
         o.onLighting?.(v); // aplica na partida em andamento (vindo da Pausa)
       }),
-      "Desligue se o celular esquentar ou travar",
+      tr("Desligue se o celular esquentar ou travar"),
     );
   } else if (tab === "jogo") {
-    row("Vibração", new Toggle(scene, 0, 0, Settings.get("haptics"), (v) => Settings.set("haptics", v)));
-    row("Tremor de tela", new Toggle(scene, 0, 0, Settings.get("shake"), (v) => Settings.set("shake", v)), "Também desliga as pausas de impacto");
+    row(tr("Idioma"), new Button(scene, 0, 0, 220, 44, LANGS.find((l) => l.id === lang).label, () => pickLanguage(scene), { size: 20, family: LANG_FONT }), "Language · Idioma");
+    row(tr("Vibração"), new Toggle(scene, 0, 0, Settings.get("haptics"), (v) => Settings.set("haptics", v)));
+    row(tr("Tremor de tela"), new Toggle(scene, 0, 0, Settings.get("shake"), (v) => Settings.set("shake", v)), tr("Também desliga as pausas de impacto"));
     row(
-      "Números de dano",
+      tr("Números de dano"),
       new Toggle(scene, 0, 0, Settings.get("dmgNumbers"), (v) => {
         Settings.set("dmgNumbers", v);
         o.onDmgNumbers?.(v);
       }),
     );
     if (Notify.available())
-      row("Avisos", new Toggle(scene, 0, 0, Notify.enabled(), (v) => (v ? Notify.enable() : Notify.disable())), "Baú do dia e colheita pronta");
+      row(tr("Avisos"), new Toggle(scene, 0, 0, Notify.enabled(), (v) => (v ? Notify.enable() : Notify.disable())), tr("Baú do dia e colheita pronta"));
   } else {
     if (Telemetry.available())
-      row("Dados de uso e erros", new Toggle(scene, 0, 0, Telemetry.enabled(), (v) => Telemetry.setEnabled(v)), "Ajuda a melhorar o jogo · anônimo");
+      row(tr("Dados de uso e erros"), new Toggle(scene, 0, 0, Telemetry.enabled(), (v) => Telemetry.setEnabled(v)), tr("Ajuda a melhorar o jogo · anônimo"));
     if (AdMobBridge.available()) {
-      row("Consentimento de anúncios", new Button(scene, 0, 0, 220, 44, "REVER", () => AdMobBridge.reviewConsent(), { size: 18 }), "Mude sua escolha quando quiser");
+      row(tr("Consentimento de anúncios"), new Button(scene, 0, 0, 220, 44, tr("REVER"), () => AdMobBridge.reviewConsent(), { size: 18 }), tr("Mude sua escolha quando quiser"));
       // Linha discreta de estado dos anúncios (toque tenta de novo se algo falhou)
-      const st = m.add(text(scene, -m.w / 2 + 56, y - 8, `Anúncios: ${AdMobBridge.statusText()}`, { size: 14, color: CSS.muted, origin: [0, 0.5] }));
+      const st = m.add(text(scene, -m.w / 2 + 56, y - 8, tr("Anúncios: {0}", AdMobBridge.statusText()), { size: 14, color: CSS.muted, origin: [0, 0.5] }));
       if (!AdMobBridge.ready) {
         st.setInteractive({ useHandCursor: true }).on("pointerup", async () => {
-          st.setText("Anúncios: tentando…");
+          st.setText(tr("Anúncios: tentando…"));
           await AdMobBridge.install();
-          st.setText(`Anúncios: ${AdMobBridge.statusText()}`);
+          st.setText(tr("Anúncios: {0}", AdMobBridge.statusText()));
         });
       }
     }
     if (o.onReset) {
-      m.add(text(scene, 0, m.h / 2 - 104, "Apaga moedas, bênçãos, armas, conquistas e a Clareira deste aparelho", { size: 14, color: CSS.muted, origin: 0.5 }));
-      m.add(new Button(scene, 0, m.h / 2 - 60, 320, 52, "APAGAR PROGRESSO", o.onReset, { size: 18, style: "danger", color: CSS.redHi }));
+      m.add(text(scene, 0, m.h / 2 - 104, tr("Apaga moedas, bênçãos, armas, conquistas e a Clareira deste aparelho"), { size: 14, color: CSS.muted, origin: 0.5 }));
+      m.add(new Button(scene, 0, m.h / 2 - 60, 320, 52, tr("APAGAR PROGRESSO"), o.onReset, { size: 18, style: "danger", color: CSS.redHi }));
     }
   }
   return m;
+}
+
+// Escolha de idioma: cada nome no próprio idioma; trocar recarrega o jogo (o progresso fica)
+function pickLanguage(scene) {
+  const m = new Modal(scene, { title: tr("IDIOMA"), w: 520, h: 110 + LANGS.length * 64 });
+  LANGS.forEach((l, i) => {
+    const on = l.id === lang;
+    m.add(
+      new Button(scene, 0, m.top + 40 + i * 64, 360, 52, l.label, () => (on ? m.close() : setLang(l.id)), {
+        size: 22,
+        family: LANG_FONT, // 日本語/简体中文 aparecem mesmo com o jogo em outro idioma
+        style: on ? "gold" : "dark",
+        color: on ? CSS.goldHi : CSS.txt,
+      }),
+    );
+  });
 }

@@ -3,6 +3,7 @@
 import { LinkSet } from '../systems/Links.js';
 import { PLAYER, GAME, COLORS, RESONANCE } from '../config.js';
 
+import { tr } from "../i18n/i18n.js";
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, heroId = 'guardian') {
@@ -126,12 +127,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       for (const el of Object.keys(count)) {
         if (this.resonance[el] > prev[el]) {
           const pct = Math.round((this.resonance[el] - 1) * 100);
-          this.scene._toast?.(`RESSONÂNCIA DE ${RESONANCE.NAMES[el]}: +${pct}% de dano`, 2400, "#ffe58f");
+          this.scene._toast?.(tr("RESSONÂNCIA DE {0}: +{1}% de dano", RESONANCE.NAMES[el], pct), 2400, "#ffe58f");
           this.scene.sound.play("sfx_levelup", { volume: 0.4, rate: 1.4 });
         }
       }
       if (this.prism > prevPrism) {
-        this.scene._toast?.(`PRISMA! Reações +${Math.round((this.prism - 1) * 100)}%`, 2600, "#e8ccff");
+        this.scene._toast?.(tr("PRISMA! Reações +{0}%", Math.round((this.prism - 1) * 100)), 2600, "#e8ccff");
         this.scene.sound.play("sfx_levelup", { volume: 0.5, rate: 1.1 });
       }
     }

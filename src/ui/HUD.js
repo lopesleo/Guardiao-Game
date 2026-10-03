@@ -9,6 +9,7 @@ import { PAL, CSS, hex } from "../art/Palette.js";
 import { Pix } from "../art/PixelArt.js";
 import { WEAPON_ICON } from "../art/Icons.js";
 import { vw, vh, text, drawFrame, Bar, P, haptic } from "./Theme.js";
+import { tr, dec } from "../i18n/i18n.js";
 
 const D = 50000; // profundidade base do HUD (acima do mundo e da vinheta)
 
@@ -43,7 +44,7 @@ export class HUD {
     this.xpBar.set(0, true);
     const lvG = fix(scene.add.graphics(), 1);
     drawFrame(lvG, 10, 2, 28 * P, 11 * P, "gold");
-    this.lvlText = fix(text(scene, 10 + 14 * P, 2 + 5.5 * P, "NV 1", { size: 17, color: CSS.goldHi, origin: 0.5 }), 2);
+    this.lvlText = fix(text(scene, 10 + 14 * P, 2 + 5.5 * P, tr("NV 1"), { size: 17, color: CSS.goldHi, origin: 0.5 }), 2);
 
     // ===== HP =====
     const hx = 16,
@@ -247,7 +248,7 @@ export class HUD {
   }
 
   // Barra de chefe no topo — serve pro Mapinguari e pros mini-chefes (name)
-  setBossActive(boss, name = "MAPINGUARI") {
+  setBossActive(boss, name = tr("MAPINGUARI")) {
     this.boss = boss;
     this.bossName = name;
     this.bossBar.setVisible(true);
@@ -315,7 +316,7 @@ export class HUD {
     const need = PLAYER.XP_PER_LEVEL(p.level);
     this.xpBar.set(p.xp / need);
     this.xpBar.tick(dt);
-    this.lvlText.setText(`NV ${p.level}`);
+    this.lvlText.setText(tr("NV {0}", p.level));
     this.elapsedMs = this.scene.elapsedMs ?? this.elapsedMs; // relógio único: o da cena
     this.timerText.setText(formatTime(this.elapsedMs));
     // Números alinhados à direita crescem para a esquerda: o ícone anda junto
@@ -349,7 +350,7 @@ export class HUD {
       this.bossBar.setColor(phase2 ? PAL.org2 : PAL.red2);
       this.bossBar.set(shown, this.boss._transitioning);
       this.bossBar.tick(dt);
-      this.bossLabel.setText(phase2 ? `${this.bossName} · FÚRIA` : this.bossName);
+      this.bossLabel.setText(phase2 ? tr("{0} · FÚRIA", this.bossName) : this.bossName);
     }
 
     // Despertar
@@ -358,7 +359,7 @@ export class HUD {
       awReady = false;
     if (!p.awakenUnlocked) {
       this.awBar.set(0, true);
-      this.awHint.setText("bloqueado").setColor(CSS.dim);
+      this.awHint.setText(tr("bloqueado")).setColor(CSS.dim);
       this.awIcon.setTint(0x555555);
     } else {
       this.awIcon.clearTint();
@@ -373,10 +374,10 @@ export class HUD {
       } else if (p.awakenReady()) {
         this.awBar.setColor(PAL.yel3);
         this.awBar.set(1);
-        this.awHint.setText(this.isTouch ? "PRONTO!" : "PRONTO! [R]").setColor(CSS.goldHi);
+        this.awHint.setText(this.isTouch ? tr("PRONTO!") : tr("PRONTO! [R]")).setColor(CSS.goldHi);
         this.awHint.setAlpha(0.6 + Math.sin(time / 120) * 0.4);
         awReady = true;
-        this.scene._hint?.("awaken", this.isTouch ? "Despertar pronto! Toque na estrela\npara disparar tudo mais rápido." : "Despertar pronto! Aperte R\npara disparar tudo mais rápido.");
+        this.scene._hint?.("awaken", this.isTouch ? tr("Despertar pronto! Toque na estrela\npara disparar tudo mais rápido.") : tr("Despertar pronto! Aperte R\npara disparar tudo mais rápido."));
       } else {
         this.awBar.setColor(now < p.awakenLockUntil ? PAL.yel1 : PAL.yel2);
         this.awBar.set(aw);
@@ -394,8 +395,8 @@ export class HUD {
       this._cooldown(this.btnAwaken, p.awakenUnlocked ? awFrac : 1, awReady, time);
     } else if (this.dashHint) {
       if (!p.dashUnlocked) this.dashHint.setText("").setColor(CSS.dim);
-      else if (p.dashReady()) this.dashHint.setText("DASH [SHIFT]").setColor(CSS.goldHi);
-      else this.dashHint.setText(`DASH ${(Math.max(0, p.dashCdUntil - now) / 1000).toFixed(1)}s`).setColor(CSS.muted);
+      else if (p.dashReady()) this.dashHint.setText(tr("DASH [SHIFT]")).setColor(CSS.goldHi);
+      else this.dashHint.setText(tr("DASH {0}s", dec(Math.max(0, p.dashCdUntil - now) / 1000))).setColor(CSS.muted);
     }
   }
 }

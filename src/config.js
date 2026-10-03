@@ -1,5 +1,6 @@
 // Balanceamento central. Tweak aqui, sem caçar números no código.
 // Fórmulas paramétricas decididas no design (D16).
+import { tr, localize } from "./i18n/i18n.js";
 
 export const GAME = {
   WIDTH: 1280,
@@ -999,7 +1000,7 @@ export const PASSIVES = [
     roll: () => {
       const v = r(15, 35);
       return {
-        name: `+${v}% Vida máxima`,
+        name: tr("+{0}% Vida máxima", v),
         apply: (p) => {
           const gain = p.maxHp * (v / 100);
           p.maxHp += gain;
@@ -1014,7 +1015,7 @@ export const PASSIVES = [
     desc: "Corra mais rápido que a horda.",
     roll: () => {
       const v = r(12, 24);
-      return { name: `+${v}% Velocidade`, apply: (p) => (p.speed *= 1 + v / 100) };
+      return { name: tr("+{0}% Velocidade", v), apply: (p) => (p.speed *= 1 + v / 100) };
     },
   },
   {
@@ -1023,7 +1024,7 @@ export const PASSIVES = [
     desc: "Todas as armas disparam mais vezes.",
     roll: () => {
       const v = r(12, 24);
-      return { name: `−${v}% Recarga`, apply: (p) => (p.cdMult *= 1 - v / 100) };
+      return { name: tr("−{0}% Recarga", v), apply: (p) => (p.cdMult *= 1 - v / 100) };
     },
   },
   {
@@ -1032,7 +1033,7 @@ export const PASSIVES = [
     desc: "Auras, nuvens, reações e a vara alcançam mais longe.",
     roll: () => {
       const v = r(15, 35);
-      return { name: `+${v}% Área`, apply: (p) => (p.areaMult *= 1 + v / 100) };
+      return { name: tr("+{0}% Área", v), apply: (p) => (p.areaMult *= 1 + v / 100) };
     },
   },
   {
@@ -1047,7 +1048,7 @@ export const PASSIVES = [
     desc: "Parte do dano causado vira cura.",
     roll: () => {
       const v = r(4, 10);
-      return { name: `+${v}% Roubo de vida`, apply: (p) => (p.lifestealPct += v / 100) };
+      return { name: tr("+{0}% Roubo de vida", v), apply: (p) => (p.lifestealPct += v / 100) };
     },
   },
   {
@@ -1056,7 +1057,7 @@ export const PASSIVES = [
     desc: "Regenera vida continuamente.",
     roll: () => {
       const v = rf(0.8, 2.6);
-      return { name: `+${v} Vida/s`, apply: (p) => (p.regenPerSec += v) };
+      return { name: tr("+{0} Vida/s", v), apply: (p) => (p.regenPerSec += v) };
     },
   },
   {
@@ -1065,7 +1066,7 @@ export const PASSIVES = [
     desc: "Críticos causam dano dobrado e empurram.",
     roll: () => {
       const v = r(8, 15);
-      return { name: `+${v}% Crítico`, apply: (p) => (p.critChance += v / 100) };
+      return { name: tr("+{0}% Crítico", v), apply: (p) => (p.critChance += v / 100) };
     },
   },
   {
@@ -1074,7 +1075,7 @@ export const PASSIVES = [
     desc: "Puxa gemas e moedas de mais longe.",
     roll: () => {
       const v = r(45, 75);
-      return { name: `+${v}% Coleta`, apply: (p) => (p.pickupRadius *= 1 + v / 100) };
+      return { name: tr("+{0}% Coleta", v), apply: (p) => (p.pickupRadius *= 1 + v / 100) };
     },
   },
   {
@@ -1083,7 +1084,7 @@ export const PASSIVES = [
     desc: "Reduz todo dano recebido (máx. 50%).",
     roll: () => {
       const v = r(9, 15);
-      return { name: `−${v}% Dano recebido`, apply: (p) => (p.dmgTakenMult = Math.max(0.5, p.dmgTakenMult * (1 - v / 100))) };
+      return { name: tr("−{0}% Dano recebido", v), apply: (p) => (p.dmgTakenMult = Math.max(0.5, p.dmgTakenMult * (1 - v / 100))) };
     },
   },
   {
@@ -1092,7 +1093,7 @@ export const PASSIVES = [
     desc: "Mais moedas, corações e orbes caindo.",
     roll: () => {
       const v = r(22, 38);
-      return { name: `+${v}% Sorte`, apply: (p) => (p.luck += v / 100) };
+      return { name: tr("+{0}% Sorte", v), apply: (p) => (p.luck += v / 100) };
     },
   },
 ];
@@ -1103,7 +1104,7 @@ export const PASSIVES = [
 export const RESONANCE = {
   PER_EXTRA_WEAPON: 0.15,
   PRISM_REACTION: 1.3,
-  NAMES: { fire: "FOGO", ice: "GELO", bolt: "RAIO", wind: "VENTO" },
+  NAMES: { fire: tr("FOGO"), ice: tr("GELO"), bolt: tr("RAIO"), wind: tr("VENTO") },
 };
 
 // Tratos da Mata: de vez em quando uma das 3 cartas é um TRATO — poder grande em troca de
@@ -1123,8 +1124,8 @@ export const PACTS = {
       roll: () => {
         const g = r(30, 45), c = r(18, 26);
         return {
-          gain: `+${g}% Dano`,
-          cost: `Em troca: −${c}% Vida máxima`,
+          gain: tr("+{0}% Dano", g),
+          cost: tr("Em troca: −{0}% Vida máxima", c),
           apply: (p) => {
             p._blessingDmgMult *= 1 + g / 100;
             p.maxHp *= 1 - c / 100;
@@ -1141,8 +1142,8 @@ export const PACTS = {
       roll: () => {
         const g = r(22, 32), c = r(15, 22);
         return {
-          gain: `+${g}% Velocidade`,
-          cost: `Em troca: +${c}% Dano recebido`,
+          gain: tr("+{0}% Velocidade", g),
+          cost: tr("Em troca: +{0}% Dano recebido", c),
           apply: (p) => {
             p.speed *= 1 + g / 100;
             p.dmgTakenMult *= 1 + c / 100;
@@ -1158,8 +1159,8 @@ export const PACTS = {
       roll: () => {
         const g = r(45, 65), c = r(12, 18);
         return {
-          gain: `+${g}% XP`,
-          cost: `Em troca: −${c}% Velocidade`,
+          gain: tr("+{0}% XP", g),
+          cost: tr("Em troca: −{0}% Velocidade", c),
           apply: (p) => {
             p._xpMult *= 1 + g / 100;
             p.speed *= 1 - c / 100;
@@ -1175,8 +1176,8 @@ export const PACTS = {
       roll: () => {
         const g = r(26, 34), c = r(18, 24);
         return {
-          gain: `−${g}% Recarga`,
-          cost: `Em troca: −${c}% Vida máxima`,
+          gain: tr("−{0}% Recarga", g),
+          cost: tr("Em troca: −{0}% Vida máxima", c),
           apply: (p) => {
             p.cdMult *= 1 - g / 100;
             p.maxHp *= 1 - c / 100;
@@ -1193,8 +1194,8 @@ export const PACTS = {
       roll: () => {
         const g = r(28, 38), c = r(15, 20);
         return {
-          gain: `−${g}% Dano recebido`,
-          cost: `Em troca: −${c}% Velocidade`,
+          gain: tr("−{0}% Dano recebido", g),
+          cost: tr("Em troca: −{0}% Velocidade", c),
           apply: (p) => {
             p.dmgTakenMult = Math.max(0.4, p.dmgTakenMult * (1 - g / 100));
             p.speed *= 1 - c / 100;
@@ -1848,3 +1849,7 @@ export const COLORS = {
   DANGER: 0xff5a6e,
   XP: 0x6fcf6f,
 };
+
+// Idioma: traduz no lugar os campos de TEXTO das fichas acima (nomes, descrições, falas)
+// antes que qualquer outro módulo os leia. Ver src/i18n/i18n.js e docs/IDIOMAS.md.
+localize([GAME, DIFFICULTY, PLAYER, ENEMY, BOSS, BOSS_FIGHT, ELEMENT, STATUS, REACTION, WEAPONS, DEED_STATS, LINKS, CHARACTERS, PASSIVES, RESONANCE, PACTS, SHRINE, CARDS, TREE, INTRO, ARENA, ENDLESS, LEGENDS, BIOMES, DUST_DEVIL, BUILD, BUILDINGS, WOOD, GARDEN, DAILY, SEASONS, FISHING, KITCHEN, LANTERN, ADMOB, ADS, DROPS, CHEST, ELITE, MIMIC, META, BLESSINGS, ANCESTRAL, ACHIEVEMENTS, COLORS]);

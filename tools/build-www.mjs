@@ -12,7 +12,8 @@ for (const p of INCLUDE) {
   cpSync(p, `${OUT}/${p}`, {
     recursive: true,
     // prévias/scratch dos packs de sprite não vão pro app
-    filter: (src) => !/_preview|\.md$/i.test(src),
+    // (.chars.txt: lista de conferência dos recortes de fonte, ver tools/font-subset.mjs)
+    filter: (src) => !/_preview|\.md$|\.chars\.txt$/i.test(src),
   });
 }
 console.log(`www/ pronto (${INCLUDE.filter(existsSync).join(", ")})`);

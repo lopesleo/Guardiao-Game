@@ -27,6 +27,7 @@ import { Modal } from "../ui/Widgets.js";
 import { fmtDuration } from "../systems/Builds.js";
 import { Notify, NOTIFY_ID, tomorrowAt } from "../systems/Notify.js";
 import { Clock } from "../systems/Clock.js";
+import { tr } from "../i18n/i18n.js";
 
 const S = GAME.PIXEL_SCALE;
 const CHEST_X = -64,
@@ -41,7 +42,7 @@ export const CampDaily = {
   _dailyBump(stat) {
     const d = this._daily();
     if (!d) return;
-    for (const t of d.bump(stat)) this.time.delayedCall(400, () => this._toast(`Missão cumprida: ${t}`));
+    for (const t of d.bump(stat)) this.time.delayedCall(400, () => this._toast(tr("Missão cumprida: {0}", t)));
     this._refreshDailyDots();
   },
 
@@ -55,7 +56,7 @@ export const CampDaily = {
     const glow = this._glow(CHEST_X, CHEST_Y - 20, 1.3, 0xffe58f, true).setVisible(shown);
     this._solid(CHEST_X, CHEST_Y - 8, 44, 16);
     this.buildings.chest = { img, shadow, glow, x: CHEST_X, y: CHEST_Y, shown, dot: this._notifyDot(CHEST_X + 26, CHEST_Y - 60).setDepth(this.D_HUD - 10).setVisible(false) };
-    this._addInteract({ x: CHEST_X, y: CHEST_Y, top: CHEST_Y - 50, r: 70, name: "BAÚ DO DIA", verb: "ABRIR", hiddenUntil: "chest", action: () => this._openDailyChest() });
+    this._addInteract({ x: CHEST_X, y: CHEST_Y, top: CHEST_Y - 50, r: 70, name: tr("BAÚ DO DIA"), verb: tr("ABRIR"), hiddenUntil: "chest", action: () => this._openDailyChest() });
     // Brilhinho subindo enquanto há presente
     this.time.addEvent({
       delay: 420,
@@ -86,7 +87,7 @@ export const CampDaily = {
     if (!d.chestReady("free")) {
       if (d.chestReady("ad") && AdService.canShow("daily_chest")) {
         AdService.rewarded("daily_chest").then((ok) => ok && this._chestReward(d.openChest("ad")));
-      } else this._say("A floresta deixa um presente por dia. Volte amanhã!");
+      } else this._say(tr("A floresta deixa um presente por dia. Volte amanhã!"));
       return;
     }
     this._chestReward(d.openChest("free"));
@@ -108,7 +109,7 @@ export const CampDaily = {
       this.tweens.add({ targets: c, x: b.x + Math.cos(a) * (40 + Math.random() * 50), y: b.y - 24 + Math.sin(a) * (50 + Math.random() * 40), duration: 420, ease: "Cubic.easeOut" });
       this.tweens.add({ targets: c, alpha: 0, delay: 600, duration: 400, onComplete: () => c.destroy() });
     }
-    this._toast(`Baú do dia: ${rewardText(r)}`);
+    this._toast(tr("Baú do dia: {0}", rewardText(r)));
     this._refreshDailyChest();
     this._refreshAll();
   },
@@ -120,12 +121,12 @@ export const CampDaily = {
     if (this._pending.length || this._cutscene || this._modals.length || this._leaving) return;
     // Relógio voltado para trás: a floresta explica, uma vez por visita
     if (Clock.frozenMs() > 10 * 60000) {
-      this._say(`O tempo da floresta não anda para trás. Plantas, obras e presentes vão esperar o relógio alcançar (${fmtDuration(Clock.frozenMs())}).`);
+      this._say(tr("O tempo da floresta não anda para trás. Plantas, obras e presentes vão esperar o relógio alcançar ({0}).", fmtDuration(Clock.frozenMs())));
       return;
     }
     // Avanço que ninguém confirmou (sem internet, cota esgotada)
     if (Clock.pendingMs() > 30 * 60000) {
-      this._say("Sem internet, a floresta não conseguiu confirmar quanto tempo passou. Conecte-se e o tempo volta a andar.");
+      this._say(tr("Sem internet, a floresta não conseguiu confirmar quanto tempo passou. Conecte-se e o tempo volta a andar."));
       return;
     }
     const d = this._daily();
@@ -135,7 +136,7 @@ export const CampDaily = {
   },
 
   _showStreak(d, day) {
-    const m = new Modal(this, { title: `PRESENTE DO DIA ${day}`, subtitle: "Volte todo dia: o 7º dia é o maior presente", w: 900, h: 420, closable: false });
+    const m = new Modal(this, { title: tr("PRESENTE DO DIA {0}", day), subtitle: tr("Volte todo dia: o 7º dia é o maior presente"), w: 900, h: 420, closable: false });
     const n = DAILY.STREAK.length;
     const bw = 108,
       gap = 12;
@@ -148,7 +149,7 @@ export const CampDaily = {
       const g = this.add.graphics();
       drawFrame(g, x - bw / 2, y - 70, bw, 140, now ? "gold" : past ? "green" : "dark", { noRivets: !now });
       m.add(g);
-      m.add(text(this, x, y - 50, `DIA ${i + 1}`, { size: 17, color: now ? CSS.goldHi : past ? CSS.green : CSS.muted, origin: 0.5 }));
+      m.add(text(this, x, y - 50, tr("DIA {0}", i + 1), { size: 17, color: now ? CSS.goldHi : past ? CSS.green : CSS.muted, origin: 0.5 }));
       const icon = rw.seeds ? "ico_seed" : rw.wood && !rw.coins ? "ico_wood" : "ico_coin";
       const ic = this.add.image(x, y - 6, icon).setScale(i === n - 1 ? 4.2 : 3.2);
       if (past) ic.setAlpha(0.5);
@@ -159,12 +160,12 @@ export const CampDaily = {
       if (past) m.add(this.add.image(x + 34, y - 52, "ico_check").setScale(2.2));
     });
     m.add(
-      new Button(this, 0, 150, 300, 58, "PEGAR", () => {
+      new Button(this, 0, 150, 300, 58, tr("PEGAR"), () => {
         const r = d.claimStreak();
         m.close();
         if (!r) return;
         this._buyFx();
-        this._toast(`Dia ${r.day}: ${rewardText(r)}`);
+        this._toast(tr("Dia {0}: {1}", r.day, rewardText(r)));
         this._refreshAll();
       }, { size: 24, style: "primary", color: CSS.goldHi }),
     );
@@ -179,13 +180,13 @@ export const CampDaily = {
     const s = this.meta.data.streak;
     list.addRow({
       h: 34,
-      build: (c, w) => c.add(text(this, w / 2, 16, `Dias seguidos: ${s?.count || 0}   ·   novas missões em ${fmtDuration(msToMidnight())}`, { size: 16, color: CSS.muted, origin: 0.5 })),
+      build: (c, w) => c.add(text(this, w / 2, 16, tr("Dias seguidos: {0}   ·   novas missões em {1}", s?.count || 0, fmtDuration(msToMidnight())), { size: 16, color: CSS.muted, origin: 0.5 })),
     });
     const rested = d.restedLeft();
     if (rested > 0)
       list.addRow({
         h: 30,
-        build: (c, w) => c.add(text(this, w / 2, 14, `Descansado: ${rested === 1 ? "a próxima partida rende" : `as próximas ${rested} partidas rendem`} +${Math.round((DAILY.RESTED.MULT - 1) * 100)}% de moedas`, { size: 16, color: CSS.goldHi, origin: 0.5 })),
+        build: (c, w) => c.add(text(this, w / 2, 14, tr("Descansado: {0} +{1}% de moedas", rested === 1 ? tr("a próxima partida rende") : tr("as próximas {0} partidas rendem", rested), Math.round((DAILY.RESTED.MULT - 1) * 100)), { size: 16, color: CSS.goldHi, origin: 0.5 })),
       });
     d.missions.forEach((m, i) => {
       const done = m.done;
@@ -195,7 +196,7 @@ export const CampDaily = {
           const r = d.claim(i);
           if (!r) return;
           this._buyFx();
-          this._toast(`Missão: ${rewardText(r)}`);
+          this._toast(tr("Missão: {0}", rewardText(r)));
           reopen();
         } : null,
         build: (c, w) => {
@@ -213,7 +214,7 @@ export const CampDaily = {
           bar.fillStyle(done ? PAL.g5 : PAL.yel2, 1).fillRect(79, 53, (bw - 6) * Math.min(1, m.p / m.n), 6);
           c.add(bar);
           c.add(text(this, 86 + bw, 56, `${m.p}/${m.n}`, { size: 16, color: CSS.muted, origin: [0, 0.5] }));
-          const right = m.claimed ? "FEITO" : done ? `PEGAR  +${m.def.coins}` : `+${m.def.coins}`;
+          const right = m.claimed ? tr("FEITO") : done ? tr("PEGAR  +{0}", m.def.coins) : `+${m.def.coins}`;
           const rt = text(this, w - 20, 42, right, { size: 20, color: m.claimed ? CSS.green : done ? CSS.goldHi : CSS.dim, origin: [1, 0.5], stroke: true });
           c.add(rt);
           if (!m.claimed) c.add(this.add.image(w - 34 - rt.width, 42, "ico_coin").setScale(2.4));
@@ -226,10 +227,10 @@ export const CampDaily = {
     list.addRow(
       this._shopRow({
         icon: "ico_chest",
-        name: "COMPLETE AS TRÊS",
+        name: tr("COMPLETE AS TRÊS"),
         nameColor: ready ? CSS.goldHi : got ? CSS.green : CSS.txt,
         desc: rewardText(DAILY.ALL_BONUS),
-        right: got ? "FEITO" : ready ? "PEGAR" : "",
+        right: got ? tr("FEITO") : ready ? tr("PEGAR") : "",
         rightColor: got ? CSS.green : CSS.goldHi,
         style: got ? "green" : ready ? "gold" : "dark",
         onTap: ready
@@ -237,7 +238,7 @@ export const CampDaily = {
               const r = d.claimBonus();
               if (!r) return;
               this._buyFx();
-              this._toast(`As três do dia: ${rewardText(r)}`);
+              this._toast(tr("As três do dia: {0}", rewardText(r)));
               reopen();
             }
           : null,
@@ -259,19 +260,19 @@ export const CampDaily = {
 CampDaily._offerNotify = function (kind, at = null) {
   if (!Notify.available()) return;
   const plan = () => {
-    if (kind === "chest") Notify.schedule(NOTIFY_ID.chest, tomorrowAt(10), "Guardião da Floresta", "O baú do dia está esperando por você na Clareira.");
-    else if (at) Notify.schedule(NOTIFY_ID.crop, at, "Guardião da Floresta", "Sua colheita está pronta na horta!");
+    if (kind === "chest") Notify.schedule(NOTIFY_ID.chest, tomorrowAt(10), tr("Guardião da Floresta"), tr("O baú do dia está esperando por você na Clareira."));
+    else if (at) Notify.schedule(NOTIFY_ID.crop, at, tr("Guardião da Floresta"), tr("Sua colheita está pronta na horta!"));
   };
   if (Notify.enabled()) return plan();
   if (Notify.asked() || this._modals.length) return;
-  const m = new Modal(this, { title: "QUER UM AVISO?", w: 640, h: 300 });
-  m.add(text(this, 0, -40, kind === "chest" ? "Posso avisar quando o baú de amanhã estiver pronto." : "Posso avisar quando a colheita ficar pronta.", { size: 20, origin: 0.5, align: "center", wrap: 560 }));
-  m.add(text(this, 0, -2, "No máximo dois avisos. Dá para desligar em Opções.", { size: 15, color: CSS.muted, origin: 0.5 }));
-  m.add(new Button(this, -135, 80, 240, 54, "SIM, AVISE", async () => {
+  const m = new Modal(this, { title: tr("QUER UM AVISO?"), w: 640, h: 300 });
+  m.add(text(this, 0, -40, kind === "chest" ? tr("Posso avisar quando o baú de amanhã estiver pronto.") : tr("Posso avisar quando a colheita ficar pronta."), { size: 20, origin: 0.5, align: "center", wrap: 560 }));
+  m.add(text(this, 0, -2, tr("No máximo dois avisos. Dá para desligar em Opções."), { size: 15, color: CSS.muted, origin: 0.5 }));
+  m.add(new Button(this, -135, 80, 240, 54, tr("SIM, AVISE"), async () => {
     m.close();
     if (await Notify.enable()) plan();
   }, { size: 20, style: "primary", color: CSS.goldHi }));
-  m.add(new Button(this, 135, 80, 240, 54, "AGORA NÃO", () => {
+  m.add(new Button(this, 135, 80, 240, 54, tr("AGORA NÃO"), () => {
     Notify.decline();
     m.close();
   }, { size: 20, style: "dark" }));

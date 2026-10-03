@@ -2,6 +2,7 @@
 // estilo celular), Slider, Toggle. Tudo desenhado com drawFrame/Theme.
 import { PAL, CSS } from "../art/Palette.js";
 import { text, drawFrame, dim, Button, P, vw, vh, haptic } from "./Theme.js";
+import { tr } from "../i18n/i18n.js";
 
 const D_MODAL = 70000;
 
@@ -26,7 +27,9 @@ export class Modal {
     // Faixa do título
     this.titleText = text(scene, 0, -this.h / 2 + 34, o.title ?? "", { size: 30, color: CSS.goldHi, origin: 0.5, stroke: true });
     this.root.add(this.titleText);
-    if (o.subtitle) this.root.add(text(scene, 0, -this.h / 2 + 64, o.subtitle, { size: 16, color: CSS.muted, origin: 0.5 }));
+    // título e subtítulo nunca passam da moldura (traduções e texto grande): encolhem
+    fitTo(this.titleText, this.w - 140);
+    if (o.subtitle) this.root.add(fitTo(text(scene, 0, -this.h / 2 + 64, o.subtitle, { size: 16, color: CSS.muted, origin: 0.5 }), this.w - 60));
     // Fechar (X) no canto
     if (o.closable !== false) {
       const close = new Button(scene, this.w / 2 - 34, -this.h / 2 + 34, 44, 44, null, () => this.close(), { icon: "ico_close", style: "dark" });
@@ -80,6 +83,12 @@ export class Modal {
     this.root.destroy();
     this.onClose?.();
   }
+}
+
+// Encolhe um texto de uma linha até caber na largura
+function fitTo(t, room) {
+  if (t.width > room) t.setScale(room / t.width);
+  return t;
 }
 
 // scrollFactor 0 em tudo dentro do modal. O Phaser testa o toque com o
@@ -332,6 +341,6 @@ export class Toggle extends Phaser.GameObjects.Container {
     drawFrame(g, -42, -18, 84, 36, this.on_ ? "green" : "disabled", { noRivets: true });
     const kx = this.on_ ? 12 : -36;
     drawFrame(g, kx, -12, 24, 24, this.on_ ? "gold" : "dark", { noRivets: true });
-    this.lbl.setText(this.on_ ? "SIM" : "NÃO").setX(this.on_ ? -14 : 12).setColor(this.on_ ? CSS.green : CSS.dim);
+    this.lbl.setText(this.on_ ? tr("SIM") : tr("NÃO")).setX(this.on_ ? -14 : 12).setColor(this.on_ ? CSS.green : CSS.dim);
   }
 }

@@ -14,6 +14,7 @@ import {
   shockwave, rootsBurst, summonPulse, pixelLine, D_TELE,
 } from "../art/Telegraph.js";
 import { Timeline, FightLog, WeakSpot, distTo, inLane, angDiff } from "../systems/BossKit.js";
+import { tr } from "../i18n/i18n.js";
 
 const TAU = Math.PI * 2;
 
@@ -171,7 +172,7 @@ export class MulaBrain extends Brain {
   checkPhase() {
     if (this.phase === 1 && this.o.hp < this.o.maxHp * 0.5) {
       this.phase = 2;
-      this.s.hud?.showBossBanner(this.s.biome?.minis?.alpha?.rage ?? "A MULA DISPARA!", "#ffb36b");
+      this.s.hud?.showBossBanner(this.s.biome?.minis?.alpha?.rage ?? tr("A MULA DISPARA!"), "#ffb36b");
       this.sfx("sfx_boss_roar", { volume: 0.45, rate: 1.2 });
       shockwave(this.s, this.o.x, this.o.y, 140, PAL.org2);
       this.s.fx?.burst("ember", this.o.x, this.o.y - 20, 18);
@@ -209,7 +210,7 @@ export class MulaBrain extends Brain {
       steps.push({
         ms: i === 0 ? K.windupMs : K.rewindMs,
         enter: () => {
-          if (i === 0) this.caption("GALOPE EM CHAMAS");
+          if (i === 0) this.caption(tr("GALOPE EM CHAMAS"));
           ang = this.angTo();
           len = clampLen(o.x, o.y, ang, K.len);
           o.setVelocity(0, 0);
@@ -267,7 +268,7 @@ export class MulaBrain extends Brain {
       ms: K.exposedMs,
       enter: () => {
         this.pose(0);
-        this.weak.open(K.exposedMs, BOSS_FIGHT.EXPOSED_MULT, "OFEGANTE!");
+        this.weak.open(K.exposedMs, BOSS_FIGHT.EXPOSED_MULT, tr("OFEGANTE!"));
         this.sfx("sfx_drain", { volume: 0.25, rate: 1.6 });
       },
       tick: () => {
@@ -296,7 +297,7 @@ export class MulaBrain extends Brain {
         {
           ms: K.windupMs,
           enter: () => {
-            this.caption("COICE");
+            this.caption(tr("COICE"));
             ang = this.angTo();
             o.setVelocity(0, 0);
             o.setFlipX(Math.cos(ang) >= 0); // de costas para o herói
@@ -360,7 +361,7 @@ export class MulaBrain extends Brain {
         {
           ms: total,
           enter: () => {
-            this.caption("CHUVA DE BRASAS");
+            this.caption(tr("CHUVA DE BRASAS"));
             o.setVelocity(0, 0);
             o.setFlipX(this.p.x < o.x);
             this.pose(4);
@@ -443,7 +444,7 @@ export class SecoBrain extends Brain {
   checkPhase() {
     if (this.phase === 1 && this.o.hp < this.o.maxHp * 0.5) {
       this.phase = 2;
-      this.s.hud?.showBossBanner("A PODRIDÃO O SEGURA DE PÉ!", "#e8ccff");
+      this.s.hud?.showBossBanner(tr("A PODRIDÃO O SEGURA DE PÉ!"), "#e8ccff");
       this.sfx("sfx_boss_roar", { volume: 0.45, rate: 0.6 });
       shockwave(this.s, this.o.x, this.o.y, 150, ROT.hot);
     }
@@ -482,7 +483,7 @@ export class SecoBrain extends Brain {
         {
           ms: K.warnMs,
           enter: () => {
-            this.caption("A SECA");
+            this.caption(tr("A SECA"));
             o.setVelocity(0, 0);
             this.pose(2);
             tele = new ZoneTele(s, o.x, o.y, r, PAL.straw2, 0.6);
@@ -542,7 +543,7 @@ export class SecoBrain extends Brain {
             rest = 300;
             if (!everIn) {
               this.log.dodged();
-              this.weak.open(K.exposedMs, BOSS_FIGHT.EXPOSED_MULT, "RESSECADO!");
+              this.weak.open(K.exposedMs, BOSS_FIGHT.EXPOSED_MULT, tr("RESSECADO!"));
               rest = K.exposedMs;
             }
           },
@@ -570,7 +571,7 @@ export class SecoBrain extends Brain {
         {
           ms: K.sinkMs,
           enter: () => {
-            this.caption("A TERRA O REJEITA");
+            this.caption(tr("A TERRA O REJEITA"));
             o.setVelocity(0, 0);
             this.pose(2);
             this.sfx("sfx_rumble", { volume: 0.55 });
@@ -665,7 +666,7 @@ export class SecoBrain extends Brain {
           enter: () => {
             o.setScale(base);
             this.pose(0);
-            this.weak.open(K.exposedMs, BOSS_FIGHT.EXPOSED_MULT, "CUSPIDO PELA TERRA!");
+            this.weak.open(K.exposedMs, BOSS_FIGHT.EXPOSED_MULT, tr("CUSPIDO PELA TERRA!"));
           },
           tick: () => o.setAngle(Math.sin(s.time.now / 50) * 4), // cambaleia
           exit: () => o.setAngle(0),
@@ -742,7 +743,7 @@ export class SecoBrain extends Brain {
       {
         ms: K.windupMs,
         enter: () => {
-          this.caption("CIPÓS DA PODRIDÃO");
+          this.caption(tr("CIPÓS DA PODRIDÃO"));
           o.setVelocity(0, 0);
           this.pose(2);
           showTele(w1);
@@ -832,7 +833,7 @@ export class MapiBrain extends Brain {
   }
 
   // BAQUE: ergue os braços e bate no chão em volta de si
-  m_slam(cx, cy, r = this.kit.SLAM.r, windup = this.kit.SLAM.windupMs, mult = this.kit.SLAM.dmg, label = "BAQUE") {
+  m_slam(cx, cy, r = this.kit.SLAM.r, windup = this.kit.SLAM.windupMs, mult = this.kit.SLAM.dmg, label = tr("BAQUE")) {
     const o = this.o,
       s = this.s,
       bag = [];
@@ -896,7 +897,7 @@ export class MapiBrain extends Brain {
         {
           ms: K.warnMs,
           enter: () => {
-            this.caption("RAÍZES");
+            this.caption(tr("RAÍZES"));
             px = this.p.x;
             py = this.p.y;
             tele = new ZoneTele(s, px, py, K.r, PAL.g6);
@@ -947,7 +948,7 @@ export class MapiBrain extends Brain {
         {
           ms: K.windupMs,
           enter: () => {
-            this.caption("INVESTIDA");
+            this.caption(tr("INVESTIDA"));
             ang = this.angTo();
             len = clampLen(o.x, o.y, ang, K.len);
             o.setVelocity(0, 0);
@@ -988,7 +989,7 @@ export class MapiBrain extends Brain {
         },
         {
           ms: K.exposedMs,
-          enter: () => this.weak.open(K.exposedMs, BOSS_FIGHT.EXPOSED_MULT, "ATOLADO!"),
+          enter: () => this.weak.open(K.exposedMs, BOSS_FIGHT.EXPOSED_MULT, tr("ATOLADO!")),
           tick: () => this.o.setAngle(Math.sin(s.time.now / 45) * 3),
           exit: () => this.o.setAngle(0),
         },
@@ -1015,14 +1016,14 @@ export class MapiBrain extends Brain {
         {
           ms: K.openMs,
           enter: () => {
-            this.caption("BOCARRA DA BARRIGA");
+            this.caption(tr("BOCARRA DA BARRIGA"));
             o.setVelocity(0, 0);
             this.pose(this.frame("maw"));
             tele = new ZoneTele(s, o.x, o.y, K.r, PAL.red2, 0.35);
             this.threat = { zones: [{ x: o.x, y: o.y, r: K.r }] };
             motes = [];
             bag.push(tele);
-            this.weak.open(K.openMs + K.inhaleMs, K.exposedMult, "A BOCA É O PONTO FRACO!");
+            this.weak.open(K.openMs + K.inhaleMs, K.exposedMult, tr("A BOCA É O PONTO FRACO!"));
             this.sfx("sfx_inhale", { volume: 0.55 });
           },
           tick: (k) => {
@@ -1106,7 +1107,7 @@ export class MapiBrain extends Brain {
         {
           ms: K.windupMs,
           enter: () => {
-            this.caption("GRITO DO MAPINGUARI");
+            this.caption(tr("GRITO DO MAPINGUARI"));
             o.setVelocity(0, 0);
             this.pose(this.frame("scream"));
             // a 1ª brecha nunca fica em cima do herói: ficar parado não salva
@@ -1205,7 +1206,7 @@ export class MapiBrain extends Brain {
         {
           ms: K.windupMs,
           enter: () => {
-            this.caption("OLHAR DA PODRIDÃO");
+            this.caption(tr("OLHAR DA PODRIDÃO"));
             o.setVelocity(0, 0);
             this.pose(this.frame("scream"));
             // a borda de partida fica a ~startPx do herói (perto ou longe, o mesmo passo)
@@ -1264,7 +1265,7 @@ export class MapiBrain extends Brain {
           ms: K.exposedMs,
           enter: () => {
             this.pose(this.frame("idle"));
-            this.weak.open(K.exposedMs, BOSS_FIGHT.EXPOSED_MULT, "OLHO CANSADO!", -60);
+            this.weak.open(K.exposedMs, BOSS_FIGHT.EXPOSED_MULT, tr("OLHO CANSADO!"), -60);
           },
         },
       ],
@@ -1286,7 +1287,7 @@ export class MapiBrain extends Brain {
         {
           ms: K.windupMs,
           enter: () => {
-            this.caption("LEQUE DE ESPINHOS");
+            this.caption(tr("LEQUE DE ESPINHOS"));
             ang = this.angTo();
             o.setVelocity(0, 0);
             tele = new ConeTele(s, o.x, o.y, ang, 300, half, PAL.red2);
@@ -1321,7 +1322,7 @@ export class MapiBrain extends Brain {
         {
           ms: 600,
           enter: () => {
-            this.caption("CHAMADO DA PODRIDÃO");
+            this.caption(tr("CHAMADO DA PODRIDÃO"));
             this.o.setVelocity(0, 0);
             this.pose(this.frame("scream"));
             this.sfx("sfx_boss_roar", { volume: 0.5, rate: 0.9 });
@@ -1481,7 +1482,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this.setVelocity(0, 0);
     scene.cameras.main.shake(500, 0.014);
     scene.sound.play("sfx_boss_roar", { volume: 0.85 });
-    scene.hud?.showBossBanner("FÚRIA!");
+    scene.hud?.showBossBanner(tr("FÚRIA!"));
     const base = this._bossScale;
     this.play(this.def.fury);
     this._furyPulse = scene.tweens.add({

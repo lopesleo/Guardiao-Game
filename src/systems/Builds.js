@@ -4,6 +4,7 @@
 // (meta.data.builds / buildJob).
 import { BUILD, BUILDINGS, BIOMES, CHARACTERS, WEAPONS, GARDEN, FISHING } from "../config.js";
 import { Clock } from "./Clock.js";
+import { tr } from "../i18n/i18n.js";
 
 export class Builds {
   constructor(meta) {
@@ -135,29 +136,29 @@ export function weaponSlotsFor(meta) {
 
 // Texto do que o nível `lv` de cada construção libera
 export function perkText(id, lv) {
-  if (id === "shrine") return `Bênçãos até o rank ${shrineRankCapFor(lv)}`;
+  if (id === "shrine") return tr("Bênçãos até o rank {0}", shrineRankCapFor(lv));
   if (id === "forge") {
     const keys = Object.entries(BUILD.FORGE_WEAPON_LEVEL).filter(([, l]) => l === lv).map(([k]) => k);
     const slots = BUILD.FORGE_WEAPON_SLOTS[lv];
     const parts = [];
-    if (slots > (BUILD.FORGE_WEAPON_SLOTS[lv - 1] ?? 0)) parts.push(`${slots}ª vaga de arma na partida`);
-    if (keys.length) parts.push(`libera forjar: ${keys.map((k) => WEAPONS[k].name).join(" e ")}`);
+    if (slots > (BUILD.FORGE_WEAPON_SLOTS[lv - 1] ?? 0)) parts.push(tr("{0}ª vaga de arma na partida", slots));
+    if (keys.length) parts.push(tr("libera forjar: {0}", keys.map((k) => WEAPONS[k].name).join(", ")));
     const t = parts.join(" · ");
     return t.charAt(0).toUpperCase() + t.slice(1);
   }
   if (id === "fire") {
     const cid = Object.entries(BUILD.FIRE_CHARACTER_LEVEL).find(([, l]) => l === lv)?.[0];
     const c = CHARACTERS.find((c) => c.id === cid);
-    return c ? `Chega à Clareira: ${c.name}` : "";
+    return c ? tr("Chega à Clareira: {0}", c.name) : "";
   }
   if (id === "trail") {
     const b = Object.values(BIOMES).find((b) => b.unlock?.trail === lv);
-    return b ? `Abre o caminho para a ${b.name}` : "";
+    return b ? tr("Abre o caminho para a {0}", b.name) : "";
   }
-  if (id === "pond") return FISHING.LEVELS[lv] ? `Vara melhor · lago com ${FISHING.LEVELS[lv].cap} peixes` : "";
+  if (id === "pond") return FISHING.LEVELS[lv] ? tr("Vara melhor · lago com {0} peixes", FISHING.LEVELS[lv].cap) : "";
   if (id === "garden") {
     const crops = Object.values(GARDEN.CROPS).filter((c) => !c.rare && c.lv === lv).map((c) => c.name);
-    return `${GARDEN.PLOTS[lv]} canteiros${crops.length ? ` · ${crops.join(", ")}` : ""}`;
+    return tr("{0} canteiros{1}", GARDEN.PLOTS[lv], crops.length ? ` · ${crops.join(", ")}` : "");
   }
   return "";
 }
@@ -165,6 +166,6 @@ export function perkText(id, lv) {
 // "3:05" / "1h 12min"
 export function fmtDuration(ms) {
   const s = Math.ceil(ms / 1000);
-  if (s >= 3600) return `${Math.floor(s / 3600)}h ${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}min`;
+  if (s >= 3600) return tr("{0}h {1}min", Math.floor(s / 3600), String(Math.floor((s % 3600) / 60)).padStart(2, "0"));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 }

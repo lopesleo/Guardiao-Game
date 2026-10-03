@@ -20,6 +20,7 @@ import { registerPond } from "../art/Pond.js";
 import { registerCampDecor } from "../art/CampDecor.js";
 import { registerAudio } from "../audio/Synth.js";
 import { text, Bar, PAL, vw, vh, fitCamera } from "../ui/Theme.js";
+import { tr } from "../i18n/i18n.js";
 
 export class PreloadScene extends Phaser.Scene {
   constructor() {
@@ -30,29 +31,29 @@ export class PreloadScene extends Phaser.Scene {
     fitCamera(this);
     const cx = vw(this) / 2,
       cy = vh(this) / 2;
-    text(this, cx, cy - 50, "GUARDIÃO DA FLORESTA", { size: 34, color: "#f2c14e", origin: 0.5 });
+    text(this, cx, cy - 50, tr("GUARDIÃO DA FLORESTA"), { size: 34, color: "#f2c14e", origin: 0.5 });
     const label = text(this, cx, cy + 44, "", { size: 16, color: "#9fb4a4", origin: 0.5 });
     const barW = 420;
     const bar = new Bar(this, cx - barW / 2, cy - 6, barW, 24, PAL.g5, { segments: 10 });
     bar.set(0, true);
 
     const steps = [
-      ["Plantando a floresta…", () => this.registry.set("envKeys", registerEnvironment(this))],
-      ["Secando o sertão…", () => this.registry.set("envKeysCaatinga", registerCaatinga(this))],
-      ["Talhando ícones…", () => registerIcons(this)],
-      ["Acendendo vaga-lumes…", () => registerSprites(this)],
-      ["Despertando o Guardião…", () => { registerHeroes(this); registerHeroRig(this); }],
-      ["Corrompendo criaturas…", () => { registerMonsters(this); registerCaatingaMonsters(this); }],
-      ["Afiando garras…", () => registerTelegraphs(this)],
-      ["Acendendo cogumelos…", () => registerLanterns(this)],
-      ["Erguendo os santuários…", () => registerShrines(this)],
-      ["Erguendo o acampamento…", () => registerCamp(this)],
-      ["Cobrindo os telhados de sapê…", () => registerBuildings(this)],
-      ["Arando a horta…", () => registerGarden(this)],
-      ["Acendendo o fogão…", () => registerKitchen(this)],
-      ["Enchendo o lago…", () => registerPond(this)],
-      ["Pendurando as bandeirinhas…", () => registerCampDecor(this)],
-      ["Afinando a floresta…", () => registerAudio(this.game)],
+      [tr("Plantando a floresta…"), () => this.registry.set("envKeys", registerEnvironment(this))],
+      [tr("Secando o sertão…"), () => this.registry.set("envKeysCaatinga", registerCaatinga(this))],
+      [tr("Talhando ícones…"), () => registerIcons(this)],
+      [tr("Acendendo vaga-lumes…"), () => registerSprites(this)],
+      [tr("Despertando o Guardião…"), () => { registerHeroes(this); registerHeroRig(this); }],
+      [tr("Corrompendo criaturas…"), () => { registerMonsters(this); registerCaatingaMonsters(this); }],
+      [tr("Afiando garras…"), () => registerTelegraphs(this)],
+      [tr("Acendendo cogumelos…"), () => registerLanterns(this)],
+      [tr("Erguendo os santuários…"), () => registerShrines(this)],
+      [tr("Erguendo o acampamento…"), () => registerCamp(this)],
+      [tr("Cobrindo os telhados de sapê…"), () => registerBuildings(this)],
+      [tr("Arando a horta…"), () => registerGarden(this)],
+      [tr("Acendendo o fogão…"), () => registerKitchen(this)],
+      [tr("Enchendo o lago…"), () => registerPond(this)],
+      [tr("Pendurando as bandeirinhas…"), () => registerCampDecor(this)],
+      [tr("Afinando a floresta…"), () => registerAudio(this.game)],
     ];
     let i = 0;
     const next = () => {

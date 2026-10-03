@@ -8,6 +8,7 @@ import { PAL, CSS, hex } from "../art/Palette.js";
 import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
 import { closeTopModal } from "../ui/Widgets.js";
 import { MetaPanels } from "../ui/MetaPanels.js";
+import { tr } from "../i18n/i18n.js";
 
 export class TitleScene extends Phaser.Scene {
   constructor() {
@@ -265,9 +266,9 @@ export class TitleScene extends Phaser.Scene {
     const x = Math.round(this.W * 0.3);
     const glow = this.add.image(x, 110, "fx_glow").setScale(8, 2.5).setTint(0xf2c14e).setAlpha(0.14).setBlendMode(Phaser.BlendModes.ADD);
     this.tweens.add({ targets: glow, alpha: 0.24, duration: 1800, yoyo: true, repeat: -1 });
-    const t1 = text(this, x, 96, "GUARDIÃO", { size: 84, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 10, shadowY: 6 });
-    const t2 = text(this, x, 160, "DA FLORESTA", { size: 34, color: hex(PAL.g6), origin: 0.5, stroke: true, strokeW: 6 });
-    text(this, x, 202, "Sobreviva à horda. Desperte a mata.", { size: 18, color: CSS.muted, origin: 0.5 });
+    const t1 = text(this, x, 96, tr("GUARDIÃO"), { size: 84, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 10, shadowY: 6 });
+    const t2 = text(this, x, 160, tr("DA FLORESTA"), { size: 34, color: hex(PAL.g6), origin: 0.5, stroke: true, strokeW: 6 });
+    text(this, x, 202, tr("Sobreviva à horda. Desperte a mata."), { size: 18, color: CSS.muted, origin: 0.5 });
     [t1, t2].forEach((t, i) => {
       t.setAlpha(0).y -= 20;
       this.tweens.add({ targets: t, alpha: 1, y: t.y + 20, delay: 150 + i * 120, duration: 500, ease: "Back.easeOut" });
@@ -278,13 +279,13 @@ export class TitleScene extends Phaser.Scene {
     const W = this.W,
       H = this.H;
     const cx = Math.round(Math.max(W * 0.74, W - 250));
-    this.playBtn = new Button(this, cx, H * 0.56, 380, 86, "JOGAR", () => this._play(), { size: 42, style: "primary", color: CSS.goldHi });
+    this.playBtn = new Button(this, cx, H * 0.56, 380, 86, tr("JOGAR"), () => this._play(), { size: 42, style: "primary", color: CSS.goldHi });
     this.tweens.add({ targets: this.playBtn, scale: 1.04, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
-    new Button(this, cx, H * 0.56 + 92, 380, 58, "OPÇÕES", () => !this._modals.length && this._showSettings(), { size: 22, icon: "ico_gear", iconScale: 2.5, style: "dark" });
-    new Button(this, cx, H * 0.56 + 160, 380, 58, "CRÉDITOS", () => !this._modals.length && this._showCredits(), { size: 22, style: "dark" });
+    new Button(this, cx, H * 0.56 + 92, 380, 58, tr("OPÇÕES"), () => !this._modals.length && this._showSettings(), { size: 22, icon: "ico_gear", iconScale: 2.5, style: "dark" });
+    new Button(this, cx, H * 0.56 + 160, 380, 58, tr("CRÉDITOS"), () => !this._modals.length && this._showCredits(), { size: 22, style: "dark" });
     // Tela cheia (só navegador)
     if (!isNative()) new Button(this, 44, 40, 52, 52, null, () => this.scale.toggleFullscreen(), { icon: "ico_fullscreen", style: "dark", iconScale: 2.5 });
-    if (!this.meta.available) text(this, 20, H - 20, "Modo privado: o progresso não será salvo", { size: 14, color: CSS.redHi, origin: [0, 1] });
+    if (!this.meta.available) text(this, 20, H - 20, tr("Modo privado: o progresso não será salvo"), { size: 14, color: CSS.redHi, origin: [0, 1] });
     text(this, W - 12, H - 8, "v1.0", { size: 12, color: CSS.dim, origin: [1, 1], shadow: false });
   }
 

@@ -3,6 +3,7 @@
 import { META, MAX_BLESSING_RANK, ANCESTRAL, ACHIEVEMENTS, BUILD, BIOMES, blessingPrice } from '../config.js';
 import { Analytics } from './Analytics.js';
 import { Clock } from './Clock.js';
+import { fmt } from '../i18n/i18n.js';
 
 // Assinatura do save (FNV-1a 2×32 bits com sal): não é criptografia forte —
 // o jogo é offline —, mas pega edição casual do localStorage.
@@ -337,7 +338,7 @@ export class MetaProgression {
       : def.stat === "win1" ? Object.entries(this.data.winsByDifficulty || {}).reduce((a, [k, v]) => a + (Number(k) >= 1 ? v : 0), 0)
       : def.stat in s ? s[def.stat] || 0
       : (s.reactions || {})[def.stat] || 0;
-    return { text: def.text.replace("{n}", def.n.toLocaleString("pt-BR")), p: Math.min(p, def.n), n: def.n, done: p >= def.n };
+    return { text: def.text.replace("{n}", fmt(def.n)), p: Math.min(p, def.n), n: def.n, done: p >= def.n };
   }
   // Feito da Forja de uma arma (sem feito = null)
   weaponDeed(weaponKey) {

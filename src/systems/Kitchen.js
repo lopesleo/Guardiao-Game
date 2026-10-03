@@ -4,6 +4,7 @@
 import { KITCHEN, GARDEN, FISHING } from "../config.js";
 import { pantryCount } from "./Garden.js";
 import { riverOpen } from "./Pond.js";
+import { tr, dec } from "../i18n/i18n.js";
 
 export const recipe = (id) => KITCHEN.RECIPES.find((r) => r.id === id);
 // Nome de um ingrediente (planta da horta ou peixe do lago)
@@ -96,15 +97,15 @@ export function bonusText(r, q = 0) {
   const pct = (v) => Math.round(v * k * 100);
   return Object.entries(r.bonus)
     .map(([stat, v]) => {
-      if (stat === "hp") return `+${pct(v)}% vida máxima`;
-      if (stat === "speed") return `+${pct(v)}% velocidade`;
-      if (stat === "dmg") return `+${pct(v)}% dano`;
-      if (stat === "area") return `+${pct(v)}% área`;
-      if (stat === "xp") return `+${pct(v)}% XP`;
-      if (stat === "pickup") return `+${pct(v)}% raio de coleta`;
-      if (stat === "cd") return `−${pct(v)}% recarga`;
-      if (stat === "crit") return `+${pct(v)}% crítico`;
-      if (stat === "regen") return `+${(v * k).toFixed(1).replace(".", ",")} vida/s`;
+      if (stat === "hp") return tr("+{0}% vida máxima", pct(v));
+      if (stat === "speed") return tr("+{0}% velocidade", pct(v));
+      if (stat === "dmg") return tr("+{0}% dano", pct(v));
+      if (stat === "area") return tr("+{0}% área", pct(v));
+      if (stat === "xp") return tr("+{0}% XP", pct(v));
+      if (stat === "pickup") return tr("+{0}% raio de coleta", pct(v));
+      if (stat === "cd") return tr("−{0}% recarga", pct(v));
+      if (stat === "crit") return tr("+{0}% crítico", pct(v));
+      if (stat === "regen") return tr("+{0} vida/s", dec(v * k));
       return "";
     })
     .join(" · ");

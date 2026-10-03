@@ -8,6 +8,7 @@ import { weaponSlotsFor, Builds } from "./Builds.js";
 import { WEAPON_ICON, PASSIVE_ICON } from "../art/Icons.js";
 import { WEAPON_CLASSES } from "../entities/Weapons.js";
 import { linkHint } from "./Links.js";
+import { tr } from "../i18n/i18n.js";
 
 // Tudo sai das fichas de WEAPONS (config.js): ordem das armas base, texto da carta,
 // melhorias sorteáveis (mods) e o rótulo do "+1" (plus). Ver docs/CONTEUDO.md.
@@ -86,8 +87,8 @@ export class UpgradeSystem {
     const same = player.weapons.filter((w) => w.def?.element === element).length;
     const els = new Set(player.weapons.map((w) => w.def?.element));
     const hints = [];
-    if (same >= 1) hints.push(`Ressonância de ${RESONANCE.NAMES[element]}: +${Math.round(RESONANCE.PER_EXTRA_WEAPON * 100)}% de dano nas armas de ${RESONANCE.NAMES[element].toLowerCase()}`);
-    if (!els.has(element) && els.size === 2) hints.push(`PRISMA: reações +${Math.round((RESONANCE.PRISM_REACTION - 1) * 100)}%`);
+    if (same >= 1) hints.push(tr("Ressonância de {0}: +{1}% de dano nas armas de {2}", RESONANCE.NAMES[element], Math.round(RESONANCE.PER_EXTRA_WEAPON * 100), RESONANCE.NAMES[element].toLowerCase()));
+    if (!els.has(element) && els.size === 2) hints.push(tr("PRISMA: reações +{0}%", Math.round((RESONANCE.PRISM_REACTION - 1) * 100)));
     return hints.length ? "\n" + hints.join("\n") : "";
   }
 
@@ -118,7 +119,7 @@ export class UpgradeSystem {
           weaponKey: key,
           title: WEAPONS[key].name,
           desc: WEAPON_DESC[key] + this._resonanceHint(player, WEAPONS[key].element) + linkHint(player, key),
-          stat: "Nova arma",
+          stat: tr("Nova arma"),
           icon: WEAPON_ICON[key],
           element: WEAPONS[key].element,
           level: 0,
@@ -135,18 +136,18 @@ export class UpgradeSystem {
       let stat, apply;
       if (mod === "dmg") {
         const v = rInt(25, 45);
-        stat = `+${v}% Dano`;
+        stat = tr("+{0}% Dano", v);
         apply = () => (w.dmgMult *= 1 + v / 100);
       } else if (mod === "cd") {
         const v = rInt(15, 30);
-        stat = `−${v}% Recarga`;
+        stat = tr("−{0}% Recarga", v);
         apply = () => (w.cdMult *= 1 - v / 100);
       } else if (mod === "range") {
         const v = rInt(18, 33);
-        stat = `+${v}% Alcance`;
+        stat = tr("+{0}% Alcance", v);
         apply = () => (w.rangeMult *= 1 + v / 100);
       } else {
-        stat = PROJ_LABEL[w.key] ?? "+1 Projétil";
+        stat = PROJ_LABEL[w.key] ?? tr("+1 Projétil");
         apply = () => (w.extraProj += 1);
       }
       cards.push({
@@ -181,8 +182,8 @@ export class UpgradeSystem {
         desc: ps.desc,
         stat: rolled.name,
         ribbon: owned
-          ? `PASSIVA ×${taken[ps.id] + 1}`
-          : `PASSIVA NOVA ${Object.keys(taken).length + 1}/${PASSIVE_SLOTS}`,
+          ? tr("PASSIVA ×{0}", taken[ps.id] + 1)
+          : tr("PASSIVA NOVA {0}/{1}", Object.keys(taken).length + 1, PASSIVE_SLOTS),
         icon: PASSIVE_ICON[ps.id] ?? "ico_plus",
         _w: 1,
         _apply: rolled.apply,
@@ -199,12 +200,12 @@ export class UpgradeSystem {
       // O trato toma o lugar de UMA das cartas comuns (a evolução nunca é trocada)
       if (pact && picked.length) {
         picked[picked.length - 1] = pact;
-        this.scene._hint?.("pact", "TRATO DA MATA: poder grande em troca de um custo.\nVocê pode recusar, trocar ou banir.");
+        this.scene._hint?.("pact", tr("TRATO DA MATA: poder grande em troca de um custo.\nVocê pode recusar, trocar ou banir."));
       }
       return picked;
     };
     if (evo) {
-      this.scene._hint?.("evolution", "EVOLUÇÃO disponível! Arma no nível 5\n+ arma parceira = versão suprema.");
+      this.scene._hint?.("evolution", tr("EVOLUÇÃO disponível! Arma no nível 5\n+ arma parceira = versão suprema."));
       return [evo, ...pick(2)];
     }
     return pick(3);
@@ -272,7 +273,7 @@ export class UpgradeSystem {
         player.recomputeResonance();
         this.scene.sound.play("sfx_levelup", { volume: 0.7, rate: 0.8 });
         this.scene.cameras.main.flash(220, 216, 140, 255); // flash roxo de evolução
-        this.scene._toast?.(`EVOLUÇÃO: ${def.name}!`, 2600, "#e8ccff");
+        this.scene._toast?.(tr("EVOLUÇÃO: {0}!", def.name), 2600, "#e8ccff");
         this.scene.hud?.refreshWeapons();
         this.scene._checkAchievements?.(); // "Metamorfose"
       }
@@ -288,14 +289,14 @@ export class UpgradeSystem {
     } else if (card.type === "pact") {
       card._apply?.(player);
       this.pactsTaken.add(card.pactId);
-      this.scene._toast?.(`TRATO: ${card.title}`, 2200, "#ff8a8a");
+      this.scene._toast?.(tr("TRATO: {0}", card.title), 2200, "#ff8a8a");
       Analytics.track("pact_taken", { id: card.pactId, level: player.level });
     } else if (card.type === "passive") {
       if (card._apply) card._apply(player);
       player.passivesTaken ??= {};
       player.passivesTaken[card.passiveId] = (player.passivesTaken[card.passiveId] || 0) + 1;
       if (Object.keys(player.passivesTaken).length === PASSIVE_SLOTS)
-        this.scene._hint?.("passive_slots", `Passivas completas (${PASSIVE_SLOTS}/${PASSIVE_SLOTS})!\nAgora as cartas só reforçam as que você já tem.`);
+        this.scene._hint?.("passive_slots", tr("Passivas completas ({0}/{1})!\nAgora as cartas só reforçam as que você já tem.", PASSIVE_SLOTS, PASSIVE_SLOTS));
       // Conquista "Osso Duro" (quase-pacifista): marca se pegou passivo de HP
       if (card.passiveId === "hp" && this.scene._runFlags) {
         this.scene._runFlags.tookHpPassive = true;

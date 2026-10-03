@@ -14,6 +14,7 @@ const DEFAULTS = {
   notify: false, // avisos (só no app, só depois que o jogador aceitar)
   notifyAsked: false,
   telemetry: true, // dados de uso e erros (Firebase, só no app); o jogador pode desligar
+  lang: null, // idioma (ver i18n/i18n.js); null = o do aparelho na 1ª abertura
 };
 
 let cache = null;

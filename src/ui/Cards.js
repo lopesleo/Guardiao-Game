@@ -3,15 +3,16 @@
 import { PAL, CSS, hex, ELEMENT_COLOR } from "../art/Palette.js";
 import { MAX_WEAPON_LEVEL } from "../config.js";
 import { text, drawFrame, P, haptic } from "./Theme.js";
+import { tr } from "../i18n/i18n.js";
 
 const TYPE = {
-  new: { style: "green", ribbon: PAL.g5, label: "NOVA ARMA", stat: CSS.green },
-  upgrade: { style: "gold", ribbon: PAL.uiGold, label: "MELHORIA", stat: CSS.goldHi },
-  evolution: { style: "purple", ribbon: PAL.pur2, label: "EVOLUÇÃO", stat: hex(PAL.pur3) },
-  passive: { style: "ice", ribbon: PAL.ice2, label: "PASSIVA", stat: hex(PAL.ice3) },
-  pact: { style: "danger", ribbon: PAL.red2, label: "TRATO DA MATA", stat: CSS.goldHi },
+  new: { style: "green", ribbon: PAL.g5, label: tr("NOVA ARMA"), stat: CSS.green },
+  upgrade: { style: "gold", ribbon: PAL.uiGold, label: tr("MELHORIA"), stat: CSS.goldHi },
+  evolution: { style: "purple", ribbon: PAL.pur2, label: tr("EVOLUÇÃO"), stat: hex(PAL.pur3) },
+  passive: { style: "ice", ribbon: PAL.ice2, label: tr("PASSIVA"), stat: hex(PAL.ice3) },
+  pact: { style: "danger", ribbon: PAL.red2, label: tr("TRATO DA MATA"), stat: CSS.goldHi },
 };
-const ELEMENT_NAME = { fire: "FOGO", ice: "GELO", bolt: "RAIO", wind: "VENTO" };
+const ELEMENT_NAME = { fire: tr("FOGO"), ice: tr("GELO"), bolt: tr("RAIO"), wind: tr("VENTO") };
 
 export function createCard(scene, x, y, w, h, card, onClick, index, showKey = true) {
   const t = TYPE[card.type] || TYPE.passive;
@@ -57,11 +58,12 @@ export function createCard(scene, x, y, w, h, card, onClick, index, showKey = tr
   scene.tweens.add({ targets: ico, y: my - 4, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
 
   // Nome
-  let cy = my + 58;
-  const title = text(scene, 0, cy, card.title, { size: 24, origin: 0.5, align: "center", wrap: w - 30, stroke: true, strokeW: 4 });
+  // Empilhado pela altura real: nome e efeito podem quebrar em 2 linhas (traduções, texto grande)
+  let cy = my + 46;
+  const title = text(scene, 0, cy, card.title, { size: 24, origin: [0.5, 0], align: "center", wrap: w - 30, stroke: true, strokeW: 4 });
   if (title.width > w - 24) title.setFontSize(20);
   inner.add(title);
-  cy += title.height / 2 + 14;
+  cy += title.height + 14;
 
   // Selo de elemento (armas)
   if (card.element) {
@@ -76,8 +78,9 @@ export function createCard(scene, x, y, w, h, card, onClick, index, showKey = tr
   }
 
   // Efeito (o número que importa)
-  inner.add(text(scene, 0, cy + 6, card.stat ?? "", { size: 21, color: t.stat, origin: 0.5, align: "center", wrap: w - 28, stroke: true, strokeW: 4 }));
-  cy += 34;
+  const statT = text(scene, 0, cy - 6, card.stat ?? "", { size: 21, color: t.stat, origin: [0.5, 0], align: "center", wrap: w - 28, stroke: true, strokeW: 4 });
+  inner.add(statT);
+  cy += statT.height + 8;
 
   // Descrição
   const descT = text(scene, 0, cy, card.desc ?? "", {

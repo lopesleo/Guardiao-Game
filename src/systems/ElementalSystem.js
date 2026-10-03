@@ -5,6 +5,7 @@
 import { STATUS, REACTION, COLORS, PLAYER, ELEMENT } from "../config.js";
 import { text } from "../ui/Theme.js";
 import { hex } from "../art/Palette.js";
+import { tr } from "../i18n/i18n.js";
 
 // Reações por COEXISTÊNCIA de status — as três funcionam do mesmo jeito: dois
 // elementos no mesmo inimigo. CRISTAL antes exigia o inimigo CONGELADO (na prática
@@ -128,7 +129,7 @@ export class ElementalSystem {
     scene.lighting?.flash(enemy.x, enemy.y, 280, def.color, 450, 1);
     // Texto flutuante BIG (D21)
     this._label(enemy.x, enemy.y, def.label, def.color);
-    scene._hint?.("reaction", "REAÇÃO! Dois elementos no mesmo inimigo\ncausam efeitos extras. Combine armas!");
+    scene._hint?.("reaction", tr("REAÇÃO! Dois elementos no mesmo inimigo\ncausam efeitos extras. Combine armas!"));
 
     // Screenshake leve
     scene.cameras.main.shake(120, 0.005);

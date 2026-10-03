@@ -182,6 +182,14 @@ if (new Set(legendIds).size !== legendIds.length) err("bestiário com id repetid
 for (const k of META.WEAPON_UNLOCK_ORDER) if (BUILD.FORGE_WEAPON_LEVEL[k] == null) err(`Forja: ${k} sem nível`);
 for (const k of BASE_WEAPON_KEYS) if (!STARTER_WEAPONS.includes(k) && !META.WEAPON_UNLOCK_ORDER.includes(k)) err(`${k}: nem inicial nem forjável`);
 
+// ---------- Idiomas (src/i18n, ver docs/IDIOMAS.md) ----------
+{
+  const { check: checkI18n } = await import("./i18n.mjs");
+  for (const p of await checkI18n({ quiet: true })) err(`idioma ${p}`);
+  const { stale } = await import("./font-subset.mjs");
+  for (const [f, miss] of await stale()) err(`fonte ${f}: faltam ${Array.from(miss).length} caracteres — rode node tools/font-subset.mjs`);
+}
+
 // ---------- Relatório ----------
 const byEl = (keys) => Object.fromEntries(ELS.map((el) => [el, keys.filter((k) => WEAPONS[k].element === el).length]));
 console.log(`Armas base: ${BASE_WEAPON_KEYS.length} ${JSON.stringify(byEl(BASE_WEAPON_KEYS))} · evoluções: ${EVOLUTION_KEYS.length} · laços: ${LINKS.length} · guardiões: ${CHARACTERS.length} · biomas: ${Object.keys(BIOMES).length}`);

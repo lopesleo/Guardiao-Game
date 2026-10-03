@@ -6,6 +6,7 @@ import { CSS, PAL, hex } from "../art/Palette.js";
 import { text, dim, Button, vw, vh, fitCamera, haptic, drawFrame } from "../ui/Theme.js";
 import { formatTime } from "../utils.js";
 import { Analytics } from "../systems/Analytics.js";
+import { tr } from "../i18n/i18n.js";
 
 export class EndlessChoiceScene extends Phaser.Scene {
   constructor() {
@@ -25,24 +26,24 @@ export class EndlessChoiceScene extends Phaser.Scene {
     // e posições fixas deixavam o subtítulo e as regras uns sobre os outros.
     const pg = this.add.graphics();
     const wrap = W - 120; // só quebra linha se nem a tela inteira couber
-    const who = this.gs.biome?.bossName ?? "Mapinguari";
+    const who = this.gs.biome?.bossName ?? tr("Mapinguari");
     const best = this.gs.meta.data.bestEndlessSeconds || 0;
     const info = [
-      `Na Noite Eterna os inimigos ficam ${Math.round(ENDLESS.HP_GROWTH_PER_MIN * 100)}% mais fortes a cada minuto.`,
-      `Cada minuto de pé vale +${ENDLESS.COINS_PER_MIN} moedas. A vitória já está garantida.`,
-      best > 0 ? `Seu recorde: ${formatTime(best * 1000)}` : "Quanto tempo você aguenta?",
+      tr("Na Noite Eterna os inimigos ficam {0}% mais fortes a cada minuto.", Math.round(ENDLESS.HP_GROWTH_PER_MIN * 100)),
+      tr("Cada minuto de pé vale +{0} moedas. A vitória já está garantida.", ENDLESS.COINS_PER_MIN),
+      best > 0 ? tr("Seu recorde: {0}", formatTime(best * 1000)) : tr("Quanto tempo você aguenta?"),
     ];
-    const t = text(this, W / 2, 0, "VITÓRIA!", { size: 80, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 10, shadowY: 6 });
-    const sub = text(this, W / 2, 0, `O ${who} está livre. Mas a Podridão não dorme…`, { size: 24, color: CSS.muted, origin: [0.5, 0], align: "center", wrap });
+    const t = text(this, W / 2, 0, tr("VITÓRIA!"), { size: 80, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 10, shadowY: 6 });
+    const sub = text(this, W / 2, 0, tr("O {0} está livre. Mas a Podridão não dorme…", who), { size: 24, color: CSS.muted, origin: [0.5, 0], align: "center", wrap });
     const body = text(this, W / 2, 0, info.join("\n"), { size: 19, color: CSS.txt, origin: [0.5, 0], align: "center", lineSpacing: 6, wrap });
     // o painel acompanha o texto (fonte Legível/texto grande = painel mais largo)
     const pw = Math.max(640, Math.min(W - 40, Math.max(sub.width, body.width) + 90));
-    const go = new Button(this, W / 2, 0, Math.min(pw - 60, Math.max(460, pw * 0.6)), 72, "ENFRENTAR A NOITE ETERNA", () => this._choose(true), {
+    const go = new Button(this, W / 2, 0, Math.min(pw - 60, Math.max(460, pw * 0.6)), 72, tr("ENFRENTAR A NOITE ETERNA"), () => this._choose(true), {
       size: 26,
       style: "purple",
       color: hex(PAL.pur3),
     });
-    const end = new Button(this, W / 2, 0, Math.min(pw - 60, Math.max(380, pw * 0.5)), 60, "ENCERRAR COM A VITÓRIA", () => this._choose(false), {
+    const end = new Button(this, W / 2, 0, Math.min(pw - 60, Math.max(380, pw * 0.5)), 60, tr("ENCERRAR COM A VITÓRIA"), () => this._choose(false), {
       size: 22,
       style: "primary",
       color: CSS.goldHi,
