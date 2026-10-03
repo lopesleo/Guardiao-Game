@@ -76,7 +76,33 @@ mesmo que o herói fique sempre na mesma distância.
 Fase 1 é uma rotação fixa que ensina; a Fúria (abaixo de 50%) troca a rotação e
 encurta o fôlego.
 
+### Caboclo d'Água (chefe da Caatinga — `src/entities/BossCaboclo.js`)
+Guardião do Rio São Francisco: vira a canoa de quem maltrata o rio. A Podridão o
+trouxe para o sertão seco, e com ele veio o rio. **A marca da lenda são as CARRANCAS**:
+os barqueiros punham figuras de proa para espantá-lo. Aqui três carrancas ficam
+fincadas perto do herói (renascem perto dele se quebrarem ou ficarem longe).
+
+| Golpe | Fase | Aviso | Como escapar |
+|---|---|---|---|
+| **Cheia do Rio** | 1 e 2 | faixas paralelas de água (uma sempre passa pelo herói); na fúria, logo depois, outra cheia **em cruz** centrada no herói | passo para o lado, para a margem entre as faixas |
+| **Rebojo** | 1 e 2 | 3 (fúria: 4) redemoinhos; um nasce sob o herói | andar para fora: o puxão é fraco (58) perto do andar do herói (160) |
+| **Arrastão** | 1 e 2 | faixa na direção do herói; **se houver carranca no caminho, a faixa para nela** (anel verde) | sair da faixa — ou **ficar atrás da carranca**: ele bate nela, se ESPANTA e fica **2,6 s exposto (×1,8)**; sem carranca, ENCALHADO 0,8 s |
+| **Pedras do Rio** | 1 e 2 | 3 (fúria: 5) círculos vermelhos, um de cada vez, onde o herói está | não ficar parado: cada pedra cai onde você estava |
+| **Tromba d'Água** | 2 | coluna d'água com círculo que **persegue** (112, mais lenta que o herói); no fim, círculo maior onde ela desaba | manter distância e sair do círculo final; depois, CANSADO (ponto fraco) |
+| **Chamado do Sertão** | 1 e 2 | braços erguidos | calangos (e carcarás na fúria); não conta como golpe |
+
+Recompensa da leitura: atrair o Arrastão para uma carranca é a maior janela de dano da
+luta. Uma dica (uma vez por save) explica as carrancas quando a luta começa.
+
 ## Como foi verificado
+
+**Caboclo d'Água (out/2026):** robô justo, 3 distâncias × 2 fases × 5 golpes, **sem as
+carrancas** (o pior caso): **0 acertos**; parado: todos os golpes acertam. Rodada final
+com os quatro chefes: **0 acertos em 101 casos**. O robô ganhou duas regras mais
+fiéis a uma pessoa: cada círculo tem o próprio tempo de reação (pedras em sequência) e
+sumir uma onda já resolvida não reinicia a reação. Raros casos de herói "travado" por
+alguns quadros no laboratório sumiram ao instrumentar (relógio simulado + hit-stop) —
+anotado como artefato do teste, não visto nas partidas renderizadas.
 
 - **Robô justo** (laboratório no navegador, sem render, relógio simulado): cada golpe,
   das distâncias 90/190/320, nas duas fases, com um jogador-robô que **só anda** (Dash

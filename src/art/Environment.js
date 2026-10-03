@@ -273,7 +273,7 @@ export function makeRock(seed, opts = {}) {
     { cx: W * (0.3 + r() * 0.4), cy: H * 0.45, rx: W * 0.28, ry: H * 0.35 },
   ];
   blobs.sort((a, b) => a.cy - b.cy);
-  shadeBlobs(p, blobs, STONE, r, 0.3);
+  shadeBlobs(p, blobs, opts.ramp ?? STONE, r, 0.3);
   // Rachadura
   const cx0 = Math.floor(W * 0.4 + r() * W * 0.2);
   for (let k = 0; k < 3; k++) p.over(cx0 + (k % 2), Math.floor(H * 0.35) + k, PAL.s1);
@@ -399,7 +399,7 @@ export function makeLog(seed) {
 // centenas de árvores/pedras (batching no celular). Retorna os nomes de frame
 // por categoria. O chão fica como textura própria (tileSprite repete).
 export function registerEnvironment(scene) {
-  const keys = { trees: [], pines: [], bushes: [], rocks: [], flowers: [], tufts: [], shrooms: [], stumps: [], logs: [], patches: { dark: [], dirt: [], moss: [] } };
+  const keys = { atlas: "env", ground: "env_ground", trees: [], pines: [], bushes: [], rocks: [], flowers: [], tufts: [], shrooms: [], stumps: [], logs: [], patches: { dark: [], dirt: [], moss: [] } };
   makeGroundTile().register(scene, "env_ground");
   const items = [];
   const add = (list, name, pix) => {

@@ -233,6 +233,12 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Arte nova (Mula empinada e no coice, Corpo-Seco de braços erguidos, Mapinguari de bocarra e gritando),
   13 sons novos, nome do golpe sob a barra. Verificado com um robô que só anda e reage em 250 ms: 0 acertos
   em 73 casos; parado, os golpes acertam. Debug: M = Mula, C = Corpo-Seco. 👤 sentir no aparelho
+- ✅ **Bioma 2: Caatinga** (ver `BIOMAS.md`): vencer o Mapinguari revela a **Trilha do Sertão**
+  (obra do João-de-barro); a placa da trilha passa a escolher **mapa + Perigo**. Cenário do sertão
+  por código, calango/carcará/cabeça-de-frade, **redemoinhos de poeira** (empurram e deixam ventado),
+  chefe **Caboclo d'Água** com 5 golpes de água e as **carrancas** (atraia o Arrastão para uma: ele
+  se espanta e fica exposto), baião e xaxado no Synth, 2 conquistas. Framework: ficha `BIOMES`,
+  `registerBoss`, `npm run check` confere biomas. Robô justo: 0 acertos em 101 casos
 - ✅ **Iluminação de volta**: desde a migração para o Phaser 4 o mapa de luz não aparecia (a
   RenderTexture só executa o desenho com `render()`). Corrigido, com ambiente mais claro que o
   original (o jogo foi equilibrado "aceso"): entardecer → noite → chefe, legível no celular.

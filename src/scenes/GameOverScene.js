@@ -16,7 +16,7 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   create(data) {
-    const { won, quit, elapsedMs, kills, coinsGained, coinsDoubleable = coinsGained, restedMult = 1, firstClear = 0, woodGained = 0, seedsGained = 0, newUnlocks = [], difficulty, unlockedNextDifficulty, level = 1, weapons = [], endlessS = 0, endlessRecord = false } = data;
+    const { won, quit, elapsedMs, kills, coinsGained, coinsDoubleable = coinsGained, restedMult = 1, firstClear = 0, woodGained = 0, seedsGained = 0, newUnlocks = [], difficulty, unlockedNextDifficulty, level = 1, weapons = [], endlessS = 0, endlessRecord = false, biome = null } = data;
     fitCamera(this);
     // O Phaser REAPROVEITA a instância da cena: todo estado de "visita" precisa
     // ser zerado aqui, senão sobra da vez anterior (ex.: herói preso andando).
@@ -37,9 +37,9 @@ export class GameOverScene extends Phaser.Scene {
     this.tweens.add({ targets: t, scale: 1, alpha: 1, duration: 420, ease: "Back.easeOut" });
     const sub =
       endlessS > 0
-        ? `Mapinguari libertado e mais ${formatTime(endlessS * 1000)} na escuridão${endlessRecord ? " — NOVO RECORDE!" : "."}`
+        ? `${biome?.bossName ?? "Mapinguari"} libertado e mais ${formatTime(endlessS * 1000)} na escuridão${endlessRecord ? " — NOVO RECORDE!" : "."}`
         : won
-          ? "O Mapinguari está livre da Podridão. A floresta respira."
+          ? biome?.freed ?? "O Mapinguari está livre da Podridão. A floresta respira."
           : quit
             ? "Você recuou para lutar outro dia."
             : "A floresta caiu… por enquanto.";

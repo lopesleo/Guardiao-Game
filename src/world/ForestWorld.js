@@ -1,7 +1,8 @@
 // Mundo da floresta: chão, decalques, decoração, muralha de árvores na borda,
-// atmosfera (vaga-lumes, folhas, feixes de luz, vinheta). Extraído da
-// GameScene pra ela cuidar só de gameplay.
-import { GAME } from "../config.js";
+// atmosfera (vaga-lumes, folhas, feixes de luz, poeira, vinheta). Extraído da
+// GameScene pra ela cuidar só de gameplay. O BIOMA (BIOMES em config.js) escolhe
+// o atlas do cenário, o chão, a cor de fundo e a atmosfera.
+import { GAME, BIOMES } from "../config.js";
 import { PAL } from "../art/Palette.js";
 import { rng } from "../art/PixelArt.js";
 import { vw, vh } from "../ui/Theme.js";
@@ -15,7 +16,9 @@ export class ForestWorld {
   constructor(scene, opts = {}) {
     this.scene = scene;
     this.R = opts.radius ?? GAME.WORLD_RADIUS;
-    this.keys = scene.registry.get("envKeys");
+    this.biome = opts.biome ?? BIOMES.amazonia;
+    this.keys = scene.registry.get(this.biome.env) ?? scene.registry.get("envKeys");
+    this.atlas = this.keys.atlas ?? "env";
     this.r = rng(opts.seed ?? (Math.random() * 1e9) | 0);
     // Entrada da floresta na borda sul: { half } = meia-largura da brecha
     this.entrance = opts.entrance ?? null;
@@ -36,9 +39,9 @@ export class ForestWorld {
   // textura acompanha o scroll (1 quad só, em vez de um sprite de 14000px).
   _buildGround() {
     const sc = this.scene;
-    sc.cameras.main.setBackgroundColor(0x1d3926);
+    sc.cameras.main.setBackgroundColor(this.biome.bg ?? 0x1d3926);
     this.ground = sc.add
-      .tileSprite(0, 0, vw(sc), vh(sc), "env_ground")
+      .tileSprite(0, 0, vw(sc), vh(sc), this.keys.ground ?? "env_ground")
       .setOrigin(0)
       .setScrollFactor(0)
       .setTileScale(S)
@@ -50,7 +53,7 @@ export class ForestWorld {
 
   _img(x, y, frame, depth, originY = 1, flip = null) {
     const im = this.scene.add
-      .image(Math.round(x), Math.round(y), "env", frame)
+      .image(Math.round(x), Math.round(y), this.atlas, frame)
       .setOrigin(0.5, originY)
       .setScale(S)
       .setDepth(depth);
@@ -128,7 +131,7 @@ export class ForestWorld {
   // Não entra na lista de "desbotar": o jogador nunca fica atrás dela.
   southTree(x, topY, list) {
     const f = this._pick(list);
-    const h = this.scene.textures.getFrame("env", f).height * S;
+    const h = this.scene.textures.getFrame(this.atlas, f).height * S;
     const y = topY + h;
     const im = this._img(x, y, f, y + Y_SORT);
     this._shadow(x, y - 2, im.displayWidth * 0.7);
@@ -139,7 +142,9 @@ export class ForestWorld {
   _border() {
     const R = this.R;
     const k = this.keys;
-    const all = [...k.trees, ...k.pines, ...k.pines];
+    // peso das "pines" na muralha (mata: pinheiros 2×; sertão: mandacaru 1×, mais árvore seca)
+    const wp = this.biome.wallPines ?? 2;
+    const all = [...k.trees, ...Array.from({ length: wp }, () => k.pines).flat()];
     const step = 74;
     const E = this.entrance;
     for (let t = -R - 60; t < R + 60; t += step) {
@@ -164,6 +169,7 @@ export class ForestWorld {
     const W = vw(sc),
       H = vh(sc);
 
+    const A = this.biome.ambient ?? {};
     // Feixes de luz diagonais (aditivos, bem sutis) — dão profundidade
     this.shafts = [];
     for (let i = 0; i < 3; i++) {
@@ -172,7 +178,7 @@ export class ForestWorld {
         .setScrollFactor(0)
         .setScale(3.5, 18)
         .setRotation(-0.5)
-        .setTint(0xfff2b0)
+        .setTint(A.shaft ?? 0xfff2b0)
         .setAlpha(0.05)
         .setBlendMode(Phaser.BlendModes.ADD)
         .setDepth(48600); // acima do mapa de luz: os feixes CLAREIAM
@@ -182,17 +188,25 @@ export class ForestWorld {
 
     // Vaga-lumes e folhas em espaço de MUNDO (renascem ao sair da tela)
     this.ambient = [];
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < (A.fireflies ?? 14); i++) {
       const glow = sc.add.image(0, 0, "fx_glow").setScale(0.35).setTint(0xfff5b8).setBlendMode(Phaser.BlendModes.ADD).setDepth(20000);
       const core = sc.add.image(0, 0, "px_dot2").setScale(S * 0.7).setTint(0xfff5b8).setDepth(20001);
       const p = { kind: "ff", glow, core, x: 0, y: 0, phase: this.r() * 7 };
       this._respawn(p, true);
       this.ambient.push(p);
     }
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < (A.leaves ?? 9); i++) {
       const leaf = sc.add.image(0, 0, "px_leaf").setScale(S).setDepth(20000);
-      if (i % 3 === 0) leaf.setTint(0xe0a050);
+      if (i % 3 === 0 || A.dust) leaf.setTint(A.leafTint ?? 0xe0a050);
       const p = { kind: "leaf", core: leaf, x: 0, y: 0, phase: this.r() * 7, vy: 18 + this.r() * 14, vx: (this.r() - 0.5) * 26 };
+      this._respawn(p, true);
+      this.ambient.push(p);
+    }
+
+    // Poeira do sertão: grãos claros que o vento arrasta na horizontal
+    for (let i = 0; i < (A.dust ?? 0); i++) {
+      const g = sc.add.image(0, 0, "px_dot2").setScale(S * (0.5 + this.r() * 0.5)).setTint(i % 3 ? 0xe8d0a0 : 0xc8a878).setAlpha(0.55).setDepth(20000);
+      const p = { kind: "dust", core: g, x: 0, y: 0, phase: this.r() * 7, vx: 60 + this.r() * 70, vy: (this.r() - 0.5) * 10 };
       this._respawn(p, true);
       this.ambient.push(p);
     }
@@ -217,6 +231,7 @@ export class ForestWorld {
     const cam = this.scene.cameras.main;
     p.x = cam.scrollX + this.r() * cam.width;
     p.y = p.kind === "leaf" && !anywhere ? cam.scrollY - 20 : cam.scrollY + this.r() * cam.height;
+    if (p.kind === "dust" && !anywhere) p.x = cam.scrollX - 20; // entra pela esquerda (o vento sopra para a direita)
   }
 
   // Esconde decoração fora da câmera (com margem) — o Phaser não faz culling
@@ -268,6 +283,10 @@ export class ForestWorld {
         const a = 0.25 + Math.abs(Math.sin(time / 400 + p.phase)) * 0.6;
         p.core.setPosition(p.x, p.y).setAlpha(a);
         p.glow.setPosition(p.x, p.y).setAlpha(a * 0.5);
+      } else if (p.kind === "dust") {
+        p.x += p.vx * (dt / 1000);
+        p.y += (p.vy + Math.sin(time / 300 + p.phase) * 12) * (dt / 1000);
+        p.core.setPosition(p.x, p.y);
       } else {
         p.x += (p.vx + Math.sin(time / 600 + p.phase) * 14) * (dt / 1000);
         p.y += p.vy * (dt / 1000);

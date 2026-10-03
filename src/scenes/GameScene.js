@@ -23,6 +23,7 @@ import {
   GARDEN,
   TREE,
   BOSS_FIGHT,
+  BIOMES,
 } from "../config.js";
 import { randomRareSeed } from "../systems/Garden.js";
 import { recipe, mealMods, bonusText } from "../systems/Kitchen.js";
@@ -36,6 +37,8 @@ import { RunEvents } from "../systems/RunEvents.js";
 import { Hazards } from "../systems/BossKit.js";
 import "../entities/WeaponsLeva3.js"; // registra as armas da leva 3 (registerWeapon)
 import "../entities/WeaponsVento.js"; // registra as armas de vento
+import "../entities/BossCaboclo.js"; // registra o chefe da Caatinga (registerBoss)
+import { DustDevils } from "../world/DustDevils.js";
 import { ElementalSystem } from "../systems/ElementalSystem.js";
 import { WeaponFX } from "../systems/WeaponFX.js";
 import { UpgradeSystem } from "../systems/UpgradeSystem.js";
@@ -75,6 +78,8 @@ import { LanternSystem } from "../systems/LanternSystem.js";
 import { Builds } from "../systems/Builds.js";
 import { VirtualJoystick } from "../ui/VirtualJoystick.js";
 
+const BOSS_TEX = { mapinguari: "mon_boss", caboclo: "mon_caboclo" };
+
 export class GameScene extends Phaser.Scene {
   constructor() {
     super("GameScene");
@@ -87,7 +92,6 @@ export class GameScene extends Phaser.Scene {
     const WS = GAME.WORLD_RADIUS * 2;
     // Limite físico na face de dentro da muralha (ver ARENA em config.js)
     this.physics.world.setBounds(ARENA.minX, ARENA.minY, ARENA.maxX - ARENA.minX, ARENA.maxY - ARENA.minY);
-    this.world = new ForestWorld(this, { entrance: { half: INTRO.PATH_HALF, y: ARENA.maxY } });
 
     this.inputMgr = new InputManager(this);
     this.joystick = new VirtualJoystick(this.inputMgr);
@@ -101,6 +105,11 @@ export class GameScene extends Phaser.Scene {
 
     // Meta-progressão (carrega desbloqueios disponíveis)
     this.meta = new MetaProgression();
+    // Bioma (mapa) escolhido na trilha da Clareira — ver BIOMES em config.js
+    this.biomeId = this.meta.selectedBiome;
+    this.biome = BIOMES[this.biomeId];
+    this.world = new ForestWorld(this, { biome: this.biome, entrance: { half: INTRO.PATH_HALF, y: ARENA.maxY } });
+    this.dust = this.biome.hazard === "dust" ? new DustDevils(this) : null;
     // Dificuldade da run (clampa ao desbloqueado por segurança)
     const diffIdx = Math.min(this.meta.selectedDifficulty, DIFFICULTY.length - 1);
     this.diff = DIFFICULTY[diffIdx] || DIFFICULTY[0];
@@ -213,7 +222,7 @@ export class GameScene extends Phaser.Scene {
       this._hint("quality", "Iluminação desligada para o jogo rodar liso.\nDá pra religar em Opções.");
     });
     AdService.newRun();
-    Analytics.track("run_start", { character: this.character.id, difficulty: this.diff.id });
+    Analytics.track("run_start", { character: this.character.id, difficulty: this.diff.id, biome: this.biomeId });
     this.runEvents = new RunEvents(this);
     this.lanterns = new LanternSystem(this);
     this.shrines = new ShrineSystem(this);
@@ -332,7 +341,7 @@ export class GameScene extends Phaser.Scene {
 
     // Música
     if (!this.bgMusic) {
-      this.bgMusic = this.sound.add("music_gameplay", {
+      this.bgMusic = this.sound.add(this.biome.music ?? "music_gameplay", {
         loop: true,
         volume: 0.35,
       });
@@ -366,14 +375,14 @@ export class GameScene extends Phaser.Scene {
     p.setCollideWorldBounds(false); // vem de fora da arena
     p.setPosition(0, R - INTRO.START_OFF);
     p.setFlipX(false);
-    const env = this.registry.get("envKeys");
+    const env = this.world.keys;
     // Trilha de terra atravessando a muralha de árvores
     for (let y = this._introEndY - 50; y < R + 80; y += 36) {
-      this.add.image((y % 3) * 5, y, "env", env.patches.dirt[(y / 36) % env.patches.dirt.length | 0]).setScale(S).setDepth(-50);
+      this.add.image((y % 3) * 5, y, this.world.atlas, env.patches.dirt[(y / 36) % env.patches.dirt.length | 0]).setScale(S).setDepth(-50);
     }
     // Lados da brecha: mesma regra da muralha sul (copa começando na linha do
     // limite), em fileiras descendo — a trilha passa ENTRE as árvores
-    const trees = [...env.trees, ...env.pines, ...env.pines];
+    const trees = [...env.trees, ...Array.from({ length: this.biome.wallPines ?? 2 }, () => env.pines).flat()];
     for (let i = 0; i < 4; i++) {
       for (const side of [-1, 1]) {
         const x = side * (INTRO.PATH_HALF + 70 + (i % 2) * 10);
@@ -407,7 +416,7 @@ export class GameScene extends Phaser.Scene {
   // Árvores brotam e fecham a brecha atrás do guardião — e viram parede
   _closeGate() {
     const S = GAME.PIXEL_SCALE;
-    const env = this.registry.get("envKeys");
+    const env = this.world.keys;
     const y = this._gateY;
     const xs = [-INTRO.PATH_HALF + 4, -18, 22, INTRO.PATH_HALF - 2];
     // Folhas voando enquanto as árvores brotam
@@ -562,7 +571,7 @@ export class GameScene extends Phaser.Scene {
       this.elapsedMs >= (this.runDurationS - 30) * 1000
     ) {
       this.bossWarned = true;
-      this.hud.showBossBanner("O Mapinguari corrompido desperta…");
+      this.hud.showBossBanner(this.biome.wake);
     }
     // Spawn do boss ao fim da duração do Perigo
     if (!this.boss && !this.endless && this.elapsedMs >= this.runDurationS * 1000) {
@@ -570,6 +579,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.inputMgr.update();
+    this.dust?.update(time, dt); // antes do herói: o empurrão entra neste quadro
     this.player.update(time, dt, this.inputMgr);
     if (!this.boss) {
       this.spawnDirector.update(time, dt);
@@ -1126,19 +1136,19 @@ export class GameScene extends Phaser.Scene {
   }
 
   _spawnBoss() {
-    this.meta.markLegend("mapinguari");
+    this.meta.markLegend(this.biome.boss);
     const ang = Math.random() * Math.PI * 2;
     const r = 320;
     const bx = this.player.x + Math.cos(ang) * r;
     const by = this.player.y + Math.sin(ang) * r;
-    this.boss = new BossEnt(this, bx, by);
+    this.boss = new BossEnt(this, bx, by, this.biome.boss);
     this.boss.activate(BOSS.HP * this.diff.hpMult);
     this.boss.dmg *= this.diff.dmgMult; // escala dano do boss pela dificuldade
-    this.hud.setBossActive(this.boss);
+    this.hud.setBossActive(this.boss, this.biome.bossName.toUpperCase());
     this.sound.play("sfx_boss_roar", { volume: 0.8 });
     // Trilha do chefe entra no lugar da música da partida
     this.bgMusic?.stop();
-    this.bgMusic = this.sound.add("music_boss", { loop: true, volume: 0.4 });
+    this.bgMusic = this.sound.add(this.biome.bossMusic ?? "music_boss", { loop: true, volume: 0.4 });
     this.bgMusic.play();
     this.cameras.main.shake(500, 0.015);
     // Limpa hordas para o boss respirar
@@ -1156,7 +1166,7 @@ export class GameScene extends Phaser.Scene {
     const log = this.boss.brain?.log;
     if (log?.flawless) {
       this.meta.recordStat("flawless");
-      // o Mapinguari não deixa madeira no chão: entra direto, como a do chefe
+      // o chefe não deixa madeira no chão: entra direto
       this._woodThisRun += BOSS_FIGHT.FLAWLESS_WOOD.BOSS;
       this.hud.addWood(BOSS_FIGHT.FLAWLESS_WOOD.BOSS);
       this.time.delayedCall(1200, () => {
@@ -1168,7 +1178,7 @@ export class GameScene extends Phaser.Scene {
     this.boss.deactivate?.();
     this.boss.setActive(false).setVisible(false);
     this.hud.clearBoss();
-    this._freeMapinguari(bx, by, bs);
+    this._freeBoss(bx, by, bs);
     // Recompensa
     this._coinsGainedThisRun += META.COIN_BOSS_WIN;
     this.hud.addCoin(META.COIN_BOSS_WIN);
@@ -1199,10 +1209,11 @@ export class GameScene extends Phaser.Scene {
     this.scene.launch("EndlessChoiceScene");
   }
 
-  // Vencer = LIBERTAR: a Podridão sai do Mapinguari (fumaça magenta subindo),
-  // ele volta à cor natural e some na mata (lenda: guardião, não vilão)
-  _freeMapinguari(x, y, scale) {
-    const m = this.add.sprite(x, y, "mon_boss", 4).setScale(scale).setDepth(y + 10000).setTint(0xc060c0); // quadro 4 = curado
+  // Vencer = LIBERTAR: a Podridão sai do chefe (fumaça magenta subindo), ele
+  // volta à cor natural e some (lenda: guardião, não vilão). Quadro 4 = libertado.
+  _freeBoss(x, y, scale) {
+    const tex = BOSS_TEX[this.biome.boss] ?? "mon_boss";
+    const m = this.add.sprite(x, y, tex, 4).setScale(scale).setDepth(y + 10000).setTint(0xc060c0);
     this.tweens.addCounter({
       from: 0,
       to: 1,
@@ -1222,7 +1233,13 @@ export class GameScene extends Phaser.Scene {
       this.tweens.add({ targets: p, y: p.y - 120 - Math.random() * 80, alpha: 0, scale: 0.5, duration: 1400 + Math.random() * 800, delay: Math.random() * 500, onComplete: () => p.destroy() });
     }
     this.lighting?.flash(x, y - 60, 420, 0x9ccf62, 1400, 1.2);
-    this._toast("O MAPINGUARI ESTÁ LIVRE!", 2600, "#9ccf62");
+    this._toast(`O ${this.biome.bossName.toUpperCase()} ESTÁ LIVRE!`, 2600, "#9ccf62");
+    // o Caboclo volta para o rio: afunda numa poça
+    if (this.biome.boss === "caboclo")
+      for (let i = 0; i < 18; i++) {
+        const d = this.add.image(x + (Math.random() - 0.5) * 80, y + 50, "px_dot2").setScale(3).setTint(i % 2 ? 0x86d0d4 : 0x4aa2b0).setDepth(y + 10100);
+        this.tweens.add({ targets: d, y: d.y - 30 - Math.random() * 40, alpha: 0, delay: 1400 + Math.random() * 600, duration: 600, onComplete: () => d.destroy() });
+      }
     this.tweens.add({ targets: m, alpha: 0, y: y - 30, delay: 1500, duration: 900, onComplete: () => m.destroy() });
   }
 
@@ -1533,7 +1550,13 @@ export class GameScene extends Phaser.Scene {
       this.meta.data.lastRunBuildAdvanceMin = min;
       this.meta._save();
     }
-    this.meta.registerRun(this.elapsedMs / 1000, won, this.diff.id);
+    // 1ª vitória sobre o chefe deste bioma (antes de registerRun contar)
+    const firstBiomeWin = won && !(this.meta.biomeWins()[this.biomeId] > 0);
+    this.meta.registerRun(this.elapsedMs / 1000, won, this.diff.id, this.biomeId);
+    if (firstBiomeWin) {
+      const next = Object.values(BIOMES).find((b) => b.unlock?.won === this.biomeId);
+      if (next) this._newUnlocksThisRun.push(`Nova trilha na Clareira: ${next.name}`);
+    }
     for (const k of this._deedsOpen || []) if (this.meta.deedDone(k)) this._newUnlocksThisRun.push(`Feito cumprido: ${WEAPONS[k].name} na Forja`);
     for (const c of this._charDeedsOpen || []) if (this.meta.characterDeed(c.id)?.done) this._newUnlocksThisRun.push(`Feito cumprido: ${c.name} na Fogueira`);
     const newAchievements = this._checkAchievements(won, true);
@@ -1590,6 +1613,7 @@ export class GameScene extends Phaser.Scene {
         seedsGained,
         newUnlocks: this._newUnlocksThisRun,
         difficulty: this.diff,
+        biome: this.biome,
         endlessS,
         endlessRecord,
         unlockedNextDifficulty: unlockedNewDifficulty

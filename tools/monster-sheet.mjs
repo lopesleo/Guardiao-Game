@@ -6,6 +6,8 @@ import fs from "node:fs";
 import zlib from "node:zlib";
 import { registerMonsters } from "../src/art/Monsters.js";
 import { registerHeroes } from "../src/art/Hero.js";
+import { registerCaatingaMonsters } from "../src/art/MonstersCaatinga.js";
+import { registerCaatinga } from "../src/art/EnvCaatinga.js";
 
 const [out = "monster-sheet.png", keysArg = "mon_alpha,mon_elder,mon_boss", scaleArg = "5"] = process.argv.slice(2);
 const S = Number(scaleArg);
@@ -39,12 +41,14 @@ const scene = {
 };
 registerMonsters(scene);
 registerHeroes(scene); // hero_<id>: 0-1 parado, 2-5 andando
+registerCaatingaMonsters(scene); // mon_calango, mon_carcara, mon_frade, mon_caboclo, obj_carranca
+registerCaatinga(scene); // cenário: atlas "env_caatinga" (quadros de tamanhos diferentes)
 
 // Uma linha por tira; quadros lado a lado sobre fundo noturno com chão
 const rows = wanted.map((k) => strips[k]).filter(Boolean);
 const PAD = 4;
-const cellW = Math.max(...rows.map((r) => r.frames[0].w)) + PAD * 2;
-const cellH = (r) => r.frames[0].h + PAD * 2;
+const cellW = Math.max(...rows.flatMap((r) => r.frames.map((f) => f.w))) + PAD * 2;
+const cellH = (r) => Math.max(...r.frames.map((f) => f.h)) + PAD * 2;
 const W = Math.max(...rows.map((r) => r.frames.length)) * cellW * S;
 const H = rows.reduce((a, r) => a + cellH(r) * S, 0);
 const img = new Uint8Array(W * H * 4);
@@ -67,11 +71,12 @@ for (const r of rows) {
     }
   r.frames.forEach((f, i) => {
     const ox = i * cellW * S + PAD * S;
+    const top = cellH(r) - PAD * 2 - f.h; // pés no chão
     for (let y = 0; y < f.h; y++)
       for (let x = 0; x < f.w; x++) {
         const si = ((f.y + y) * r.w + f.x + x) * 4;
         if (!r.buf[si + 3]) continue;
-        for (let dy = 0; dy < S; dy++) for (let dx = 0; dx < S; dx++) put(ox + x * S + dx, oy + (PAD + y) * S + dy, r.buf[si], r.buf[si + 1], r.buf[si + 2]);
+        for (let dy = 0; dy < S; dy++) for (let dx = 0; dx < S; dx++) put(ox + x * S + dx, oy + (PAD + top + y) * S + dy, r.buf[si], r.buf[si + 1], r.buf[si + 2]);
       }
   });
   oy += ch * S;

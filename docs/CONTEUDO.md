@@ -110,8 +110,15 @@ nenhuma arma emite).
 
 `deed: { stat, n, text }` com `stat` de `DEED_STATS` (config.js):
 `kills`, `win1`, `VAPOR`, `CRYSTAL`, `OVERLOAD`, `LABAREDA`, `GEADA`, `TEMPORAL`, `miniBosses`, `chests`, `flawless`.
+(`carrancas` também é contada — vezes que o Caboclo d'Água se espantou — e serve à conquista.)
 Estatística nova: some em `DEED_STATS`, conte com `meta.recordStat("nome")` onde ela
 acontece, e o progresso aparece sozinho na Forja/Fogueira e no fim da partida.
+
+## Bioma (mapa)
+
+Ficha em `BIOMES` + cenário, bichos, chefe, perigo do terreno e música — passo a passo
+em [`BIOMAS.md`](BIOMAS.md) → "Como adicionar um bioma". Chefe novo usa
+`registerBoss(id, def)` (`src/entities/Bosses.js`), como as armas usam `registerWeapon`.
 
 ## Checklist antes do commit
 
