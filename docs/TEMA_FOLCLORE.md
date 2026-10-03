@@ -26,6 +26,7 @@ mata). Isso evita demonizar mitos de origem indígena e africana.
 | Personagem (gelo) | Druida da Geada | **Iara** — senhora das águas |
 | Personagem (raio) | Xamã do Trovão | **Saci** — uma perna só, gorro vermelho, redemoinho; esperto e poderoso, nunca piada |
 | Personagem (vara encantada) | Caçadora | **Caipora** — protetora dos animais |
+| Personagens da leva 3 | — | **Comadre Fulozinha** (açoite de urtiga), **Mãe-do-Ouro** (bola de ouro), **Anhangá** (miragem) |
 | Chefe final | O Ancião | **Mapinguari corrompido** → ao vencer, a Podridão sai dele e ele volta a proteger a mata |
 | Minichefes | Lobo Alfa, Ogro Ancião | **Mula sem Cabeça** (investidas em chamas) e **Corpo-Seco** (este sim da Podridão) |
 | Reação Sobrecarga | Sobrecarga | pode ganhar o apelido de **Fúria do Boitatá** |
@@ -43,6 +44,27 @@ tinha e o veredito.
 | **Caipora** | "Habitante do mato" (tupi *caapora*), protetora dos bichos contra a caça; anda montada num porco-do-mato e **sempre tem uma vara**; recebe fumo de oferenda e fuma cachimbo; derivada do Curupira | Bumerangue em brasa | ❌ **Não fazia**: bumerangue é dos povos aborígenes da Austrália. **Agora: Vara Encantada** — a vara da lenda, acesa no fumo do cachimbo; mesma mecânica (gira, atravessa, volta), nova arte na mão, no voo e no ícone |
 | **Iara** | "Senhora das águas" (tupi), mãe-d'água dos rios amazônicos, canto que encanta e paralisa; na origem, guerreira transformada pelos peixes | Aura Gélida (campo frio; quem demora dentro congela) | ✅ **Faz sentido**: águas frias, e quem fica "ouvindo" o canto é paralisado (congela). Atributos também batem: mais área e cura, **mais lenta em terra** |
 | **Saci** | Viaja **dentro dos redemoinhos** de vento; gorro vermelho que dá poder; assobio, travessuras, guardião das ervas; do Jaxy Jaterê guarani | Raio Concentrado | ❌ **Não fazia**: o próprio jogo chama o Redemoinho de "Redemoinho do Saci" e a arte dele já tem um redemoinho de raios no pé. **Agora começa com o Redemoinho** (continua raio: as conquistas de raio seguem possíveis). Medido: com 1 arma nível 1, aos 1:00, o Redemoinho mata 26 em 40 s (Raio 20, Cajado 22) — dentro da faixa |
+
+### Guardiões da leva 3 (out/2026)
+
+| Guardião | O que a lenda conta | Arma | Por quê |
+|---|---|---|---|
+| **Comadre Fulozinha** (PE e Nordeste) | cabocla miúda, cabelo negro comprido, vestida de branco; protege mata e bichos, assobia, dá pistas falsas e **açoita com urtiga** quem desrespeita a floresta | **Açoite de Urtiga** (fogo: urtiga queima) | a arma é o castigo da lenda; traz o Nordeste ao elenco (antes só Amazônia e Sul) |
+| **Mãe-do-Ouro** (Sudeste, Centro-Oeste, Nordeste) | **bola de fogo** que voa nas noites sem lua e vira mulher de cabelo dourado; **guarda o ouro** das serras e rios para que não seja extraído | **Bola de Ouro** (raio dourado que ricocheteia) | a bola de fogo é ela; o tema anti-garimpo casa com a Podridão |
+| **Anhangá** (tupi) | espírito protetor da caça, **veado branco de olhos de fogo**, engana com **ilusões** quem caça sem respeito | **Miragem** (ilusão que atrai o bando) | a arma é a ilusão da lenda; ele joga como o veado (forma canônica) |
+
+Cuidados: Fulozinha retratada como guardiã, não como "assombração"; o Anhangá foi
+demonizado pelos missionários — aqui aparece como na origem tupi, protetor (sem a cruz
+na testa que algumas versões cristianizadas acrescentam). Os dois entram na revisão
+por leitor indígena/pesquisador de folclore já prevista.
+Fontes: [A União (PB) — mito sertanejo](https://auniao.pb.gov.br/noticias/caderno_diversidade/mito-sertanejo) ·
+[BNews — lendas do Nordeste](https://www.bnews.com.br/noticias/nordeste/dia-do-folclore-conheca-lendas-e-mitos-da-regiao-nordeste.html) ·
+[Wikipedia — Mãe-do-Ouro](https://en.wikipedia.org/wiki/M%C3%A3e-do-Ouro) ·
+[Toda Matéria — Mãe do Ouro](https://www.todamateria.com.br/mae-de-ouro/) ·
+[Portal São Francisco — Anhangá](https://www.portalsaofrancisco.com.br/folclore/anhanga/amp)
+
+As três armas "sem dono" da leva 3 também são do Brasil: **Fogueira de São João**
+(festa junina), **Boleadeira** (gaúcha, Sul) e **Tambor do Trovão**.
 
 Evolução: **Fênix → Boitatá**. A fênix é grega; o Boitatá ("cobra de fogo" em tupi)
 é a serpente de fogo que guarda os campos — e a evolução já era isso: a vara deixa
