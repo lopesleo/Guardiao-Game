@@ -302,6 +302,43 @@ const SFX = {
     const rumble = lp(s, noise(), 0.03, "hp") * 4 * env(t, 0.05, 0.3);
     return Math.tanh((hit * 1.3 + skin + rumble) * 1.4);
   }],
+  // ---- vento ----
+  sfx_assobio: [0.5, (t, s) => {
+    // assobio da mata: tom que sobe e desce com vibrato + sopro
+    const f = 1500 + Math.sin(Math.min(1, t / 0.5) * Math.PI) * 700 + Math.sin(t * 40) * 30;
+    return Math.sin(TAU * osc(s, "ph", f)) * 0.45 * env(t, 0.03, 0.25) + lp(s, noise(), 0.3) * 0.15 * env(t, 0.01, 0.2);
+  }],
+  sfx_folhas: [0.5, (t, s) => {
+    // farfalhar de folhas girando
+    const g = 0.5 + 0.5 * Math.sin(t * 60);
+    return lp(s, noise(), 0.45) * g * env(t, 0.02, 0.22) * 0.8;
+  }],
+  sfx_catavento: [0.6, (t, s) => {
+    // cata-vento pegando vento: zumbido que acelera
+    const spin = 0.5 + 0.5 * Math.sin(TAU * osc(s, "ph", 8 + t * 30));
+    return lp(s, noise(), 0.2) * spin * env(t, 0.05, 0.3);
+  }],
+  sfx_react_labareda: [0.6, (t, s) => {
+    // labareda: lufada que vira fogo (sopro que sobe + estalos)
+    if (s.pop == null) s.pop = 0;
+    if (rnd() < 0.006) s.pop = 0.8;
+    s.pop *= 0.95;
+    return lp(s, noise(), 0.08 + Math.min(1, t * 3) * 0.4) * env(t, 0.04, 0.22) + noise() * s.pop * 0.4;
+  }],
+  sfx_react_geada: [0.55, (t, s) => {
+    // geada: rajada fria (chiado agudo) + tilintar
+    const x = noise();
+    s.hp = x - s.prev;
+    s.prev = x;
+    const bell = Math.sin(TAU * osc(s, "ph", 2400)) * 0.3 * env(t, 0.002, 0.12);
+    return s.hp * 0.7 * env(t, 0.03, 0.25) + bell;
+  }],
+  sfx_react_temporal: [0.7, (t, s) => {
+    // temporal: vento grave + estalo de trovão
+    const wind = lp(s, noise(), 0.04) * 2 * env(t, 0.05, 0.4);
+    const crack = t > 0.08 ? noise() * Math.exp(-(t - 0.08) * 60) : 0;
+    return Math.tanh((wind + crack) * 1.4);
+  }],
   sfx_weak: [0.5, (t, s) => {
     // ponto fraco aberto: "plim" duplo dourado (chama o ataque)
     const n = t < 0.1 ? 88 : 93;

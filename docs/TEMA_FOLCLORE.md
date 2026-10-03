@@ -24,7 +24,7 @@ mata). Isso evita demonizar mitos de origem indígena e africana.
 |---|---|---|
 | Personagem inicial (fogo) | O Guardião | **Curupira** — cabelo de fogo, pés virados |
 | Personagem (gelo) | Druida da Geada | **Iara** — senhora das águas |
-| Personagem (raio) | Xamã do Trovão | **Saci** — uma perna só, gorro vermelho, redemoinho; esperto e poderoso, nunca piada |
+| Personagem (vento) | Xamã do Trovão | **Saci** — uma perna só, gorro vermelho, redemoinho de VENTO (era raio); esperto e poderoso, nunca piada |
 | Personagem (vara encantada) | Caçadora | **Caipora** — protetora dos animais |
 | Personagens da leva 3 | — | **Comadre Fulozinha** (açoite de urtiga), **Mãe-do-Ouro** (bola de ouro), **Anhangá** (miragem) |
 | Chefe final | O Ancião | **Mapinguari corrompido** → ao vencer, a Podridão sai dele e ele volta a proteger a mata |

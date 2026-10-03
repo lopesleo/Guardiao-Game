@@ -129,25 +129,42 @@ não mexe na arma (ver `docs/CONTEUDO.md`).
 - Avisos do verificador que vêm de antes: Vaga-lumes, Granizo e Redemoinho não são
   parceiros de nenhuma evolução (os laços compensam em parte).
 
-## Vale adicionar mais elementos? (análise, out/2026)
+## Vento — o 4º elemento (out/2026)
 
-**Não agora.** Os números:
+Primeiro a análise disse "adiar" (reações crescem em combinação, leitura no celular,
+paridade de armas). O Leonardo escolheu adicionar, e o candidato que menos brigava
+com o resto era o **Vento**: tema forte (minuano do Pampa, redemoinho do Saci, o
+assobio das lendas), cor própria (**verde-água/menta**, longe do laranja, do azul-gelo
+e do roxo) e um verbo que nenhum elemento tinha: **empurrar/arrastar**.
 
-- **Reações crescem em combinação**: 3 elementos = 3 reações; 4 = 6; 5 = 10. Cada
-  reação pede efeito, som, cor, texto, tutorial, feito e equilíbrio próprios — e a
-  reação é a assinatura do jogo; 6 reações mal feitas valem menos que 3 claras.
-- **Leitura no celular**: os status já usam laranja, azul e roxo sobre um chão verde.
-  Um 4º elemento "natureza/terra" (o mais temático) cairia no verde — mesma cor do
-  chão, das curas e das marcas de "seguro" dos avisos de chefe.
-- **Paridade**: acabamos de chegar a 5 armas por elemento. Um elemento novo precisaria
-  de ~5 armas para não nascer fraco (Ressonância, Prisma, conquistas mono-elemento).
-- **Já rende**: reações são 41–62% do dano medido; o jogador já monta Vapor no 1º
-  minuto (Cajado + Aura).
+- **Status "ventado"**: −15% de velocidade e o vento arrasta o inimigo para longe do
+  herói (chefe e minichefe não). Sem dano por tique.
+- **Reações novas** (nomes daqui):
 
-Onde está a profundidade que faltava, com custo muito menor: **laços** (feitos), **evoluções
-que fazem reação sozinhas** (feitas) e **catalisadores** (fase 3 abaixo). Reabrir a
-questão se os testadores disserem que as reações "cansam" depois de muitas horas — e,
-nesse caso, um elemento viria junto de um **bioma** (ex.: água no Pantanal), não solto.
+| Reação | Par | Efeito |
+|---|---|---|
+| **Labareda** | fogo + vento | o alvo explode em chama e o vento leva o fogo a até 5 vizinhos |
+| **Geada** | gelo + vento | rajada fria em volta: dano, lentidão forte, congela quem já estava gelado |
+| **Temporal** | raio + vento | raios caem do céu no alvo e em 2 vizinhos |
+
+- **Prisma** passou a valer com **3 elementos quaisquer** dos 4.
+- **Armas de vento**: Redemoinho (era raio — o Saci virou o guardião do vento),
+  **Assobio da Mata** (onda em cone que empurra; Forja 2, 350), **Folhas ao Vento**
+  (espiral cortante; Forja 3, 650 + 40 Labaredas), **Cata-vento** (torre plantada que
+  sopra rajadas, como os cata-ventos dos poços do sertão; Forja 4, 950 + 40 Geadas).
+- **Evoluções**: **Vento Sul** (Assobio + Granizo → Geada), **Ventania** (Folhas +
+  Vaga-lumes → Temporal), **Cata-vento de Brasa** (Cata-vento + Fogueira → Labareda);
+  o **Redemoinho de Brasa** agora faz Labareda (era Sobrecarga).
+- **Laços de vento**: Avivar o Fogo (Assobio + Sopro), Ciranda (Folhas + Redemoinho),
+  Tempo Ruim (Cata-vento + Granizo).
+- Conquistas: Filho do Vento (vencer só com vento), Fogo Corredor, Sopro do Sul e Dono
+  do Temporal (100 de cada reação). Missão do dia: Labaredas.
+- Medição (mesmo laboratório): Assobio 38, Folhas 35, Cata-vento ~36, Redemoinho 30;
+  Vento Sul 105, Ventania 113, Cata-vento de Brasa 100, Redemoinho de Brasa 80 — na
+  faixa. Duplas: Cajado + Assobio (Labareda), Aura + Assobio (Geada), Raio + Assobio
+  (Temporal) disparam as três reações.
+- Contagem: fogo 5 · gelo 5 · raio 4 · vento 4 (o raio perdeu o Redemoinho). Próximas
+  armas, quando vierem: uma de raio e uma de vento.
 
 ## Próximas fases
 

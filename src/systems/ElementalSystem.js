@@ -1,5 +1,7 @@
 // ★ DIFERENCIAL ★ — Status elementais e reações automáticas.
-// 3 status: fire, ice, bolt. Quando 2+ coexistem no mesmo inimigo, dispara reação.
+// 4 status: fire, ice, bolt, wind. Quando 2+ coexistem no mesmo inimigo, dispara reação.
+// Pares: fogo+gelo Vapor · gelo+raio Cristal · fogo+raio Sobrecarga ·
+//        fogo+vento Labareda · gelo+vento Geada · raio+vento Temporal.
 import { STATUS, REACTION, COLORS, PLAYER, ELEMENT } from "../config.js";
 import { text } from "../ui/Theme.js";
 import { hex } from "../art/Palette.js";
@@ -15,6 +17,12 @@ const REACTION_MAP = {
   "bolt+fire": "OVERLOAD",
   "ice+bolt": "CRYSTAL",
   "bolt+ice": "CRYSTAL",
+  "fire+wind": "LABAREDA",
+  "wind+fire": "LABAREDA",
+  "ice+wind": "GEADA",
+  "wind+ice": "GEADA",
+  "bolt+wind": "TEMPORAL",
+  "wind+bolt": "TEMPORAL",
 };
 
 export class ElementalSystem {
@@ -23,7 +31,7 @@ export class ElementalSystem {
     this.lastTickAt = 0;
     this.tickInterval = 100;
     // Cooldown global por tipo de reação (evita spam visual quando muitas armas)
-    this.lastReactionAt = { VAPOR: 0, CRYSTAL: 0, OVERLOAD: 0 };
+    this.lastReactionAt = { VAPOR: 0, CRYSTAL: 0, OVERLOAD: 0, LABAREDA: 0, GEADA: 0, TEMPORAL: 0 };
     this.reactionCdMs = 350; // 1 reação do mesmo tipo a cada 350ms
   }
 
@@ -62,7 +70,8 @@ export class ElementalSystem {
 
   _updateTint(enemy) {
     // Phaser 4: o flash de dano usa tintMode FILL; os tints de status são MULTIPLY
-    const c = enemy.statuses.fire ? 0xff9966 : enemy.statuses.ice ? 0x9ad4ff : enemy.statuses.bolt ? 0xd8a8ff : null;
+    const st = enemy.statuses;
+    const c = st.fire ? 0xff9966 : st.ice ? 0x9ad4ff : st.bolt ? 0xd8a8ff : st.wind ? 0xb8f0dc : null;
     if (c !== null) enemy.setTint(c).setTintMode(Phaser.TintModes.MULTIPLY);
     else enemy.clearTint();
   }
@@ -112,8 +121,7 @@ export class ElementalSystem {
     if (onCd) {
       // Aplica só o efeito mecânico, sem texto/shake/SFX
       const areaMult = scene.player?.areaMult ?? 1;
-      if (reactionKey === "VAPOR") this._vapor(enemy, def, areaMult);
-      else if (reactionKey === "OVERLOAD") this._overload(enemy, def, areaMult);
+      this._mechanic(reactionKey, enemy, def, areaMult, false);
       return;
     }
 
@@ -131,13 +139,101 @@ export class ElementalSystem {
     // Área é amplificada pelo modificador de área do player (passiva)
     const areaMult = this.scene.player?.areaMult ?? 1;
     // SFX distintos por reação (re-uso impacts existentes com pitch diferente)
-    if (reactionKey === "VAPOR") {
-      scene.sound.play("sfx_react_vapor", { volume: 0.5 }); // sibilo de vapor
-      this._vapor(enemy, def, areaMult);
-    } else if (reactionKey === "OVERLOAD") {
-      scene.sound.play("sfx_react_overload", { volume: 0.55 }); // crepitar elétrico
-      this._overload(enemy, def, areaMult);
+    const SFX = { VAPOR: "sfx_react_vapor", OVERLOAD: "sfx_react_overload", LABAREDA: "sfx_react_labareda", GEADA: "sfx_react_geada", TEMPORAL: "sfx_react_temporal" };
+    scene.sound.play(SFX[reactionKey], { volume: 0.5 });
+    this._mechanic(reactionKey, enemy, def, areaMult, true);
+  }
+
+  // Efeito mecânico de cada reação (fx = mostrar o espetáculo; em recarga, só o dano)
+  _mechanic(key, enemy, def, areaMult, fx) {
+    if (key === "VAPOR") this._vapor(enemy, def, areaMult);
+    else if (key === "OVERLOAD") this._overload(enemy, def, areaMult);
+    else if (key === "LABAREDA") this._labareda(enemy, def, areaMult, fx);
+    else if (key === "GEADA") this._geada(enemy, def, areaMult, fx);
+    else if (key === "TEMPORAL") this._temporal(enemy, def, areaMult, fx);
+  }
+
+  // Alvos vivos perto de (x, y), mais perto primeiro (inimigos; chefe à parte)
+  _near(x, y, r, skip = null, n = 99) {
+    const list = [];
+    const rSq = r * r;
+    this.scene.enemyPool.forEachActive((e) => {
+      if (!e.active || e === skip) return;
+      const d2 = (e.x - x) ** 2 + (e.y - y) ** 2;
+      if (d2 <= rSq) list.push({ e, d2 });
+    });
+    list.sort((a, b) => a.d2 - b.d2);
+    return list.slice(0, n).map((o) => o.e);
+  }
+
+  _hurt(e, dmg, fx, fy) {
+    const scene = this.scene;
+    const died = e.takeDamage(dmg * (scene.player?.prism ?? 1), null, fx, fy);
+    if (died) scene._onEnemyDeath(e);
+    return died;
+  }
+
+  // LABAREDA (fogo + vento): o alvo explode em chama e o vento leva o fogo aos vizinhos
+  _labareda(enemy, def, areaMult, fx) {
+    const scene = this.scene;
+    const x = enemy.x,
+      y = enemy.y;
+    this._hurt(enemy, def.dmg, x, y);
+    const near = this._near(x, y, def.radius * areaMult, enemy, def.spread);
+    near.forEach((e, i) => {
+      this._hurt(e, def.dmg * 0.6, x, y);
+      if (e.active) this.applyStatus(e, "fire"); // a chama "pega" (pode reagir de novo noutro par)
+      if (fx && scene.fx) {
+        // língua de fogo voando até o vizinho
+        const n = 5;
+        for (let k = 1; k <= n; k++) {
+          const t = k / n;
+          scene.time.delayedCall(i * 40 + k * 18, () => scene.fx?.burst("jet_fire", x + (e.x - x) * t, y - 8 + (e.y - y) * t - Math.sin(t * Math.PI) * 18, 1, null, 360, { min: 5, max: 30 }));
+        }
+      }
+    });
+    if (!fx) return;
+    scene.fx?.burst("ember", x, y - 6, 14, -Math.PI / 2, 160, { min: 60, max: 200 });
+    scene.fx?.ring(x, y + 4, def.color, 10, 60 * areaMult, 240);
+    scene.fx?.burst("leaf", x, y, 4, null, 360, { min: 80, max: 180 });
+  }
+
+  // GEADA (gelo + vento): rajada fria em volta — dano, lentidão forte e congela quem já estava gelado
+  _geada(enemy, def, areaMult, fx) {
+    const scene = this.scene;
+    const now = scene.time.now;
+    const x = enemy.x,
+      y = enemy.y;
+    const R = def.radius * areaMult;
+    const hit = [enemy, ...this._near(x, y, R, enemy)];
+    for (const e of hit) {
+      const wasCold = !!e.statuses?.ice || e === enemy;
+      if (this._hurt(e, def.dmg, x, y)) continue;
+      if (e.miniBoss) continue;
+      e._bindUntil = now + def.slowMs;
+      e._bindSlow = def.slow;
+      if (wasCold && e.freeze && !e.isFrozen(now) && now >= e._freezeLockUntil) e.freeze(now, def.freezeMs, 2400);
     }
+    if (!fx) return;
+    scene.fx?.ring(x, y + 4, 0xffffff, 10, R, 280, 0.6, 1);
+    scene.fx?.ring(x, y + 4, def.color, 8, R * 0.75, 340, 0.6, 0.8);
+    scene.fx?.burst("frost", x, y, 16, null, 360, { min: 80, max: 220 });
+    scene.fx?.burst("streak", x, y, 10, null, 360, { min: 160, max: 320 }, [0xffffff, 0xd2fbe9, 0xbfeaff]);
+    scene.fx?.decal("fx_frost", x, y + 6, R * 0.6, 1800, 0.6);
+  }
+
+  // TEMPORAL (raio + vento): raios caem do céu em quem está em volta
+  _temporal(enemy, def, areaMult, fx) {
+    const scene = this.scene;
+    const targets = [enemy, ...this._near(enemy.x, enemy.y, def.radius * areaMult, enemy, def.strikes - 1)];
+    targets.forEach((e, i) => {
+      scene.time.delayedCall(i * 90, () => {
+        if (!e.active) return;
+        if (fx || i === 0) this._drawBolt(e.x + 24 - i * 12, e.y - 260, e.x, e.y - 4, def.color, 5);
+        this._hurt(e, def.dmg, e.x, e.y - 30);
+      });
+    });
+    if (fx) scene.cameras.main.shake(140, 0.005);
   }
 
   // VAPOR = nuvem ESCALDANTE: dano contínuo (DoT) na área. Não causa mais slow.
@@ -410,6 +506,9 @@ export class ElementalSystem {
     } else if (st.ice) {
       fx.burst("frost", x, y, 1, null, 360, { min: 0, max: 20 });
       e._stFxAt = time + 380;
+    } else if (st.wind) {
+      fx.burst("gust", x, y, 1, Math.atan2(e.y - (this.scene.player?.y ?? e.y), e.x - (this.scene.player?.x ?? e.x)), 40);
+      e._stFxAt = time + 240;
     }
   }
 

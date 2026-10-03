@@ -113,13 +113,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   // Ressonância elemental (ver RESONANCE): recalcula quando o arsenal muda.
   recomputeResonance() {
     this.links.recompute(); // laços dependem do mesmo arsenal
-    const count = { fire: 0, ice: 0, bolt: 0 };
+    const count = { fire: 0, ice: 0, bolt: 0, wind: 0 };
     for (const w of this.weapons) if (w.def?.element in count) count[w.def.element]++;
-    const prev = this.resonance ?? { fire: 1, ice: 1, bolt: 1 };
+    const prev = this.resonance ?? { fire: 1, ice: 1, bolt: 1, wind: 1 };
     const prevPrism = this.prism ?? 1;
     this.resonance = {};
     for (const el of Object.keys(count)) this.resonance[el] = 1 + RESONANCE.PER_EXTRA_WEAPON * Math.max(0, count[el] - 1);
-    this.prism = count.fire && count.ice && count.bolt ? RESONANCE.PRISM_REACTION : 1;
+    // Prisma: TRÊS elementos diferentes no arsenal (quaisquer três dos quatro)
+    this.prism = Object.values(count).filter((n) => n > 0).length >= 3 ? RESONANCE.PRISM_REACTION : 1;
     // Avisa só quando algo MELHOROU (não na carga inicial)
     if (this._resReady) {
       for (const el of Object.keys(count)) {

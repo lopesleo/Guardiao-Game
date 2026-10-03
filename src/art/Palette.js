@@ -71,6 +71,12 @@ export const PAL = {
   pur3: 0xe8ccff,
   pink: 0xff7eb6,
 
+  // Vento (4º elemento): verde-água/menta — longe do laranja, do azul-gelo e do roxo
+  wnd0: 0x1f5a52,
+  wnd1: 0x3f9c86,
+  wnd2: 0x7fd9bd,
+  wnd3: 0xd2fbe9,
+
   // UI
   uiBg: 0x0f1a16,
   uiPanel: 0x16241f,
@@ -101,6 +107,7 @@ export const CSS = {
   fire: hex(PAL.org2),
   ice: hex(PAL.ice2),
   bolt: hex(PAL.pur2),
+  wind: hex(PAL.wnd2),
 };
 
 // Cor por elemento (mesma em HUD, cartas, FX e números de dano)
@@ -108,4 +115,5 @@ export const ELEMENT_COLOR = {
   fire: PAL.org2,
   ice: PAL.ice2,
   bolt: PAL.pur2,
+  wind: PAL.wnd2,
 };

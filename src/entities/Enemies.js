@@ -346,6 +346,16 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     let slow = 1;
     if (this.statuses.ice) slow *= 0.5;
     if (time < this._bindUntil) slow *= this._bindSlow;
+    // Vento: mais leve e arrastado para longe do herói (chefe/minichefe não)
+    if (this.statuses.wind && !this.miniBoss) {
+      slow *= this.statuses.wind.def.slowFactor;
+      const ax = this.x - target.x,
+        ay = this.y - target.y;
+      const al = Math.hypot(ax, ay) || 1;
+      const k = (this.statuses.wind.def.drift * dt) / 1000;
+      this.x += (ax / al) * k;
+      this.y += (ay / al) * k;
+    }
 
     // Miragem: quem foi atraído caminha até a ilusão (o tiro continua mirando o herói)
     const goal = time < this._lureUntil ? { x: this._lureX, y: this._lureY } : target;

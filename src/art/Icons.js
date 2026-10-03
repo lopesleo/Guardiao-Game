@@ -36,6 +36,9 @@ const L = {
   n: PAL.n3,
   N: PAL.n2,
   m: PAL.n4,
+  u: PAL.wnd3, // vento
+  v: PAL.wnd2,
+  V: PAL.wnd1,
 };
 
 const MAPS = {
@@ -579,6 +582,53 @@ const MAPS = {
     ".kRRRRRRRk.",
     "..kkkkkkk..",
   ],
+  // ---- vento ----
+  // Assobio da Mata: boca soprando e três arcos de som indo para a direita
+  assobio: [
+    "......k...k.",
+    ".....kuk..kv",
+    "..kk..kuk..k",
+    ".kmmk..kv..k",
+    "kmlmmk.kv.kv",
+    "kmllmk.kv.kv",
+    "kmlmmk.kv.kv",
+    ".kmmk..kv..k",
+    "..kk..kuk..k",
+    ".....kuk..kv",
+    "......k...k.",
+  ],
+  // Folhas ao Vento: três folhas em espiral
+  folhas: [
+    "....kk......",
+    "...kegk.....",
+    "..kegGk.kk..",
+    "...kGk.kuuk.",
+    "....k.kuvVk.",
+    ".kk....kVk..",
+    "keek....k...",
+    "kegGk...kk..",
+    ".kGk...kegk.",
+    "..k...kegGk.",
+    ".......kGk..",
+    "........k...",
+  ],
+  // Cata-vento: quatro pás girando em volta do centro + cabo
+  catavento: [
+    ".....kk.....",
+    "..kkkuukk...",
+    ".kllkuuuuk..",
+    ".kllkuuuuk..",
+    "klllkukkkk..",
+    "kllllorrrrk.",
+    ".kkkkykrrrk.",
+    ".kyyyykrrk..",
+    ".kyyyykrrk..",
+    "..kkyykkk...",
+    "....kkmk....",
+    ".....kmk....",
+    ".....kmk....",
+    ".....kmk....",
+  ],
   sword: [
     "........kkk",
     ".......kalk",
@@ -607,6 +657,10 @@ const RECOLOR = {
   firefly_gold: { base: "firefly", swap: { a: "z", S: "Y", x: "y" } }, // Revoada
   hail_storm: { base: "hail", swap: { a: "p", s: "P" } }, // Tempestade de Granizo
   whirl_fire: { base: "whirl", swap: { q: "z", p: "o", P: "O" } }, // Redemoinho de Brasa
+  whirl_wind: { base: "whirl", swap: { q: "u", p: "v", P: "V" } }, // Redemoinho (vento)
+  assobio_ice: { base: "assobio", swap: { u: "c", v: "b", V: "B" } }, // Vento Sul
+  folhas_bolt: { base: "folhas", swap: { e: "q", g: "p", G: "P" } }, // Ventania
+  catavento_fire: { base: "catavento", swap: { u: "o", y: "z", r: "R", l: "h" } }, // Cata-vento de Brasa
   // evoluções da leva 3: a mesma arma na "tinta" do elemento que ela soma
   lash_ice: { base: "lash", swap: { o: "c", g: "b", G: "B", e: "c" } }, // Laçada de Urtiga
   bolas_storm: { base: "bolas", swap: { s: "p", a: "q" } }, // Minuano

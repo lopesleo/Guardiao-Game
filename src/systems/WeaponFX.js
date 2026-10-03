@@ -21,6 +21,7 @@ export const ELEM = {
   fire: { core: PAL.yel3, mid: PAL.org2, dark: PAL.red1, light: 0xff8a3c, spark: [PAL.white, PAL.yel3, PAL.org3, PAL.org2] },
   ice: { core: PAL.white, mid: PAL.ice2, dark: PAL.ice1, light: 0x5cc8ff, spark: [PAL.white, PAL.ice3, PAL.ice3, PAL.ice2] },
   bolt: { core: PAL.white, mid: PAL.pur2, dark: PAL.pur1, light: 0xc78cff, spark: [PAL.white, PAL.pur3, PAL.pur3, PAL.pur2] },
+  wind: { core: PAL.white, mid: PAL.wnd2, dark: PAL.wnd1, light: 0x7fd9bd, spark: [PAL.white, PAL.wnd3, PAL.wnd3, PAL.wnd2] },
   none: { core: PAL.white, mid: PAL.cream, dark: PAL.s3, light: 0xffe2b8, spark: [PAL.white, PAL.cream, PAL.yel3, PAL.cream] },
 };
 const el = (e) => ELEM[e] ?? ELEM.none;
@@ -192,10 +193,22 @@ export class WeaponFX {
       puff_fire: add("px_puff", { ...PUFF, color: [PAL.white, PAL.yel2, PAL.org2, PAL.org1, PAL.red1], blendMode: ADD }),
       puff_ice: add("px_puff", { ...PUFF, color: [PAL.white, PAL.ice3, PAL.ice2, PAL.ice1], blendMode: ADD }),
       puff_bolt: add("px_puff", { ...PUFF, color: [PAL.white, PAL.pur3, PAL.pur2, PAL.pur1], blendMode: ADD }),
+      puff_wind: add("px_puff", { ...PUFF, color: [PAL.white, PAL.wnd3, PAL.wnd2, PAL.wnd1], blendMode: ADD }),
+      // Lufada: risco claro que corre rápido e some (o vento visível)
+      gust: add("fx_streak", {
+        speed: { min: 140, max: 260 },
+        lifespan: { min: 160, max: 280 },
+        scale: { start: 1.2, end: 0.2 },
+        rotate: { onEmit: () => 0, onUpdate: (p) => Math.atan2(p.velocityY, p.velocityX) * DEG },
+        color: [PAL.white, PAL.wnd3, PAL.wnd2],
+        blendMode: ADD,
+        maxAliveParticles: 160,
+      }),
       // Cauda de projétil (encolhe enquanto fica para trás)
       tail_fire: add("px_puff", { ...TAIL, color: [PAL.yel3, PAL.yel2, PAL.org2, PAL.org1], blendMode: ADD }),
       tail_ice: add("px_puff", { ...TAIL, color: [PAL.ice3, PAL.ice2, PAL.ice2], blendMode: ADD }),
       tail_bolt: add("px_puff", { ...TAIL, color: [PAL.pur3, PAL.pur2, PAL.pur2], blendMode: ADD }),
+      tail_wind: add("px_puff", { ...TAIL, color: [PAL.wnd3, PAL.wnd2, PAL.wnd2], blendMode: ADD }),
       // Jato de chamas (Sopro): nasce pequeno e branco, cresce e esfria
       jet_fire: add("px_puff", {
         speed: { min: 300, max: 600 },
@@ -352,6 +365,7 @@ export class WeaponFX {
     this._sprite("fx_disc", x, y, { tint: c.core, s0: 1.1, s1: 0.4, ms: 70 });
     this._sprite("fx_burst", x, y, { tint: c.core, s0: 0.5, s1: 1.2, ms: 90, rot: ang });
     if (element === "bolt") this.burst("zap", x, y, 5, ang, 70);
+    else if (element === "wind") this.burst("gust", x, y, 4, ang, 50);
     else this.burst(`puff_${element}`, x, y, 2, ang, 60, { min: 20, max: 70 });
     this.burst("streak", x, y, 3, ang, 45, { min: 160, max: 300 }, c.spark);
     this.light(x, y, 120, c.light, 120, 1);
@@ -382,6 +396,10 @@ export class WeaponFX {
       this.burst("frost", x, y, 2 + 2 * pw);
       if (pw >= 0.8) this.burst("shard", x, y, 2, fwd, 120);
     } else if (element === "bolt") this.burst("zap", x, y, 2 + 3 * pw, fwd, 160);
+    else if (element === "wind") {
+      this.burst("gust", x, y, 2 + 2 * pw, fwd, 90);
+      if (pw >= 0.7) this.burst("puff_wind", x, y, 2, fwd, 120, { min: 20, max: 70 });
+    }
   }
 
   // Morte: estalo branco + a "matéria" do elemento que matou
@@ -406,6 +424,10 @@ export class WeaponFX {
       this.burst("zap", x, y, 10 * k);
       this.star(x, y, c.mid, 0.8 * k, 2.6 * k, 120, 0);
       this.burst("smoke", x, y, 2 * k, -Math.PI / 2, 120);
+    } else if (element === "wind") {
+      this.burst("gust", x, y, 8 * k, null, 360);
+      this.burst("puff_wind", x, y, 4 * k, null, 360, { min: 20, max: 90 });
+      this.burst("leaf", x, y, 3 * k, null, 360, { min: 60, max: 180 });
     } else {
       this.burst("spark", x, y, 6 * k, null, 360, { min: 60, max: 180 }, c.spark);
     }
@@ -425,6 +447,7 @@ export class WeaponFX {
     if (element === "fire") this.burst("ember", x, y, 1, null, 360, { min: 5, max: 35 });
     else if (element === "ice") this.burst("frost", x, y, 1, null, 360, { min: 0, max: 20 });
     else if (element === "bolt") this.burst("zap", x, y, 1, null, 360, { min: 20, max: 80 });
+    else if (element === "wind") this.burst("gust", x, y, 1, null, 360);
   }
 
   // Raio em PIXEL (quadrados de 3px), com halo, núcleo e galhos — some piscando

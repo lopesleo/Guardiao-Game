@@ -233,6 +233,10 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Arte nova (Mula empinada e no coice, Corpo-Seco de braços erguidos, Mapinguari de bocarra e gritando),
   13 sons novos, nome do golpe sob a barra. Verificado com um robô que só anda e reage em 250 ms: 0 acertos
   em 73 casos; parado, os golpes acertam. Debug: M = Mula, C = Corpo-Seco. 👤 sentir no aparelho
+- ✅ **Vento, o 4º elemento** (ver `ARMAS_E_COMBOS.md`): status "ventado" (arrasta para longe), reações
+  **Labareda** (fogo+vento), **Geada** (gelo+vento) e **Temporal** (raio+vento); Prisma com 3 dos 4 elementos;
+  Redemoinho vira vento (o Saci é o guardião do vento); armas novas **Assobio da Mata**, **Folhas ao Vento** e
+  **Cata-vento**; evoluções **Vento Sul**, **Ventania** e **Cata-vento de Brasa**; 3 laços e 4 conquistas
 - ✅ **Framework de conteúdo** (`docs/CONTEUDO.md`): cada arma tem UMA ficha em `WEAPONS` (números, texto,
   ícone, melhorias, desbloqueio com feito) e cada guardião uma ficha em `CHARACTERS` (arma, viés, desbloqueio,
   bestiário); Forja, Fogueira, cartas, ícones e bestiário leem delas (as tabelas antigas viraram derivadas).
