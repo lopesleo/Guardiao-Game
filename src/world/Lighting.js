@@ -16,9 +16,12 @@ const RES = 4; // mapa de luz em 1/4 da resolução (luz é suave) → 16× meno
 const D_TREE_SHADOW = -80;
 
 // Ambiente: início da partida (fim de tarde) → 7:00 (noite) → chefe
-const AMB_DUSK = [0xb8, 0xb0, 0xbe];
-const AMB_NIGHT = [0x2a, 0x30, 0x52];
-const AMB_BOSS = [0x24, 0x1c, 0x3a];
+// (mais claros que os de antes da migração para o Phaser 4: o mapa de luz ficou
+// desligado sem querer por um tempo e o jogo foi equilibrado "aceso" — legibilidade
+// no celular vem antes do clima)
+const AMB_DUSK = [0xd6, 0xce, 0xd8];
+const AMB_NIGHT = [0x4a, 0x4e, 0x74];
+const AMB_BOSS = [0x3e, 0x34, 0x5e];
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const mix = (c1, c2, t) => (Math.round(lerp(c1[0], c2[0], t)) << 16) | (Math.round(lerp(c1[1], c2[1], t)) << 8) | Math.round(lerp(c1[2], c2[2], t));
@@ -147,7 +150,7 @@ export class Lighting {
     }
     if (s.boss?.active) {
       const fury = s.boss.phase === 2;
-      this._light(s.boss.x, s.boss.y - 30, fury ? 260 : 180, fury ? 0xff6a2a : 0xb03aa0, 0.7);
+      this._light(s.boss.x, s.boss.y - 30, fury ? 280 : 240, fury ? 0xff6a2a : 0xb03aa0, 0.75);
     }
     s.projectilePool?.forEachActive((pr) => {
       const c = pr.element === "ice" ? 0x5cc8ff : pr.element === "bolt" ? 0xc78cff : pr.element === "wind" ? 0x7fd9bd : 0xff8a3c;
@@ -184,6 +187,9 @@ export class Lighting {
     const amb = s.boss?.active ? mix(AMB_NIGHT, AMB_BOSS, 1) : mix(AMB_DUSK, AMB_NIGHT, Math.pow(tRun, 1.3));
     this.rt.fill(amb);
     if (this._n) this.rt.draw(this.stamps.slice(0, this._n));
+    // Phaser 4: no modo padrão a RenderTexture só EXIBE o que já tem; sem render()
+    // o fill/draw acima ficava na fila e o mapa de luz nunca aparecia (desde a migração)
+    this.rt.render();
   }
 
   // Sombras projetadas pelas árvores a partir da luz do herói
