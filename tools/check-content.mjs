@@ -7,7 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   WEAPONS, BASE_WEAPON_KEYS, EVOLUTION_KEYS, STARTER_WEAPONS, LINKS, CHARACTERS, LEGENDS, META, BUILD, DEED_STATS, ELEMENT,
-  BIOMES, BUILDINGS, BOSS_FIGHT,
+  BIOMES, BUILDINGS, BOSS_FIGHT, GARDEN, FISHING, KITCHEN,
 } from "../src/config.js";
 import { ICON_KEYS } from "../src/art/Icons.js";
 import { HERO_IDS } from "../src/art/Hero.js";
@@ -154,6 +154,28 @@ if (new Set(legendIds).size !== legendIds.length) err("bestiário com id repetid
   const trails = Object.values(BIOMES).map((b) => b.unlock?.trail).filter(Boolean);
   if (new Set(trails).size !== trails.length) err("dois biomas abrem no mesmo nível da Trilha");
   if (!BOSS_FIGHT.CABOCLO) err("BOSS_FIGHT.CABOCLO sumiu (kit do Caboclo d'Água)");
+}
+
+// ---------- Clareira: plantas, peixes e pratos têm arte; "biome" aponta para um bioma ----------
+{
+  const garden = src("src/art/Garden.js"),
+    pond = src("src/art/Pond.js"),
+    kitchen = src("src/art/Kitchen.js");
+  const has = (txt, id, ...forms) => forms.some((f) => txt.includes(f.replace("ID", id)));
+  for (const [id, c] of Object.entries(GARDEN.CROPS)) {
+    if (!has(garden, id, "  ID: {", "CROP_ART.ID =")) err(`planta ${id}: sem arte em Garden.js (CROP_ART)`);
+    if (!has(garden, id, "  ID() {", "ICONS.ID =")) err(`planta ${id}: sem ícone em Garden.js (ICONS)`);
+    if (c.biome && !BIOMES[c.biome]) err(`planta ${id}: biome "${c.biome}" não existe`);
+    if (c.biome && !c.rare) warn(`planta ${id}: de bioma mas não é rara (a semente não cai nas partidas)`);
+  }
+  for (const [id, f] of Object.entries(FISHING.FISH)) {
+    if (!has(pond, id, "  ID: { body")) err(`peixe ${id}: sem arte em Pond.js (FISH_ART)`);
+    if (f.biome && !BIOMES[f.biome]) err(`peixe ${id}: biome "${f.biome}" não existe`);
+  }
+  for (const r of KITCHEN.RECIPES) {
+    if (!has(kitchen, r.id, "  ID: { food")) err(`prato ${r.id}: sem ícone em Kitchen.js (DISH)`);
+    for (const k of Object.keys(r.needs)) if (!GARDEN.CROPS[k] && !FISHING.FISH[k]) err(`prato ${r.id}: ingrediente "${k}" não existe`);
+  }
 }
 
 // ---------- Desbloqueios derivados (sanidade) ----------

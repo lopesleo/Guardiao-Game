@@ -179,13 +179,51 @@ const CROP_ART = {
   },
 };
 
+// Frutas do sertão (sementes da Caatinga): folhagem verde-acinzentada da seca
+const LEAF_SERTAO = [0x3e5a3a, 0x5e7a4a, 0x8ca06a];
+CROP_ART.umbu = {
+  leaf: LEAF_SERTAO,
+  flower: PAL.white,
+  ripe(p) {
+    // umbuzeiro novo: galhos tortos, copa baixa e umbus amarelo-esverdeados
+    p.line(8, PH - 1, 8, PH - 7, PAL.n2);
+    p.line(8, PH - 6, 4, PH - 10, PAL.n2);
+    p.line(8, PH - 7, 12, PH - 11, PAL.n3);
+    bush(p, 5, PH - 12, 4, 3, LEAF_SERTAO);
+    bush(p, 11, PH - 13, 4, 3, LEAF_SERTAO);
+    bush(p, 8, PH - 16, 4, 3, LEAF_SERTAO);
+    for (const [x, y] of [[4, PH - 9], [7, PH - 12], [12, PH - 9], [10, PH - 15], [5, PH - 15]]) {
+      p.disc(x + 0.5, y + 0.5, 1.2, PAL.yel2);
+      p.set(x, y, PAL.yel3);
+      p.set(x + 1, y + 1, PAL.g5);
+    }
+  },
+};
+CROP_ART.caju = {
+  leaf: [PAL.g3, PAL.g4, PAL.g6],
+  flower: PAL.pink,
+  ripe(p) {
+    // cajueiro: folhas largas e cajus pendurados (pedúnculo vermelho + castanha embaixo)
+    p.line(8, PH - 1, 8, PH - 8, PAL.n3);
+    p.line(8, PH - 7, 13, PH - 11, PAL.n2);
+    bush(p, 6, PH - 13, 5, 3.5, LEAF);
+    bush(p, 11, PH - 14, 4.5, 3.5, LEAF);
+    for (const [x, y, c] of [[4, PH - 11, PAL.red2], [12, PH - 10, PAL.yel2], [9, PH - 17, PAL.red2]]) {
+      p.rect(x, y, 3, 3, c);
+      p.set(x, y, c === PAL.red2 ? PAL.red3 : PAL.yel3);
+      p.set(x + 1, y + 3, PAL.s2); // castanha
+      p.set(x + 2, y + 3, PAL.s1);
+    }
+  },
+};
+
 function cropFrames(id) {
   const a = CROP_ART[id];
   const frames = [];
   // 0 semente: montinho de terra com o grão
   let p = new Pix(PW, PH);
   mound(p);
-  p.set(8, PH - 4, id === "pepper" || id === "frost" || id === "thunder" ? PAL.yel3 : PAL.n4);
+  p.set(8, PH - 4, ["pepper", "frost", "thunder", "umbu", "caju"].includes(id) ? PAL.yel3 : PAL.n4);
   frames.push(p.outline(K));
   // 1 broto
   p = new Pix(PW, PH);
@@ -515,6 +553,37 @@ const ICONS = {
     for (let i = 0; i < 5; i++) p.set(3 + i * 2, 7, PAL.g3);
     return p.outline(K);
   },
+};
+
+ICONS.umbu = () => {
+  // três umbus num galhinho
+  const p = new Pix(13, 11);
+  p.line(1, 2, 11, 1, PAL.n3);
+  for (const [x, y] of [[3, 6], [7, 7], [10, 5]]) {
+    p.disc(x, y, 2.6, PAL.yel2);
+    p.set(x - 1, y - 1, PAL.yel3);
+    p.set(x + 1, y + 1, PAL.g5);
+    p.line(x, y - 3, x, 1, PAL.n2);
+  }
+  p.ellipse(5, 1.5, 2, 1, PAL.g4);
+  return p.outline(K);
+};
+ICONS.caju = () => {
+  // o caju: pedúnculo (a "fruta") vermelho-amarelo e a castanha embaixo
+  const p = new Pix(11, 14);
+  for (let y = 1; y < 10; y++)
+    for (let x = 1; x < 10; x++) {
+      const dx = (x + 0.5 - 5.5) / (3 + y * 0.18),
+        dy = (y + 0.5 - 5.5) / 4.6;
+      if (dx * dx + dy * dy > 1) continue;
+      p.set(x, y, x < 4 ? PAL.yel2 : x < 7 ? PAL.org2 : PAL.red2);
+    }
+  p.set(3, 3, PAL.yel3);
+  p.set(4, 2, PAL.yel3);
+  p.line(5, 1, 6, 0, PAL.g4);
+  p.ellipse(5.5, 11.5, 2.2, 1.6, PAL.s2);
+  p.set(5, 11, PAL.s3);
+  return p.outline(K);
 };
 
 export function registerGarden(scene) {

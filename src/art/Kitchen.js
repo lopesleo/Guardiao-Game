@@ -26,10 +26,25 @@ const DISH = {
   pacu_assado: { food: [PAL.s1, PAL.s2, PAL.s4], bits: PAL.org2, chunky: true },
   moqueca: { food: [PAL.red1, PAL.org2, PAL.yel2], bits: PAL.g6 },
   dourado_brasa: { food: [PAL.yel1, PAL.yel2, PAL.yel3], bits: PAL.red2, chunky: true },
+  // do sertão
+  umbuzada: { food: [0xc8c890, 0xe0e0b0, PAL.cream], bits: PAL.g5 },
+  cajuina: { food: [PAL.yel1, PAL.yel2, PAL.yel3], bits: PAL.org3, glass: true },
+  curimata_assada: { food: [PAL.s2, PAL.s3, PAL.s4], bits: PAL.g5, chunky: true },
+  piau_frito: { food: [PAL.yel1, PAL.org3, PAL.yel3], bits: PAL.red2, chunky: true },
+  surubim_caju: { food: [PAL.s1, PAL.s3, PAL.cream], bits: PAL.red2, chunky: true },
 };
 
 function dishIcon(d) {
   const p = new Pix(14, 12);
+  if (d.glass) {
+    // cajuína: garrafinha de vidro (suco de caju clarificado do Piauí, sem álcool) no lugar da tigela
+    p.rect(5, 0, 3, 3, PAL.s3);
+    p.rect(4, 3, 5, 9, d.food[1]);
+    p.rect(4, 3, 1, 9, d.food[2]);
+    p.rect(4, 6, 5, 2, PAL.red2); // rótulo
+    p.set(6, 6, PAL.cream);
+    return p.outline(K);
+  }
   // Tigela
   for (let y = 5; y < 12; y++)
     for (let x = 0; x < 14; x++) {

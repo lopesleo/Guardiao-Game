@@ -1285,6 +1285,8 @@ export const LEGENDS = [
     origin: "Contada no interior do Sudeste: alguém tão cruel em vida que nem a terra o aceitou, e ficou seco, vagando. Aqui, a Podridão o levantou." },
   { id: "mapinguari", name: "Mapinguari", sprite: ["mon_boss", 4, 1.2], role: "Chefe · bocarra na barriga, grito e o olho da Podridão",
     origin: "Gigante da Amazônia, peludo, com um olho na testa e a boca na barriga. Há quem ligue a lenda às preguiças-gigantes extintas. Vencê-lo o liberta." },
+  { id: "cabra", name: "Cabra Cabriola", sprite: ["mon_cabra", 0, 2.2], role: "Minichefe da Caatinga · galope em chamas, coice e brasas",
+    origin: "Assombração de origem ibérica contada em Pernambuco: uma cabra que salta e solta fogo pelos olhos. Aqui, a Podridão a tomou; vencida, volta a ser só uma cabra do sertão." },
   { id: "caboclo", name: "Caboclo d'Água", sprite: ["mon_caboclo", 4, 1.3], role: "Chefe da Caatinga · cheia, rebojo e arrastão; foge das carrancas",
     origin: "Guardião do Rio São Francisco: vira canoas de quem maltrata o rio. Os barqueiros punham carrancas na proa para espantá-lo. A Podridão o trouxe para o sertão seco." },
 ];
@@ -1317,7 +1319,11 @@ export const BIOMES = {
     light: { dusk: [0xf0, 0xd2, 0xae], night: [0x56, 0x4a, 0x6c], boss: [0x34, 0x44, 0x66] }, // sol forte → noite quente → o rio (azul)
     ambient: { fireflies: 3, leaves: 4, leafTint: 0xb89060, shaft: 0xffd890, dust: 18 },
     // arte do sertão no lugar da mata: lobo → calango, corvo → carcará, cogumelo → cabeça-de-frade
-    looks: { wolf: "calango", crow: "carcara", shroom: "frade" },
+    looks: { wolf: "calango", crow: "carcara", shroom: "frade", alpha: "cabra" },
+    // minichefe próprio (mesmos golpes da Mula; Corpo-Seco continua: "A Seca" é do sertão)
+    minis: { alpha: { legend: "cabra", name: "CABRA CABRIOLA", msg: "A CABRA CABRIOLA SALTA!", again: "A CABRA CABRIOLA VOLTOU!", rage: "A CABRA DISPARA!" } },
+    // lanternas: candeeiros de barro no lugar dos cogumelos
+    lantern: { tex: "px_candeeiro", broken: "px_candeeiro_broken", anim: "candeeiro_glow", color: 0xffb36b, spark: 0xffe58f, hint: "Candeeiros de barro guardam presentes do sertão.\nEncoste para quebrar!" },
     hazard: "dust",
     wallPines: 1, // muralha: mais juazeiro e árvore seca, menos mandacaru
     boss: "caboclo",
@@ -1401,6 +1407,9 @@ export const GARDEN = {
     pepper: { name: "Pimenta-de-brasa", s: 2 * 3600, needs: 2, yield: 2, lv: 1, rare: true, element: "fire" },
     frost: { name: "Flor-de-geada", s: 2 * 3600, needs: 2, yield: 2, lv: 1, rare: true, element: "ice" },
     thunder: { name: "Erva-do-trovão", s: 2 * 3600, needs: 2, yield: 2, lv: 1, rare: true, element: "bolt" },
+    // Frutas do sertão: a semente só cai nas partidas da Caatinga (biome)
+    umbu: { name: "Umbu", s: 3 * 3600, needs: 2, yield: 3, lv: 1, rare: true, biome: "caatinga" },
+    caju: { name: "Caju", s: 3 * 3600, needs: 2, yield: 2, lv: 1, rare: true, biome: "caatinga" },
   },
   NEEDS: {
     water: "Com sede! Toque para regar.",
@@ -1409,6 +1418,7 @@ export const GARDEN = {
   },
   // Sementes raras caem nas partidas (só depois que a Horta apareceu)
   SEEDS: { MINIBOSS: 1, GOLDEN_CHEST: 1, BOSS: 2 },
+  BIOME_SEED_CHANCE: 0.6, // num bioma com frutas próprias, 60% das sementes raras são dele
 };
 
 // Hábito diário (M4 — ver docs/PRE_LANCAMENTO.md §2). "Dia" = data LOCAL do
@@ -1480,6 +1490,10 @@ export const FISHING = {
     pacu: { name: "Pacu", move: "sinker", diff: 55, w: 11, cm: [30, 70] },
     tucunare: { name: "Tucunaré", move: "dart", diff: 70, w: 7, cm: [30, 80], day: true },
     dourado: { name: "Dourado", move: "mixed", diff: 78, w: 3, cm: [50, 100], day: true },
+    // Do Rio São Francisco: chegam ao Lago depois que o Caboclo d'Água é libertado (biome)
+    curimata: { name: "Curimatã", move: "smooth", diff: 30, w: 16, cm: [25, 55], biome: "caatinga" },
+    piau: { name: "Piau", move: "mixed", diff: 45, w: 12, cm: [20, 45], biome: "caatinga" },
+    surubim: { name: "Surubim", move: "sinker", diff: 82, w: 4, cm: [60, 140], night: true, biome: "caatinga" },
   },
 };
 
@@ -1505,6 +1519,12 @@ export const KITCHEN = {
     { id: "pacu_assado", name: "Pacu Assado", needs: { pacu: 1, cassava: 1 }, bonus: { hp: 0.3 } },
     { id: "moqueca", name: "Moqueca de Tucunaré", needs: { tucunare: 1, carrot: 1, pepper: 1 }, bonus: { dmg: 0.15 } },
     { id: "dourado_brasa", name: "Dourado na Brasa", needs: { dourado: 1 }, bonus: { crit: 0.09 } },
+    // Do sertão (frutas da Caatinga e peixes do São Francisco)
+    { id: "umbuzada", name: "Umbuzada", food: "umbu", needs: { umbu: 2 }, bonus: { regen: 0.7 } },
+    { id: "cajuina", name: "Cajuína", food: "caju", needs: { caju: 2 }, bonus: { xp: 0.18 } },
+    { id: "curimata_assada", name: "Curimatã Assada", needs: { curimata: 2 }, bonus: { hp: 0.25 } },
+    { id: "piau_frito", name: "Piau Frito", needs: { piau: 1, cassava: 1 }, bonus: { speed: 0.12 } },
+    { id: "surubim_caju", name: "Surubim com Caju", needs: { surubim: 1, caju: 1 }, bonus: { crit: 0.1 } },
   ],
 };
 

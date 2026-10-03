@@ -794,7 +794,7 @@ export class GameScene extends Phaser.Scene {
       const dx = s.x - this.player.x,
         dy = s.y - this.player.y;
       if (dx * dx + dy * dy < this.player.pickupRadius * this.player.pickupRadius) {
-        const id = randomRareSeed();
+        const id = randomRareSeed(this.biomeId);
         this._seedsThisRun[id] = (this._seedsThisRun[id] || 0) + 1;
         this.sound.play("sfx_chest_reel", { volume: 0.5, rate: 1.3 });
         this._toast(`Semente rara: ${GARDEN.CROPS[id].name}`, 1800, "#ffe58f");
@@ -1189,7 +1189,7 @@ export class GameScene extends Phaser.Scene {
     // Sementes do Mapinguari também entram direto
     if (this._seedsOn)
       for (let i = 0; i < GARDEN.SEEDS.BOSS; i++) {
-        const id = randomRareSeed();
+        const id = randomRareSeed(this.biomeId);
         this._seedsThisRun[id] = (this._seedsThisRun[id] || 0) + 1;
       }
     this.cameras.main.shake(600, 0.02);

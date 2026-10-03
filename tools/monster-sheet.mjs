@@ -8,6 +8,10 @@ import { registerMonsters } from "../src/art/Monsters.js";
 import { registerHeroes } from "../src/art/Hero.js";
 import { registerCaatingaMonsters } from "../src/art/MonstersCaatinga.js";
 import { registerCaatinga } from "../src/art/EnvCaatinga.js";
+import { registerGarden } from "../src/art/Garden.js";
+import { registerPond } from "../src/art/Pond.js";
+import { registerKitchen } from "../src/art/Kitchen.js";
+import { registerLanterns } from "../src/art/Lanterns.js";
 
 const [out = "monster-sheet.png", keysArg = "mon_alpha,mon_elder,mon_boss", scaleArg = "5"] = process.argv.slice(2);
 const S = Number(scaleArg);
@@ -42,8 +46,14 @@ const scene = {
 registerMonsters(scene);
 registerHeroes(scene); // hero_<id>: 0-1 parado, 2-5 andando
 registerCaatingaMonsters(scene); // mon_calango, mon_carcara, mon_frade, mon_caboclo, obj_carranca
+registerGarden(scene); // crop_<id> (5 estágios) + ico_<id>
+registerPond(scene); // ico_<peixe>
+registerKitchen(scene); // ico_dish_<id>
+registerLanterns(scene); // px_lantern, px_candeeiro
 registerCaatinga(scene); // cenário: atlas "env_caatinga" (quadros de tamanhos diferentes)
 
+// Imagem solta (Pix.register, sem quadros): a imagem inteira é um quadro
+for (const st of Object.values(strips)) if (!st.frames.length) st.frames.push({ x: 0, y: 0, w: st.w, h: st.h });
 // Uma linha por tira; quadros lado a lado sobre fundo noturno com chão
 const rows = wanted.map((k) => strips[k]).filter(Boolean);
 const PAD = 4;

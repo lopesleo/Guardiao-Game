@@ -53,6 +53,13 @@ export const REVEALS = [
     line: "A Samaúma acordou! Antes de cada partida ela pode abençoar você.",
   },
   {
+    // O Caboclo d'Água libertado manda peixes do São Francisco para o Lago (at: onde a cena acontece)
+    id: "riverfish",
+    at: "pond",
+    when: (d) => (d.revealed || []).includes("pond") && (d.winsByBiome?.caatinga || 0) > 0,
+    line: "O Caboclo d'Água agradeceu: peixes do São Francisco chegaram ao Lago! Surubim, curimatã, piau…",
+  },
+  {
     // Biomas (docs/BIOMAS.md): vencer o Mapinguari mostra o caminho para o sertão
     id: "trail",
     when: (d) => (d.wins || 0) > 0,
