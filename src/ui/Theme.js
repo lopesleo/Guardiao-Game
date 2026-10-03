@@ -189,6 +189,7 @@ export class Button extends Phaser.GameObjects.Container {
         align: "center",
       });
       this.content.add(this.label);
+      this._fitLabel();
     }
     this._draw(false, false);
     this.setSize(w, h);
@@ -239,7 +240,16 @@ export class Button extends Phaser.GameObjects.Container {
   }
   setLabel(str) {
     this.label?.setText(str);
+    this._fitLabel();
     return this;
+  }
+  // Rótulo nunca vaza da moldura: com a fonte Legível ou texto grande, encolhe para caber
+  _fitLabel() {
+    const t = this.label;
+    if (!t || this.ico) return;
+    t.setScale(1);
+    const room = this.w - 8 * P;
+    if (t.width > room) t.setScale(room / t.width);
   }
 }
 
