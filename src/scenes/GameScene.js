@@ -35,6 +35,7 @@ import { SpawnDirector } from "../systems/SpawnDirector.js";
 import { RunEvents } from "../systems/RunEvents.js";
 import { Hazards } from "../systems/BossKit.js";
 import "../entities/WeaponsLeva3.js"; // registra as armas da leva 3 (registerWeapon)
+import "../entities/WeaponsVento.js"; // registra as armas de vento
 import { ElementalSystem } from "../systems/ElementalSystem.js";
 import { WeaponFX } from "../systems/WeaponFX.js";
 import { UpgradeSystem } from "../systems/UpgradeSystem.js";
@@ -947,6 +948,7 @@ export class GameScene extends Phaser.Scene {
     if (crit) color = "#ffd96b";
     else if (element === "ice") color = "#9ad4ff";
     else if (element === "bolt") color = "#d8a8ff";
+    else if (element === "wind") color = "#b8f0dc";
     else if (element === "fire") color = "#ff9966";
     else if (element === "heal") color = "#6fcf6f";
     else color = "#ffffff";

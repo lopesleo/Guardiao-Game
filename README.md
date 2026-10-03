@@ -12,10 +12,11 @@ Roda 100% offline.
 
 ## Conteúdo
 
-- **15 armas**, 5 por elemento (fogo: Cajado, Vara Encantada, Sopro Flamejante,
-  Açoite de Urtiga, Fogueira de São João; gelo: Aura Gélida, Orbe Gélido, Granizo,
-  Miragem, Boleadeira; raio: Raio Concentrado, Vaga-lumes, Redemoinho, Bola de Ouro,
-  Tambor do Trovão), **15 evoluções** (arma nível 5 + parceira) e **10 laços** de
+- **4 elementos** (fogo, gelo, raio e vento) e **6 reações**; **18 armas** (fogo:
+  Cajado, Vara Encantada, Sopro Flamejante, Açoite de Urtiga, Fogueira de São João;
+  gelo: Aura Gélida, Orbe Gélido, Granizo, Miragem, Boleadeira; raio: Raio
+  Concentrado, Vaga-lumes, Bola de Ouro, Tambor do Trovão; vento: Redemoinho, Assobio
+  da Mata, Folhas ao Vento, Cata-vento), **18 evoluções** e **13 laços** de
   dupla — ver `docs/ARMAS_E_COMBOS.md`; para criar conteúdo, `docs/CONTEUDO.md`
   e `npm run check`
 - **7 personagens** jogáveis (Curupira, Caipora, Iara, Saci, Comadre Fulozinha,

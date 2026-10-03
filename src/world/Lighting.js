@@ -150,7 +150,7 @@ export class Lighting {
       this._light(s.boss.x, s.boss.y - 30, fury ? 260 : 180, fury ? 0xff6a2a : 0xb03aa0, 0.7);
     }
     s.projectilePool?.forEachActive((pr) => {
-      const c = pr.element === "ice" ? 0x5cc8ff : pr.element === "bolt" ? 0xc78cff : 0xff8a3c;
+      const c = pr.element === "ice" ? 0x5cc8ff : pr.element === "bolt" ? 0xc78cff : pr.element === "wind" ? 0x7fd9bd : 0xff8a3c;
       this._light(pr.x, pr.y, 150, c, 0.9);
     });
     s.boomerPool?.forEachActive((b) => this._light(b.x, b.y, 120, 0xff8a3c, 0.8));

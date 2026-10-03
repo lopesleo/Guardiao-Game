@@ -109,7 +109,7 @@ nenhuma arma emite).
 ## Feito (desbloqueio por desafio)
 
 `deed: { stat, n, text }` com `stat` de `DEED_STATS` (config.js):
-`kills`, `win1`, `VAPOR`, `CRYSTAL`, `OVERLOAD`, `miniBosses`, `chests`, `flawless`.
+`kills`, `win1`, `VAPOR`, `CRYSTAL`, `OVERLOAD`, `LABAREDA`, `GEADA`, `TEMPORAL`, `miniBosses`, `chests`, `flawless`.
 Estatística nova: some em `DEED_STATS`, conte com `meta.recordStat("nome")` onde ela
 acontece, e o progresso aparece sozinho na Forja/Fogueira e no fim da partida.
 

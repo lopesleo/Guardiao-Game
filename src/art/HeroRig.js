@@ -522,10 +522,10 @@ function prop(p, id, pose, hand, t) {
     p.disc(px + 1, py - 1.5, 2, PAL.org2);
     p.disc(px + 1, py - 1.5, 1.2, PAL.yel3);
   } else if (id === "shaman") {
-    // faísca roxa
+    // lufada de vento na mão
     p.set(Math.round(px + 1 - 0.5), Math.round(py - 1 - 0.5), PAL.white);
-    p.set(Math.round(px + 1 - 0.5), Math.round(py - 2 - 0.5), PAL.pur3);
-    p.set(Math.round(px + 2 - 0.5), Math.round(py - 0.5), PAL.pur2);
+    p.set(Math.round(px + 1 - 0.5), Math.round(py - 2 - 0.5), PAL.wnd3);
+    p.set(Math.round(px + 2 - 0.5), Math.round(py - 0.5), PAL.wnd2);
   }
 }
 

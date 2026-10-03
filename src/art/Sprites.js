@@ -394,6 +394,18 @@ export function registerSprites(scene) {
     ["...kk....", "..kssk...", "..kask...", "...kk....", "...ll....", "..l..l...", ".kk...kk.", "kssk.kssk", "kask.kask", ".kk...kk."],
     { k: K, s: PAL.s3, a: PAL.s4, l: PAL.straw2 },
   ).register(scene, "px_bolas");
+  // ---- vento ----
+  // Cata-vento: quatro pás de cores de festa (gira inteiro no jogo) + cabo
+  const pinwheel = (c1, c2, c3, c4) =>
+    Pix.fromMap(
+      [".....uu....", "..l..uuuu..", ".ll..uuuuu.", ".lll.uuu...", "llll.u.....", "lllllorrrrr", ".....y.rrrr", "...yyy.rrr.", ".yyyyy..rr.", "..yyyy..r..", "....yy....."],
+      { u: c1, l: c2, r: c3, y: c4, o: PAL.yel3 },
+    ).outline(K);
+  pinwheel(PAL.wnd2, PAL.cream, PAL.red2, PAL.yel2).register(scene, "px_catavento");
+  pinwheel(PAL.org2, PAL.yel3, PAL.red2, PAL.org3).register(scene, "px_catavento_brasa");
+  Pix.fromMap(["kk", "km", "km", "km", "km", "km", "km", "km", "km", "km", "kk"], { k: K, m: PAL.n3 }).register(scene, "px_catavento_stick");
+  // Rajada do cata-vento: risco de vento com a cauda se desfazendo
+  Pix.fromMap([".......kk.", "..u.uuwwwk", "uu.uuwwwwk", "..u.uuwwwk", ".......kk."], { k: PAL.wnd1, u: PAL.wnd2, w: PAL.white }).register(scene, "px_gust");
   // Pegada do Curupira (dedos para CIMA; girada no uso — os pés dele são virados)
   Pix.fromMap(["d.d.d", ".....", ".kkk.", "kkkkk", ".kkk.", "..k..", ".kkk.", ".kkk."], { k: PAL.n0, d: PAL.n1 }).register(scene, "px_foot");
   enemyShot().register(scene, "px_eshot");
@@ -406,7 +418,7 @@ export function registerSprites(scene) {
   shard().register(scene, "px_shard");
   firefly().register(scene, "px_firefly");
   hailstone().register(scene, "px_hail");
-  registerStrip(scene, "px_whirl", whirlFrames([PAL.pur3, PAL.pur2, PAL.pur1]));
+  registerStrip(scene, "px_whirl", whirlFrames([PAL.wnd3, PAL.wnd2, PAL.wnd1])); // vento (era roxo/raio)
   registerStrip(scene, "px_whirl_fire", whirlFrames([PAL.yel3, PAL.org2, PAL.org1], PAL.red2));
   leaf().register(scene, "px_leaf");
   registerGlow(scene);

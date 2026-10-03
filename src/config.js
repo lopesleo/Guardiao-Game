@@ -123,12 +123,14 @@ export const BOSS_FIGHT = {
 };
 
 // Elementos & reações (D11, D21)
-export const ELEMENT = { FIRE: "fire", ICE: "ice", BOLT: "bolt" };
+export const ELEMENT = { FIRE: "fire", ICE: "ice", BOLT: "bolt", WIND: "wind" };
 
 export const STATUS = {
   FIRE: { duration: 4000, tickMs: 500, dmgPerTick: 1 },
   ICE: { duration: 3000, slowFactor: 0.5, damageAmp: 1.35 },
   BOLT: { duration: 2000, tickMs: 125, dmgPerTick: 0.5 },
+  // Vento: "ventado" — mais leve (−15% de velocidade) e o vento o arrasta para longe do herói
+  WIND: { duration: 2200, slowFactor: 0.85, drift: 38 },
 };
 
 export const REACTION = {
@@ -157,6 +159,33 @@ export const REACTION = {
     label: "CRISTAL!",
   },
   // FIRE + BOLT => Sobrecarga: a recompensa em ÁREA — corrente forte entre muitos inimigos
+  // ---- reações do VENTO ----
+  // FOGO + VENTO => Labareda: o vento espalha a chama para os vizinhos
+  LABAREDA: {
+    color: 0xffa040,
+    dmg: 12,
+    spread: 5, // vizinhos que pegam fogo
+    radius: 120,
+    label: "LABAREDA!",
+  },
+  // GELO + VENTO => Geada: rajada fria em volta; deixa lento e congela quem já estava gelado
+  GEADA: {
+    color: 0xd2fbe9,
+    dmg: 10,
+    radius: 96,
+    slow: 0.4,
+    slowMs: 1500,
+    freezeMs: 900,
+    label: "GEADA!",
+  },
+  // RAIO + VENTO => Temporal: o vento arma a tempestade e raios caem do céu em volta
+  TEMPORAL: {
+    color: 0x9fe3ff,
+    strikes: 3,
+    dmg: 12,
+    radius: 170,
+    label: "TEMPORAL!",
+  },
   OVERLOAD: {
     color: 0xffe24c,
     jumps: 4, // era 6: com armas de área (Redemoinho, Sopro) virava 70% do dano
@@ -392,12 +421,12 @@ export const WEAPONS = {
   // bando e PUXA quem está perto. Dano por tique em área. Controle de multidão.
   WHIRL: {
     name: "Redemoinho",
-    desc: "Redemoinho do Saci persegue o bando e puxa todos para o centro.",
-    icon: "ico_whirl",
+    desc: "Redemoinho de vento do Saci: persegue o bando e puxa todos para o centro.",
+    icon: "ico_whirl_wind",
     mods: ["dmg", "cd", "range", "proj"],
     plus: "+1 Redemoinho",
     unlock: { forge: 4, cost: 900, deed: { stat: "OVERLOAD", n: 60, text: "Faça {n} Sobrecargas (fogo + raio)" } },
-    element: ELEMENT.BOLT,
+    element: ELEMENT.WIND, // o redemoinho do Saci é VENTO (era raio)
     baseDmg: 2, // por tique; era 3 (2× o dano das outras armas de área no bando)
     cooldown: 3800,
     range: 260,
@@ -449,13 +478,13 @@ export const WEAPONS = {
     strike: { max: 1, dmg: 10 }, // raio por pedra (só em congelado) → Cristal
   },
   // Redemoinho de Brasa (Redemoinho Lv5 + Sopro): funil maior que alterna FOGO e
-  // RAIO a cada tique → dispara SOBRECARGA sozinho.
+  // VENTO a cada tique → dispara LABAREDA sozinho.
   FIRE_WHIRL: {
     name: "Redemoinho de Brasa",
-    reaction: "OVERLOAD", // a reação sai por código próprio da arma (não via also)
-    desc: "Funil de BRASA: alterna fogo e raio e causa SOBRECARGA.",
+    reaction: "LABAREDA", // a reação sai por código próprio da arma (não via also)
+    desc: "Funil de BRASA: alterna fogo e vento e causa LABAREDA.",
     icon: "ico_whirl_fire",
-    element: ELEMENT.BOLT,
+    element: ELEMENT.WIND,
     evolvesFrom: "WHIRL",
     partner: "FLAME",
     baseDmg: 4,
@@ -686,6 +715,108 @@ export const WEAPONS = {
     touchR: 52,
     burst: { dmg: 16, r: 104 },
   },
+  // ===== VENTO (4º elemento): Redemoinho + 3 armas novas =====
+  // Assobio: o assobio das lendas — onda em cone que corre, empurra e deixa "ventado".
+  ASSOBIO: {
+    name: "Assobio da Mata",
+    desc: "O assobio das lendas: onda de vento em cone que empurra o bando.",
+    icon: "ico_assobio",
+    mods: ["dmg", "cd", "range", "proj"],
+    plus: "+1 Onda",
+    unlock: { forge: 2, cost: 350 },
+    element: ELEMENT.WIND,
+    baseDmg: 4,
+    cooldown: 1700,
+    range: 230,
+    halfAngle: 0.6,
+    travelMs: 420,
+    push: 42,
+  },
+  // Folhas ao Vento: folhas cortantes numa espiral que abre a partir do herói.
+  FOLHAS: {
+    name: "Folhas ao Vento",
+    desc: "Folhas cortantes giram numa espiral que abre a partir de você.",
+    icon: "ico_folhas",
+    mods: ["dmg", "cd", "range", "proj"],
+    plus: "+2 Folhas",
+    unlock: { forge: 3, cost: 650, deed: { stat: "LABAREDA", n: 40, text: "Faça {n} Labaredas (fogo + vento)" } },
+    element: ELEMENT.WIND,
+    baseDmg: 3,
+    cooldown: 2000,
+    range: 190,
+    count: 6,
+    lifeMs: 1700,
+    spin: 3.2,
+  },
+  // Cata-vento: torre plantada que gira e sopra rajadas que atravessam o bando.
+  CATAVENTO: {
+    name: "Cata-vento",
+    desc: "Planta um cata-vento que gira e sopra rajadas no bando.",
+    icon: "ico_catavento",
+    mods: ["dmg", "cd", "range", "proj"],
+    plus: "+1 Cata-vento",
+    unlock: { forge: 4, cost: 950, deed: { stat: "GEADA", n: 40, text: "Faça {n} Geadas (gelo + vento)" } },
+    element: ELEMENT.WIND,
+    baseDmg: 3.5,
+    cooldown: 3400,
+    range: 280,
+    max: 2,
+    durationMs: 8000,
+    everyMs: 1000,
+    speed: 360,
+    push: 18,
+  },
+  // Vento Sul (Assobio + Granizo): o assobio gelado do sul — duas ondas largas → GEADA.
+  VENTO_SUL: {
+    name: "Vento Sul",
+    desc: "Assobio gelado: duas ondas largas de vento e gelo = GEADA.",
+    icon: "ico_assobio_ice",
+    also: ["ice"],
+    element: ELEMENT.WIND,
+    evolvesFrom: "ASSOBIO",
+    partner: "HAIL",
+    baseDmg: 9,
+    cooldown: 1250,
+    range: 270,
+    halfAngle: 0.9,
+    travelMs: 440,
+    push: 48,
+    waves: 2,
+  },
+  // Ventania (Folhas + Vaga-lumes): mais folhas, carregadas de raio → TEMPORAL.
+  VENTANIA: {
+    name: "Ventania",
+    desc: "Mais folhas, carregadas de raio: vento + raio = TEMPORAL.",
+    icon: "ico_folhas_bolt",
+    also: ["bolt"],
+    element: ELEMENT.WIND,
+    evolvesFrom: "FOLHAS",
+    partner: "FIREFLY",
+    baseDmg: 4,
+    cooldown: 1600,
+    range: 220,
+    count: 10,
+    lifeMs: 1800,
+    spin: 3.6,
+  },
+  // Cata-vento de Brasa (Cata-vento + Fogueira): o cata-vento abana o fogo → LABAREDA.
+  CATAVENTO_BRASA: {
+    name: "Cata-vento de Brasa",
+    desc: "O cata-vento abana o fogo: rajadas em brasa = LABAREDA.",
+    icon: "ico_catavento_fire",
+    also: ["fire"],
+    element: ELEMENT.WIND,
+    evolvesFrom: "CATAVENTO",
+    partner: "BONFIRE",
+    baseDmg: 8,
+    cooldown: 2800,
+    range: 300,
+    max: 3,
+    durationMs: 9000,
+    everyMs: 700,
+    speed: 380,
+    push: 20,
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -693,7 +824,7 @@ export const WEAPONS = {
 // (desc/icon/mods/plus/unlock). Ver docs/CONTEUDO.md.
 // ---------------------------------------------------------------------------
 // Estatísticas acumuladas que um FEITO (deed) pode pedir — ver MetaProgression.deedProgress
-export const DEED_STATS = ["kills", "win1", "VAPOR", "CRYSTAL", "OVERLOAD", "miniBosses", "chests", "flawless"];
+export const DEED_STATS = ["kills", "win1", "VAPOR", "CRYSTAL", "OVERLOAD", "LABAREDA", "GEADA", "TEMPORAL", "miniBosses", "chests", "flawless"];
 export const BASE_WEAPON_KEYS = Object.keys(WEAPONS).filter((k) => !WEAPONS[k].evolvesFrom);
 export const EVOLUTION_KEYS = Object.keys(WEAPONS).filter((k) => WEAPONS[k].evolvesFrom);
 // Forjáveis em ordem de preço (é a ordem da lista da Forja)
@@ -715,6 +846,9 @@ export const LINKS = [
   { id: "brasa", a: "STAFF", b: "BONFIRE", name: "Brasa de São João", desc: "A fogueira mais perto também atira a bola de fogo do Cajado." },
   { id: "trovoada", a: "CHAIN", b: "DRUM", name: "Trovoada", desc: "O Raio causa +60% em quem a onda do tambor acabou de acertar." },
   { id: "rastro", a: "BOOMER", b: "MIRAGE", name: "Rastro Falso", desc: "Onde a vara faz a volta, fica uma miragem curta que atrai o bando." },
+  { id: "avivar", a: "ASSOBIO", b: "FLAME", name: "Avivar o Fogo", desc: "O assobio aviva o sopro: o cone do Sopro Flamejante fica 30% maior." },
+  { id: "ciranda", a: "FOLHAS", b: "WHIRL", name: "Ciranda", desc: "Folha que cruza o redemoinho gira com ele e corta 50% mais." },
+  { id: "temporuim", a: "CATAVENTO", b: "HAIL", name: "Tempo Ruim", desc: "O granizo cai perto dos cata-ventos." },
   { id: "derretido", a: "FLAME", b: "GOLDBALL", name: "Ouro Derretido", desc: "A bola de ouro que passa pelo sopro pega fogo: metade dos ricochetes também queima." },
 ];
 
@@ -773,7 +907,7 @@ export const CHARACTERS = [
     perk: "−15% recarga · +15% dano · −25% vida",
     mods: { cd: 0.85, dmg: 1.15, hp: 0.75 },
     unlock: { fire: 4 },
-    legend: { id: "saci", role: "Redemoinho travesso · redemoinho de raios",
+    legend: { id: "saci", role: "Redemoinho travesso · vento",
       origin: "Nasceu do Jaxy Jaterê guarani e ganhou traços africanos e europeus ao longo dos séculos. Esperto e brincalhão, vive dentro dos redemoinhos de vento." },
   },
   // Leva 3: Fogueira nv 4 + FEITO acumulado + moedas (cost)
@@ -937,7 +1071,7 @@ export const PASSIVES = [
 export const RESONANCE = {
   PER_EXTRA_WEAPON: 0.15,
   PRISM_REACTION: 1.3,
-  NAMES: { fire: "FOGO", ice: "GELO", bolt: "RAIO" },
+  NAMES: { fire: "FOGO", ice: "GELO", bolt: "RAIO", wind: "VENTO" },
 };
 
 // Tratos da Mata: de vez em quando uma das 3 cartas é um TRATO — poder grande em troca de
@@ -1224,6 +1358,7 @@ export const DAILY = {
     { id: "vapor", text: "Faça {n} Vapores (fogo + gelo)", stat: "VAPOR", n: [8, 15], coins: 120 },
     { id: "crystal", text: "Faça {n} Cristais (gelo + raio)", stat: "CRYSTAL", n: [5, 10], coins: 120, needs: (d) => (d.unlockedWeapons || []).includes("CHAIN") },
     { id: "overload", text: "Faça {n} Sobrecargas (fogo + raio)", stat: "OVERLOAD", n: [5, 10], coins: 120, needs: (d) => (d.unlockedWeapons || []).includes("CHAIN") },
+    { id: "labareda", text: "Faça {n} Labaredas (fogo + vento)", stat: "LABAREDA", n: [5, 10], coins: 120, needs: (d) => (d.unlockedWeapons || []).includes("ASSOBIO") },
     { id: "survive", text: "Sobreviva {n} minutos numa partida", stat: "minutes", n: [3, 5], coins: 100, max: true },
     { id: "runs", text: "Jogue {n} partidas", stat: "runs", n: [2, 3], coins: 80 },
     { id: "chests", text: "Abra {n} baús na floresta", stat: "chests", n: [2, 4], coins: 100 },
@@ -1577,6 +1712,9 @@ export const ACHIEVEMENTS = [
   { id: "vapor_100", name: "Mestre do Vapor", desc: "Dispare a reação Vapor 100 vezes", check: (c) => (c.reactions.VAPOR || 0) >= 100, prog: (c) => [c.reactions.VAPOR || 0, 100] },
   { id: "crystal_100", name: "Quebra-Gelo", desc: "Dispare a reação Cristal 100 vezes", check: (c) => (c.reactions.CRYSTAL || 0) >= 100, prog: (c) => [c.reactions.CRYSTAL || 0, 100] },
   { id: "overload_100", name: "Eletricista", desc: "Dispare a reação Sobrecarga 100 vezes", check: (c) => (c.reactions.OVERLOAD || 0) >= 100, prog: (c) => [c.reactions.OVERLOAD || 0, 100] },
+  { id: "labareda_100", name: "Fogo Corredor", desc: "Dispare a reação Labareda 100 vezes", check: (c) => (c.reactions.LABAREDA || 0) >= 100, prog: (c) => [c.reactions.LABAREDA || 0, 100] },
+  { id: "geada_100", name: "Sopro do Sul", desc: "Dispare a reação Geada 100 vezes", check: (c) => (c.reactions.GEADA || 0) >= 100, prog: (c) => [c.reactions.GEADA || 0, 100] },
+  { id: "temporal_100", name: "Dono do Temporal", desc: "Dispare a reação Temporal 100 vezes", check: (c) => (c.reactions.TEMPORAL || 0) >= 100, prog: (c) => [c.reactions.TEMPORAL || 0, 100] },
   // — Meta-progressão —
   { id: "bless_max", name: "Bênção Suprema", desc: "Maximize uma trilha de Bênção (rank 10)", check: (c) => c.maxBlessingRank >= MAX_BLESSING_RANK },
   { id: "ancestral_10", name: "Herdeiro Ancestral", desc: "Tesouro Ancestral no nível 10", check: (c) => c.ancestralLevel >= 10, prog: (c) => [c.ancestralLevel, 10] },
@@ -1591,12 +1729,14 @@ export const ACHIEVEMENTS = [
   { id: "mono_fire", name: "Piromante", desc: "Vença com 2+ armas, todas de fogo", check: monoWin(ELEMENT.FIRE) },
   { id: "mono_ice", name: "Coração de Geada", desc: "Vença com 2+ armas, todas de gelo", check: monoWin(ELEMENT.ICE) },
   { id: "mono_bolt", name: "Filho do Trovão", desc: "Vença com 2+ armas, todas de raio", check: monoWin(ELEMENT.BOLT) },
+  { id: "mono_wind", name: "Filho do Vento", desc: "Vença com 2+ armas, todas de vento", check: monoWin(ELEMENT.WIND) },
 ];
 
 export const COLORS = {
   FIRE: 0xff7a3c,
   ICE: 0x5cc8ff,
   BOLT: 0xd98cff,
+  WIND: 0x7fd9bd,
   GOLD: 0xd9b25c,
   INK: 0xe8f0e6,
   BG: 0x0a0e0a,

@@ -300,7 +300,7 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
       this._refreshAll();
       this._showArsenal();
     };
-    const elName = { fire: "Fogo", ice: "Gelo", bolt: "Raio" };
+    const elName = { fire: "Fogo", ice: "Gelo", bolt: "Raio", wind: "Vento" };
     this._buildRow(list, "forge", reopen);
     this._section(list, "ARMAS");
     const rows = [

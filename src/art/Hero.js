@@ -2,7 +2,7 @@
 //   guardian → Curupira (cabelo de fogo, pés virados para trás, cajado)
 //   huntress → Caipora (cabeleira de folhas, protetora dos bichos, vara encantada)
 //   druid    → Iara (senhora das águas, cabelo longo, vestido de escamas)
-//   shaman   → Saci (uma perna só, gorro vermelho, redemoinho elétrico)
+//   shaman   → Saci (uma perna só, gorro vermelho, redemoinho de vento)
 //   fulozinha → Comadre Fulozinha (cabelo negro comprido, vestido branco, urtiga)
 //   maedoouro → Mãe-do-Ouro (cabelo dourado, vestido de seda, bola de fogo de ouro)
 //   anhanga  → Anhangá (veado branco de olhos de fogo, galhada com pelo)
@@ -226,8 +226,8 @@ function drawSaci(pose, frame) {
   // Pulo: sobe nos quadros de passo
   const hop = pose.step !== 0 ? 2 : 0;
   const b = pose.bob - hop;
-  // Redemoinho de raios em volta do pé (gira entre quadros)
-  const whirl = [PAL.pur1, PAL.pur2, PAL.pur3];
+  // Redemoinho de VENTO em volta do pé (gira entre quadros)
+  const whirl = [PAL.wnd1, PAL.wnd2, PAL.wnd3];
   for (let k = 0; k < 7; k++) {
     const a = (k / 7) * Math.PI * 2 + frame * 0.9;
     const x = Math.round(12 + Math.cos(a) * 5),
@@ -244,13 +244,13 @@ function drawSaci(pose, frame) {
   for (let y = 16 + b; y <= 19 + b; y++) for (let x = 9; x <= 14; x++) p.set(x, y, x === 9 ? PAL.red3 : x < 12 ? PAL.red2 : PAL.red1);
   // Tronco (pele) magro
   torso(p, 11 + b, 15 + b, 9, 14, 0, 0, [SKIN_DARK.shade, SKIN_DARK.base, SKIN_DARK.light]);
-  // Braço erguido soltando faísca
+  // Braço erguido soltando uma lufada
   p.set(15, 12 + b, SKIN_DARK.base);
   p.set(16, 11 + b, SKIN_DARK.base);
   p.set(17, 10 + b, SKIN_DARK.base);
-  p.set(18, 9 + b, PAL.pur3);
+  p.set(18, 9 + b, PAL.wnd3);
   p.set(19, 8 + b, PAL.white);
-  p.set(18, 7 + b, PAL.pur2);
+  p.set(18, 7 + b, PAL.wnd2);
   // Cabeça
   head(p, 11.5, 7.5 + b, 3.8, 3.6, SKIN_DARK);
   eye(p, 13, 7 + b);

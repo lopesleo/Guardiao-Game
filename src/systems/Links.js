@@ -25,6 +25,8 @@ export const EVENTS = {
   "goldball:hit": "Bola de Ouro acertou · { weapon, ball, target }",
   "bolas:target": "Boleadeira escolhe o alvo · { weapon, target } (pode trocar ev.target)",
   "bolas:bind": "Boleadeira amarrou · { weapon, enemies[], ms } (pode mudar ev.ms)",
+  "flame:fire": "Sopro vai soprar · { weapon, range } (pode mudar ev.range)",
+  "folhas:move": "Folha andou · { weapon, leaf } (leaf.boost multiplica o dano)",
 };
 
 const near = (a, b, r) => (a.x - b.x) ** 2 + (a.y - b.y) ** 2 <= r * r;
@@ -137,6 +139,36 @@ export const LINK_EFFECTS = {
     },
   },
 };
+
+// ---- laços do VENTO ----
+Object.assign(LINK_EFFECTS, {
+  // Assobio + Sopro: o cone do sopro fica maior
+  avivar: {
+    "flame:fire": (ev) => {
+      ev.range *= 1.3;
+    },
+  },
+  // Folhas + Redemoinho: a folha que cruza o funil gira com ele e corta mais
+  ciranda: {
+    "folhas:move": ({ leaf }, scene, player) => {
+      if (leaf.boost > 1) return;
+      const whirls = player.weaponOf("WHIRL")?.whirls ?? [];
+      if (whirls.some((w) => near(leaf, w, 70))) {
+        leaf.boost = 1.5;
+        leaf.spr?.setTint(0xd2fbe9);
+      }
+    },
+  },
+  // Cata-vento + Granizo: as pedras caem perto dos cata-ventos
+  temporuim: {
+    "hail:targets": (ev, scene, player) => {
+      const towers = player.weaponOf("CATAVENTO")?.towers ?? [];
+      towers.forEach((t, i) => {
+        if (i < ev.points.length) ev.points[i] = { x: t.x + (Math.random() - 0.5) * 120, y: t.y + (Math.random() - 0.5) * 80 };
+      });
+    },
+  },
+});
 
 // Laços ativos de um herói. recompute() quando o arsenal muda; emit() pelas armas.
 export class LinkSet {

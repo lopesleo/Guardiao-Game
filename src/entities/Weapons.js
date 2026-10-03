@@ -117,6 +117,9 @@ export class Projectile extends Phaser.GameObjects.Container {
     } else if (element === ELEMENT.BOLT) {
       this.glow.setTint(COLORS.BOLT);
       this.core.setTint(0xf5e6ff);
+    } else if (element === ELEMENT.WIND) {
+      this.glow.setTint(COLORS.WIND);
+      this.core.setTint(0xeafff6);
     } else {
       this.glow.setTint(color);
       this.core.setTint(0xffe6b8);
@@ -1065,7 +1068,7 @@ export class Flamethrower extends Weapon {
     if (!this.owner) return false;
     if (!this._nearestEnemyInRange()) return false;
     const dir = this._dir();
-    const R = this.range;
+    const R = this._emit("flame:fire", { weapon: this, range: this.range }).range; // laço Avivar o Fogo
     const half = this.def.halfAngle;
     const scene = this.scene;
     const px = this.owner.x,
@@ -1446,7 +1449,7 @@ export class Hailstorm extends Hail {
   }
 }
 
-// REDEMOINHO (raio): funil que nasce no inimigo mais próximo e anda atrás do
+// REDEMOINHO (vento): funil que nasce no inimigo mais próximo e anda atrás do
 // bando; a cada tique causa dano em área e PUXA quem está em volta (chefe e
 // minichefes não são puxados). `extraProj` = mais funis ao mesmo tempo.
 export class Whirlwind extends Weapon {
@@ -1455,7 +1458,7 @@ export class Whirlwind extends Weapon {
     this.whirls = [];
     this._tex = "px_whirl";
     this._anim = "whirl_spin";
-    this._glowTint = COLORS.BOLT;
+    this._glowTint = COLORS.WIND;
     this._debris = "leaf"; // o que o vento arranca do chão
   }
   get count() {
@@ -1586,7 +1589,7 @@ export class Whirlwind extends Weapon {
     });
   }
   _tickElement() {
-    return ELEMENT.BOLT;
+    return this.def.element; // vento
   }
   _tick(w, R, n) {
     const rSq = R * R;
@@ -1605,8 +1608,8 @@ export class Whirlwind extends Weapon {
   }
 }
 
-// REDEMOINHO DE BRASA (Redemoinho + Sopro): maior, puxa mais e alterna FOGO e RAIO
-// a cada tique — fogo + raio no mesmo inimigo = SOBRECARGA.
+// REDEMOINHO DE BRASA (Redemoinho + Sopro): maior, puxa mais e alterna FOGO e VENTO
+// a cada tique — fogo + vento no mesmo inimigo = LABAREDA.
 export class FireWhirl extends Whirlwind {
   constructor(scene) {
     super(scene, "FIRE_WHIRL");
@@ -1617,7 +1620,7 @@ export class FireWhirl extends Whirlwind {
     this._debris = "ember";
   }
   _tickElement(n) {
-    return n % 2 ? ELEMENT.BOLT : ELEMENT.FIRE;
+    return n % 2 ? ELEMENT.WIND : ELEMENT.FIRE; // vento + fogo = LABAREDA
   }
 }
 

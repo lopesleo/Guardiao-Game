@@ -11,7 +11,7 @@ const TYPE = {
   passive: { style: "ice", ribbon: PAL.ice2, label: "PASSIVA", stat: hex(PAL.ice3) },
   pact: { style: "danger", ribbon: PAL.red2, label: "TRATO DA MATA", stat: CSS.goldHi },
 };
-const ELEMENT_NAME = { fire: "FOGO", ice: "GELO", bolt: "RAIO" };
+const ELEMENT_NAME = { fire: "FOGO", ice: "GELO", bolt: "RAIO", wind: "VENTO" };
 
 export function createCard(scene, x, y, w, h, card, onClick, index, showKey = true) {
   const t = TYPE[card.type] || TYPE.passive;
