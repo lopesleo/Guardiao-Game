@@ -10,6 +10,7 @@ import { Analytics } from "../systems/Analytics.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { POND_AW, POND_AH, pondShape, ISLE } from "../art/Pond.js";
 import { text, drawFrame, haptic } from "../ui/Theme.js";
+import { tr } from "../i18n/i18n.js";
 
 const S = GAME.PIXEL_SCALE;
 const D_NIGHT = 50000; // luzes (ADD) por cima da camada de noite
@@ -188,14 +189,14 @@ export const CampPond = {
       y: SPOT_Y,
       top: SPOT_Y - 70,
       r: 70,
-      name: "LAGO",
-      verb: "PESCAR",
+      name: tr("LAGO"),
+      verb: tr("PESCAR"),
       ruinOf: "pond",
       build: "pond",
-      action: () => (this.buildings.pond.shown ? this._startFishing() : this._say("Cure a floresta jogando partidas para revelar o que há aqui.")),
+      action: () => (this.buildings.pond.shown ? this._startFishing() : this._say(tr("Cure a floresta jogando partidas para revelar o que há aqui."))),
     });
     // Examinar a ruína de longe (antes de revelar, o trapiche nem existe)
-    this._addInteract({ x: PX - 40, y: PY + 60, top: PY - 20, r: 130, name: "LAGO", verb: "", ruinOf: "pond", hideWhenShown: "pond", action: () => this._say("Cure a floresta jogando partidas para revelar o que há aqui.") });
+    this._addInteract({ x: PX - 40, y: PY + 60, top: PY - 20, r: 130, name: tr("LAGO"), verb: "", ruinOf: "pond", hideWhenShown: "pond", action: () => this._say(tr("Cure a floresta jogando partidas para revelar o que há aqui.")) });
 
     // Vida na água (uma só rotina): ondinhas, bolhas quando há peixe,
     // peixe saltando de vez em quando, espuma da bica
@@ -292,7 +293,7 @@ export const CampPond = {
   // ---------------------------------------------------------------------------
   _startFishing() {
     const pond = this.pond;
-    if (pond.fish() <= 0) return this._say("O lago descansa. Os peixes se esconderam — volte mais tarde.");
+    if (pond.fish() <= 0) return this._say(tr("O lago descansa. Os peixes se esconderam — volte mais tarde."));
     const p = this.player;
     // O herói vai para a ponta da margem, virado para a água
     p.setVelocity(0, 0);
@@ -329,7 +330,7 @@ export const CampPond = {
       },
     });
     this.sound.play("sfx_dash", { volume: 0.3, rate: 1.4 });
-    f.hint = text(this, this.W / 2, this.H - 40, "Espere a boia afundar…", { size: 20, color: CSS.goldHi, origin: 0.5, stroke: true }).setScrollFactor(0).setDepth(this.D_HUD + 8);
+    f.hint = text(this, this.W / 2, this.H - 40, tr("Espere a boia afundar…"), { size: 20, color: CSS.goldHi, origin: 0.5, stroke: true }).setScrollFactor(0).setDepth(this.D_HUD + 8);
     // "Segurar" = um dedo que DESCEU no jogo durante a pescaria. Antes valia qualquer
     // ponteiro pressionado, e o polegar apoiado no joystick (zona fora do canvas, que o
     // Phaser também registra) deixava a zona verde subindo sem parar.
@@ -364,7 +365,7 @@ export const CampPond = {
     const f = this._fishing;
     if (!f) return;
     if (f.state === "wait") {
-      f.hint.setText("Cedo demais! Espere a boia afundar.");
+      f.hint.setText(tr("Cedo demais! Espere a boia afundar."));
       this._endFishing(null, 900);
     } else if (f.state === "bite") this._fishFight();
     else if (f.state === "result") this._endFishing(f.result);
@@ -397,7 +398,7 @@ export const CampPond = {
         this._splash(f.bx, f.by, 8);
         haptic(60);
         this.sound.play("sfx_chest_reel", { volume: 0.6, rate: 1.4 });
-        f.hint.setText(this.isTouch ? "PUXE! Toque na tela!" : "PUXE! (E / espaço / clique)").setColor(CSS.redHi);
+        f.hint.setText(this.isTouch ? tr("PUXE! Toque na tela!") : tr("PUXE! (E / espaço / clique)")).setColor(CSS.redHi);
         f.bang = text(this, p.x, p.y - 80, "!", { size: 40, color: CSS.redHi, origin: 0.5, stroke: true }).setDepth(this.D_HUD - 5);
         this.tweens.add({ targets: f.bang, scale: { from: 1.6, to: 1 }, duration: 200 });
       }
@@ -405,7 +406,7 @@ export const CampPond = {
       f.bobber.y = f.by + 6 + Math.sin(this.time.now / 60) * 2;
       f.t -= dt;
       if (f.t <= 0) {
-        f.hint.setText("O peixe soltou a isca…").setColor(CSS.muted);
+        f.hint.setText(tr("O peixe soltou a isca…")).setColor(CSS.muted);
         this._endFishing(null, 1000);
       }
     } else if (f.state === "fight") this._fightUpdate(f, dt);
@@ -438,7 +439,7 @@ export const CampPond = {
       slips: 0,
       acc: 0,
     });
-    f.hint.setText(this.isTouch ? "Segure a tela para subir · solte para descer" : "Segure E / espaço / clique para subir · solte para descer").setColor(CSS.goldHi);
+    f.hint.setText(this.isTouch ? tr("Segure a tela para subir · solte para descer") : tr("Segure E / espaço / clique para subir · solte para descer")).setColor(CSS.goldHi);
     // Barra na direita da tela
     const x = this.W - 130,
       y = this.H / 2;
@@ -537,7 +538,7 @@ export const CampPond = {
     if (f.prog >= 1) this._fishCaught(f);
     else if (f.prog <= 0) {
       this.pond.lose();
-      f.hint.setText("Escapou! Tente manter o peixe na zona verde.").setColor(CSS.muted);
+      f.hint.setText(tr("Escapou! Tente manter o peixe na zona verde.")).setColor(CSS.muted);
       Analytics.track("fish_lost", { id: f.fishId });
       this._endFishing(null, 1200);
     }
@@ -559,19 +560,19 @@ export const CampPond = {
     const c = (f.card = this.add.container(this.W / 2, this.H / 2 - 40).setScrollFactor(0).setDepth(this.D_HUD + 9));
     const g = this.add.graphics();
     drawFrame(g, -210, -120, 420, 240, "gold", { alpha: 0.97 });
-    const tag = r.first ? `Primeiro ${fish.name}!` : r.record ? "NOVO RECORDE!" : "Pegou!";
+    const tag = r.first ? tr("Primeiro {0}!", fish.name) : r.record ? tr("NOVO RECORDE!") : tr("Pegou!");
     c.add([
       g,
       text(this, 0, -92, tag, { size: 24, color: r.record || r.first ? CSS.goldHi : CSS.txt, origin: 0.5, stroke: true }),
       this.add.image(0, -30, `ico_${r.id}`).setScale(6),
       text(this, 0, 30, fish.name, { size: 26, origin: 0.5, stroke: true }),
-      text(this, 0, 62, `${r.cm} cm  ·  ${GARDEN.QUALITY[q]}`, { size: 20, color: Q_COLOR[q], origin: 0.5 }),
-      text(this, 0, 94, q === 2 ? "Pegada perfeita!" : "Sem deixar o peixe sair = Ouro", { size: 15, color: CSS.muted, origin: 0.5 }),
+      text(this, 0, 62, tr("{0} cm  ·  {1}", r.cm, GARDEN.QUALITY[q]), { size: 20, color: Q_COLOR[q], origin: 0.5 }),
+      text(this, 0, 94, q === 2 ? tr("Pegada perfeita!") : tr("Sem deixar o peixe sair = Ouro"), { size: 15, color: CSS.muted, origin: 0.5 }),
     ]);
     c.list.forEach((o) => o.setScrollFactor(0));
     c.setScale(0.8);
     this.tweens.add({ targets: c, scale: 1, duration: 220, ease: "Back.easeOut" });
-    f.hint.setText("Toque para continuar").setColor(CSS.muted);
+    f.hint.setText(tr("Toque para continuar")).setColor(CSS.muted);
     f.bobber?.destroy();
     f.bobber = null;
     this.time.delayedCall(2600, () => this._fishing === f && this._endFishing(r));
@@ -593,8 +594,8 @@ export const CampPond = {
       this._modals = this._modals.filter((m) => m !== f);
       this._fishing = null;
       this._refreshAll();
-      if (this.pond.fish() <= 0) this._say("O lago descansa. Os peixes se esconderam — volte mais tarde.");
-      else if (this.meta.data.stats.fishCaught === 1 && result) this._say("Belo peixe! Leve para a cozinha: com peixe saem pratos mais fortes.");
+      if (this.pond.fish() <= 0) this._say(tr("O lago descansa. Os peixes se esconderam — volte mais tarde."));
+      else if (this.meta.data.stats.fishCaught === 1 && result) this._say(tr("Belo peixe! Leve para a cozinha: com peixe saem pratos mais fortes."));
     };
     if (delay) {
       f.state = "ending";

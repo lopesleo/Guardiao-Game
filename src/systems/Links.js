@@ -8,6 +8,7 @@
 // Sem mexer na arma, desde que ela já emita o evento (lista em EVENTS abaixo).
 // Evolução conta como a arma base dela (Laçada de Urtiga vale como Açoite).
 import { LINKS, ELEMENT } from "../config.js";
+import { tr } from "../i18n/i18n.js";
 
 // Eventos que as armas emitem hoje (o verificador confere que cada laço só usa estes).
 // Os dados (ev) podem ser alterados pelo laço quando o nome diz (ex.: ev.dmg).
@@ -186,10 +187,9 @@ export class LinkSet {
       for (const id of next)
         if (!this.active.has(id)) {
           const l = LINKS.find((x) => x.id === id);
-          scene._toast?.(`LAÇO: ${l.name}
-${l.desc}`, 3600, "#c8f08c");
+          scene._toast?.(tr("LAÇO: {0}\n{1}", l.name, l.desc), 3600, "#c8f08c");
           scene.sound?.play("sfx_levelup", { volume: 0.45, rate: 1.45 });
-          scene._hint?.("link", "LAÇO! Duas armas que combinam ganham um efeito extra.\nVeja os laços ativos na pausa.");
+          scene._hint?.("link", tr("LAÇO! Duas armas que combinam ganham um efeito extra.\nVeja os laços ativos na pausa."));
         }
     this.active = next;
     this._ready = true;
@@ -214,6 +214,6 @@ ${l.desc}`, 3600, "#c8f08c");
 export function linkHint(player, key) {
   const bases = new Set(player.weapons.map((w) => w.baseKey ?? w.key));
   return LINKS.filter((l) => (l.a === key && bases.has(l.b)) || (l.b === key && bases.has(l.a)))
-    .map((l) => `\nLAÇO: ${l.name}`)
+    .map((l) => tr("\nLAÇO: {0}", l.name))
     .join("");
 }

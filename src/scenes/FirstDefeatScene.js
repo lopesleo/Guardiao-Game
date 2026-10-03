@@ -11,6 +11,7 @@ import { Analytics } from "../systems/Analytics.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
 import { Settings } from "../systems/Settings.js";
 import { RIG_W, RIG_H, GROUND, RIG_KEYS } from "../art/HeroRig.js";
+import { tr } from "../i18n/i18n.js";
 
 const SC = 4; // escala dos personagens (a mesma do acampamento)
 const TYPE_MS = 24; // ms por letra
@@ -211,19 +212,19 @@ export class FirstDefeatScene extends Phaser.Scene {
     const coins = n.coinsGained || 0;
     if (this.won) {
       return [
-        { t: "Você conseguiu! O Mapinguari está livre da Podridão, e logo na primeira partida!" },
-        { t: "Eu sou a Anciã da Fogueira. Esta é a Clareira, o último canto da floresta que a Podridão ainda não tomou." },
-        { t: `Você trouxe ${coins} moedas da mata. Com elas vamos reerguer a Clareira, peça por peça.` },
-        { t: "Mas a Podridão tem mais fôlego do que parece. O próximo Perigo será mais cruel. Prepare-se, guardião." },
+        { t: tr("Você conseguiu! O Mapinguari está livre da Podridão, e logo na primeira partida!") },
+        { t: tr("Eu sou a Anciã da Fogueira. Esta é a Clareira, o último canto da floresta que a Podridão ainda não tomou.") },
+        { t: tr("Você trouxe {0} moedas da mata. Com elas vamos reerguer a Clareira, peça por peça.", coins) },
+        { t: tr("Mas a Podridão tem mais fôlego do que parece. O próximo Perigo será mais cruel. Prepare-se, guardião.") },
       ];
     }
     return [
-      { t: "Calma, guardião… respire. Você caiu fundo na mata, mas está a salvo ao lado da fogueira." },
-      { t: "Eu sou a Anciã da Fogueira. Esta é a Clareira, o último canto da floresta que a Podridão ainda não tomou." },
-      { t: `Você resistiu ${time} e derrubou ${kills} criaturas, e ainda trouxe ${coins} moedas. Nada mal para a primeira vez!` },
-      { t: "Lá fora, basta caminhar: suas armas atacam sozinhas, e a cada nível a floresta oferece uma carta. Misture fogo, gelo e raio: quando se encontram, nascem reações." },
-      { t: "Ninguém vence a Podridão de primeira. Cada queda deixa você mais forte, e as moedas vão reerguer a Clareira. Outras lendas da mata esperam ser libertadas para lutar ao seu lado." },
-      { t: "Descanse um instante. Quando estiver pronto, a floresta o espera." },
+      { t: tr("Calma, guardião… respire. Você caiu fundo na mata, mas está a salvo ao lado da fogueira.") },
+      { t: tr("Eu sou a Anciã da Fogueira. Esta é a Clareira, o último canto da floresta que a Podridão ainda não tomou.") },
+      { t: tr("Você resistiu {0} e derrubou {1} criaturas, e ainda trouxe {2} moedas. Nada mal para a primeira vez!", time, kills, coins) },
+      { t: tr("Lá fora, basta caminhar: suas armas atacam sozinhas, e a cada nível a floresta oferece uma carta. Misture fogo, gelo e raio: quando se encontram, nascem reações.") },
+      { t: tr("Ninguém vence a Podridão de primeira. Cada queda deixa você mais forte, e as moedas vão reerguer a Clareira. Outras lendas da mata esperam ser libertadas para lutar ao seu lado.") },
+      { t: tr("Descanse um instante. Quando estiver pronto, a floresta o espera.") },
     ];
   }
 
@@ -471,7 +472,7 @@ export class FirstDefeatScene extends Phaser.Scene {
     drawFrame(g, -w / 2, -64, w, 128, "gold", { alpha: 0.97 });
     this.face = this.add.sprite(-w / 2 + 56, 40, "camp_elder", 0).setOrigin(0.5, 1).setScale(4).setFlipX(true);
     this.face.play("elder_idle");
-    const who = text(this, -w / 2 + 108, -42, "ANCIÃ DA FOGUEIRA", { size: 15, color: CSS.goldHi, origin: [0, 0.5] });
+    const who = text(this, -w / 2 + 108, -42, tr("ANCIÃ DA FOGUEIRA"), { size: 15, color: CSS.goldHi, origin: [0, 0.5] });
     this.lineT = text(this, -w / 2 + 108, -26, "", { size: 19, color: CSS.txt, origin: [0, 0], lineSpacing: 3 });
     // texto invisível usado só para medir/quebrar linhas (a digitação não "pula")
     this.measureT = this._u(text(this, 0, 0, "", { size: 19, origin: [0, 0], wrap: w - 140, lineSpacing: 3 }).setVisible(false));
@@ -479,8 +480,8 @@ export class FirstDefeatScene extends Phaser.Scene {
     this.tweens.add({ targets: this.more, y: 52, duration: 450, yoyo: true, repeat: -1 });
     c.add([g, this.face, who, this.lineT, this.more]);
     this._u(c);
-    this.hint = this._u(text(this, W / 2, H - 20, "toque para continuar", { size: 14, color: CSS.muted, origin: 0.5 }).setDepth(1600).setAlpha(0));
-    this.skipBtn = new Button(this, W - 96, 40, 150, 48, "PULAR", () => this._finish(true), { size: 20 });
+    this.hint = this._u(text(this, W / 2, H - 20, tr("toque para continuar"), { size: 14, color: CSS.muted, origin: 0.5 }).setDepth(1600).setAlpha(0));
+    this.skipBtn = new Button(this, W - 96, 40, 150, 48, tr("PULAR"), () => this._finish(true), { size: 20 });
     this.skipBtn.setDepth(1700).setAlpha(0);
     this._u(this.skipBtn);
     this.tweens.add({ targets: this.skipBtn, alpha: 0.8, duration: 600, delay: 1200 });
@@ -618,7 +619,7 @@ export class FirstDefeatScene extends Phaser.Scene {
       return;
     }
     // depois do baque: legenda, uma luz de tocha chega e os lobos fogem
-    this._at(3300, () => this._caption("A Podridão te alcançou…", 700, 1200));
+    this._at(3300, () => this._caption(tr("A Podridão te alcançou…"), 700, 1200));
     this._at(3900, () => this._torchLight());
     this._at(5300, () => {
       this._fadeBlack(1, 1100);
@@ -692,7 +693,7 @@ export class FirstDefeatScene extends Phaser.Scene {
     this.fireSnd = this.sound.add("sfx_fire_loop", { loop: true, volume: 0 });
     this.fireSnd.play();
     this.tweens.add({ targets: this.fireSnd, volume: 0.22, duration: 2400 });
-    this._titleCard("A CLAREIRA", "o último canto da floresta", 1100);
+    this._titleCard(tr("A CLAREIRA"), tr("o último canto da floresta"), 1100);
     this._at(2900, () => {
       this._bloomIn();
       this._fadeBlack(0, 1700);
@@ -819,7 +820,20 @@ export class FirstDefeatScene extends Phaser.Scene {
   }
 
   _startLine(str) {
-    const wrapped = this.measureT.getWrappedText(str).join("\n");
+    // a fala tem de caber na caixa (traduções e texto grande): encolhe a letra só se precisar
+    const ROOM = 78; // do topo do texto (-26) até a borda de baixo da caixa (+64 − moldura)
+    const base = (this._lineBase ??= parseInt(this.lineT.style.fontSize, 10));
+    let size = base,
+      wrapped;
+    for (;;) {
+      this.measureT.setFontSize(size);
+      wrapped = this.measureT.getWrappedText(str).join("\n");
+      this.measureT.setText(wrapped);
+      if (this.measureT.height <= ROOM || size <= 12) break;
+      size--;
+    }
+    this.measureT.setText("");
+    this.lineT.setFontSize(size);
     this._full = wrapped;
     this._shown = 0;
     this._typing = true;
@@ -838,9 +852,9 @@ export class FirstDefeatScene extends Phaser.Scene {
         if (this._shown % 3 === 0) this._sfx("sfx_ui_hover", 0.06, 0.9 + Math.random() * 0.4);
         if (this._shown >= this._full.length) return this._completeLine();
         // pausa curtinha nas vírgulas e pontos: a fala "respira"
-        if (ch === "," || ch === "." || ch === "…" || ch === "!") {
+        if (",.…!，、。！".includes(ch)) {
           this._typeEvt.paused = true;
-          this.time.delayedCall(ch === "," ? 120 : 230, () => this._typeEvt && (this._typeEvt.paused = false));
+          this.time.delayedCall(",，、".includes(ch) ? 120 : 230, () => this._typeEvt && (this._typeEvt.paused = false));
         }
       },
     });

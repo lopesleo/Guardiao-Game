@@ -83,12 +83,15 @@ src/
 A identidade visual é **uma paleta só** (`src/art/Palette.js`): heróis,
 criaturas, cenário, ícones, efeitos e interface são desenhados por código com
 ela. Músicas e efeitos sonoros são sintetizados no carregamento
-(`src/audio/Synth.js`). O jogo não usa nenhum asset de terceiros além da fonte.
+(`src/audio/Synth.js`). O jogo não usa nenhum asset de terceiros além das fontes.
 
 ## Créditos
 
 Lista completa em [`docs/CREDITS.md`](docs/CREDITS.md) e no menu → Créditos.
 **Arte e áudio 100% próprios**, gerados por código (`src/art/`, `src/audio/`) ·
-Fonte: Jersey 15 (OFL) · Motor: Phaser 4 (MIT) · nipplejs (MIT).
+Fontes: Jersey 15, Atkinson Hyperlegible e Fusion Pixel (todas OFL) · Motor: Phaser 4 (MIT) · nipplejs (MIT).
+
+Idiomas: português, inglês, espanhol, japonês e chinês simplificado (`src/i18n/`, ver
+`docs/IDIOMAS.md`).
 
 **Autor:** Leonardo Lopes

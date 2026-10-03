@@ -7,6 +7,7 @@ import { text, dim, Button, vw, vh, fitCamera, drawFrame } from "../ui/Theme.js"
 import { CSS } from "../art/Palette.js";
 import { AdService } from "../systems/AdService.js";
 import { Analytics } from "../systems/Analytics.js";
+import { tr } from "../i18n/i18n.js";
 
 export class LevelUpScene extends Phaser.Scene {
   constructor() {
@@ -38,10 +39,10 @@ export class LevelUpScene extends Phaser.Scene {
     // Título com raios de luz girando atrás
     const rays = this.add.image(W / 2, 64, "fx_glow").setScale(6, 2).setTint(0xf2c14e).setAlpha(0.35).setBlendMode(Phaser.BlendModes.ADD);
     this.tweens.add({ targets: rays, alpha: 0.15, duration: 900, yoyo: true, repeat: -1 });
-    const title = text(this, W / 2, 60, `NÍVEL ${this.player.level}!`, { size: 44, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 7 });
+    const title = text(this, W / 2, 60, tr("NÍVEL {0}!", this.player.level), { size: 44, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 7 });
     title.setScale(0.5);
     this.tweens.add({ targets: title, scale: 1, duration: 260, ease: "Back.easeOut" });
-    text(this, W / 2, 102, "Escolha uma bênção da floresta", { size: 18, color: CSS.muted, origin: 0.5 });
+    text(this, W / 2, 102, tr("Escolha uma bênção da floresta"), { size: 18, color: CSS.muted, origin: 0.5 });
 
     this._renderCards(true);
     this._buildReroll();
@@ -98,7 +99,7 @@ export class LevelUpScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-B", () => this._toggleBanish());
     if (offer) {
       Analytics.track("ad_offer_show", { placement: "extra_card" });
-      this.extraBtn = new Button(this, this._btnXs[2], H - 34, 280, 44, "MAIS UMA CARTA", () => this._extraCard(), {
+      this.extraBtn = new Button(this, this._btnXs[2], H - 34, 280, 44, tr("MAIS UMA CARTA"), () => this._extraCard(), {
         size: 17,
         style: "primary",
         color: CSS.goldHi,
@@ -137,8 +138,8 @@ export class LevelUpScene extends Phaser.Scene {
   _refreshReroll() {
     const left = this.rerollsLeft || 0;
     const key = this.isTouch ? "" : " [R]";
-    if (left > 0) this.rerollBtn.setLabel(`TROCAR CARTAS${key}`).setEnabled(true);
-    else this.rerollBtn.setLabel("Sem trocas").setEnabled(false);
+    if (left > 0) this.rerollBtn.setLabel(tr("TROCAR CARTAS{0}", key)).setEnabled(true);
+    else this.rerollBtn.setLabel(tr("Sem trocas")).setEnabled(false);
   }
 
   // Botão de banir: normal ou, sem banimentos, "BANIR +1" por anúncio
@@ -147,7 +148,7 @@ export class LevelUpScene extends Phaser.Scene {
     this.banishBtn?.destroy();
     this._banishAd = ad;
     this.banishBtn = ad
-      ? new Button(this, x, vh(this) - 34, 280, 44, "BANIR +1", () => this._adBanish(), { size: 17, style: "danger", color: CSS.redHi, icon: "ico_play", iconScale: 2 })
+      ? new Button(this, x, vh(this) - 34, 280, 44, tr("BANIR +1"), () => this._adBanish(), { size: 17, style: "danger", color: CSS.redHi, icon: "ico_play", iconScale: 2 })
       : new Button(this, x, vh(this) - 34, 280, 44, "", () => this._toggleBanish(), { size: 17, style: "danger" });
     this.banishBtn._baseX = x;
     if (ad) Analytics.track("ad_offer_show", { placement: "extra_banish" });
@@ -159,10 +160,10 @@ export class LevelUpScene extends Phaser.Scene {
     const offerAd = !this._banishMode && left <= 0 && AdService.canShow("extra_banish");
     if (offerAd !== !!this._banishAd) this._makeBanishBtn(offerAd);
     if (offerAd) this.banishBtn.setEnabled(!this._adBusy && !this._locked);
-    else if (this._banishMode) this.banishBtn.setLabel("CANCELAR").setEnabled(true);
-    else if (left > 0) this.banishBtn.setLabel(`BANIR (${left})${key}`).setEnabled(true);
-    else this.banishBtn.setLabel("Sem banimentos").setEnabled(false);
-    this.banishHint.setText(this._banishMode ? "Toque na carta que NÃO quer mais ver nesta partida" : "");
+    else if (this._banishMode) this.banishBtn.setLabel(tr("CANCELAR")).setEnabled(true);
+    else if (left > 0) this.banishBtn.setLabel(tr("BANIR ({0}){1}", left, key)).setEnabled(true);
+    else this.banishBtn.setLabel(tr("Sem banimentos")).setEnabled(false);
+    this.banishHint.setText(this._banishMode ? tr("Toque na carta que NÃO quer mais ver nesta partida") : "");
   }
 
   // Anúncio premiado → +1 banimento e já entra no modo banir

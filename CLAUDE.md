@@ -39,9 +39,14 @@ público brasileiro, com potencial internacional.
 ## Princípios e decisões (seguir sempre)
 
 - **Arte e áudio 100% próprios, gerados por código** (`src/art/`, `src/audio/`),
-  com **uma paleta só** (`src/art/Palette.js`). Não usar assets de terceiros (a
-  única exceção é a fonte Jersey 15, OFL). UI sempre via `src/ui/Theme.js` e
+  com **uma paleta só** (`src/art/Palette.js`). Não usar assets de terceiros (as
+  únicas exceções são fontes OFL: Jersey 15, Atkinson Hyperlegible e a Fusion Pixel
+  recortada para japonês/chinês). UI sempre via `src/ui/Theme.js` e
   `src/ui/Widgets.js` — nada de retângulos crus, emojis ou fontes do sistema.
+- **Idiomas (pt, en, es, ja, zh):** todo texto visível passa por `tr("português", …)`
+  (`src/i18n/i18n.js`) com `{0}` para valores — nunca frase concatenada. Fichas do
+  `config.js` são traduzidas por campo. `npm run check` aponta o que falta. Ver
+  `docs/IDIOMAS.md`.
 - **Gênero:** o jogador só se move; decisões acontecem nas cartas de nível.
 - **Balanceamento centralizado** em `src/config.js`.
 - **Automatizar o tedioso, nunca o divertido** (bichos ajudam e presenteiam;
@@ -82,6 +87,7 @@ público brasileiro, com potencial internacional.
 | **Chefes: golpes especiais e regras de justiça** | `docs/CHEFES.md` |
 | **Como adicionar armas, laços, guardiões e desbloqueios** (`npm run check`) | `docs/CONTEUDO.md` |
 | Biomas (mapas): pesquisa, a Caatinga e como adicionar um bioma | `docs/BIOMAS.md` |
+| **Idiomas: como traduzir, adicionar texto/idioma, glossário** | `docs/IDIOMAS.md` |
 
 ## Rodar e testar
 

@@ -1378,14 +1378,14 @@ export class Hail extends Weapon {
       .setAlpha(0.5)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(60);
-    const tr = {};
+    const trail = {};
     scene.tweens.add({
       targets: [stone, glow],
       x,
       y,
       duration: fall,
       ease: "Quad.easeIn",
-      onUpdate: () => scene.fx?.trail(tr, stone.x, stone.y, "ice", 22),
+      onUpdate: () => scene.fx?.trail(trail, stone.x, stone.y, "ice", 22),
       onComplete: () => {
         stone.destroy();
         glow.destroy();

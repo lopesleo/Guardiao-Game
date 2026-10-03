@@ -10,6 +10,7 @@ import { CSS } from "../art/Palette.js";
 import { dishIconKey } from "../art/Kitchen.js";
 import { Modal } from "../ui/Widgets.js";
 import { text, haptic } from "../ui/Theme.js";
+import { tr } from "../i18n/i18n.js";
 
 const S = GAME.PIXEL_SCALE;
 const KX = 310,
@@ -48,10 +49,10 @@ export const CampKitchen = {
       y: KY,
       top: KY - img.displayHeight,
       r: 120,
-      name: "COZINHA",
-      verb: "COZINHAR",
+      name: tr("COZINHA"),
+      verb: tr("COZINHAR"),
       ruinOf: "kitchen",
-      action: () => (this.buildings.kitchen.shown ? this._showKitchen() : this._say("Cure a floresta jogando partidas para revelar o que há aqui.")),
+      action: () => (this.buildings.kitchen.shown ? this._showKitchen() : this._say(tr("Cure a floresta jogando partidas para revelar o que há aqui."))),
     });
   },
 
@@ -66,7 +67,7 @@ export const CampKitchen = {
   _showKitchen() {
     const k = this.kitchen;
     const d = this.meta.data;
-    const m = new Modal(this, { title: "COZINHA", subtitle: "Coma um prato antes de partir: o bônus vale só na próxima partida", w: 880, h: 620 });
+    const m = new Modal(this, { title: tr("COZINHA"), subtitle: tr("Coma um prato antes de partir: o bônus vale só na próxima partida"), w: 880, h: 620 });
     const list = this._modalList(m);
     const reopen = () => {
       const y = list.scroll;
@@ -76,26 +77,26 @@ export const CampKitchen = {
       this._modals.at(-1)?.list?.setScroll(y);
     };
     // O que já comeu (vale na próxima partida)
-    this._section(list, "PRÓXIMA PARTIDA");
+    this._section(list, tr("PRÓXIMA PARTIDA"));
     if (d.meal) {
       const r = recipe(d.meal.id);
       list.addRow(
         this._shopRow({
           icon: dishIconKey(r.id),
-          name: `Você comeu: ${r.name} · ${GARDEN.QUALITY[d.meal.q]}`,
+          name: tr("Você comeu: {0} · {1}", r.name, GARDEN.QUALITY[d.meal.q]),
           nameColor: CSS.goldHi,
           desc: bonusText(r, d.meal.q),
-          right: "BARRIGA CHEIA",
+          right: tr("BARRIGA CHEIA"),
           rightColor: CSS.green,
           style: "green",
         }),
       );
-    } else list.addRow({ h: 40, build: (c, w) => c.add(text(this, w / 2, 20, "Você ainda não comeu — cozinhe e coma um prato antes de partir", { size: 16, color: CSS.dim, origin: 0.5 })) });
+    } else list.addRow({ h: 40, build: (c, w) => c.add(text(this, w / 2, 20, tr("Você ainda não comeu — cozinhe e coma um prato antes de partir"), { size: 16, color: CSS.dim, origin: 0.5 })) });
     // Pratos prontos (cozinhados e guardados)
     const ready = [];
     for (const [id, row] of Object.entries(d.dishes || {})) row.forEach((n, q) => n > 0 && ready.push({ id, q, n }));
     if (ready.length) {
-      this._section(list, "PRATOS PRONTOS");
+      this._section(list, tr("PRATOS PRONTOS"));
       for (const { id, q, n } of ready.sort((a, b) => b.q - a.q)) {
         const r = recipe(id);
         list.addRow(
@@ -103,7 +104,7 @@ export const CampKitchen = {
             icon: dishIconKey(id),
             name: `${r.name} · ${GARDEN.QUALITY[q]}  ×${n}`,
             desc: bonusText(r, q),
-            right: d.meal ? "JÁ COMEU" : "COMER",
+            right: d.meal ? tr("JÁ COMEU") : tr("COMER"),
             rightColor: d.meal ? CSS.dim : CSS.goldHi,
             style: d.meal ? "dark" : "button",
             onTap: d.meal
@@ -112,7 +113,7 @@ export const CampKitchen = {
                   if (!k.eat(id, q)) return;
                   this.sound.play("sfx_pickup", { volume: 0.5, rate: 0.9 });
                   haptic(20);
-                  this._toast(`Hum! ${r.name}: vale na próxima partida`);
+                  this._toast(tr("Hum! {0}: vale na próxima partida", r.name));
                   Analytics.track("meal_eat", { id, q });
                   reopen();
                 },
@@ -121,7 +122,7 @@ export const CampKitchen = {
       }
     }
     // Receitas
-    this._section(list, "RECEITAS");
+    this._section(list, tr("RECEITAS"));
     for (const r of k.known()) {
       const can = k.canCook(r);
       const ing = Object.entries(r.needs)
@@ -134,7 +135,7 @@ export const CampKitchen = {
           name: r.name,
           nameColor: can ? CSS.txt : CSS.muted,
           desc: `${bonusText(r)} · ${ing}`,
-          right: can ? "COZINHAR" : "FALTA",
+          right: can ? tr("COZINHAR") : tr("FALTA"),
           rightColor: can ? CSS.goldHi : CSS.dim,
           style: can ? "gold" : "dark",
           onTap: can
@@ -144,7 +145,7 @@ export const CampKitchen = {
                 this._dailyBump?.("cook");
                 this._buyFx();
                 Analytics.track("kitchen_cook", { id: r.id, q: res.q });
-                this._toast(`${r.name} (${GARDEN.QUALITY[res.q]}) pronto!${d.meal ? "" : " Coma antes de partir"}`);
+                this._toast(tr("{0} ({1}) pronto!{2}", r.name, GARDEN.QUALITY[res.q], d.meal ? "" : tr(" Coma antes de partir")));
                 reopen();
               }
             : null,

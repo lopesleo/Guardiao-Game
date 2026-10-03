@@ -7,12 +7,13 @@ import { DAILY, GARDEN } from "../config.js";
 import { rng } from "../art/PixelArt.js";
 import { Analytics } from "./Analytics.js";
 import { Clock } from "./Clock.js";
+import { tr } from "../i18n/i18n.js";
 
 export const dayKey = (d = Clock.date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const yesterdayKey = (d = Clock.date()) => dayKey(new Date(d.getFullYear(), d.getMonth(), d.getDate() - 1));
 const def = (id) => DAILY.MISSIONS.find((m) => m.id === id);
 // "{n}" vira o alvo; "{s}" vira plural quando o alvo passa de 1
-const fill = (t, n) => t.replace("{n}", n).replace("{s}", n > 1 ? "s" : "");
+const fill = (t, n) => t.replace("{n}", n).replace("{s}", n > 1 ? "s" : ""); // japonês e chinês tiram o {s} da frase
 
 // Missões, presentes e baú só existem depois que o Mural apareceu
 export const dailyUnlocked = (d) => (d.revealed || []).includes("board");
@@ -176,9 +177,9 @@ export class Daily {
 // Texto curto de um prêmio: "+60 moedas · +2 madeira"
 export function rewardText(r) {
   const parts = [];
-  if (r.coins) parts.push(`+${r.coins} moedas`);
-  if (r.wood) parts.push(`+${r.wood} madeira`);
+  if (r.coins) parts.push(tr("+{0} moedas", r.coins));
+  if (r.wood) parts.push(tr("+{0} madeira", r.wood));
   const ns = Array.isArray(r.seeds) ? r.seeds.length : r.seeds || 0;
-  if (ns) parts.push(`+${ns} semente${ns > 1 ? "s" : ""} rara${ns > 1 ? "s" : ""}`);
+  if (ns) parts.push(ns > 1 ? tr("+{0} sementes raras", ns) : tr("+1 semente rara"));
   return parts.join(" · ");
 }

@@ -9,6 +9,7 @@
 import { BOSS_FIGHT, PLAYER } from "../config.js";
 import { PAL } from "../art/Palette.js";
 import { D_TELE, pixelArc } from "../art/Telegraph.js";
+import { tr } from "../i18n/i18n.js";
 
 // ---------------------------------------------------------------------------
 // Timeline: etapas { ms, enter(), tick(k, dt), exit() } em sequência.
@@ -107,7 +108,7 @@ export class FightLog {
     this.dodges++;
     p.addAwakenMeter(BOSS_FIGHT.DODGE_AWAKEN);
     const n = s.dmgNumberPool?.acquire();
-    n?.show(p.x, p.y - 44, viaDash ? "ESQUIVOU!" : "DESVIOU!", "#c8f08c", false);
+    n?.show(p.x, p.y - 44, viaDash ? tr("ESQUIVOU!") : tr("DESVIOU!"), "#c8f08c", false);
     s.sound.play("sfx_dodge", { volume: 0.45 });
     s.fx?.ring?.(p.x, p.y, PAL.g6, 10, 46, 260, 1, 0.8);
   }
@@ -206,7 +207,7 @@ export class WeakSpot {
   }
 
   // offsetY (opcional): onde fica o ponto fraco desta vez (ex.: o olho)
-  open(ms, mult = BOSS_FIGHT.EXPOSED_MULT, label = "PONTO FRACO!", offsetY = null) {
+  open(ms, mult = BOSS_FIGHT.EXPOSED_MULT, label = tr("PONTO FRACO!"), offsetY = null) {
     const o = this.owner,
       s = this.scene;
     this.curOffset = offsetY ?? this.offsetY;

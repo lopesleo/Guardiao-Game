@@ -12,6 +12,7 @@ import { Settings } from "./Settings.js";
 import { Telemetry } from "./Telemetry.js";
 import { text, vw, vh } from "../ui/Theme.js";
 import { CSS } from "../art/Palette.js";
+import { tr } from "../i18n/i18n.js";
 
 // Aviso curto na cena que está por cima (ex.: tela de cartas), sem depender de cada cena
 function notice(msg) {
@@ -70,7 +71,7 @@ function showRewarded(placement) {
       state.busy = false;
       gameAudio(true);
       // Falha de carga (sem rede, bloqueador de anúncios, sem anúncio no momento): avisa o jogador
-      if (failed && !ok) notice("Anúncio indisponível agora. Tente mais tarde.");
+      if (failed && !ok) notice(tr("Anúncio indisponível agora. Tente mais tarde."));
       resolve(ok);
     };
     (async () => {

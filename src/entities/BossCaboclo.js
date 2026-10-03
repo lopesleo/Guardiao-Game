@@ -10,6 +10,7 @@ import { PAL } from "../art/Palette.js";
 import { ZoneTele, LaneTele, shockwave, summonPulse, pixelArc, D_TELE } from "../art/Telegraph.js";
 import { distTo, inLane } from "../systems/BossKit.js";
 import { Brain, registerBoss, clampLen, clampPt } from "./Bosses.js";
+import { tr } from "../i18n/i18n.js";
 
 const TAU = Math.PI * 2;
 const S = GAME.PIXEL_SCALE;
@@ -157,7 +158,7 @@ export class CabocloBrain extends Brain {
     if (!this._placed) {
       this._placed = true;
       this.carrancas.place();
-      this.s._hint?.("carranca", "As CARRANCAS espantam o Caboclo d'Água.\nFique atrás de uma quando ele investir!", 5200);
+      this.s._hint?.("carranca", tr("As CARRANCAS espantam o Caboclo d'Água.\nFique atrás de uma quando ele investir!"), 5200);
     }
     this.carrancas.update(time);
     super.update(time, dt);
@@ -272,7 +273,7 @@ export class CabocloBrain extends Brain {
       {
         ms: K.windupMs,
         enter: () => {
-          this.caption("CHEIA DO RIO");
+          this.caption(tr("CHEIA DO RIO"));
           o.setVelocity(0, 0);
           this.pose(this.frame("raise"));
           w1 = mkWave(o.x, o.y, this.angTo(), K.back, K.len);
@@ -348,7 +349,7 @@ export class CabocloBrain extends Brain {
         {
           ms: K.warnMs,
           enter: () => {
-            this.caption("REBOJO");
+            this.caption(tr("REBOJO"));
             this.o.setVelocity(0, 0);
             this.pose(this.frame("raise"));
             const p = this.p;
@@ -426,7 +427,7 @@ export class CabocloBrain extends Brain {
         {
           ms: K.windupMs,
           enter: () => {
-            this.caption("ARRASTÃO");
+            this.caption(tr("ARRASTÃO"));
             ang = this.angTo();
             len = clampLen(o.x, o.y, ang, K.len);
             target = this.carrancas.firstIn(o.x, o.y, ang, len, K.width);
@@ -489,9 +490,9 @@ export class CabocloBrain extends Brain {
             run.t = 0;
             this.pose(this.frame("idle"));
             if (target) {
-              this.weak.open(K.scaredMs, K.scaredMult, "A CARRANCA O ESPANTOU!");
+              this.weak.open(K.scaredMs, K.scaredMult, tr("A CARRANCA O ESPANTOU!"));
               s.meta?.recordStat?.("carrancas");
-            } else this.weak.open(K.exposedMs, BOSS_FIGHT.EXPOSED_MULT, "ENCALHADO!");
+            } else this.weak.open(K.exposedMs, BOSS_FIGHT.EXPOSED_MULT, tr("ENCALHADO!"));
           },
           tick: (_, dt) => {
             run.t += dt;
@@ -533,7 +534,7 @@ export class CabocloBrain extends Brain {
         {
           ms: 380,
           enter: () => {
-            this.caption("PEDRAS DO RIO");
+            this.caption(tr("PEDRAS DO RIO"));
             o.setVelocity(0, 0);
             this.pose(this.frame("raise"));
           },
@@ -600,7 +601,7 @@ export class CabocloBrain extends Brain {
         {
           ms: K.windupMs,
           enter: () => {
-            this.caption("TROMBA D'ÁGUA");
+            this.caption(tr("TROMBA D'ÁGUA"));
             o.setVelocity(0, 0);
             this.pose(this.frame("raise"));
             sp = { x: o.x, y: o.y + 20 };
@@ -673,7 +674,7 @@ export class CabocloBrain extends Brain {
           ms: K.exposedMs,
           enter: () => {
             this.pose(this.frame("idle"));
-            this.weak.open(K.exposedMs, BOSS_FIGHT.EXPOSED_MULT, "CANSADO!");
+            this.weak.open(K.exposedMs, BOSS_FIGHT.EXPOSED_MULT, tr("CANSADO!"));
           },
           tick: () => o.setAngle(Math.sin(s.time.now / 60) * 2),
           exit: () => o.setAngle(0),
@@ -691,7 +692,7 @@ export class CabocloBrain extends Brain {
         {
           ms: 600,
           enter: () => {
-            this.caption("CHAMADO DO SERTÃO");
+            this.caption(tr("CHAMADO DO SERTÃO"));
             this.o.setVelocity(0, 0);
             this.pose(this.frame("raise"));
             this.sfx("sfx_boss_roar", { volume: 0.5, rate: 1.15 });

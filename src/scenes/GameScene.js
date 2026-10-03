@@ -77,6 +77,7 @@ import { QualityWatchdog } from "../systems/QualityWatchdog.js";
 import { LanternSystem } from "../systems/LanternSystem.js";
 import { Builds } from "../systems/Builds.js";
 import { VirtualJoystick } from "../ui/VirtualJoystick.js";
+import { tr } from "../i18n/i18n.js";
 
 const BOSS_TEX = { mapinguari: "mon_boss", caboclo: "mon_caboclo" };
 
@@ -204,7 +205,7 @@ export class GameScene extends Phaser.Scene {
       if (m.coins) this._treeCoinMult = m.coins;
       this.meta.data.treeBuff = null;
       this.meta._save();
-      this.time.delayedCall(meal ? 5400 : 2500, () => this._toast(`Bênção da Samaúma: ${tree.short}`, 2600, "#ffe58f"));
+      this.time.delayedCall(meal ? 5400 : 2500, () => this._toast(tr("Bênção da Samaúma: {0}", tree.short), 2600, "#ffe58f"));
       Analytics.track("tree_buff_used", { id: tree.id });
     }
     // Locks de habilidades: bloqueia se não comprou
@@ -219,7 +220,7 @@ export class GameScene extends Phaser.Scene {
     // Aparelho fraco: desliga a iluminação na 1ª partida (uma vez só)
     this.quality = new QualityWatchdog(this, () => {
       this.lighting.setEnabled(false);
-      this._hint("quality", "Iluminação desligada para o jogo rodar liso.\nDá pra religar em Opções.");
+      this._hint("quality", tr("Iluminação desligada para o jogo rodar liso.\nDá pra religar em Opções."));
     });
     AdService.newRun();
     Analytics.track("run_start", { character: this.character.id, difficulty: this.diff.id, biome: this.biomeId });
@@ -258,7 +259,7 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard.on("keydown-NINE", () => {
       // Enche Despertar
       this.player.awakenMeter = this.player.awakenMax;
-      this._toast("★ Despertar cheio");
+      this._toast(tr("★ Despertar cheio"));
     });
     this.input.keyboard.on("keydown-EIGHT", () => {
       // Level up imediato
@@ -282,8 +283,8 @@ export class GameScene extends Phaser.Scene {
       }
     });
     // Minichefes na hora (testar os golpes especiais): M = Mula, C = Corpo-Seco
-    this.input.keyboard.on("keydown-M", () => this.runEvents._run({ type: "miniboss", kind: "alpha", msg: "A MULA SEM CABEÇA GALOPA!" }));
-    this.input.keyboard.on("keydown-C", () => this.runEvents._run({ type: "miniboss", kind: "elder", msg: "O CORPO-SECO SE LEVANTA!" }));
+    this.input.keyboard.on("keydown-M", () => this.runEvents._run({ type: "miniboss", kind: "alpha", msg: tr("A MULA SEM CABEÇA GALOPA!") }));
+    this.input.keyboard.on("keydown-C", () => this.runEvents._run({ type: "miniboss", kind: "elder", msg: tr("O CORPO-SECO SE LEVANTA!") }));
     this.input.keyboard.on("keydown-G", () => {
       // God mode toggle
       this._god = !this._god;
@@ -542,8 +543,8 @@ export class GameScene extends Phaser.Scene {
       this._hint(
         "move",
         touch
-          ? "Arraste o polegar na esquerda para andar.\nO ataque é automático!"
-          : "Ande com WASD ou setas.\nO ataque é automático!",
+          ? tr("Arraste o polegar na esquerda para andar.\nO ataque é automático!")
+          : tr("Ande com WASD ou setas.\nO ataque é automático!"),
       ),
     );
   }
@@ -604,7 +605,7 @@ export class GameScene extends Phaser.Scene {
       if (c.opened) continue;
       if (!this._chestHinted && view.contains(c.x, c.y)) {
         this._chestHinted = true;
-        this._hint("chest", "Um baú! Encoste nele para abrir.\nCuidado: alguns são armadilhas…");
+        this._hint("chest", tr("Um baú! Encoste nele para abrir.\nCuidado: alguns são armadilhas…"));
       }
       c.update(time, this.player);
       // Abre ao ENCOSTAR (~0,3s perto) — sem botão extra no celular; E ainda vale
@@ -783,7 +784,7 @@ export class GameScene extends Phaser.Scene {
         this._woodThisRun += 1;
         this.hud.addWood(1);
         this.sound.play("sfx_chest_reel", { volume: 0.5, rate: 0.8 });
-        this._hint("wood", "Madeira Ancestral! Leve para a Clareira:\nela serve para as obras do acampamento.");
+        this._hint("wood", tr("Madeira Ancestral! Leve para a Clareira:\nela serve para as obras do acampamento."));
         w.pickup();
         this.woodPool.release(w);
       }
@@ -797,7 +798,7 @@ export class GameScene extends Phaser.Scene {
         const id = randomRareSeed(this.biomeId);
         this._seedsThisRun[id] = (this._seedsThisRun[id] || 0) + 1;
         this.sound.play("sfx_chest_reel", { volume: 0.5, rate: 1.3 });
-        this._toast(`Semente rara: ${GARDEN.CROPS[id].name}`, 1800, "#ffe58f");
+        this._toast(tr("Semente rara: {0}", GARDEN.CROPS[id].name), 1800, "#ffe58f");
         s.pickup();
         this.seedPool.release(s);
       }
@@ -934,7 +935,7 @@ export class GameScene extends Phaser.Scene {
     const newly = this.meta.checkAchievements(this._runCtx(won));
     if (!silent && newly.length) {
       this.sound.play("sfx_levelup", { volume: 0.5, rate: 1.3 });
-      this._toast(`Conquista: ${newly.map((a) => a.name).join(" · ")}`, 3000, "#e8ccff");
+      this._toast(tr("Conquista: {0}", newly.map((a) => a.name).join(" · ")), 3000, "#e8ccff");
     }
     return newly;
   }
@@ -1021,7 +1022,7 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.shake(400, 0.016);
     this.cameras.main.flash(200, 242, 193, 78);
     this.sound.play("sfx_chest_jackpot", { volume: 0.6 });
-    this._toast(`${e.miniBoss} DERROTADO!`, 2200, "#ffe58f");
+    this._toast(tr("{0} DERROTADO!", e.miniBoss), 2200, "#ffe58f");
     const chest = new Chest(this, x, y);
     chest.forceKind = "golden";
     this.chests.push(chest);
@@ -1042,7 +1043,7 @@ export class GameScene extends Phaser.Scene {
     this.meta.recordStat("flawless"); // feitos: Miragem / Anhangá
     this.time.delayedCall(900, () => {
       if (this.gameOver) return;
-      this._toast(`DESVIOU DE TUDO! +${wood} Madeira Ancestral`, 2600, "#c8f08c");
+      this._toast(tr("DESVIOU DE TUDO! +{0} Madeira Ancestral", wood), 2600, "#c8f08c");
       this.sound.play("sfx_levelup", { volume: 0.5, rate: 1.25 });
       this._spawnWood(x, y, wood);
     });
@@ -1186,7 +1187,7 @@ export class GameScene extends Phaser.Scene {
       this._woodThisRun += BOSS_FIGHT.FLAWLESS_WOOD.BOSS;
       this.hud.addWood(BOSS_FIGHT.FLAWLESS_WOOD.BOSS);
       this.time.delayedCall(1200, () => {
-        this._toast(`DESVIOU DE TUDO! +${BOSS_FIGHT.FLAWLESS_WOOD.BOSS} Madeira Ancestral`, 2600, "#c8f08c");
+        this._toast(tr("DESVIOU DE TUDO! +{0} Madeira Ancestral", BOSS_FIGHT.FLAWLESS_WOOD.BOSS), 2600, "#c8f08c");
         this.sound.play("sfx_levelup", { volume: 0.5, rate: 1.25 });
       });
       Analytics.track("boss_flawless", { specials: log.specials, dodges: log.dodges, boss: 1 });
@@ -1202,7 +1203,7 @@ export class GameScene extends Phaser.Scene {
     // Madeira do Mapinguari entra direto (a escolha da Noite Eterna vem em seguida)
     this._woodThisRun += WOOD.BOSS;
     this.hud.addWood(WOOD.BOSS);
-    this._toast(`+${WOOD.BOSS} Madeira Ancestral`, 2200, "#ffc86b");
+    this._toast(tr("+{0} Madeira Ancestral", WOOD.BOSS), 2200, "#ffc86b");
     // Sementes do Mapinguari também entram direto
     if (this._seedsOn)
       for (let i = 0; i < GARDEN.SEEDS.BOSS; i++) {
@@ -1250,7 +1251,7 @@ export class GameScene extends Phaser.Scene {
       this.tweens.add({ targets: p, y: p.y - 120 - Math.random() * 80, alpha: 0, scale: 0.5, duration: 1400 + Math.random() * 800, delay: Math.random() * 500, onComplete: () => p.destroy() });
     }
     this.lighting?.flash(x, y - 60, 420, 0x9ccf62, 1400, 1.2);
-    this._toast(`O ${this.biome.bossName.toUpperCase()} ESTÁ LIVRE!`, 2600, "#9ccf62");
+    this._toast(tr("O {0} ESTÁ LIVRE!", this.biome.bossName.toUpperCase()), 2600, "#9ccf62");
     // o Caboclo volta para o rio: afunda numa poça
     if (this.biome.boss === "caboclo")
       for (let i = 0; i < 18; i++) {
@@ -1279,7 +1280,7 @@ export class GameScene extends Phaser.Scene {
     this.bgMusic?.stop();
     this.bgMusic = this.sound.add("music_gameplay", { loop: true, volume: 0.35, rate: 0.92 });
     this.bgMusic.play();
-    this.hud.showBossBanner("A NOITE ETERNA COMEÇA", "#e8ccff");
+    this.hud.showBossBanner(tr("A NOITE ETERNA COMEÇA"), "#e8ccff");
     this.cameras.main.flash(400, 60, 30, 90);
     Analytics.track("endless_start", { level: this.player.level, t: Math.floor(this.elapsedMs / 1000) });
   }
@@ -1361,7 +1362,7 @@ export class GameScene extends Phaser.Scene {
           });
         }
       });
-      this._toast("BAÚ DOURADO!", 2200, "#ffe58f");
+      this._toast(tr("BAÚ DOURADO!"), 2200, "#ffe58f");
       // Carta extra grátis
       this.time.delayedCall(burstDelay + 1200, () =>
         this.events.emit("player:levelup", this.player.level),
@@ -1372,7 +1373,7 @@ export class GameScene extends Phaser.Scene {
         this.sound.play("sfx_boss_roar", { volume: 0.5, rate: 0.7 });
         this.cameras.main.shake(280, 0.018);
       });
-      this._toast("ARMADILHA!", 1500, "#ff8a8a");
+      this._toast(tr("ARMADILHA!"), 1500, "#ff8a8a");
       const wave = this.waveIndex();
       const types = ["wolf", "crow", "goblin"];
       for (let i = 0; i < CHEST.TRAP_ENEMY_COUNT; i++) {
@@ -1393,7 +1394,7 @@ export class GameScene extends Phaser.Scene {
         this.cameras.main.shake(450, 0.025);
         this.cameras.main.flash(150, 200, 40, 40);
       });
-      this._toast("MÍMICO!", 1800, "#ff8a8a");
+      this._toast(tr("MÍMICO!"), 1800, "#ff8a8a");
       const wave = this.waveIndex();
       const types = ["goblin", "wolf"];
       this.time.delayedCall(burstDelay + 200, () => {
@@ -1450,7 +1451,7 @@ export class GameScene extends Phaser.Scene {
     this.lighting?.flash(p.x, p.y, R * 1.5, 0xfff0a0, 900, 1.3);
     this.cameras.main.flash(260, 255, 240, 180);
     this.sound.play("sfx_levelup", { volume: 0.8, rate: 0.9 });
-    this._toast("DE VOLTA À LUTA!", 2200, "#ffe58f");
+    this._toast(tr("DE VOLTA À LUTA!"), 2200, "#ffe58f");
     Analytics.track("revive", { t: Math.floor(this.elapsedMs / 1000), level: p.level });
   }
 
@@ -1572,10 +1573,10 @@ export class GameScene extends Phaser.Scene {
     this.meta.registerRun(this.elapsedMs / 1000, won, this.diff.id, this.biomeId);
     if (firstBiomeWin) {
       const next = Object.values(BIOMES).find((b) => b.unlock?.won === this.biomeId);
-      if (next) this._newUnlocksThisRun.push(`Nova trilha na Clareira: ${next.name}`);
+      if (next) this._newUnlocksThisRun.push(tr("Nova trilha na Clareira: {0}", next.name));
     }
-    for (const k of this._deedsOpen || []) if (this.meta.deedDone(k)) this._newUnlocksThisRun.push(`Feito cumprido: ${WEAPONS[k].name} na Forja`);
-    for (const c of this._charDeedsOpen || []) if (this.meta.characterDeed(c.id)?.done) this._newUnlocksThisRun.push(`Feito cumprido: ${c.name} na Fogueira`);
+    for (const k of this._deedsOpen || []) if (this.meta.deedDone(k)) this._newUnlocksThisRun.push(tr("Feito cumprido: {0} na Forja", WEAPONS[k].name));
+    for (const c of this._charDeedsOpen || []) if (this.meta.characterDeed(c.id)?.done) this._newUnlocksThisRun.push(tr("Feito cumprido: {0} na Fogueira", c.name));
     const newAchievements = this._checkAchievements(won, true);
     this._newUnlocksThisRun.push(...newAchievements.map((a) => a.name));
     // Missões do dia (o prêmio se pega no Mural da Clareira)
@@ -1588,7 +1589,7 @@ export class GameScene extends Phaser.Scene {
         reactions += byType[k];
       }
       const done = new Daily(this.meta).runEnd({ kills: this.hud.kills, reactions, byType, seconds: this.elapsedMs / 1000, chests: this._runChests, lanterns: this._runLanterns, won });
-      this._newUnlocksThisRun.push(...done.map((t) => `Missão: ${t}`));
+      this._newUnlocksThisRun.push(...done.map((t) => tr("Missão: {0}", t)));
     }
     Analytics.track("run_end", {
       won,

@@ -28,6 +28,7 @@ import { CampPond } from "./CampPond.js";
 import { CampDecor, decorFree } from "./CampDecor.js";
 import { CampDaily } from "./CampDaily.js";
 import { CampTree } from "./CampTree.js";
+import { tr, fmt, isCJK } from "../i18n/i18n.js";
 
 const S = GAME.PIXEL_SCALE;
 const CAMP_W = 1500,
@@ -40,14 +41,14 @@ const D_HUD = 60000;
 
 // Falas da Anciã (uma por vez, em rodízio): dicas curtas e o tom da floresta
 const ELDER_LINES = [
-  "A Podridão tomou a mata. Cada partida devolve um pouco da floresta.",
-  "Fogo e gelo juntos viram vapor. Misture os elementos, guardião.",
-  "Lanternas de cogumelo guardam presentes. Quebre-as quando precisar de fôlego.",
-  "No Santuário, as moedas viram bênçãos que ficam para sempre.",
-  "A Forja guarda armas para quem junta moedas pela mata.",
-  "Dizem que, depois do Mapinguari, vem uma noite que não acaba…",
-  "Uma arma no nível máximo, com a parceira certa, desperta algo maior.",
-  "Planta cuidada em dia sai com qualidade Ouro. Descuidada não morre, só perde o brilho.",
+  tr("A Podridão tomou a mata. Cada partida devolve um pouco da floresta."),
+  tr("Fogo e gelo juntos viram vapor. Misture os elementos, guardião."),
+  tr("Lanternas de cogumelo guardam presentes. Quebre-as quando precisar de fôlego."),
+  tr("No Santuário, as moedas viram bênçãos que ficam para sempre."),
+  tr("A Forja guarda armas para quem junta moedas pela mata."),
+  tr("Dizem que, depois do Mapinguari, vem uma noite que não acaba…"),
+  tr("Uma arma no nível máximo, com a parceira certa, desperta algo maior."),
+  tr("Planta cuidada em dia sai com qualidade Ouro. Descuidada não morre, só perde o brilho."),
 ];
 
 export class CampScene extends Phaser.Scene {
@@ -136,7 +137,7 @@ export class CampScene extends Phaser.Scene {
     if (adv > 0) {
       this.meta.data.lastRunBuildAdvanceMin = 0;
       this.meta._save();
-      if (this.builds.job) this.time.delayedCall(900, () => this._toast(`A partida adiantou a obra em ${adv} min`));
+      if (this.builds.job) this.time.delayedCall(900, () => this._toast(tr("A partida adiantou a obra em {0} min", adv)));
     }
     cam.fadeIn(400, 10, 14, 10);
     Analytics.track("camp_enter", {});
@@ -207,7 +208,7 @@ export class CampScene extends Phaser.Scene {
     this.add.image(sx, sy + 4, "px_shadow").setScale(5, 3).setAlpha(0.6).setDepth(sy - 1);
     const sign = this.add.image(sx, sy, "camp_trail").setOrigin(0.5, 1).setScale(S).setDepth(sy);
     this._solid(sx, sy - 6, 20, 12);
-    this._addInteract({ x: sx, y: sy, top: sy - sign.displayHeight, r: 90, name: "TRILHA", verb: "ESCOLHER MAPA E PERIGO", action: () => this._showDifficulty() });
+    this._addInteract({ x: sx, y: sy, top: sy - sign.displayHeight, r: 90, name: tr("TRILHA"), verb: tr("ESCOLHER MAPA E PERIGO"), action: () => this._showDifficulty() });
     // Trilha do Sertão (obra do João-de-barro): mandacarus brotam ao lado da placa
     const trailShown = this._isShown("trail");
     const sertao = () => {
@@ -247,7 +248,7 @@ export class CampScene extends Phaser.Scene {
     this._glow(x, y + 4, 1.6, 0xff5a1e, true); // brasa
     this._flames(x, y - 4, 22, 70, 0.25);
     this._solid(x, y, 56, 22);
-    this._addInteract({ x, y, top: y - 70, r: 110, name: "FOGUEIRA", verb: "GUARDIÕES", action: () => this._showCharacters(), build: "fire" });
+    this._addInteract({ x, y, top: y - 70, r: 110, name: tr("FOGUEIRA"), verb: tr("GUARDIÕES"), action: () => this._showCharacters(), build: "fire" });
   }
 
   // Chamas de partículas (puffs) — mesmas da tela de título
@@ -299,14 +300,14 @@ export class CampScene extends Phaser.Scene {
         name,
         verb,
         ruinOf: id,
-        action: () => (b.shown ? action() : this._say("Cure a floresta jogando partidas para revelar o que há aqui.")),
+        action: () => (b.shown ? action() : this._say(tr("Cure a floresta jogando partidas para revelar o que há aqui."))),
         build: BUILDINGS[id] ? id : null,
       });
       this.buildings[id] = b;
     };
-    B("shrine", "camp_shrine", "SANTUÁRIO", "BÊNÇÃOS E DONS", -430, -130, () => this._showBlessings(), [0, -99, 0xffe58f, 2.4]);
-    B("forge", "camp_forge", "FORJA", "FORJAR ARMAS", 440, -120, () => this._showArsenal(), [-40, -24, 0xff8a3c, 2.8]);
-    B("board", "camp_board", "MURAL", "MISSÕES, CONQUISTAS E LENDAS", -420, 280, () => this._showBoard(this._daily() ? "missoes" : "conquistas"));
+    B("shrine", "camp_shrine", tr("SANTUÁRIO"), tr("BÊNÇÃOS E DONS"), -430, -130, () => this._showBlessings(), [0, -99, 0xffe58f, 2.4]);
+    B("forge", "camp_forge", tr("FORJA"), tr("FORJAR ARMAS"), 440, -120, () => this._showArsenal(), [-40, -24, 0xff8a3c, 2.8]);
+    B("board", "camp_board", tr("MURAL"), tr("MISSÕES, CONQUISTAS E LENDAS"), -420, 280, () => this._showBoard(this._daily() ? "missoes" : "conquistas"));
 
     // Ninho do João-de-barro (o construtor chega com as obras) + o pássaro
     const nx = 450,
@@ -318,7 +319,7 @@ export class CampScene extends Phaser.Scene {
     this.bird = this.add.sprite(nx + 34, ny - 2, "camp_bird", 0).setOrigin(0.5, 1).setScale(S).setDepth(ny + 1).play("bird_idle").setAlpha(nestShown ? 1 : 0);
     this.nest = { x: nx + 34, y: ny - 2 };
     this.buildings.nest = { dot: this._notifyDot(nx, ny - 80).setDepth(D_HUD - 10).setVisible(false), img: nestImg, shadow: nestShadow, x: nx, y: ny, shown: nestShown };
-    this._addInteract({ x: nx, y: ny, top: ny - 100, r: 100, name: "JOÃO-DE-BARRO", verb: "OBRAS", action: () => this._showWorks(), hiddenUntil: "nest" });
+    this._addInteract({ x: nx, y: ny, top: ny - 100, r: 100, name: tr("JOÃO-DE-BARRO"), verb: tr("OBRAS"), action: () => this._showWorks(), hiddenUntil: "nest" });
     // A fogueira também é construção (nível) — posição para a obra aparecer
     this.buildings.fire = { x: 0, y: 70, img: null };
 
@@ -328,7 +329,7 @@ export class CampScene extends Phaser.Scene {
     this.add.image(ex, ey + 4, "px_shadow").setScale(4, 3).setAlpha(0.6).setDepth(ey - 1);
     this.elder = this.add.sprite(ex, ey, "camp_elder", 0).setOrigin(0.5, 1).setScale(S + 1).setFlipX(true).setDepth(ey).play("elder_idle");
     this._solid(ex, ey - 6, 30, 14);
-    this._addInteract({ x: ex, y: ey, top: ey - this.elder.displayHeight, r: 90, name: "ANCIÃ", verb: "CONVERSAR", action: () => this._talkElder() });
+    this._addInteract({ x: ex, y: ey, top: ey - this.elder.displayHeight, r: 90, name: tr("ANCIÃ"), verb: tr("CONVERSAR"), action: () => this._talkElder() });
   }
 
   _player() {
@@ -404,7 +405,7 @@ export class CampScene extends Phaser.Scene {
     // Tocar no quadro abre a escolha de Perigo de qualquer ponto da Clareira
     const hz = fix(this.add.zone(14, 14, 330, 62).setOrigin(0).setInteractive({ useHandCursor: true }));
     hz.on("pointerup", () => !this._modals.length && !this._cutscene && !this._leaving && this._showDifficulty());
-    fix(text(this, 30, 32, "CLAREIRA DO GUARDIÃO", { size: 20, color: CSS.goldHi, origin: [0, 0.5], stroke: true }));
+    fix(text(this, 30, 32, tr("CLAREIRA DO GUARDIÃO"), { size: 20, color: CSS.goldHi, origin: [0, 0.5], stroke: true }));
     this.hudInfo = fix(text(this, 30, 58, "", { size: 14, color: CSS.muted, origin: [0, 0.5] }));
     // Moedas + guia + opções
     const cg = fix(this.add.graphics());
@@ -439,7 +440,7 @@ export class CampScene extends Phaser.Scene {
       this.actionBtn.setVisible(false);
     }
     // Dica de movimento na 1ª visita
-    const hint = this.isTouch ? "Arraste à esquerda para andar · toque no botão para interagir" : "WASD/setas para andar · E para interagir · a trilha ao norte leva à floresta";
+    const hint = this.isTouch ? tr("Arraste à esquerda para andar · toque no botão para interagir") : tr("WASD/setas para andar · E para interagir · a trilha ao norte leva à floresta");
     this.hint = fix(text(this, W / 2, H - 26, hint, { size: 16, color: CSS.muted, origin: 0.5 }));
     this.tweens.add({ targets: this.hint, alpha: 0, delay: 7000, duration: 800 });
     // Balão de fala da Anciã
@@ -458,9 +459,9 @@ export class CampScene extends Phaser.Scene {
     const c = CHARACTERS.find((c) => c.id === this.meta.selectedCharacter) || CHARACTERS[0];
     const d = DIFFICULTY[Math.min(this.meta.selectedDifficulty, DIFFICULTY.length - 1)];
     const bio = this.meta.selectedBiome !== "amazonia" ? `${BIOMES[this.meta.selectedBiome].name}  ·  ` : "";
-    this.hudInfo.setText(`${c.name}  ·  ${bio}Perigo: ${d.name} (${Math.round(d.durationS / 60)} min)  »`);
+    this.hudInfo.setText(tr("{0}  ·  {1}Perigo: {2} ({3} min)  »", c.name, bio, d.name, Math.round(d.durationS / 60)));
     if (this.signLabel) {
-      this.signLabelT.setText(bio ? `${BIOMES[this.meta.selectedBiome].name.toUpperCase()} · ${d.name.toUpperCase()}` : `PERIGO: ${d.name.toUpperCase()}`);
+      this.signLabelT.setText(bio ? `${BIOMES[this.meta.selectedBiome].name.toUpperCase()} · ${d.name.toUpperCase()}` : tr("PERIGO: {0}", d.name.toUpperCase()));
       // bioma novo aberto e ainda não visitado: selo "!" na placa
       this.buildings.trail?.dot.setVisible(BIOME_IDS.some((id) => id !== "amazonia" && this.meta.biomeOpen(id) && !(this.meta.data.biomesSeen || []).includes(id)));
       const w = this.signLabelT.width + 20;
@@ -574,7 +575,7 @@ export class CampScene extends Phaser.Scene {
     if (!d.campIntroSeen) {
       d.campIntroSeen = true;
       this.meta._save();
-      this._say("A Podridão tomou nosso lar. Cada partida devolve um pouco da floresta.", reveal);
+      this._say(tr("A Podridão tomou nosso lar. Cada partida devolve um pouco da floresta."), reveal);
     } else reveal();
   }
 
@@ -630,12 +631,15 @@ export class CampScene extends Phaser.Scene {
     const g = this.add.graphics();
     drawFrame(g, -w / 2, -52, w, 104, "gold", { alpha: 0.96 });
     const face = this.add.sprite(-w / 2 + 52, 30, "camp_elder", 0).setOrigin(0.5, 1).setScale(4).setFlipX(true);
-    const who = text(this, -w / 2 + 100, -30, "ANCIÃ DA FOGUEIRA", { size: 15, color: CSS.goldHi, origin: [0, 0.5] });
+    const who = text(this, -w / 2 + 100, -30, tr("ANCIÃ DA FOGUEIRA"), { size: 15, color: CSS.goldHi, origin: [0, 0.5] });
     const t = text(this, -w / 2 + 100, 8, line, { size: 19, color: CSS.txt, origin: [0, 0.5], wrap: w - 130 });
+    // fala comprida (traduções, texto grande) encolhe até caber nas 2-3 linhas da caixa
+    for (let px = parseInt(t.style.fontSize, 10); t.height > 70 && px > 12; ) t.setFontSize(--px);
     c.add([g, face, who, t]);
     c.setAlpha(0).setY(H - 70);
     this.tweens.add({ targets: c, alpha: 1, y: H - 92, duration: 220, ease: "Back.easeOut" });
-    const ms = Math.max(3200, line.length * 55);
+    // tempo de leitura: japonês e chinês dizem o mesmo com ~1/3 dos caracteres
+    const ms = Math.max(3200, line.length * (isCJK ? 160 : 55));
     this.time.delayedCall(ms, () => {
       this.tweens.add({ targets: c, alpha: 0, duration: 300, onComplete: () => c.destroy() });
       onDone?.();
@@ -652,7 +656,7 @@ export class CampScene extends Phaser.Scene {
     const job = this.builds.job;
     if (job && this.buildTimer) {
       const free = this.builds.canFinishFree();
-      this.buildTimer.setText(free ? "PRONTA!" : fmtDuration(this.builds.remainingMs()));
+      this.buildTimer.setText(free ? tr("PRONTA!") : fmtDuration(this.builds.remainingMs()));
       this.buildTimer.setColor(free ? CSS.green : CSS.goldHi);
     }
   }
@@ -737,8 +741,8 @@ export class CampScene extends Phaser.Scene {
       this.tweens.add({ targets: c, x: b.x + Math.cos(a) * (60 + Math.random() * 80), y: b.y - 60 + Math.sin(a) * 60 + 40, alpha: 0, duration: 1000 + Math.random() * 500, ease: "Cubic.easeOut", onComplete: () => c.destroy() });
     }
     const opened = r.id === "trail" ? BIOME_IDS.find((id) => BIOMES[id].unlock?.trail === r.to) : null;
-    if (opened) this._say(`A trilha está aberta! Escolha a ${BIOMES[opened].name} na placa e siga pela mata.`);
-    else this._toast(`${name} chegou ao nível ${r.to}!`);
+    if (opened) this._say(tr("A trilha está aberta! Escolha a {0} na placa e siga pela mata.", BIOMES[opened].name));
+    else this._toast(tr("{0} chegou ao nível {1}!", name, r.to));
     Analytics.track("build_done", { id: r.id, level: r.to });
     this._refreshBuildVisuals();
     this._refreshAll();
@@ -775,7 +779,7 @@ export class CampScene extends Phaser.Scene {
     const plot = it.plot != null ? this._plotLabel(it.plot) : null;
     it._key = plot?.key;
     const ruin = it.ruinOf && !this.buildings[it.ruinOf]?.shown;
-    const name = plot ? plot.name : ruin ? "RUÍNA" : it.build ? `${it.name} · NV ${this.builds.level(it.build)}` : it.name;
+    const name = plot ? plot.name : ruin ? tr("RUÍNA") : it.build ? tr("{0} · NV {1}", it.name, this.builds.level(it.build)) : it.name;
     const label = this.isTouch ? name : `[E]  ${name}`;
     this.promptT.setText(label);
     const w = this.promptT.width + 28;
@@ -783,7 +787,7 @@ export class CampScene extends Phaser.Scene {
     drawFrame(this.promptG, -w / 2, -17, w, 34, "gold", { noRivets: true, alpha: 0.95 });
     this.prompt.setPosition(it.x, it.top - 24).setVisible(true).setScale(0.8);
     this.tweens.add({ targets: this.prompt, scale: 1, duration: 140, ease: "Back.easeOut" });
-    if (this.actionBtn) this.actionBtn.setLabel(plot ? plot.verb : ruin ? "EXAMINAR" : it.verb).setVisible(true);
+    if (this.actionBtn) this.actionBtn.setLabel(plot ? plot.verb : ruin ? tr("EXAMINAR") : it.verb).setVisible(true);
   }
 
   _interact() {
@@ -815,14 +819,14 @@ export class CampScene extends Phaser.Scene {
   _showDifficulty() {
     const biomes = this._isShown("trail");
     const m = new Modal(this, {
-      title: biomes ? "TRILHA" : "PERIGO",
-      subtitle: biomes ? "Escolha o mapa e o perigo. Mais perigo, mais recompensa." : "Mais perigo, mais recompensa. Vença um nível para liberar o próximo.",
+      title: biomes ? tr("TRILHA") : tr("PERIGO"),
+      subtitle: biomes ? tr("Escolha o mapa e o perigo. Mais perigo, mais recompensa.") : tr("Mais perigo, mais recompensa. Vença um nível para liberar o próximo."),
       w: 760,
       h: biomes ? 640 : 560,
     });
     const list = this._modalList(m);
     if (biomes) {
-      this._section(list, "MAPA");
+      this._section(list, tr("MAPA"));
       const ICON = { amazonia: ["env", "tree0", 1.1], caatinga: ["env_caatinga", "mandacaru0", 1.15] };
       const curB = this.meta.selectedBiome;
       for (const id of BIOME_IDS) {
@@ -841,9 +845,9 @@ export class CampScene extends Phaser.Scene {
             name: b.name,
             nameColor: open ? (sel ? CSS.green : CSS.goldHi) : CSS.dim,
             desc: open
-              ? `${b.desc}${wins ? ` · Vitórias: ${wins}` : ""}`
-              : `Obra do João-de-barro: ${BUILDINGS.trail.name} (nível ${b.unlock.trail})`,
-            right: sel ? "ESCOLHIDO" : open ? "ESCOLHER" : "",
+              ? `${b.desc}${wins ? tr(" · Vitórias: {0}", wins) : ""}`
+              : tr("Obra do João-de-barro: {0} (nível {1})", BUILDINGS.trail.name, b.unlock.trail),
+            right: sel ? tr("ESCOLHIDO") : open ? tr("ESCOLHER") : "",
             rightColor: sel ? CSS.green : CSS.txt,
             style: sel ? "green" : open ? "button" : "dark",
             onTap:
@@ -861,7 +865,7 @@ export class CampScene extends Phaser.Scene {
           }),
         );
       }
-      this._section(list, "PERIGO");
+      this._section(list, tr("PERIGO"));
     }
     const last = DIFFICULTY.length - 1;
     const maxSel = this.meta.maxSelectableDifficulty(last);
@@ -878,10 +882,10 @@ export class CampScene extends Phaser.Scene {
           name: d.name,
           nameColor: open ? colors[d.id] : CSS.dim,
           desc: open
-            ? `Inimigos ${Math.round(d.hpMult * 100)}% de vida · Moedas ×${String(d.rewardMult).replace(".", ",")}` +
-              (d.firstClear && !((this.meta.data.winsByDifficulty || {})[String(d.id)] > 0) ? ` · Primeira vitória: +${d.firstClear}` : "")
-            : "Vença o Perigo anterior para liberar",
-          right: sel ? "ESCOLHIDO" : open ? "ESCOLHER" : "",
+            ? tr("Inimigos {0}% de vida · Moedas ×{1}", Math.round(d.hpMult * 100), fmt(d.rewardMult)) +
+              (d.firstClear && !((this.meta.data.winsByDifficulty || {})[String(d.id)] > 0) ? tr(" · Primeira vitória: +{0}", d.firstClear) : "")
+            : tr("Vença o Perigo anterior para liberar"),
+          right: sel ? tr("ESCOLHIDO") : open ? tr("ESCOLHER") : "",
           rightColor: sel ? CSS.green : CSS.txt,
           style: sel ? "green" : open ? "button" : "dark",
           onTap:

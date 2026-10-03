@@ -6,6 +6,7 @@ import { CSS } from "../art/Palette.js";
 import { text, dim, Button, vw, vh, fitCamera, haptic, drawFrame } from "../ui/Theme.js";
 import { AdService } from "../systems/AdService.js";
 import { Analytics } from "../systems/Analytics.js";
+import { tr } from "../i18n/i18n.js";
 
 export class ReviveScene extends Phaser.Scene {
   constructor() {
@@ -25,26 +26,26 @@ export class ReviveScene extends Phaser.Scene {
     const cy = H / 2 - 40;
     const pg = this.add.graphics();
     drawFrame(pg, W / 2 - 300, cy - 206, 600, 486, "danger", { alpha: 0.96 });
-    text(this, W / 2, cy - 150, "VOCÊ CAIU…", { size: 64, color: CSS.redHi, origin: 0.5, stroke: true, strokeW: 8 });
-    text(this, W / 2, cy - 92, "A floresta ainda precisa de você.", { size: 22, color: CSS.muted, origin: 0.5 });
+    text(this, W / 2, cy - 150, tr("VOCÊ CAIU…"), { size: 64, color: CSS.redHi, origin: 0.5, stroke: true, strokeW: 8 });
+    text(this, W / 2, cy - 92, tr("A floresta ainda precisa de você."), { size: 22, color: CSS.muted, origin: 0.5 });
 
     this.heart = this.add.image(W / 2, cy - 10, "ico_heart").setScale(6);
     this.tweens.add({ targets: this.heart, scale: 6.6, duration: 420, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
     this.countText = text(this, W / 2, cy + 58, "", { size: 30, color: CSS.goldHi, origin: 0.5, stroke: true });
 
-    this.reviveBtn = new Button(this, W / 2, cy + 130, 420, 72, "REVIVER", () => this._revive(), {
+    this.reviveBtn = new Button(this, W / 2, cy + 130, 420, 72, tr("REVIVER"), () => this._revive(), {
       size: 30,
       style: "primary",
       color: CSS.goldHi,
       icon: "ico_play",
       iconScale: 3,
     });
-    text(this, W / 2, cy + 184, `Assista a um anúncio e volte com ${Math.round(ADS.REVIVE_HP_PCT * 100)}% da vida`, {
+    text(this, W / 2, cy + 184, tr("Assista a um anúncio e volte com {0}% da vida", Math.round(ADS.REVIVE_HP_PCT * 100)), {
       size: 17,
       color: CSS.dim,
       origin: 0.5,
     });
-    this.giveUpBtn = new Button(this, W / 2, cy + 240, 300, 52, "ENCERRAR PARTIDA", () => this._decline(), { size: 20, style: "dark" });
+    this.giveUpBtn = new Button(this, W / 2, cy + 240, 300, 52, tr("ENCERRAR PARTIDA"), () => this._decline(), { size: 20, style: "dark" });
 
     this.remaining = ADS.REVIVE_OFFER_S;
     this._tick();
@@ -79,7 +80,7 @@ export class ReviveScene extends Phaser.Scene {
       this._busy = false;
       this.reviveBtn.setEnabled(AdService.canShow("revive"));
       this.giveUpBtn.setEnabled(true);
-      this.countText.setText("Anúncio indisponível agora");
+      this.countText.setText(tr("Anúncio indisponível agora"));
       return;
     }
     this._done = true;

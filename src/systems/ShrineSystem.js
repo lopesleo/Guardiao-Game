@@ -9,6 +9,7 @@ import { Analytics } from "./Analytics.js";
 import { Chest } from "../entities/Chest.js";
 import { text, vw, vh } from "../ui/Theme.js";
 import { CSS } from "../art/Palette.js";
+import { tr } from "../i18n/i18n.js";
 
 const S = GAME.PIXEL_SCALE;
 
@@ -141,7 +142,7 @@ export class ShrineSystem {
     player._blessingDmgMult *= DMG;
     player.speed *= SPEED;
     s.sound.play("sfx_levelup", { volume: 0.55, rate: 1.2 });
-    s._toast?.(`CARGA! +${Math.round((DMG - 1) * 100)}% dano e +${Math.round((SPEED - 1) * 100)}% velocidade`, 2400, sh.def.css);
+    s._toast?.(tr("CARGA! +{0}% dano e +{1}% velocidade", Math.round((DMG - 1) * 100), Math.round((SPEED - 1) * 100)), 2400, sh.def.css);
     s.time.delayedCall(MS, () => {
       player._blessingDmgMult /= DMG;
       player.speed /= SPEED;
@@ -153,7 +154,7 @@ export class ShrineSystem {
     this._use(sh);
     this.greedUntil = s.time.now + SHRINE.GREED.MS;
     s.sound.play("sfx_coin_cascade", { volume: 0.6 });
-    s._toast?.("GANÂNCIA! Mais moedas e drops, mas mais inimigos", 2800, sh.def.css);
+    s._toast?.(tr("GANÂNCIA! Mais moedas e drops, mas mais inimigos"), 2800, sh.def.css);
   }
 
   _startChallenge(sh) {
@@ -173,7 +174,7 @@ export class ShrineSystem {
     }
     this.challenge = { id, shrine: sh, enemies };
     s.sound.play("sfx_boss_roar", { volume: 0.55, rate: 1.1 });
-    s.hud.showBossBanner("DESAFIO! DERROTE OS ELITES", CSS.goldHi);
+    s.hud.showBossBanner(tr("DESAFIO! DERROTE OS ELITES"), CSS.goldHi);
   }
 
   _updateChallenge() {
@@ -189,7 +190,7 @@ export class ShrineSystem {
     chest.forceKind = "golden";
     s.chests.push(chest);
     s.sound.play("sfx_chest_jackpot", { volume: 0.5 });
-    s._toast?.("DESAFIO CUMPRIDO! Um baú dourado surgiu", 2600, sh.def.css);
+    s._toast?.(tr("DESAFIO CUMPRIDO! Um baú dourado surgiu"), 2600, sh.def.css);
   }
 
   // Seta na borda da tela até o santuário não usado mais próximo (some quando já está visível)

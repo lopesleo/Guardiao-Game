@@ -7,6 +7,7 @@ import { GAME, SEASONS } from "../config.js";
 import { PAL } from "../art/Palette.js";
 import { paintGround, FLAG_COUNT } from "../art/CampDecor.js";
 import { Clock } from "../systems/Clock.js";
+import { tr } from "../i18n/i18n.js";
 
 const S = GAME.PIXEL_SCALE;
 const D_NIGHT = 50000;

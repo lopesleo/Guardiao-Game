@@ -343,7 +343,11 @@ Nada disso trava o desenvolvimento; só o lançamento e a receita.
 
 ### M6 — Loja e lançamento 👤
 - ⬜ Capturas de tela + imagem de destaque (geradas do jogo) + vídeo de 30 s
-- ⬜ Tradução para inglês
+- ✅ **Idiomas: inglês, espanhol, japonês e chinês simplificado** (ver `IDIOMAS.md`): 933 textos por
+  idioma, idioma do aparelho na 1ª abertura (sem suporte = inglês) e seletor em Opções → Jogo; fichas do
+  `config.js` traduzidas por campo; Fusion Pixel (OFL) recortada para japonês/chinês com quebra por caractere;
+  nome do app no Android por idioma; `npm run check` aponta texto sem tradução e fonte desatualizada. Painéis,
+  listas, cartas e falas passam a caber com textos longos. 👤 revisão por falantes nativos (ja/zh antes de tudo)
 - 👤 Testes em aparelho forte e fraco + playtest com 5–10 pessoas
 - 👤 `.aab` assinado, classificação IARC, **teste fechado** exigido pelo Play Console
 - ⬜ Ajustes pelos números de D1/D3/D7 → **produção**

@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- Nome do app no aparelho por idioma (o padrão, em values/, é o inglês) -->
+<resources>
+    <string name="app_name">Guardián del Bosque</string>
+    <string name="title_activity_main">Guardián del Bosque</string>
+</resources>

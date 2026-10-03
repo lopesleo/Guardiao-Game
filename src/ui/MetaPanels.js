@@ -11,6 +11,7 @@ import { WEAPON_DESC } from "../systems/UpgradeSystem.js";
 import { text, drawFrame, Button, haptic } from "./Theme.js";
 import { Modal, ScrollList } from "./Widgets.js";
 import { openSettings } from "./SettingsModal.js";
+import { tr, fmt } from "../i18n/i18n.js";
 
 const BLESSING_ICON = {
   hp1: "ico_heart",
@@ -35,15 +36,15 @@ export const MetaPanels = {
     const job = b.job;
     let o;
     if (!step) {
-      o = { icon: "ico_trophy", name: `${name} · NÍVEL ${lv} (MÁXIMO)`, desc: "Construção completa.", style: "green", nameColor: CSS.green };
+      o = { icon: "ico_trophy", name: tr("{0} · NÍVEL {1} (MÁXIMO)", name, lv), desc: tr("Construção completa."), style: "green", nameColor: CSS.green };
     } else if (job && job.id === id) {
       const rem = b.remainingMs();
       const free = b.canFinishFree();
       o = {
         icon: "ico_hourglass",
-        name: `EM OBRA → NÍVEL ${job.to}`,
-        desc: `${b.nextPerk(id)} · ${free ? "pronta para concluir" : "cada partida adianta a obra"}`,
-        right: free ? "CONCLUIR" : fmtDuration(rem),
+        name: tr("EM OBRA → NÍVEL {0}", job.to),
+        desc: `${b.nextPerk(id)} · ${free ? tr("pronta para concluir") : tr("cada partida adianta a obra")}`,
+        right: free ? tr("CONCLUIR") : fmtDuration(rem),
         rightColor: free ? CSS.green : CSS.gold,
         style: free ? "green" : "dark",
         onTap: free
@@ -58,12 +59,12 @@ export const MetaPanels = {
       };
     } else {
       const blk = b.blocker(id);
-      const time = step.min ? fmtDuration(step.min * 60000) : "na hora";
-      const right = { busy: "JOÃO OCUPADO", coins: "FALTAM MOEDAS", wood: "FALTA MADEIRA" }[blk] ?? "CONSTRUIR";
+      const time = step.min ? fmtDuration(step.min * 60000) : tr("na hora");
+      const right = { busy: tr("JOÃO OCUPADO"), coins: tr("FALTAM MOEDAS"), wood: tr("FALTA MADEIRA") }[blk] ?? tr("CONSTRUIR");
       o = {
         icon: "ico_wood",
-        name: `MELHORAR PARA O NÍVEL ${lv + 1}  ·  ${time}`,
-        desc: `${b.nextPerk(id)} · ${step.coins} moedas + ${step.wood} madeira`,
+        name: tr("MELHORAR PARA O NÍVEL {0}  ·  {1}", lv + 1, time),
+        desc: tr("{0} · {1} moedas + {2} madeira", b.nextPerk(id), step.coins, step.wood),
         right,
         rightColor: blk ? CSS.dim : CSS.goldHi,
         nameColor: blk ? CSS.txt : CSS.goldHi,
@@ -88,8 +89,8 @@ export const MetaPanels = {
         this._shopRow({
           h: 56,
           icon: "ico_play",
-          name: `ADIANTAR ${BUILD.AD_SPEEDUP_MIN} MIN`,
-          desc: "Assista a um anúncio (opcional)",
+          name: tr("ADIANTAR {0} MIN", BUILD.AD_SPEEDUP_MIN),
+          desc: tr("Assista a um anúncio (opcional)"),
           style: "button",
           onTap: async () => {
             if (await AdService.rewarded("build_speed")) {
@@ -106,12 +107,11 @@ export const MetaPanels = {
   // Confirmação antes de gastar moedas e madeira numa obra (evita toque sem querer)
   _confirmBuild({ id, from, step, time }, onYes) {
     const b = this.builds;
-    const m = new Modal(this, { title: "CONSTRUIR?", subtitle: `${BUILDINGS[id].name} · nível ${from} → ${from + 1}`, w: 600, h: 400 });
+    const m = new Modal(this, { title: tr("CONSTRUIR?"), subtitle: tr("{0} · nível {1} → {2}", BUILDINGS[id].name, from, from + 1), w: 600, h: 400 });
     m.add(text(this, 0, -62, b.nextPerk(id), { size: 20, color: CSS.goldHi, origin: 0.5, align: "center", wrap: 520 }));
-    m.add(text(this, 0, 4, `Custo: ${step.coins} moedas + ${step.wood} madeira
-Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
-    m.add(new Button(this, -135, 120, 240, 56, "CONSTRUIR", () => (m.close(), onYes()), { size: 20, style: "primary" }));
-    m.add(new Button(this, 135, 120, 240, 56, "VOLTAR", () => m.close(), { size: 20 }));
+    m.add(text(this, 0, 4, tr("Custo: {0} moedas + {1} madeira\nTempo: {2}", step.coins, step.wood, time), { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
+    m.add(new Button(this, -135, 120, 240, 56, tr("CONSTRUIR"), () => (m.close(), onYes()), { size: 20, style: "primary" }));
+    m.add(new Button(this, 135, 120, 240, 56, tr("VOLTAR"), () => m.close(), { size: 20 }));
   },
 
   // Cabeçalho de seção dentro de uma lista
@@ -121,7 +121,7 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
 
   // Ninho do João-de-barro: todas as obras num lugar só
   _showWorks() {
-    const m = new Modal(this, { title: "JOÃO-DE-BARRO", subtitle: "O construtor da Clareira · uma obra por vez", w: 860, h: 640 });
+    const m = new Modal(this, { title: tr("JOÃO-DE-BARRO"), subtitle: tr("O construtor da Clareira · uma obra por vez"), w: 860, h: 640 });
     const list = this._modalList(m);
     const reopen = () => {
       m.close();
@@ -129,7 +129,7 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
       this._showWorks();
     };
     for (const id of this._workIds?.() ?? ["fire", "shrine", "forge"]) {
-      this._section(list, `${BUILDINGS[id].name.toUpperCase()} · NÍVEL ${this.builds.level(id)}`);
+      this._section(list, tr("{0} · NÍVEL {1}", BUILDINGS[id].name.toUpperCase(), this.builds.level(id)));
       this._buildRow(list, id, reopen);
     }
   },
@@ -153,13 +153,20 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
       h: o.h ?? 74,
       onTap: o.onTap,
       build(c, w) {
-        // Textos primeiro: a altura da linha acompanha o tamanho do texto (acessibilidade)
+        // Rótulo da direita primeiro: o texto da esquerda fica com o espaço que sobra (com
+        // tradução ou texto grande, "FALTA MADEIRA" e cia. encostavam na descrição)
+        const rt = o.right ? text(scene, 0, 0, o.right, { size: 20, color: o.rightColor ?? CSS.goldHi, origin: [1, 0.5], stroke: true }) : null;
+        if (rt && rt.width > w * 0.3) rt.setScale((w * 0.3) / rt.width);
+        const rightW = Math.max(o.pips != null ? 250 : 0, rt ? rt.displayWidth + (o.rightIcon ? 40 : 0) + 20 : 0);
+        const room = w - 74 - rightW - 24;
+        // Textos: a altura da linha acompanha o tamanho do texto (acessibilidade)
         const name = text(scene, 74, 0, o.name, { size: 20, color: o.nameColor ?? CSS.txt, origin: [0, 0] });
-        const desc = text(scene, 74, 0, o.desc, { size: 14, color: CSS.muted, origin: [0, 0], shadow: false, wrap: w - 300 });
-        const block = name.height + 3 + desc.height;
+        if (name.width > room) name.setScale(room / name.width);
+        const desc = text(scene, 74, 0, o.desc, { size: 14, color: CSS.muted, origin: [0, 0], shadow: false, wrap: Math.min(w - 300, room) });
+        const block = name.displayHeight + 3 + desc.height;
         const h = Math.max(o.h ?? 74, Math.ceil(block + 24));
         name.y = Math.round((h - block) / 2);
-        desc.y = name.y + name.height + 3;
+        desc.y = name.y + name.displayHeight + 3;
         const g = scene.add.graphics();
         const draw = (hover) => {
           g.clear();
@@ -182,11 +189,10 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
             c.add(scene.add.rectangle(w - 250 + (i % perRow) * 18, y, 12, 12, i < o.pips ? PAL.yel2 : PAL.inkSoft).setStrokeStyle(3, PAL.ink));
           }
         }
-        if (o.right) {
+        if (rt) {
           const rc = scene.add.container(w - 20, hh);
-          const rt = text(scene, 0, 0, o.right, { size: 20, color: o.rightColor ?? CSS.goldHi, origin: [1, 0.5], stroke: true });
           rc.add(rt);
-          if (o.rightIcon) rc.add(scene.add.image(-rt.width - 18, 0, o.rightIcon).setScale(2.5));
+          if (o.rightIcon) rc.add(scene.add.image(-rt.displayWidth - 18, 0, o.rightIcon).setScale(2.5));
           c.add(rc);
         }
         return h;
@@ -200,7 +206,7 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
   },
 
   _showBlessings() {
-    const m = new Modal(this, { title: "SANTUÁRIO", subtitle: "Bênçãos e dons permanentes — valem para todos os guardiões", w: 860, h: 640 });
+    const m = new Modal(this, { title: tr("SANTUÁRIO"), subtitle: tr("Bênçãos e dons permanentes — valem para todos os guardiões"), w: 860, h: 640 });
     const list = this._modalList(m);
     const reopen = () => {
       m.close();
@@ -211,10 +217,10 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
     this._buildRow(list, "shrine", reopen);
     const cap = this.builds ? this.builds.shrineRankCap() : MAX_BLESSING_RANK;
     // Dons: habilidades ativas liberadas uma vez (antes ficavam na Forja)
-    section("DONS DA FLORESTA");
+    section(tr("DONS DA FLORESTA"));
     const gifts = [
-      { key: "DASH", name: "Dash", icon: "ico_dash", desc: "Esquiva rápida e invulnerável (SHIFT / botão)" },
-      { key: "AWAKEN", name: "Despertar", icon: "ico_star", desc: "Modo fúria: armas disparam 2,5× mais rápido" },
+      { key: "DASH", name: tr("Dash"), icon: "ico_dash", desc: tr("Esquiva rápida e invulnerável (SHIFT / botão)") },
+      { key: "AWAKEN", name: tr("Despertar"), icon: "ico_star", desc: tr("Modo fúria: armas disparam 2,5× mais rápido") },
     ];
     for (const g of gifts) {
       const cost = META.ABILITY_UNLOCK_COST[g.key];
@@ -225,7 +231,7 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
           icon: g.icon,
           name: g.name,
           desc: g.desc,
-          right: has ? "LIBERADO" : String(cost),
+          right: has ? tr("LIBERADO") : String(cost),
           rightIcon: has ? null : "ico_coin",
           rightColor: has ? CSS.green : can ? CSS.goldHi : CSS.dim,
           style: has ? "green" : can ? "button" : "dark",
@@ -240,7 +246,7 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
         }),
       );
     }
-    section("BÊNÇÃOS");
+    section(tr("BÊNÇÃOS"));
     for (const b of BLESSINGS) {
       const rank = this.meta.blessingRank(b.id);
       const cost = this.meta.blessingNextCost(b);
@@ -253,7 +259,7 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
           desc: b.desc,
           pips: rank,
           pipsMax: MAX_BLESSING_RANK,
-          right: cost == null ? "MÁX" : capped ? `SANTUÁRIO NV ${Math.ceil((rank + 1) / 2)}` : String(cost),
+          right: cost == null ? tr("MÁX") : capped ? tr("SANTUÁRIO NV {0}", Math.ceil((rank + 1) / 2)) : String(cost),
           rightIcon: cost == null || capped ? null : "ico_coin",
           rightColor: cost == null ? CSS.green : can ? CSS.goldHi : CSS.dim,
           style: cost == null ? "green" : can ? "button" : "dark",
@@ -273,8 +279,8 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
     list.addRow(
       this._shopRow({
         icon: "ico_trophy",
-        name: "Tesouro Ancestral",
-        desc: `+2% de dano geral por nível · Nível ${this.meta.ancestralLevel} (sem limite)`,
+        name: tr("Tesouro Ancestral"),
+        desc: tr("+2% de dano geral por nível · Nível {0} (sem limite)", this.meta.ancestralLevel),
         right: String(ac),
         rightIcon: "ico_coin",
         rightColor: acan ? CSS.goldHi : CSS.dim,
@@ -293,16 +299,16 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
   },
 
   _showArsenal() {
-    const m = new Modal(this, { title: "FORJA", subtitle: `Armas novas nas cartas de nível · vagas de arma na partida: ${this.builds ? this.builds.weaponSlots() : 2}`, w: 860, h: 640 });
+    const m = new Modal(this, { title: tr("FORJA"), subtitle: tr("Armas novas nas cartas de nível · vagas de arma na partida: {0}", this.builds ? this.builds.weaponSlots() : 2), w: 860, h: 640 });
     const list = this._modalList(m);
     const reopen = () => {
       m.close();
       this._refreshAll();
       this._showArsenal();
     };
-    const elName = { fire: "Fogo", ice: "Gelo", bolt: "Raio", wind: "Vento" };
+    const elName = { fire: tr("Fogo"), ice: tr("Gelo"), bolt: tr("Raio"), wind: tr("Vento") };
     this._buildRow(list, "forge", reopen);
-    this._section(list, "ARMAS");
+    this._section(list, tr("ARMAS"));
     const rows = [
       { kind: "weapon", key: "STAFF", cost: 0 },
       { kind: "weapon", key: "AURA", cost: 0 },
@@ -320,9 +326,8 @@ Tempo: ${time}`, { size: 19, align: "center", origin: 0.5, lineSpacing: 6 }));
         this._shopRow({
           icon: r.icon ?? WEAPON_ICON[r.key],
           name: r.name ?? `${def.name}  ·  ${elName[def.element]}`,
-          desc: deedOpen ? `${WEAPON_DESC[r.key]}
-Feito para forjar: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLocaleString("pt-BR")})` : r.desc ?? WEAPON_DESC[r.key],
-          right: has ? "FORJADA" : !allowed ? `FORJA NV ${BUILD.FORGE_WEAPON_LEVEL[r.key]}` : deedOpen ? "FALTA O FEITO" : String(r.cost),
+          desc: deedOpen ? tr("{0}\nFeito para forjar: {1} ({2}/{3})", WEAPON_DESC[r.key], deed.text, fmt(deed.p), fmt(deed.n)) : r.desc ?? WEAPON_DESC[r.key],
+          right: has ? tr("FORJADA") : !allowed ? tr("FORJA NV {0}", BUILD.FORGE_WEAPON_LEVEL[r.key]) : deedOpen ? tr("FALTA O FEITO") : String(r.cost),
           rightIcon: has || !allowed || deedOpen ? null : "ico_coin",
           rightColor: has ? CSS.green : can ? CSS.goldHi : CSS.dim,
           style: has ? "green" : can ? "button" : "dark",
@@ -341,7 +346,7 @@ Feito para forjar: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLo
     // Evoluções: receitas visíveis (descoberta guiada)
     list.addRow({
       h: 40,
-      build: (c, w) => c.add(text(this, w / 2, 24, "RECEITAS DE EVOLUÇÃO", { size: 18, color: hex(PAL.pur3), origin: 0.5 })),
+      build: (c, w) => c.add(text(this, w / 2, 24, tr("RECEITAS DE EVOLUÇÃO"), { size: 18, color: hex(PAL.pur3), origin: 0.5 })),
     });
     for (const [k, d] of Object.entries(WEAPONS)) {
       if (!d.evolvesFrom) continue;
@@ -350,7 +355,7 @@ Feito para forjar: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLo
           h: 62,
           icon: WEAPON_ICON[k],
           name: d.name,
-          desc: `${WEAPONS[d.evolvesFrom].name} nível 5 + ${WEAPONS[d.partner].name}`,
+          desc: tr("{0} nível 5 + {1}", WEAPONS[d.evolvesFrom].name, WEAPONS[d.partner].name),
           style: "purple",
         }),
       );
@@ -364,8 +369,8 @@ Feito para forjar: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLo
     const missions = !!this._daily?.();
     if (tab === "missoes" && !missions) tab = "conquistas"; // aba ainda não liberada
     const m = new Modal(this, {
-      title: "MURAL",
-      subtitle: tab === "missoes" ? "Três missões por dia · o prêmio se pega aqui" : tab === "lendas" ? `Lendas da mata encontradas: ${seen} de ${LEGENDS.length}` : `Conquistas: ${ACHIEVEMENTS.filter((a) => done.includes(a.id)).length} de ${ACHIEVEMENTS.length}`,
+      title: tr("MURAL"),
+      subtitle: tab === "missoes" ? tr("Três missões por dia · o prêmio se pega aqui") : tab === "lendas" ? tr("Lendas da mata encontradas: {0} de {1}", seen, LEGENDS.length) : tr("Conquistas: {0} de {1}", ACHIEVEMENTS.filter((a) => done.includes(a.id)).length, ACHIEVEMENTS.length),
       w: 860,
       h: 640,
     });
@@ -379,12 +384,12 @@ Feito para forjar: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLo
         }, { size: 18, style: tab === id ? "gold" : "dark", color: tab === id ? CSS.goldHi : CSS.muted }),
       );
     if (missions) {
-      tabBtn(-250, "missoes", "MISSÕES");
-      tabBtn(0, "conquistas", "CONQUISTAS");
-      tabBtn(250, "lendas", "LENDAS");
+      tabBtn(-250, "missoes", tr("MISSÕES"));
+      tabBtn(0, "conquistas", tr("CONQUISTAS"));
+      tabBtn(250, "lendas", tr("LENDAS"));
     } else {
-      tabBtn(-128, "conquistas", "CONQUISTAS");
-      tabBtn(128, "lendas", "LENDAS");
+      tabBtn(-128, "conquistas", tr("CONQUISTAS"));
+      tabBtn(128, "lendas", tr("LENDAS"));
     }
     const list = this._modalList(m, m.top + 58);
     if (tab === "missoes" && missions)
@@ -413,7 +418,7 @@ Feito para forjar: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLo
         h: 118,
         build: (c, w) => {
           const t1 = text(this, 120, 12, ok ? l.name : "???", { size: 21, color: ok ? CSS.goldHi : CSS.dim, origin: [0, 0] });
-          const t2 = text(this, 120, 12 + t1.height + 2, ok ? l.role : "Encontre na floresta para conhecer esta lenda.", { size: 14, color: ok ? CSS.green : CSS.dim, origin: [0, 0], wrap: w - 140 });
+          const t2 = text(this, 120, 12 + t1.height + 2, ok ? l.role : tr("Encontre na floresta para conhecer esta lenda."), { size: 14, color: ok ? CSS.green : CSS.dim, origin: [0, 0], wrap: w - 140 });
           const t3 = ok ? text(this, 120, t2.y + t2.height + 4, l.origin, { size: 14, color: CSS.muted, origin: [0, 0], wrap: w - 140, shadow: false }) : null;
           const h = Math.max(118, Math.ceil((t3 ? t3.y + t3.height : t2.y + t2.height) + 14));
           const g = this.add.graphics();
@@ -457,28 +462,28 @@ Feito para forjar: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLo
   },
 
   _showGuide() {
-    const m = new Modal(this, { title: "GUIA DA FLORESTA", w: 880, h: 640 });
+    const m = new Modal(this, { title: tr("GUIA DA FLORESTA"), w: 880, h: 640 });
     const list = this._modalList(m);
     const touch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     const sections = [
-      ["ico_dash", "Movimento", touch ? "Arraste o polegar na metade esquerda da tela para andar. O ataque é automático." : "WASD ou setas para andar. O ataque é automático — posicione-se."],
-      ["ico_gem", "Nível", "Colete gemas verdes para subir de nível e escolher 1 de 3 cartas: novas armas, melhorias ou passivas."],
-      ["ico_staff", "Elementos", "Cada arma aplica um elemento: Fogo, Gelo ou Raio. Dois elementos no mesmo inimigo disparam uma REAÇÃO."],
-      ["ico_cloud", "Vapor (Fogo + Gelo)", "Nuvem escaldante que causa dano contínuo na área."],
-      ["ico_aura", "Cristal (Gelo + Raio)", "O inimigo estilhaça e fere quem está perto. Congelado, o estilhaço é bem maior."],
-      ["ico_bolt_gold", "Sobrecarga (Fogo + Raio)", "Corrente elétrica que salta entre vários inimigos."],
-      ["ico_star", "Despertar", "Reações enchem a barra dourada. Ative para disparar tudo muito mais rápido por alguns segundos."],
-      ["ico_chest", "Baús", "Encoste num baú para abri-lo: tesouro, jackpot dourado… ou uma armadilha (e o temido mímico)."],
-      ["ico_heart_ice", "Evoluções", "Arma no nível 5 + a arma parceira na mesma partida = carta de EVOLUÇÃO garantida. Veja as receitas na Forja da Clareira."],
-      ["ico_skull", "O Mapinguari", "No fim da partida (7 a 10 min, conforme o Perigo) o gigante da mata desperta, tomado pela Podridão. Vença-o para libertá-lo e liberar o próximo Perigo."],
-      ["ico_coin", "A Clareira", "Entre partidas: Santuário (bênçãos e dons), Forja (armas), Fogueira (guardiões), Mural (conquistas). A trilha ao norte leva à floresta."],
+      ["ico_dash", tr("Movimento"), touch ? tr("Arraste o polegar na metade esquerda da tela para andar. O ataque é automático.") : tr("WASD ou setas para andar. O ataque é automático — posicione-se.")],
+      ["ico_gem", tr("Nível"), tr("Colete gemas verdes para subir de nível e escolher 1 de 3 cartas: novas armas, melhorias ou passivas.")],
+      ["ico_staff", tr("Elementos"), tr("Cada arma aplica um elemento: Fogo, Gelo ou Raio. Dois elementos no mesmo inimigo disparam uma REAÇÃO.")],
+      ["ico_cloud", tr("Vapor (Fogo + Gelo)"), tr("Nuvem escaldante que causa dano contínuo na área.")],
+      ["ico_aura", tr("Cristal (Gelo + Raio)"), tr("O inimigo estilhaça e fere quem está perto. Congelado, o estilhaço é bem maior.")],
+      ["ico_bolt_gold", tr("Sobrecarga (Fogo + Raio)"), tr("Corrente elétrica que salta entre vários inimigos.")],
+      ["ico_star", tr("Despertar"), tr("Reações enchem a barra dourada. Ative para disparar tudo muito mais rápido por alguns segundos.")],
+      ["ico_chest", tr("Baús"), tr("Encoste num baú para abri-lo: tesouro, jackpot dourado… ou uma armadilha (e o temido mímico).")],
+      ["ico_heart_ice", tr("Evoluções"), tr("Arma no nível 5 + a arma parceira na mesma partida = carta de EVOLUÇÃO garantida. Veja as receitas na Forja da Clareira.")],
+      ["ico_skull", tr("O Mapinguari"), tr("No fim da partida (7 a 10 min, conforme o Perigo) o gigante da mata desperta, tomado pela Podridão. Vença-o para libertá-lo e liberar o próximo Perigo.")],
+      ["ico_coin", tr("A Clareira"), tr("Entre partidas: Santuário (bênçãos e dons), Forja (armas), Fogueira (guardiões), Mural (conquistas). A trilha ao norte leva à floresta.")],
     ];
     if ((this.meta.data.revealed || []).includes("garden"))
-      sections.push(["ico_sprout", "Horta", "Ande até um canteiro e use o botão de ação para plantar e cuidar; passe por cima do que está maduro para colher. As plantas crescem em tempo real, mesmo com o jogo fechado. Cuidar em dia dá qualidade Ouro — nada morre, só perde qualidade. A colheita fica no Celeiro. Sementes raras caem dos minichefes, do baú dourado e do Mapinguari."]);
+      sections.push(["ico_sprout", tr("Horta"), tr("Ande até um canteiro e use o botão de ação para plantar e cuidar; passe por cima do que está maduro para colher. As plantas crescem em tempo real, mesmo com o jogo fechado. Cuidar em dia dá qualidade Ouro — nada morre, só perde qualidade. A colheita fica no Celeiro. Sementes raras caem dos minichefes, do baú dourado e do Mapinguari.")]);
     if ((this.meta.data.revealed || []).includes("kitchen"))
-      sections.push(["ico_dish_roast_carrot", "Cozinha", "Transforme a colheita em pratos. Coma um antes de partir: o bônus vale só na próxima partida — ingredientes Ouro dão um bônus maior."]);
+      sections.push(["ico_dish_roast_carrot", tr("Cozinha"), tr("Transforme a colheita em pratos. Coma um antes de partir: o bônus vale só na próxima partida — ingredientes Ouro dão um bônus maior.")]);
     if ((this.meta.data.revealed || []).includes("pond"))
-      sections.push(["ico_lambari", "Lago", "No trapiche, jogue a linha e toque quando a boia afundar. Segure para subir a zona verde e solte para descer: mantenha o peixe dentro até a barra encher. Sem deixar o peixe sair = qualidade Ouro. O lago descansa depois de alguns peixes; bolhas na água mostram que eles voltaram."]);
+      sections.push(["ico_lambari", tr("Lago"), tr("No trapiche, jogue a linha e toque quando a boia afundar. Segure para subir a zona verde e solte para descer: mantenha o peixe dentro até a barra encher. Sem deixar o peixe sair = qualidade Ouro. O lago descansa depois de alguns peixes; bolhas na água mostram que eles voltaram.")]);
     for (const [icon, name, desc] of sections) {
       list.addRow({
         h: 84,
@@ -509,26 +514,26 @@ Feito para forjar: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLo
   },
 
   _confirmReset() {
-    const m = new Modal(this, { title: "APAGAR TUDO?", style: "danger", w: 560, h: 330 });
-    m.add(text(this, 0, -30, "Moedas, bênçãos, armas, personagens,\nconquistas e recordes serão perdidos.", { size: 18, align: "center", origin: 0.5, color: CSS.txt }));
+    const m = new Modal(this, { title: tr("APAGAR TUDO?"), style: "danger", w: 560, h: 330 });
+    m.add(text(this, 0, -30, tr("Moedas, bênçãos, armas, personagens,\nconquistas e recordes serão perdidos."), { size: 18, align: "center", origin: 0.5, color: CSS.txt }));
     m.add(
-      new Button(this, -125, 90, 220, 54, "APAGAR", () => {
+      new Button(this, -125, 90, 220, 54, tr("APAGAR"), () => {
         this.meta.reset();
         this.scene.restart();
       }, { style: "danger", color: CSS.redHi, size: 20 }),
     );
-    m.add(new Button(this, 125, 90, 220, 54, "CANCELAR", () => m.close(), { size: 20 }));
+    m.add(new Button(this, 125, 90, 220, 54, tr("CANCELAR"), () => m.close(), { size: 20 }));
   },
 
   _showCredits() {
-    const m = new Modal(this, { title: "CRÉDITOS", w: 820, h: 620 });
+    const m = new Modal(this, { title: tr("CRÉDITOS"), w: 820, h: 620 });
     const list = this._modalList(m);
     const lines = [
-      ["Design, código e arte procedural", "Leonardo Lopes"],
-      ["Arte", "Heróis, criaturas, cenário, ícones e efeitos: arte própria, gerada por código"],
-      ["Fontes", "Jersey 15 — The Soft Type Project Authors (OFL 1.1) · Atkinson Hyperlegible — Braille Institute of America (OFL 1.1)"],
-      ["Música e efeitos sonoros", "Compostos e sintetizados por código para este jogo"],
-      ["Motor", "Phaser 4 (MIT) · nipplejs (MIT)"],
+      [tr("Design, código e arte procedural"), "Leonardo Lopes"],
+      [tr("Arte"), tr("Heróis, criaturas, cenário, ícones e efeitos: arte própria, gerada por código")],
+      [tr("Fontes"), tr("Jersey 15 — The Soft Type Project Authors · Atkinson Hyperlegible — Braille Institute of America · Fusion Pixel — TakWolf (todas OFL 1.1)")],
+      [tr("Música e efeitos sonoros"), tr("Compostos e sintetizados por código para este jogo")],
+      [tr("Motor"), tr("Phaser 4 (MIT) · nipplejs (MIT)")],
     ];
     for (const [a, b] of lines) {
       list.addRow({
@@ -546,7 +551,7 @@ Feito para forjar: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLo
   // Guardiões (na Clareira: pela Fogueira). Escolher troca na hora; os
   // bloqueados mostram o preço.
   _showCharacters() {
-    const m = new Modal(this, { title: "FOGUEIRA", subtitle: "Quem vai proteger a floresta hoje?", w: 860, h: 640 });
+    const m = new Modal(this, { title: tr("FOGUEIRA"), subtitle: tr("Quem vai proteger a floresta hoje?"), w: 860, h: 640 });
     const list = this._modalList(m);
     const reopen = () => {
       m.close();
@@ -554,7 +559,7 @@ Feito para forjar: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLo
       this._showCharacters();
     };
     this._buildRow(list, "fire", reopen);
-    this._section(list, "GUARDIÕES");
+    this._section(list, tr("GUARDIÕES"));
     for (const c of CHARACTERS) {
       const owned = this.meta.hasCharacter(c.id);
       const sel = this.meta.selectedCharacter === c.id;
@@ -574,8 +579,8 @@ Feito para forjar: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLo
           dim: !owned,
           name: `${c.name}  ·  ${c.title}`,
           nameColor: sel ? CSS.goldHi : CSS.txt,
-          desc: `Começa com ${WEAPONS[c.weapon].name}. ${c.perk}` + (deed && fireOk ? `\nFeito: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLocaleString("pt-BR")})` : ""),
-          right: sel ? "ESCOLHIDO" : owned ? "ESCOLHER" : !fireOk ? `FOGUEIRA NV ${needLv}` : deedOpen ? "FALTA O FEITO" : buyable || !this.builds ? String(c.cost) : `FOGUEIRA NV ${needLv}`,
+          desc: tr("Começa com {0}. {1}", WEAPONS[c.weapon].name, c.perk) + (deed && fireOk ? tr("\nFeito: {0} ({1}/{2})", deed.text, fmt(deed.p), fmt(deed.n)) : ""),
+          right: sel ? tr("ESCOLHIDO") : owned ? tr("ESCOLHER") : !fireOk ? tr("FOGUEIRA NV {0}", needLv) : deedOpen ? tr("FALTA O FEITO") : buyable || !this.builds ? String(c.cost) : tr("FOGUEIRA NV {0}", needLv),
           rightIcon: owned || !fireOk || deedOpen || (this.builds && !buyable) ? null : "ico_coin",
           rightColor: sel ? CSS.green : owned ? CSS.txt : can ? CSS.goldHi : CSS.dim,
           style: sel ? "green" : owned || can ? "button" : "dark",

@@ -2,6 +2,7 @@
 // uma tira "mon_<tipo>" e a animação "<tipo>_move".
 import { ENEMY, GAME, ELITE, MIMIC, BOSS_FIGHT } from "../config.js";
 import { MulaBrain, SecoBrain } from "./Bosses.js";
+import { tr } from "../i18n/i18n.js";
 
 // O chefe (Mapinguari) mora em Bosses.js junto com os golpes dos minichefes
 export { BossEnt } from "./Bosses.js";
@@ -175,7 +176,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.speed = alpha ? 132 : 95; // < 160 do herói: dá pra kitar
       this.contactRadius = alpha ? 50 : 62;
       this.rimColor = 0xf2c14e;
-      this.miniBoss = this.scene.biome?.minis?.[elite]?.name ?? (alpha ? "MULA SEM CABEÇA" : "CORPO-SECO");
+      this.miniBoss = this.scene.biome?.minis?.[elite]?.name ?? (alpha ? tr("MULA SEM CABEÇA") : tr("CORPO-SECO"));
     } else this.miniBoss = null;
     // Cérebro de golpes especiais (só minichefes; criado depois da escala final)
     this._brain?.dispose();

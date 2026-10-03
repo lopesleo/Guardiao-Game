@@ -9,6 +9,7 @@ import { Clock } from "../systems/Clock.js";
 import { PAL, CSS } from "../art/Palette.js";
 import { text, Button, haptic, drawFrame } from "../ui/Theme.js";
 import { Modal } from "../ui/Widgets.js";
+import { tr } from "../i18n/i18n.js";
 
 const TX = -250,
   TY = -250; // pé da Samaúma (CampDecor)
@@ -51,7 +52,7 @@ export const CampTree = {
       this._refreshTree();
     };
     if (shown) this._kapok.setTexture("camp_kapok_blessed");
-    this._addInteract({ x: TX, y: TY, top: TY - 300, r: 125, name: "SAMAÚMA", verb: "BÊNÇÃO", hiddenUntil: "tree", action: () => this._showTree() });
+    this._addInteract({ x: TX, y: TY, top: TY - 300, r: 125, name: tr("SAMAÚMA"), verb: tr("BÊNÇÃO"), hiddenUntil: "tree", action: () => this._showTree() });
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this._refreshTree() });
     // Faíscas subindo do anel até a copa enquanto a bênção está pronta
     this.time.addEvent({
@@ -81,7 +82,7 @@ export const CampTree = {
     const can = AdService.canShow("tree_spin") || this.meta.coins >= this._offeringPrice();
     const mode = st.kind === "ready" && !can ? "off" : st.kind;
     // Plaquinha: pronta (dourada), guardada (verde)
-    const label = { ready: "BÊNÇÃO PRONTA", pending: "BÊNÇÃO GUARDADA", off: "SAMAÚMA" }[mode];
+    const label = { ready: tr("BÊNÇÃO PRONTA"), pending: tr("BÊNÇÃO GUARDADA"), off: tr("SAMAÚMA") }[mode];
     if (label !== b.tagT.text || mode !== b.mode) {
       b.tagT.setText(label).setColor(mode === "ready" ? CSS.goldHi : mode === "pending" ? CSS.green : CSS.muted);
       const w = b.tagT.width + 24;
@@ -105,7 +106,7 @@ export const CampTree = {
   },
 
   _showTree() {
-    const m = new Modal(this, { title: "SAMAÚMA", subtitle: "A mãe da mata abençoa a sua próxima partida", w: 640, h: 640 });
+    const m = new Modal(this, { title: tr("SAMAÚMA"), subtitle: tr("A mãe da mata abençoa a sua próxima partida"), w: 640, h: 640 });
     const cy = m.top + R + 34;
 
     // Roleta: fatias da paleta, contorno de tinta, rótulo em 2 linhas
@@ -162,8 +163,8 @@ export const CampTree = {
     const status = m.add(text(this, 0, cy + R + 40, "", { size: 19, color: CSS.txt, origin: 0.5, align: "center", wrap: m.w - 60 }));
     m._status = status;
     const by = m.h / 2 - 50;
-    const btn = m.add(new Button(this, -146, by, 270, 54, "GIRAR", () => this._spinTree(m, wheel, status, btn, refresh), { size: 20, style: "primary", color: CSS.goldHi, icon: "ico_play", iconScale: 2 }));
-    const offer = m.add(new Button(this, 146, by, 270, 54, `OFERENDA  ${this._offeringPrice()}`, () => this._showOffering(m, wheel, refresh), { size: 20, icon: "ico_coin", iconScale: 2.2 }));
+    const btn = m.add(new Button(this, -146, by, 270, 54, tr("GIRAR"), () => this._spinTree(m, wheel, status, btn, refresh), { size: 20, style: "primary", color: CSS.goldHi, icon: "ico_play", iconScale: 2 }));
+    const offer = m.add(new Button(this, 146, by, 270, 54, tr("OFERENDA  {0}", this._offeringPrice()), () => this._showOffering(m, wheel, refresh), { size: 20, icon: "ico_coin", iconScale: 2.2 }));
     let spinning = false;
     const refresh = (isSpinning = spinning) => {
       spinning = isSpinning;
@@ -173,9 +174,9 @@ export const CampTree = {
       const price = this._offeringPrice();
       offer.setEnabled(st.kind !== "pending" && this.meta.coins >= price);
       btn.setEnabled(st.kind === "ready" && canAd);
-      if (st.kind === "pending") status.setText(`Bênção guardada: ${st.buff.short}\nVale na próxima partida`).setColor(CSS.goldHi);
-      else if (!canAd) status.setText(`Sem anúncio agora. Com uma oferenda de ${price} moedas\nvocê escolhe a bênção da próxima partida.`).setColor(CSS.muted);
-      else status.setText(`Uma bênção por partida: gire com um anúncio (sorteio grátis)\nou faça uma oferenda e escolha a bênção.`).setColor(CSS.txt);
+      if (st.kind === "pending") status.setText(tr("Bênção guardada: {0}\nVale na próxima partida", st.buff.short)).setColor(CSS.goldHi);
+      else if (!canAd) status.setText(tr("Sem anúncio agora. Com uma oferenda de {0} moedas\nvocê escolhe a bênção da próxima partida.", price)).setColor(CSS.muted);
+      else status.setText(tr("Uma bênção por partida: gire com um anúncio (sorteio grátis)\nou faça uma oferenda e escolha a bênção.")).setColor(CSS.txt);
     };
     refresh();
     const ev = this.time.addEvent({ delay: 1000, loop: true, callback: () => (status.active ? refresh() : ev.remove()) });
@@ -199,7 +200,7 @@ export const CampTree = {
     this.meta._save();
     Analytics.track("tree_spin", { id: won.id });
     this._refreshTree();
-    if (!wheel.active) return this._toast(`Bênção da Samaúma: ${won.short}`);
+    if (!wheel.active) return this._toast(tr("Bênção da Samaúma: {0}", won.short));
     this._spinWheelTo(m, wheel, status, k, won, refresh, 3600, 5);
   },
 
@@ -210,7 +211,7 @@ export const CampTree = {
   // Oferenda: escolhe a bênção pagando moedas. Abre por cima da roleta.
   _showOffering(parent, wheel, refresh) {
     const price = this._offeringPrice();
-    const m = new Modal(this, { title: "OFERENDA", subtitle: `${price} moedas: escolha a bênção da próxima partida`, w: 700, h: 600 });
+    const m = new Modal(this, { title: tr("OFERENDA"), subtitle: tr("{0} moedas: escolha a bênção da próxima partida", price), w: 700, h: 600 });
     const list = this._modalList(m);
     TREE.SLICES.forEach((s, k) => {
       if (TREE.OFFERING.EXCLUDE.includes(s.id)) return;
@@ -219,7 +220,7 @@ export const CampTree = {
         this._shopRow({
           icon: SLICE_ICON[s.id],
           name: s.short,
-          desc: "Só na próxima partida",
+          desc: tr("Só na próxima partida"),
           right: String(price),
           rightIcon: "ico_coin",
           rightColor: can ? CSS.goldHi : CSS.dim,
@@ -237,7 +238,7 @@ export const CampTree = {
                 this._refreshAll?.();
                 this._refreshTree();
                 if (wheel.active) this._spinWheelTo(parent, wheel, parent._status, k, s, refresh, 1400, 1);
-                else this._toast(`Bênção da Samaúma: ${s.short}`);
+                else this._toast(tr("Bênção da Samaúma: {0}", s.short));
               }
             : null,
         }),
@@ -271,7 +272,7 @@ export const CampTree = {
         }
       },
       onComplete: () => {
-        if (!wheel.active) return this._toast(`Bênção da Samaúma: ${won.short}`);
+        if (!wheel.active) return this._toast(tr("Bênção da Samaúma: {0}", won.short));
         this.sound.play("sfx_chest_jackpot", { volume: 0.6 });
         haptic(50);
         // A fatia vencedora pisca no ponteiro
