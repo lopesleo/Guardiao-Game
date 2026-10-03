@@ -69,7 +69,7 @@ Legenda — **Esforço:** P (horas) · M (1–2 dias) · G (3+ dias) ·
 |---|---|---|---|
 | 5.1 | **Capturas de tela** (6–8, 16:9) e **imagem de destaque 1024×500** — gero automaticamente do próprio jogo | P | 🤖 |
 | 5.2 | **Vídeo de 30s** (opcional, aumenta instalação) — gravação automatizada de uma partida | M | 🤖 |
-| 5.3 | Textos da loja em PT-BR (prontos em `PLAY_STORE.md`) + **inglês** | P | 🤖 |
+| 5.3 | ✅ Textos da loja nos 5 idiomas (em `PLAY_STORE.md`) | P | 🤖 |
 | 5.4 | Questionário de classificação IARC | P | 👤 |
 | 5.5 | Gerar `.aab` assinado e guardar a keystore | P | 👤 |
 
@@ -77,7 +77,7 @@ Legenda — **Esforço:** P (horas) · M (1–2 dias) · G (3+ dias) ·
 
 | # | Item | Esforço | Quem |
 |---|---|---|---|
-| 6.1 | **Tradução para inglês** (e opcionalmente espanhol) com seletor de idioma | M | 🤖 |
+| 6.1 | ✅ **Idiomas:** inglês, espanhol, japonês e chinês com seletor (ver `IDIOMAS.md`); 👤 revisão nativa | M | 🤖 |
 
 ---
 
