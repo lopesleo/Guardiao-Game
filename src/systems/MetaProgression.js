@@ -1,6 +1,6 @@
 // Persistência entre runs via localStorage.
 // Salva: moedas totais, high score (tempo), armas desbloqueadas.
-import { META, MAX_BLESSING_RANK, ANCESTRAL, ACHIEVEMENTS, BUILD, blessingPrice } from '../config.js';
+import { META, MAX_BLESSING_RANK, ANCESTRAL, ACHIEVEMENTS, BUILD, BIOMES, blessingPrice } from '../config.js';
 import { Analytics } from './Analytics.js';
 import { Clock } from './Clock.js';
 
@@ -233,12 +233,14 @@ export class MetaProgression {
     return {
       wins: this.data.wins || 0,
       winsByDifficulty: this.data.winsByDifficulty || {},
+      winsByBiome: this.biomeWins(),
       maxDifficultyCleared: this.data.maxDifficultyCleared || 0,
       reactions: s.reactions || {},
       totalKills: s.totalKills || 0,
       totalCoinsEarned: s.totalCoinsEarned || 0,
       maxBlessingRank: Math.max(0, ...Object.values(this.data.blessingRanks)),
       ancestralLevel: this.ancestralLevel,
+      stats: s,
       run,
     };
   }
@@ -269,7 +271,7 @@ export class MetaProgression {
     return true;
   }
 
-  registerRun(elapsedSeconds, won, difficulty = 0) {
+  registerRun(elapsedSeconds, won, difficulty = 0, biome = "amazonia") {
     this.data.runsPlayed = (this.data.runsPlayed || 0) + 1; // revelações da Clareira
     if (elapsedSeconds > this.data.highScoreSeconds) {
       this.data.highScoreSeconds = Math.floor(elapsedSeconds);
@@ -278,6 +280,8 @@ export class MetaProgression {
       this.data.wins = (this.data.wins || 0) + 1;
       const k = String(difficulty);
       this.data.winsByDifficulty[k] = (this.data.winsByDifficulty[k] || 0) + 1;
+      const wb = (this.data.winsByBiome ||= {});
+      wb[biome] = (wb[biome] || 0) + 1;
       if (difficulty > this.data.maxDifficultyCleared) {
         this.data.maxDifficultyCleared = difficulty;
       }
@@ -294,6 +298,30 @@ export class MetaProgression {
   get selectedDifficulty() { return this.data.selectedDifficulty || 0; }
   setSelectedDifficulty(idx) {
     this.data.selectedDifficulty = idx;
+    this._save();
+  }
+  // ---- Biomas (mapas — BIOMES em config.js) ----
+  // Vitórias por bioma. Saves de antes dos biomas: toda vitória foi na Amazônia.
+  biomeWins() {
+    const wb = { ...(this.data.winsByBiome || {}) };
+    if (wb.amazonia == null && (this.data.wins || 0) > 0) wb.amazonia = this.data.wins - Object.values(wb).reduce((a, n) => a + n, 0);
+    return wb;
+  }
+  // Bioma aberto: nível da obra da Trilha + vitória no bioma pedido
+  biomeOpen(id) {
+    const u = BIOMES[id]?.unlock;
+    if (!BIOMES[id]) return false;
+    if (!u) return true;
+    const trail = this.data.builds?.trail?.level ?? 1;
+    return trail >= (u.trail ?? 1) && (!u.won || (this.biomeWins()[u.won] || 0) > 0);
+  }
+  get selectedBiome() {
+    const id = this.data.selectedBiome;
+    return id && this.biomeOpen(id) ? id : "amazonia";
+  }
+  setSelectedBiome(id) {
+    if (!this.biomeOpen(id)) return;
+    this.data.selectedBiome = id;
     this._save();
   }
   isDifficultyUnlocked(idx) {

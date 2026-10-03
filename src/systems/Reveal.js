@@ -52,6 +52,12 @@ export const REVEALS = [
     when: (d) => (d.revealed || []).includes("chest") && (d.runsPlayed || 0) >= 6,
     line: "A Samaúma acordou! Antes de cada partida ela pode abençoar você.",
   },
+  {
+    // Biomas (docs/BIOMAS.md): vencer o Mapinguari mostra o caminho para o sertão
+    id: "trail",
+    when: (d) => (d.wins || 0) > 0,
+    line: "O vento trouxe areia do sertão… O João-de-barro pode abrir uma trilha até a Caatinga.",
+  },
 ];
 
 export function isRevealed(id, data) {

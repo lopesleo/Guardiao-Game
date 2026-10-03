@@ -18,6 +18,10 @@ const LOOK = {
   alpha: ["mon_alpha", "alpha_move"],
   elder: ["mon_elder", "elder_move"],
   mimic: ["obj_chest", "mimic_bite"],
+  // Caatinga (BIOMES.caatinga.looks): mesma criatura, arte do sertão
+  calango: ["mon_calango", "calango_move"],
+  carcara: ["mon_carcara", "carcara_move"],
+  frade: ["mon_frade", "frade_move"],
 };
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
@@ -72,7 +76,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   // Aplica a arte do tipo: textura, animação e corpo físico no "pé" do sprite
   _look(type) {
-    const [tex, anim] = LOOK[type] ?? LOOK.wolf;
+    const [tex, anim] = LOOK[this.scene.biome?.looks?.[type] ?? type] ?? LOOK.wolf;
     this.setTexture(tex, 0);
     this.play({ key: anim, startFrame: Math.floor(Math.random() * 2) });
     const w = this.frame.width,

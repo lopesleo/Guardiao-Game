@@ -2,7 +2,7 @@
 // por vez) com tempo REAL (Clock, à prova de mexer na hora). Partidas adiantam
 // a obra; faltando pouco, conclui com um toque. Tudo mora no save
 // (meta.data.builds / buildJob).
-import { BUILD, BUILDINGS, CHARACTERS, WEAPONS, GARDEN, FISHING } from "../config.js";
+import { BUILD, BUILDINGS, BIOMES, CHARACTERS, WEAPONS, GARDEN, FISHING } from "../config.js";
 import { Clock } from "./Clock.js";
 
 export class Builds {
@@ -28,7 +28,7 @@ export class Builds {
   nextStep(id) {
     const lv = this.level(id);
     if (lv >= this.max(id)) return null;
-    return BUILD.STEPS[lv];
+    return BUILDINGS[id].steps?.[lv] ?? BUILD.STEPS[lv]; // obra com tabela própria (Trilha)
   }
 
   // O que o PRÓXIMO nível libera (texto curto para o jogador)
@@ -149,6 +149,10 @@ export function perkText(id, lv) {
     const cid = Object.entries(BUILD.FIRE_CHARACTER_LEVEL).find(([, l]) => l === lv)?.[0];
     const c = CHARACTERS.find((c) => c.id === cid);
     return c ? `Chega à Clareira: ${c.name}` : "";
+  }
+  if (id === "trail") {
+    const b = Object.values(BIOMES).find((b) => b.unlock?.trail === lv);
+    return b ? `Abre o caminho para a ${b.name}` : "";
   }
   if (id === "pond") return FISHING.LEVELS[lv] ? `Vara melhor · lago com ${FISHING.LEVELS[lv].cap} peixes` : "";
   if (id === "garden") {

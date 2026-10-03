@@ -1,4 +1,4 @@
-// Verificador de CONTEÚDO (armas, evoluções, laços, guardiões, desbloqueios).
+// Verificador de CONTEÚDO (armas, evoluções, laços, guardiões, biomas, desbloqueios).
 // Roda sem navegador: `npm run check` (ou node tools/check-content.mjs).
 // Erro (✗) = algo vai quebrar no jogo · aviso (!) = regra de design não cumprida.
 // Ver docs/CONTEUDO.md para o passo a passo de cada tipo de conteúdo.
@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   WEAPONS, BASE_WEAPON_KEYS, EVOLUTION_KEYS, STARTER_WEAPONS, LINKS, CHARACTERS, LEGENDS, META, BUILD, DEED_STATS, ELEMENT,
+  BIOMES, BUILDINGS, BOSS_FIGHT,
 } from "../src/config.js";
 import { ICON_KEYS } from "../src/art/Icons.js";
 import { HERO_IDS } from "../src/art/Hero.js";
@@ -62,8 +63,10 @@ for (const [k, d] of Object.entries(WEAPONS)) {
         if (u.deed.n > 1 && !u.deed.text?.includes("{n}")) warn(`${tag}: texto do feito sem {n}`);
       }
     }
-    // Regra 3: toda arma base é parceira de alguma evolução (nenhuma carta "morta")
-    if (!EVOLUTION_KEYS.some((e) => WEAPONS[e].partner === k)) warn(`${tag}: não é parceira de nenhuma evolução`);
+    // Regra 3: nenhuma carta "morta" — a arma base é parceira de alguma evolução OU faz parte de um laço
+    const partner = EVOLUTION_KEYS.some((e) => WEAPONS[e].partner === k);
+    const inLink = LINKS.some((l) => l.a === k || l.b === k);
+    if (!partner && !inLink) warn(`${tag}: sem sinergia (não é parceira de evolução nem está em laço)`);
     if (!EVOLUTION_KEYS.some((e) => WEAPONS[e].evolvesFrom === k)) warn(`${tag}: não tem evolução`);
   }
 }
@@ -119,13 +122,47 @@ for (const c of CHARACTERS) {
 const legendIds = LEGENDS.map((l) => l.id);
 if (new Set(legendIds).size !== legendIds.length) err("bestiário com id repetido");
 
+// ---------- Biomas (mapas) ----------
+// Cada bioma: cenário registrado, chefe no bestiário + registerBoss + kit, músicas, troca
+// de arte que existe, desbloqueio alcançável pela obra da Trilha.
+{
+  const preload = src("src/scenes/PreloadScene.js");
+  const synth = src("src/audio/Synth.js");
+  const enemies = src("src/entities/Enemies.js");
+  const bossFiles = entitySrc;
+  const scene = src("src/scenes/GameScene.js");
+  for (const [id, b] of Object.entries(BIOMES)) {
+    const tag = `bioma ${id}`;
+    for (const f of ["name", "desc", "env", "boss", "bossName", "wake", "freed", "music", "bossMusic", "light"]) if (b[f] == null) err(`${tag}: falta "${f}"`);
+    if (b.env && !preload.includes(`"${b.env}"`)) err(`${tag}: cenário "${b.env}" não é registrado na PreloadScene`);
+    for (const k of [b.music, b.bossMusic]) if (k && !synth.includes(`"${k}"`)) err(`${tag}: música "${k}" não existe em Synth.js`);
+    if (b.boss && !legendIds.includes(b.boss)) err(`${tag}: chefe "${b.boss}" fora do bestiário (LEGENDS)`);
+    if (b.boss && b.boss !== "mapinguari" && !bossFiles.includes(`registerBoss("${b.boss}"`)) err(`${tag}: chefe "${b.boss}" sem registerBoss`);
+    if (b.boss && b.boss !== "mapinguari") {
+      const file = fs.readdirSync(path.join(ROOT, "src/entities")).find((f) => src(`src/entities/${f}`).includes(`registerBoss("${b.boss}"`));
+      if (file && !scene.includes(`import "../entities/${file}"`)) err(`${tag}: ${file} (chefe) não é importado na GameScene`);
+    }
+    for (const [from, to] of Object.entries(b.looks ?? {})) if (!enemies.includes(`${to}: ["mon_${to}"`)) err(`${tag}: arte "${to}" (no lugar de ${from}) não está em LOOK (Enemies.js)`);
+    for (const k of ["dusk", "night", "boss"]) if (b.light && !(Array.isArray(b.light[k]) && b.light[k].length === 3)) err(`${tag}: light.${k} deve ser [r, g, b]`);
+    const u = b.unlock;
+    if (u) {
+      if (!(u.trail >= 2 && u.trail <= BUILDINGS.trail.max)) err(`${tag}: unlock.trail ${u.trail} fora de 2..${BUILDINGS.trail.max} (BUILDINGS.trail.max)`);
+      else if (!BUILDINGS.trail.steps?.[u.trail - 1]) err(`${tag}: a obra da Trilha não tem custo para o nível ${u.trail}`);
+      if (u.won && !BIOMES[u.won]) err(`${tag}: unlock.won "${u.won}" não é bioma`);
+    }
+  }
+  const trails = Object.values(BIOMES).map((b) => b.unlock?.trail).filter(Boolean);
+  if (new Set(trails).size !== trails.length) err("dois biomas abrem no mesmo nível da Trilha");
+  if (!BOSS_FIGHT.CABOCLO) err("BOSS_FIGHT.CABOCLO sumiu (kit do Caboclo d'Água)");
+}
+
 // ---------- Desbloqueios derivados (sanidade) ----------
 for (const k of META.WEAPON_UNLOCK_ORDER) if (BUILD.FORGE_WEAPON_LEVEL[k] == null) err(`Forja: ${k} sem nível`);
 for (const k of BASE_WEAPON_KEYS) if (!STARTER_WEAPONS.includes(k) && !META.WEAPON_UNLOCK_ORDER.includes(k)) err(`${k}: nem inicial nem forjável`);
 
 // ---------- Relatório ----------
 const byEl = (keys) => Object.fromEntries(ELS.map((el) => [el, keys.filter((k) => WEAPONS[k].element === el).length]));
-console.log(`Armas base: ${BASE_WEAPON_KEYS.length} ${JSON.stringify(byEl(BASE_WEAPON_KEYS))} · evoluções: ${EVOLUTION_KEYS.length} · laços: ${LINKS.length} · guardiões: ${CHARACTERS.length}`);
+console.log(`Armas base: ${BASE_WEAPON_KEYS.length} ${JSON.stringify(byEl(BASE_WEAPON_KEYS))} · evoluções: ${EVOLUTION_KEYS.length} · laços: ${LINKS.length} · guardiões: ${CHARACTERS.length} · biomas: ${Object.keys(BIOMES).length}`);
 if (noReaction.length) console.log(`  · evoluções sem reação própria (ok, mas a regra 2 prefere que gerem): ${noReaction.join(", ")}`);
 for (const w of warns) console.log(`  ! ${w}`);
 for (const e of errors) console.log(`  ✗ ${e}`);

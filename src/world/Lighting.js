@@ -184,7 +184,11 @@ export class Lighting {
     // Ambiente + todas as luzes numa ÚNICA passada no mapa de luz.
     // (Antes: 1 draw por luz = ~100 trocas de framebuffer/frame → travava celular.)
     const tRun = Math.min(1, s.elapsedMs / (s.runDurationS * 1000));
-    const amb = s.boss?.active ? mix(AMB_NIGHT, AMB_BOSS, 1) : mix(AMB_DUSK, AMB_NIGHT, Math.pow(tRun, 1.3));
+    const L = s.biome?.light;
+    const dusk = L?.dusk ?? AMB_DUSK,
+      night = L?.night ?? AMB_NIGHT,
+      bossAmb = L?.boss ?? AMB_BOSS;
+    const amb = s.boss?.active ? mix(night, bossAmb, 1) : mix(dusk, night, Math.pow(tRun, 1.3));
     this.rt.fill(amb);
     if (this._n) this.rt.draw(this.stamps.slice(0, this._n));
     // Phaser 4: no modo padrão a RenderTexture só EXIBE o que já tem; sem render()

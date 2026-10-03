@@ -349,7 +349,7 @@ export class HUD {
       this.bossBar.setColor(phase2 ? PAL.org2 : PAL.red2);
       this.bossBar.set(shown, this.boss._transitioning);
       this.bossBar.tick(dt);
-      this.bossLabel.setText(phase2 ? "MAPINGUARI · FÚRIA" : "MAPINGUARI");
+      this.bossLabel.setText(phase2 ? `${this.bossName} · FÚRIA` : this.bossName);
     }
 
     // Despertar

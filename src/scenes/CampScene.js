@@ -7,7 +7,7 @@
 //   Cozinha → pratos · Lago → pescar (no trapiche) · Placa da trilha → Perigo ·
 //   Anciã → conversa.
 // A trilha ao norte leva à floresta (começa a partida).
-import { GAME, CHARACTERS, DIFFICULTY, META, BLESSINGS, BUILDINGS } from "../config.js";
+import { GAME, CHARACTERS, DIFFICULTY, META, BLESSINGS, BUILDINGS, BIOMES, BIOME_IDS } from "../config.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
 import { Builds, fmtDuration } from "../systems/Builds.js";
 import { Garden } from "../systems/Garden.js";
@@ -89,6 +89,7 @@ export class CampScene extends Phaser.Scene {
     this.solids = this.physics.add.staticGroup();
     this.interactables = [];
     this.glows = [];
+    this.buildings = {}; // a trilha (placa) também é construção e vem antes das outras
 
     this._ground();
     this._forestWall();
@@ -206,7 +207,18 @@ export class CampScene extends Phaser.Scene {
     this.add.image(sx, sy + 4, "px_shadow").setScale(5, 3).setAlpha(0.6).setDepth(sy - 1);
     const sign = this.add.image(sx, sy, "camp_trail").setOrigin(0.5, 1).setScale(S).setDepth(sy);
     this._solid(sx, sy - 6, 20, 12);
-    this._addInteract({ x: sx, y: sy, top: sy - sign.displayHeight, r: 90, name: "PERIGO", verb: "ESCOLHER PERIGO", action: () => this._showDifficulty() });
+    this._addInteract({ x: sx, y: sy, top: sy - sign.displayHeight, r: 90, name: "TRILHA", verb: "ESCOLHER MAPA E PERIGO", action: () => this._showDifficulty() });
+    // Trilha do Sertão (obra do João-de-barro): mandacarus brotam ao lado da placa
+    const trailShown = this._isShown("trail");
+    const sertao = () => {
+      for (const [dx, dy, f] of [[62, 8, "mandacaru1"], [36, 18, "xique0"], [86, 20, "macambira0"]]) {
+        const im = this.add.image(sx + dx, sy + dy, "env_caatinga", f).setOrigin(0.5, 1).setScale(S).setDepth(sy + dy);
+        im.setScale(S, 0);
+        this.tweens.add({ targets: im, scaleY: S, duration: 500, ease: "Back.easeOut" });
+      }
+    };
+    if (trailShown) sertao();
+    this.buildings.trail = { x: sx, y: sy, img: sign, shown: trailShown, reveal: sertao, dot: this._notifyDot(sx + 20, sy - sign.displayHeight).setDepth(D_HUD - 10).setVisible(false) };
     // Letreiro sempre visível sobre a placa: o Perigo atual (tocar também abre)
     this.signLabel = this.add.container(sx, sy - sign.displayHeight - 26).setDepth(D_HUD - 8);
     this.signLabelG = this.add.graphics();
@@ -268,7 +280,6 @@ export class CampScene extends Phaser.Scene {
   }
 
   _structures() {
-    this.buildings = {};
     const B = (id, tex, name, verb, x, y, action, glow) => {
       const shown = this._isShown(id);
       const img = this.add.image(x, y, tex).setOrigin(0.5, 1).setScale(S).setDepth(y).setAlpha(shown ? 1 : 0);
@@ -446,9 +457,12 @@ export class CampScene extends Phaser.Scene {
     this.woodBox[2].setText(String(wood));
     const c = CHARACTERS.find((c) => c.id === this.meta.selectedCharacter) || CHARACTERS[0];
     const d = DIFFICULTY[Math.min(this.meta.selectedDifficulty, DIFFICULTY.length - 1)];
-    this.hudInfo.setText(`${c.name}  ·  Perigo: ${d.name} (${Math.round(d.durationS / 60)} min)  »`);
+    const bio = this.meta.selectedBiome !== "amazonia" ? `${BIOMES[this.meta.selectedBiome].name}  ·  ` : "";
+    this.hudInfo.setText(`${c.name}  ·  ${bio}Perigo: ${d.name} (${Math.round(d.durationS / 60)} min)  »`);
     if (this.signLabel) {
-      this.signLabelT.setText(`PERIGO: ${d.name.toUpperCase()}`);
+      this.signLabelT.setText(bio ? `${BIOMES[this.meta.selectedBiome].name.toUpperCase()} · ${d.name.toUpperCase()}` : `PERIGO: ${d.name.toUpperCase()}`);
+      // bioma novo aberto e ainda não visitado: selo "!" na placa
+      this.buildings.trail?.dot.setVisible(BIOME_IDS.some((id) => id !== "amazonia" && this.meta.biomeOpen(id) && !(this.meta.data.biomesSeen || []).includes(id)));
       const w = this.signLabelT.width + 20;
       this.signLabelG.clear();
       drawFrame(this.signLabelG, -w / 2, -13, w, 26, "dark", { noRivets: true, alpha: 0.92 });
@@ -721,7 +735,9 @@ export class CampScene extends Phaser.Scene {
       const a = Math.random() * Math.PI * 2;
       this.tweens.add({ targets: c, x: b.x + Math.cos(a) * (60 + Math.random() * 80), y: b.y - 60 + Math.sin(a) * 60 + 40, alpha: 0, duration: 1000 + Math.random() * 500, ease: "Cubic.easeOut", onComplete: () => c.destroy() });
     }
-    this._toast(`${name} chegou ao nível ${r.to}!`);
+    const opened = r.id === "trail" ? BIOME_IDS.find((id) => BIOMES[id].unlock?.trail === r.to) : null;
+    if (opened) this._say(`A trilha está aberta! Escolha a ${BIOMES[opened].name} na placa e siga pela mata.`);
+    else this._toast(`${name} chegou ao nível ${r.to}!`);
     Analytics.track("build_done", { id: r.id, level: r.to });
     this._refreshBuildVisuals();
     this._refreshAll();
@@ -729,7 +745,7 @@ export class CampScene extends Phaser.Scene {
 
   // Construções que o João-de-barro pode melhorar (as já reveladas)
   _workIds() {
-    return ["fire", "shrine", "forge", "garden", "pond"].filter((id) => this._isShown(id));
+    return ["fire", "shrine", "forge", "garden", "pond", "trail"].filter((id) => this._isShown(id));
   }
 
   // Aviso curto no alto da tela
@@ -793,10 +809,59 @@ export class CampScene extends Phaser.Scene {
     this.tweens.add({ targets: this.elder, scaleY: (S + 1) * 1.06, duration: 120, yoyo: true });
   }
 
-  // Placa da trilha: escolher o Perigo (os não vencidos ficam trancados)
+  // Placa da trilha: escolher o MAPA (bioma, depois da Trilha do Sertão) e o
+  // Perigo (os não vencidos ficam trancados)
   _showDifficulty() {
-    const m = new Modal(this, { title: "PERIGO", subtitle: "Mais perigo, mais recompensa. Vença um nível para liberar o próximo.", w: 760, h: 560 });
+    const biomes = this._isShown("trail");
+    const m = new Modal(this, {
+      title: biomes ? "TRILHA" : "PERIGO",
+      subtitle: biomes ? "Escolha o mapa e o perigo. Mais perigo, mais recompensa." : "Mais perigo, mais recompensa. Vença um nível para liberar o próximo.",
+      w: 760,
+      h: biomes ? 640 : 560,
+    });
     const list = this._modalList(m);
+    if (biomes) {
+      this._section(list, "MAPA");
+      const ICON = { amazonia: ["env", "tree0", 1.1], caatinga: ["env_caatinga", "mandacaru0", 1.15] };
+      const curB = this.meta.selectedBiome;
+      for (const id of BIOME_IDS) {
+        const b = BIOMES[id];
+        const open = this.meta.biomeOpen(id);
+        const sel = id === curB;
+        const [icon, iconFrame, iconScale] = ICON[id] ?? ["ico_skull", 0, 3];
+        const wins = this.meta.biomeWins()[id] || 0;
+        list.addRow(
+          this._shopRow({
+            h: 76,
+            icon: open ? icon : "ico_lock",
+            iconFrame: open ? iconFrame : 0,
+            iconScale: open ? iconScale : 3,
+            dim: !open,
+            name: b.name,
+            nameColor: open ? (sel ? CSS.green : CSS.goldHi) : CSS.dim,
+            desc: open
+              ? `${b.desc}${wins ? ` · Vitórias: ${wins}` : ""}`
+              : `Obra do João-de-barro: ${BUILDINGS.trail.name} (nível ${b.unlock.trail})`,
+            right: sel ? "ESCOLHIDO" : open ? "ESCOLHER" : "",
+            rightColor: sel ? CSS.green : CSS.txt,
+            style: sel ? "green" : open ? "button" : "dark",
+            onTap:
+              open && !sel
+                ? () => {
+                    this.meta.setSelectedBiome(id);
+                    const seen = (this.meta.data.biomesSeen ||= []);
+                    if (!seen.includes(id)) seen.push(id);
+                    this.meta._save();
+                    m.close();
+                    this._refreshAll();
+                    this._showDifficulty();
+                  }
+                : null,
+          }),
+        );
+      }
+      this._section(list, "PERIGO");
+    }
     const last = DIFFICULTY.length - 1;
     const maxSel = this.meta.maxSelectableDifficulty(last);
     const cur = Math.min(this.meta.selectedDifficulty, maxSel);

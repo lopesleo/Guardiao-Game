@@ -18,7 +18,7 @@ import { Timeline, FightLog, WeakSpot, distTo, inLane, angDiff } from "../system
 const TAU = Math.PI * 2;
 
 // Encurta uma reta para não sair da arena (investidas)
-function clampLen(x, y, ang, len, m = 70) {
+export function clampLen(x, y, ang, len, m = 70) {
   const c = Math.cos(ang),
     s = Math.sin(ang);
   let L = len;
@@ -28,7 +28,7 @@ function clampLen(x, y, ang, len, m = 70) {
   if (s < -0.001) L = Math.min(L, (ARENA.minY + m - y) / s);
   return Math.max(80, L);
 }
-const clampPt = (x, y, m = 60) => ({
+export const clampPt = (x, y, m = 60) => ({
   x: Math.max(ARENA.minX + m, Math.min(ARENA.maxX - m, x)),
   y: Math.max(ARENA.minY + m, Math.min(ARENA.maxY - m, y)),
 });
@@ -36,7 +36,7 @@ const clampPt = (x, y, m = 60) => ({
 // ============================================================================
 // Base dos cérebros
 // ============================================================================
-class Brain {
+export class Brain {
   constructor(owner, kit, weakOffsetY = 0) {
     this.o = owner;
     this.s = owner.scene;
@@ -1353,17 +1353,32 @@ export class MapiBrain extends Brain {
 }
 
 // ============================================================================
-// BOSS — Mapinguari corrompido, 2 fases (corpo; quem decide é o MapiBrain)
+// Registro de CHEFES de bioma (BIOMES[id].boss em config.js): textura, animações,
+// corpo e o cérebro. Um chefe novo = um arquivo que chama registerBoss (como as
+// armas com registerWeapon) e é importado pela GameScene.
+// ============================================================================
+export const BOSS_DEFS = {
+  mapinguari: { tex: "mon_boss", idle: "boss_idle", fury: "boss_fury", scale: 1.1, body: [10, 15, 34], furySpeed: 90, Brain: MapiBrain },
+};
+export function registerBoss(id, def) {
+  BOSS_DEFS[id] = def;
+}
+
+// ============================================================================
+// BOSS — corpo de 2 fases (o Mapinguari por padrão; quem decide é o Brain do def)
 // ============================================================================
 export class BossEnt extends Phaser.Physics.Arcade.Sprite {
-  constructor(scene, x, y) {
-    super(scene, x, y, "mon_boss", 0);
+  constructor(scene, x, y, id = "mapinguari") {
+    const def = BOSS_DEFS[id] ?? BOSS_DEFS.mapinguari;
+    super(scene, x, y, def.tex, 0);
+    this.def = def;
+    this.bossId = id;
     scene.add.existing(this);
     scene.physics.add.existing(this);
-    this._bossScale = GAME.PIXEL_SCALE * 1.1; // arte de 50×56 → ~165px: chefe tem que impor
+    this._bossScale = GAME.PIXEL_SCALE * def.scale; // arte de ~50×56 → ~165px: chefe tem que impor
     this.setScale(this._bossScale);
-    this.body.setCircle(10, 15, 34);
-    this.play("boss_idle");
+    this.body.setCircle(...def.body);
+    this.play(def.idle);
     this.shadow = scene.add
       .image(x, y, "px_shadow")
       .setScale((GAME.PIXEL_SCALE * this.displayWidth) / 48)
@@ -1401,12 +1416,12 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this._furyPulse?.stop();
     this._furyPulse = null;
     this.clearTint();
-    this.play("boss_idle");
+    this.play(this.def.idle);
     this.setActive(true).setVisible(true);
     this.body.enable = true;
     this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46).setVisible(true);
     this.brain?.dispose();
-    this.brain = new MapiBrain(this);
+    this.brain = new this.def.Brain(this);
   }
 
   deactivate() {
@@ -1440,7 +1455,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     const scene = this.scene;
     const DURATION = 1300;
     this.phase = 2;
-    this.speed = 90;
+    this.speed = this.def.furySpeed ?? 90;
     this.brain?.cancelMove();
     if (this.brain) {
       this.brain.phase = 2;
@@ -1456,7 +1471,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     scene.sound.play("sfx_boss_roar", { volume: 0.85 });
     scene.hud?.showBossBanner("FÚRIA!");
     const base = this._bossScale;
-    this.play("boss_fury");
+    this.play(this.def.fury);
     this._furyPulse = scene.tweens.add({
       targets: this,
       scaleX: base * 1.14,

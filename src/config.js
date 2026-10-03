@@ -120,6 +120,22 @@ export const BOSS_FIGHT = {
     GAZE: { windupMs: 1250, sweepMs: 1150, arc: 1.7, len: 600, blind: 80, startPx: 90, halfWidth: 0.075, dmg: 1.3, exposedMs: 1300 },
     FAN: { windupMs: 720, n: 7, spread: 0.16, speed: 230 },
   },
+  // Caboclo d'Água (chefe da Caatinga): o rio que ele traz para o sertão
+  CABOCLO: {
+    GAP_MS: [1500, 950],
+    // Cheia: faixas paralelas de água na direção do herói (fúria: depois, outra em cruz)
+    CHEIA: { windupMs: 1050, crossWindupMs: 800, lanes: [3, 4], width: 84, period: 210, back: 240, len: 1150, liveMs: 520, dmg: 0.9 },
+    // Rebojo: redemoinhos que puxam (devagar: andar sempre vence) e engolem quem ficar
+    REBOJO: { warnMs: 1400, n: [3, 4], r: 84, sep: 235, pull: 58, pullR: 150, dmg: 1.0 },
+    // Arrastão: investida em faixa. Na CARRANCA ele se espanta: fica exposto bem mais tempo
+    ARRASTAO: { windupMs: 850, len: 560, width: 112, speed: 660, dmg: 1.1, exposedMs: 800, scaredMs: 2600, scaredMult: 1.8 },
+    // Pedras do Rio: pedras caem onde o herói está, uma atrás da outra
+    PEDRADA: { warnMs: 820, n: [3, 5], everyMs: 430, r: 62, dmg: 0.8 },
+    // Tromba d'Água (fúria): coluna d'água que persegue devagar e estoura no fim
+    TROMBA: { windupMs: 800, chaseMs: 3400, speed: 112, r: 46, splashWarnMs: 850, splashR: 110, dmg: 0.5, splashDmg: 1.0, exposedMs: 1400 },
+    // Carrancas: figuras de proa que espantam o Caboclo (lenda do São Francisco)
+    CARRANCAS: { n: 3, dist: 270, r: 34, respawnMs: 9000, far: 760, minBoss: 150 },
+  },
 };
 
 // Elementos & reações (D11, D21)
@@ -1269,7 +1285,55 @@ export const LEGENDS = [
     origin: "Contada no interior do Sudeste: alguém tão cruel em vida que nem a terra o aceitou, e ficou seco, vagando. Aqui, a Podridão o levantou." },
   { id: "mapinguari", name: "Mapinguari", sprite: ["mon_boss", 4, 1.2], role: "Chefe · bocarra na barriga, grito e o olho da Podridão",
     origin: "Gigante da Amazônia, peludo, com um olho na testa e a boca na barriga. Há quem ligue a lenda às preguiças-gigantes extintas. Vencê-lo o liberta." },
+  { id: "caboclo", name: "Caboclo d'Água", sprite: ["mon_caboclo", 4, 1.3], role: "Chefe da Caatinga · cheia, rebojo e arrastão; foge das carrancas",
+    origin: "Guardião do Rio São Francisco: vira canoas de quem maltrata o rio. Os barqueiros punham carrancas na proa para espantá-lo. A Podridão o trouxe para o sertão seco." },
 ];
+
+// Biomas (mapas) — ver docs/BIOMAS.md. UMA ficha por bioma: o cenário (ForestWorld),
+// a luz, a troca de arte dos inimigos, o perigo do terreno, o chefe e a música saem daqui.
+// Desbloqueio: unlock.trail = nível da obra "Trilha" (João-de-barro) que abre o caminho.
+export const BIOMES = {
+  amazonia: {
+    name: "Floresta Amazônica",
+    desc: "A mata fechada da Clareira. O Mapinguari espera no fim.",
+    env: "envKeys",
+    bg: 0x1d3926,
+    // ambiente da luz: fim de tarde → noite → chefe
+    light: { dusk: [0xd6, 0xce, 0xd8], night: [0x4a, 0x4e, 0x74], boss: [0x3e, 0x34, 0x5e] },
+    ambient: { fireflies: 14, leaves: 9, leafTint: 0xe0a050, shaft: 0xfff2b0, dust: 0 },
+    looks: {},
+    boss: "mapinguari",
+    bossName: "Mapinguari",
+    wake: "O Mapinguari corrompido desperta…",
+    freed: "O Mapinguari está livre da Podridão. A floresta respira.",
+    music: "music_gameplay",
+    bossMusic: "music_boss",
+  },
+  caatinga: {
+    name: "Caatinga",
+    desc: "O sertão seco: mandacarus, lajedos e redemoinhos de poeira. O Caboclo d'Água trouxe o rio.",
+    env: "envKeysCaatinga",
+    bg: 0x8c6a42,
+    light: { dusk: [0xf0, 0xd2, 0xae], night: [0x56, 0x4a, 0x6c], boss: [0x34, 0x44, 0x66] }, // sol forte → noite quente → o rio (azul)
+    ambient: { fireflies: 3, leaves: 4, leafTint: 0xb89060, shaft: 0xffd890, dust: 18 },
+    // arte do sertão no lugar da mata: lobo → calango, corvo → carcará, cogumelo → cabeça-de-frade
+    looks: { wolf: "calango", crow: "carcara", shroom: "frade" },
+    hazard: "dust",
+    wallPines: 1, // muralha: mais juazeiro e árvore seca, menos mandacaru
+    boss: "caboclo",
+    bossName: "Caboclo d'Água",
+    wake: "O rio sobe no sertão… o Caboclo d'Água desperta!",
+    freed: "O Caboclo d'Água está livre. O rio volta para o São Francisco.",
+    music: "music_caatinga",
+    bossMusic: "music_boss_caatinga",
+    unlock: { trail: 2, won: "amazonia" },
+  },
+};
+export const BIOME_IDS = Object.keys(BIOMES);
+
+// Redemoinhos de poeira (perigo do terreno da Caatinga): andam pelo mapa, empurram o
+// herói (sem dano) e deixam VENTADO quem passa por eles — o fogo do herói vira Labareda.
+export const DUST_DEVIL = { firstMs: 25000, everyMs: [16000, 9000], max: 2, r: 64, lifeMs: 9000, speed: 70, push: 150, enemyWindMs: 2500 };
 
 // Obras da Clareira (níveis das construções): custam moedas + Madeira Ancestral
 // e levam tempo real, feitas pelo João-de-barro (1 obra por vez). Partidas
@@ -1302,6 +1366,8 @@ export const BUILDINGS = {
   forge: { name: "Forja", max: 4 },
   garden: { name: "Horta", max: 4 }, // nível → canteiros (GARDEN.PLOTS) e plantas
   pond: { name: "Lago", max: 3 }, // nível → vara melhor e mais peixes (FISHING.LEVELS)
+  // nível → biomas abertos (BIOMES[id].unlock.trail); aparece depois de vencer o Mapinguari
+  trail: { name: "Trilha do Sertão", max: 2, steps: [null, { coins: 600, wood: 10, min: 60 }] },
 };
 
 // Madeira Ancestral: material das obras da Clareira. Rara de propósito — as
@@ -1701,6 +1767,9 @@ export const ACHIEVEMENTS = [
   { id: "clear_d2", name: "Veterano de Guerra", desc: "Vença no Perigo Veterano", check: wonAt(2) },
   { id: "clear_d3", name: "Implacável", desc: "Vença no Perigo Implacável", check: wonAt(3) },
   { id: "clear_d4", name: "Senhor do Pesadelo", desc: "Vença no Perigo Pesadelo", check: wonAt(4) },
+  // — Biomas —
+  { id: "win_caatinga", name: "Cabra da Peste", desc: "Liberte o Caboclo d'Água na Caatinga", check: (c) => (c.winsByBiome?.caatinga || 0) > 0 },
+  { id: "carrancas_10", name: "Mestre Carranqueiro", desc: "Espante o Caboclo d'Água com carrancas 10 vezes", check: (c) => (c.stats?.carrancas || 0) >= 10 },
   // — Armas —
   { id: "wmax_staff", name: "Cajado Ancestral", desc: "Leve o Cajado ao nível 5", check: weaponMax("STAFF") },
   { id: "wmax_boomer", name: "Retorno Perfeito", desc: "Leve a Vara Encantada ao nível 5", check: weaponMax("BOOMER") },

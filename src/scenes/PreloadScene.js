@@ -2,6 +2,8 @@
 // src/audio/). As etapas rodam uma por frame pra barra de progresso andar em
 // vez de a tela congelar enquanto sintetiza as músicas.
 import { registerEnvironment } from "../art/Environment.js";
+import { registerCaatinga } from "../art/EnvCaatinga.js";
+import { registerCaatingaMonsters } from "../art/MonstersCaatinga.js";
 import { registerIcons } from "../art/Icons.js";
 import { registerSprites } from "../art/Sprites.js";
 import { registerHeroes } from "../art/Hero.js";
@@ -36,10 +38,11 @@ export class PreloadScene extends Phaser.Scene {
 
     const steps = [
       ["Plantando a floresta…", () => this.registry.set("envKeys", registerEnvironment(this))],
+      ["Secando o sertão…", () => this.registry.set("envKeysCaatinga", registerCaatinga(this))],
       ["Talhando ícones…", () => registerIcons(this)],
       ["Acendendo vaga-lumes…", () => registerSprites(this)],
       ["Despertando o Guardião…", () => { registerHeroes(this); registerHeroRig(this); }],
-      ["Corrompendo criaturas…", () => registerMonsters(this)],
+      ["Corrompendo criaturas…", () => { registerMonsters(this); registerCaatingaMonsters(this); }],
       ["Afiando garras…", () => registerTelegraphs(this)],
       ["Acendendo cogumelos…", () => registerLanterns(this)],
       ["Erguendo os santuários…", () => registerShrines(this)],
