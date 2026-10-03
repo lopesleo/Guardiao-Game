@@ -2,6 +2,7 @@
 // (que renderizam diferente em cada Android e quebravam a identidade visual).
 // Uso: scene.add.image(x, y, "ico_heart").setScale(3)
 import { PAL } from "./Palette.js";
+import { WEAPONS } from "../config.js";
 import { Pix } from "./PixelArt.js";
 
 // Legenda base — cada letra é uma cor da paleta
@@ -497,6 +498,87 @@ const MAPS = {
     "klk.klk",
     "kk...kk",
   ],
+  // ---- leva 3 ----
+  // Açoite de Urtiga: cipó com folhas e ponta em brasa
+  lash: [
+    "..........kk",
+    ".........kok",
+    "........kgk.",
+    ".......kgk..",
+    "......kgek..",
+    ".....kGgk...",
+    "...kkGgk....",
+    "..kGgGk.....",
+    ".kGgkk......",
+    "kmmk........",
+    "kmk.........",
+    "kk..........",
+  ],
+  // Bola de Ouro
+  goldball: [
+    "...kkkkk...",
+    "..kyzzzyk..",
+    ".kyzwwzzyk.",
+    "kyzwwzzzzyk",
+    "kyzwzzzzyOk",
+    "kyzzzzzzyOk",
+    "kyyzzzzyyOk",
+    ".kyyyyyyOk.",
+    "..kOOOOOk..",
+    "...kkkkk...",
+  ],
+  // Miragem: cabeça do veado branco, galhada e olho de fogo
+  mirage: [
+    ".k.k...k.k.",
+    "kck.k.k.kck",
+    ".kck.k.kck.",
+    "..kccccck..",
+    "..kcwwwck..",
+    ".kcwowwck..",
+    ".kcwwwwwck.",
+    "..kcwwwwck.",
+    "...kcccck..",
+    "....kkkk...",
+  ],
+  // Fogueira de São João
+  bonfire: [
+    ".....kk.....",
+    "....kzhk....",
+    "...kzhohk...",
+    "..kzhoohk.k.",
+    ".khzooOohkhk",
+    ".khoOOOohhk.",
+    "..kkkkkkkk..",
+    ".kmnnmmnnmk.",
+    "kkkkkkkkkkkk",
+  ],
+  // Boleadeira: três pedras e a corda
+  bolas: [
+    "....kk.....",
+    "...kssk....",
+    "...kask....",
+    "....kl.....",
+    "....l......",
+    "...l.l.....",
+    "..l...l....",
+    ".kk...kk...",
+    "kssk.kssk..",
+    "kask.kask..",
+    ".kk...kk...",
+  ],
+  // Tambor do Trovão
+  drum: [
+    "..q.....q..",
+    ".kpk...kpk.",
+    "..kkkkkkk..",
+    ".klllllllk.",
+    "kNlllllllNk",
+    "kRRrRRrRRRk",
+    "kRrRRrRRrRk",
+    "kRRrRRrRRRk",
+    ".kRRRRRRRk.",
+    "..kkkkkkk..",
+  ],
   sword: [
     "........kkk",
     ".......kalk",
@@ -525,6 +607,13 @@ const RECOLOR = {
   firefly_gold: { base: "firefly", swap: { a: "z", S: "Y", x: "y" } }, // Revoada
   hail_storm: { base: "hail", swap: { a: "p", s: "P" } }, // Tempestade de Granizo
   whirl_fire: { base: "whirl", swap: { q: "z", p: "o", P: "O" } }, // Redemoinho de Brasa
+  // evoluções da leva 3: a mesma arma na "tinta" do elemento que ela soma
+  lash_ice: { base: "lash", swap: { o: "c", g: "b", G: "B", e: "c" } }, // Laçada de Urtiga
+  bolas_storm: { base: "bolas", swap: { s: "p", a: "q" } }, // Minuano
+  drum_fire: { base: "drum", swap: { q: "z", p: "o" } }, // Trovão de Brasa
+  bonfire_gold: { base: "bonfire", swap: { o: "y", O: "Y", h: "z" } }, // Arraial
+  goldball_ice: { base: "goldball", swap: { y: "b", z: "c", O: "B" } }, // Ouro Encantado
+  mirage_fire: { base: "mirage", swap: { c: "h", o: "r" } }, // Visagem
 };
 
 export function registerIcons(scene) {
@@ -544,27 +633,11 @@ export function registerIcons(scene) {
   }
 }
 
-// Ícone por arma (chave de WEAPONS) e por passiva (id de PASSIVES)
-export const WEAPON_ICON = {
-  STAFF: "ico_staff",
-  AURA: "ico_aura",
-  BOOMER: "ico_boomer",
-  CHAIN: "ico_bolt",
-  ORB: "ico_orb",
-  FLAME: "ico_flame",
-  VAPOR_STORM: "ico_cloud_hot",
-  OVERLOAD_X: "ico_bolt_gold",
-  WINTER_HEART: "ico_heart_ice",
-  PHOENIX: "ico_flame_pink",
-  GLACIER: "ico_orb_frost",
-  INFERNO: "ico_flame_red",
-  FIREFLY: "ico_firefly",
-  HAIL: "ico_hail",
-  WHIRL: "ico_whirl",
-  SWARM: "ico_firefly_gold",
-  HAILSTORM: "ico_hail_storm",
-  FIRE_WHIRL: "ico_whirl_fire",
-};
+// Ícone por arma: vem da ficha (WEAPONS[k].icon)
+export const WEAPON_ICON = Object.fromEntries(Object.entries(WEAPONS).map(([k, d]) => [k, d.icon]));
+
+// Todas as texturas de ícone que registerIcons cria (o verificador de conteúdo usa)
+export const ICON_KEYS = () => [...Object.keys(MAPS), ...Object.keys(RECOLOR)].map((k) => "ico_" + k);
 
 export const PASSIVE_ICON = {
   hp: "ico_heart",

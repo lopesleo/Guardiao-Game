@@ -2,41 +2,19 @@
 //   nova arma (peso 3) · melhoria de arma (peso 4) · passiva (peso 1 cada).
 // Sem peso, as 11 passivas soterravam as armas — builds ficavam aleatórias.
 // Evolução elegível = carta garantida.
-import { WEAPONS, MAX_WEAPON_LEVEL, PASSIVES, PASSIVE_SLOTS, CARDS, RESONANCE, PACTS } from "../config.js";
+import { WEAPONS, BASE_WEAPON_KEYS, MAX_WEAPON_LEVEL, PASSIVES, PASSIVE_SLOTS, CARDS, RESONANCE, PACTS } from "../config.js";
 import { Analytics } from "./Analytics.js";
 import { weaponSlotsFor, Builds } from "./Builds.js";
 import { WEAPON_ICON, PASSIVE_ICON } from "../art/Icons.js";
 import { WEAPON_CLASSES } from "../entities/Weapons.js";
+import { linkHint } from "./Links.js";
 
-// Ordem = ordem de exibição no menu de desbloqueio
-export const BASE_WEAPONS = ["STAFF", "AURA", "BOOMER", "CHAIN", "ORB", "FLAME", "FIREFLY", "HAIL", "WHIRL"];
-
-export const WEAPON_DESC = {
-  STAFF: "Bola de fogo no inimigo mais próximo.",
-  AURA: "Campo gélido: dano contínuo e congela quem demora dentro.",
-  BOOMER: "A vara da Caipora, acesa no fumo: gira, atravessa e volta.",
-  CHAIN: "Raio de dano alto; prefere alvos já afetados.",
-  ORB: "Orbes de gelo giram ao seu redor e resfriam quem tocam.",
-  FLAME: "Sopro de fogo em cone na direção em que você anda.",
-  FIREFLY: "Vaga-lumes teleguiados caçam inimigos diferentes.",
-  HAIL: "Granizo cai em inimigos pela tela; congela quem já está gelado.",
-  WHIRL: "Redemoinho do Saci persegue o bando e puxa todos para o centro.",
-};
-
-const WEAPON_MODS = {
-  STAFF: ["dmg", "cd", "range", "proj"],
-  AURA: ["dmg", "cd", "range"],
-  BOOMER: ["dmg", "cd", "range"],
-  CHAIN: ["dmg", "cd", "range", "proj"],
-  ORB: ["dmg", "proj", "range"],
-  FLAME: ["dmg", "cd", "range"],
-  FIREFLY: ["dmg", "cd", "range", "proj"],
-  HAIL: ["dmg", "cd", "range", "proj"],
-  WHIRL: ["dmg", "cd", "range", "proj"],
-};
-
-// Texto da melhoria "+1" de cada arma (o padrão é projétil)
-const PROJ_LABEL = { ORB: "+1 Orbe", FIREFLY: "+1 Vaga-lume", HAIL: "+1 Pedra", WHIRL: "+1 Redemoinho" };
+// Tudo sai das fichas de WEAPONS (config.js): ordem das armas base, texto da carta,
+// melhorias sorteáveis (mods) e o rótulo do "+1" (plus). Ver docs/CONTEUDO.md.
+export const BASE_WEAPONS = BASE_WEAPON_KEYS;
+export const WEAPON_DESC = Object.fromEntries(Object.entries(WEAPONS).map(([k, d]) => [k, d.desc]));
+const WEAPON_MODS = Object.fromEntries(BASE_WEAPON_KEYS.map((k) => [k, WEAPONS[k].mods ?? ["dmg"]]));
+const PROJ_LABEL = Object.fromEntries(BASE_WEAPON_KEYS.filter((k) => WEAPONS[k].plus).map((k) => [k, WEAPONS[k].plus]));
 
 // Sorteio ponderado sem reposição
 function weightedPick(list, n) {
@@ -139,7 +117,7 @@ export class UpgradeSystem {
           type: "new",
           weaponKey: key,
           title: WEAPONS[key].name,
-          desc: WEAPON_DESC[key] + this._resonanceHint(player, WEAPONS[key].element),
+          desc: WEAPON_DESC[key] + this._resonanceHint(player, WEAPONS[key].element) + linkHint(player, key),
           stat: "Nova arma",
           icon: WEAPON_ICON[key],
           element: WEAPONS[key].element,
@@ -266,19 +244,7 @@ export class UpgradeSystem {
   }
 
   _evoDesc(key) {
-    return (
-      {
-        VAPOR_STORM: "As bolas de fogo EXPLODEM em nuvem escaldante no impacto.",
-        OVERLOAD_X: "O raio SALTA em cadeia entre até 5 inimigos.",
-        WINTER_HEART: "A aura pulsa NOVAS de estilhaços que congelam de longe.",
-        PHOENIX: "A vara vira a cobra de fogo: RASTRO DE CHAMAS pelo caminho.",
-        GLACIER: "Os orbes crescem e CONGELAM na hora quem tocam.",
-        INFERNO: "O sopro vira um INFERNO que deixa o chão em chamas.",
-        SWARM: "Mais vaga-lumes; cada um que acerta se DIVIDE em dois.",
-        HAILSTORM: "Pedras que CONGELAM na hora, e um RAIO do céu as estilhaça.",
-        FIRE_WHIRL: "Funil de BRASA: alterna fogo e raio e causa SOBRECARGA.",
-      }[key] || WEAPONS[key].name
-    );
+    return WEAPONS[key].desc || WEAPONS[key].name;
   }
 
   apply(card, player) {

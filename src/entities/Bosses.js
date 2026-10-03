@@ -64,7 +64,10 @@ class Brain {
     return Math.atan2(this.p.y - this.o.y, this.p.x - this.o.x);
   }
   slow() {
-    return this.o.statuses?.ice ? 0.5 : 1;
+    let k = this.o.statuses?.ice ? 0.5 : 1;
+    // amarrado pela Boleadeira: metade do efeito em chefe (nunca fica preso de vez)
+    if ((this.o._bindUntil ?? 0) > this.s.time.now) k *= Math.max(0.5, this.o._bindSlow ?? 1);
+    return k;
   }
   caption(text) {
     this.s.hud?.bossMove?.(text);
@@ -268,7 +271,7 @@ export class MulaBrain extends Brain {
         this.sfx("sfx_drain", { volume: 0.25, rate: 1.6 });
       },
       tick: () => {
-        if (Math.random() < 0.25) s.fx?.burst("glow", this.neck().x, this.neck().y, 1, -90, 40, 30, PAL.s3);
+        if (Math.random() < 0.25) s.fx?.burst("glow", this.neck().x, this.neck().y, 1, -Math.PI / 2, 40, 30, PAL.s3);
       },
     });
     return this.timeline(steps, bag, () => this.restore());
@@ -319,7 +322,7 @@ export class MulaBrain extends Brain {
             s.cameras.main.shake(140, 0.006);
             const hx = o.x + Math.cos(ang) * 40,
               hy = o.y + Math.sin(ang) * 40;
-            s.fx?.burst("spark", hx, hy, 10, (ang * 180) / Math.PI, 90, 220, PAL.yel3);
+            s.fx?.burst("spark", hx, hy, 10, ang, 90, 220, PAL.yel3);
             s.fx?.ring?.(hx, hy, PAL.org3, 10, K.range * 0.8, 260, 0.62, 0.9);
             if (inCone()) {
               // empurrão de K.push px (velocidade que decai em 240 ms)
@@ -526,7 +529,7 @@ export class SecoBrain extends Brain {
             // poeira seca subindo na borda
             if (Math.random() < 0.4) {
               const a = Math.random() * TAU;
-              s.fx?.burst("glow", o.x + Math.cos(a) * r, o.y + Math.sin(a) * r, 1, -90, 30, 40, PAL.straw2);
+              s.fx?.burst("glow", o.x + Math.cos(a) * r, o.y + Math.sin(a) * r, 1, -Math.PI / 2, 30, 40, PAL.straw2);
             }
           },
         },
@@ -575,7 +578,7 @@ export class SecoBrain extends Brain {
           tick: (k) => {
             o.setScale(base * (1 + 0.15 * k), base * (1 - 0.85 * k));
             o.setAlpha(1 - k * k);
-            if (Math.random() < 0.5) s.fx?.burst("glow", o.x + (Math.random() - 0.5) * 50, footY(), 1, -90, 60, 50, PAL.n3);
+            if (Math.random() < 0.5) s.fx?.burst("glow", o.x + (Math.random() - 0.5) * 50, footY(), 1, -Math.PI / 2, 60, 50, PAL.n3);
           },
           exit: () => {
             this._contact = o.contactRadius;
@@ -611,7 +614,7 @@ export class SecoBrain extends Brain {
               pixelLine(cracks, last.x - nx, last.y - ny, o.x - nx, fy - ny, ROT.mid, 0.9);
               pixelLine(cracks, last.x, last.y, o.x, fy, ROT.glow, 1);
               last = { x: o.x, y: fy };
-              s.fx?.burst("glow", o.x, fy, 3, -90, 100, 80, PAL.n4);
+              s.fx?.burst("glow", o.x, fy, 3, -Math.PI / 2, 100, 80, PAL.n4);
             }
           },
         },

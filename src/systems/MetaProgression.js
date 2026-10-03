@@ -300,16 +300,28 @@ export class MetaProgression {
     return idx <= this.data.maxDifficultyCleared + 1;
   }
 
-  // Feito da Forja de uma arma: { text, p, n, done } (sem feito = null)
-  weaponDeed(weaponKey) {
-    const def = META.WEAPON_DEED?.[weaponKey];
+  // Progresso de um FEITO { stat, n, text } → { text, p, n, done }. stat ∈ DEED_STATS.
+  deedProgress(def) {
     if (!def) return null;
     const s = this.data.stats;
     const p =
       def.stat === "kills" ? s.totalKills || 0
       : def.stat === "win1" ? Object.entries(this.data.winsByDifficulty || {}).reduce((a, [k, v]) => a + (Number(k) >= 1 ? v : 0), 0)
+      : def.stat in s ? s[def.stat] || 0
       : (s.reactions || {})[def.stat] || 0;
     return { text: def.text.replace("{n}", def.n.toLocaleString("pt-BR")), p: Math.min(p, def.n), n: def.n, done: p >= def.n };
+  }
+  // Feito da Forja de uma arma (sem feito = null)
+  weaponDeed(weaponKey) {
+    return this.deedProgress(META.WEAPON_DEED?.[weaponKey]);
+  }
+  // Feito de um guardião da leva 3 (sem feito = null)
+  characterDeed(id) {
+    return this.deedProgress(META.CHARACTER_DEED?.[id]);
+  }
+  // Contadores dos feitos novos (minichefes, baús, "desviou de tudo")
+  recordStat(key, n = 1) {
+    this.data.stats[key] = (this.data.stats[key] || 0) + n;
   }
   deedDone(weaponKey) {
     return this.weaponDeed(weaponKey)?.done ?? true;
@@ -384,6 +396,7 @@ export class MetaProgression {
   }
   unlockCharacter(id, cost) {
     if (this.hasCharacter(id)) return false;
+    if (this.characterDeed(id) && !this.characterDeed(id).done) return false;
     if (this.data.totalCoins < cost) return false;
     this.data.totalCoins -= cost;
     this.data.unlockedCharacters.push(id);

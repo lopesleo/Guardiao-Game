@@ -3,6 +3,9 @@
 //   huntress → Caipora (cabeleira de folhas, protetora dos bichos, vara encantada)
 //   druid    → Iara (senhora das águas, cabelo longo, vestido de escamas)
 //   shaman   → Saci (uma perna só, gorro vermelho, redemoinho elétrico)
+//   fulozinha → Comadre Fulozinha (cabelo negro comprido, vestido branco, urtiga)
+//   maedoouro → Mãe-do-Ouro (cabelo dourado, vestido de seda, bola de fogo de ouro)
+//   anhanga  → Anhangá (veado branco de olhos de fogo, galhada com pelo)
 // Retratos respeitosos: heróis espertos e poderosos, sem caricatura; Saci sem
 // cachimbo; Caipora sem peles de animal (ela protege os bichos).
 // Desenho por primitivas, virados para a DIREITA. Quadros: 0-1 parado
@@ -266,12 +269,190 @@ function drawSaci(pose, frame) {
   return p;
 }
 
+
+// ---------------------------------------------------------------------------
+// COMADRE FULOZINHA — cabocla miúda do Nordeste: cabelo negro comprido até o
+// chão, vestido branco, flor no cabelo e um ramo de urtiga na mão
+// ---------------------------------------------------------------------------
+const HAIR_BLACK = [0x1c1824, 0x2c2638, 0x3e3650];
+function drawFulozinha(pose) {
+  const p = new Pix(HERO_W, HERO_H);
+  const b = pose.bob;
+  const sway = pose.step; // o cabelo balança ao andar
+  // Cabelo comprido atrás, quase até os pés
+  for (let y = 5 + b; y <= 25; y++)
+    for (let x = 5; x <= 10; x++) {
+      if (x === 5 && y < 9 + b) continue;
+      if (y > 21 && x === 10) continue;
+      const xx = x - (y > 18 ? sway : 0);
+      p.set(xx, y, x === 7 && y % 3 === 0 ? HAIR_BLACK[2] : y % 4 === 1 ? HAIR_BLACK[1] : HAIR_BLACK[0]);
+    }
+  // Pés descalços aparecendo sob o vestido
+  leg(p, 10 - (pose.step > 0 ? 1 : 0), 23, pose.step < 0 ? 1 : 0, SKIN.base, SKIN.shade);
+  leg(p, 13 + (pose.step < 0 ? 1 : 0), 23, pose.step > 0 ? 1 : 0, SKIN.base, SKIN.shade);
+  // Vestido branco (rodado, com barra rendada)
+  torso(p, 12 + b, 22, 9, 14, 2, 2, [PAL.cream, PAL.white, PAL.white]);
+  for (let x = 7; x <= 16; x++) if (p.get(x, 22) && x % 2) p.set(x, 22, PAL.s3);
+  for (let y = 15 + b; y <= 21; y += 3) p.set(12, y, PAL.s4); // dobras
+  // Braço com o ramo de urtiga (folhas serrilhadas e florzinhas brancas)
+  for (let x = 15; x <= 18; x++) p.set(x, 14 + b, SKIN.base);
+  for (let y = 6 + b; y <= 19 + b; y++) p.set(19, y, PAL.g3);
+  for (let i = 0; i < 5; i++) {
+    const y = 7 + b + i * 2.5;
+    p.set(20, Math.round(y), PAL.g5);
+    p.set(21, Math.round(y) + 1, PAL.g4);
+    p.set(18, Math.round(y) + 1, PAL.g5);
+  }
+  p.set(20, 5 + b, PAL.cream);
+  p.set(18, 8 + b, PAL.cream);
+  // Cabeça
+  head(p, 11.5, 8.5 + b, 4, 3.8, SKIN);
+  eye(p, 13, 8 + b);
+  p.set(13, 10 + b, SKIN.shade);
+  // Cabelo por cima (franja) + flor
+  for (let x = 8; x <= 15; x++) p.set(x, 4 + b, x > 13 ? HAIR_BLACK[1] : HAIR_BLACK[0]);
+  for (let x = 8; x <= 12; x++) p.set(x, 5 + b, HAIR_BLACK[0]);
+  p.set(15, 5 + b, HAIR_BLACK[0]);
+  p.set(9, 3 + b, PAL.pink);
+  p.set(10, 3 + b, PAL.yel3);
+  p.set(11, 3 + b, PAL.pink);
+  p.set(10, 2 + b, PAL.pink);
+  p.outline(PAL.ink);
+  return p;
+}
+
+// ---------------------------------------------------------------------------
+// MÃE-DO-OURO — guardiã das serras: cabelo dourado longo, vestido de seda
+// branca; flutua (luz dourada sob a barra) com a bola de fogo de ouro na mão
+// ---------------------------------------------------------------------------
+const GOLD_HAIR = [PAL.yel1, PAL.yel2, PAL.yel3];
+function drawMaeDoOuro(pose, frame) {
+  const p = new Pix(HERO_W, HERO_H);
+  const b = pose.bob;
+  const fl = frame % 2; // a bola de fogo tremula
+  // Cabelo dourado longo atrás, ondulando
+  for (let y = 5 + b; y <= 21; y++)
+    for (let x = 5; x <= 10; x++) {
+      if (x === 5 && y < 9 + b) continue;
+      const w = Math.round(Math.sin(y * 0.7 + pose.step) * 0.6);
+      p.set(x + w, y, (x + y) % 4 === 0 ? GOLD_HAIR[2] : x < 8 ? GOLD_HAIR[1] : GOLD_HAIR[0]);
+    }
+  // Vestido de seda até o chão (flutua: sem pés)
+  torso(p, 12 + b, 24, 9, 14, 2, 3, [PAL.cream, PAL.white, PAL.white]);
+  for (let y = 15 + b; y <= 24; y++) if (p.get(15, y)) p.set(15, y, PAL.s4); // sombra da seda
+  for (let y = 14 + b; y <= 24; y++) if (y % 3 === 0) p.set(11, y, PAL.white);
+  for (let x = 8; x <= 16; x++) if (p.get(x, 24) && (x + pose.step) % 2) p.set(x, 24, PAL.yel3); // barra de ouro
+  // Luz dourada sob a barra (ela não pisa no chão)
+  p.set(10, 26, PAL.yel2);
+  p.set(12, 27 - fl, PAL.yel3);
+  p.set(14, 26, PAL.yel2);
+  // Braço estendido com a bola de fogo de ouro
+  for (let x = 15; x <= 18; x++) p.set(x, 14 + b, SKIN.base);
+  p.disc(20, 12 + b, 2.6, PAL.org2);
+  p.disc(20, 12 + b, 1.8, PAL.yel2);
+  p.set(20, 12 + b, PAL.white);
+  p.set(19 + fl, 9 + b, PAL.yel3);
+  p.set(21 - fl, 8 + b, PAL.org2);
+  // Cabeça
+  head(p, 11.5, 8.5 + b, 4, 3.8, SKIN);
+  eye(p, 13, 8 + b);
+  p.set(13, 10 + b, SKIN.shade);
+  // Topo do cabelo dourado + diadema
+  for (let x = 8; x <= 15; x++) p.set(x, 4 + b, x > 13 ? GOLD_HAIR[0] : GOLD_HAIR[1]);
+  for (let x = 8; x <= 12; x++) p.set(x, 5 + b, GOLD_HAIR[0]);
+  p.set(15, 5 + b, GOLD_HAIR[0]);
+  p.set(11, 3 + b, PAL.white);
+  p.set(12, 3 + b, PAL.yel3);
+  p.outline(PAL.ink);
+  return p;
+}
+
+// ---------------------------------------------------------------------------
+// ANHANGÁ — o veado branco protetor da caça: pelo branco, galhada coberta de
+// pelo, olhos de fogo. Quadrúpede (anda de lado, virado para a direita)
+// ---------------------------------------------------------------------------
+const DEER = [PAL.s3, PAL.s4, PAL.cream, PAL.white]; // sombra → luz
+function drawAnhanga(pose, frame) {
+  const p = new Pix(HERO_W, HERO_H);
+  const b = pose.bob;
+  const st = pose.step;
+  const ell = (cx, cy, rx, ry) => {
+    for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++)
+      for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
+        const dx = (x + 0.5 - cx) / rx,
+          dy = (y + 0.5 - cy) / ry;
+        if (dx * dx + dy * dy > 1) continue;
+        const l = -dx * 0.35 - dy * 0.85;
+        p.set(x, y, l > 0.45 ? DEER[3] : l > -0.15 ? DEER[2] : l > -0.6 ? DEER[1] : DEER[0]);
+      }
+  };
+  // Patas finas. Traseiras com jarrete (dobram para trás); dianteiras retas.
+  const hind = (x, swing, near) => {
+    const c = near ? DEER[2] : DEER[0];
+    for (let y = 17; y <= 21; y++) p.set(x + (y > 19 ? -1 : 0), y, c);
+    for (let y = 22; y <= FEET; y++) p.set(x - 1 + (y > 23 ? swing : 0), y, c);
+    p.set(x - 1 + swing, FEET, PAL.n2);
+  };
+  const fore = (x, swing, near) => {
+    const c = near ? DEER[2] : DEER[0];
+    for (let y = 17; y <= FEET; y++) p.set(x + (y > 22 ? swing : 0), y, c);
+    p.set(x + swing, FEET, PAL.n2);
+  };
+  hind(6, -st, false);
+  fore(17, st, false);
+  hind(8, st, true);
+  fore(15, -st, true);
+  // Corpo + peito mais fundo na frente
+  ell(11, 15 + b * 0.5, 7.2, 3.2);
+  ell(15.5, 15 + b * 0.5, 3, 3.6);
+  // Rabinho branco erguido
+  p.set(4, 13 + b, DEER[3]);
+  p.set(3, 12 + b, DEER[3]);
+  // Pescoço curto, inclinado para a frente
+  for (let i = 0; i < 4; i++) {
+    const x = 16 + i,
+      y = 13 + b - i;
+    p.set(x, y, DEER[3]);
+    p.set(x + 1, y, DEER[2]);
+    p.set(x + 1, y + 1, DEER[1]);
+  }
+  // Cabeça com focinho
+  ell(20, 8 + b, 2.4, 1.9);
+  for (const [x, y] of [[22, 8], [23, 8], [22, 9], [23, 9]]) p.set(x, y + b, DEER[1]);
+  p.set(23, 8 + b, PAL.s2); // focinho
+  // Olho de FOGO (tremula)
+  p.set(20, 7 + b, frame % 2 ? PAL.yel3 : PAL.org2);
+  // Orelha para trás
+  p.set(18, 6 + b, DEER[2]);
+  p.set(17, 6 + b, DEER[1]);
+  // Galhada coberta de pelo, ramificada e varrendo para trás (pontas claras)
+  // (pixels encostados em escada: sem diagonais soltas, o contorno não vira xadrez)
+  const ant = [
+    [19, 5], [19, 4], [18, 4], [18, 3], [17, 3], [17, 2], [16, 2], [16, 1], // haste de trás
+    [18, 2], [18, 1], // galho
+    [21, 5], [21, 4], [22, 4], [22, 3], [22, 2], [23, 2], // haste da frente
+    [21, 2], [21, 1], // galho
+  ];
+  for (const [x, y] of ant) p.set(x, y + b, y <= 2 ? DEER[3] : DEER[2]);
+  // Fiapos de névoa (é um espírito)
+  const wisp = (frame * 3) % 6;
+  p.set(1 + (wisp % 3), 17 - (wisp >> 1), PAL.ice3);
+  p.set(21, 17 + (frame % 3), PAL.ice3);
+  p.outline(PAL.ink);
+  return p;
+}
+// Um desenho por guardião (id = CHARACTERS[].id). O verificador confere que todo
+// guardião da config tem desenho aqui e poses em HeroRig.js.
 const DRAW = {
   guardian: (pose, i) => drawCurupira(pose, i % 2),
   huntress: (pose) => drawCaipora(pose),
   druid: (pose) => drawIara(pose),
   shaman: (pose, i) => drawSaci(pose, i),
+  fulozinha: (pose) => drawFulozinha(pose),
+  maedoouro: (pose, i) => drawMaeDoOuro(pose, i),
+  anhanga: (pose, i) => drawAnhanga(pose, i),
 };
+export const HERO_IDS = Object.keys(DRAW);
 
 // Registra hero_<id> (6 quadros) + animações <id>_idle / <id>_walk
 export function registerHeroes(scene) {

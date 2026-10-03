@@ -170,6 +170,10 @@ export const REACTION = {
 export const WEAPONS = {
   STAFF: {
     name: "Cajado",
+    desc: "Bola de fogo no inimigo mais próximo.",
+    icon: "ico_staff",
+    mods: ["dmg", "cd", "range", "proj"], // melhorias que as cartas sorteiam
+    unlock: { start: true },
     element: ELEMENT.FIRE,
     baseDmg: 10, // era 7: alvo único precisa render no chefe (laboratório de equilíbrio)
     cooldown: 1100,
@@ -179,6 +183,10 @@ export const WEAPONS = {
   // Aura Gélida: campo de CONTROLE. Dano de chip + slow; quem fica 1s dentro CONGELA.
   AURA: {
     name: "Aura Gélida",
+    desc: "Campo gélido: dano contínuo e congela quem demora dentro.",
+    icon: "ico_aura",
+    mods: ["dmg", "cd", "range"],
+    unlock: { start: true },
     element: ELEMENT.ICE,
     baseDmg: 2,
     cooldown: 1200,
@@ -191,6 +199,10 @@ export const WEAPONS = {
   // acesa no fumo do cachimbo, gira, atravessa o bando e volta para a mão.
   BOOMER: {
     name: "Vara Encantada",
+    desc: "A vara da Caipora, acesa no fumo: gira, atravessa e volta.",
+    icon: "ico_boomer",
+    mods: ["dmg", "cd", "range"],
+    unlock: { forge: 1, cost: 30 },
     element: ELEMENT.FIRE,
     baseDmg: 3, // era 4: atravessa o bando e queima todos (era o mais forte no bando)
     cooldown: 1600,
@@ -200,6 +212,10 @@ export const WEAPONS = {
   // Raio: dano ALTO focado em 1 alvo. (A "corrente" agora é a reação Sobrecarga: fogo+raio.)
   CHAIN: {
     name: "Raio Concentrado",
+    desc: "Raio de dano alto; prefere alvos já afetados.",
+    icon: "ico_bolt",
+    mods: ["dmg", "cd", "range", "proj"],
+    unlock: { forge: 2, cost: 60 },
     element: ELEMENT.BOLT,
     baseDmg: 20, // era 15: o melhor contra o chefe, fraco no bando
     cooldown: 1800,
@@ -213,6 +229,9 @@ export const WEAPONS = {
   // (mini-Vapor) no impacto — o Cajado vira dano em área.
   VAPOR_STORM: {
     name: "Tempestade de Vapor",
+    reaction: "VAPOR", // a reação sai por código próprio da arma (não via also)
+    desc: "As bolas de fogo EXPLODEM em nuvem escaldante no impacto.",
+    icon: "ico_cloud_hot",
     element: ELEMENT.FIRE,
     evolvesFrom: "STAFF",
     partner: "AURA",
@@ -226,6 +245,8 @@ export const WEAPONS = {
   // salta entre inimigos próximos com dano decrescente, aplicando bolt em todos.
   OVERLOAD_X: {
     name: "Sobrecarga Eterna",
+    desc: "O raio SALTA em cadeia entre até 5 inimigos.",
+    icon: "ico_bolt_gold",
     element: ELEMENT.BOLT,
     evolvesFrom: "CHAIN",
     partner: "STAFF",
@@ -240,6 +261,8 @@ export const WEAPONS = {
   // causa dano + aplica gelo num raio bem maior — gelo finalmente OFENSIVO.
   WINTER_HEART: {
     name: "Coração do Inverno",
+    desc: "A aura pulsa NOVAS de estilhaços que congelam de longe.",
+    icon: "ico_heart_ice",
     element: ELEMENT.ICE,
     evolvesFrom: "AURA",
     partner: "CHAIN",
@@ -255,6 +278,8 @@ export const WEAPONS = {
   // queimam (dano + status fire) quem cruza o caminho.
   PHOENIX: {
     name: "Boitatá",
+    desc: "A vara vira a cobra de fogo: RASTRO DE CHAMAS pelo caminho.",
+    icon: "ico_flame_pink",
     element: ELEMENT.FIRE,
     evolvesFrom: "BOOMER",
     partner: "STAFF",
@@ -267,6 +292,11 @@ export const WEAPONS = {
   // cooldown = intervalo mínimo entre acertos no MESMO inimigo.
   ORB: {
     name: "Orbe Gélido",
+    desc: "Orbes de gelo giram ao seu redor e resfriam quem tocam.",
+    icon: "ico_orb",
+    mods: ["dmg", "proj", "range"],
+    plus: "+1 Orbe",
+    unlock: { forge: 3, cost: 300, deed: { stat: "VAPOR", n: 60, text: "Faça {n} Vapores (fogo + gelo)" } },
     element: ELEMENT.ICE,
     baseDmg: 5,
     cooldown: 650,
@@ -278,6 +308,10 @@ export const WEAPONS = {
   // Sopro Flamejante: cone de fogo na direção em que o player anda.
   FLAME: {
     name: "Sopro Flamejante",
+    desc: "Sopro de fogo em cone na direção em que você anda.",
+    icon: "ico_flame",
+    mods: ["dmg", "cd", "range"],
+    unlock: { forge: 4, cost: 600, deed: { stat: "win1", n: 1, text: "Vença o Mapinguari no Perigo Guardião ou acima" } },
     element: ELEMENT.FIRE,
     baseDmg: 6,
     cooldown: 1250,
@@ -287,6 +321,8 @@ export const WEAPONS = {
   // Geleira (Orbe Lv5 + Aura): orbes maiores, 2 extras, e CONGELAM ao tocar.
   GLACIER: {
     name: "Geleira Viva",
+    desc: "Os orbes crescem e CONGELAM na hora quem tocam.",
+    icon: "ico_orb_frost",
     element: ELEMENT.ICE,
     evolvesFrom: "ORB",
     partner: "AURA",
@@ -302,6 +338,8 @@ export const WEAPONS = {
   // Inferno (Sopro Lv5 + Vara Encantada): cone largo que deixa o chão em chamas.
   INFERNO: {
     name: "Inferno",
+    desc: "O sopro vira um INFERNO que deixa o chão em chamas.",
+    icon: "ico_flame_red",
     element: ELEMENT.FIRE,
     evolvesFrom: "FLAME",
     partner: "BOOMER",
@@ -316,6 +354,11 @@ export const WEAPONS = {
   // DPS total ~ Raio Concentrado, mas espalhado (bom contra bando, fraco no chefe).
   FIREFLY: {
     name: "Vaga-lumes",
+    desc: "Vaga-lumes teleguiados caçam inimigos diferentes.",
+    icon: "ico_firefly",
+    mods: ["dmg", "cd", "range", "proj"],
+    plus: "+1 Vaga-lume",
+    unlock: { forge: 2, cost: 150, deed: { stat: "kills", n: 1500, text: "Abata {n} criaturas" } },
     element: ELEMENT.BOLT,
     baseDmg: 4,
     cooldown: 1500,
@@ -330,6 +373,11 @@ export const WEAPONS = {
   // Quem já estava resfriado CONGELA — combina com Aura/Orbe e prepara o Cristal.
   HAIL: {
     name: "Granizo",
+    desc: "Granizo cai em inimigos pela tela; congela quem já está gelado.",
+    icon: "ico_hail",
+    mods: ["dmg", "cd", "range", "proj"],
+    plus: "+1 Pedra",
+    unlock: { forge: 3, cost: 400, deed: { stat: "CRYSTAL", n: 40, text: "Faça {n} Cristais (gelo + raio)" } },
     element: ELEMENT.ICE,
     baseDmg: 6,
     cooldown: 2000,
@@ -344,6 +392,11 @@ export const WEAPONS = {
   // bando e PUXA quem está perto. Dano por tique em área. Controle de multidão.
   WHIRL: {
     name: "Redemoinho",
+    desc: "Redemoinho do Saci persegue o bando e puxa todos para o centro.",
+    icon: "ico_whirl",
+    mods: ["dmg", "cd", "range", "proj"],
+    plus: "+1 Redemoinho",
+    unlock: { forge: 4, cost: 900, deed: { stat: "OVERLOAD", n: 60, text: "Faça {n} Sobrecargas (fogo + raio)" } },
     element: ELEMENT.BOLT,
     baseDmg: 2, // por tique; era 3 (2× o dano das outras armas de área no bando)
     cooldown: 3800,
@@ -359,6 +412,8 @@ export const WEAPONS = {
   // em 2 filhotes (uma vez) que caçam outros alvos.
   SWARM: {
     name: "Revoada",
+    desc: "Mais vaga-lumes; cada um que acerta se DIVIDE em dois.",
+    icon: "ico_firefly_gold",
     element: ELEMENT.BOLT,
     evolvesFrom: "FIREFLY",
     partner: "ORB",
@@ -376,6 +431,9 @@ export const WEAPONS = {
   // na hora; um congelado da área leva um raio do céu → CRISTAL dentro da própria arma.
   HAILSTORM: {
     name: "Tempestade de Granizo",
+    reaction: "CRYSTAL", // a reação sai por código próprio da arma (não via also)
+    desc: "Pedras que CONGELAM na hora, e um RAIO do céu as estilhaça.",
+    icon: "ico_hail_storm",
     element: ELEMENT.ICE,
     evolvesFrom: "HAIL",
     partner: "CHAIN",
@@ -394,6 +452,9 @@ export const WEAPONS = {
   // RAIO a cada tique → dispara SOBRECARGA sozinho.
   FIRE_WHIRL: {
     name: "Redemoinho de Brasa",
+    reaction: "OVERLOAD", // a reação sai por código próprio da arma (não via also)
+    desc: "Funil de BRASA: alterna fogo e raio e causa SOBRECARGA.",
+    icon: "ico_whirl_fire",
     element: ELEMENT.BOLT,
     evolvesFrom: "WHIRL",
     partner: "FLAME",
@@ -407,13 +468,266 @@ export const WEAPONS = {
     speed: 95,
     pull: 70,
   },
+  // ===== Leva 3: 5 por elemento (ver docs/ARMAS_E_COMBOS.md) =====
+  // Açoite de Urtiga (Comadre Fulozinha): golpe CORPO A CORPO em arco na direção do
+  // inimigo mais próximo; queima e empurra. Estilo de risco: rende perto do chefe.
+  LASH: {
+    name: "Açoite de Urtiga",
+    desc: "Açoite da Comadre Fulozinha: estala em arco de perto, queima e empurra.",
+    icon: "ico_lash",
+    mods: ["dmg", "cd", "range", "proj"],
+    plus: "+1 Açoite",
+    unlock: { forge: 4, cost: 1000, deed: { stat: "miniBosses", n: 6, text: "Derrote {n} minichefes" } },
+    element: ELEMENT.FIRE,
+    baseDmg: 10,
+    cooldown: 1000,
+    range: 118, // alcance do chicote
+    halfAngle: 1.05, // ~60° para cada lado
+    push: 34, // empurrão (px) em quem não é chefe/minichefe
+  },
+  // Bola de Ouro (Mãe-do-Ouro): bola dourada que RICOCHETEIA de inimigo em inimigo.
+  GOLDBALL: {
+    name: "Bola de Ouro",
+    desc: "A bola de fogo da Mãe-do-Ouro ricocheteia de inimigo em inimigo.",
+    icon: "ico_goldball",
+    mods: ["dmg", "cd", "range", "proj"],
+    plus: "+1 Bola",
+    unlock: { forge: 4, cost: 1100, deed: { stat: "chests", n: 40, text: "Abra {n} baús" } },
+    element: ELEMENT.BOLT,
+    baseDmg: 6,
+    cooldown: 1600,
+    range: 260,
+    speed: 430,
+    bounces: 4, // acertos depois do primeiro
+    bounceRange: 230,
+  },
+  // Miragem (Anhangá): uma ilusão do veado branco que ATRAI o bando (iscas); quem
+  // encosta esfria; no fim ela se desfaz numa explosão de geada.
+  MIRAGE: {
+    name: "Miragem",
+    desc: "Ilusão do Anhangá: atrai o bando, esfria quem encosta e estoura em geada.",
+    icon: "ico_mirage",
+    mods: ["dmg", "cd", "range", "proj"],
+    plus: "+1 Miragem",
+    unlock: { forge: 4, cost: 1200, deed: { stat: "flawless", n: 2, text: "Desvie de tudo em {n} lutas de chefe" } },
+    element: ELEMENT.ICE,
+    baseDmg: 2, // por tique em quem encosta
+    cooldown: 4200,
+    range: 170, // distância em que a ilusão aparece
+    count: 1,
+    lureR: 230,
+    durationMs: 3200,
+    tickMs: 600,
+    touchR: 40,
+    burst: { dmg: 8, r: 86 },
+  },
+  // Fogueira de São João: ARMADILHA fixa — planta fogueiras no caminho que queimam
+  // quem passa. Até `max` acesas ao mesmo tempo.
+  BONFIRE: {
+    name: "Fogueira de São João",
+    desc: "Planta fogueiras no caminho que queimam quem passa.",
+    icon: "ico_bonfire",
+    mods: ["dmg", "cd", "range", "proj"],
+    plus: "+1 Fogueira",
+    unlock: { forge: 2, cost: 500 },
+    element: ELEMENT.FIRE,
+    baseDmg: 2.5, // por tique
+    cooldown: 2300,
+    range: 9999,
+    radius: 48,
+    durationMs: 5200,
+    tickMs: 500,
+    max: 3,
+  },
+  // Boleadeira (gaúcha): três pedras numa corda que AMARRAM até 3 inimigos juntos
+  // (puxa um para o outro e quase não andam) e esfriam.
+  BOLAS: {
+    name: "Boleadeira",
+    desc: "Três pedras na corda: amarram até 3 inimigos juntos e esfriam.",
+    icon: "ico_bolas",
+    mods: ["dmg", "cd", "range", "proj"],
+    plus: "+1 Boleadeira",
+    unlock: { forge: 3, cost: 700, deed: { stat: "CRYSTAL", n: 80, text: "Faça {n} Cristais (gelo + raio)" } },
+    element: ELEMENT.ICE,
+    baseDmg: 8,
+    cooldown: 2000,
+    range: 270,
+    count: 1,
+    speed: 380,
+    bindR: 80,
+    bindN: 3,
+    bindMs: 1500,
+    bindSlow: 0.2, // velocidade dos amarrados
+  },
+  // Tambor do Trovão: ONDA em anel que sai do herói, acerta cada um uma vez e empurra.
+  DRUM: {
+    name: "Tambor do Trovão",
+    desc: "Onda de trovão em anel: acerta todos em volta e empurra.",
+    icon: "ico_drum",
+    mods: ["dmg", "cd", "range"],
+    unlock: { forge: 3, cost: 850, deed: { stat: "OVERLOAD", n: 100, text: "Faça {n} Sobrecargas (fogo + raio)" } },
+    element: ELEMENT.BOLT,
+    baseDmg: 4.5,
+    cooldown: 2800,
+    range: 150, // raio final da onda
+    growMs: 360,
+    push: 26,
+  },
+  // ----- evoluções da leva 3 (cada uma faz uma reação SOZINHA) -----
+  // Laçada de Urtiga (Açoite + Boleadeira): a ponta do açoite enlaça com geada →
+  // fogo + gelo = VAPOR em quem leva a ponta.
+  LACADA: {
+    name: "Laçada de Urtiga",
+    desc: "A ponta do açoite enlaça com geada: fogo + gelo = VAPOR.",
+    icon: "ico_lash_ice",
+    also: ["ice"], // aplica também este elemento: a reação sai sozinha
+    element: ELEMENT.FIRE,
+    evolvesFrom: "LASH",
+    partner: "BOLAS",
+    baseDmg: 14,
+    cooldown: 850,
+    range: 150,
+    halfAngle: 1.3,
+    push: 40,
+    tipFrac: 0.45, // fração externa do alcance que leva gelo também
+    bindMs: 700,
+  },
+  // Minuano (Boleadeira + Tambor): o vento frio do Sul com trovão — os amarrados levam
+  // um raio pouco depois → gelo + raio = CRISTAL.
+  MINUANO: {
+    name: "Minuano",
+    desc: "Vento frio com trovão: os amarrados levam um raio = CRISTAL.",
+    icon: "ico_bolas_storm",
+    also: ["bolt"], // aplica também este elemento: a reação sai sozinha
+    element: ELEMENT.ICE,
+    evolvesFrom: "BOLAS",
+    partner: "DRUM",
+    baseDmg: 9,
+    cooldown: 1900,
+    range: 300,
+    count: 2,
+    speed: 420,
+    bindR: 95,
+    bindN: 4,
+    bindMs: 1800,
+    bindSlow: 0.15,
+    zap: { delayMs: 450, dmg: 10 },
+  },
+  // Trovão de Brasa (Tambor + Açoite): batida dupla; cada onda é fogo E raio →
+  // SOBRECARGA no anel.
+  BRASA_TROVAO: {
+    name: "Trovão de Brasa",
+    desc: "Batida dupla de fogo e raio: SOBRECARGA no anel.",
+    icon: "ico_drum_fire",
+    also: ["fire"], // aplica também este elemento: a reação sai sozinha
+    element: ELEMENT.BOLT,
+    evolvesFrom: "DRUM",
+    partner: "LASH",
+    baseDmg: 10,
+    cooldown: 2000,
+    range: 215,
+    growMs: 380,
+    push: 34,
+    double: true,
+  },
+  // Arraial (Fogueira + Bola de Ouro): fogueiras maiores que soltam FOGOS dourados
+  // (raio) em quem está perto → fogo + raio = SOBRECARGA.
+  ARRAIAL: {
+    name: "Arraial",
+    desc: "Fogueiras maiores soltam FOGOS dourados: fogo + raio = SOBRECARGA.",
+    icon: "ico_bonfire_gold",
+    also: ["bolt"], // aplica também este elemento: a reação sai sozinha
+    element: ELEMENT.FIRE,
+    evolvesFrom: "BONFIRE",
+    partner: "GOLDBALL",
+    baseDmg: 6,
+    cooldown: 1900,
+    range: 9999,
+    radius: 58,
+    durationMs: 6000,
+    tickMs: 400,
+    max: 4,
+    fireworks: { everyMs: 900, dmg: 8, r: 190 },
+  },
+  // Ouro Encantado (Bola de Ouro + Miragem): a bola vira ouro gelado — cada ricochete
+  // é gelo E raio → CRISTAL em quem ela acerta.
+  OURO_ENCANTADO: {
+    name: "Ouro Encantado",
+    desc: "Ouro gelado: cada ricochete é gelo + raio = CRISTAL.",
+    icon: "ico_goldball_ice",
+    also: ["ice"], // aplica também este elemento: a reação sai sozinha
+    element: ELEMENT.BOLT,
+    evolvesFrom: "GOLDBALL",
+    partner: "MIRAGE",
+    baseDmg: 9,
+    cooldown: 1350,
+    range: 290,
+    speed: 470,
+    bounces: 6,
+    bounceRange: 250,
+  },
+  // Visagem (Miragem + Fogueira): duas aparições na fumaça; quem encosta esfria e, no
+  // fim, elas estouram em fogo E geada → VAPOR.
+  VISAGEM: {
+    name: "Visagem",
+    desc: "Duas aparições na fumaça que estouram em fogo + geada = VAPOR.",
+    icon: "ico_mirage_fire",
+    also: ["fire"], // aplica também este elemento: a reação sai sozinha
+    element: ELEMENT.ICE,
+    evolvesFrom: "MIRAGE",
+    partner: "BONFIRE",
+    baseDmg: 4,
+    cooldown: 3600,
+    range: 190,
+    count: 2,
+    lureR: 260,
+    durationMs: 3600,
+    tickMs: 450,
+    touchR: 52,
+    burst: { dmg: 16, r: 104 },
+  },
 };
+
+// ---------------------------------------------------------------------------
+// TABELAS DERIVADAS DAS FICHAS — não edite à mão: tudo sai de WEAPONS[k]
+// (desc/icon/mods/plus/unlock). Ver docs/CONTEUDO.md.
+// ---------------------------------------------------------------------------
+// Estatísticas acumuladas que um FEITO (deed) pode pedir — ver MetaProgression.deedProgress
+export const DEED_STATS = ["kills", "win1", "VAPOR", "CRYSTAL", "OVERLOAD", "miniBosses", "chests", "flawless"];
+export const BASE_WEAPON_KEYS = Object.keys(WEAPONS).filter((k) => !WEAPONS[k].evolvesFrom);
+export const EVOLUTION_KEYS = Object.keys(WEAPONS).filter((k) => WEAPONS[k].evolvesFrom);
+// Forjáveis em ordem de preço (é a ordem da lista da Forja)
+const FORGEABLE = BASE_WEAPON_KEYS.filter((k) => WEAPONS[k].unlock?.cost != null).sort(
+  (a, b) => WEAPONS[a].unlock.cost - WEAPONS[b].unlock.cost,
+);
+const unlockTable = (f) => Object.fromEntries(FORGEABLE.map((k) => [k, f(WEAPONS[k].unlock)]).filter(([, v]) => v != null));
+export const STARTER_WEAPONS = BASE_WEAPON_KEYS.filter((k) => WEAPONS[k].unlock?.start);
+
+// LAÇOS (combos de dupla): basta ter as duas armas (base ou evoluída) na partida.
+// Sem carta, sem custo: o jogo avisa quando liga. Cada efeito vive na arma que muda.
+export const LINKS = [
+  { id: "corredeira", a: "WHIRL", b: "AURA", name: "Corredeira", desc: "Quem o redemoinho puxa para dentro da aura congela na hora." },
+  { id: "olho", a: "WHIRL", b: "HAIL", name: "Olho do Furacão", desc: "O granizo cai dentro do redemoinho." },
+  { id: "saojoao", a: "FIREFLY", b: "BONFIRE", name: "Noite de São João", desc: "Vaga-lume que passa pela fogueira acende: metade dos golpes dele também queima." },
+  { id: "isca", a: "MIRAGE", b: "BOLAS", name: "Isca e Laço", desc: "A boleadeira mira quem a miragem atraiu e amarra pelo dobro do tempo." },
+  { id: "rufar", a: "DRUM", b: "LASH", name: "Rufar da Mata", desc: "Cada batida do tambor estala um açoite a mais." },
+  { id: "correnteza", a: "GOLDBALL", b: "WHIRL", name: "Ouro na Correnteza", desc: "A bola de ouro que cruza o redemoinho ganha 2 ricochetes." },
+  { id: "brasa", a: "STAFF", b: "BONFIRE", name: "Brasa de São João", desc: "A fogueira mais perto também atira a bola de fogo do Cajado." },
+  { id: "trovoada", a: "CHAIN", b: "DRUM", name: "Trovoada", desc: "O Raio causa +60% em quem a onda do tambor acabou de acertar." },
+  { id: "rastro", a: "BOOMER", b: "MIRAGE", name: "Rastro Falso", desc: "Onde a vara faz a volta, fica uma miragem curta que atrai o bando." },
+  { id: "derretido", a: "FLAME", b: "GOLDBALL", name: "Ouro Derretido", desc: "A bola de ouro que passa pelo sopro pega fogo: metade dos ricochetes também queima." },
+];
 
 export const MAX_WEAPON_LEVEL = 5;
 
 // Personagens jogáveis — cada um começa com uma arma e tem um viés de stats.
 // Sprite = textura hero_<id> (arte própria, src/art/Hero.js). mods aplicados no início da run.
 export const CHARACTERS = [
+  // Ficha do guardião (tudo que o jogo precisa saber dele mora aqui):
+  //   weapon = arma inicial (chave de WEAPONS) · mods = viés de stats na partida
+  //   unlock = { start } | { fire: nv da Fogueira } (chega sozinho) | { fire, deed } (feito + moedas = cost)
+  //   legend = ficha do bestiário (Mural) — a origem da lenda (ver TEMA_FOLCLORE.md)
+  //   Arte: hero_<id> em src/art/Hero.js e as poses de queda em src/art/HeroRig.js
   {
     id: "guardian",
     name: "Curupira",
@@ -422,6 +736,9 @@ export const CHARACTERS = [
     cost: 0,
     perk: "Equilibrado, sem fraquezas. Bom para aprender.",
     mods: {},
+    unlock: { start: true },
+    legend: { id: "curupira", role: "Guardião da mata · fogo",
+      origin: "Lenda de origem tupi, registrada já no século XVI. Protege as matas e os bichos; os pés virados para trás deixam rastros que confundem os caçadores." },
   },
   {
     id: "huntress",
@@ -431,6 +748,9 @@ export const CHARACTERS = [
     cost: 250,
     perk: "+12% velocidade · +8% crítico · −10% vida",
     mods: { speed: 1.12, crit: 0.08, hp: 0.9 },
+    unlock: { fire: 2 },
+    legend: { id: "caipora", role: "Protetora dos bichos · vara encantada",
+      origin: "Do tupi ka'apora, \"habitante do mato\". Protetora dos animais contra a caça em excesso; em muitas regiões anda montada num porco-do-mato." },
   },
   {
     id: "druid",
@@ -440,6 +760,9 @@ export const CHARACTERS = [
     cost: 600,
     perk: "+20% área · +1 Vida/s · −15% velocidade",
     mods: { area: 1.2, regen: 1, speed: 0.85 },
+    unlock: { fire: 3 },
+    legend: { id: "iara", role: "Senhora das águas · gelo",
+      origin: "Do tupi y-îara, \"senhora das águas\". Vive nos rios da Amazônia e encanta com seu canto; a lenda somou traços europeus e africanos com o tempo." },
   },
   {
     id: "shaman",
@@ -449,6 +772,46 @@ export const CHARACTERS = [
     cost: 1200,
     perk: "−15% recarga · +15% dano · −25% vida",
     mods: { cd: 0.85, dmg: 1.15, hp: 0.75 },
+    unlock: { fire: 4 },
+    legend: { id: "saci", role: "Redemoinho travesso · redemoinho de raios",
+      origin: "Nasceu do Jaxy Jaterê guarani e ganhou traços africanos e europeus ao longo dos séculos. Esperto e brincalhão, vive dentro dos redemoinhos de vento." },
+  },
+  // Leva 3: Fogueira nv 4 + FEITO acumulado + moedas (cost)
+  {
+    id: "fulozinha",
+    name: "Comadre Fulozinha",
+    title: "Guardiã do Nordeste",
+    weapon: "LASH",
+    cost: 1600,
+    perk: "+25% vida · +6% velocidade (luta de perto)",
+    mods: { hp: 1.25, speed: 1.06 },
+    unlock: { fire: 4, deed: { stat: "miniBosses", n: 15, text: "Derrote {n} minichefes (Mula e Corpo-Seco)" } },
+    legend: { id: "fulozinha", role: "Guardiã do Nordeste · açoite de urtiga",
+      origin: "Lenda de Pernambuco e do Nordeste: cabocla miúda de cabelos negros compridos, vestida de branco. Protege a mata e os bichos, assobia, dá pistas falsas e açoita com urtiga quem desrespeita a floresta." },
+  },
+  {
+    id: "maedoouro",
+    name: "Mãe-do-Ouro",
+    title: "Guardiã das serras",
+    weapon: "GOLDBALL",
+    cost: 2000,
+    perk: "+50% sorte · +10% crítico · −10% vida",
+    mods: { luck: 0.5, crit: 0.1, hp: 0.9 },
+    unlock: { fire: 4, deed: { stat: "chests", n: 80, text: "Abra {n} baús na floresta" } },
+    legend: { id: "maedoouro", role: "Guardiã das serras · bola de ouro",
+      origin: "Contada no interior do Sudeste, Centro-Oeste e Nordeste: bola de fogo que voa nas noites sem lua e vira mulher de cabelos dourados. Guarda o ouro das serras e dos rios para que não seja arrancado." },
+  },
+  {
+    id: "anhanga",
+    name: "Anhangá",
+    title: "Veado branco da caça",
+    weapon: "MIRAGE",
+    cost: 2400,
+    perk: "+18% velocidade · +10% área · −15% vida",
+    mods: { speed: 1.18, area: 1.1, hp: 0.85 },
+    unlock: { fire: 4, deed: { stat: "flawless", n: 4, text: "Desvie de tudo em {n} lutas de chefe" } },
+    legend: { id: "anhanga", role: "Protetor da caça · miragem",
+      origin: "Do tupi: espírito protetor dos bichos, que aparece como um veado branco de olhos de fogo e engana com ilusões quem caça sem respeito. Os missionários o chamaram de demônio; na origem, é guardião." },
   },
 ];
 
@@ -764,14 +1127,8 @@ export const ENDLESS = {
 // da lenda (cuidado de representação: citar a origem — ver TEMA_FOLCLORE.md).
 // char = liberada junto com o guardião; as outras, ao encontrá-las na mata.
 export const LEGENDS = [
-  { id: "curupira", char: "guardian", name: "Curupira", sprite: ["hero_guardian", 0, 2.2], role: "Guardião da mata · fogo",
-    origin: "Lenda de origem tupi, registrada já no século XVI. Protege as matas e os bichos; os pés virados para trás deixam rastros que confundem os caçadores." },
-  { id: "caipora", char: "huntress", name: "Caipora", sprite: ["hero_huntress", 0, 2.2], role: "Protetora dos bichos · vara encantada",
-    origin: "Do tupi ka'apora, \"habitante do mato\". Protetora dos animais contra a caça em excesso; em muitas regiões anda montada num porco-do-mato." },
-  { id: "iara", char: "druid", name: "Iara", sprite: ["hero_druid", 0, 2.2], role: "Senhora das águas · gelo",
-    origin: "Do tupi y-îara, \"senhora das águas\". Vive nos rios da Amazônia e encanta com seu canto; a lenda somou traços europeus e africanos com o tempo." },
-  { id: "saci", char: "shaman", name: "Saci", sprite: ["hero_shaman", 0, 2.2], role: "Redemoinho travesso · redemoinho de raios",
-    origin: "Nasceu do Jaxy Jaterê guarani e ganhou traços africanos e europeus ao longo dos séculos. Esperto e brincalhão, vive dentro dos redemoinhos de vento." },
+  // guardiões: saem das fichas de CHARACTERS (legend)
+  ...CHARACTERS.map((c) => ({ id: c.legend.id, char: c.id, name: c.name, sprite: [`hero_${c.id}`, 0, 2.2], role: c.legend.role, origin: c.legend.origin })),
   { id: "mula", name: "Mula sem Cabeça", sprite: ["mon_alpha", 0, 2.2], role: "Minichefe · galope em chamas, coice e chuva de brasas",
     origin: "Lenda de origem ibérica espalhada pelo interior do Brasil: uma mula que solta fogo pelo pescoço e galopa pelos campos em noites escuras." },
   { id: "corposeco", name: "Corpo-Seco", sprite: ["mon_elder", 0, 2], role: "Minichefe · seca a vida, foge pela terra, solta cipós",
@@ -797,11 +1154,12 @@ export const BUILD = {
   FREE_FINISH_MIN: 2, // menor que a obra mais curta (10 min), senão ela vira instantânea
   AD_SPEEDUP_MIN: 30, // anúncio opcional (desligado junto com ADS.ENABLED)
   // O que cada nível libera
-  FORGE_WEAPON_LEVEL: { BOOMER: 1, CHAIN: 2, FIREFLY: 2, ORB: 3, HAIL: 3, FLAME: 4, WHIRL: 4 }, // Forja nv mínimo
+  FORGE_WEAPON_LEVEL: unlockTable((u) => u.forge), // Forja nv mínimo (das fichas de WEAPONS)
   // Vagas de arma na partida por nível da Forja (como o Megabonk: começa com 2 e chega a 4).
   // O herói já nasce com 1, então o nível 1 dá 1 escolha; cada vaga nova vem de obra.
   FORGE_WEAPON_SLOTS: [0, 2, 2, 3, 4],
-  FIRE_CHARACTER_LEVEL: { huntress: 2, druid: 3, shaman: 4 }, // Fogueira nv → guardião
+  // Fogueira nv → guardião que CHEGA sozinho (das fichas de CHARACTERS; os de feito são comprados)
+  FIRE_CHARACTER_LEVEL: Object.fromEntries(CHARACTERS.filter((c) => c.unlock?.fire && !c.unlock.deed).map((c) => [c.id, c.unlock.fire])),
 };
 // Santuário nv N → bênçãos até o rank N
 export const BUILDINGS = {
@@ -1065,21 +1423,16 @@ export const META = {
   COIN_VALUE: 1,
   COIN_BOSS_WIN: 80,
   // Início barato (1ª compra logo na 1ª partida); o resto cresce com a Forja
-  WEAPON_UNLOCK_COST: { BOOMER: 30, CHAIN: 60, FIREFLY: 150, ORB: 300, HAIL: 400, FLAME: 600, WHIRL: 900 },
-  WEAPON_UNLOCK_ORDER: ["BOOMER", "CHAIN", "FIREFLY", "ORB", "HAIL", "FLAME", "WHIRL"], // Aura já vem liberada
-  // Feitos da Forja (desbloqueio por desafio, como no Megabonk): além de moedas e do
-  // nível da Forja, as armas do meio em diante pedem um feito ACUMULADO entre partidas.
-  // Os feitos ensinam a mecânica-assinatura (cada reação) e nunca pedem o que o jogador
-  // ainda não pode fazer: Vapor = Cajado + Aura (início); Cristal/Sobrecarga = + Raio (60).
-  // stat: "kills" (abates no total), "VAPOR"/"CRYSTAL"/"OVERLOAD" (reações no total) ou
-  // "win1" (vitórias no Perigo Guardião ou acima).
-  WEAPON_DEED: {
-    FIREFLY: { stat: "kills", n: 1500, text: "Abata {n} criaturas" },
-    ORB: { stat: "VAPOR", n: 60, text: "Faça {n} Vapores (fogo + gelo)" },
-    HAIL: { stat: "CRYSTAL", n: 40, text: "Faça {n} Cristais (gelo + raio)" },
-    FLAME: { stat: "win1", n: 1, text: "Vença o Mapinguari no Perigo Guardião ou acima" },
-    WHIRL: { stat: "OVERLOAD", n: 60, text: "Faça {n} Sobrecargas (fogo + raio)" },
-  },
+  // Forja: preço, ordem e FEITOS saem das fichas de WEAPONS (unlock: { forge, cost, deed })
+  WEAPON_UNLOCK_COST: unlockTable((u) => u.cost),
+  WEAPON_UNLOCK_ORDER: FORGEABLE, // Cajado e Aura já vêm liberados (unlock.start)
+  // Feitos da Forja (desbloqueio por desafio, como no Megabonk): as armas do meio em diante
+  // pedem um feito ACUMULADO entre partidas. stat: "kills", "win1" (vitórias no Perigo
+  // Guardião ou acima), "VAPOR"/"CRYSTAL"/"OVERLOAD" (reações), "miniBosses", "chests",
+  // "flawless" (lutas de chefe sem levar golpe especial). Ver DEED_STATS.
+  WEAPON_DEED: unlockTable((u) => u.deed),
+  // Guardiões com feito (leva 3): sai das fichas de CHARACTERS (unlock.deed)
+  CHARACTER_DEED: Object.fromEntries(CHARACTERS.filter((c) => c.unlock?.deed).map((c) => [c.id, c.unlock.deed])),
   ABILITY_UNLOCK_COST: { DASH: 50, AWAKEN: 100 },
 };
 

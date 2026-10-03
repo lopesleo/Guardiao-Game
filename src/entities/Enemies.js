@@ -104,6 +104,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this._auraEnterAt = 0;
     this._auraLastSeen = 0;
     this._frozenVisual = false;
+    this._lureUntil = 0; // Miragem: anda até a ilusão em vez do herói
+    this._bindUntil = 0; // Boleadeira: amarrado (quase não anda)
+    this._bindSlow = 1;
     this.clearTint();
     this.setAngle(0);
     this.setScale(GAME.PIXEL_SCALE);
@@ -339,12 +342,15 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       return;
     }
 
-    // Slow apenas do gelo (Aura Gélida). Vapor agora causa dano, não slow.
+    // Slow do gelo (Aura Gélida) e das cordas da Boleadeira
     let slow = 1;
     if (this.statuses.ice) slow *= 0.5;
+    if (time < this._bindUntil) slow *= this._bindSlow;
 
-    const dx = target.x - this.x,
-      dy = target.y - this.y;
+    // Miragem: quem foi atraído caminha até a ilusão (o tiro continua mirando o herói)
+    const goal = time < this._lureUntil ? { x: this._lureX, y: this._lureY } : target;
+    const dx = goal.x - this.x,
+      dy = goal.y - this.y;
     const len = Math.hypot(dx, dy) || 1;
 
     if (this._kind === "goblin") {

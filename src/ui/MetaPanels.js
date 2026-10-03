@@ -558,9 +558,14 @@ Feito para forjar: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLo
     for (const c of CHARACTERS) {
       const owned = this.meta.hasCharacter(c.id);
       const sel = this.meta.selectedCharacter === c.id;
-      const needLv = BUILD.FIRE_CHARACTER_LEVEL[c.id];
+      const needLv = c.unlock?.fire ?? BUILD.FIRE_CHARACTER_LEVEL[c.id];
+      // Guardião de FEITO (leva 3): Fogueira no nível + feito cumprido + moedas
+      const deed = owned ? null : this.meta.characterDeed(c.id);
+      const fireOk = !this.builds || this.builds.level("fire") >= (needLv ?? 1);
+      const deedOpen = !!deed && !deed.done;
       // Sem Clareira (this.builds), mantém a compra antiga por moedas
-      const can = !owned && !this.builds && this.meta.coins >= c.cost;
+      const can = !owned && this.meta.coins >= c.cost && (deed ? fireOk && !deedOpen : !this.builds);
+      const buyable = !owned && deed && fireOk && !deedOpen;
       list.addRow(
         this._shopRow({
           h: 84,
@@ -569,9 +574,9 @@ Feito para forjar: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLo
           dim: !owned,
           name: `${c.name}  ·  ${c.title}`,
           nameColor: sel ? CSS.goldHi : CSS.txt,
-          desc: `Começa com ${WEAPONS[c.weapon].name}. ${c.perk}`,
-          right: sel ? "ESCOLHIDO" : owned ? "ESCOLHER" : this.builds ? `FOGUEIRA NV ${needLv}` : String(c.cost),
-          rightIcon: owned || this.builds ? null : "ico_coin",
+          desc: `Começa com ${WEAPONS[c.weapon].name}. ${c.perk}` + (deed && fireOk ? `\nFeito: ${deed.text} (${deed.p.toLocaleString("pt-BR")}/${deed.n.toLocaleString("pt-BR")})` : ""),
+          right: sel ? "ESCOLHIDO" : owned ? "ESCOLHER" : !fireOk ? `FOGUEIRA NV ${needLv}` : deedOpen ? "FALTA O FEITO" : buyable || !this.builds ? String(c.cost) : `FOGUEIRA NV ${needLv}`,
+          rightIcon: owned || !fireOk || deedOpen || (this.builds && !buyable) ? null : "ico_coin",
           rightColor: sel ? CSS.green : owned ? CSS.txt : can ? CSS.goldHi : CSS.dim,
           style: sel ? "green" : owned || can ? "button" : "dark",
           onTap:

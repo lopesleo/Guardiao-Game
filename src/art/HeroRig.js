@@ -292,7 +292,177 @@ const STYLE = {
     taper(p, ...k.armF.mid, ...k.armF.end, 2.2, 2, [sk.base, sk.light, sk.shade]);
     return k.armF.end;
   },
+  // COMADRE FULOZINHA — cabelo negro comprido, vestido branco, flor no cabelo
+  fulozinha(p, pose, k, t) {
+    const sk = SKIN;
+    const hair = [0x1c1824, 0x2c2638, 0x3e3650];
+    const back = [k.hc[0] - k.hu[0] * 1.5 - k.hf[0] * 2.4, k.hc[1] - k.hu[1] * 1.5 - k.hf[1] * 2.4];
+    const hairEnd = pose.hairLie ? [k.hc[0] - 9, GROUND - 1] : [k.hip[0] - k.hf[0] * 2.6 - k.tu[0] * 4.5, k.hip[1] - k.hf[1] * 2.6 - k.tu[1] * 4.5];
+    taper(p, ...back, ...hairEnd, 5, 3.4, null, (tt, b) => (Math.round(tt * 10) % 4 === 1 ? hair[2] : b > 0.2 ? hair[1] : hair[0]));
+    taper(p, ...k.armB.root, ...k.armB.mid, 2.2, 2, [sk.shade, sk.shade, sk.shade]);
+    taper(p, ...k.armB.mid, ...k.armB.end, 2, 1.8, [sk.shade, sk.shade, sk.shade]);
+    for (const leg of [k.legB, k.legF]) {
+      taper(p, ...leg.root, ...leg.mid, 2.8, 2.4, [sk.base, sk.light, sk.shade]);
+      taper(p, ...leg.mid, ...leg.end, 2.4, 2, [sk.base, sk.light, sk.shade]);
+      foot(p, leg, false, sk.base, sk.shade);
+    }
+    // vestido branco: do ombro até o meio das coxas, rodado
+    const skirt = (leg) => taper(p, ...k.hip, leg.mid[0], leg.mid[1], 6.4, 5, null, (tt, b) => (b > 0.2 ? PAL.white : b < -0.4 ? PAL.s4 : PAL.cream));
+    skirt(k.legB);
+    skirt(k.legF);
+    taper(p, k.hip[0] - k.tu[0] * 0.4, k.hip[1] - k.tu[1] * 0.4, ...k.sh, 6.4, 5.8, null, (tt, b) => (b > 0.2 ? PAL.white : b < -0.4 ? PAL.s4 : PAL.cream));
+    headBall(p, ...k.hc, 4, 3.8, sk);
+    for (let i = -3; i <= 3; i++) {
+      const bx = k.hc[0] + k.hu[0] * 3 + k.hf[0] * i * 1.1,
+        by = k.hc[1] + k.hu[1] * 3 + k.hf[1] * i * 1.1;
+      p.set(Math.round(bx - 0.5), Math.round(by - 0.5), i > 1 ? hair[1] : hair[0]);
+      if (i < 2) p.set(Math.round(bx - k.hu[0] - 0.5), Math.round(by - k.hu[1] - 0.5), hair[0]);
+    }
+    p.set(Math.round(k.hc[0] + k.hu[0] * 3.8 - k.hf[0] * 1.2 - 0.5), Math.round(k.hc[1] + k.hu[1] * 3.8 - k.hf[1] * 1.2 - 0.5), PAL.pink); // flor
+    p.set(Math.round(k.hc[0] + k.hu[0] * 3.8 - k.hf[0] * 0.2 - 0.5), Math.round(k.hc[1] + k.hu[1] * 3.8 - k.hf[1] * 0.2 - 0.5), PAL.yel3);
+    face(p, k, pose, sk);
+    taper(p, ...k.armF.root, ...k.armF.mid, 2.4, 2.2, [sk.base, sk.light, sk.shade]);
+    taper(p, ...k.armF.mid, ...k.armF.end, 2.2, 2, [sk.base, sk.light, sk.shade]);
+    return k.armF.end;
+  },
+  // MÃE-DO-OURO — cabelo dourado longo, vestido de seda branca até os pés
+  maedoouro(p, pose, k, t) {
+    const sk = SKIN;
+    const gold = [PAL.yel1, PAL.yel2, PAL.yel3];
+    const back = [k.hc[0] - k.hu[0] * 1.5 - k.hf[0] * 2.4, k.hc[1] - k.hu[1] * 1.5 - k.hf[1] * 2.4];
+    const hairEnd = pose.hairLie ? [k.hc[0] - 8, GROUND - 1] : [k.hip[0] - k.hf[0] * 2.4 - k.tu[0] * 1.5, k.hip[1] - k.hf[1] * 2.4 - k.tu[1] * 1.5];
+    taper(p, ...back, ...hairEnd, 5.4, 3.6, null, (tt, b) => (Math.round(tt * 9) % 3 === 0 ? gold[2] : b > 0.1 ? gold[1] : gold[0]));
+    taper(p, ...k.armB.root, ...k.armB.mid, 2.2, 2, [sk.shade, sk.shade, sk.shade]);
+    taper(p, ...k.armB.mid, ...k.armB.end, 2, 1.8, [sk.shade, sk.shade, sk.shade]);
+    // vestido longo: cobre as pernas até os pés (barra dourada)
+    const silk = (tt, b) => (tt > 0.92 ? PAL.yel3 : b > 0.2 ? PAL.white : b < -0.4 ? PAL.s4 : PAL.cream);
+    for (const leg of [k.legB, k.legF]) {
+      taper(p, ...leg.root, ...leg.mid, 5.2, 4.2, null, silk);
+      taper(p, ...leg.mid, ...leg.end, 4.2, 3.4, null, silk);
+    }
+    taper(p, k.hip[0] - k.tu[0] * 0.4, k.hip[1] - k.tu[1] * 0.4, ...k.sh, 6.6, 5.8, null, (tt, b) => (b > 0.2 ? PAL.white : b < -0.4 ? PAL.s4 : PAL.cream));
+    headBall(p, ...k.hc, 4, 3.8, sk);
+    for (let i = -3; i <= 3; i++) {
+      const bx = k.hc[0] + k.hu[0] * 3 + k.hf[0] * i * 1.1,
+        by = k.hc[1] + k.hu[1] * 3 + k.hf[1] * i * 1.1;
+      p.set(Math.round(bx - 0.5), Math.round(by - 0.5), i > 1 ? gold[0] : gold[1]);
+      if (i < 2) p.set(Math.round(bx - k.hu[0] - 0.5), Math.round(by - k.hu[1] - 0.5), gold[0]);
+    }
+    face(p, k, pose, sk);
+    taper(p, ...k.armF.root, ...k.armF.mid, 2.4, 2.2, [sk.base, sk.light, sk.shade]);
+    taper(p, ...k.armF.mid, ...k.armF.end, 2.2, 2, [sk.base, sk.light, sk.shade]);
+    return k.armF.end;
+  },
 };
+
+// ---------------------------------------------------------------------------
+// ANHANGÁ — quadrúpede: não usa o esqueleto humano. Cada pose-chave vira um
+// estado do veado (dobrar as patas, baixar o corpo, deitar a cabeça no chão).
+// ---------------------------------------------------------------------------
+const DEER_C = [PAL.s3, PAL.s4, PAL.cream, PAL.white];
+// drop: quanto o corpo desce (0 em pé → 1 deitado) · fore/hind: patas dobradas (0..1)
+// head: -1 cabeça no chão · 0 normal · 1 erguida · rear: empina (recuo do golpe)
+const DEER_POSES = {
+  idle: { drop: 0, fore: 0, hind: 0, head: 0 },
+  idle2: { drop: 0, fore: 0, hind: 0, head: 0.1 },
+  hit: { drop: 0, fore: 0, hind: 0, head: 0.6, eyes: "wide", shift: -1 },
+  recoil: { drop: 0.05, fore: 0.3, hind: 0, head: 0.6, eyes: "squint", shift: -2, rear: 0.18 },
+  buckle: { drop: 0.3, fore: 0.7, hind: 0.2, head: 0.2, eyes: "squint", shift: -1 },
+  fall1: { drop: 0.6, fore: 1, hind: 0.6, head: -0.3, eyes: "closed" },
+  fall2: { drop: 0.85, fore: 1, hind: 0.9, head: -0.7, eyes: "closed" },
+  impact: { drop: 1, fore: 1, hind: 1, head: -1, eyes: "closed" },
+  bounce: { drop: 0.94, fore: 1, hind: 1, head: -0.9, eyes: "closed" },
+  lieA: { drop: 1, fore: 1, hind: 1, head: -1, eyes: "closed" },
+  lieB: { drop: 0.97, fore: 1, hind: 1, head: -1, eyes: "closed" },
+  stir: { drop: 1, fore: 1, hind: 1, head: -0.4, eyes: "half" },
+  eyes: { drop: 1, fore: 1, hind: 1, head: 0.2, eyes: "open" },
+  prop: { drop: 0.8, fore: 0.4, hind: 1, head: 0.3, eyes: "half" },
+  sit1: { drop: 0.6, fore: 0, hind: 1, head: 0.5, eyes: "squint" },
+  sit2: { drop: 0.55, fore: 0, hind: 1, head: 0.6, eyes: "open" },
+  knee: { drop: 0.25, fore: 0, hind: 0.5, head: 0.4, eyes: "open" },
+  rise: { drop: 0, fore: 0, hind: 0, head: 0.3, eyes: "open" },
+};
+function renderDeer(poseKey, t) {
+  const st = DEER_POSES[poseKey] ?? DEER_POSES.idle;
+  const p = new Pix(RIG_W, RIG_H);
+  const L = 7; // comprimento das patas em pé (mesma proporção do sprite de andar)
+  const sx = (st.shift ?? 0) + 20; // x do corpo
+  const top = GROUND - L - 3 + Math.round(st.drop * (L - 1)); // y da barriga
+  const rear = st.rear ?? 0;
+  const ell = (cx, cy, rx, ry) => {
+    for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++)
+      for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
+        const dx = (x + 0.5 - cx) / rx,
+          dy = (y + 0.5 - cy) / ry;
+        if (dx * dx + dy * dy > 1) continue;
+        const l = -dx * 0.35 - dy * 0.85;
+        p.set(x, y, l > 0.45 ? DEER_C[3] : l > -0.15 ? DEER_C[2] : l > -0.6 ? DEER_C[1] : DEER_C[0]);
+      }
+  };
+  // patas: em pé = retas até o chão; dobradas = recolhidas sob o corpo (para a frente)
+  const leg = (x, fold, near, hindLeg) => {
+    const c = near ? DEER_C[2] : DEER_C[0];
+    const y0 = top + 1;
+    const len = Math.max(1, GROUND - y0);
+    const kneeY = y0 + Math.round(len * 0.5);
+    const foldX = hindLeg ? 3 : 4;
+    const endX = x + Math.round(fold * foldX),
+      endY = Math.round(GROUND - fold * Math.min(len, 2));
+    for (let y = y0; y <= kneeY; y++) p.set(x + (hindLeg && y > kneeY - 1 ? -1 : 0), y, c);
+    const n = Math.max(1, Math.abs(endY - kneeY) + Math.abs(endX - x));
+    for (let i = 0; i <= n; i++) p.set(Math.round(x + (endX - x) * (i / n)), Math.round(kneeY + (endY - kneeY) * (i / n)), c);
+    p.set(endX, endY, PAL.n2);
+  };
+  leg(sx - 5, st.hind, false, true);
+  leg(sx + 6, st.fore, false, false);
+  leg(sx - 3, st.hind, true, true);
+  leg(sx + 4, st.fore, true, false);
+  // corpo (empinar = a frente sobe)
+  for (let i = 0; i <= 12; i++) ell(sx - 6 + i, top - 3 - Math.round(rear * i * 0.5), 1.2, 3.2);
+  ell(sx + 5, top - 3 - Math.round(rear * 6), 2.8, 3.4);
+  p.set(sx - 8, top - 5, DEER_C[3]); // rabinho
+  // pescoço + cabeça: head > 0 ergue, < 0 abaixa até o chão
+  const hb = [sx + 7, top - 5 - Math.round(rear * 6)];
+  // rad: 0 = horizontal p/ a direita · negativo = para cima. Erguida ~65°; no chão, apontando para baixo
+  const h = st.head ?? 0;
+  const ang = h >= 0 ? -0.75 - h * 0.4 : -0.75 - h * 1.4;
+  const nx = Math.cos(ang),
+    ny = Math.sin(ang);
+  const neckLen = 4;
+  for (let i = 0; i <= neckLen; i++) {
+    const x = Math.round(hb[0] + nx * i),
+      y = Math.round(hb[1] + ny * i);
+    // pescoço grosso (3 px): claro na frente de cima, sombra embaixo
+    p.set(x - 1, y, DEER_C[3]);
+    p.set(x, y, DEER_C[3]);
+    p.set(x + 1, y, DEER_C[2]);
+    p.set(x, y + 1, DEER_C[2]);
+    p.set(x + 1, y + 1, DEER_C[1]);
+  }
+  let hx = hb[0] + nx * (neckLen + 2),
+    hy = hb[1] + ny * (neckLen + 2);
+  hy = Math.min(hy, GROUND - 2); // cabeça deitada repousa no chão
+  ell(hx, hy, 2.4, 1.9);
+  p.set(Math.round(hx + 2.5), Math.round(hy + 0.5), PAL.s2); // focinho
+  p.set(Math.round(hx + 3), Math.round(hy + 0.5), DEER_C[1]);
+  // olho de fogo (fechado = risco escuro)
+  const eyes = st.eyes ?? "open";
+  const ex = Math.round(hx + 0.6),
+    ey = Math.round(hy - 0.6);
+  if (eyes === "closed") p.set(ex, ey, PAL.s2);
+  else if (eyes === "half") p.set(ex, ey, PAL.red1);
+  else p.set(ex, ey, Math.floor(t * 3) % 2 ? PAL.yel3 : PAL.org2);
+  if (eyes === "wide") p.set(ex, ey - 1, PAL.white);
+  // galhada (segue a cabeça)
+  const ax = Math.round(hx - 0.5),
+    ay = Math.round(hy - 2);
+  const ant = [[0, 0], [0, -1], [-1, -1], [-1, -2], [-2, -2], [-2, -3], [-1, -3], [-1, -4], [2, 0], [2, -1], [3, -1], [3, -2], [3, -3], [4, -3], [2, -3], [2, -4]];
+  for (const [dx, dy] of ant) p.set(ax + dx, ay + dy, dy <= -3 ? DEER_C[3] : DEER_C[2]);
+  p.set(ax - 2, ay + 1, DEER_C[1]); // orelha
+  p.outline(PAL.ink);
+  return p;
+}
+export const RIG_IDS = [...Object.keys(STYLE), "anhanga"];
 
 // Adereços na mão (desenhados por cima da mão, antes do contorno)
 function prop(p, id, pose, hand, t) {
@@ -335,6 +505,22 @@ function prop(p, id, pose, hand, t) {
     p.set(Math.round(px + 1 - 0.5), Math.round(py - 1 - 0.5), PAL.white);
     p.set(Math.round(px + 2 - 0.5), Math.round(py - 0.5 - 0.5), PAL.ice3);
     p.set(Math.round(px + 1 - 0.5), Math.round(py + 1 - 0.5), PAL.ice2);
+  } else if (id === "fulozinha") {
+    // ramo de urtiga: talo verde com folhas serrilhadas
+    const x1 = px + d[0] * 9,
+      y1 = py + d[1] * 9;
+    taper(p, px - d[0] * 2, py - d[1] * 2, x1, y1, 1, 1, [PAL.g3, PAL.g4, PAL.g2]);
+    for (let i = 2; i <= 8; i += 2) {
+      const lx = px + d[0] * i,
+        ly = py + d[1] * i;
+      p.set(Math.round(lx + d[1] * 1.5 - 0.5), Math.round(ly - d[0] * 1.5 - 0.5), PAL.g5);
+      p.set(Math.round(lx - d[1] * 1.5 - 0.5), Math.round(ly + d[0] * 1.5 - 0.5), PAL.g4);
+    }
+    p.set(Math.round(x1 - 0.5), Math.round(y1 - 0.5), PAL.cream);
+  } else if (id === "maedoouro") {
+    // bola de fogo de ouro na palma
+    p.disc(px + 1, py - 1.5, 2, PAL.org2);
+    p.disc(px + 1, py - 1.5, 1.2, PAL.yel3);
   } else if (id === "shaman") {
     // faísca roxa
     p.set(Math.round(px + 1 - 0.5), Math.round(py - 1 - 0.5), PAL.white);
@@ -379,6 +565,7 @@ export const RIG_KEYS = Object.keys(RIG_POSES);
 
 // Quadro de uma pose para um herói. t = tempo (chamas tremulam).
 export function renderPose(charId, poseKey, t = 0) {
+  if (charId === "anhanga") return renderDeer(poseKey, t);
   const pose = RIG_POSES[poseKey];
   const p = new Pix(RIG_W, RIG_H);
   const k = solve(pose);
@@ -399,7 +586,7 @@ export const RIG_SEQ = {
 // Registra herodown_<id>: uma tira com todos os quadros-chave + as animações
 export function registerHeroRig(scene) {
   const keys = RIG_KEYS;
-  for (const id of ["guardian", "huntress", "druid", "shaman"]) {
+  for (const id of RIG_IDS) {
     registerStrip(scene, `herorig_${id}`, keys.map((k, i) => renderPose(id, k, i)));
     for (const [name, steps] of Object.entries(RIG_SEQ)) {
       const anim = `herorig_${id}_${name}`;

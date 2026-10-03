@@ -4,14 +4,12 @@
 // confere invariantes de design. Quando um invariante quebra o script sai com
 // código 1 — rode depois de mexer em dano, vida, vagas ou pratos.
 // Win rate por Perigo só sai de jogo de verdade (Analytics "run_end" / testers).
-import { readFileSync } from "node:fs";
-import { BUILD, DIFFICULTY, PLAYER, ENEMY, BOSS, MAX_WEAPON_LEVEL, PASSIVE_SLOTS, WEAPONS, BLESSINGS, MAX_BLESSING_RANK, KITCHEN, ENDLESS } from "../src/config.js";
+import { BUILD, DIFFICULTY, PLAYER, ENEMY, BOSS, MAX_WEAPON_LEVEL, PASSIVE_SLOTS, WEAPONS, BLESSINGS, MAX_BLESSING_RANK, KITCHEN, ENDLESS, BASE_WEAPON_KEYS } from "../src/config.js";
 
-// BASE_WEAPONS mora em UpgradeSystem.js (que importa Phaser): lê o valor do texto
-const slotsSrc = readFileSync(new URL("../src/systems/UpgradeSystem.js", import.meta.url), "utf8");
+// Armas base: derivadas das fichas de WEAPONS (config.js)
 const SLOTS = BUILD.FORGE_WEAPON_SLOTS.slice(1); // por nível da Forja
 const MAX_WEAPON_SLOTS = Math.max(...SLOTS);
-const BASE_WEAPONS = (/BASE_WEAPONS\s*=\s*\[([^\]]*)\]/.exec(slotsSrc)[1].match(/"/g) || []).length / 2;
+const BASE_WEAPONS = BASE_WEAPON_KEYS.length;
 
 const RUN_S = 7 * 60; // partida até o chefe
 const fails = [];

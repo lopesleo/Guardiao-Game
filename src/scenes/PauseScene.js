@@ -46,7 +46,9 @@ export class PauseScene extends Phaser.Scene {
     const rows = (n) => Math.max(1, Math.ceil(n / COLS));
     const wRows = rows(p.weapons.length),
       pRows = rows(ids.length);
-    const ph = PAD + HEAD + wRows * ROW + 10 + HEAD + pRows * ROW + PAD - 6;
+    const links = p.links?.list() ?? [];
+    const LINK_H = links.length ? 38 + links.length * 22 : 0;
+    const ph = PAD + HEAD + wRows * ROW + 10 + HEAD + pRows * ROW + PAD - 6 + LINK_H;
     const g = this.add.graphics();
     drawFrame(g, px, py, pw, ph, "gold");
     const slot = (i, y0, frame, icon, name, sub, subColor) => {
@@ -76,6 +78,16 @@ export class PauseScene extends Phaser.Scene {
       const def = PASSIVES.find((d) => d.id === id);
       slot(i, y, "ice", PASSIVE_ICON[id] ?? "ico_plus", def?.label ?? id, `Nível ${taken[id]}`, hexIce());
     });
+    // Laços ativos (combos de dupla): nome + o que fazem, uma linha cada
+    if (links.length) {
+      y += pRows * ROW + 4;
+      g.fillStyle(PAL.ink, 0.6).fillRect(px + 24, y - 6, pw - 48, 2);
+      text(this, px + 28, y + 12, `LAÇOS ${links.length}`, { size: 20, color: CSS.green, origin: [0, 0.5] });
+      links.forEach((l, i) => {
+        const t = text(this, px + 28, y + 36 + i * 22, `${l.name}: ${l.desc}`, { size: 14, color: CSS.muted, origin: [0, 0.5] });
+        if (t.width > pw - 56) t.setScale((pw - 56) / t.width);
+      });
+    }
 
     // Botões
     const by = H - 150;
