@@ -288,6 +288,11 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
 - ✅ **Animação dos guardiões** (`src/art/HeroRig.js`): queda, deitado respirando e acordar são
   QUADROS DESENHADOS (esqueleto de quadril/tronco/cabeça/braços/pernas + figurino de cada lenda),
   não o sprite de caminhada girado. Revisar as poses: `node tools/hero-sheet.mjs saida.png <id>`
+- ✅ **Chefe com luta de verdade** (ver `CHEFES.md`): **Couraça da Podridão** (acima de um ritmo de dano o
+  chefe resiste ao excesso; build forte: de ~7 s para ~30 s, build média ~50 s), a **horda não some** quando
+  ele nasce (somem só os de tiro, minichefes e o excesso; ficam 8) e a mira prefere o chefe. Correções: tela
+  de **vitória** sem texto encavalado com a fonte Legível/texto grande (rótulo de botão sempre cabe na
+  moldura) e **pesca** que não confunde o polegar no joystick com "segurar". 👤 sentir no aparelho
 
 ### M5 — Monetização e medição reais 👤
 - ✅ AdMob: app Android criado e **8 blocos premiados** (revive, extra_card, build_speed,

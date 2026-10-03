@@ -1413,6 +1413,8 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this._transitioning = false;
     this._transitionEnd = 0;
     this._displayFill = 1;
+    this._armorAcc = 0; // couraça: dano recente (decai com BOSS.ARMOR.TAU_S)
+    this._armorAt = 0;
     this._furyPulse?.stop();
     this._furyPulse = null;
     this.clearTint();
@@ -1437,7 +1439,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     const iceAmp = this.statuses.ice ? 1.35 : 1;
     const now = this.scene.time.now;
     const amp = now < this._exposedUntil ? this._exposedMult ?? BOSS_FIGHT.EXPOSED_MULT : 1;
-    this.hp -= dmg * iceAmp * amp;
+    this.hp -= this._armor(dmg * iceAmp, now) * amp;
     if (amp > 1) this.scene._markAmp?.(this, amp);
     this.setTint(amp > 1 ? 0xffe58f : 0xffffff).setTintMode(Phaser.TintModes.FILL);
     this.scene.time.delayedCall(50, () => {
@@ -1447,6 +1449,16 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     if (this.hp <= 0) return true;
     if (this.phase === 1 && this.hp <= this.maxHp * BOSS.PHASE2_AT_HP_PCT) this._enterFury();
     return false;
+  }
+
+  // Couraça da Podridão (ver BOSS.ARMOR): acima do ritmo de referência, o excesso é resistido
+  _armor(raw, now) {
+    const A = BOSS.ARMOR;
+    this._armorAcc = this._armorAcc * Math.exp(-(now - this._armorAt) / (A.TAU_S * 1000)) + raw;
+    this._armorAt = now;
+    const rate = this._armorAcc / A.TAU_S;
+    const ref = this.maxHp / A.TARGET_S;
+    return rate > ref ? raw * Math.pow(ref / rate, 1 - A.KEEP) : raw;
   }
 
   // Êxtase da virada: boss parado e invulnerável ~1.3s, pulsando, enquanto a
