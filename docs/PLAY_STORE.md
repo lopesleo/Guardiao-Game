@@ -258,6 +258,53 @@ Refazer quando o app mudar (compra "Remover anúncios", login do Play Games, nov
   | Diagnóstico | sim | sim | sim | análise, publicidade, fraudes |
   | IDs do dispositivo | sim | sim | sim | análise, publicidade, fraudes |
 
+## Progresso na nuvem (Google Play Games)
+
+O código está pronto (`android/.../PlayGamesPlugin.java` + `src/systems/CloudSave.js`), mas fica
+**desligado** até existir o ID do projeto do Play Games. Sem ID, o app funciona normalmente e a
+linha "Progresso na nuvem" nem aparece em Opções. Para ligar (depende da conta da Play Console):
+
+1. Play Console → o app → **Play Games Services → Configuração** → criar o projeto do Play Games
+   (pode usar o projeto do Google Cloud do Firebase, `guardiao-da-floresta`).
+2. **Credenciais → Android (OAuth)**: pacote `com.lopesleo.guardiao` e o **SHA-1**. Cadastrar
+   **dois**: o da chave de upload/debug (testes pelo Android Studio) e o da **chave de assinatura
+   do app** da Play (Configuração → Integridade do app). Sem o segundo, o login falha só na versão
+   baixada da loja.
+3. **Propriedades → Jogos salvos: ATIVADO.**
+4. **Testadores**: enquanto o projeto do Play Games não for publicado, só as contas da lista
+   conseguem entrar.
+5. Copiar o **ID do projeto** (só números) para `android/app/src/main/res/values/games-ids.xml`.
+6. **Revisar e publicar** as alterações do Play Games.
+7. Teste no celular: jogar 1 partida → desinstalar → reinstalar → o título mostra "Progresso
+   recuperado do Play Games". Com outro celular na mesma conta, o jogo pergunta qual progresso usar.
+
+**Segurança dos dados:** o save vai para a conta Google do próprio jogador (Jogos salvos do
+Play Games), não para servidor nosso. Confira no guia do Google como declarar o SDK do Play
+Games no formulário.
+
+**Política de privacidade** (só quando a nuvem for ligada; até lá o app não usa o Play Games): pôr em
+`docs/PRIVACY.md` e na versão em inglês do site (`lopesleo.github.io/guardiao/privacidade/` e `/en/privacy/`):
+
+- No **Resumo**, trocar "Seu progresso fica **no seu aparelho**." por: "Seu progresso fica **no seu
+  aparelho**. Se você entrar no **Google Play Games**, uma cópia também fica guardada na sua conta
+  Google, para voltar ao reinstalar ou trocar de celular."
+- Seção nova, antes de "Anúncios":
+
+  > ## Cópia do progresso na nuvem (Google Play Games)
+  >
+  > Se você estiver conectado ao **Google Play Games**, o jogo guarda uma cópia do progresso
+  > com o recurso **Jogos salvos** do Google. A cópia fica no espaço do jogo na sua conta Google
+  > (uma pasta oculta, que só este jogo acessa), **não em servidores nossos**, e serve para
+  > recuperar o progresso ao reinstalar ou trocar de aparelho. As opções (volume, idioma etc.)
+  > não vão para a nuvem. O Google Play Games trata a sua conta e o seu perfil de jogador
+  > conforme a [Política de Privacidade do Google](https://policies.google.com/privacy).
+  > Para não usar a nuvem, basta não entrar no Play Games. "Apagar progresso" apaga também a
+  > cópia na nuvem, e você pode excluir os dados do jogo no app ou nas configurações do Google
+  > Play Games.
+
+- Em "Seus direitos": "(apagar o progresso, inclusive a cópia no Play Games; redefinir o ID de
+  publicidade; desativar notificações)".
+
 ## Preço
 
 **Grátis**, com anúncios opcionais e a compra "Remover anúncios" (precisa de **perfil de pagamentos**
@@ -266,4 +313,3 @@ na conta para vender).
 ## Próximos passos recomendados (pós-lançamento)
 
 - Conquistas do Google Play Games (os ids de `ACHIEVEMENTS` já servem de chave).
-- Salvar na nuvem (Play Games Saved Games) — hoje o progresso fica no aparelho.

@@ -456,6 +456,15 @@ Nada disso trava o desenvolvimento; só o lançamento e a receita.
   app 森林守護者 (`values-b+zh+Hant`); ficha da loja. **"Idioma do app" do Android 13+** (`locales_config.xml`);
   trocar o idioma do aparelho depois de escolher no jogo faz o jogo voltar a seguir o aparelho.
   👤 Falta conferir no celular a tela "Idioma do app" (Configurações → Apps → Guardião → Idioma)
+- ✅ **Progresso na nuvem (Google Play Games, 05/10/2026):** o save do aparelho ganha uma cópia na conta
+  Google do jogador (Jogos salvos, API v2, plugin nativo `PlayGamesPlugin`). Reinstalou ou trocou de
+  celular = volta sozinho; os dois com progresso = o jogador escolhe numa janela (partidas, vitórias,
+  moedas, guardiões, data). Nada sobe antes da 1ª conferência (aparelho novo nunca apaga a nuvem);
+  envio carimbado, que não passa por cima do que outro celular gravou; nunca troca nada no meio da
+  partida; "Apagar progresso" apaga também a nuvem; o relógio anti-trapaça do outro aparelho é
+  descartado ao restaurar. Opções → Jogo: CONECTAR / SALVAR AGORA. Testado no navegador com Play
+  Games falso (21 casos). 👤 **Falta:** criar o projeto do Play Games na Play Console e pôr o ID em
+  `games-ids.xml` (passo a passo em `PLAY_STORE.md`); sem ID fica desligado
 - 👤 Testes em aparelho forte e fraco + playtest com 5–10 pessoas
 - 👤 `.aab` assinado, classificação IARC, **teste fechado** exigido pelo Play Console
   - ✅ Assinatura por comando, sem Android Studio: `npm run android:chave` (cria a chave fora do projeto e o
