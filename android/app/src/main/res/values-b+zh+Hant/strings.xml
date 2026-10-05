@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!-- Nome do app em chinês tradicional (Taiwan, Hong Kong, Macau e zh-Hant) -->
+<resources>
+    <string name="app_name">森林守護者</string>
+    <string name="title_activity_main">森林守護者</string>
+</resources>

@@ -36,11 +36,12 @@ No Android Studio:
 A cada nova versão, aumente `versionCode` (inteiro) e `versionName` em
 `android/app/build.gradle` e rode `npm run android:sync` de novo.
 
-## Ficha da loja (5 idiomas)
+## Ficha da loja (6 idiomas)
 
 Números conferidos com o `config.js` em 03/10/2026 (18 armas, 18 evoluções, 7 guardiões,
 12 lendas, 2 mapas, 5 Perigos, 32 conquistas). Limites da Play: nome 30, descrição curta 80,
-completa 4000 caracteres. No Play Console: **Presença na loja → Traduções** (pt-BR padrão).
+completa 4000 caracteres. No Play Console: **Presença na loja → Traduções** (pt-BR padrão;
+chinês tradicional = `zh-TW` e `zh-HK`, a mesma ficha nos dois).
 
 ### Português (Brasil) — padrão
 
@@ -159,6 +160,29 @@ completa 4000 caracteres. No Play Console: **Presença na loja → Traduções**
 > • 空地：局与局之间种菜、钓鱼、烹饪和建造
 > • 每局约7分钟，专为手机设计 · 可离线游玩
 > • 免费：广告只在你想看时出现，战斗中绝不打扰
+
+### 繁體中文（台灣、香港）
+
+**名稱:** 森林守護者
+
+**簡短說明:**
+> 在獸群中生存，組合元素，解放巴西森林中的傳說。
+
+**完整說明:**
+> 腐朽吞沒了森林。你是最後的守護者。
+>
+> **森林守護者**是一款取材於巴西民間傳說的生存類 Roguelite 遊戲：你只需移動，武器會自動攻擊，
+> 每次升級都會獲得一張改變戰局的卡牌。
+>
+> 🔥❄️⚡🌀 **元素反應** —— 火＋冰化為蒸汽，冰＋雷碎成結晶，火＋雷引發超載，風還能帶來烈焰、寒霜與風暴。
+>
+> • 18種武器、18種進化，以及相配武器之間的羈絆
+> • 7位守護者：庫魯皮拉、凱波拉、伊亞拉、薩西等傳說人物
+> • 只靠走位就能躲開大招的頭目：馬品瓜里、卡博克洛水靈……
+> • 2張地圖（亞馬孫與卡廷加）、5級危險度、32項成就
+> • 空地：局與局之間種菜、釣魚、烹飪和建造
+> • 每局約7分鐘，專為手機設計 · 可離線遊玩
+> • 免費：廣告只在你想看時出現，戰鬥中絕不打擾
 
 **Categoria:** Jogos → Ação · **Classificação indicativa:** questionário IARC
 (violência fantasiosa leve, sem sangue → costuma sair Livre/10+).

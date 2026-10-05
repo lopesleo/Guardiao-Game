@@ -43,12 +43,12 @@ público brasileiro, com potencial internacional.
   únicas exceções são fontes OFL: Jersey 15, Atkinson Hyperlegible e a Fusion Pixel
   recortada para japonês/chinês). UI sempre via `src/ui/Theme.js` e
   `src/ui/Widgets.js` — nada de retângulos crus, emojis ou fontes do sistema.
-- **Idiomas (pt, en, es, ja, zh):** todo texto visível passa por `tr("português", …)`
+- **Idiomas (pt, en, es, ja, zh, zht = chinês tradicional):** todo texto visível passa por `tr("português", …)`
   (`src/i18n/i18n.js`) com `{0}` para valores — nunca frase concatenada. Fichas do
   `config.js` são traduzidas por campo. `npm run check` aponta o que falta. Ver
   `docs/IDIOMAS.md`.
 - **Revisar todos os idiomas a cada novidade:** ao adicionar ou mudar qualquer texto, revisar
-  na hora a tradução nos 5 idiomas (sentido, tom, glossário e se cabe na tela) — não só
+  na hora a tradução em todos os idiomas (sentido, tom, glossário e se cabe na tela) — não só
   preencher o que o `npm run check` aponta como faltando.
 - **Critério de qualidade:** mirar um nível capaz de ganhar prêmios como Awwwards, Webby Awards
   ou FWA. Verificar o próprio trabalho repetidamente (capturas de tela, jogar como jogador,

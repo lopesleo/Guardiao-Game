@@ -9,9 +9,13 @@ import { tr, lang, isCJK, cjkWrap } from "../i18n/i18n.js";
 // Jersey 15 é condensada e "pequena", a Atkinson (feita para baixa visão) é larga.
 // Japonês e chinês: Fusion Pixel 12px (OFL; recortada só com os caracteres do jogo,
 // ver tools/font-subset.py) nas duas opções; a "Legível" só fica maior.
-const CJK = { ja: '"Fusion Pixel JA", "Jersey 15", monospace', zh: '"Fusion Pixel ZH", "Jersey 15", monospace' };
+const CJK = {
+  ja: '"Fusion Pixel JA", "Jersey 15", monospace',
+  zh: '"Fusion Pixel ZH", "Jersey 15", monospace',
+  zht: '"Fusion Pixel ZHT", "Jersey 15", monospace',
+};
 const CJK_K = 1;
-// Nomes dos idiomas (日本語, 简体中文) em qualquer idioma: recorte mínimo da Fusion Pixel
+// Nomes dos idiomas (日本語, 简体中文, 繁體中文) em qualquer idioma: recorte mínimo da Fusion Pixel
 export const LANG_FONT = '"Jersey 15", "Fusion Pixel Langs", monospace';
 export const FONTS = {
   pixel: { label: tr("Pixel"), family: isCJK ? CJK[lang] : '"Jersey 15", monospace', k: isCJK ? CJK_K : 1, style: "normal" },

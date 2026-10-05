@@ -91,7 +91,7 @@ Lista completa em [`docs/CREDITS.md`](docs/CREDITS.md) e no menu → Créditos.
 **Arte e áudio 100% próprios**, gerados por código (`src/art/`, `src/audio/`) ·
 Fontes: Jersey 15, Atkinson Hyperlegible e Fusion Pixel (todas OFL) · Motor: Phaser 4 (MIT) · nipplejs (MIT).
 
-Idiomas: português, inglês, espanhol, japonês e chinês simplificado (`src/i18n/`, ver
+Idiomas: português, inglês, espanhol, japonês, chinês simplificado e chinês tradicional (`src/i18n/`, ver
 `docs/IDIOMAS.md`).
 
 **Autor:** Leonardo Lopes

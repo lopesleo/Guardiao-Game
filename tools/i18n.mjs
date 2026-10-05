@@ -14,7 +14,7 @@ import { pathToFileURL } from "node:url";
 const ts = createRequire(import.meta.url)("typescript");
 
 const ROOT = path.resolve("src");
-export const LANG_IDS = ["en", "es", "ja", "zh"];
+export const LANG_IDS = ["en", "es", "ja", "zh", "zht"];
 const TEXT_FIELDS = new Set(
   fs.readFileSync(path.join(ROOT, "i18n", "i18n.js"), "utf8").match(/const TEXT_FIELDS = new Set\(\[([\s\S]*?)\]\)/)[1].match(/"([^"]+)"/g).map((s) => s.slice(1, -1)),
 );

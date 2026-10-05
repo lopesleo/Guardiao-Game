@@ -14,7 +14,7 @@ export class BootScene extends Phaser.Scene {
       Promise.all([
         document.fonts.load('16px "Jersey 15"'),
         document.fonts.load('bold 16px "Atkinson Hyperlegible"'),
-        document.fonts.load('16px "Fusion Pixel Langs"', '日本語简体中文'),
+        document.fonts.load('16px "Fusion Pixel Langs"', '日本語简体中文繁體中文'),
         // japonês/chinês: o texto do Phaser é desenhado uma vez, a fonte tem de chegar antes
         ...(isCJK ? [document.fonts.load(`16px "Fusion Pixel ${lang.toUpperCase()}"`, '森')] : []),
       ]).then(go, go);

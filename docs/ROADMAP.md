@@ -357,6 +357,11 @@ Nada disso trava o desenvolvimento; só o lançamento e a receita.
   `config.js` traduzidas por campo; Fusion Pixel (OFL) recortada para japonês/chinês com quebra por caractere;
   nome do app no Android por idioma; `npm run check` aponta texto sem tradução e fonte desatualizada. Painéis,
   listas, cartas e falas passam a caber com textos longos. 👤 revisão por falantes nativos (ja/zh antes de tudo)
+- ✅ **Chinês tradicional (05/10/2026):** 6º idioma (`zht`, 繁體中文) para Taiwan, Hong Kong, Macau e `zh-Hant`,
+  convertido do simplificado (OpenCC, padrão de Taiwan) e revisado; fonte com o desenho de Taiwan; nome do
+  app 森林守護者 (`values-b+zh+Hant`); ficha da loja. **"Idioma do app" do Android 13+** (`locales_config.xml`);
+  trocar o idioma do aparelho depois de escolher no jogo faz o jogo voltar a seguir o aparelho.
+  👤 Falta conferir no celular a tela "Idioma do app" (Configurações → Apps → Guardião → Idioma)
 - 👤 Testes em aparelho forte e fraco + playtest com 5–10 pessoas
 - 👤 `.aab` assinado, classificação IARC, **teste fechado** exigido pelo Play Console
 - ⬜ Ajustes pelos números de D1/D3/D7 → **produção**

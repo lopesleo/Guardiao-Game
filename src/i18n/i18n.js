@@ -7,6 +7,7 @@ import en from "./en.js";
 import es from "./es.js";
 import ja from "./ja.js";
 import zh from "./zh.js";
+import zht from "./zht.js";
 
 export const LANGS = [
   { id: "pt", label: "Português", locale: "pt-BR" },
@@ -14,27 +15,49 @@ export const LANGS = [
   { id: "es", label: "Español", locale: "es-ES" },
   { id: "ja", label: "日本語", locale: "ja-JP" },
   { id: "zh", label: "简体中文", locale: "zh-CN" },
+  { id: "zht", label: "繁體中文", locale: "zh-TW" },
 ];
-const CATALOGS = { en, es, ja, zh };
+const CATALOGS = { en, es, ja, zh, zht };
 
-// 1ª abertura: idioma do aparelho (português do Brasil é a casa; o resto cai no inglês)
+// Idioma do jogo para uma etiqueta do aparelho ("pt-BR", "zh-Hant-TW"…). O chinês tem duas
+// escritas: "Hant", Taiwan, Hong Kong e Macau usam o tradicional; "Hans" e o resto, o simplificado.
+// (index.html repete esta regra antes do jogo carregar)
+export function langOf(tag) {
+  const t = String(tag || "").toLowerCase();
+  const base = t.split(/[-_]/)[0];
+  if (base === "zh") return !/hans/.test(t) && /hant|[-_](tw|hk|mo)(?![a-z])/.test(t) ? "zht" : "zh";
+  return LANGS.some((x) => x.id === base) ? base : null;
+}
+
+const deviceLangs = () =>
+  (typeof navigator !== "undefined" && (navigator.languages?.length ? navigator.languages : [navigator.language])) || [];
+
+// Idioma do aparelho (português do Brasil é a casa; sem suporte cai no inglês)
 function detect() {
   if (typeof window === "undefined") return "pt"; // ferramentas no Node (npm run check) leem o português
-  const list = (typeof navigator !== "undefined" && (navigator.languages?.length ? navigator.languages : [navigator.language])) || [];
-  for (const l of list) {
-    const base = String(l || "").toLowerCase().split("-")[0];
-    if (LANGS.some((x) => x.id === base)) return base;
+  for (const l of deviceLangs()) {
+    const id = langOf(l);
+    if (id) return id;
   }
   return "en";
 }
 
+// A escolha feita no jogo vale até o jogador mudar o idioma do APARELHO (ou o "idioma do app"
+// do Android 13+) depois dela: a mudança mais recente vence
 export const lang = (() => {
   const saved = Settings.get("lang");
-  return LANGS.some((x) => x.id === saved) ? saved : detect();
+  if (!LANGS.some((x) => x.id === saved)) return detect();
+  const from = Settings.get("langDevice");
+  if (from != null && from !== String(deviceLangs()[0] ?? "")) {
+    Settings.set("lang", null);
+    Settings.set("langDevice", null);
+    return detect();
+  }
+  return saved;
 })();
 export const locale = LANGS.find((x) => x.id === lang).locale;
 // Japonês e chinês: fonte própria e quebra de linha por caractere (não há espaços)
-export const isCJK = lang === "ja" || lang === "zh";
+export const isCJK = lang === "ja" || lang === "zh" || lang === "zht";
 const cat = CATALOGS[lang] ?? null;
 
 export function tr(src, ...args) {
@@ -50,6 +73,7 @@ export const dec = (x, digits = 1) => Number(x).toLocaleString(locale, { minimum
 // Troca o idioma: os textos do Phaser são desenhados uma vez, então o jogo recarrega
 export function setLang(id) {
   Settings.set("lang", id);
+  Settings.set("langDevice", String(deviceLangs()[0] ?? "")); // ver `lang` acima
   location.reload();
 }
 
