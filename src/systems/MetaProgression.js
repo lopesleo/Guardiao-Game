@@ -17,6 +17,15 @@ function fnv(str, seed) {
   return h.toString(16).padStart(8, '0');
 }
 export const signSave = (json) => fnv(SALT + json, 0x811c9dc5) + fnv(json + SALT, 0x9e3779b9);
+// Texto gravado no localStorage: o JSON com a assinatura como último campo
+export const serializeSave = (json) => `${json.slice(0, -1)}${json.length > 2 ? "," : ""}"_sig":"${signSave(json)}"}`;
+
+// Quem precisa saber que o save mudou (progresso na nuvem, CloudSave.js)
+const saveHooks = [];
+export const addSaveHook = (fn) => saveHooks.push(fn);
+// Trava de gravação: ligada enquanto um save da nuvem é restaurado (o jogo recarrega
+// logo em seguida; nada da sessão antiga pode gravar por cima do que voltou)
+export const SaveLock = { frozen: false };
 
 const DEFAULT = {
   saveVersion: 4,
@@ -170,14 +179,14 @@ export class MetaProgression {
   }
 
   _save() {
-    if (!this.available) return;
+    if (!this.available || SaveLock.frozen) return;
     try {
       this.data.clock = Clock.snapshot(); // estado do relógio confiável, assinado junto (ver Clock.js)
       delete this.data.clockLast; // formato antigo
       const { _sig, ...rest } = this.data;
-      const json = JSON.stringify(rest);
-      localStorage.setItem(META.STORAGE_KEY, `${json.slice(0, -1)}${json.length > 2 ? "," : ""}"_sig":"${signSave(json)}"}`);
-    } catch {}
+      localStorage.setItem(META.STORAGE_KEY, serializeSave(JSON.stringify(rest)));
+    } catch { return; }
+    for (const fn of saveHooks) fn();
   }
 
   // ---- Queries ----
@@ -446,10 +455,10 @@ export class MetaProgression {
   }
 
   // RESET completo
+  // Grava o save zerado (em vez de só apagar): com o progresso na nuvem ligado, o
+  // save zerado também sobe — apagar vale para a nuvem, senão ela devolveria tudo
   reset() {
     this.data = freshDefault();
-    if (this.available) {
-      try { localStorage.removeItem(META.STORAGE_KEY); } catch {}
-    }
+    this._save();
   }
 }
