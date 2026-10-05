@@ -47,6 +47,13 @@ público brasileiro, com potencial internacional.
   (`src/i18n/i18n.js`) com `{0}` para valores — nunca frase concatenada. Fichas do
   `config.js` são traduzidas por campo. `npm run check` aponta o que falta. Ver
   `docs/IDIOMAS.md`.
+- **Revisar todos os idiomas a cada novidade:** ao adicionar ou mudar qualquer texto, revisar
+  na hora a tradução nos 5 idiomas (sentido, tom, glossário e se cabe na tela) — não só
+  preencher o que o `npm run check` aponta como faltando.
+- **Critério de qualidade:** mirar um nível capaz de ganhar prêmios como Awwwards, Webby Awards
+  ou FWA. Verificar o próprio trabalho repetidamente (capturas de tela, jogar como jogador,
+  tentar quebrar) e seguir melhorando por conta própria até atingir esse nível, antes de
+  dar por pronto.
 - **Gênero:** o jogador só se move; decisões acontecem nas cartas de nível.
 - **Balanceamento centralizado** em `src/config.js`.
 - **Automatizar o tedioso, nunca o divertido** (bichos ajudam e presenteiam;

@@ -318,7 +318,16 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   anúncio premiado de TESTE carregado → exibido → recompensa → fechado → 4ª carta liberada; eventos
   `ad_offer_show/accept/ad_reward` enviados ao Firebase. Com bloqueador de anúncios (ex.: DNS privado
   AdGuard) o anúncio não carrega e o jogo avisa "Anúncio indisponível agora" (sem bônus grátis).
-  👤 Falta: ver o formulário europeu (`ADS.TEST_EEA = true`) e conferir os eventos no painel do Firebase
+  👤 Falta: ver o formulário europeu (`ADS.TEST_EEA = true` **e** o código do celular em
+  `ADS.TEST_DEVICE_IDS`, que aparece no logcat — sem ele o Google ignora a simulação num aparelho de
+  verdade) e conferir os eventos no painel do Firebase
+- ✅ **Retorno dos anúncios (05/10/2026):** "Carregando anúncio…" com roda de espera enquanto o vídeo vem;
+  aviso quando não vem (sem rede, sem anúncio, 12 s sem carregar) ou quando o jogador fecha antes do fim
+  ("Assista até o fim…"); o Reviver diz o motivo certo e congela a contagem durante a espera. Se o AdMob
+  falhar na abertura (sem internet), tenta de novo ao voltar ao app. Em Opções, **"Consentimento de
+  anúncios" agora abre as opções de privacidade do Google** (antes apagava a escolha e não abria nada):
+  só existe onde há mensagem publicada (Europa); no Brasil o botão fica apagado com "Não é exigido na sua
+  região". Teste no navegador: `?debug=1&adsim=fail` ou `&adsim=cancel`. Evento novo: `ad_fail`
 - ⬜ Compra "Remover anúncios"
 - ✅ Firebase Analytics + Crashlytics plugados (`src/systems/Telemetry.js`, plugins `@capacitor-firebase/*`):
   projeto `guardiao-da-floresta` (plano Spark, grátis), app Android `com.lopesleo.guardiao`, GA4 em conta
