@@ -154,7 +154,7 @@ function pickLanguage(scene) {
     m.add(
       new Button(scene, 0, m.top + 40 + i * 64, 360, 52, l.label, () => (on ? m.close() : setLang(l.id)), {
         size: 22,
-        family: LANG_FONT, // 日本語/简体中文 aparecem mesmo com o jogo em outro idioma
+        family: LANG_FONT, // 日本語/简体中文/繁體中文 aparecem mesmo com o jogo em outro idioma
         style: on ? "gold" : "dark",
         color: on ? CSS.goldHi : CSS.txt,
       }),

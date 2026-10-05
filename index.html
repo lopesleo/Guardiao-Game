@@ -33,6 +33,11 @@
       font-display: block;
     }
     @font-face {
+      font-family: 'Fusion Pixel ZHT';
+      src: url('./assets/fonts/FusionPixel-zht.woff2') format('woff2');
+      font-display: block;
+    }
+    @font-face {
       font-family: 'Fusion Pixel Langs';
       src: url('./assets/fonts/FusionPixel-langs.woff2') format('woff2');
       font-display: block;
@@ -63,6 +68,7 @@
     #rotate-overlay .icon { font-size: 64px; margin-bottom: 24px; animation: rot 2s ease-in-out infinite; }
     html[lang="ja"] body { font-family: 'Fusion Pixel JA', 'Jersey 15', monospace; }
     html[lang="zh-CN"] body { font-family: 'Fusion Pixel ZH', 'Jersey 15', monospace; }
+    html[lang="zh-TW"] body { font-family: 'Fusion Pixel ZHT', 'Jersey 15', monospace; }
     #rotate-overlay p { font-size: 20px; font-weight: 700; line-height: 1.8; max-width: 320px; }
     @keyframes rot { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(90deg); } }
     @media (orientation: portrait) and (max-width: 900px) {
@@ -86,11 +92,19 @@
   <script>
     // Idioma da página antes do jogo carregar (mesma regra de src/i18n/i18n.js)
     (function () {
-      var ids = ["pt", "en", "es", "ja", "zh"], lang = null;
-      try { lang = JSON.parse(localStorage.getItem("guardiao_settings_v1") || "{}").lang; } catch (e) {}
+      var ids = ["pt", "en", "es", "ja", "zh", "zht"], lang = null, s = {};
+      var list = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+      try { s = JSON.parse(localStorage.getItem("guardiao_settings_v1") || "{}"); } catch (e) {}
+      lang = s.lang;
+      // a escolha no jogo perde para uma troca de idioma do aparelho feita depois dela
+      if (s.langDevice != null && s.langDevice !== String(list[0] || "")) lang = null;
+      var of = function (tag) {
+        var t = String(tag || "").toLowerCase(), base = t.split(/[-_]/)[0];
+        if (base === "zh") return !/hans/.test(t) && /hant|[-_](tw|hk|mo)(?![a-z])/.test(t) ? "zht" : "zh";
+        return base;
+      };
       if (ids.indexOf(lang) < 0) {
-        var list = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
-        for (var i = 0; i < list.length && ids.indexOf(lang) < 0; i++) lang = String(list[i] || "").toLowerCase().split("-")[0];
+        for (var i = 0; i < list.length && ids.indexOf(lang) < 0; i++) lang = of(list[i]);
         if (ids.indexOf(lang) < 0) lang = "en";
       }
       var rot = {
@@ -98,10 +112,11 @@
         es: "Gira el dispositivo a modo horizontal",
         ja: "端末を横向きにしてください",
         zh: "请将设备横屏",
+        zht: "請將裝置轉為橫向",
       };
-      document.documentElement.lang = { pt: "pt-BR", en: "en", es: "es", ja: "ja", zh: "zh-CN" }[lang];
+      document.documentElement.lang = { pt: "pt-BR", en: "en", es: "es", ja: "ja", zh: "zh-CN", zht: "zh-TW" }[lang];
       if (rot[lang]) document.getElementById("rotate-text").textContent = rot[lang];
-      var title = { en: "Forest Guardian", es: "Guardián del Bosque", ja: "森の守護者", zh: "森林守护者" };
+      var title = { en: "Forest Guardian", es: "Guardián del Bosque", ja: "森の守護者", zh: "森林守护者", zht: "森林守護者" };
       if (title[lang]) document.title = title[lang];
     })();
   </script>

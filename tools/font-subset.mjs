@@ -1,8 +1,8 @@
 // Recorta a Fusion Pixel 12px (OFL, github.com/TakWolf/fusion-pixel-font) só com os caracteres
 // que o jogo usa — a fonte inteira tem ~7 MB; o recorte, algumas dezenas de KB.
-//   node tools/font-subset.mjs          → gera assets/fonts/FusionPixel-{ja,zh,langs}.woff2
+//   node tools/font-subset.mjs          → gera assets/fonts/FusionPixel-{ja,zh,zht,langs}.woff2
 //   node tools/font-subset.mjs --check  → só confere se os recortes cobrem os catálogos atuais
-// Rodar de novo sempre que os catálogos ja/zh mudarem (`npm run check` avisa).
+// Rodar de novo sempre que os catálogos ja/zh/zht mudarem (`npm run check` avisa).
 // Precisa de Python com fontTools e brotli (pip install fonttools brotli). A fonte original é
 // baixada uma vez para tools/.cache/ (fora do git).
 import fs from "node:fs";
@@ -14,7 +14,12 @@ const VER = "2026.09.25";
 const ZIP = `https://github.com/TakWolf/fusion-pixel-font/releases/download/${VER}/fusion-pixel-font-12px-proportional-ttf-v${VER}.zip`;
 const CACHE = path.resolve("tools/.cache/fusion-pixel");
 const OUT = path.resolve("assets/fonts");
-const SRC = { ja: "fusion-pixel-12px-proportional-ja.ttf", zh: "fusion-pixel-12px-proportional-zh_hans.ttf" };
+// zht: o desenho de Taiwan (formas tradicionais de cada caractere)
+const SRC = {
+  ja: "fusion-pixel-12px-proportional-ja.ttf",
+  zh: "fusion-pixel-12px-proportional-zh_hans.ttf",
+  zht: "fusion-pixel-12px-proportional-zh_tw.ttf",
+};
 
 // Sempre presentes: ASCII, Latin-1 (nomes em português, ex. "Ã") e a pontuação do jogo
 const BASE = (() => {
@@ -39,6 +44,7 @@ export async function wanted() {
   return {
     ja: chars(BASE, pt, Object.values(await catalog("ja")).join("")),
     zh: chars(BASE, pt, Object.values(await catalog("zh")).join("")),
+    zht: chars(BASE, pt, Object.values(await catalog("zht")).join("")),
     langs: chars(LANGS.map((l) => l.label).join("")),
   };
 }
@@ -74,7 +80,7 @@ async function main() {
   }
   ensureSource();
   const w = await wanted();
-  // nomes dos idiomas (日本語 / 简体中文): o recorte chinês tem os dois
+  // nomes dos idiomas (日本語 / 简体中文 / 繁體中文): o recorte "langs" sai da fonte chinesa
   for (const [id, text] of Object.entries(w)) {
     const src = path.join(CACHE, SRC[id] ?? SRC.zh);
     const txt = path.join(CACHE, `${id}.txt`);
