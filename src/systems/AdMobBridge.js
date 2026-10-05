@@ -10,34 +10,41 @@ import { AdService } from "./AdService.js";
 import { Analytics } from "./Analytics.js";
 import { Settings } from "./Settings.js";
 import { Telemetry } from "./Telemetry.js";
-import { text, vw, vh } from "../ui/Theme.js";
-import { CSS } from "../art/Palette.js";
 import { tr } from "../i18n/i18n.js";
-
-// Aviso curto na cena que está por cima (ex.: tela de cartas), sem depender de cada cena
-function notice(msg) {
-  const scenes = window.game?.scene?.getScenes(true) ?? [];
-  const s = scenes[scenes.length - 1];
-  if (!s) return;
-  const t = text(s, vw(s) / 2, vh(s) * 0.2, msg, { size: 20, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 5 })
-    .setDepth(99999)
-    .setScrollFactor(0);
-  s.tweens.add({ targets: t, alpha: 0, delay: 2200, duration: 500, onComplete: () => t.destroy() });
-}
 
 const plugin = () => window.Capacitor?.Plugins?.AdMob;
 
-let state = { ready: false, consent: "UNKNOWN", busy: false, step: "não iniciado", error: "" };
+// privacy: o Google pede um botão de "opções de privacidade" para este jogador? (REQUIRED só onde há
+// mensagem de consentimento publicada no AdMob — hoje a europeia/GDPR; no Brasil vem NOT_REQUIRED)
+let state = { ready: false, consent: "UNKNOWN", privacy: "UNKNOWN", busy: false, step: "idle", error: "" };
 
 // Status do UMP: NOT_REQUIRED (fora da Europa) e OBTAINED (já respondeu) liberam anúncios
 const canRequestAds = (status) => status === "NOT_REQUIRED" || status === "OBTAINED";
 
+// Teste: ADS.TEST_EEA finge que o aparelho está na Europa. Num celular de verdade o Google só
+// aceita isso se o aparelho estiver em ADS.TEST_DEVICE_IDS (emulador já conta como de teste)
+const consentOpts = () =>
+  ADS.TESTING && ADS.TEST_EEA ? { debugGeography: 1, testDeviceIdentifiers: ADS.TEST_DEVICE_IDS ?? [] } : {};
+
+const remember = (info) => {
+  if (info?.privacyOptionsRequirementStatus) state.privacy = info.privacyOptionsRequirementStatus;
+  return info;
+};
+
 async function askConsent(AdMob) {
-  // ADS.TEST_EEA força a geografia "Europa" para você ver o formulário no aparelho de teste
-  const opts = ADS.TESTING && ADS.TEST_EEA ? { debugGeography: 1 } : {};
-  let info = await AdMob.requestConsentInfo(opts);
-  if (info?.isConsentFormAvailable && info.status === "REQUIRED") info = await AdMob.showConsentForm();
+  let info = remember(await AdMob.requestConsentInfo(consentOpts()));
+  if (info?.isConsentFormAvailable && info.status === "REQUIRED") info = remember(await AdMob.showConsentForm());
   return info?.status ?? "UNKNOWN";
+}
+
+// Liga o SDK e passa a servir anúncios (no boot ou logo depois de o jogador consentir)
+async function startAds(AdMob) {
+  state.step = "sdk";
+  await AdMob.initialize({ initializeForTesting: ADS.TESTING });
+  AdService.setProvider({ show: showRewarded });
+  state.ready = true;
+  state.error = "";
+  state.step = "ready";
 }
 
 // Som do jogo durante o anúncio: o anúncio abre uma tela própria DENTRO do app, então o Android não
@@ -54,38 +61,53 @@ function gameAudio(on) {
   if (on && ctx.state === "suspended" && !snd.locked) ctx.resume().catch(() => {});
 }
 
-// Um anúncio premiado: resolve true só se o jogador GANHOU a recompensa (assistiu até o fim)
+// Nova tentativa de ligar os anúncios ao voltar ao app (no máximo uma por minuto)
+const RETRY_MS = 60000;
+let installing = null,
+  retryHooked = false,
+  lastTry = 0;
+
+// Sem rede o carregamento pode demorar muito: passado esse tempo, desiste (o jogador é avisado)
+const LOAD_TIMEOUT_MS = 12000;
+
+// Um anúncio premiado. Resolve "ok" só se o jogador GANHOU a recompensa (assistiu até o fim);
+// "cancelled" = fechou antes; "unavailable" = não carregou (sem rede, sem anúncio no momento…)
 function showRewarded(placement) {
   const AdMob = plugin();
   const adId = ADMOB.UNITS[placement];
-  if (!AdMob || !adId || state.busy) return Promise.resolve(false);
+  if (state.busy) return Promise.resolve("busy");
+  if (!AdMob || !adId) return Promise.resolve("unavailable");
   state.busy = true;
   return new Promise((resolve) => {
     const handles = [];
     let rewarded = false;
     let done = false;
-    const finish = (ok, failed = false) => {
+    const finish = (result) => {
       if (done) return;
       done = true;
+      clearTimeout(timer);
       handles.forEach((h) => h?.remove?.());
       state.busy = false;
       gameAudio(true);
-      // Falha de carga (sem rede, bloqueador de anúncios, sem anúncio no momento): avisa o jogador
-      if (failed && !ok) notice(tr("Anúncio indisponível agora. Tente mais tarde."));
-      resolve(ok);
+      resolve(result);
     };
+    const timer = setTimeout(() => {
+      state.error = "timeout";
+      finish("unavailable");
+    }, LOAD_TIMEOUT_MS);
     (async () => {
       try {
-        state.step = "anúncio";
         handles.push(await AdMob.addListener("onRewardedVideoAdReward", () => (rewarded = true)));
-        handles.push(await AdMob.addListener("onRewardedVideoAdDismissed", () => finish(rewarded)));
-        handles.push(await AdMob.addListener("onRewardedVideoAdFailedToShow", () => finish(false, true)));
+        handles.push(await AdMob.addListener("onRewardedVideoAdDismissed", () => finish(rewarded ? "ok" : "cancelled")));
+        handles.push(await AdMob.addListener("onRewardedVideoAdFailedToShow", () => finish("unavailable")));
         await AdMob.prepareRewardVideoAd({ adId, isTesting: ADS.TESTING });
+        if (done) return; // demorou demais: o jogador já foi avisado, não abre o anúncio depois
+        clearTimeout(timer); // carregou: daqui em diante o tempo é do jogador assistindo
         gameAudio(false); // silencia o jogo só quando o anúncio vai mesmo aparecer
         await AdMob.showRewardVideoAd();
       } catch (e) {
         state.error = String(e?.message ?? e); // aparece em Opções (ex.: "no fill")
-        finish(rewarded, true); // sem anúncio disponível (falha ao carregar) = sem recompensa
+        finish(rewarded ? "ok" : "unavailable");
       }
     })();
   });
@@ -99,47 +121,70 @@ export const AdMobBridge = {
   get ready() {
     return state.ready;
   },
+  // "REQUIRED" | "NOT_REQUIRED" | "UNKNOWN" — se o botão de rever o consentimento vale para este jogador
+  get privacy() {
+    return state.privacy;
+  },
   // Texto curto para a tela de Opções: ajuda a descobrir por que o anúncio não aparece
   statusText() {
-    if (!isNative()) return "só no app";
-    if (!plugin()) return "plugin AdMob ausente";
-    if (state.ready) return ADS.TESTING ? "pronto (teste)" : "pronto";
-    if (state.error) return `erro em ${state.step}: ${state.error}`.slice(0, 60);
-    return state.step;
+    if (!isNative()) return tr("só no app");
+    if (!plugin()) return tr("indisponíveis neste aparelho");
+    if (state.ready) return ADS.TESTING ? tr("prontos (teste)") : tr("prontos");
+    if (state.step === "no-consent") return tr("sem consentimento · toque para tentar de novo");
+    if (state.error) return tr("falharam ({0}) · toque para tentar de novo", state.error.slice(0, 32));
+    return tr("iniciando…");
   },
-  // O jogador pode rever a escolha de consentimento (obrigatório oferecer na Europa)
+  // Opções de privacidade do Google (rever o consentimento). Só existe onde há mensagem de
+  // consentimento (privacy = REQUIRED); depois da escolha, liga os anúncios se ficaram liberados.
   async reviewConsent() {
     const AdMob = plugin();
-    if (!AdMob) return;
+    if (!AdMob || state.privacy !== "REQUIRED") return false;
     try {
-      await AdMob.resetConsentInfo();
-      state.consent = await askConsent(AdMob);
+      await AdMob.showPrivacyOptionsForm();
+      const info = remember(await AdMob.requestConsentInfo(consentOpts()));
+      state.consent = info?.status ?? state.consent;
       Analytics.track("consent_review", { status: state.consent });
-    } catch {}
+      if (!state.ready && canRequestAds(state.consent)) await startAds(AdMob);
+      return true;
+    } catch (e) {
+      state.error = String(e?.message ?? e);
+      return false;
+    }
   },
 
+  // Boot do app. Se falhar (sem internet na abertura, por exemplo), tenta de novo sozinho quando
+  // o jogador volta ao app — sem isso as ofertas sumiriam até reabrir o jogo
   async install() {
-    if (!this.available()) return;
+    if (!this.available() || state.ready || installing) return installing ?? undefined;
+    installing = this._install().finally(() => (installing = null));
+    if (!retryHooked) {
+      retryHooked = true;
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden || state.ready || Date.now() - lastTry < RETRY_MS) return;
+        this.install();
+      });
+    }
+    return installing;
+  },
+
+  async _install() {
     const AdMob = plugin();
+    lastTry = Date.now();
     state.error = "";
     try {
-      state.step = "consentimento";
+      state.step = "consent";
       state.consent = await askConsent(AdMob);
-      Analytics.track("consent_status", { status: state.consent });
+      Analytics.track("consent_status", { status: state.consent, privacy: state.privacy });
       // Europa/UK/Suíça: o uso de dados começa DESLIGADO (o jogador liga em Opções se quiser)
       if (state.consent !== "NOT_REQUIRED" && !Settings.get("telemetryEeaInit")) {
         Settings.set("telemetryEeaInit", true);
         Telemetry.setEnabled(false);
       }
       if (!canRequestAds(state.consent)) {
-        state.step = `sem consentimento (${state.consent})`;
+        state.step = "no-consent";
         return; // sem permissão: nenhum anúncio é oferecido
       }
-      state.step = "iniciando SDK";
-      await AdMob.initialize({ initializeForTesting: ADS.TESTING });
-      AdService.setProvider({ show: showRewarded });
-      state.ready = true;
-      state.step = "pronto";
+      await startAds(AdMob);
     } catch (e) {
       state.error = String(e?.message ?? e);
       Analytics.track("admob_init_fail", { step: state.step, msg: state.error.slice(0, 80) });
