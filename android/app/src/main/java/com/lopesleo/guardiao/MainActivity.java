@@ -16,6 +16,8 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         // Plugin local: relógio desde que o aparelho ligou (anti-trapaça de hora)
         registerPlugin(ElapsedClockPlugin.class);
+        // Plugin local: progresso na nuvem pelo Play Games
+        registerPlugin(PlayGamesPlugin.class);
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         hideSystemBars();
