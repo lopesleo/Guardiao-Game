@@ -40,7 +40,7 @@ export class ReviveScene extends Phaser.Scene {
       icon: "ico_play",
       iconScale: 3,
     });
-    text(this, W / 2, cy + 184, tr("Assista a um anúncio e volte com {0}% da vida", Math.round(ADS.REVIVE_HP_PCT * 100)), {
+    this.hint = text(this, W / 2, cy + 184, tr("Assista a um anúncio e volte com {0}% da vida", Math.round(ADS.REVIVE_HP_PCT * 100)), {
       size: 17,
       color: CSS.dim,
       origin: 0.5,
@@ -76,11 +76,14 @@ export class ReviveScene extends Phaser.Scene {
     const ok = await AdService.rewarded("revive");
     if (this._done) return;
     if (!ok) {
-      // Anúncio indisponível/cancelado: não pune — volta a oferta com o tempo que restava
+      // Anúncio indisponível/fechado antes do fim: não pune — volta a oferta com o tempo que
+      // restava e diz o motivo no lugar da dica (a contagem continua visível)
       this._busy = false;
       this.reviveBtn.setEnabled(AdService.canShow("revive"));
       this.giveUpBtn.setEnabled(true);
-      this.countText.setText(tr("Anúncio indisponível agora"));
+      const why = AdService.lastResult === "cancelled" ? tr("O anúncio foi fechado antes do fim") : tr("Anúncio indisponível agora");
+      this.hint.setText(why).setColor(CSS.redHi);
+      this._tick();
       return;
     }
     this._done = true;

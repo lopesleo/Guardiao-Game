@@ -109,14 +109,32 @@ export function openSettings(scene, o = {}) {
     if (Telemetry.available())
       row(tr("Dados de uso e erros"), new Toggle(scene, 0, 0, Telemetry.enabled(), (v) => Telemetry.setEnabled(v)), tr("Ajuda a melhorar o jogo · anônimo"));
     if (AdMobBridge.available()) {
-      row(tr("Consentimento de anúncios"), new Button(scene, 0, 0, 220, 44, tr("REVER"), () => AdMobBridge.reviewConsent(), { size: 18 }), tr("Mude sua escolha quando quiser"));
+      // Rever o consentimento só existe onde o Google tem mensagem para a região (hoje a Europa);
+      // nos outros lugares o botão fica apagado e a dica explica o porquê
+      const privacy = AdMobBridge.privacy;
+      const hint = { REQUIRED: tr("Mude sua escolha quando quiser"), NOT_REQUIRED: tr("Não é exigido na sua região") }[privacy] ?? tr("Precisa de internet");
+      const review = new Button(scene, 0, 0, 220, 44, tr("REVER"), async () => {
+        review.setEnabled(false);
+        await AdMobBridge.reviewConsent();
+        if (!review.active) return;
+        review.setEnabled(true);
+        st.setText(tr("Anúncios: {0}", AdMobBridge.statusText()));
+      }, { size: 18 });
+      review.setEnabled(privacy === "REQUIRED");
+      row(tr("Consentimento de anúncios"), review, hint);
       // Linha discreta de estado dos anúncios (toque tenta de novo se algo falhou)
       const st = m.add(text(scene, -m.w / 2 + 56, y - 8, tr("Anúncios: {0}", AdMobBridge.statusText()), { size: 14, color: CSS.muted, origin: [0, 0.5] }));
       if (!AdMobBridge.ready) {
         st.setInteractive({ useHandCursor: true }).on("pointerup", async () => {
           st.setText(tr("Anúncios: tentando…"));
           await AdMobBridge.install();
+          if (!st.active) return;
           st.setText(tr("Anúncios: {0}", AdMobBridge.statusText()));
+          // a tentativa pode ter descoberto a região: reabre para o botão de consentimento refletir
+          if (AdMobBridge.privacy !== privacy) {
+            m.close();
+            openSettings(scene, { ...o, tab: "dados" });
+          }
         });
       }
     }

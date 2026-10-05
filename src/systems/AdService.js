@@ -6,14 +6,17 @@
 // Provedores:
 //  · "web" (navegador/site): não há anúncio — a recompensa é liberada direto
 //    (vira um bônus gratuito na versão web). Com ?debug=1 simula uma espera.
-//  · "admob" (app Android): entra no M5 (plugin @capacitor-community/admob).
-//    Enquanto não estiver plugado, o app se comporta como "web".
+//  · "admob" (app Android): AdMobBridge registra o provider quando o SDK fica pronto.
 // A compra "Remover anúncios" (noAds) também libera direto, sem assistir.
+// O jogador sempre sabe o que aconteceu: "carregando" enquanto o anúncio vem e, se não vier
+// ou for fechado antes do fim, um aviso (AdFeedback). O motivo fica em AdService.lastResult.
+// Teste no navegador: ?debug=1&adsim=fail (sem anúncio) ou ?debug=1&adsim=cancel (fechou antes).
 import { Analytics } from "./Analytics.js";
 import { DEBUG, isNative } from "./Platform.js";
 import { ADS } from "../config.js";
 import { Clock } from "./Clock.js";
 import { tr } from "../i18n/i18n.js";
+import { AdFeedback } from "../ui/AdFeedback.js";
 
 const KEY = "guardiao_ads_v1";
 
@@ -45,7 +48,7 @@ function loadState() {
 
 let state = loadState();
 let runCounts = {};
-let provider = null; // plugado no M5: { show(placement) → Promise<boolean> }
+let provider = null; // AdMobBridge: { show(placement) → Promise<"ok" | "cancelled" | "unavailable" | "busy"> }
 
 function save() {
   try {
@@ -65,7 +68,9 @@ export const AdService = {
     state.noAds = !!v;
     save();
   },
-  // Plugado no M5 com o AdMob
+  // Como terminou o último pedido: "ok" | "cancelled" (fechou antes do fim) | "unavailable" | "busy"
+  lastResult: null,
+  // Registrado pelo AdMobBridge quando o SDK fica pronto
   setProvider(p) {
     provider = p;
   },
@@ -83,26 +88,41 @@ export const AdService = {
     const day = state.daily[placement] || 0;
     return run < cfg.perRun && day < cfg.perDay;
   },
-  // true = pode dar a recompensa; false = cancelado/indisponível
+  // true = pode dar a recompensa; false = cancelado/indisponível (motivo em lastResult)
   async rewarded(placement) {
-    if (!this.canShow(placement)) return false;
+    if (!this.canShow(placement)) {
+      this.lastResult = "unavailable";
+      return false;
+    }
     Analytics.track("ad_offer_accept", { placement });
-    let ok = true;
-    if (!state.noAds && provider) {
+    let result = "ok";
+    if (!state.noAds && (provider || DEBUG)) {
+      AdFeedback.loading(true);
       try {
-        ok = await provider.show(placement);
+        result = provider ? await provider.show(placement) : await simulate();
       } catch {
-        ok = false;
+        result = "unavailable";
       }
-    } else if (DEBUG && !state.noAds) {
-      await new Promise((r) => setTimeout(r, 600)); // simula o anúncio
+      AdFeedback.loading(false);
     }
-    if (ok) {
-      runCounts[placement] = (runCounts[placement] || 0) + 1;
-      state.daily[placement] = (state.daily[placement] || 0) + 1;
-      save();
-      Analytics.track("ad_reward", { placement, noAds: !!state.noAds, provider: provider ? "admob" : "web" });
+    this.lastResult = result;
+    if (result === "unavailable") AdFeedback.notice(tr("Anúncio indisponível agora. Tente mais tarde."));
+    else if (result === "cancelled") AdFeedback.notice(tr("Assista até o fim para ganhar a recompensa."));
+    if (result !== "ok") {
+      Analytics.track("ad_fail", { placement, result });
+      return false;
     }
-    return ok;
+    runCounts[placement] = (runCounts[placement] || 0) + 1;
+    state.daily[placement] = (state.daily[placement] || 0) + 1;
+    save();
+    Analytics.track("ad_reward", { placement, noAds: !!state.noAds, provider: provider ? "admob" : "web" });
+    return true;
   },
 };
+
+// Navegador com ?debug=1: finge a espera do anúncio (e, com ?adsim=, a falha ou o cancelamento)
+async function simulate() {
+  await new Promise((r) => setTimeout(r, 900));
+  const sim = /[?&]adsim=(fail|cancel)/.exec(globalThis.location?.search ?? "")?.[1];
+  return sim === "fail" ? "unavailable" : sim === "cancel" ? "cancelled" : "ok";
+}
