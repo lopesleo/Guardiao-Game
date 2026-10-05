@@ -180,10 +180,13 @@ export const Clock = {
   async checkNetwork() {
     if (this._checking) return;
     this._checking = true;
+    let timer;
     try {
       const t0 = Date.now();
       let dateHdr = null;
-      const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 4000));
+      // o temporizador é cancelado no finally: senão a rejeição chega depois, sem ninguém
+      // ouvindo, e vira um erro falso na telemetria ("promise: timeout") a cada checagem
+      const timeout = new Promise((_, rej) => (timer = setTimeout(() => rej(new Error("timeout")), 4000)));
       const http = native() && window.Capacitor?.Plugins?.CapacitorHttp;
       if (http) {
         const res = await Promise.race([http.request({ url: TIME_URL, method: "GET" }), timeout]);
@@ -197,6 +200,7 @@ export const Clock = {
     } catch {
       // sem internet: segue com o relógio do aparelho ligado ou com a cota
     } finally {
+      clearTimeout(timer);
       this._checking = false;
     }
   },
