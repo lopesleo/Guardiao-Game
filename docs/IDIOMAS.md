@@ -1,9 +1,17 @@
 # Idiomas
 
-O jogo fala **português (Brasil), inglês, espanhol, japonês e chinês simplificado**.
-Na primeira abertura ele usa o idioma do aparelho (idioma sem suporte = inglês); depois,
-**Opções → Jogo → Idioma** (cada idioma aparece escrito nele mesmo; trocar recarrega o jogo,
-o progresso fica).
+O jogo fala **português (Brasil), inglês, espanhol, japonês, chinês simplificado e chinês
+tradicional**. Ele segue o idioma do aparelho (idioma sem suporte = inglês) até o jogador
+escolher em **Opções → Jogo → Idioma** (cada idioma aparece escrito nele mesmo; trocar recarrega
+o jogo, o progresso fica).
+
+- **Chinês:** `zh-Hant`, Taiwan, Hong Kong e Macau → tradicional (`zht`); `zh-Hans`, China,
+  Singapura e o resto → simplificado (`zh`). Regra em `langOf()` (`src/i18n/i18n.js`), repetida
+  no `index.html`.
+- **A troca mais recente vence:** a escolha no jogo guarda o idioma que o aparelho tinha naquela
+  hora (`langDevice`). Se depois o jogador mudar o idioma do aparelho (ou o **"Idioma do app"** do
+  Android 13+, que lista os idiomas de `res/xml/locales_config.xml`), o jogo volta a seguir o
+  aparelho. Quem escolheu antes dessa regra (sem `langDevice`) continua com a escolha.
 
 ## Como funciona
 
@@ -14,13 +22,13 @@ o progresso fica).
   `config.js`, `localize([...])` traduz no lugar os campos de texto (`name`, `desc`, `text`,
   `label`, `role`, `origin`… — lista `TEXT_FIELDS` em `src/i18n/i18n.js`) antes de qualquer
   outro módulo ler. Ids e chaves (`"STAFF"`, `"kills"`) nunca são traduzidos.
-- **Catálogos:** `src/i18n/{en,es,ja,zh}.js` — objeto `"português": "tradução"`.
+- **Catálogos:** `src/i18n/{en,es,ja,zh,zht}.js` — objeto `"português": "tradução"`.
 - **Números:** `fmt(n)` (separador de milhar do idioma) e `dec(x)` (decimal com vírgula ou ponto).
 - **Japonês e chinês:** fonte **Fusion Pixel 12px** (OFL) recortada só com os caracteres do jogo
-  (`assets/fonts/FusionPixel-{ja,zh}.woff2`, ~40 KB cada), tamanhos na grade de 6 px (a fonte é
+  (`assets/fonts/FusionPixel-{ja,zh,zht}.woff2`, ~40 KB cada; o `zht` usa o desenho de Taiwan), tamanhos na grade de 6 px (a fonte é
   desenhada em 12 px) e quebra de linha por caractere (`cjkWrap`), sem começar linha com
   pontuação de fechamento. A opção "Legível" só aumenta a letra nesses idiomas.
-- **Nomes dos idiomas** no seletor (日本語, 简体中文) usam um recorte mínimo (`FusionPixel-langs`)
+- **Nomes dos idiomas** no seletor (日本語, 简体中文, 繁體中文) usam um recorte mínimo (`FusionPixel-langs`)
   carregado sempre, para aparecerem certos em qualquer idioma.
 - **Fora do Phaser:** `index.html` ajusta `lang`, título da página e o aviso "gire o aparelho";
   o nome do app no Android vem de `android/app/src/main/res/values-*/strings.xml` (padrão em inglês).
@@ -34,6 +42,7 @@ o progresso fica).
    missões diárias, `{s}` vira "s" no plural; japonês e chinês tiram o `{s}` da tradução.
 3. Não envolva ids, nomes de textura, sons e eventos em `tr()`.
 4. Campo de ficha no `config.js` com nome fora de `TEXT_FIELDS`? Acrescente o nome lá.
+5. Revise a tradução em **todos** os idiomas na hora (sentido, tom, glossário, se cabe na tela).
 
 ## Traduzindo o que falta
 
@@ -42,8 +51,13 @@ npm run check                                  # aponta textos sem tradução e 
 node tools/i18n.mjs missing en > falta.txt     # "N|texto" do que falta em inglês
 # escreva traducao.txt com as mesmas linhas "N|tradução" (\n = quebra de linha)
 node tools/i18n.mjs build en falta.txt traducao.txt
-node tools/font-subset.mjs                     # depois de mexer em ja/zh (precisa de Python + fonttools + brotli)
+node tools/font-subset.mjs                     # depois de mexer em ja/zh/zht (precisa de Python + fonttools + brotli)
 ```
+
+**Chinês tradicional (`zht`)** nasce do simplificado: converta a tradução `zh` com o OpenCC no
+padrão de Taiwan (`pip install opencc-python-reimplemented`, `OpenCC("s2twp")`) e **revise**.
+Armadilhas já vistas: nome transliterado ganha 裡 no lugar de 里 (馬品瓜**里**, 庫**里**馬塔), aspas
+“” viram 「」, e termos de Taiwan: 點擊, 拖曳, 空白鍵, 像素 (não 畫素), 吳郭魚 (tilápia), 網路.
 
 `build` junta ao catálogo, mantém o que já existia e tira traduções de textos que saíram do
 código. `check` também confere se `{0}`/`{n}` batem entre o português e a tradução.
@@ -59,6 +73,10 @@ código. `check` também confere se `{0}`/`{n}` batem entre o português e a tra
 4. `values-xx/strings.xml` no Android e textos da loja (`docs/PLAY_STORE.md`).
 
 ## Glossário
+
+No chinês tradicional (`zht`) os termos são os mesmos do simplificado, na escrita tradicional
+(腐朽, 空地, 危險度, 守護者, 金幣・遠古木材, 神龕・鍛造坊・篝火・告示板, 灶鳥・長老・薩馬烏瑪樹,
+覺醒・衝刺, 羈絆・森林契約, 小頭目・頭目).
 
 | Português | English | Español | 日本語 | 简体中文 |
 |---|---|---|---|---|
@@ -85,5 +103,5 @@ com duas exceções de sentido claro: **Mula sem Cabeça** (Headless Mule / Mula
 (首なしラバ / 无头骡, 黄金の母 / 黄金之母, 干尸 para Corpo-Seco). As origens (tupi, guarani,
 ibérica) são mantidas nas descrições — ver `TEMA_FOLCLORE.md`.
 
-👤 **Revisão por falantes nativos** (principalmente japonês e chinês) antes do lançamento nesses
+👤 **Revisão por falantes nativos** (principalmente japonês e os dois chineses) antes do lançamento nesses
 mercados: as traduções foram feitas com cuidado, mas um nativo pega tom e termos de jogo.
