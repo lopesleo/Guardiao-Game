@@ -305,13 +305,20 @@ export class HUD {
     });
   }
 
+  // Vida na tela agora. instant: sem a "sombra" do dano drenando (a cena vai pausar —
+  // ex.: golpe fatal abre a oferta de reviver no mesmo quadro, antes do update da HUD)
+  syncHp(instant = false) {
+    const p = this.player;
+    this.hpBar.set(p.hp / p.maxHp, instant);
+    this.hpText.setText(`${Math.max(0, Math.ceil(p.hp))}/${Math.ceil(p.maxHp)}`);
+  }
+
   update(time, dt) {
     this.elapsedMs += dt;
     const p = this.player;
 
-    this.hpBar.set(p.hp / p.maxHp);
+    this.syncHp();
     this.hpBar.tick(dt);
-    this.hpText.setText(`${Math.ceil(p.hp)}/${Math.ceil(p.maxHp)}`);
 
     const need = PLAYER.XP_PER_LEVEL(p.level);
     this.xpBar.set(p.xp / need);
