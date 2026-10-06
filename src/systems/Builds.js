@@ -13,6 +13,21 @@ export class Builds {
     d.builds ||= {};
     for (const id of Object.keys(BUILDINGS)) d.builds[id] ||= { level: 1 };
     if (d.buildJob && !BUILDINGS[d.buildJob.id]) d.buildJob = null;
+    // Guardiões da Fogueira são regra do nível, não evento: um save que chegou ao
+    // nível sem passar pela entrega (save antigo, regra que mudou) recebe-os aqui
+    if (this._grantFireCharacters(this.level("fire"))) meta._save();
+  }
+
+  // Entrega os guardiões liberados até o nível `lv` da Fogueira; true se algum chegou
+  _grantFireCharacters(lv) {
+    const d = this.meta.data;
+    let got = false;
+    for (const [cid, need] of Object.entries(BUILD.FIRE_CHARACTER_LEVEL))
+      if (need <= lv && !d.unlockedCharacters.includes(cid)) {
+        d.unlockedCharacters.push(cid);
+        got = true;
+      }
+    return got;
   }
 
   level(id) {
@@ -108,10 +123,7 @@ export class Builds {
   _complete(id, to) {
     const d = this.meta.data;
     d.builds[id] = { level: to };
-    if (id === "fire") {
-      for (const [cid, lv] of Object.entries(BUILD.FIRE_CHARACTER_LEVEL))
-        if (lv <= to && !d.unlockedCharacters.includes(cid)) d.unlockedCharacters.push(cid);
-    }
+    if (id === "fire") this._grantFireCharacters(to);
   }
 
   // ---- Travas lidas pelos painéis ----
