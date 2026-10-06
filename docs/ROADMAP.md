@@ -334,6 +334,10 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   anúncios" agora abre as opções de privacidade do Google** (antes apagava a escolha e não abria nada):
   só existe onde há mensagem publicada (Europa); no Brasil o botão fica apagado com "Não é exigido na sua
   região". Teste no navegador: `?debug=1&adsim=fail` ou `&adsim=cancel`. Evento novo: `ad_fail`
+- ✅ **Medição para o teste fechado (05/10/2026):** `run_start`/`run_end` com `run_n` (nº da partida: funil da
+  1ª sessão) e `shop_buy` em toda compra (arma, bênção, dom, guardião, Tesouro, obra). Economia simulada de
+  novo com o catálogo atual: 63 / 37 / 22 dias (casual / médio / hardcore), sem buracos de compra; ver
+  `META_LOOP.md`
 - ⬜ Compra "Remover anúncios"
 - ✅ Firebase Analytics + Crashlytics plugados (`src/systems/Telemetry.js`, plugins `@capacitor-firebase/*`):
   projeto `guardiao-da-floresta` (plano Spark, grátis), app Android `com.lopesleo.guardiao`, GA4 em conta

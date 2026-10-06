@@ -364,6 +364,7 @@ export class MetaProgression {
     this.data.totalCoins -= cost;
     this.data.unlockedWeapons.push(weaponKey);
     this._save();
+    this._bought("weapon", weaponKey, cost);
     return true;
   }
 
@@ -387,7 +388,14 @@ export class MetaProgression {
     this.data.totalCoins -= cost;
     this.data.blessingRanks[blessing.id] = rank + 1;
     this._save();
+    this._bought("blessing", `${blessing.id}_${rank + 1}`, cost);
     return true;
+  }
+
+  // Compra na loja da Clareira → medição (comparar a economia real com a simulação de
+  // docs/META_LOOP.md: o que se compra, por quanto, em qual partida e quanto sobra)
+  _bought(kind, id, cost, extra = {}) {
+    Analytics.track("shop_buy", { kind, id, cost, left: this.data.totalCoins, run_n: this.data.runsPlayed || 0, ...extra });
   }
 
   // Tesouro Ancestral (sink infinito)
@@ -399,6 +407,7 @@ export class MetaProgression {
     this.data.totalCoins -= cost;
     this.data.ancestralLevel = this.ancestralLevel + 1;
     this._save();
+    this._bought("ancestral", String(this.data.ancestralLevel), cost);
     return true;
   }
 
@@ -411,6 +420,7 @@ export class MetaProgression {
     this.data.totalCoins -= cost;
     this.data.unlockedAbilities.push(id);
     this._save();
+    this._bought("ability", id, cost);
     return true;
   }
 
@@ -431,6 +441,7 @@ export class MetaProgression {
     this.data.unlockedCharacters.push(id);
     this.data.selectedCharacter = id;
     this._save();
+    this._bought("character", id, cost);
     return true;
   }
 

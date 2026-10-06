@@ -223,7 +223,9 @@ export class GameScene extends Phaser.Scene {
       this._hint("quality", tr("Iluminação desligada para o jogo rodar liso.\nDá pra religar em Opções."));
     });
     AdService.newRun();
-    Analytics.track("run_start", { character: this.character.id, difficulty: this.diff.id, biome: this.biomeId });
+    // nº desta partida na vida do jogador: o funil da 1ª sessão (onde o novato desiste) sai daqui
+    this._runN = (this.meta.data.runsPlayed || 0) + 1;
+    Analytics.track("run_start", { run_n: this._runN, character: this.character.id, difficulty: this.diff.id, biome: this.biomeId });
     this.runEvents = new RunEvents(this);
     this.lanterns = new LanternSystem(this);
     this.shrines = new ShrineSystem(this);
@@ -1600,6 +1602,7 @@ export class GameScene extends Phaser.Scene {
       this._newUnlocksThisRun.push(...done.map((t) => tr("Missão: {0}", t)));
     }
     Analytics.track("run_end", {
+      run_n: this._runN,
       won,
       quit,
       t: Math.floor(this.elapsedMs / 1000),
