@@ -84,11 +84,14 @@ export const BOSS = {
   // Couraça da Podridão: com vida fixa, uma build forte (~300 de dano/s no alvo, nível 15)
   // libertava o chefe em ~7 s, antes de ver um golpe. O chefe mede o dano que vem levando
   // (média móvel de TAU_S) e, acima do ritmo de referência (vida ÷ TARGET_S), resiste ao
-  // excesso: dano efetivo = ref × (ritmo/ref)^KEEP. Quem bate mais ainda vence antes
-  // (lab 2026-10-02, Guardião, herói circulando o chefe: ~35 dano/s → ~60 s, ~120 → ~45 s,
-  // ~300 → ~35 s), mas sempre há luta. O ponto fraco (EXPOSTO) multiplica DEPOIS da
-  // couraça: desviar continua valendo.
-  ARMOR: { TARGET_S: 60, KEEP: 0.25, TAU_S: 3 },
+  // excesso: dano efetivo = ref × (ritmo/ref)^KEEP. Quem bate mais vence antes, mas sempre
+  // há luta. KEEP 0,25 → 0,45 (05/10/2026): com 0,25 uma build 8× mais forte vencia só 1,7×
+  // mais rápido (60 s → 35 s) e a build boa não se sentia; agora ~35 dano/s → ~60 s,
+  // ~120 → ~34 s, ~300 → ~22 s (uns 6 golpes, fúria incluída). O ponto fraco (EXPOSTO)
+  // multiplica DEPOIS da couraça: desviar continua valendo. Quando ela segura mais que
+  // (1 − SHOW_BELOW) do golpe, o número sai cinza, o chefe pisca cinza-pedra e solta lascas
+  // da Podridão (no máximo a cada FX_MS).
+  ARMOR: { TARGET_S: 60, KEEP: 0.45, TAU_S: 3, SHOW_BELOW: 0.75, FX_MS: 220 },
 };
 
 // Golpes especiais dos chefes (ver docs/CHEFES.md). Regras de JUSTIÇA que valem para todos:

@@ -1440,9 +1440,16 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     const iceAmp = this.statuses.ice ? 1.35 : 1;
     const now = this.scene.time.now;
     const amp = now < this._exposedUntil ? this._exposedMult ?? BOSS_FIGHT.EXPOSED_MULT : 1;
-    this.hp -= this._armor(dmg * iceAmp, now) * amp;
-    if (amp > 1) this.scene._markAmp?.(this, amp);
-    this.setTint(amp > 1 ? 0xffe58f : 0xffffff).setTintMode(Phaser.TintModes.FILL);
+    const raw = dmg * iceAmp;
+    const eff = this._armor(raw, now);
+    const lost = eff * amp;
+    this.hp -= lost;
+    // A Couraça segurou boa parte do golpe: o jogador precisa VER isso (senão parece que a
+    // build "não presta" contra o chefe). O número na tela mostra o que o chefe PERDEU.
+    const resisted = eff < raw * BOSS.ARMOR.SHOW_BELOW;
+    this.scene._markHit?.(this, dmg > 0 ? lost / dmg : 1, { weak: amp > 1, resisted });
+    if (resisted) this._armorFeedback(now);
+    this.setTint(amp > 1 ? 0xffe58f : resisted ? PAL.s3 : 0xffffff).setTintMode(Phaser.TintModes.FILL);
     this.scene.time.delayedCall(50, () => {
       if (!this.active) return;
       this.scene.elemental?._updateTint(this);
@@ -1450,6 +1457,18 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     if (this.hp <= 0) return true;
     if (this.phase === 1 && this.hp <= this.maxHp * BOSS.PHASE2_AT_HP_PCT) this._enterFury();
     return false;
+  }
+
+  // Couraça resistindo: lascas e anel na cor da Podridão (no máximo a cada FX_MS) e, na
+  // primeira vez da vida do jogador, a dica que ensina a saída: o ponto fraco
+  _armorFeedback(now) {
+    const scene = this.scene;
+    if (now - (this._armorFxAt || 0) < BOSS.ARMOR.FX_MS) return;
+    this._armorFxAt = now;
+    const y = this.y - this.displayHeight * 0.3;
+    scene.fx?.ring(this.x, y, PAL.s4, this.displayWidth * 0.3, this.displayWidth * 0.55, 260, 0.62, 0.7);
+    scene.fx?.burst("shard", this.x, y, 5, null, 360, null, ROT.hot);
+    scene._hint?.("boss_armor", tr("COURAÇA DA PODRIDÃO: o chefe segura o dano em excesso.\nAcerte o ponto fraco depois dos golpes grandes!"));
   }
 
   // Couraça da Podridão (ver BOSS.ARMOR): acima do ritmo de referência, o excesso é resistido

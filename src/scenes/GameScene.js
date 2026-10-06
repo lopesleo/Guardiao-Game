@@ -68,7 +68,7 @@ import { HUD } from "../ui/HUD.js";
 import { ForestWorld } from "../world/ForestWorld.js";
 import { Lighting } from "../world/Lighting.js";
 import { vw, vh, text, drawFrame, fitCamera, Button } from "../ui/Theme.js";
-import { CSS } from "../art/Palette.js";
+import { CSS, PAL, hex } from "../art/Palette.js";
 import { DEBUG } from "../systems/Platform.js";
 import { Settings } from "../systems/Settings.js";
 import { Analytics } from "../systems/Analytics.js";
@@ -942,21 +942,29 @@ export class GameScene extends Phaser.Scene {
 
   // Golpe no PONTO FRACO de um chefe: takeDamage marca o alvo e a ampliação;
   // o número de dano que sai logo em seguida (mesma posição) mostra o valor real.
+  // O alvo levou dano diferente do golpe (ponto fraco, couraça do chefe): quem bateu chama
+  // _showDmg logo depois, na mesma posição e no mesmo quadro, e o número mostra o dano REAL
+  _markHit(target, mult, o = {}) {
+    this._ampMark = { x: target.x, y: target.y, amp: mult, weak: !!o.weak, resisted: !!o.resisted, t: this.time.now };
+  }
   _markAmp(target, amp) {
-    this._ampMark = { x: target.x, y: target.y, amp, t: this.time.now };
+    this._markHit(target, amp, { weak: true });
   }
 
   _showDmg(x, y, dmg, element, crit = false) {
     const m = this._ampMark;
+    let resisted = false;
     if (m && element !== "heal" && m.t === this.time.now && Math.abs(m.x - x) < 1 && Math.abs(m.y - y) < 1) {
       this._ampMark = null;
-      dmg = Math.round(dmg * m.amp);
-      crit = true; // dourado e grande: o jogador VÊ que achou o ponto fraco
+      dmg = Math.max(1, Math.round(dmg * m.amp));
+      if (m.weak) crit = true; // dourado e grande: o jogador VÊ que achou o ponto fraco
+      else if (m.resisted) (resisted = true), (crit = false); // cinza e pequeno: a couraça segurou
     }
     if (element !== "heal" && !this._showDmgNumbers) return;
     const n = this.dmgNumberPool.acquire();
     let color;
-    if (crit) color = "#ffd96b";
+    if (resisted) color = hex(PAL.s4);
+    else if (crit) color = "#ffd96b";
     else if (element === "ice") color = "#9ad4ff";
     else if (element === "bolt") color = "#d8a8ff";
     else if (element === "wind") color = "#b8f0dc";
