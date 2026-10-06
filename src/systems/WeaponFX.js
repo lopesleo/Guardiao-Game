@@ -11,6 +11,9 @@
 // Hit-stop: GameFeel congela também as partículas (setTimeScale).
 import { PAL } from "../art/Palette.js";
 import { Pix, bayer, rng } from "../art/PixelArt.js";
+import { registerFireFX, WHIRL_H, IGNITE_H } from "../art/FireFX.js";
+
+const PX = 3; // escala dos quadros desenhados (= GAME.PIXEL_SCALE)
 
 export const D_FX = 48600; // acima do mapa de luz (48500), abaixo do HUD (50000)
 const D_SMOKE = 48400; // fumaça: abaixo do mapa de luz
@@ -37,6 +40,7 @@ const DECALS = 22;
 
 // ---------------------------------------------------------------- texturas
 function textures(scene) {
+  registerFireFX(scene); // redemoinho, ignição e língua de fogo (Labareda)
   if (scene.textures.exists("fx_star")) return;
   // Estrela de 4 pontas (clarão de impacto): miolo 3×3 e braços afinando
   const st = new Pix(13, 13);
@@ -244,6 +248,10 @@ export class WeaponFX {
     }
     this._frameImpacts = 0;
     this._ts = 1;
+    // Fogo desenhado (Labareda): sprites animados reaproveitados, criados sob demanda
+    this.flames = { whirl: [], ignite: [], wisp: [] };
+    this.whirls = []; // redemoinhos vivos (brasas em espiral, fumaça no fim)
+    this.wisps = []; // línguas de fogo em voo
   }
 
   get q() {
@@ -257,6 +265,7 @@ export class WeaponFX {
   setTimeScale(k) {
     this._ts = k;
     for (const e of Object.values(this.em)) e.timeScale = k;
+    for (const list of Object.values(this.flames)) for (const s of list) s.anims.timeScale = k;
   }
 
   // ------------------------------------------------------------ primitivas
@@ -511,10 +520,116 @@ export class WeaponFX {
     return g;
   }
 
+  // ------------------------------------------------------------ fogo desenhado
+  // Sprite do pool de chamas (null se todos ocupados: o efeito some, o dano não)
+  _flame(kind, max, x, y, originY) {
+    const list = this.flames[kind];
+    let s = list.find((o) => !o.visible);
+    if (!s) {
+      if (list.length >= max) return null;
+      s = this.scene.add.sprite(-9999, -9999, `fx_${kind}`, 0).setVisible(false);
+      s.anims.timeScale = this._ts;
+      s.on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => s.setVisible(false));
+      list.push(s);
+    }
+    s.setOrigin(0.5, originY).setPosition(x, y).setScale(PX).setRotation(0).setAlpha(1).setDepth(D_FX).setVisible(true);
+    s.play(`fx_${kind}`);
+    return s;
+  }
+
+  // LABAREDA: redemoinho de fogo que irrompe aos pés (fy) do alvo. Por baixo: chão
+  // queimado, anel de vento e de fogo, lufadas girando; depois brasas sobem em
+  // espiral pela coluna e ela se desfaz em fumaça no alto.
+  fireWhirl(x, fy, R) {
+    const s = this._flame("whirl", 4, x, fy, (WHIRL_H - 3) / WHIRL_H);
+    this.decal("fx_scorch", x, fy - 4, Math.max(26, R * 0.32), 2200, 0.6);
+    this.ring(x, fy, PAL.wnd2, 10, R, 380, 0.5, 0.85);
+    this.scene.time.delayedCall(70, () => this.ring(x, fy, PAL.org2, 8, R * 0.62, 320, 0.5, 0.95));
+    for (let k = 0; k < 10; k++) {
+      const a = (k / 10) * Math.PI * 2;
+      this.burst("gust", x + Math.cos(a) * 34, fy + Math.sin(a) * 12, 1, a - Math.PI / 2, 16, { min: 160, max: 230 });
+    }
+    this.burst("puff_fire", x, fy - 8, 5, null, 360, { min: 40, max: 120 });
+    this.burst("leaf", x, fy - 10, 5, null, 360, { min: 90, max: 200 });
+    this.light(x, fy - 70, 240, 0xff8a3c, 700, 1);
+    if (s) this.whirls.push({ x, fy, t: 0, next: 0, smoked: false });
+  }
+
+  // Língua de fogo levada pelo vento de (x0, y0) até o alvo (segue o alvo vivo), numa
+  // curva que gira no mesmo sentido do redemoinho. onArrive na chegada (o dano).
+  fireWisp(x0, y0, target, delay, onArrive) {
+    const go = () => {
+      const tx = target.x,
+        ty = target.y - 6;
+      const d = Math.hypot(tx - x0, ty - y0);
+      const s = this._flame("wisp", 16, x0, y0, 0.5);
+      if (s) s.setScale(PX * 0.9);
+      // curva: meio do caminho, deslocado para o lado (o giro) e para cima
+      const nx = -(ty - y0) / (d || 1),
+        ny = (tx - x0) / (d || 1);
+      this.wisps.push({ s, x0, y0, cx: (x0 + tx) / 2 + nx * d * 0.45, cy: (y0 + ty) / 2 + ny * d * 0.45 - 40, target, tx, ty, t: 0, dur: 170 + d * 1.15, onArrive, px: x0, py: y0 });
+    };
+    if (delay > 0) this.scene.time.delayedCall(delay, go);
+    else go();
+  }
+
+  // A chama que pega num inimigo (aos pés dele), com estalo de luz e brasas
+  ignite(x, fy) {
+    this._flame("ignite", 14, x, fy, (IGNITE_H - 2) / IGNITE_H);
+    this._sprite("fx_burst", x, fy - 18, { tint: PAL.yel3, s0: 0.6, s1: 1.6, ms: 120, rot: Math.random() * Math.PI });
+    this.burst("ember", x, fy - 16, 5, -Math.PI / 2, 120, { min: 50, max: 150 });
+    this.light(x, fy - 20, 120, 0xff8a3c, 260, 1);
+  }
+
+  _updateFire(d) {
+    for (let i = this.whirls.length - 1; i >= 0; i--) {
+      const w = this.whirls[i];
+      w.t += d;
+      // brasas subindo em espiral pela coluna enquanto a chama vive
+      while (w.next <= w.t && w.next < 760) {
+        const th = w.next * 0.016;
+        const h = 20 + (w.next / 760) * 120;
+        this.burst("ember", w.x + Math.cos(th) * (10 + h * 0.08), w.fy - h, 1, th + Math.PI / 2 - 0.9, 30, { min: 50, max: 110 });
+        w.next += 45 / this.q;
+      }
+      if (!w.smoked && w.t > 600) {
+        w.smoked = true;
+        this.burst("smoke", w.x, w.fy - 150, 4, -Math.PI / 2, 90, { min: 20, max: 60 });
+      }
+      if (w.t > 800) this.whirls.splice(i, 1);
+    }
+    for (let i = this.wisps.length - 1; i >= 0; i--) {
+      const w = this.wisps[i];
+      w.t += d;
+      if (w.target.active) {
+        w.tx = w.target.x;
+        w.ty = w.target.y - 6;
+      }
+      const k = Math.min(1, w.t / w.dur);
+      const e = k * k * (3 - 2 * k) * 0.35 + k * 0.65; // sai rápido e assenta no fim
+      const u = 1 - e;
+      const x = u * u * w.x0 + 2 * u * e * w.cx + e * e * w.tx,
+        y = u * u * w.y0 + 2 * u * e * w.cy + e * e * w.ty;
+      if (w.s) w.s.setPosition(x, y).setRotation(Math.atan2(y - w.py, x - w.px));
+      this.trail(w, x, y, "fire", 26);
+      w.px = x;
+      w.py = y;
+      if (k >= 1) {
+        if (w.s) {
+          w.s.stop();
+          w.s.setVisible(false);
+        }
+        this.wisps.splice(i, 1);
+        w.onArrive?.();
+      }
+    }
+  }
+
   // ------------------------------------------------------------ laço
   update(dt) {
     this._frameImpacts = 0;
     const d = dt * this._ts;
+    this._updateFire(d);
     for (const s of this.pool) {
       if (!s.live) continue;
       s.t += d;

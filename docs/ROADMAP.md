@@ -185,6 +185,14 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   "achata" no golpe e segura durante o hit-stop; tiques de status não piscam mais de branco. Emissivos ficam
   acima do mapa de luz (brilham à noite). Com a iluminação desligada, metade das partículas. 56–60 FPS no teste
   de carga. 👤 sentir no aparelho (S23 e um fraco)
+- ✅ **Labareda desenhada** (`src/art/FireFX.js`): a reação fogo + vento era um punhado de brasas e um anel.
+  Agora um **redemoinho de fogo** pintado quadro a quadro (12 quadros: irrompe do chão, gira com faixas em
+  espiral, três arcos de vento o abraçam, a base se solta e ele se desfaz em fumaça), com chão queimado,
+  anel de vento e de fogo e brasas subindo em espiral. O vento arranca **línguas de fogo** da coluna que
+  voam em curva até os vizinhos e seguem o alvo; a chama **pega** (ignição desenhada, 8 quadros) quando a
+  língua chega — o dano e a queimadura dos vizinhos agora caem na chegada (~0,3 s), conferindo que o inimigo
+  do pool ainda é o mesmo. Sprites reaproveitados (4 redemoinhos, 16 línguas, 14 ignições); congelam no
+  hit-stop. Revisar a arte: `node tools/monster-sheet.mjs saida.png fx_whirl,fx_ignite,fx_wisp 6`
 - ✅ **Animação dos guardiões** (`src/art/Hero.js`): de 2 poses de caminhada (perna desliza 1 px) para
   **15 quadros desenhados por pose**: respiração em 4 tempos com cabelo/roupa chegando um quadro depois
   (arrasto), **piscada** a cada ~4 s, **caminhada em 8 tempos** (contato, desce, passa, sobe) com joelho que

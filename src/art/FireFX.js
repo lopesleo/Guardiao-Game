@@ -1,0 +1,175 @@
+// Fogo desenhado quadro a quadro para a reação LABAREDA (fogo + vento). Nada de
+// partícula redonda esticada: cada quadro é pintado pixel a pixel a partir de um
+// campo de calor (ruído periódico que SOBE entre quadros), com a rampa de fogo da
+// paleta (vinho → vermelho → laranja → amarelo → branco no miolo).
+//   fx_whirl  — redemoinho de fogo: irrompe do chão, gira (faixas em espiral), o vento
+//               o abraça em arcos e ele se desprende do chão e se desfaz no alto
+//   fx_ignite — a chama que "pega" no vizinho: lambe para cima e morre
+//   fx_wisp   — língua de fogo levada pelo vento (cabeça à direita, cauda tremulando)
+import { PAL } from "./Palette.js";
+import { Pix, registerStrip, tileNoise, bayer, rng } from "./PixelArt.js";
+
+const smooth = (a, b, t) => {
+  const k = Math.max(0, Math.min(1, (t - a) / (b - a)));
+  return k * k * (3 - 2 * k);
+};
+// Calor → cor. O vinho só aparece pontilhado (borda que se desfaz em fumaça quente)
+function fireCol(I, x, y) {
+  if (I > 1.02) return PAL.white;
+  if (I > 0.84) return PAL.yel3;
+  if (I > 0.66) return PAL.yel2;
+  if (I > 0.48) return PAL.org2;
+  if (I > 0.32) return PAL.org1;
+  if (I > 0.18) return PAL.red1;
+  if (I > 0.08 && bayer(x, y) < 0.5) return PAL.red0;
+  return null;
+}
+
+export const WHIRL_W = 44,
+  WHIRL_H = 64;
+const WG = WHIRL_H - 3; // linha do chão dentro do quadro
+// Linha do tempo (12 quadros): altura, base solta do chão, calor e largura
+const W_GROW = [0.22, 0.5, 0.82, 1, 1, 1, 1, 1, 0.96, 0.88, 0.74, 0.56];
+const W_LIFT = [0, 0, 0, 0, 0, 0, 0, 0.04, 0.14, 0.3, 0.48, 0.66];
+const W_HEAT = [1.45, 1.3, 1.18, 1.08, 1.02, 1, 1, 0.97, 0.88, 0.76, 0.62, 0.48];
+const W_WIDE = [0.75, 0.95, 1.08, 1.02, 1, 1, 1, 0.98, 0.92, 0.84, 0.74, 0.62];
+
+function whirl(f) {
+  const p = new Pix(WHIRL_W, WHIRL_H);
+  const n1 = tileNoise(WHIRL_W, 64, 8, 31),
+    n2 = tileNoise(WHIRL_W, 64, 4, 57);
+  const grow = W_GROW[f],
+    lift = W_LIFT[f],
+    heat = W_HEAT[f],
+    wide = W_WIDE[f];
+  const H = WHIRL_H * 0.92;
+  const scroll = f * 5; // o ruído sobe 5 px por quadro: as línguas correm para cima
+  // Centro da coluna em cada altura: um S que gira com o tempo (o "torcido" do redemoinho)
+  const cxAt = (h) => WHIRL_W / 2 + Math.sin(h * 6.5 - f * 0.95) * (0.6 + h * 3.2);
+  const wAt = (h) => wide * (4.2 + h * 7.5) * (1 - smooth(grow * 0.7, grow, h) * 0.7);
+  for (let y = 0; y < WHIRL_H; y++) {
+    const h = (WG - y) / H; // 0 no chão, 1 no topo
+    if (h < -0.04) continue;
+    const cx = cxAt(Math.max(0, h)),
+      w = Math.max(1.2, wAt(Math.max(0, h)));
+    for (let x = 0; x < WHIRL_W; x++) {
+      const n = 0.62 * n1(x, (y + scroll) & 63) + 0.38 * n2(x, (y + scroll * 1.6) & 63);
+      // topo e base irregulares (línguas que sobem; a base se solta quando morre)
+      const top = grow + (n - 0.5) * 0.28;
+      const bot = lift + (n - 0.5) * 0.18;
+      if (h > top || h < bot) continue;
+      const u = (x + 0.5 - cx) / w; // −1 … 1 de borda a borda
+      let I = (1 - Math.pow(Math.abs(u), 1.6)) * heat + (n - 0.5) * 0.85;
+      I -= Math.max(0, h - grow * 0.55) * 0.9; // esfria no alto
+      I -= Math.max(0, bot + 0.1 - h) * 2.2; // e na base que se desprende
+      // Faixas em espiral (o giro): escura e, logo atrás, um fio claro
+      const band = (((h * 8.5 - u * 0.95 - f * 0.42) % 1) + 1) % 1;
+      if (band < 0.13) I -= 0.26;
+      else if (band > 0.5 && band < 0.6) I += 0.14;
+      // Saia de fogo rente ao chão nos primeiros quadros (o pé do redemoinho)
+      if (h < 0.08 && f < 9) I += (1 - Math.abs((x + 0.5 - WHIRL_W / 2) / (w + 5))) * 0.5 * (1 - h / 0.08);
+      const c = fireCol(I, x, y);
+      if (c != null) p.set(x, y, c);
+    }
+  }
+  // Vento abraçando a coluna: três arcos que giram (a parte de trás some atrás do fogo)
+  if (f >= 1 && f <= 10) {
+    const fade = f >= 9 ? 1 : 0;
+    for (let k = 0; k < 3; k++) {
+      const h = (0.22 + k * 0.25) * grow;
+      const y0 = WG - h * H;
+      const rw = wAt(h) + 4 + k * 0.5,
+        ry = rw * 0.32;
+      const a0 = f * 0.85 + k * 2.1;
+      const len = 2.6 - fade * 1;
+      for (let a = a0; a < a0 + len; a += 0.12) {
+        const x = Math.round(cxAt(h) + Math.cos(a) * rw),
+          y = Math.round(y0 + Math.sin(a) * ry);
+        const t = (a - a0) / len; // 0 = cauda, 1 = cabeça
+        const front = Math.sin(a) > -0.15;
+        if (!front && p.get(x, y)) continue; // atrás da chama
+        const c = t > 0.8 ? PAL.white : t > 0.45 ? PAL.wnd3 : t > 0.2 ? PAL.wnd2 : bayer(x, y) < 0.6 ? PAL.wnd1 : null;
+        if (c != null) {
+          p.set(x, y, c);
+          if (t > 0.55 && front) p.set(x, y + 1, t > 0.8 ? PAL.wnd3 : PAL.wnd2); // corpo da lufada
+        }
+      }
+    }
+  }
+  // Fagulhas soltas acima da chama (sobem e ficam para trás)
+  const r = rng(900 + f);
+  for (let i = 0; i < 5; i++) {
+    const h = grow * (0.7 + r() * 0.45);
+    const y = Math.round(WG - h * H - r() * 6);
+    const x = Math.round(cxAt(Math.min(1, h)) + (r() - 0.5) * 14);
+    if (y > 0 && !p.get(x, y)) p.set(x, y, r() < 0.4 ? PAL.yel3 : PAL.org2);
+  }
+  return p;
+}
+
+// Chama que pega num inimigo (18×26, 8 quadros): lambe para cima e morre
+export const IGNITE_W = 22,
+  IGNITE_H = 26;
+const I_GROW = [0.35, 0.75, 1, 1, 0.92, 0.78, 0.58, 0.36];
+const I_HEAT = [1.4, 1.22, 1.08, 1, 0.92, 0.82, 0.7, 0.55];
+function ignite(f) {
+  const p = new Pix(IGNITE_W, IGNITE_H);
+  const n1 = tileNoise(IGNITE_W, 32, 4, 77),
+    n2 = tileNoise(IGNITE_W, 32, 2, 13);
+  const G = IGNITE_H - 2,
+    H = IGNITE_H * 0.9;
+  const grow = I_GROW[f],
+    heat = I_HEAT[f],
+    lift = Math.max(0, (f - 4) * 0.1);
+  for (let y = 0; y < IGNITE_H; y++) {
+    const h = (G - y) / H;
+    if (h < -0.03) continue;
+    const cx = IGNITE_W / 2 + Math.sin(h * 5 - f * 1.1) * h * 2;
+    const w = (4.6 + h * 2.2) * (1 - smooth(grow * 0.5, grow, h) * 0.8);
+    for (let x = 0; x < IGNITE_W; x++) {
+      const n = 0.6 * n1(x, (y + f * 4) & 31) + 0.4 * n2(x, (y + f * 6) & 31);
+      if (h > grow + (n - 0.5) * 0.35 || h < lift + (n - 0.5) * 0.15) continue;
+      let I = (1 - Math.pow(Math.abs((x + 0.5 - cx) / Math.max(1, w)), 1.5)) * heat + (n - 0.5) * 0.9 - Math.max(0, h - grow * 0.5) * 0.9;
+      const c = fireCol(I, x, y);
+      if (c != null) p.set(x, y, c);
+    }
+  }
+  return p;
+}
+
+// Língua de fogo (16×9, 4 quadros): cabeça clara à direita, cauda que ondula
+export const WISP_W = 22,
+  WISP_H = 11;
+function wisp(f) {
+  const p = new Pix(WISP_W, WISP_H);
+  const n1 = tileNoise(32, 16, 4, 101);
+  const hx = WISP_W - 4,
+    cy = (WISP_H - 1) / 2;
+  for (let y = 0; y < WISP_H; y++)
+    for (let x = 0; x < WISP_W; x++) {
+      const d = hx - x; // distância atrás da cabeça
+      const len = WISP_W - 4;
+      const t = Math.max(0, d) / len; // 0 cabeça … 1 ponta
+      const r = d < 0 ? 4 + d * 1.1 : 4 * Math.pow(1 - t, 0.7);
+      const yc = cy + Math.sin(d * 0.75 - f * 1.6) * t * 1.6;
+      const n = n1((x + f * 8) & 31, y);
+      let I = (1 - Math.abs(y + 0.5 - yc - 0.5) / Math.max(0.6, r)) * (1.35 - t * 0.7) + (n - 0.5) * 0.7;
+      if (t > 0.98) continue;
+      const c = fireCol(I, x, y);
+      if (c != null) p.set(x, y, c);
+    }
+  return p;
+}
+
+export function registerFireFX(scene) {
+  if (scene.textures.exists("fx_whirl")) return;
+  registerStrip(scene, "fx_whirl", Array.from({ length: W_GROW.length }, (_, f) => whirl(f)));
+  registerStrip(scene, "fx_ignite", Array.from({ length: I_GROW.length }, (_, f) => ignite(f)));
+  registerStrip(scene, "fx_wisp", [0, 1, 2, 3].map((f) => wisp(f)));
+  const mk = (key, tex, rate, repeat = 0) => {
+    if (!scene.anims.exists(key)) scene.anims.create({ key, frames: scene.anims.generateFrameNumbers(tex, {}), frameRate: rate, repeat });
+  };
+  mk("fx_whirl", "fx_whirl", 15);
+  mk("fx_ignite", "fx_ignite", 16);
+  mk("fx_wisp", "fx_wisp", 14, -1);
+}
