@@ -184,6 +184,16 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   "achata" no golpe e segura durante o hit-stop; tiques de status não piscam mais de branco. Emissivos ficam
   acima do mapa de luz (brilham à noite). Com a iluminação desligada, metade das partículas. 56–60 FPS no teste
   de carga. 👤 sentir no aparelho (S23 e um fraco)
+- ✅ **Animação dos guardiões** (`src/art/Hero.js`): de 2 poses de caminhada (perna desliza 1 px) para
+  **15 quadros desenhados por pose**: respiração em 4 tempos com cabelo/roupa chegando um quadro depois
+  (arrasto), **piscada** a cada ~4 s, **caminhada em 8 tempos** (contato, desce, passa, sobe) com joelho que
+  dobra, perna de trás mais escura, braço de trás balançando, tronco inclinado e cabelo/chamas/gorro
+  esvoaçando para trás; **pose de dash** (passada longa, olhar focado) e **pose de golpe** (olhos fechados,
+  corpo para trás). Ciclos próprios: Saci **pula** numa perna (agacha, voa, amortece), Iara e Mãe-do-Ouro
+  **deslizam** flutuando (nadadeira batendo, barra de ouro cintilando), Anhangá anda **em 4 tempos** como
+  veado (cabeça acenando, rabo e orelha mexendo). No jogo: o passo acompanha a velocidade real, ao parar o
+  corpo "assenta" em vez de estalar, e as pisadas soltam poeira (Curupira chuta para a frente — pés virados;
+  Saci levanta vento ao cair; quem flutua solta gota/brilho), com pool de 6 imagens. Sem girar/esticar sprite
 - ✅ **Revisão das telas (HUD e painéis)**: as listas roláveis vazavam por cima do título e da borda de TODOS
   os painéis (no Phaser 4/WebGL `setMask` não recorta) — agora a lista é desenhada numa RenderTexture do tamanho
   da janela; painéis com lista curta encolhem até o conteúdo (Obras, Celeiro, Perigo, Créditos); roleta da
