@@ -55,6 +55,7 @@ export class Builds {
     d.totalCoins -= step.coins;
     d.wood = (d.wood || 0) - step.wood;
     const to = this.level(id) + 1;
+    this.meta._bought("build", `${id}_${to}`, step.coins, { wood: step.wood });
     if (step.min <= 0) {
       this._complete(id, to);
       this.meta._save();

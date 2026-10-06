@@ -259,6 +259,24 @@ minuto. **Validar com dados reais:** o evento `run_end` (Firebase) traz `coins`,
 `kills`, `t`, `won`, `difficulty`, `rested` e `first_clear`; se a renda real fugir
 muito da simulada, o primeiro ajuste é `BLESSING_TAX` (1% ≈ casual em 47 dias).
 
+**Conferência 05/10/2026 (catálogo atual).** Desde a simulação acima entraram as Levas 2 e 3, o
+Vento, a Caatinga e os feitos: armas 2.040 → **9.740** moedas, guardiões 2.050 → **8.050**, catálogo
+77.025 → **90.365**. Mesma simulação (ela reproduz os 59/35/20 de antes), agora lendo o catálogo do
+`config.js` e com os feitos (abates, reações, minichefes, baús, "desviou de tudo"):
+
+| Perfil | Dias para tudo | Núcleo (armas + guardiões) | Maior espera sem compra |
+|---|---|---|---|
+| Casual | 59 → **63** | 13 → **33** | 11 partidas (igual) |
+| Intermediário | 35 → **37** | 9 → **18** | 6 (igual) |
+| Hardcore | 20 → **22** | 5 → **10** | 4 → 3 |
+
+A economia segue de pé: o que mais pesa continua sendo as bênçãos, e as armas e guardiões novos
+viraram metas do meio do jogo. Para médio e hardcore quem segura é o preço, não o feito. Ponto de
+atenção: no **casual** o último item é o **Sopro Flamejante** (dia 32), porque o feito pede vencer no
+Perigo Guardião e o casual simulado fica muito tempo no Aprendiz (hipótese de comportamento, conferir
+com dados). Medição: `run_start`/`run_end` levam `run_n` (nº da partida na vida do jogador, para o
+funil da 1ª sessão) e toda compra gera `shop_buy` (`kind`, `id`, `cost`, `left`, `run_n`).
+
 ---
 
 ## Ordem de implementação
