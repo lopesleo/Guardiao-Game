@@ -29,8 +29,6 @@ export const PLACEMENTS = {
   extra_reroll: { perRun: 3, perDay: 20, label: tr("Troca extra") },
   daily_chest: { perRun: 99, perDay: 1, label: tr("Baú diário") },
   extra_banish: { perRun: 1, perDay: 20, label: tr("Banir extra") },
-  // a roleta vale 1 bênção por partida (CampTree); aqui só um teto de segurança por dia
-  tree_spin: { perRun: 99, perDay: 24, label: tr("Roleta da Samaúma") },
 };
 
 const today = () => Clock.date().toISOString().slice(0, 10);

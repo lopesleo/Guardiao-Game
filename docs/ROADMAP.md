@@ -163,9 +163,10 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
 - ✅ **Banir cartas**: tira a carta (ou as melhorias daquela arma) da partida inteira; **1 grátis por
   partida + 1 por anúncio** ("BANIR +1", `extra_banish`); só a carta banida é trocada (as outras ficam
   na mesa); evolução nunca é banível (`CARDS` no config). Trocar já existia.
-- ✅ **Roleta da Samaúma** (Clareira, depois do Baú do Dia): por anúncio, sorteia 1 de 8 bênçãos para a
-  próxima partida (dano, XP, moedas, vida, +1 banir, ímã, velocidade, defesa); recarrega **de hora em
-  hora** e guarda uma bênção por vez (`TREE` no config, `src/scenes/CampTree.js`)
+- ❌ **Roleta da Samaúma — retirada em 06/10/2026.** Sorteava 1 de 8 bênçãos por anúncio e, com a Oferenda,
+  deixava **comprar com moedas a bênção que quisesse** antes de cada partida. Saiu inteira (cena, `TREE`, bloco
+  `tree_spin`, textos nos 6 idiomas): comprar o bônus escolhido toda partida virava obrigação e enfraquecia as
+  decisões das cartas. A Samaúma continua na Clareira como cenário. Ver "Decisões tomadas"
 - ✅ **Ressonância elemental**: +15% de dano por arma extra do mesmo elemento; Fogo+Gelo+Raio
   monta o **Prisma** (reações +30%). Dica na carta de arma nova (`RESONANCE` no config)
 - ✅ **Armas, leva 2** ([`ARMAS_E_COMBOS.md`](ARMAS_E_COMBOS.md)): **3 armas por elemento** (eram 3 de fogo,
@@ -229,10 +230,6 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   do nível da Forja, Vaga-lumes pede 1.500 abates, Orbe 60 Vapores, Granizo 40 Cristais, Sopro Flamejante
   vencer no Perigo Guardião ou acima e Redemoinho 60 Sobrecargas (acumulados entre partidas). A Forja mostra
   o feito e o progresso; o fim da partida avisa quando um feito é cumprido. Os feitos ensinam as reações
-- ✅ **Oferenda na Samaúma** (`TREE.OFFERING`): além de girar a roleta com anúncio (sorteio grátis),
-  o jogador pode pagar moedas e **escolher** a bênção da próxima partida. Mesma regra para anúncio e
-  oferenda: **uma bênção por partida** (a recarga de 1 hora do anúncio saiu; o teto diário de 24 fica); preço 150 × (1 + 5% por rank de bênção comprado), ~750 no fim. "+40% moedas" fica de fora
-  (moeda por moeda daria lucro). Sem anúncio no aparelho, a Samaúma continua útil
 - ✅ **Golpes especiais dos chefes** ([`CHEFES.md`](CHEFES.md)): Mula sem Cabeça (Galope em Chamas com rastro
   de fogo, Coice, Chuva de Brasas), Corpo-Seco (A Seca, A Terra o Rejeita, Cipós da Podridão) e Mapinguari
   (Bocarra da Barriga, Grito com brecha, Olhar da Podridão na fúria, mais Baque, Raízes, Investida, Leque).
@@ -311,8 +308,9 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   fraca não muda). 👤 sentir no aparelho
 
 ### M5 — Monetização e medição reais 👤
-- ✅ AdMob: app Android criado e **8 blocos premiados** (revive, extra_card, build_speed,
-  double_coins, daily_chest, extra_reroll, extra_banish, tree_spin) + 1 intersticial pronto e desligado; IDs em `ADMOB` no `src/config.js`
+- ✅ AdMob: app Android criado e **7 blocos premiados** em uso (revive, extra_card, build_speed,
+  double_coins, daily_chest, extra_reroll, extra_banish; o `tree_spin` da roleta saiu do jogo em 06/10/2026 —
+  👤 arquivar o bloco no console do AdMob) + 1 intersticial pronto e desligado; IDs em `ADMOB` no `src/config.js`
 - ✅ Mensagem de consentimento europeia (GDPR) **publicada** no AdMob (app selecionado, URL da
   política, botão "Não consentir" ligado). Falta dar push da `docs/PRIVACY.md` atualizada (a
   mensagem aponta para ela) e, no app, integrar o SDK da UMP no M5
@@ -392,6 +390,9 @@ Nada disso trava o desenvolvimento; só o lançamento e a receita.
 - **Tema folclore brasileiro: SIM** (29/09/2026), como camada respeitosa — as
   lendas são guardiãs e aliadas; o vilão é a Podridão. Ver
   [`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md).
+- **Sem roleta de bênçãos** (06/10/2026): nada de sortear nem comprar o bônus da próxima partida na
+  Clareira. Escolher e pagar pelo buff que quiser antes de toda partida virava rotina obrigatória e tirava
+  peso das cartas de nível. Bônus de uma partida vêm das refeições (feitas pelo jogador).
 
 ## Depois do lançamento (atualizações)
 | Ordem | Atualização |

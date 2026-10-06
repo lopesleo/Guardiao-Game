@@ -1229,36 +1229,11 @@ export const SHRINE = {
 
 // Controle das cartas de nível: trocar (1× por nível, grátis) e BANIR (tirar a carta da
 // partida inteira). 1 banimento grátis por partida + 1 extra por anúncio (AdService
-// "extra_banish"). A bênção da Samaúma pode dar mais um.
+// "extra_banish").
 export const CARDS = {
   BANISH_BASE: 1,
   BANISH_PER_SHRINE_LEVEL: 0,
 };
-
-// Roleta da Samaúma (Clareira): UMA bênção para a próxima partida — sorteada com um anúncio
-// premiado ou escolhida com uma Oferenda de moedas. A regra é a mesma para os dois: uma
-// bênção guardada por vez (usou na partida, pode pegar outra). Sem recarga por tempo: o
-// anúncio não pode ser mais travado que a moeda. Fatias de peso igual, todas boas.
-export const TREE = {
-  // mods: dmg/hp/speed multiplicam; xp, pickup (ímã) e coins também; banish soma; guard
-  // multiplica o dano sofrido. Cores da paleta (Palette.js).
-  SLICES: [
-    { id: "dmg", label: "+20% DANO", short: "Dano +20%", color: 0xe8434f, mods: { dmg: 1.2 } },
-    { id: "xp", label: "+30% XP", short: "XP +30%", color: 0x5cc8ff, mods: { xp: 1.3 } },
-    { id: "coins", label: "+40% MOEDAS", short: "Moedas +40%", color: 0xf2c14e, mods: { coins: 1.4 } },
-    { id: "hp", label: "+25% VIDA", short: "Vida +25%", color: 0x9ccf62, mods: { hp: 1.25 } },
-    { id: "banish", label: "+1 BANIR", short: "+1 banimento", color: 0xc78cff, mods: { banish: 1 } },
-    { id: "magnet", label: "+60% ÍMÃ", short: "Ímã +60%", color: 0xff7eb6, mods: { pickup: 1.6 } },
-    { id: "speed", label: "+15% VELOC.", short: "Velocidade +15%", color: 0xff7a3c, mods: { speed: 1.15 } },
-    { id: "guard", label: "+15% DEFESA", short: "Dano sofrido -15%", color: 0xb3bac4, mods: { guard: 0.85 } },
-  ],
-  // Oferenda: pagar moedas para ESCOLHER a bênção (o anúncio continua sorteando de graça).
-  // Preço cresce com os ranks de bênção comprados (acompanha a renda do jogador:
-  // 150 no começo, ~750 com tudo). "Moedas" fica de fora: comprar moeda com moeda
-  // daria lucro garantido.
-  OFFERING: { BASE: 150, PER_RANK: 0.05, EXCLUDE: ["coins"] },
-};
-export const offeringPrice = (blessingRanks) => Math.round((TREE.OFFERING.BASE * (1 + TREE.OFFERING.PER_RANK * blessingRanks)) / 5) * 5;
 
 // Entrada na floresta (continuação da saída da Clareira): o guardião chega
 // andando pela trilha e a mata se fecha atrás dele antes de a partida começar.
@@ -1587,7 +1562,6 @@ export const ADMOB = {
     daily_chest: "ca-app-pub-7068898840847782/4481833690",
     extra_reroll: "ca-app-pub-7068898840847782/7024236554",
     extra_banish: "ca-app-pub-7068898840847782/6544975979",
-    tree_spin: "ca-app-pub-7068898840847782/7068468581",
   },
   // Intersticial: pronto e DESLIGADO (começamos sem, como o Vampire Survivors; ver PRE_LANCAMENTO 1.7)
   INTERSTITIAL: "ca-app-pub-7068898840847782/5930646735",
@@ -1858,4 +1832,4 @@ export const COLORS = {
 
 // Idioma: traduz no lugar os campos de TEXTO das fichas acima (nomes, descrições, falas)
 // antes que qualquer outro módulo os leia. Ver src/i18n/i18n.js e docs/IDIOMAS.md.
-localize([GAME, DIFFICULTY, PLAYER, ENEMY, BOSS, BOSS_FIGHT, ELEMENT, STATUS, REACTION, WEAPONS, DEED_STATS, LINKS, CHARACTERS, PASSIVES, RESONANCE, PACTS, SHRINE, CARDS, TREE, INTRO, ARENA, ENDLESS, LEGENDS, BIOMES, DUST_DEVIL, BUILD, BUILDINGS, WOOD, GARDEN, DAILY, SEASONS, FISHING, KITCHEN, LANTERN, ADMOB, ADS, DROPS, CHEST, ELITE, MIMIC, META, BLESSINGS, ANCESTRAL, ACHIEVEMENTS, COLORS]);
+localize([GAME, DIFFICULTY, PLAYER, ENEMY, BOSS, BOSS_FIGHT, ELEMENT, STATUS, REACTION, WEAPONS, DEED_STATS, LINKS, CHARACTERS, PASSIVES, RESONANCE, PACTS, SHRINE, CARDS, INTRO, ARENA, ENDLESS, LEGENDS, BIOMES, DUST_DEVIL, BUILD, BUILDINGS, WOOD, GARDEN, DAILY, SEASONS, FISHING, KITCHEN, LANTERN, ADMOB, ADS, DROPS, CHEST, ELITE, MIMIC, META, BLESSINGS, ANCESTRAL, ACHIEVEMENTS, COLORS]);

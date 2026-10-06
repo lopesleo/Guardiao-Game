@@ -49,11 +49,6 @@ export const REVEALS = [
     line: tr("Todo dia a floresta deixa um presente aqui, junto ao fogo. Abra o baú!"),
   },
   {
-    id: "tree",
-    when: (d) => (d.revealed || []).includes("chest") && (d.runsPlayed || 0) >= 6,
-    line: tr("A Samaúma acordou! Antes de cada partida ela pode abençoar você."),
-  },
-  {
     // O Caboclo d'Água libertado manda peixes do São Francisco para o Lago (at: onde a cena acontece)
     id: "riverfish",
     at: "pond",

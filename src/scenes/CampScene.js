@@ -27,7 +27,6 @@ import { CampKitchen } from "./CampKitchen.js";
 import { CampPond } from "./CampPond.js";
 import { CampDecor, decorFree } from "./CampDecor.js";
 import { CampDaily } from "./CampDaily.js";
-import { CampTree } from "./CampTree.js";
 import { tr, fmt, isCJK } from "../i18n/i18n.js";
 
 const S = GAME.PIXEL_SCALE;
@@ -102,7 +101,6 @@ export class CampScene extends Phaser.Scene {
     this._pondWorld();
     this._decor();
     this._dailyChestWorld();
-    this._treeWorld();
     this._player();
     this._night();
     this._hud();
@@ -929,4 +927,4 @@ export class CampScene extends Phaser.Scene {
   }
 }
 
-Object.assign(CampScene.prototype, MetaPanels, CampGarden, CampKitchen, CampPond, CampDecor, CampDaily, CampTree);
+Object.assign(CampScene.prototype, MetaPanels, CampGarden, CampKitchen, CampPond, CampDecor, CampDaily);
