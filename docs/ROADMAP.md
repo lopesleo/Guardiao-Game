@@ -258,7 +258,7 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Laços por **eventos** (`src/systems/Links.js`); evolução faz reação com `also`; `registerWeapon()`;
   verificador `npm run check` (ficha incompleta, parceira inexistente, laço com evento que ninguém emite,
   guardião sem arte...)
-- ✅ **Leva 3** ([`ARMAS_E_COMBOS.md`](ARMAS_E_COMBOS.md)): **5 armas por elemento** — Açoite de Urtiga,
+- ✅ **Leva 3** ([`ARMAS_E_COMBOS.md`](ARMAS_E_COMBOS.md)): **5 armas de fogo e de gelo, 4 de raio e de vento** (nas cartas cada elemento sai 25%; ver `ARMAS_E_COMBOS.md`) — Açoite de Urtiga,
   Fogueira de São João, Miragem, Boleadeira, Bola de Ouro, Tambor do Trovão (verbos novos: corpo a corpo,
   armadilha, isca, amarrar, ricochete, onda); **6 evoluções em ciclo** que fazem reação sozinhas; **10 laços**
   de dupla (aviso, pausa e carta); **3 guardiões** — Comadre Fulozinha, Mãe-do-Ouro e Anhangá (o veado

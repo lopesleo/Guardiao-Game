@@ -70,7 +70,14 @@ Cristal 4× e Vapor 1×. As cartas só oferecem arma nova depois de forjada; a c
 de evolução aparece com âncora no nível 5 + parceira, e a evolução herda dano,
 recarga, alcance e +1 da âncora.
 
-## Leva 3 (feita, out/2026): 5 por elemento, 3 guardiões, laços
+## Leva 3 (feita, out/2026): 5 de fogo e gelo, 4 de raio e vento, 3 guardiões, laços
+
+> **Conferido em 05/10/2026:** armas base = 5 fogo, 5 gelo, **4 raio, 4 vento** (o Redemoinho
+> passou do raio para o vento). Nas cartas isso não pesa: todo guardião começa com uma arma e a
+> Aura (gelo) vem liberada, então entre as que faltam cada elemento tem 4 candidatas — medido no
+> sorteador real (`generateCards`, 20 mil mesas, Cajado + Aura): **25% para cada elemento**. O
+> que falta é escolha numa build pura de raio ou de vento (as 4 armas = as 4 vagas da Forja).
+> Uma 5ª arma de raio e uma de vento é boa candidata a primeira atualização de conteúdo.
 
 Seis armas, cada uma com um **verbo que o jogo não tinha**. Três são as armas das
 lendas novas (ver `TEMA_FOLCLORE.md`); três são do Brasil "sem dono".
