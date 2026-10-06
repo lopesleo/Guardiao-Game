@@ -99,8 +99,11 @@ nenhuma arma emite).
    `unlock: { fire: N, deed }` = Fogueira N + feito + moedas, comprado na Fogueira.
    O bestiário (Mural → Lendas) sai do `legend`.
    `mods` aceitos: `hp, speed, crit, area, regen, cd, dmg, luck`.
-2. **Arte**: função de desenho em `Hero.js` (`DRAW[id]`, 6 quadros: 0-1 parado, 2-5
-   andando) e figurino em `HeroRig.js` (`STYLE[id]`, poses de queda/acordar). Um
+2. **Arte**: função de desenho em `Hero.js` (`DRAW[id]`) que recebe uma **pose** (corpo,
+   cabelo atrasado, inclinação, pernas com joelho, braço de trás, olhos) e gera 15 quadros
+   (`HERO_FRAMES`: 0-3 respiração, 4 piscada, 5-12 caminhada em 8 tempos, 13 dash, 14 golpe;
+   quem não anda com dois pés troca o ciclo, ex.: `HOP` do Saci, `GLIDE` de quem flutua) +
+   pisadas em `HERO_STEPS` (poeira/gota/brilho), e figurino em `HeroRig.js` (`STYLE[id]`, poses de queda/acordar). Um
    quadrúpede ou forma não humana pode ter render próprio (ver `renderDeer`).
    Revisar: `node tools/monster-sheet.mjs saida.png hero_<id> 7` e
    `node tools/hero-sheet.mjs saida.png <id> 5`.

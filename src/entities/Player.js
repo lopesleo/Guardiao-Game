@@ -2,6 +2,8 @@
 // Diferenciais: Despertar (R) e Dash (Shift/Space).
 import { LinkSet } from '../systems/Links.js';
 import { PLAYER, GAME, COLORS, RESONANCE } from '../config.js';
+import { HERO_STEPS } from '../art/Hero.js';
+import { PAL } from '../art/Palette.js';
 
 import { tr } from "../i18n/i18n.js";
 
@@ -17,6 +19,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setCollideWorldBounds(true);
     this.body.setCircle(6, 6, 14); // corpo na altura dos pés (quadro 24×28)
     this.body.setMaxSpeed(PLAYER.SPEED_BASE * 6); // permitir dash
+    this._hurtUntil = 0; // quadro de "golpe sofrido" (Hero.js) até este instante
+    // Pisadas: nos quadros em que o pé toca o chão sobe poeira (ou gota/brilho de quem flutua)
+    this._steps = HERO_STEPS[heroId] ?? null;
+    this._puffs = [];
+    this.on(Phaser.Animations.Events.ANIMATION_UPDATE, (anim, frame) => {
+      if (this._steps?.frames.includes(Number(frame.textureFrame))) this._stepFx();
+    });
 
     // Sombra "blob" no chão (segue em update)
     this.shadow = scene.add
@@ -156,6 +165,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   _hitFx() {
+    this._hurtUntil = this.scene.time.now + 150; // pose de dor (olhos fechados, corpo para trás)
     this.scene.sound.play('sfx_player_hit', { volume: 0.7 });
     this.setTint(0xff5a6e);
     this.scene.time.delayedCall(120, () => {
@@ -325,9 +335,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this._pullX = 0;
     this._pullY = 0;
     this.setFlipX(this.facingX < 0);
-    // Anima: andando vs. parado (troca só quando muda, pra não reiniciar o ciclo)
-    const anim = `${this.heroId}_${this.isMoving || this.isDashing() ? 'walk' : 'idle'}`;
-    if (this.anims.currentAnim?.key !== anim) this.play(anim);
+    // Anima: dash > golpe > andando > parado (troca só quando muda, pra não reiniciar
+    // o ciclo). Ao parar, a respiração começa "assentando" (corpo desce) em vez de
+    // estalar para a pose em pé; o passo acompanha a velocidade real.
+    const state = this.isDashing() ? 'dash' : time < this._hurtUntil ? 'hurt' : this.isMoving ? 'walk' : 'idle';
+    const anim = `${this.heroId}_${state}`;
+    if (this.anims.currentAnim?.key !== anim) {
+      const wasWalking = this.anims.currentAnim?.key === `${this.heroId}_walk`;
+      this.play(state === 'idle' && wasWalking ? { key: anim, startFrame: 1 } : anim);
+    }
+    const v = this.body.velocity;
+    this.anims.timeScale = state === 'walk' ? Phaser.Math.Clamp(Math.hypot(v.x, v.y) / PLAYER.SPEED_BASE, 0.7, 1.6) : 1;
 
     this.isMoving = Math.abs(input.move.x) + Math.abs(input.move.y) > 0.1;
     if (this.isMoving) {
@@ -342,6 +360,42 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setDepth(this.y + this.displayHeight * 0.45 + 10000);
     this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46);
     this.light.setPosition(this.x, this.y + this.displayHeight * 0.3);
+  }
+
+  // Efeito da pisada (pool de 6 imagens; nada é criado por passo)
+  _stepFx() {
+    const st = this._steps;
+    if (!this.visible || !this.scene.cameras.main.worldView.contains(this.x, this.y)) return;
+    let o = this._puffs.find((p) => !p.visible);
+    if (!o) {
+      if (this._puffs.length >= 6) return;
+      o = this.scene.add.image(0, 0, 'px_puff').setVisible(false);
+      this._puffs.push(o);
+    }
+    const S = GAME.PIXEL_SCALE;
+    const back = -this.facingX * (st.back ? -1 : 1); // para onde a poeira é chutada
+    const feet = this.y + this.displayHeight * 0.44;
+    const kind = st.kind;
+    const big = kind === 'land';
+    o.setTexture(kind === 'drop' || kind === 'glint' ? 'px_dot2' : 'px_puff')
+      .setTint(kind === 'drop' ? PAL.ice3 : kind === 'glint' ? PAL.yel3 : kind === 'land' ? PAL.wnd2 : PAL.n4)
+      .setBlendMode(kind === 'glint' || kind === 'drop' ? Phaser.BlendModes.ADD : Phaser.BlendModes.NORMAL)
+      .setPosition(this.x + back * S * (kind === 'dust' ? 3 : 1), feet - (kind === 'glint' || kind === 'drop' ? S * 2 : 0))
+      .setScale(kind === 'dust' || big ? S * 0.35 : S * 0.6)
+      .setAlpha(big ? 0.5 : 0.38)
+      .setDepth(this.depth - 1)
+      .setVisible(true);
+    const rise = kind === 'glint' || kind === 'drop';
+    this.scene.tweens.add({
+      targets: o,
+      x: o.x + back * S * (rise ? 0 : big ? 4 : 3),
+      y: o.y - S * (rise ? 5 : 1.5),
+      scale: rise ? S * 0.3 : S * (big ? 0.9 : 0.6),
+      alpha: 0,
+      duration: rise ? 520 : big ? 380 : 320,
+      ease: 'Quad.easeOut',
+      onComplete: () => o.setVisible(false),
+    });
   }
 
   // Multiplicador de cooldown final (usado por Weapon.cooldown)

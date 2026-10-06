@@ -44,7 +44,7 @@ const scene = {
   anims: { exists: () => true, create: () => {}, generateFrameNumbers: () => [] },
 };
 registerMonsters(scene);
-registerHeroes(scene); // hero_<id>: 0-1 parado, 2-5 andando
+registerHeroes(scene); // hero_<id>: 0-3 respiração, 4 piscada, 5-12 andando, 13 dash, 14 golpe
 registerCaatingaMonsters(scene); // mon_calango, mon_carcara, mon_frade, mon_caboclo, obj_carranca
 registerGarden(scene); // crop_<id> (5 estágios) + ico_<id>
 registerPond(scene); // ico_<peixe>
