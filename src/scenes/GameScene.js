@@ -1504,6 +1504,8 @@ export class GameScene extends Phaser.Scene {
 
   _onGameOver(won, quit = false, skipRevive = false) {
     if (this.gameOver) return;
+    // A cena pausa já neste quadro: a vida da HUD tem que mostrar o golpe fatal (0)
+    if (!won && !quit) this.hud?.syncHp(true);
     // Segunda chance (anúncio premiado, 1x por partida) — só se os anúncios
     // estiverem ligados. Várias checagens de morte podem cair no mesmo quadro:
     // enquanto a oferta está aberta, ignora as repetidas.
