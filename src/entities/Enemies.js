@@ -89,6 +89,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 
   activate(x, y, kind, wave, elite = false) {
+    this._life = (this._life ?? 0) + 1; // vida nova no pool (efeitos atrasados conferem)
     this._kind = kind;
     this._elite = elite;
     this._challengeId = null; // inimigo é reaproveitado (pool): zera a marca de desafio de santuário

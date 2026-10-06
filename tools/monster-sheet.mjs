@@ -12,6 +12,7 @@ import { registerGarden } from "../src/art/Garden.js";
 import { registerPond } from "../src/art/Pond.js";
 import { registerKitchen } from "../src/art/Kitchen.js";
 import { registerLanterns } from "../src/art/Lanterns.js";
+import { registerFireFX } from "../src/art/FireFX.js";
 
 const [out = "monster-sheet.png", keysArg = "mon_alpha,mon_elder,mon_boss", scaleArg = "5"] = process.argv.slice(2);
 const S = Number(scaleArg);
@@ -50,6 +51,7 @@ registerGarden(scene); // crop_<id> (5 estágios) + ico_<id>
 registerPond(scene); // ico_<peixe>
 registerKitchen(scene); // ico_dish_<id>
 registerLanterns(scene); // px_lantern, px_candeeiro
+registerFireFX(scene); // fx_whirl, fx_ignite, fx_wisp (reação Labareda)
 registerCaatinga(scene); // cenário: atlas "env_caatinga" (quadros de tamanhos diferentes)
 
 // Imagem solta (Pix.register, sem quadros): a imagem inteira é um quadro

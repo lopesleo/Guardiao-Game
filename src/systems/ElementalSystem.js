@@ -174,29 +174,32 @@ export class ElementalSystem {
     return died;
   }
 
-  // LABAREDA (fogo + vento): o alvo explode em chama e o vento leva o fogo aos vizinhos
+  // LABAREDA (fogo + vento): um redemoinho de fogo irrompe no alvo e o vento arranca
+  // línguas de fogo da coluna até os vizinhos — a chama "pega" quando a língua chega
   _labareda(enemy, def, areaMult, fx) {
     const scene = this.scene;
     const x = enemy.x,
       y = enemy.y;
+    const R = def.radius * areaMult;
+    const feet = (e) => e.y + (e.displayHeight || 40) * 0.42;
+    const fxOn = fx && scene.fx;
+    if (fxOn) scene.fx.fireWhirl(x, feet(enemy), R);
     this._hurt(enemy, def.dmg, x, y);
-    const near = this._near(x, y, def.radius * areaMult, enemy, def.spread);
+    const near = this._near(x, y, R, enemy, def.spread);
     near.forEach((e, i) => {
-      this._hurt(e, def.dmg * 0.6, x, y);
-      if (e.active) this.applyStatus(e, "fire"); // a chama "pega" (pode reagir de novo noutro par)
-      if (fx && scene.fx) {
-        // língua de fogo voando até o vizinho
-        const n = 5;
-        for (let k = 1; k <= n; k++) {
-          const t = k / n;
-          scene.time.delayedCall(i * 40 + k * 18, () => scene.fx?.burst("jet_fire", x + (e.x - x) * t, y - 8 + (e.y - y) * t - Math.sin(t * Math.PI) * 18, 1, null, 360, { min: 5, max: 30 }));
-        }
-      }
+      const catchFire = () => {
+        this._hurt(e, def.dmg * 0.6, x, y);
+        if (e.active) this.applyStatus(e, "fire"); // a chama "pega" (pode reagir de novo noutro par)
+      };
+      if (!fxOn) return catchFire();
+      // O inimigo é de pool: só vale se ainda for o mesmo quando a língua chegar
+      const life = e._life;
+      scene.fx.fireWisp(x, y - 40 - (i % 3) * 14, e, 90 + i * 55, () => {
+        if (!e.active || e._life !== life) return;
+        scene.fx.ignite(e.x, feet(e));
+        catchFire();
+      });
     });
-    if (!fx) return;
-    scene.fx?.burst("ember", x, y - 6, 14, -Math.PI / 2, 160, { min: 60, max: 200 });
-    scene.fx?.ring(x, y + 4, def.color, 10, 60 * areaMult, 240);
-    scene.fx?.burst("leaf", x, y, 4, null, 360, { min: 80, max: 180 });
   }
 
   // GEADA (gelo + vento): rajada fria em volta — dano, lentidão forte e congela quem já estava gelado
