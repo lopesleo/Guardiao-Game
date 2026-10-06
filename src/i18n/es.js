@@ -444,6 +444,7 @@ export default {
   "OLHO CANSADO!": "¡OJO CANSADO!",
   "LEQUE DE ESPINHOS": "ABANICO DE ESPINAS",
   "CHAMADO DA PODRIDÃO": "LLAMADO DE LA PODREDUMBRE",
+  "COURAÇA DA PODRIDÃO: o chefe segura o dano em excesso.\nAcerte o ponto fraco depois dos golpes grandes!": "CORAZA DE LA PODREDUMBRE: el jefe aguanta el daño en exceso.\n¡Golpea el punto débil después de sus grandes ataques!",
   "FÚRIA!": "¡FURIA!",
   "MULA SEM CABEÇA": "MULA SIN CABEZA",
   "CORPO-SECO": "CORPO-SECO",

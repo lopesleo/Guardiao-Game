@@ -444,6 +444,7 @@ export default {
   "OLHO CANSADO!": "眼睛累了！",
   "LEQUE DE ESPINHOS": "荊棘扇",
   "CHAMADO DA PODRIDÃO": "腐朽的召喚",
+  "COURAÇA DA PODRIDÃO: o chefe segura o dano em excesso.\nAcerte o ponto fraco depois dos golpes grandes!": "腐朽之甲：頭目會抵擋過量傷害。\n在牠放出大招後攻擊弱點！",
   "FÚRIA!": "狂怒！",
   "MULA SEM CABEÇA": "無頭騾",
   "CORPO-SECO": "乾屍",

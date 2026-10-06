@@ -444,6 +444,7 @@ export default {
   "OLHO CANSADO!": "目が疲れた！",
   "LEQUE DE ESPINHOS": "トゲの扇",
   "CHAMADO DA PODRIDÃO": "腐敗の呼び声",
+  "COURAÇA DA PODRIDÃO: o chefe segura o dano em excesso.\nAcerte o ponto fraco depois dos golpes grandes!": "腐敗の鎧：ボスは強すぎるダメージを軽減する。\n大技のあとに弱点をねらえ！",
   "FÚRIA!": "激怒！",
   "MULA SEM CABEÇA": "首なしラバ",
   "CORPO-SECO": "コルポ・セコ",

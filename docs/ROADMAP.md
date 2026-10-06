@@ -294,6 +294,12 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   de **vitória** sem texto encavalado com a fonte Legível/texto grande (rótulo de botão sempre cabe na
   moldura) e **pesca** que não confunde o polegar no joystick com "segurar". 👤 sentir no aparelho
 
+- ✅ **Couraça do chefe revista (05/10/2026)** (ver `CHEFES.md`): era invisível (a tela mostrava o golpe
+  cheio e o chefe perdia bem menos) e forte demais (build 8× mais forte vencia só 1,7× mais rápido). Agora
+  o número mostra o dano real (cinza quando a couraça segura; dourado no ponto fraco), anel e lascas da
+  Podridão e uma dica que ensina o ponto fraco; KEEP 0,25 → 0,45 (300 dano/s: ~35 s → ~17 s; build
+  fraca não muda). 👤 sentir no aparelho
+
 ### M5 — Monetização e medição reais 👤
 - ✅ AdMob: app Android criado e **8 blocos premiados** (revive, extra_card, build_speed,
   double_coins, daily_chest, extra_reroll, extra_banish, tree_spin) + 1 intersticial pronto e desligado; IDs em `ADMOB` no `src/config.js`

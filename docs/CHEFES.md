@@ -45,9 +45,16 @@ não tinha como escapar.**
 - **Couraça da Podridão** (`BOSS.ARMOR`): com vida fixa, uma build forte (nível 15, ~300
   de dano/s no chefe) libertava o Mapinguari em ~7 s, antes de ver um golpe. O chefe mede
   o dano que vem levando (média dos últimos ~3 s) e, acima do ritmo que daria uma luta de
-  60 s, resiste ao excesso: dano efetivo = ref × (ritmo/ref)^0,25. Quem bate mais ainda vence
-  antes, mas sempre há luta. O ponto fraco multiplica **depois** da couraça. A barra não
-  mostra números, então o ajuste é contínuo e sem saltos. Vale para todo chefe de bioma.
+  60 s, resiste ao excesso: dano efetivo = ref × (ritmo/ref)^0,45. Quem bate mais vence
+  antes, mas sempre há luta. O ponto fraco multiplica **depois** da couraça. Vale para todo
+  chefe de bioma. **Revisão 05/10/2026:** o expoente era 0,25 (build 8× mais forte vencia só
+  1,7× mais rápido: 60 s → 35 s) e a couraça era invisível — o número na tela mostrava o golpe
+  cheio enquanto o chefe perdia bem menos, e a build boa "não parecia servir" contra o chefe.
+  Agora, medido no jogo: 35 dano/s → ~51 s (a couraça nem age), 120 → ~29 s, 300 → ~17 s
+  (uns 5 golpes, fúria incluída). E ela se mostra: o número exibe o dano **real** (cinza e
+  pequeno quando a couraça segurou mais de 25% do golpe; dourado e grande no ponto fraco), o
+  chefe pisca cinza-pedra com um anel e lascas da Podridão, e uma dica única ensina a saída:
+  acertar o ponto fraco depois dos golpes grandes.
 - **A horda não some mais** (`BOSS_FIGHT.ADDS`): ao nascer, o chefe espanta os inimigos de
   tiro (tiro + aviso de golpe deixaria de ser "evitável andando"), os minichefes, os que estão
   onde ele chega e o excesso; ficam os 8 mais perto do herói. Não nasce horda nova durante a

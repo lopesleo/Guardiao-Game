@@ -444,6 +444,7 @@ export default {
   "OLHO CANSADO!": "TIRED EYE!",
   "LEQUE DE ESPINHOS": "FAN OF THORNS",
   "CHAMADO DA PODRIDÃO": "CALL OF THE ROT",
+  "COURAÇA DA PODRIDÃO: o chefe segura o dano em excesso.\nAcerte o ponto fraco depois dos golpes grandes!": "ROT ARMOR: the boss shrugs off excess damage.\nHit the weak spot after its big attacks!",
   "FÚRIA!": "FURY!",
   "MULA SEM CABEÇA": "HEADLESS MULE",
   "CORPO-SECO": "CORPO-SECO",
