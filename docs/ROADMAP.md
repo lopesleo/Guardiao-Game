@@ -185,6 +185,9 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   "achata" no golpe e segura durante o hit-stop; tiques de status não piscam mais de branco. Emissivos ficam
   acima do mapa de luz (brilham à noite). Com a iluminação desligada, metade das partículas. 56–60 FPS no teste
   de carga. 👤 sentir no aparelho (S23 e um fraco)
+- ✅ **Conta das moedas no resultado**: a linha das moedas mostra "628 na floresta × 1,9 Pesadelo × 1,5
+  descanso × 2 anúncio" (só os fatores que valeram). **Imposto das bênçãos 2% → 5%** (ver `META_LOOP.md`):
+  bênçãos 147 mil → 269 mil moedas; armas, guardiões e obras iguais. 👤 confirmar com dados reais
 - ✅ **Labareda desenhada** (`src/art/FireFX.js`): a reação fogo + vento era um punhado de brasas e um anel.
   Agora um **redemoinho de fogo** pintado quadro a quadro (12 quadros: irrompe do chão, gira com faixas em
   espiral, três arcos de vento o abraçam, a base se solta e ele se desfaz em fumaça), com chão queimado,

@@ -277,6 +277,15 @@ Perigo Guardião e o casual simulado fica muito tempo no Aprendiz (hipótese de 
 com dados). Medição: `run_start`/`run_end` levam `run_n` (nº da partida na vida do jogador, para o
 funil da 1ª sessão) e toda compra gera `shop_buy` (`kind`, `id`, `cost`, `left`, `run_n`).
 
+
+**Imposto 2% → 5% (06/10/2026).** Decisão do Leonardo: receio de o jogador comprar tudo rápido demais
+e a retenção cair (o jogo é grátis; o fim da loja é poder opcional). Só as bênçãos encarecem — armas,
+guardiões e obras não mudam, então o início e o meio da jornada ficam iguais. Compra racional (sempre o
+rank mais barato): as 80 ranks custam **146.955 → 268.800** moedas (+83%); o último rank, **9.920 →
+19.035**. Pela regra da simulação (+1% de imposto ≈ +12 dias no casual), a jornada completa vai para
+algo como **~95 / ~55 / ~33 dias** (casual / médio / hardcore) — estimativa a confirmar rodando a
+simulação de novo. Ponto a vigiar: a "maior espera sem compra" no fim (um rank pode pedir 5+ partidas
+de Pesadelo); se os dados mostrarem gente travando, o primeiro ajuste é voltar para 3–4%.
 ---
 
 ## Ordem de implementação
