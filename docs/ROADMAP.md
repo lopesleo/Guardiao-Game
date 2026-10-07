@@ -185,6 +185,11 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   "achata" no golpe e segura durante o hit-stop; tiques de status não piscam mais de branco. Emissivos ficam
   acima do mapa de luz (brilham à noite). Com a iluminação desligada, metade das partículas. 56–60 FPS no teste
   de carga. 👤 sentir no aparelho (S23 e um fraco)
+- ✅ **Elementos e reações na pausa**: selo da cor do elemento no canto de cada arma (chama, floco, raio,
+  lufada — `ELEMENT_SEAL` em `Icons.js`; a evolução que aplica dois elementos ganha dois) e uma coluna
+  **REAÇÕES** com os 6 pares sempre à vista: conseguida na partida = nome na cor da reação e "×N";
+  possível com o arsenal de agora = clara; sem os dois elementos = apagada. Ensina por que saiu um
+  "TEMPORAL!" (Redemoinho = vento + Vaga-lumes = raio). Conferido em 16:9, celular deitado e 4:3
 - ✅ **Conta das moedas no resultado**: a linha das moedas mostra "628 na floresta × 1,9 Pesadelo × 1,5
   descanso × 2 anúncio" (só os fatores que valeram). **Imposto das bênçãos 2% → 5%** (ver `META_LOOP.md`):
   bênçãos 147 mil → 269 mil moedas; armas, guardiões e obras iguais. 👤 confirmar com dados reais

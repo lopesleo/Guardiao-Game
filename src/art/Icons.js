@@ -670,7 +670,31 @@ const RECOLOR = {
   mirage_fire: { base: "mirage", swap: { c: "h", o: "r" } }, // Visagem
 };
 
+// Selos de elemento (11×11): moeda na cor do elemento, aro escuro, brilho no alto e o
+// símbolo em branco — chama, floco, raio, lufada. Marcam a arma e as reações na pausa.
+const SEAL = {
+  fire: { mid: PAL.org2, dark: PAL.red1, hi: PAL.yel3, glyph: ["..w..", ".ww.w", ".wwww", "ww.ww", ".www."] },
+  ice: { mid: PAL.ice2, dark: PAL.ice1, hi: PAL.ice3, glyph: ["w.w.w", ".www.", "ww.ww", ".www.", "w.w.w"] },
+  bolt: { mid: PAL.pur2, dark: PAL.pur1, hi: PAL.pur3, glyph: ["...ww", "..ww.", ".wwww", "..ww.", ".ww.."] },
+  wind: { mid: PAL.wnd2, dark: PAL.wnd1, hi: PAL.wnd3, glyph: [".www.", "....w", "wwww.", ".....", "www.."] },
+};
+export const ELEMENT_SEAL = Object.fromEntries(Object.keys(SEAL).map((k) => [k, `ico_el_${k}`]));
+function seal({ mid, dark, hi, glyph }) {
+  const p = new Pix(11, 11);
+  for (let y = 0; y < 11; y++)
+    for (let x = 0; x < 11; x++) {
+      const dx = x + 0.5 - 5.5,
+        dy = y + 0.5 - 5.5;
+      const d = Math.hypot(dx, dy);
+      if (d > 4.7) continue;
+      p.set(x, y, d > 3.7 ? (dx + dy < -2 ? mid : dark) : -dx - dy > 3.2 ? hi : mid);
+    }
+  glyph.forEach((row, y) => [...row].forEach((ch, x) => ch === "w" && p.set(3 + x, 3 + y, PAL.white)));
+  return p.outline(PAL.ink);
+}
+
 export function registerIcons(scene) {
+  for (const [k, def] of Object.entries(SEAL)) seal(def).register(scene, ELEMENT_SEAL[k]);
   for (const [key, rows] of Object.entries(MAPS)) {
     Pix.fromMap(rows, L).register(scene, "ico_" + key);
   }

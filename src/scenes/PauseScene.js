@@ -1,14 +1,30 @@
 // Pausa: overlay sobre a GameScene. Mostra a build atual (armas com nível,
 // passivas acumuladas) e estatísticas; Continuar / Opções / Desistir.
-import { WEAPONS, PASSIVES, MAX_WEAPON_LEVEL, PASSIVE_SLOTS } from "../config.js";
+import { WEAPONS, PASSIVES, MAX_WEAPON_LEVEL, PASSIVE_SLOTS, REACTION } from "../config.js";
 import { weaponSlotsFor } from "../systems/Builds.js";
 import { formatTime } from "../utils.js";
 import { PAL, CSS } from "../art/Palette.js";
-import { WEAPON_ICON, PASSIVE_ICON } from "../art/Icons.js";
+import { WEAPON_ICON, PASSIVE_ICON, ELEMENT_SEAL } from "../art/Icons.js";
 import { text, drawFrame, dim, Button, vw, vh, fitCamera } from "../ui/Theme.js";
 import { Modal, closeTopModal } from "../ui/Widgets.js";
 import { openSettings } from "../ui/SettingsModal.js";
 import { tr } from "../i18n/i18n.js";
+
+// As seis reações (par de elementos → reação), na ordem em que o jogo as apresenta
+const REACTIONS = [
+  ["fire", "ice", "VAPOR"],
+  ["ice", "bolt", "CRYSTAL"],
+  ["fire", "bolt", "OVERLOAD"],
+  ["fire", "wind", "LABAREDA"],
+  ["ice", "wind", "GEADA"],
+  ["bolt", "wind", "TEMPORAL"],
+];
+// Elementos que a arma aplica: o seu + os que ela "também" põe (evoluções) + o par da
+// reação que ela faz por código próprio (ex.: Redemoinho de Brasa alterna fogo e vento)
+const weaponElements = (def) => {
+  const pair = REACTIONS.find(([, , k]) => k === def.reaction)?.slice(0, 2) ?? [];
+  return [...new Set([def.element, ...(def.also || []), ...pair].filter((e) => ELEMENT_SEAL[e]))];
+};
 
 export class PauseScene extends Phaser.Scene {
   constructor() {
@@ -34,14 +50,18 @@ export class PauseScene extends Phaser.Scene {
     // Painel da build: ARMAS e PASSIVAS no MESMO padrão (moldura + ícone, nome, nível),
     // grade de 3 colunas; a altura sai do conteúdo. Antes as passivas eram só ícones
     // com um "×2" em cima da moldura e o nome só aparecia passando o mouse.
-    const pw = Math.min(760, W - 60);
+    // À direita, a coluna das REAÇÕES (tabela dos pares + quantas saíram nesta partida);
+    // em tela estreita demais ela some e o painel volta a ser só a build
+    const RX = W - 60 >= 1000 ? 270 : 0;
+    const pw = Math.min(760, W - 60 - RX) + RX;
     const px = W / 2 - pw / 2,
       py = 128;
+    const lw = pw - RX; // largura da parte da build
     const COLS = 3,
       ROW = 64,
       HEAD = 40,
       PAD = 18;
-    const colW = (pw - 56) / COLS;
+    const colW = (lw - 56) / COLS;
     const taken = p.passivesTaken || {};
     const ids = Object.keys(taken);
     const rows = (n) => Math.max(1, Math.ceil(n / COLS));
@@ -49,15 +69,18 @@ export class PauseScene extends Phaser.Scene {
       pRows = rows(ids.length);
     const links = p.links?.list() ?? [];
     const LINK_H = links.length ? 38 + links.length * 22 : 0;
-    const ph = PAD + HEAD + wRows * ROW + 10 + HEAD + pRows * ROW + PAD - 6 + LINK_H;
+    const REACT_H = RX ? PAD + HEAD + 20 + (REACTIONS.length - 1) * 38 + 22 + PAD : 0; // última linha + respiro
+    const ph = Math.max(PAD + HEAD + wRows * ROW + 10 + HEAD + pRows * ROW + PAD - 6 + LINK_H, REACT_H);
     const g = this.add.graphics();
     drawFrame(g, px, py, pw, ph, "gold");
-    const slot = (i, y0, frame, icon, name, sub, subColor) => {
+    const slot = (i, y0, frame, icon, name, sub, subColor, seals = []) => {
       const x = px + 28 + (i % COLS) * colW;
       const y = y0 + Math.floor(i / COLS) * ROW;
       const sg = this.add.graphics();
       drawFrame(sg, x, y, 52, 52, frame, { noRivets: true });
       this.add.image(x + 26, y + 26, icon).setScale(2.8);
+      // selo do elemento no canto da moldura (dois na arma que aplica dois)
+      seals.forEach((e, k) => this.add.image(x + 50 - k * 17, y + 50, ELEMENT_SEAL[e]).setScale(2));
       const nt = text(this, x + 64, y + 14, name, { size: 18, origin: [0, 0.5] });
       if (nt.width > colW - 72) nt.setScale((colW - 72) / nt.width);
       text(this, x + 64, y + 38, sub, { size: 15, color: subColor, origin: [0, 0.5] });
@@ -67,11 +90,11 @@ export class PauseScene extends Phaser.Scene {
     y += HEAD;
     p.weapons.forEach((w, i) => {
       const def = WEAPONS[w.key];
-      slot(i, y, def.evolvesFrom ? "purple" : "dark", WEAPON_ICON[w.key] ?? "ico_staff", def.name, def.evolvesFrom ? tr("EVOLUÍDA") : tr("Nível {0}/{1}", w.level, MAX_WEAPON_LEVEL), def.evolvesFrom ? CSS.gold : CSS.muted);
+      slot(i, y, def.evolvesFrom ? "purple" : "dark", WEAPON_ICON[w.key] ?? "ico_staff", def.name, def.evolvesFrom ? tr("EVOLUÍDA") : tr("Nível {0}/{1}", w.level, MAX_WEAPON_LEVEL), def.evolvesFrom ? CSS.gold : CSS.muted, weaponElements(def));
     });
     y += wRows * ROW + 10;
     // separador entre as seções
-    g.fillStyle(PAL.ink, 0.6).fillRect(px + 24, y - 6, pw - 48, 2);
+    g.fillStyle(PAL.ink, 0.6).fillRect(px + 24, y - 6, lw - 48, 2);
     text(this, px + 28, y + 12, tr("PASSIVAS {0}/{1}", ids.length, PASSIVE_SLOTS), { size: 20, color: hexIce(), origin: [0, 0.5] });
     y += HEAD;
     if (!ids.length) text(this, px + 28, y + 20, tr("Nenhuma ainda — escolha passivas nas cartas de nível."), { size: 16, color: CSS.dim, origin: [0, 0.5] });
@@ -82,13 +105,14 @@ export class PauseScene extends Phaser.Scene {
     // Laços ativos (combos de dupla): nome + o que fazem, uma linha cada
     if (links.length) {
       y += pRows * ROW + 4;
-      g.fillStyle(PAL.ink, 0.6).fillRect(px + 24, y - 6, pw - 48, 2);
+      g.fillStyle(PAL.ink, 0.6).fillRect(px + 24, y - 6, lw - 48, 2);
       text(this, px + 28, y + 12, tr("LAÇOS {0}", links.length), { size: 20, color: CSS.green, origin: [0, 0.5] });
       links.forEach((l, i) => {
         const t = text(this, px + 28, y + 36 + i * 22, `${l.name}: ${l.desc}`, { size: 14, color: CSS.muted, origin: [0, 0.5] });
-        if (t.width > pw - 56) t.setScale((pw - 56) / t.width);
+        if (t.width > lw - 56) t.setScale((lw - 56) / t.width);
       });
     }
+    if (RX) this._reactions(gs, p, g, px + lw, py, RX, ph);
 
     // Botões
     const by = H - 150;
@@ -105,6 +129,32 @@ export class PauseScene extends Phaser.Scene {
       if (!closeTopModal(this)) this._resume();
     });
     this.input.keyboard.on("keydown-P", () => this._resume());
+  }
+
+  // Coluna das reações: os seis pares sempre à vista (ensina as combinações). Conseguida
+  // nesta partida = nome na cor da reação e "×N"; possível com as armas de agora = nome
+  // claro; sem os dois elementos no arsenal = apagada.
+  _reactions(gs, p, g, x0, y0, w, h) {
+    g.fillStyle(PAL.ink, 0.6).fillRect(x0 - 2, y0 + 18, 2, h - 36); // divisória vertical
+    const have = new Set(p.weapons.flatMap((wp) => weaponElements(WEAPONS[wp.key])));
+    const now = gs.meta?.data?.stats?.reactions || {};
+    const start = gs._reactionsAtStart || {};
+    const got = REACTIONS.filter(([, , k]) => (now[k] || 0) - (start[k] || 0) > 0).length;
+    text(this, x0 + 22, y0 + 18 + 12, tr("REAÇÕES {0}/{1}", got, REACTIONS.length), { size: 20, color: CSS.goldHi, origin: [0, 0.5] });
+    REACTIONS.forEach(([a, b, k], i) => {
+      const n = (now[k] || 0) - (start[k] || 0);
+      const can = have.has(a) && have.has(b);
+      const y = y0 + 18 + 40 + 20 + i * 38;
+      const alpha = n > 0 || can ? 1 : 0.35;
+      this.add.image(x0 + 34, y, ELEMENT_SEAL[a]).setScale(2).setAlpha(alpha);
+      this.add.image(x0 + 58, y, ELEMENT_SEAL[b]).setScale(2).setAlpha(alpha);
+      const name = String(REACTION[k].label).replace(/[!！]+$/, "");
+      const col = n > 0 ? "#" + REACTION[k].color.toString(16).padStart(6, "0") : can ? CSS.txt : CSS.dim;
+      const t = text(this, x0 + 80, y, name, { size: 17, color: col, origin: [0, 0.5] }).setAlpha(n > 0 || can ? 1 : 0.6);
+      const cnt = text(this, x0 + w - 22, y, n > 0 ? `×${n}` : "—", { size: 17, color: n > 0 ? CSS.goldHi : CSS.dim, origin: [1, 0.5] }).setAlpha(alpha);
+      const room = w - 22 - 80 - cnt.width - 10;
+      if (t.width > room) t.setScale(room / t.width);
+    });
   }
 
   // VOLTAR do Android: fecha modal; senão continua a partida
