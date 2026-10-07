@@ -16,6 +16,8 @@ import { registerIceFX, SPIKE_H } from "../art/IceFX.js";
 import { registerReactionFX, STEAM_W } from "../art/ReactionFX.js";
 
 const PX = 3; // escala dos quadros desenhados (= GAME.PIXEL_SCALE)
+const STEAM_ALPHA = 0.55; // nuvem de vapor: vê-se o que está atrás
+const STEAM_ALPHA_INSIDE = 0.28; // com o herói dentro dela
 
 export const D_FX = 48600; // acima do mapa de luz (48500), abaixo do HUD (50000)
 const D_SMOKE = 48400; // fumaça: abaixo do mapa de luz
@@ -702,22 +704,29 @@ export class WeaponFX {
 
   // VAPOR: nuvem desenhada que borbulha em laço pelo tempo da nuvem (aparece e some
   // por transparência); fica entre os bichos (ordenada por y), com luz quente por baixo
+  // TRANSPARENTE (não pode esconder bichos, tiros nem o herói): ~55% de opacidade, e
+  // cai para ~28% quando o herói entra na nuvem. A opacidade final sai de _updateFire.
   steamCloud(x, y, radius, ms) {
     const s = this._flame("steam", 10, x, y, 0.62);
     if (!s) return;
     const k = (2.1 * radius) / STEAM_W;
     this.scene.tweens.killTweensOf(s);
     s.setScale(k * 0.6).setAlpha(0).setDepth(y + 10040).setFlipX(Math.random() < 0.5);
-    this.scene.tweens.add({ targets: s, alpha: 0.94, scale: k, duration: 220, ease: "Back.easeOut" });
+    const life = (s._life = { k: 0 }); // 0 → 1 ao surgir, 1 → 0 ao sumir
+    s._steamR = radius;
+    s._steamA = STEAM_ALPHA;
+    this.scene.tweens.add({ targets: s, scale: k, duration: 220, ease: "Back.easeOut" });
+    this.scene.tweens.add({ targets: life, k: 1, duration: 220 });
+    this.scene.tweens.add({ targets: s, scale: k * 1.08, delay: Math.max(0, ms - 380), duration: 380 });
     this.scene.tweens.add({
-      targets: s,
-      alpha: 0,
-      scale: k * 1.08,
+      targets: life,
+      k: 0,
       delay: Math.max(0, ms - 380),
       duration: 380,
       onComplete: () => {
         s.stop();
         s.setVisible(false);
+        s._life = null;
       },
     });
     this.light(x, y, radius * 1.7, 0xffc8a0, ms, 0.55);
@@ -759,6 +768,16 @@ export class WeaponFX {
   }
 
   _updateFire(d) {
+    // Nuvens de vapor: opacidade = surgimento × (55% normal, 28% com o herói dentro);
+    // a troca é suave para a nuvem não "piscar" quando o herói entra e sai
+    const pl = this.scene.player;
+    for (const s of this.flames.steam) {
+      if (!s.visible || !s._life) continue;
+      const inside = pl && (pl.x - s.x) ** 2 + (pl.y - s.y) ** 2 < (s._steamR * 0.95) ** 2;
+      const want = inside ? STEAM_ALPHA_INSIDE : STEAM_ALPHA;
+      s._steamA += (want - s._steamA) * Math.min(1, d / 120);
+      s.setAlpha(s._life.k * s._steamA);
+    }
     for (let i = this.attached.length - 1; i >= 0; i--) {
       const a = this.attached[i];
       if (!a.s.visible || !a.owner.active) {
