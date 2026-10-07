@@ -13,6 +13,7 @@ import { PAL } from "../art/Palette.js";
 import { Pix, bayer, rng } from "../art/PixelArt.js";
 import { registerFireFX, WHIRL_H, IGNITE_H, JET_W, JET_X0, JET_LEN, JET_HALF, GFIRE_H } from "../art/FireFX.js";
 import { registerIceFX, SPIKE_H } from "../art/IceFX.js";
+import { registerReactionFX, STEAM_W } from "../art/ReactionFX.js";
 
 const PX = 3; // escala dos quadros desenhados (= GAME.PIXEL_SCALE)
 
@@ -42,7 +43,8 @@ const DECALS = 22;
 // ---------------------------------------------------------------- texturas
 function textures(scene) {
   registerFireFX(scene); // redemoinho, ignição e língua de fogo (Labareda), jato do Sopro
-  registerIceFX(scene); // espinho de gelo (Coração do Inverno)
+  registerIceFX(scene); // espinho de gelo (Coração do Inverno, Cristal)
+  registerReactionFX(scene); // nuvem de vapor e lufada de neve (Vapor, Geada)
   if (scene.textures.exists("fx_star")) return;
   // Estrela de 4 pontas (clarão de impacto): miolo 3×3 e braços afinando
   const st = new Pix(13, 13);
@@ -251,7 +253,7 @@ export class WeaponFX {
     this._frameImpacts = 0;
     this._ts = 1;
     // Fogo desenhado (Labareda): sprites animados reaproveitados, criados sob demanda
-    this.flames = { whirl: [], ignite: [], wisp: [], jet: [], icespike: [], groundfire: [] };
+    this.flames = { whirl: [], ignite: [], wisp: [], jet: [], icespike: [], groundfire: [], steam: [], frostgust: [] };
     this.attached = []; // sprites que seguem um dono (jato do Sopro preso à mão)
     this.whirls = []; // redemoinhos vivos (brasas em espiral, fumaça no fim)
     this.wisps = []; // línguas de fogo em voo
@@ -695,6 +697,56 @@ export class WeaponFX {
         s.setVisible(false);
       },
     });
+  }
+
+  // VAPOR: nuvem desenhada que borbulha em laço pelo tempo da nuvem (aparece e some
+  // por transparência); fica entre os bichos (ordenada por y), com luz quente por baixo
+  steamCloud(x, y, radius, ms) {
+    const s = this._flame("steam", 10, x, y, 0.62);
+    if (!s) return;
+    const k = (2.1 * radius) / STEAM_W;
+    this.scene.tweens.killTweensOf(s);
+    s.setScale(k * 0.6).setAlpha(0).setDepth(y + 10040).setFlipX(Math.random() < 0.5);
+    this.scene.tweens.add({ targets: s, alpha: 0.94, scale: k, duration: 220, ease: "Back.easeOut" });
+    this.scene.tweens.add({
+      targets: s,
+      alpha: 0,
+      scale: k * 1.08,
+      delay: Math.max(0, ms - 380),
+      duration: 380,
+      onComplete: () => {
+        s.stop();
+        s.setVisible(false);
+      },
+    });
+    this.light(x, y, radius * 1.7, 0xffc8a0, ms, 0.55);
+  }
+
+  // GEADA: lufada de neve em espiral que abre até o raio R
+  frostGust(x, y, R) {
+    const s = this._flame("frostgust", 8, x, y, 0.5);
+    if (s) s.setScale(R / 26);
+  }
+
+  // CRISTAL: um aglomerado de espinhos de gelo brota no alvo e estilhaça
+  crystalBurst(x, y, big = false) {
+    const n = big ? 7 : 5;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + Math.random() * 0.6;
+      const d = i === 0 ? 0 : 10 + Math.random() * (big ? 22 : 14);
+      const sx = x + Math.cos(a) * d,
+        sy = y + Math.sin(a) * d * 0.6;
+      const s = this._flame("icespike", 40, sx, sy, (SPIKE_H - 3) / SPIKE_H);
+      if (s) s.setDepth(sy + 10000).setFlipX(i % 2 === 1).setScale(PX * (i === 0 ? 1.2 : 0.8 + Math.random() * 0.3));
+    }
+  }
+
+  // Marca de raio no chão (Temporal): estalo, chão queimado e uma onda curtinha
+  strikeMark(x, y, cols) {
+    this.thunderRing(x, y, 6, 52, 260, cols, 0.55);
+    this.decal("fx_scorch", x, y, 18, 1400, 0.5);
+    this.star(x, y - 4, 0xffffff, 0.8, 2.6, 130, Math.PI / 4);
+    this.burst("zap", x, y - 4, 8, -Math.PI / 2, 160);
   }
 
   // A chama que pega num inimigo (aos pés dele), com estalo de luz e brasas
