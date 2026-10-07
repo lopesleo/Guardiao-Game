@@ -599,7 +599,6 @@ export default {
   "A floresta caiu… por enquanto.": "森林淪陷了……暫時而已。",
   "Tempo": "時間",
   "Abates": "擊殺",
-  "Moedas · descansado +{0}%": "金幣 · 休整+{0}%",
   "Moedas ganhas": "獲得金幣",
   "Primeira vitória no {0}": "在{0}危險度下首勝",
   "Perigo": "危險度",
@@ -914,4 +913,7 @@ export default {
   "Muito grande": "特大",
   "SIM": "開",
   "NÃO": "關",
+  "{0} na floresta": "森林中{0}",
+  "{0} descanso": "{0} 休整",
+  "{0} anúncio": "{0} 廣告",
 };

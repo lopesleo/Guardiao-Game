@@ -9,7 +9,7 @@ import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.
 import { AdService } from "../systems/AdService.js";
 import { Analytics } from "../systems/Analytics.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
-import { tr } from "../i18n/i18n.js";
+import { tr, fmt, dec } from "../i18n/i18n.js";
 
 export class GameOverScene extends Phaser.Scene {
   constructor() {
@@ -17,13 +17,14 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   create(data) {
-    const { won, quit, elapsedMs, kills, coinsGained, coinsDoubleable = coinsGained, restedMult = 1, firstClear = 0, woodGained = 0, seedsGained = 0, newUnlocks = [], difficulty, unlockedNextDifficulty, level = 1, weapons = [], endlessS = 0, endlessRecord = false, biome = null } = data;
+    const { won, quit, elapsedMs, kills, coinsGained, coinsDoubleable = coinsGained, coinsRun = null, restedMult = 1, firstClear = 0, woodGained = 0, seedsGained = 0, newUnlocks = [], difficulty, unlockedNextDifficulty, level = 1, weapons = [], endlessS = 0, endlessRecord = false, biome = null } = data;
     fitCamera(this);
     // O Phaser REAPROVEITA a instância da cena: todo estado de "visita" precisa
     // ser zerado aqui, senão sobra da vez anterior (ex.: herói preso andando).
     this._leaving = false;
     this._coinsShown = undefined;
     this._coinText = null;
+    this._coinNote = null;
     const W = vw(this),
       H = vh(this);
     const cx = W / 2;
@@ -55,9 +56,12 @@ export class GameOverScene extends Phaser.Scene {
     const stats = [
       { icon: "ico_hourglass", label: tr("Tempo"), value: elapsedMs / 1000, fmt: (v) => formatTime(v * 1000) },
       { icon: "ico_skull", label: tr("Abates"), value: kills, fmt: (v) => String(Math.round(v)) },
-      // Moedas da PARTIDA (é o que o anúncio dobra); o prêmio da 1ª vitória vem em linha própria
-      { icon: "ico_coin", label: restedMult > 1 ? tr("Moedas · descansado +{0}%", Math.round((restedMult - 1) * 100)) : tr("Moedas ganhas"), value: coinsDoubleable, fmt: (v) => `+${Math.round(v)}`, color: CSS.goldHi },
+      // Moedas da PARTIDA (é o que o anúncio dobra); o prêmio da 1ª vitória vem em linha própria.
+      // Embaixo, a CONTA: o que caiu na floresta × Perigo × descanso (× anúncio) — o jogador
+      // vê de onde veio cada moeda em vez de um número que "pula" sem explicação
+      { icon: "ico_coin", label: tr("Moedas ganhas"), note: this._coinMath(coinsRun, difficulty, restedMult, false), value: coinsDoubleable, fmt: (v) => `+${Math.round(v)}`, color: CSS.goldHi },
     ];
+    const coinMathDoubled = this._coinMath(coinsRun, difficulty, restedMult, true);
     if (firstClear > 0) stats.push({ icon: "ico_trophy", label: tr("Primeira vitória no {0}", difficulty?.name ?? tr("Perigo")), value: firstClear, fmt: (v) => `+${Math.round(v)}`, color: CSS.goldHi });
     if (woodGained > 0) stats.push({ icon: "ico_wood", label: tr("Madeira Ancestral"), value: woodGained, fmt: (v) => `+${Math.round(v)}`, color: "#ffc86b" });
     if (seedsGained > 0) stats.push({ icon: "ico_seed", label: tr("Sementes raras"), value: seedsGained, fmt: (v) => `+${Math.round(v)}`, color: "#ffe58f" });
@@ -80,7 +84,14 @@ export class GameOverScene extends Phaser.Scene {
     stats.forEach((s, i) => {
       const y = py + HEAD + rowH * (i + 0.5);
       this.add.image(px + 50, y, s.icon).setScale(tiny ? 2.2 : small ? 2.5 : 3);
-      text(this, px + 84, y, s.label, { size: tiny ? 18 : small ? 20 : 22, color: CSS.muted, origin: [0, 0.5] });
+      if (s.note && rowH >= 40) {
+        // duas linhas: rótulo em cima, a conta embaixo (menor, apagada)
+        text(this, px + 84, y - 10, s.label, { size: small ? 20 : 22, color: CSS.muted, origin: [0, 0.5] });
+        this._coinNote = text(this, px + 84, y + 13, s.note, { size: 17, color: CSS.dim, origin: [0, 0.5] });
+      } else if (s.note) this._coinNote = text(this, px + 84, y, s.note, { size: tiny ? 15 : 17, color: CSS.muted, origin: [0, 0.5] });
+      else text(this, px + 84, y, s.label, { size: tiny ? 18 : small ? 20 : 22, color: CSS.muted, origin: [0, 0.5] });
+      // a conta nunca invade o número da direita
+      if (s.note && this._coinNote.width > pw - 84 - 170) this._coinNote.setScale((pw - 84 - 170) / this._coinNote.width);
       const v = text(this, px + pw - 36, y, s.fmt(0), { size: tiny ? 22 : small ? 26 : 30, color: s.color ?? CSS.txt, origin: [1, 0.5], stroke: true });
       const o = { n: 0 };
       this.tweens.add({
@@ -144,6 +155,11 @@ export class GameOverScene extends Phaser.Scene {
         this._coinsShown = coinsDoubleable * 2;
         db.setLabel(tr("MOEDAS DOBRADAS!"));
         this._coinText?.setText(`+${this._coinsShown}`);
+        if (this._coinNote && coinMathDoubled) {
+          this._coinNote.setScale(1).setText(coinMathDoubled);
+          const room = pw - 84 - 170;
+          if (this._coinNote.width > room) this._coinNote.setScale(room / this._coinNote.width);
+        }
         if (this._coinText) this.tweens.add({ targets: this._coinText, scale: { from: 1.5, to: 1 }, duration: 260, ease: "Back.easeOut" });
         this.sound.play("sfx_coin_cascade", { volume: 0.7 });
         haptic(30);
@@ -171,6 +187,18 @@ export class GameOverScene extends Phaser.Scene {
     this.cameras.main.fadeOut(250, 5, 8, 6);
     // Voltando à Clareira, o guardião chega pela trilha (vindo da floresta)
     this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start(key, key === "CampScene" ? { fromRun: true } : undefined));
+  }
+
+  // "628 na floresta × 1,9 Pesadelo × 1,5 descanso × 2 anúncio" (só os fatores que valeram).
+  // null quando não há conta a mostrar (sem moedas, ou save/partida sem o número-base).
+  _coinMath(run, difficulty, restedMult, doubled) {
+    if (run == null || run <= 0) return null;
+    const parts = [tr("{0} na floresta", fmt(Math.round(run)))];
+    const dm = difficulty?.rewardMult ?? 1;
+    if (dm !== 1) parts.push(`${dec(dm)} ${difficulty.name}`); // o nome do Perigo já vem traduzido
+    if (restedMult > 1) parts.push(tr("{0} descanso", dec(restedMult)));
+    if (doubled) parts.push(tr("{0} anúncio", 2));
+    return parts.join(" × ");
   }
 
   _backdrop(won) {
