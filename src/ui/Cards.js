@@ -61,7 +61,13 @@ export function createCard(scene, x, y, w, h, card, onClick, index, showKey = tr
   // Empilhado pela altura real: nome e efeito podem quebrar em 2 linhas (traduções, texto grande)
   let cy = my + 46;
   const title = text(scene, 0, cy, card.title, { size: 24, origin: [0.5, 0], align: "center", wrap: w - 30, stroke: true, strokeW: 4 });
-  if (title.width > w - 24) title.setFontSize(20);
+  // Quebrou em 2 linhas? Tenta caber em uma com fonte menor (em japonês sobrava um
+  // caractere sozinho na 2ª linha: "サン・ジョアンの焚き / 火")
+  const oneLine = title.height;
+  title.setText("x");
+  const lineH = title.height;
+  title.setText(card.title);
+  if (oneLine > lineH * 1.5) title.setFontSize(20);
   inner.add(title);
   cy += title.height + 14;
 
@@ -93,28 +99,33 @@ export function createCard(scene, x, y, w, h, card, onClick, index, showKey = tr
     shadow: false,
   });
   inner.add(descT);
-  // Centraliza o corpo no espaço livre (acima dos pips/custo/atalho)
+  // Encaixe do corpo: ele SEMPRE termina acima do rodapé — pips de nível (armas), custo
+  // (trato) ou selo da tecla. Antes só havia ajuste para o trato: descrição longa (dica de
+  // Ressonância da arma nova), 4 cartas na mesa (carta estreita) ou tradução maior
+  // desciam por cima dos pips. Ordem: fonte da descrição até 13 → o corpo inteiro encolhe.
   inner = outer;
   inner.add(body);
-  const bodyTop = my - 44,
-    bodyBottom = descT.y + descT.height;
-  const footer = h / 2 - (card.cost ? 12 * P + 84 : 24 * P);
-  const free = footer - ribBottom - (bodyBottom - bodyTop);
-  if (free > 0) body.y = ribBottom + free * 0.42 - bodyTop;
-
-  // Custo do trato, em vermelho, no pé da carta. Fica sempre ABAIXO da descrição: se faltar
-  // espaço (descrição longa / fonte ampliada), a descrição encolhe em vez de sobrepor.
+  let costT = null;
   if (card.cost) {
-    const costT = text(scene, 0, 0, card.cost, { size: 18, color: CSS.redHi, origin: 0.5, align: "center", wrap: w - 70, stroke: true, strokeW: 4 });
+    costT = text(scene, 0, 0, card.cost, { size: 18, color: CSS.redHi, origin: 0.5, align: "center", wrap: w - 70, stroke: true, strokeW: 4 });
     // Acima do selo da tecla (canto inferior) — antes encostava nele
     costT.setY(h / 2 - 12 * P - 14 - costT.height / 2);
-    let fs = parseInt(descT.style.fontSize, 10);
-    while (descT.y + descT.height > costT.y - costT.height / 2 - 8 && fs > 12) {
-      fs -= 1;
-      descT.setFontSize(fs);
-    }
     inner.add(costT);
   }
+  const hasPips = card.type === "upgrade" || card.type === "new";
+  const limit = costT ? costT.y - costT.height / 2 - 8 : hasPips ? h / 2 - 16 * P - 3.5 * P - 10 : h / 2 - 14 * P - 4;
+  const top = ribBottom + 6;
+  const bodyTop = my - 44;
+  const bodyH = () => descT.y + descT.height - bodyTop;
+  let fs = parseInt(descT.style.fontSize, 10);
+  while (bodyH() > limit - top && fs > 13) {
+    fs -= 1;
+    descT.setFontSize(fs);
+  }
+  const k = Math.min(1, (limit - top) / bodyH());
+  body.setScale(k);
+  const free = limit - top - bodyH() * k;
+  body.y = top + free * 0.42 - bodyTop * k;
 
   // Pips de nível (nova arma: 0→1; melhoria: n→n+1 piscando)
   if (card.type === "upgrade" || card.type === "new") {
