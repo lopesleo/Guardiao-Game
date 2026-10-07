@@ -45,7 +45,7 @@ export class LanternSystem {
     for (let i = this.list.length - 1; i >= 0; i--) {
       const l = this.list[i];
       const dx = player.x - l.x,
-        dy = player.y - l.y;
+        dy = player.y + LANTERN.TOUCH_HERO_DY - (l.y + LANTERN.TOUCH_CAP_DY);
       const d2 = dx * dx + dy * dy;
       if (d2 < LANTERN.TOUCH_R * LANTERN.TOUCH_R) this._break(l, i);
       else if (d2 > LANTERN.DESPAWN_DIST * LANTERN.DESPAWN_DIST) {
@@ -59,7 +59,7 @@ export class LanternSystem {
       const it = this.items[i];
       it.glow.setAlpha(0.35 + Math.sin(time / 200 + it.spr.x) * 0.15);
       const dx = player.x - it.spr.x,
-        dy = player.y - it.spr.y;
+        dy = player.y + LANTERN.TOUCH_HERO_DY - it.spr.y; // item no chão: mede do corpo do herói
       const r = Math.max(LANTERN.TOUCH_R, player.pickupRadius);
       if (time >= it.readyAt && dx * dx + dy * dy < r * r) {
         this._collect(it);
