@@ -1233,6 +1233,9 @@ export const SHRINE = {
 export const CARDS = {
   BANISH_BASE: 1,
   BANISH_PER_SHRINE_LEVEL: 0,
+  // TROCAR cartas também é escasso (era 1 grátis a CADA nível — sempre à mão, a escolha
+  // perdia peso): saldo por PARTIDA + 1 extra por anúncio (AdService "extra_reroll")
+  REROLL_BASE: 2,
 };
 
 // Entrada na floresta (continuação da saída da Clareira): o guardião chega
@@ -1384,7 +1387,7 @@ export const WOOD = {
 // Nada morre: descuidar só baixa a qualidade (0 comum · 1 prata · 2 ouro) e
 // atrasa. Sempre há uma planta curta e uma longa (o jogador escolhe quando volta).
 export const GARDEN = {
-  PLOTS: [0, 2, 4, 6, 9], // canteiros por nível da Horta (obra do João-de-barro)
+  PLOTS: [0, 2, 3, 4, 5], // canteiros por nível da Horta: cada obra do João-de-barro abre +1
   TUTORIAL_S: 30, // a 1ª cenoura cresce em 30 s (ver o ciclo antes de esperar)
   NEED_SLOW: 0.75, // com um cuidado pendente, a planta cresce a 75%
   NEED_GRACE: 0.2, // cuidar até 20% da duração depois do aviso não perde qualidade…

@@ -635,7 +635,6 @@ export default {
   "NÍVEL {0}!": "¡NIVEL {0}!",
   "Escolha uma bênção da floresta": "Elige una bendición del bosque",
   "MAIS UMA CARTA": "UNA CARTA MÁS",
-  "TROCAR CARTAS{0}": "CAMBIAR CARTAS{0}",
   "Sem trocas": "Sin cambios",
   "BANIR +1": "DESTERRAR +1",
   "CANCELAR": "CANCELAR",
@@ -917,4 +916,6 @@ export default {
   "{0} descanso": "{0} descanso",
   "{0} anúncio": "{0} anuncio",
   "REAÇÕES {0}/{1}": "REACCIONES {0}/{1}",
+  "TROCAR ({0}){1}": "CAMBIAR ({0}){1}",
+  "TROCAR +1": "CAMBIAR +1",
 };

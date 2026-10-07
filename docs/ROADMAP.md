@@ -70,7 +70,7 @@ Aplica o tema ([`TEMA_FOLCLORE.md`](TEMA_FOLCLORE.md)) ao que já existe.
 - 👤 Revisão dos textos por leitor indígena/pesquisador de folclore (ideal)
 
 ### M3 — Clareira, parte 2: horta, pesca e cozinha ✅
-- ✅ **Horta** revelada após a 3ª partida: canteiros no mapa (2 → 9 com obras do
+- ✅ **Horta** revelada após a 3ª partida: canteiros no mapa (2 → 5 com obras do
   João-de-barro), 5 plantas comuns (cenoura 5 min, milho 30 min, feijão 1 h, abóbora
   4 h, mandioca 8 h) + 3 **mágicas** (pimenta-de-brasa, flor-de-geada, erva-do-trovão)
   com **sementes raras** das partidas (minichefe, baú dourado, Mapinguari); 5 estágios
@@ -196,6 +196,9 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   (marca no chão), **Sobrecarga** (onda amarela); **Despertar** com aura de fogo espiritual e explosão de
   ativação; **dash** com fantasmas do pool. Anel genérico vira faixa de 3 px. Teste de carga (6 evoluções,
   120 inimigos): igual ou melhor que antes (menos objetos criados por golpe). Guia em `CONTEUDO.md` (Arte)
+- ✅ **Trocar cartas escasso** (como o banir): era 1 troca grátis a CADA nível; agora **2 por partida**
+  (`CARDS.REROLL_BASE`) + **"TROCAR +1" por anúncio** (1 por partida, `extra_reroll`). **Horta: +1 canteiro
+  por obra** do João-de-barro (2 → 3 → 4 → 5; eram 2 → 4 → 6 → 9). Canteiros já abertos nunca somem
 - ✅ **Elementos e reações na pausa**: selo da cor do elemento no canto de cada arma (chama, floco, raio,
   lufada — `ELEMENT_SEAL` em `Icons.js`; a evolução que aplica dois elementos ganha dois) e uma coluna
   **REAÇÕES** com os 6 pares sempre à vista: conseguida na partida = nome na cor da reação e "×N";

@@ -20,7 +20,6 @@ export class LevelUpScene extends Phaser.Scene {
     this.player = data.player;
     this.gameScene = data.gameScene;
     this._cardObjs = [];
-    this.rerollsLeft = 1;
     this._banishMode = false;
     this._locked = false;
     this._extraBusy = false;
@@ -29,7 +28,9 @@ export class LevelUpScene extends Phaser.Scene {
     // 2 botões) e encavalava no "MAIS UMA CARTA" quando ele aparecia
     this.banishBtn = null;
     this.extraBtn = null;
+    this.rerollBtn = null;
     this._banishAd = false;
+    this._rerollAd = false;
     this._adBusy = false;
     this.isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     const W = vw(this),
@@ -98,7 +99,7 @@ export class LevelUpScene extends Phaser.Scene {
     const offer = AdService.canShow("extra_card");
     // 2 botões (trocar, banir) ou 3 (com "mais uma carta" por anúncio), centralizados
     this._btnXs = offer ? [W / 2 - 320, W / 2, W / 2 + 320] : [W / 2 - 150, W / 2 + 150];
-    this.rerollBtn = new Button(this, this._btnXs[0], H - 34, 280, 44, "", () => this._reroll(), { size: 17, style: "ice" });
+    this._makeRerollBtn(false);
     this._refreshReroll();
     this._makeBanishBtn(false);
     this.banishHint = text(this, W / 2, H - 78, "", { size: 18, color: CSS.redHi, origin: 0.5, stroke: true });
@@ -131,7 +132,7 @@ export class LevelUpScene extends Phaser.Scene {
     this.extraBtn.destroy();
     this.extraBtn = null;
     this._btnXs = [vw(this) / 2 - 150, vw(this) / 2 + 150];
-    this.rerollBtn.x = this._btnXs[0];
+    this.rerollBtn.x = this.rerollBtn._baseX = this._btnXs[0];
     this.banishBtn.x = this.banishBtn._baseX = this._btnXs[1];
     if (!c) return;
     this.cards = [...this.cards, c];
@@ -142,11 +143,41 @@ export class LevelUpScene extends Phaser.Scene {
     this.sound.play("sfx_chest_jackpot", { volume: 0.5 });
   }
 
+  // Botão de trocar: saldo da PARTIDA (upgrades.rerollsLeft) ou, sem trocas, "TROCAR +1"
+  // por anúncio — o mesmo jeito do banir
+  _makeRerollBtn(ad) {
+    const x = this.rerollBtn?._baseX ?? this._btnXs[0];
+    this.rerollBtn?.destroy();
+    this._rerollAd = ad;
+    this.rerollBtn = ad
+      ? new Button(this, x, vh(this) - 34, 280, 44, tr("TROCAR +1"), () => this._adReroll(), { size: 17, style: "ice", icon: "ico_play", iconScale: 2 })
+      : new Button(this, x, vh(this) - 34, 280, 44, "", () => this._reroll(), { size: 17, style: "ice" });
+    this.rerollBtn._baseX = x;
+    if (ad) Analytics.track("ad_offer_show", { placement: "extra_reroll" });
+  }
+
   _refreshReroll() {
-    const left = this.rerollsLeft || 0;
+    const left = this.gameScene.upgrades.rerollsLeft || 0;
     const key = this.isTouch ? "" : " [R]";
-    if (left > 0) this.rerollBtn.setLabel(tr("TROCAR CARTAS{0}", key)).setEnabled(true);
+    const offerAd = left <= 0 && AdService.canShow("extra_reroll");
+    if (offerAd !== !!this._rerollAd) this._makeRerollBtn(offerAd);
+    if (offerAd) this.rerollBtn.setEnabled(!this._adBusy && !this._locked);
+    else if (left > 0) this.rerollBtn.setLabel(tr("TROCAR ({0}){1}", left, key)).setEnabled(true);
     else this.rerollBtn.setLabel(tr("Sem trocas")).setEnabled(false);
+  }
+
+  // Anúncio premiado → +1 troca, e já troca
+  async _adReroll() {
+    if (this._locked || this._adBusy) return;
+    this._adBusy = true;
+    this.rerollBtn.setEnabled(false);
+    const ok = await AdService.rewarded("extra_reroll");
+    this._adBusy = false;
+    if (!this.scene.isActive() || this._locked) return;
+    if (ok) {
+      this.gameScene.upgrades.rerollsLeft += 1;
+      this._reroll(true); // troca já (o botão ainda está no modo anúncio)
+    } else this._refreshReroll();
   }
 
   // Botão de banir: normal ou, sem banimentos, "BANIR +1" por anúncio
@@ -235,9 +266,11 @@ export class LevelUpScene extends Phaser.Scene {
     this._refreshReroll();
   }
 
-  _reroll() {
-    if (this._locked || (this.rerollsLeft || 0) <= 0) return;
-    this.rerollsLeft -= 1;
+  _reroll(paid = false) {
+    if (this._rerollAd && !paid) return this._adReroll();
+    const up = this.gameScene.upgrades;
+    if (this._locked || (up.rerollsLeft || 0) <= 0) return;
+    up.rerollsLeft -= 1;
     this._banishMode = false;
     this._refreshBanish();
     const extra = this.cards.length > 3; // a 4ª carta paga continua valendo na troca

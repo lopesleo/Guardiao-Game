@@ -635,7 +635,6 @@ export default {
   "NÍVEL {0}!": "レベル{0}！",
   "Escolha uma bênção da floresta": "森の祝福を1つ選ぼう",
   "MAIS UMA CARTA": "カードをもう1枚",
-  "TROCAR CARTAS{0}": "カードを引き直す{0}",
   "Sem trocas": "引き直しなし",
   "BANIR +1": "追放 +1",
   "CANCELAR": "キャンセル",
@@ -917,4 +916,6 @@ export default {
   "{0} descanso": "{0} 休息",
   "{0} anúncio": "{0} 広告",
   "REAÇÕES {0}/{1}": "反応 {0}/{1}",
+  "TROCAR ({0}){1}": "引き直し（{0}）{1}",
+  "TROCAR +1": "引き直し +1",
 };
