@@ -599,7 +599,6 @@ export default {
   "A floresta caiu… por enquanto.": "The forest has fallen… for now.",
   "Tempo": "Time",
   "Abates": "Kills",
-  "Moedas · descansado +{0}%": "Coins · rested +{0}%",
   "Moedas ganhas": "Coins earned",
   "Primeira vitória no {0}": "First win on {0}",
   "Perigo": "Danger",
@@ -914,4 +913,7 @@ export default {
   "Muito grande": "Very large",
   "SIM": "YES",
   "NÃO": "NO",
+  "{0} na floresta": "{0} in the forest",
+  "{0} descanso": "{0} rested",
+  "{0} anúncio": "{0} ad",
 };

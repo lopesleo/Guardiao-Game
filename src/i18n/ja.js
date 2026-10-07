@@ -599,7 +599,6 @@ export default {
   "A floresta caiu… por enquanto.": "森は倒れた…今のところは。",
   "Tempo": "時間",
   "Abates": "撃破数",
-  "Moedas · descansado +{0}%": "コイン · 休息+{0}%",
   "Moedas ganhas": "獲得コイン",
   "Primeira vitória no {0}": "{0}で初勝利",
   "Perigo": "危険度",
@@ -914,4 +913,7 @@ export default {
   "Muito grande": "特大",
   "SIM": "オン",
   "NÃO": "オフ",
+  "{0} na floresta": "森で{0}",
+  "{0} descanso": "{0} 休息",
+  "{0} anúncio": "{0} 広告",
 };

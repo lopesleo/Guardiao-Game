@@ -1621,6 +1621,7 @@ export class GameScene extends Phaser.Scene {
         kills: this.hud.kills,
         coinsGained: coinsFinal,
         coinsDoubleable: runCoins, // o anúncio dobra a partida, não o prêmio da 1ª vitória
+        coinsRun: this._coinsGainedThisRun, // moedas da floresta, antes dos multiplicadores (a conta na tela)
         restedMult,
         firstClear,
         woodGained: this._woodThisRun,

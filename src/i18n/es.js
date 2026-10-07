@@ -599,7 +599,6 @@ export default {
   "A floresta caiu… por enquanto.": "El bosque cayó… por ahora.",
   "Tempo": "Tiempo",
   "Abates": "Bajas",
-  "Moedas · descansado +{0}%": "Monedas · descansado +{0}%",
   "Moedas ganhas": "Monedas ganadas",
   "Primeira vitória no {0}": "Primera victoria en {0}",
   "Perigo": "Peligro",
@@ -914,4 +913,7 @@ export default {
   "Muito grande": "Muy grande",
   "SIM": "SÍ",
   "NÃO": "NO",
+  "{0} na floresta": "{0} en el bosque",
+  "{0} descanso": "{0} descanso",
+  "{0} anúncio": "{0} anuncio",
 };
