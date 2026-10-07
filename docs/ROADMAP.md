@@ -215,6 +215,13 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   língua chega — o dano e a queimadura dos vizinhos agora caem na chegada (~0,3 s), conferindo que o inimigo
   do pool ainda é o mesmo. Sprites reaproveitados (4 redemoinhos, 16 línguas, 14 ignições); congelam no
   hit-stop. Revisar a arte: `node tools/monster-sheet.mjs saida.png fx_whirl,fx_ignite,fx_wisp 6`
+- ✅ **Animação dos monstros**: os de 2 quadros ganharam ciclos desenhados — **corvo** e **carcará** batem asa
+  em 4 tempos (alta, aberta, baixa, aberta; corpo sobe na batida, rabo abana), **duende** anda em 4 tempos
+  (orelhas e braço com arrasto), **bruxa** flutua (barra ondula, chapéu atrasa, orbe pulsa), **troll** pisa
+  pesado (barriga balança, clava contra o braço), **abelha** asas em 4 tempos, **cogumelo** pula em 6 (agacha,
+  estica, cai achatado soltando esporo), **cabeça-de-frade** pulinho rolando; **lobo** galopa em 6 (patas em
+  pares, cauda chicoteia); **Corpo-Seco** cambaleia; **Mapinguari** e **Caboclo** respiram em 4 tempos com os
+  braços alternados. Quadros novos dos chefes no FIM da tira (índices de golpe/pose preservados)
 - ✅ **Animação dos guardiões** (`src/art/Hero.js`): de 2 poses de caminhada (perna desliza 1 px) para
   **15 quadros desenhados por pose**: respiração em 4 tempos com cabelo/roupa chegando um quadro depois
   (arrasto), **piscada** a cada ~4 s, **caminhada em 8 tempos** (contato, desce, passa, sobe) com joelho que

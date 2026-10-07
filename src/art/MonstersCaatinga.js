@@ -80,31 +80,38 @@ function calango(f) {
 function carcara(f) {
   const p = new Pix(22, 17);
   const [c0, c1, c2, c3] = CARC;
-  const up = f === 0;
+  // 4 tempos como o corvo: asa em cima, aberta, embaixo, aberta; corpo sobe na batida
+  const wing = ["up", "mid", "down", "mid"][f % 4];
+  const dy = [1, 0, -1, 0][f % 4];
+  const sh = (list) => list.map(([x, y]) => [x, y + dy]);
   // Asa de trás
-  if (up) px(p, [[8, 1], [9, 1], [9, 2], [10, 2], [10, 3], [11, 3], [11, 4], [8, 2], [8, 3], [9, 3], [9, 4], [10, 4], [12, 4]], c0);
-  else px(p, [[8, 12], [9, 12], [9, 13], [10, 13], [10, 14], [8, 13], [9, 14], [11, 12], [11, 13]], c0);
-  // Cauda com pontas claras (barrada)
-  px(p, [[1, 8], [2, 8], [3, 8], [1, 9], [2, 9], [3, 9], [0, 9], [2, 10]], c2);
-  px(p, [[0, 8], [1, 10]], PAL.cream);
+  if (wing === "up") px(p, sh([[8, 1], [9, 1], [9, 2], [10, 2], [10, 3], [11, 3], [11, 4], [8, 2], [8, 3], [9, 3], [9, 4], [10, 4], [12, 4]]), c0);
+  else if (wing === "down") px(p, sh([[8, 12], [9, 12], [9, 13], [10, 13], [10, 14], [8, 13], [9, 14], [11, 12], [11, 13]]), c0);
+  else px(p, sh([[4, 2], [5, 2], [6, 2], [7, 2], [8, 3], [9, 3], [10, 3], [11, 4], [6, 3], [7, 3], [3, 2]]), c0);
+  // Cauda com pontas claras (barrada) — abana com a batida
+  const t = wing === "down" ? 1 : wing === "up" ? -1 : 0;
+  px(p, sh([[1, 8 + t], [2, 8], [3, 8], [1, 9 + t], [2, 9], [3, 9], [0, 9 + t], [2, 10]]), c2);
+  px(p, sh([[0, 8 + t], [1, 10 + t]]), PAL.cream);
   // Corpo pardo e peito barrado
-  ell(p, 9, 8, 5.5, 3.6, CARC);
-  for (let x = 8; x <= 13; x += 2) p.set(x, 10, PAL.cream);
-  for (let x = 9; x <= 13; x += 2) p.set(x, 9, c3);
+  ell(p, 9, 8 + dy, 5.5, 3.6, CARC);
+  for (let x = 8; x <= 13; x += 2) p.set(x, 10 + dy, PAL.cream);
+  for (let x = 9; x <= 13; x += 2) p.set(x, 9 + dy, c3);
   // Pescoço/cara creme, cara nua vermelha, boné preto
-  ell(p, 15.5, 6, 3, 2.8, [c3, PAL.cream, PAL.cream, PAL.cream], 0.05);
-  px(p, [[14, 3], [15, 3], [16, 3], [17, 3], [14, 4], [15, 4], [16, 4], [13, 4]], PAL.ink);
-  px(p, [[17, 6], [18, 6], [17, 5]], PAL.org2);
-  p.set(16, 5, ROT.glow); // olho
+  ell(p, 15.5, 6 + dy, 3, 2.8, [c3, PAL.cream, PAL.cream, PAL.cream], 0.05);
+  px(p, sh([[14, 3], [15, 3], [16, 3], [17, 3], [14, 4], [15, 4], [16, 4], [13, 4]]), PAL.ink);
+  px(p, sh([[17, 6], [18, 6], [17, 5]]), PAL.org2);
+  p.set(16, 5 + dy, ROT.glow); // olho
   // Bico grosso e curvo (base laranja, ponta azulada)
-  px(p, [[19, 5], [20, 5], [19, 6], [20, 6], [21, 7]], PAL.s4);
-  p.set(19, 5, PAL.org3);
+  px(p, sh([[19, 5], [20, 5], [19, 6], [20, 6], [21, 7]]), PAL.s4);
+  p.set(19, 5 + dy, PAL.org3);
   // Asa da frente
-  if (up) px(p, [[5, 0], [6, 0], [6, 1], [7, 1], [7, 2], [8, 4], [5, 1], [6, 2], [6, 3], [7, 3], [7, 4], [8, 5], [4, 1], [6, 4], [7, 5], [9, 6]], c2);
-  else px(p, [[6, 11], [7, 11], [7, 12], [7, 13], [8, 14], [6, 12], [6, 13], [5, 12], [8, 15], [9, 15], [5, 13]], c2);
-  px(p, [[up ? 4 : 4, up ? 0 : 13]], PAL.cream); // pontas das primárias
-  // Garras
-  px(p, [[8, 12], [10, 12]], PAL.yel1);
+  if (wing === "up") px(p, sh([[5, 0], [6, 0], [6, 1], [7, 1], [7, 2], [8, 4], [5, 1], [6, 2], [6, 3], [7, 3], [7, 4], [8, 5], [4, 1], [6, 4], [7, 5], [9, 6]]), c2);
+  else if (wing === "down") px(p, sh([[6, 11], [7, 11], [7, 12], [7, 13], [8, 14], [6, 12], [6, 13], [5, 12], [8, 15], [9, 15], [5, 13]]), c2);
+  else px(p, sh([[1, 4], [2, 4], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [8, 4], [9, 4], [3, 4], [4, 4], [5, 4], [6, 4], [7, 4], [10, 5]]), c2);
+  const tip = wing === "up" ? [4, 0] : wing === "down" ? [4, 13] : [0, 4];
+  p.set(tip[0], tip[1] + dy, PAL.cream); // pontas das primárias
+  // Garras recolhidas
+  px(p, sh([[8, 12], [10, 12]]), PAL.yel1);
   p.outline(PAL.ink);
   return p;
 }
@@ -114,28 +121,36 @@ function carcara(f) {
 // ---------------------------------------------------------------------------
 function frade(f) {
   const p = new Pix(17, 18);
-  const bob = f % 2;
-  // Perninhas de raiz
-  px(p, [[5, 16], [6, 17], [11, 16], [10, 17]].map(([x, y], i) => [x + (f === 1 ? (i < 2 ? -1 : 1) : 0), y]), PAL.n2);
+  // 4 tempos de PULINHO: agacha (achata), sobe, no alto, cai; os gomos rolam um tico
+  // (parece girar) e as perninhas de raiz alternam
+  const k = f % 4;
+  const bob = [1, 0, -1, 0][k];
+  const sq = k === 0 ? 1 : k === 2 ? -1 : 0; // achata no chão, estica no alto
+  const roll = k; // os gomos andam 1 px por tempo
+  // Perninhas de raiz (recolhidas no alto)
+  const lx = [1, 0, 0, -1][k];
+  if (k === 2) px(p, [[6, 16], [10, 16]], PAL.n2);
+  else px(p, [[5 - lx, 16], [6 - lx, 17], [11 + lx, 16], [10 + lx, 17]], PAL.n2);
   // Corpo: gomos verticais
-  for (let y = 5; y <= 16; y++)
-    for (let x = 1; x <= 15; x++) {
-      const dx = (x - 8) / 7.5,
-        dy = (y - 11) / 6;
+  for (let y = 4; y <= 16; y++)
+    for (let x = 0; x <= 16; x++) {
+      const dx = (x - 8) / (7.5 + sq * 0.6),
+        dy = (y - 11 - (sq > 0 ? 0.5 : 0)) / (6 - sq * 0.5);
       if (dx * dx + dy * dy > 1) continue;
-      let k = dx < -0.3 ? 3 : dx < 0.2 ? 2 : dx < 0.6 ? 1 : 0;
-      if ((x + 1) % 3 === 0) k = Math.max(0, k - 1); // costelas
-      p.set(x, y + bob - 1, CAC[k]);
+      let kk = dx < -0.3 ? 3 : dx < 0.2 ? 2 : dx < 0.6 ? 1 : 0;
+      if ((x + 1 + roll) % 3 === 0) kk = Math.max(0, kk - 1); // costelas que rolam
+      p.set(x, y + bob - 1, CAC[kk]);
     }
   // Espinhos claros nas costelas
-  for (let y = 7; y <= 14; y += 3) for (let x = 2; x <= 14; x += 3) if (p.get(x, y + bob)) p.set(x, y + bob, PAL.cream);
+  for (let y = 7; y <= 14; y += 3) for (let x = 2; x <= 14; x += 3) if (p.get(x + (roll % 3), y + bob)) p.set(x + (roll % 3), y + bob, PAL.cream);
   // Gorro vermelho (cefálio) com a Podridão por baixo
   for (let x = 4; x <= 12; x++) for (let y = 1; y <= 5; y++) {
     const dx = (x - 8) / 4.5,
       dy = (y - 4) / 3;
-    if (dx * dx + dy * dy <= 1) p.set(x, y + bob, dx < -0.2 ? PAL.red3 : dx < 0.4 ? PAL.red2 : PAL.red1);
+    if (dx * dx + dy * dy <= 1) p.set(x, y + bob + (sq > 0 ? 1 : 0), dx < -0.2 ? PAL.red3 : dx < 0.4 ? PAL.red2 : PAL.red1);
   }
-  px(p, [[6, 2 + bob], [9, 1 + bob], [11, 3 + bob]], PAL.pink); // florzinhas
+  const hb = bob + (sq > 0 ? 1 : 0);
+  px(p, [[6, 2 + hb], [9, 1 + hb], [11, 3 + hb]], PAL.pink); // florzinhas
   // Carinha (olhos de Podridão)
   p.set(6, 10 + bob, ROT.glow);
   p.set(10, 10 + bob, ROT.glow);
@@ -150,7 +165,7 @@ function frade(f) {
 // pose: null | "raise" (braços erguidos: chama a água) | "grab" (agachado,
 // braços abertos baixos: o arrastão)
 // ---------------------------------------------------------------------------
-function caboclo(f, fury, freed = false, pose = null) {
+function caboclo(f, fury, freed = false, pose = null, swing = [0, 0]) {
   const p = new Pix(48, 54);
   const sw = pose ? 0 : f === 1 ? 1 : 0; // respiração
   const crouch = pose === "grab" ? 3 : 0;
@@ -213,8 +228,8 @@ function caboclo(f, fury, freed = false, pose = null) {
     armWide(8, -1);
     armWide(39, 1);
   } else {
-    arm(8, -1, sw);
-    arm(37, 1, 1 - sw);
+    arm(8, -1, sw + swing[0]);
+    arm(37, 1, 1 - sw + swing[1]);
   }
   // Cabeça larga, afundada nos ombros (bicho de rio): crista de barbatana no alto
   const hy = top - 3;
@@ -479,22 +494,25 @@ export function registerCaatingaMonsters(scene) {
   };
   const four = [0, 1, 2, 3];
   strip("mon_calango", four.map((f) => calango(f)));
-  strip("mon_carcara", [carcara(0), carcara(1)]);
-  strip("mon_frade", [frade(0), frade(1)]);
+  strip("mon_carcara", four.map((f) => carcara(f)));
+  strip("mon_frade", four.map((f) => frade(f)));
   strip("mon_cabra", [cabra(0), cabra(1), cabra(2), cabra(3), cabraRear(0), cabraKick()]); // minichefe (golpes da Mula)
   // 0-1 parado · 2-3 fúria · 4 libertado · 5 chama a água · 6 arrastão · 7 chama (fúria) · 8 arrastão (fúria)
   strip("mon_caboclo", [
     caboclo(0, false), caboclo(1, false), caboclo(0, true), caboclo(1, true), caboclo(0, false, true),
     caboclo(0, false, false, "raise"), caboclo(0, false, false, "grab"),
     caboclo(0, true, false, "raise"), caboclo(0, true, false, "grab"),
+    // 9-12: respiração em 4 tempos (os braços sobem alternados) — parado e fúria
+    caboclo(0, false, false, null, [2, 0]), caboclo(1, false, false, null, [0, 2]),
+    caboclo(0, true, false, null, [2, 0]), caboclo(1, true, false, null, [0, 2]),
   ]);
   strip("obj_carranca", [carranca(false), carranca(true)]);
   strip("px_spout", [waterSpout(0), waterSpout(1), waterSpout(2)]);
   anim("calango_move", "mon_calango", four, 14);
-  anim("carcara_move", "mon_carcara", [0, 1], 8);
-  anim("frade_move", "mon_frade", [0, 1], 5);
+  anim("carcara_move", "mon_carcara", four, 12);
+  anim("frade_move", "mon_frade", four, 7);
   anim("cabra_move", "mon_cabra", four, 10);
-  anim("caboclo_idle", "mon_caboclo", [0, 1], 2);
-  anim("caboclo_fury", "mon_caboclo", [2, 3], 4);
+  anim("caboclo_idle", "mon_caboclo", [0, 9, 1, 10], 3);
+  anim("caboclo_fury", "mon_caboclo", [2, 11, 3, 12], 6);
   anim("spout_spin", "px_spout", [0, 1, 2], 12);
 }

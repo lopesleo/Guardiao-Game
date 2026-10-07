@@ -54,53 +54,58 @@ function rell(p, cx, cy, rx, ry, ang, ramp, jitter = 0.2) {
 // ---------------------------------------------------------------------------
 function wolf(f, ramp = FUR, eye = ROT.glow, crack = ROT.hot) {
   const p = new Pix(27, 18);
-  const bob = f % 2;
+  // GALOPE em 6 tempos: as patas de trás empurram juntas, as da frente alcançam juntas
+  // (meia volta depois); o corpo ondula, a cauda chicoteia e as orelhas deitam no salto
+  const k = f % 6;
+  const ph = (k / 6) * Math.PI * 2;
+  const bob = [0, 1, 1, 0, 0, 1][k];
   const [c0, c1, c2, c3] = ramp;
-  // Patas: pares alternam avanço
-  const swing = [
-    [1, -1],
-    [0, 0],
-    [-1, 1],
-    [0, 0],
-  ][f];
-  const leg = (x, dx, near) => {
+  // pata: a canela vai à frente/atrás (dx) e sobe (lift) quando está no ar
+  const legAt = (phase) => {
+    const c = Math.cos(ph - phase);
+    return { dx: Math.round(c * 2), lift: Math.sin(ph - phase) > 0.35 ? 1 : 0 };
+  };
+  const leg = (x, st, near) => {
     const col = near ? c1 : c0;
-    for (let y = 11; y <= 16; y++) {
-      p.set(x + (y > 13 ? dx : 0), y, col);
+    for (let y = 11; y <= 16 - st.lift; y++) {
+      p.set(x + (y > 13 ? st.dx : 0), y, col);
       if (y < 14) p.set(x + 1, y, col);
     }
-    p.set(x + dx + 1, 16, col);
+    p.set(x + st.dx + 1, 16 - st.lift, col);
   };
-  // Patas de trás
-  leg(6, swing[0], false);
-  leg(16, swing[1], false);
-  // Cauda felpuda erguida
-  ell(p, 3.2, 6 + bob, 2.8, 1.8, ramp);
-  px(p, [[1, 4 + bob], [0, 3 + bob]], c2);
+  // Patas de trás (longe/perto um tico defasadas)
+  leg(6, legAt(0), false);
+  leg(16, legAt(Math.PI), false);
+  // Cauda felpuda: chicoteia para cima e para baixo
+  const ty = [0, -1, -1, 0, 1, 1][k];
+  ell(p, 3.2, 6 + bob + ty, 2.8, 1.8, ramp);
+  px(p, [[1, 4 + bob + ty * 2], [0, 3 + bob + ty * 2]], c2);
   // Corpo + peito fundo
   ell(p, 11, 9 + bob, 7.5, 3.8, ramp);
-  ell(p, 16.5, 9 + bob, 3.6, 4.2, ramp);
-  // Cabeça erguida
-  ell(p, 20.5, 5.5 + bob, 3.6, 3, ramp);
+  ell(p, 16.5, 9 + bob - (k === 2 ? 1 : 0), 3.6, 4.2, ramp);
+  // Cabeça erguida (acena com o galope)
+  const hb = bob + (k === 3 ? 1 : 0);
+  ell(p, 20.5, 5.5 + hb, 3.6, 3, ramp);
   // Focinho longo
-  px(p, [[23, 5], [24, 5], [23, 6], [24, 6], [25, 6], [26, 6], [23, 7], [24, 7], [25, 7]].map(([x, y]) => [x, y + bob]), c2);
-  p.set(26, 6 + bob, PAL.ink); // nariz
-  p.set(24, 8 + bob, PAL.white); // presa
-  px(p, [[25, 8 + bob], [23, 8 + bob]], c0); // mandíbula
-  // Orelhas grandes e pontudas
-  px(p, [[18, 1], [18, 2], [19, 2], [18, 3], [19, 3]].map(([x, y]) => [x, y + bob]), c2);
-  px(p, [[20, 0], [20, 1], [21, 1], [20, 2], [21, 2]].map(([x, y]) => [x, y + bob]), c3);
+  px(p, [[23, 5], [24, 5], [23, 6], [24, 6], [25, 6], [26, 6], [23, 7], [24, 7], [25, 7]].map(([x, y]) => [x, y + hb]), c2);
+  p.set(26, 6 + hb, PAL.ink); // nariz
+  p.set(24, 8 + hb, PAL.white); // presa
+  px(p, [[25, 8 + hb], [23, 8 + hb]], c0); // mandíbula
+  // Orelhas em pé; no salto a ponta deita 1 px para trás (deitar inteira deformava a cabeça)
+  const back = k === 1 || k === 2 ? 1 : 0;
+  px(p, [[18 - back, 1], [18, 2], [19, 2], [18, 3], [19, 3]].map(([x, y]) => [x, y + hb]), c2);
+  px(p, [[20 - back, 0], [20, 1], [21, 1], [20, 2], [21, 2]].map(([x, y]) => [x, y + hb]), c3);
   // Olho
-  p.set(22, 4 + bob, eye);
+  p.set(22, 4 + hb, eye);
   // Espinha de cristais corrompidos + rachaduras
   px(p, [[8, 5 + bob], [11, 5 + bob], [14, 5 + bob]], crack);
   px(p, [[8, 4 + bob], [11, 4 + bob]], eye);
   px(p, [[10, 10 + bob], [11, 11 + bob]], crack);
   // Barriga clara
   for (let x = 8; x <= 15; x++) p.over(x, 12 + bob, c2);
-  // Patas da frente
-  leg(9, swing[1], true);
-  leg(18, swing[0], true);
+  // Patas da frente (perto)
+  leg(9, legAt(0.5), true);
+  leg(18, legAt(Math.PI + 0.5), true);
   p.outline(PAL.ink);
   return p;
 }
@@ -111,24 +116,32 @@ function wolf(f, ramp = FUR, eye = ROT.glow, crack = ROT.hot) {
 function crow(f) {
   const p = new Pix(20, 16);
   const [c0, c1, c2, c3] = FEATHER;
-  const up = f === 0;
+  // 4 tempos: asa em cima, aberta (descendo), embaixo, aberta (subindo). O corpo sobe na
+  // batida (empurrou o ar) e desce no recolher; o rabo abana junto
+  const wing = ["up", "mid", "down", "mid"][f % 4];
+  const dy = [1, 0, -1, 0][f % 4];
+  const sh = (list) => list.map(([x, y]) => [x, y + dy]);
   // Asa de trás
-  if (up) px(p, [[8, 2], [9, 2], [9, 3], [10, 3], [10, 4], [11, 4], [11, 5], [8, 3], [8, 4], [9, 4], [9, 5], [10, 5]], c0);
-  else px(p, [[8, 11], [9, 11], [9, 12], [10, 12], [10, 13], [8, 12], [9, 13], [11, 11], [11, 12]], c0);
-  // Corpo, cauda, cabeça
-  ell(p, 9, 8, 5.5, 3.4, FEATHER);
-  px(p, [[3, 8], [2, 7], [2, 9], [1, 8], [3, 9], [1, 10]], c1);
-  ell(p, 15, 6, 2.9, 2.6, FEATHER);
+  if (wing === "up") px(p, sh([[8, 2], [9, 2], [9, 3], [10, 3], [10, 4], [11, 4], [11, 5], [8, 3], [8, 4], [9, 4], [9, 5], [10, 5]]), c0);
+  else if (wing === "down") px(p, sh([[8, 11], [9, 11], [9, 12], [10, 12], [10, 13], [8, 12], [9, 13], [11, 11], [11, 12]]), c0);
+  else px(p, sh([[4, 2], [5, 2], [6, 2], [7, 2], [8, 3], [9, 3], [10, 3], [6, 3], [7, 3], [3, 2]]), c0); // aberta: acima das costas
+  // Corpo, cauda (abana), cabeça
+  ell(p, 9, 8 + dy, 5.5, 3.4, FEATHER);
+  const tail = wing === "down" ? 1 : wing === "up" ? -1 : 0;
+  px(p, sh([[3, 8], [2, 7 + tail], [2, 9], [1, 8 + tail], [3, 9], [1, 10 + tail]]), c1);
+  ell(p, 15, 6 + dy, 2.9, 2.6, FEATHER);
   // Bico
-  px(p, [[18, 6], [17, 6], [18, 7], [19, 7]], PAL.yel1);
-  p.set(18, 6, PAL.yel2);
-  p.set(16, 5, ROT.glow);
+  px(p, sh([[18, 6], [17, 6], [18, 7], [19, 7]]), PAL.yel1);
+  p.set(18, 6 + dy, PAL.yel2);
+  p.set(16, 5 + dy, ROT.glow);
   // Asa da frente
-  if (up) px(p, [[6, 1], [7, 1], [7, 2], [8, 5], [6, 2], [6, 3], [7, 3], [7, 4], [8, 6], [5, 2], [6, 4], [7, 5], [9, 6]], c2);
-  else px(p, [[6, 10], [7, 10], [7, 11], [7, 12], [8, 13], [6, 11], [6, 12], [5, 11], [8, 14], [9, 14]], c2);
-  px(p, [[up ? 5 : 5, up ? 1 : 12]], c3);
-  // Garras
-  px(p, [[8, 12], [10, 12]], PAL.yel1);
+  if (wing === "up") px(p, sh([[6, 1], [7, 1], [7, 2], [8, 5], [6, 2], [6, 3], [7, 3], [7, 4], [8, 6], [5, 2], [6, 4], [7, 5], [9, 6]]), c2);
+  else if (wing === "down") px(p, sh([[6, 10], [7, 10], [7, 11], [7, 12], [8, 13], [6, 11], [6, 12], [5, 11], [8, 14], [9, 14]]), c2);
+  else px(p, sh([[1, 4], [2, 4], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [8, 4], [9, 4], [3, 4], [4, 4], [5, 4], [6, 4], [7, 4], [10, 5]]), c2);
+  const tip = wing === "up" ? [5, 1] : wing === "down" ? [5, 12] : [0, 4];
+  p.set(tip[0], tip[1] + dy, c3);
+  // Garras recolhidas
+  px(p, sh([[8, 12], [10, 12]]), PAL.yel1);
   p.outline(PAL.ink);
   return p;
 }
@@ -138,16 +151,24 @@ function crow(f) {
 // ---------------------------------------------------------------------------
 function goblin(f) {
   const p = new Pix(18, 19);
-  const bob = f % 2;
-  // Pernas
-  px(p, [[6, 15], [6, 16], [6, 17], [10, 15], [10, 16], [10, 17]].map(([x, y], i) => [x + (f === 1 ? (i < 3 ? 1 : -1) : 0), y]), PAL.n1);
+  // 4 tempos: contato (perna da frente adiante), passa, contato (a outra), passa.
+  // Corpo desce no contato; orelhas e braço chegam um tempo depois (arrasto)
+  const k = f % 4;
+  const bob = k % 2 === 0 ? 1 : 0;
+  const lag = k % 2 === 1 ? 1 : 0; // o que pende ainda está embaixo quando o corpo sobe
+  const fwd = [1, 0, -1, 0][k]; // perna da frente: adiante / junto / atrás
+  const legX = (x0, dx, lift) => {
+    for (let y = 15; y <= 17 - lift; y++) p.set(x0 + dx, y, PAL.n1);
+  };
+  legX(6, -fwd, k === 3 ? 1 : 0); // de trás
+  legX(10, fwd, k === 1 ? 1 : 0); // da frente
   // Corpo (trapo roxo)
   ell(p, 8.5, 12 + bob, 4, 3.4, RAG);
   // Cabeça grande
   ell(p, 8.5, 6.5 + bob, 5, 4.3, GOB);
-  // Orelhas pontudas
-  px(p, [[13, 5 + bob], [14, 5 + bob], [15, 4 + bob], [14, 4 + bob]], GOB[2]);
-  px(p, [[3, 5 + bob], [2, 4 + bob], [3, 4 + bob]], GOB[1]);
+  // Orelhas pontudas (a ponta pende com atraso)
+  px(p, [[13, 5 + bob], [14, 5 + bob], [15, 4 + bob + lag], [14, 4 + bob]], GOB[2]);
+  px(p, [[3, 5 + bob], [2, 4 + bob + lag], [3, 4 + bob]], GOB[1]);
   // Capuz de trapo
   px(p, [[5, 2 + bob], [6, 2 + bob], [7, 2 + bob], [8, 2 + bob], [9, 2 + bob], [10, 2 + bob], [6, 1 + bob], [7, 1 + bob], [8, 1 + bob], [9, 3 + bob], [11, 3 + bob]], RAG[2]);
   // Olhos e sorriso de dentes
@@ -155,10 +176,11 @@ function goblin(f) {
   p.set(12, 6 + bob, ROT.glow);
   px(p, [[10, 9 + bob], [12, 9 + bob]], PAL.white);
   px(p, [[9, 9 + bob], [11, 9 + bob], [13, 9 + bob]], PAL.ink);
-  // Braço com espinho
-  px(p, [[12, 11 + bob], [13, 11 + bob], [14, 11 + bob]], GOB[2]);
-  px(p, [[15, 10 + bob], [16, 9 + bob], [16, 10 + bob]], ROT.hot);
-  p.set(17, 9 + bob, ROT.glow);
+  // Braço com espinho (balança com o passo)
+  const ay = 11 + bob + lag;
+  px(p, [[12, ay], [13, ay], [14, ay]], GOB[2]);
+  px(p, [[15, ay - 1], [16, ay - 2], [16, ay - 1]], ROT.hot);
+  p.set(17, ay - 2, k === 0 ? PAL.white : ROT.glow); // a ponta pisca
   p.outline(PAL.ink);
   return p;
 }
@@ -168,39 +190,45 @@ function goblin(f) {
 // ---------------------------------------------------------------------------
 function witch(f) {
   const p = new Pix(21, 25);
-  const bob = f % 2;
+  // 4 tempos: flutua (sobe e desce devagar), a barra do manto ondula, o chapéu e o orbe
+  // chegam com atraso e o orbe pulsa
+  const k = f % 4;
+  const bob = [0, 0, 1, 1][k];
+  const lag = [1, 0, 0, 1][k];
   const [r0, r1, r2, r3] = RAG;
   // Manto (sino)
   for (let y = 11; y <= 22; y++) {
     const t = (y - 11) / 11;
-    const xl = Math.round(7 - t * 3),
-      xr = Math.round(13 + t * 3);
+    const wave = y > 18 ? [0, 1, 0, -1][(k + y) % 4] * (t > 0.85 ? 1 : 0) : 0;
+    const xl = Math.round(7 - t * 3) + wave,
+      xr = Math.round(13 + t * 3) + wave;
     for (let x = xl; x <= xr; x++) {
       const u = (x - xl) / (xr - xl);
       p.set(x, y + (y > 12 ? bob : 0), u < 0.25 ? r2 : u < 0.7 ? r1 : r0);
     }
   }
-  // Barra esfarrapada
-  for (let x = 4; x <= 16; x += 2) p.set(x, 23 + bob, r1);
+  // Barra esfarrapada (as pontas mudam de lugar: o pano ondula)
+  for (let x = 4 + (k % 2); x <= 16; x += 2) p.set(x, 23 + bob, r1);
   // Rosto
   ell(p, 10.5, 9 + bob, 3.2, 2.8, [0x3e5a3a, 0x5a7a4a, 0x7a9a5a, 0x9aba6a]);
   p.set(11, 9 + bob, ROT.glow);
   p.set(13, 9 + bob, ROT.glow);
   px(p, [[13, 10 + bob], [14, 11 + bob]], 0x7a9a5a); // nariz
-  // Chapéu pontudo torto
+  // Chapéu pontudo torto (a ponta balança com atraso)
   for (let y = 0; y <= 7; y++) {
     const w = Math.round((y / 7) * 5);
-    const cx = 9 + Math.round((7 - y) * 0.5);
+    const cx = 9 + Math.round((7 - y) * 0.5) - (y < 3 ? lag : 0);
     for (let x = cx - w; x <= cx + w; x++) p.set(x, y + bob, x < cx ? r3 : r2);
   }
   for (let x = 3; x <= 17; x++) p.set(x, 7 + bob, r1); // aba
   px(p, [[7, 6 + bob], [8, 6 + bob], [9, 6 + bob], [10, 6 + bob], [11, 6 + bob], [12, 6 + bob]], ROT.hot); // faixa
-  // Cajado torto com orbe (quadro 1 = ergue)
-  const sy = f === 1 ? -2 : 0;
-  for (let y = 8 + sy; y <= 23; y++) p.set(17 + (y > 16 ? 1 : 0), y + bob, PAL.n2);
-  p.disc(17.5, 6 + sy + bob, 2.2, ROT.hot);
-  p.set(17, 5 + sy + bob, ROT.glow);
-  p.set(16, 5 + sy + bob, PAL.white);
+  // Cajado torto com orbe que PULSA (o brilho anda em volta)
+  const sy = bob + lag - 1;
+  for (let y = 8 + sy; y <= 23 + bob; y++) p.set(17 + (y > 16 ? 1 : 0), y, PAL.n2);
+  p.disc(17.5, 6 + sy, [2.2, 2.5, 2.2, 1.9][k], ROT.hot);
+  p.set(17, 5 + sy, ROT.glow);
+  const spark = [[16, 4], [19, 5], [18, 8], [15, 7]][k];
+  p.set(spark[0], spark[1] + sy, PAL.white);
   px(p, [[15, 14 + bob], [16, 14 + bob]], 0x7a9a5a); // mão
   p.outline(PAL.ink);
   return p;
@@ -211,20 +239,24 @@ function witch(f) {
 // ---------------------------------------------------------------------------
 function troll(f, skin = TROLL, eye = ROT.glow) {
   const p = new Pix(30, 29);
-  const bob = f % 2;
+  // 4 tempos de PISADA PESADA: pé adiante (corpo afunda), passa (sobe), o outro pé,
+  // passa. A barriga e o braço chegam com atraso; a clava balança ao contrário do braço
+  const k = f % 4;
+  const bob = k % 2 === 0 ? 1 : 0;
+  const lag = k % 2 === 1 ? 1 : 0;
+  const step = [1, 0, -1, 0][k];
   const [s0, s1, s2, s3] = skin;
-  // Pernas curtas e grossas
-  const lx = f === 1 ? 1 : 0;
+  // Pernas curtas e grossas (a que passa sobe 1 px)
   for (let y = 22; y <= 27; y++) {
-    for (let x = 8; x <= 11; x++) p.set(x + lx, y, s1);
-    for (let x = 16; x <= 19; x++) p.set(x - lx, y, s0);
+    if (!(k === 3 && y === 27)) for (let x = 8; x <= 11; x++) p.set(x + step, y, s1);
+    if (!(k === 1 && y === 27)) for (let x = 16; x <= 19; x++) p.set(x - step, y, s0);
   }
-  // Braço de trás
-  ell(p, 7, 16 + bob, 3, 5, skin);
+  // Braço de trás (balança)
+  ell(p, 7 - step * 0.5, 16 + bob + lag, 3, 5, skin);
   // Corpão
   ell(p, 14, 15 + bob, 9.5, 8.5, skin);
-  // Barriga
-  ell(p, 15, 18 + bob, 5, 4, [s1, s2, s2, s3], 0.1);
+  // Barriga (balança um tempo depois)
+  ell(p, 15, 18 + bob + lag * 0.5, 5, 4, [s1, s2, s2, s3], 0.1);
   // Cabeça pequena afundada nos ombros
   ell(p, 17, 7 + bob, 5, 4, skin);
   p.set(18, 6 + bob, eye);
@@ -237,13 +269,14 @@ function troll(f, skin = TROLL, eye = ROT.glow) {
   px(p, [[8, 8 + bob], [9, 7 + bob], [10, 7 + bob], [11, 8 + bob], [12, 7 + bob], [22, 9 + bob], [23, 10 + bob]], PAL.g4);
   px(p, [[9, 8 + bob], [11, 7 + bob]], PAL.g5);
   px(p, [[12, 14 + bob], [13, 15 + bob], [12, 16 + bob], [19, 13 + bob]], ROT.hot);
-  // Braço da frente + clava
-  ell(p, 23, 16 + bob, 3.2, 5, skin);
+  // Braço da frente + clava (sobe quando o braço vai à frente)
+  ell(p, 23 + step * 0.5, 16 + bob + lag, 3.2, 5, skin);
+  const cy = bob - step;
   for (let y = 9; y <= 22; y++) {
     const w = y < 13 ? 2 : 1;
-    for (let x = 26; x < 26 + w; x++) p.set(x, y + bob - (f === 1 ? 1 : 0), y < 13 ? PAL.n3 : PAL.n2);
+    for (let x = 26; x < 26 + w; x++) p.set(x, y + cy, y < 13 ? PAL.n3 : PAL.n2);
   }
-  px(p, [[27, 9 + bob], [25, 10 + bob]], PAL.s3); // pregos
+  px(p, [[27, 9 + cy], [25, 10 + cy]], PAL.s3); // pregos
   p.outline(PAL.ink);
   return p;
 }
@@ -253,22 +286,30 @@ function troll(f, skin = TROLL, eye = ROT.glow) {
 // ---------------------------------------------------------------------------
 function bee(f) {
   const p = new Pix(14, 12);
-  // Asas
-  const wy = f === 0 ? 1 : 2;
-  px(p, [[5, wy], [6, wy], [7, wy], [5, wy + 1], [6, wy + 1], [7, wy + 1], [8, wy + 1], [6, wy + 2], [7, wy + 2]], PAL.ice3);
+  // 4 tempos: as asas sobem, abrem, descem, abrem; o corpo boia
+  const k = f % 4;
+  const wy = [0, 1, 2, 1][k];
+  const dy = [0, 0, 1, 1][k];
+  const wide = k % 2 === 1;
+  // Asas (translúcidas: tom de gelo)
+  const wing = wide
+    ? [[4, wy + 1], [5, wy], [6, wy], [7, wy], [8, wy], [5, wy + 1], [6, wy + 1], [7, wy + 1], [8, wy + 1], [9, wy + 1], [6, wy + 2], [7, wy + 2]]
+    : [[5, wy], [6, wy], [7, wy], [5, wy + 1], [6, wy + 1], [7, wy + 1], [8, wy + 1], [6, wy + 2], [7, wy + 2]];
+  px(p, wing, PAL.ice3);
+  p.set(6, wy + (wide ? 0 : 1), PAL.white);
   // Abdômen listrado
   for (let x = 2; x <= 8; x++)
     for (let y = 5; y <= 9; y++) {
       const dx = (x - 5) / 3.6,
-        dy = (y - 7) / 2.4;
-      if (dx * dx + dy * dy > 1) continue;
-      p.set(x, y, x % 3 === 0 ? PAL.ink : y < 7 ? PAL.yel3 : PAL.yel2);
+        ddy = (y - 7) / 2.4;
+      if (dx * dx + ddy * ddy > 1) continue;
+      p.set(x, y + dy, x % 3 === 0 ? PAL.ink : y < 7 ? PAL.yel3 : PAL.yel2);
     }
-  p.set(1, 7, PAL.ink); // ferrão
-  p.set(0, 7, ROT.hot);
+  p.set(1, 7 + dy + (k === 2 ? 1 : 0), PAL.ink); // ferrão mexe
+  p.set(0, 7 + dy + (k === 2 ? 1 : 0), ROT.hot);
   // Cabeça
-  ell(p, 10, 6, 2.2, 2, [PAL.ink, 0x2a2a30, 0x3a3a44, 0x4a4a55]);
-  p.set(11, 5, ROT.glow);
+  ell(p, 10, 6 + dy, 2.2, 2, [PAL.ink, 0x2a2a30, 0x3a3a44, 0x4a4a55]);
+  p.set(11, 5 + dy, ROT.glow);
   p.outline(PAL.ink);
   return p;
 }
@@ -278,27 +319,38 @@ function bee(f) {
 // ---------------------------------------------------------------------------
 function shroom(f) {
   const p = new Pix(17, 18);
-  const bob = f % 2;
-  // Perninhas
-  px(p, [[6, 15], [6, 16], [10, 15], [10, 16]].map(([x, y], i) => [x + (f === 1 ? (i < 2 ? -1 : 1) : 0), y]), PAL.n2);
-  // Talo com carinha
-  for (let y = 8; y <= 14; y++) for (let x = 5; x <= 11; x++) p.set(x, y + bob, x < 7 ? PAL.cream : x < 10 ? 0xd8c8a8 : 0xb0a080);
-  p.set(8, 10 + bob, PAL.ink);
-  p.set(10, 10 + bob, PAL.ink);
-  px(p, [[8, 12 + bob], [9, 12 + bob], [10, 12 + bob]], ROT.dark);
-  // Chapéu
-  for (let y = 1; y <= 8; y++)
+  // 6 tempos de PULO: em pé, agacha (chapéu achata e alarga), estica, no ar (perninhas
+  // recolhidas), cai achatado, assenta. Solta esporos ao cair.
+  const k = f % 6;
+  const b = [1, 2, 0, 0, 2, 1][k]; // corpo desce
+  const sq = [0, 1, -1, 0, 1, 0][k]; // achata (+) / estica (−)
+  const air = k === 2 || k === 3;
+  // Perninhas (no ar ficam recolhidas)
+  const lx = air ? 0 : k === 1 || k === 4 ? 1 : 0;
+  const legs = air ? [[6, 15], [10, 15]] : [[6 - lx, 15], [6 - lx, 16], [10 + lx, 15], [10 + lx, 16]];
+  px(p, legs, PAL.n2);
+  // Talo com carinha (encolhe quando agacha)
+  for (let y = 8 + b + Math.max(0, sq); y <= 14; y++) for (let x = 5; x <= 11; x++) p.set(x, y, x < 7 ? PAL.cream : x < 10 ? 0xd8c8a8 : 0xb0a080);
+  const fy = Math.min(10 + b, 12);
+  p.set(8, fy, PAL.ink);
+  p.set(10, fy, PAL.ink);
+  px(p, [[8, fy + 2], [9, fy + 2], [10, fy + 2]], ROT.dark);
+  // Chapéu (alarga achatado, afina esticado)
+  const rx = 8 + sq,
+    ry = 7 - sq;
+  for (let y = 0; y <= 8; y++)
     for (let x = 0; x <= 16; x++) {
-      const dx = (x - 8) / 8,
-        dy = (y - 8) / 7;
+      const dx = (x - 8) / rx,
+        dy = (y - 8) / ry;
       if (dx * dx + dy * dy > 1 || y > 8) continue;
       const light = -dx * 0.6 - dy * 0.5;
-      p.set(x, y + bob, light > 0.55 ? ROT.glow : light > 0.1 ? ROT.hot : light > -0.3 ? ROT.mid : ROT.dark);
+      p.set(x, y + b, light > 0.55 ? ROT.glow : light > 0.1 ? ROT.hot : light > -0.3 ? ROT.mid : ROT.dark);
     }
   // Pintas
-  px(p, [[5, 3 + bob], [6, 3 + bob], [10, 2 + bob], [12, 5 + bob], [3, 6 + bob], [8, 5 + bob]], PAL.cream);
-  // Esporos soltando
-  if (f === 1) px(p, [[14, 1], [1, 2]], PAL.g5);
+  px(p, [[5, 3 + b + sq], [6, 3 + b + sq], [10, 2 + b + sq], [12, 5 + b], [3, 6 + b], [8, 5 + b]], PAL.cream);
+  // Esporos soltando ao cair
+  if (k === 4) px(p, [[14, 1], [1, 2], [15, 5]], PAL.g5);
+  if (k === 5) px(p, [[15, 0], [0, 1]], PAL.g4);
   p.outline(PAL.ink);
   return p;
 }
@@ -528,13 +580,15 @@ function mulaKick() {
 // braços longos com garras e olhos ocos com o brilho da Podridão
 // ---------------------------------------------------------------------------
 const SECO = [0x241e1a, 0x3e342c, 0x5a4c3e, 0x7a6a56];
-function corpoSeco(f, cast = false) {
+function corpoSeco(f, cast = false, step = 0) {
   const p = new Pix(26, 32);
   const sw = cast ? 0 : f % 2;
+  // step: cambaleio — uma perna adiante, o braço do outro lado balança (−1 / 0 / 1)
   // Pernas finas
-  for (const x0 of [10, 15]) for (let y = 22; y <= 30; y++) {
-    p.set(x0 + (y > 27 && sw ? 1 : 0), y, SECO[1]);
-    p.set(x0 + 1 + (y > 27 && sw ? 1 : 0), y, SECO[0]);
+  for (const [x0, d] of [[10, -step], [15, step]]) for (let y = 22; y <= 30; y++) {
+    const o = (y > 27 && sw ? 1 : 0) + (y > 25 ? d : 0);
+    p.set(x0 + o, y, SECO[1]);
+    p.set(x0 + 1 + o, y, SECO[0]);
   }
   // Trapos pendurados na cintura
   for (let x = 8; x <= 18; x++) for (let y = 19; y <= 23 + ((x * 3) % 3); y++) p.set(x, y, RAG[(x + y) % 3 === 0 ? 2 : 1]);
@@ -542,13 +596,13 @@ function corpoSeco(f, cast = false) {
   ell(p, 13, 13 + sw * 0.5, 5.5, 7, SECO, 0.2);
   for (let y = 10; y <= 16; y += 2) for (let x = 10; x <= 15; x++) if (x !== 12) p.set(x, y + sw, SECO[0]);
   // Braços compridos até os joelhos, garras
-  const arm = (x0, dir) => {
+  const arm = (x0, dir, swing = 0) => {
     for (let y = 9; y <= 25 - sw; y++) {
-      const x = x0 + dir * Math.round((y - 9) * 0.18);
+      const x = x0 + dir * Math.round((y - 9) * 0.18) + Math.round(((y - 9) / 16) * swing * 2);
       p.set(x, y, SECO[2]);
       p.set(x + dir, y, SECO[1]);
     }
-    const hx = x0 + dir * 3,
+    const hx = x0 + dir * 3 + swing * 2,
       hy = 26 - sw;
     px(p, [[hx, hy], [hx + dir, hy + 1], [hx - dir, hy + 1]], PAL.s4);
   };
@@ -567,8 +621,8 @@ function corpoSeco(f, cast = false) {
     armUp(7, -1);
     armUp(19, 1);
   } else {
-    arm(7, -1);
-    arm(19, 1);
+    arm(7, -1, step);
+    arm(19, 1, -step);
   }
   // Cabeça caída para a frente, cabelo ralo, olhos ocos brilhando
   ell(p, 15, 5 + sw * 0.5, 4, 4, SECO.slice(1), 0.2);
@@ -594,7 +648,7 @@ function corpoSeco(f, cast = false) {
 const MAPI_FUR = [0x1e120c, 0x352014, 0x52321f, 0x74492c, 0x93603a];
 // pose: null | "maw" (Bocarra: boca enorme, braços abertos) | "scream" (Grito/Olhar:
 // braços erguidos, olho em brasa)
-function mapinguari(f, fury, freed = false, pose = null) {
+function mapinguari(f, fury, freed = false, pose = null, swing = [0, 0]) {
   const p = new Pix(50, 56);
   const sw = pose ? 0 : f === 1 ? 1 : 0; // respiração: ombros sobem 1px
   const crack = fury ? [PAL.org1, PAL.org2, PAL.yel3] : [ROT.mid, ROT.hot, ROT.glow];
@@ -646,8 +700,8 @@ function mapinguari(f, fury, freed = false, pose = null) {
     arm(6, -1, 5); // abertos e erguidos: "venha"
     arm(44, 1, 5);
   } else {
-    arm(8, -1, sw);
-    arm(42, 1, 1 - sw);
+    arm(8, -1, sw + swing[0]);
+    arm(42, 1, 1 - sw + swing[1]);
   }
   // Cabeça afundada nos ombros, com UM olho grande na testa
   ell(p, 25, 11 - sw, 7.5, 6.5, MAPI_FUR.slice(1), 0.35);
@@ -734,35 +788,40 @@ export function registerMonsters(scene) {
       scene.anims.create({ key, frames: scene.anims.generateFrameNumbers(tex, { frames }), frameRate: rate, repeat: -1 });
   };
   const four = [0, 1, 2, 3];
-  strip("mon_wolf", four.map((f) => wolf(f)));
+  const six = [0, 1, 2, 3, 4, 5];
+  strip("mon_wolf", six.map((f) => wolf(f)));
   strip("mon_alpha", [...four.map((f) => mulaTall(f)), mulaRear(0), mulaKick()]); // minichefe: Mula sem Cabeça (4 = empinada, 5 = coice)
-  strip("mon_crow", [crow(0), crow(1)]);
-  strip("mon_goblin", [goblin(0), goblin(1)]);
-  strip("mon_mage", [witch(0), witch(1)]);
-  strip("mon_brute", [troll(0), troll(1)]);
-  strip("mon_elder", [corpoSeco(0), corpoSeco(1), corpoSeco(0, true)]); // minichefe: Corpo-Seco (2 = braços erguidos)
-  strip("mon_bee", [bee(0), bee(1)]);
-  strip("mon_shroom", [shroom(0), shroom(1)]);
+  strip("mon_crow", four.map((f) => crow(f)));
+  strip("mon_goblin", four.map((f) => goblin(f)));
+  strip("mon_mage", four.map((f) => witch(f)));
+  strip("mon_brute", four.map((f) => troll(f)));
+  // minichefe: Corpo-Seco (2 = braços erguidos; 3-4 = cambaleio, no FIM para não mudar o 2)
+  strip("mon_elder", [corpoSeco(0), corpoSeco(1), corpoSeco(0, true), corpoSeco(0, false, 1), corpoSeco(1, false, -1)]);
+  strip("mon_bee", four.map((f) => bee(f)));
+  strip("mon_shroom", six.map((f) => shroom(f)));
   // 0-1 parado · 2-3 fúria · 4 libertado · 5 bocarra · 6 grito · 7 bocarra (fúria) · 8 grito (fúria)
   strip("mon_boss", [
     mapinguari(0, false), mapinguari(1, false), mapinguari(0, true), mapinguari(1, true), mapinguari(0, false, true),
     mapinguari(0, false, false, "maw"), mapinguari(0, false, false, "scream"),
     mapinguari(0, true, false, "maw"), mapinguari(0, true, false, "scream"),
+    // 9-12: respiração em 4 tempos (braços sobem alternados) — parado e fúria
+    mapinguari(0, false, false, null, [2, 0]), mapinguari(1, false, false, null, [0, 2]),
+    mapinguari(0, true, false, null, [2, 0]), mapinguari(1, true, false, null, [0, 2]),
   ]);
   strip("obj_chest", [chest(0), chest(1), chest(2), chest(3), chest(4)]);
   strip("px_fireball", [fireball(0), fireball(1), fireball(2)]);
 
-  anim("wolf_move", "mon_wolf", four, 12);
+  anim("wolf_move", "mon_wolf", six, 14);
   anim("alpha_move", "mon_alpha", four, 10);
-  anim("crow_move", "mon_crow", [0, 1], 8);
-  anim("goblin_move", "mon_goblin", [0, 1], 6);
-  anim("mage_move", "mon_mage", [0, 0, 1, 0], 4);
-  anim("brute_move", "mon_brute", [0, 1], 4);
-  anim("elder_move", "mon_elder", [0, 1], 3);
-  anim("bee_move", "mon_bee", [0, 1], 20);
-  anim("shroom_move", "mon_shroom", [0, 1], 5);
-  anim("boss_idle", "mon_boss", [0, 1], 2);
-  anim("boss_fury", "mon_boss", [2, 3], 4);
+  anim("crow_move", "mon_crow", four, 12);
+  anim("goblin_move", "mon_goblin", four, 8);
+  anim("mage_move", "mon_mage", four, 5);
+  anim("brute_move", "mon_brute", four, 6);
+  anim("elder_move", "mon_elder", [3, 1, 4, 0], 4);
+  anim("bee_move", "mon_bee", four, 24);
+  anim("shroom_move", "mon_shroom", six, 9);
+  anim("boss_idle", "mon_boss", [0, 9, 1, 10], 3);
+  anim("boss_fury", "mon_boss", [2, 11, 3, 12], 6);
   anim("mimic_bite", "obj_chest", [3, 4], 6);
   anim("fireball_fly", "px_fireball", [0, 1, 2], 14);
 }
