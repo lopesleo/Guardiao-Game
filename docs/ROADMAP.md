@@ -185,6 +185,17 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   "achata" no golpe e segura durante o hit-stop; tiques de status não piscam mais de branco. Emissivos ficam
   acima do mapa de luz (brilham à noite). Com a iluminação desligada, metade das partículas. 56–60 FPS no teste
   de carga. 👤 sentir no aparelho (S23 e um fraco)
+- ✅ **Revisão de todos os efeitos** (laboratório: as 36 armas no nível máximo num bando parado, as 6
+  reações, dash e Despertar, fotografados em sequência). Redesenhados em quadros de pixel (escala 3, uma
+  paleta, de pool): **Sopro/Inferno** jato de fogo preso à mão (era quase invisível); **Açoite/Laçada**
+  crescente em células no lugar das fatias vetoriais; **Aura/Coração do Inverno** chão gelado + borda de
+  cristais e a nova do Coração vira **onda de espinhos de gelo**; **Tambor/Trovão de Brasa** onda de
+  trovão em zigue-zague; **Boitatá** vira a cobra de fogo (cabeça + 9 gomos) com **fogo no chão**
+  desenhado (também no Inferno); **Redemoinho** tornado pintado; **Folhas** folha que rodopia; reações
+  **Vapor** (nuvem que borbulha), **Cristal** (espinhos brotam), **Geada** (lufada de neve), **Temporal**
+  (marca no chão), **Sobrecarga** (onda amarela); **Despertar** com aura de fogo espiritual e explosão de
+  ativação; **dash** com fantasmas do pool. Anel genérico vira faixa de 3 px. Teste de carga (6 evoluções,
+  120 inimigos): igual ou melhor que antes (menos objetos criados por golpe). Guia em `CONTEUDO.md` (Arte)
 - ✅ **Elementos e reações na pausa**: selo da cor do elemento no canto de cada arma (chama, floco, raio,
   lufada — `ELEMENT_SEAL` em `Icons.js`; a evolução que aplica dois elementos ganha dois) e uma coluna
   **REAÇÕES** com os 6 pares sempre à vista: conseguida na partida = nome na cor da reação e "×N";

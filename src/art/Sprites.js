@@ -1,7 +1,7 @@
 // Sprites procedurais de gameplay: pickups, projéteis, partículas e sombras.
 // Substituem os círculos/retângulos vetoriais (que "denunciavam" protótipo).
 import { PAL } from "./Palette.js";
-import { Pix, registerStrip } from "./PixelArt.js";
+import { Pix, registerStrip, tileNoise, bayer } from "./PixelArt.js";
 
 const K = PAL.ink;
 
@@ -247,6 +247,32 @@ function shard() {
     b: PAL.ice3,
   });
 }
+// Folha que RODOPIA (9×9, 4 quadros): frente, inclinada, de lado (só a nervura) e o verso
+// mais escuro — o giro em 3D é desenhado, não é escala. Folhas ao Vento / Ventania.
+function leafTumble(f) {
+  const p = new Pix(9, 9);
+  const w = [1, 0.55, 0.12, 0.55][f]; // largura aparente da folha
+  const back = f === 3; // verso: tons mais escuros
+  const L = back ? [PAL.g3, PAL.g4, PAL.g2] : [PAL.g6, PAL.g5, PAL.g3];
+  // folha em diagonal (do cabinho, embaixo à esquerda, até a ponta, em cima à direita)
+  for (let i = 0; i <= 10; i++) {
+    const t = i / 10;
+    const cx = 1.5 + t * 6,
+      cy = 7.5 - t * 6;
+    const half = Math.sin(t * Math.PI) * 2.6 * w;
+    for (let k = -3; k <= 3; k++) {
+      const off = k * 0.5;
+      if (Math.abs(off) > half + 0.2) continue;
+      const x = Math.round(cx - off * 0.7),
+        y = Math.round(cy - off * 0.7);
+      p.set(x, y, Math.abs(off) < 0.3 ? L[2] : off < 0 ? L[0] : L[1]);
+    }
+  }
+  p.set(0, 8, PAL.n3); // cabinho
+  p.set(1, 8, PAL.n3);
+  return p.outline(PAL.g2);
+}
+
 function leaf() {
   return Pix.fromMap([".gg", "gGk"], { g: PAL.g5, G: PAL.g3, k: PAL.g2 });
 }
@@ -278,50 +304,72 @@ function hailstone() {
 // serpenteiam e giram — 6 frames. Corpo translúcido, frente clara, fundo escuro,
 // um fio de luz correndo pelos anéis e folhas sendo levantadas na base.
 // cols = [clara, média, escura]; o mesmo desenho serve à evolução em brasa.
-function whirlFrames(cols, debris = PAL.g5) {
-  // Desenhado para escala INTEIRA 3× (escala quebrada deixava faixas de pixel desiguais)
+// Funil de vento PINTADO (era uma pilha de anéis abertos que parecia arame): largo em
+// cima, fino no chão, faixas claras em espiral DESCENDO, lado de trás mais escuro e
+// translúcido, saia de poeira na base e detritos girando na frente/atrás. 8 quadros em
+// laço sem emenda (ruído e faixas avançam exatamente 1/8 de período por quadro).
+// Desenhado para escala INTEIRA 3× (escala quebrada deixava faixas de pixel desiguais).
+function whirlFrames(cols, debris = PAL.g5, dust = PAL.s3) {
   const W = 30,
     H = 38,
-    N = 6;
+    N = 8;
+  const G = H - 3; // chão
+  const noise = tileNoise(32, 32, 4, 909);
   const frames = [];
   for (let f = 0; f < N; f++) {
     const p = new Pix(W, H);
     const ph = (f / N) * Math.PI * 2;
-    const rings = [];
-    for (let y = 2; y < H - 3; y += 3) {
-      const t = (y - 2) / (H - 5); // 0 = topo · 1 = base
-      const rx = 1.4 + Math.pow(1 - t, 1.45) * 12.4;
-      // A onda desce pelo funil (fase anda para baixo a cada frame)
-      const cx = W / 2 + Math.sin(t * 5 - ph) * 3.4 * (0.3 + t * 0.7);
-      rings.push({ y, t, rx, ry: Math.max(0.7, rx * 0.3), cx });
-    }
-    // Miolo translúcido bem leve (só dá corpo, não vira cunha)
-    for (const r of rings)
-      for (let x = Math.floor(r.cx - r.rx * 0.45); x <= Math.ceil(r.cx + r.rx * 0.45); x++) p.set(x, r.y, cols[1], 55);
-    // Anéis ABERTOS: cada um tem uma falha que gira — lê como vento, não como sólido
-    for (const r of rings) {
-      const n = Math.max(10, Math.round(r.rx * 7));
-      const gapAt = ph * 2 + r.t * 4;
-      for (let i = 0; i < n; i++) {
-        const th = (i / n) * Math.PI * 2;
-        const rel = (((th - gapAt) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-        if (rel > Math.PI * 1.55) continue; // falha (~22% do anel)
-        const x = r.cx + Math.cos(th) * r.rx,
-          y = r.y + Math.sin(th) * r.ry;
-        if (Math.sin(th) <= 0) p.set(x, y, cols[2], 150);
-        else p.set(x, y, rel < 0.7 ? PAL.white : cols[0], 255);
+    const cxAt = (h) => W / 2 + Math.sin(h * 4.2 - ph) * (0.4 + h * 2.6);
+    const hwAt = (h) => 1.6 + Math.pow(h, 1.25) * 12.2;
+    for (let y = 0; y < H; y++) {
+      const h = (G - y) / (G - 1); // 0 no chão … 1 na boca
+      if (h < -0.05 || h > 1.02) continue;
+      const cx = cxAt(Math.max(0, h)),
+        hw = hwAt(Math.max(0, h));
+      for (let x = 0; x < W; x++) {
+        const u = (x + 0.5 - cx) / hw; // −1 … 1 de borda a borda
+        const n = noise((x + 64) & 31, (y + f * 4) & 31);
+        if (Math.abs(u) > 1 + (n - 0.5) * 0.35) continue;
+        // faixas QUASE horizontais (o vento gira em volta do eixo) descendo pelo funil;
+        // volume: claro à esquerda (luz), escuro e translúcido à direita (o lado de trás)
+        const band = (((h * 10 + u * 0.3 + f / N) % 1) + 1) % 1;
+        const lit = 0.5 - u * 0.5 + (n - 0.5) * 0.3; // 1 = esquerda … 0 = direita
+        let col, a;
+        if (band < 0.11) {
+          col = band < 0.045 && lit > 0.35 ? PAL.white : cols[0];
+          a = lit > 0.3 ? 255 : 170;
+        } else if (lit > 0.62) {
+          col = cols[1];
+          a = 165;
+        } else if (lit > 0.3) {
+          col = cols[1];
+          a = 100;
+        } else {
+          col = cols[2];
+          a = 60; // o lado de trás é quase transparente (vê-se o chão através)
+        }
+        // a boca do funil se desfaz em fiapos irregulares
+        if (h > 0.78 + (n - 0.5) * 0.35) continue;
+        p.set(x, y, col, a);
       }
     }
-    // Fiapos soltos na boca do funil
-    for (let k = 0; k < 2; k++) {
-      const a = ph + k * Math.PI;
-      p.set(W / 2 + Math.cos(a) * 14, 1 + Math.sin(a) * 1.5, cols[0], 200);
+    // saia de poeira na base (larga, achatada, gira)
+    for (let k = 0; k < 14; k++) {
+      const a = ph + (k / 14) * Math.PI * 2;
+      const r = 4 + (k % 3);
+      const x = W / 2 + Math.cos(a) * r,
+        y = G + Math.sin(a) * 1.3;
+      p.set(x, y, Math.sin(a) > 0 ? dust : cols[1], Math.sin(a) > 0 ? 230 : 140);
     }
-    // Folhas e poeira girando na base
-    for (let k = 0; k < 3; k++) {
-      const a = ph * 1.5 + (k / 3) * Math.PI * 2;
-      const base = rings[rings.length - 1];
-      p.set(base.cx + Math.cos(a) * (3 + k), H - 3 + Math.sin(a) * 1.2, k === 1 ? cols[2] : debris);
+    // detritos orbitando em alturas diferentes (frente opaca, trás apagado)
+    for (let k = 0; k < 4; k++) {
+      const h = 0.2 + k * 0.2;
+      const a = ph * (k % 2 ? 1 : -1) * 0 + ph + k * 1.9;
+      const x = cxAt(h) + Math.cos(a) * (hwAt(h) + 1.5),
+        y = G - h * (G - 1) + Math.sin(a) * 1.5;
+      const front = Math.sin(a) > 0;
+      p.set(x, y, k % 2 ? debris : PAL.g6, front ? 255 : 120);
+      if (front && k % 2) p.set(x + 1, y, debris, 255);
     }
     frames.push(p);
   }
@@ -419,8 +467,9 @@ export function registerSprites(scene) {
   firefly().register(scene, "px_firefly");
   hailstone().register(scene, "px_hail");
   registerStrip(scene, "px_whirl", whirlFrames([PAL.wnd3, PAL.wnd2, PAL.wnd1])); // vento (era roxo/raio)
-  registerStrip(scene, "px_whirl_fire", whirlFrames([PAL.yel3, PAL.org2, PAL.org1], PAL.red2));
+  registerStrip(scene, "px_whirl_fire", whirlFrames([PAL.yel3, PAL.org2, PAL.red1], PAL.yel3, PAL.n2));
   leaf().register(scene, "px_leaf");
+  registerStrip(scene, "px_leaf_tumble", [0, 1, 2, 3].map((f) => leafTumble(f)));
   registerGlow(scene);
 
   const anim = (key, tex, rate, frames) => {
@@ -437,6 +486,7 @@ export function registerSprites(scene) {
   anim("gem_gold_shine", "px_gem_gold", 6, [0, 1, 2, 3, 0, 0, 0, 0]);
   anim("coin_spin", "px_coin", 8, [0, 1, 2, 3]);
   anim("awaken_spark", "px_awaken", 4, [0, 1]);
-  anim("whirl_spin", "px_whirl", 14, [0, 1, 2, 3, 4, 5]);
-  anim("whirl_fire_spin", "px_whirl_fire", 18, [0, 1, 2, 3, 4, 5]);
+  anim("whirl_spin", "px_whirl", 16, [0, 1, 2, 3, 4, 5, 6, 7]);
+  anim("leaf_tumble", "px_leaf_tumble", 10, [0, 1, 2, 3]);
+  anim("whirl_fire_spin", "px_whirl_fire", 20, [0, 1, 2, 3, 4, 5, 6, 7]);
 }

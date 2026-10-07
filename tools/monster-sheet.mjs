@@ -14,6 +14,9 @@ import { registerKitchen } from "../src/art/Kitchen.js";
 import { registerLanterns } from "../src/art/Lanterns.js";
 import { registerFireFX } from "../src/art/FireFX.js";
 import { registerIcons } from "../src/art/Icons.js";
+import { registerIceFX, frostRimTexture, frostDiskTexture } from "../src/art/IceFX.js";
+import { registerReactionFX } from "../src/art/ReactionFX.js";
+import { registerAuraFX } from "../src/art/AuraFX.js";
 
 const [out = "monster-sheet.png", keysArg = "mon_alpha,mon_elder,mon_boss", scaleArg = "5"] = process.argv.slice(2);
 const S = Number(scaleArg);
@@ -54,6 +57,13 @@ registerKitchen(scene); // ico_dish_<id>
 registerLanterns(scene); // px_lantern, px_candeeiro
 registerFireFX(scene); // fx_whirl, fx_ignite, fx_wisp (reação Labareda)
 registerIcons(scene); // ico_* (inclui os selos de elemento ico_el_*)
+registerIceFX(scene); // fx_icespike
+registerReactionFX(scene); // fx_steam, fx_frostgust
+registerAuraFX(scene); // fx_awaken_aura (Despertar)
+// campo da Aura no raio-base (40 = 120/3) e do Coração do Inverno (43): fx_frost_rim_40_0 etc.
+frostRimTexture(scene, 40, false);
+frostRimTexture(scene, 43, true);
+frostDiskTexture(scene, 40);
 registerCaatinga(scene); // cenário: atlas "env_caatinga" (quadros de tamanhos diferentes)
 
 // Imagem solta (Pix.register, sem quadros): a imagem inteira é um quadro

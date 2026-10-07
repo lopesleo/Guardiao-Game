@@ -4,7 +4,7 @@
 //        fogo+vento Labareda · gelo+vento Geada · raio+vento Temporal.
 import { STATUS, REACTION, COLORS, PLAYER, ELEMENT } from "../config.js";
 import { text } from "../ui/Theme.js";
-import { hex } from "../art/Palette.js";
+import { hex, PAL } from "../art/Palette.js";
 import { tr } from "../i18n/i18n.js";
 
 // Reações por COEXISTÊNCIA de status — as três funcionam do mesmo jeito: dois
@@ -219,8 +219,8 @@ export class ElementalSystem {
       if (wasCold && e.freeze && !e.isFrozen(now) && now >= e._freezeLockUntil) e.freeze(now, def.freezeMs, 2400);
     }
     if (!fx) return;
-    scene.fx?.ring(x, y + 4, 0xffffff, 10, R, 280, 0.6, 1);
-    scene.fx?.ring(x, y + 4, def.color, 8, R * 0.75, 340, 0.6, 0.8);
+    scene.fx?.frostGust(x, y + 4, R); // lufada de neve em espiral (desenhada)
+    scene.fx?.ring(x, y + 4, 0xffffff, 10, R, 280, 0.6, 0.7);
     scene.fx?.burst("frost", x, y, 16, null, 360, { min: 80, max: 220 });
     scene.fx?.burst("streak", x, y, 10, null, 360, { min: 160, max: 320 }, [0xffffff, 0xd2fbe9, 0xbfeaff]);
     scene.fx?.decal("fx_frost", x, y + 6, R * 0.6, 1800, 0.6);
@@ -233,7 +233,10 @@ export class ElementalSystem {
     targets.forEach((e, i) => {
       scene.time.delayedCall(i * 90, () => {
         if (!e.active) return;
-        if (fx || i === 0) this._drawBolt(e.x + 24 - i * 12, e.y - 260, e.x, e.y - 4, def.color, 5);
+        if (fx || i === 0) {
+          this._drawBolt(e.x + 24 - i * 12, e.y - 260, e.x, e.y - 4, def.color, 5);
+          scene.fx?.strikeMark(e.x, e.y + 10, [PAL.white, PAL.ice3, PAL.wnd2, PAL.ice1]);
+        }
         this._hurt(e, def.dmg, e.x, e.y - 30);
       });
     });
@@ -292,9 +295,14 @@ export class ElementalSystem {
     });
   }
 
-  // Nuvem em pixel-art: vários "puffs" que incham, sobem e somem + luz quente
+  // Nuvem de vapor DESENHADA (src/art/ReactionFX.js) — sem WeaponFX, os puffs antigos
   _cloudFx(cx, cy, radius, color, duration) {
     const scene = this.scene;
+    if (scene.fx) {
+      scene.fx.steamCloud(cx, cy, radius, duration);
+      scene.fx.burst("smoke", cx, cy - 10, 3, -Math.PI / 2, 100, { min: 20, max: 60 });
+      return;
+    }
     const glow = scene.add
       .image(cx, cy, "fx_glow")
       .setScale((radius * 2.4) / 64)
@@ -379,6 +387,7 @@ export class ElementalSystem {
     // O gelo quebra: lascas voando + estalo + anel de geada no chão
     const fx = scene.fx;
     if (fx) {
+      fx.crystalBurst(cx, cy + 10, frozen); // o gelo BROTA no alvo e estilhaça
       fx.burst("shard", cx, cy - 6, (def.shards ?? 8) + 4, null, 360, { min: 140, max: 320 });
       fx.burst("frost", cx, cy, 10, null, 360, { min: 30, max: 120 });
       fx.star(cx, cy - 6, 0xffffff, 0.8, showFx ? 3.2 : 2, 160, Math.PI / 4);
@@ -411,20 +420,8 @@ export class ElementalSystem {
     const reach = (def.jumpRange ?? 200) * areaMult;
     const jumpMaxSq = reach * reach;
     // Flash no ponto de origem — marca a Sobrecarga como "a recompensa em área"
-    const flash = scene.add
-      .image(enemy.x, enemy.y, "fx_glow")
-      .setScale(0.5)
-      .setTint(def.color)
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setDepth(61);
-    scene.tweens.add({
-      targets: flash,
-      scale: 2.2,
-      alpha: 0,
-      duration: 300,
-      onComplete: () => flash.destroy(),
-    });
-    scene.fx?.ring(enemy.x, enemy.y + 4, def.color, 10, 70 * areaMult, 240);
+    scene.fx?.thunderRing(enemy.x, enemy.y + 6, 8, 74 * areaMult, 300, [PAL.white, PAL.yel3, PAL.yel2, PAL.org1], 0.6);
+    scene.fx?.light(enemy.x, enemy.y, 200, def.color, 300, 1);
     scene.fx?.burst("zap", enemy.x, enemy.y, 12);
     for (let i = 0; i < def.jumps; i++) {
       let best = null,

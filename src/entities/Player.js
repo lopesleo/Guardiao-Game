@@ -4,6 +4,7 @@ import { LinkSet } from '../systems/Links.js';
 import { PLAYER, GAME, COLORS, RESONANCE } from '../config.js';
 import { HERO_STEPS } from '../art/Hero.js';
 import { PAL } from '../art/Palette.js';
+import { registerAuraFX, AURA_H } from '../art/AuraFX.js';
 
 import { tr } from "../i18n/i18n.js";
 
@@ -20,6 +21,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.body.setCircle(6, 6, 14); // corpo na altura dos pés (quadro 24×28)
     this.body.setMaxSpeed(PLAYER.SPEED_BASE * 6); // permitir dash
     this._hurtUntil = 0; // quadro de "golpe sofrido" (Hero.js) até este instante
+    // Aura do Despertar: fogo espiritual dourado desenhado ATRÁS do herói (AuraFX.js)
+    registerAuraFX(scene);
+    this.aura = scene.add.sprite(x, y, 'fx_awaken_aura', 0).setOrigin(0.5, (AURA_H - 3) / AURA_H).setScale(GAME.PIXEL_SCALE).setAlpha(0.85).setVisible(false);
     // Pisadas: nos quadros em que o pé toca o chão sobe poeira (ou gota/brilho de quem flutua)
     this._steps = HERO_STEPS[heroId] ?? null;
     this._puffs = [];
@@ -207,6 +211,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setTint(0xffd96b);
     this.scene.cameras.main.shake(300, 0.012);
     this.scene.cameras.main.flash(180, 240, 200, 80);
+    // O despertar: onda dourada de trovão saindo do herói, anel, vaga-lumes subindo
+    const fx = this.scene.fx;
+    if (fx) {
+      const fy = this.y + this.displayHeight * 0.42;
+      fx.thunderRing(this.x, fy, 10, 230, 520, [PAL.white, PAL.yel3, PAL.yel2, PAL.g5], 0.6);
+      fx.ring(this.x, fy, 0xffffff, 8, 150, 360, 0.6, 0.9);
+      fx.burst('glow', this.x, this.y, 22, -Math.PI / 2, 140, { min: 60, max: 220 });
+      fx.burst('ember', this.x, fy, 14, -Math.PI / 2, 120, { min: 80, max: 200 });
+      fx.light(this.x, this.y, 320, 0xffe58f, 600, 1);
+    }
     this.scene.sound.play('sfx_boss_roar', { volume: 0.55, rate: 1.25 });
     return true;
   }
@@ -269,14 +283,19 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
+  // Dash: fantasmas do POOL (antes: 4 sprites criados e destruídos por dash), poeira na
+  // arrancada e lufadas de vento correndo no sentido do dash
   _dashTrail() {
     const scene = this.scene;
+    const fx = scene.fx;
+    const fy = this.y + this.displayHeight * 0.44;
+    const back = Math.atan2(-this.dashDirY, -this.dashDirX);
+    fx?.burst('smoke', this.x, fy, 5, back, 70, { min: 40, max: 110 });
+    fx?.burst('gust', this.x, this.y, 6, back + Math.PI, 30, { min: 260, max: 420 });
     for (let i = 0; i < 4; i++) {
       scene.time.delayedCall(i * 30, () => {
-        const ghost = scene.add.sprite(this.x, this.y, this.texture.key, this.frame.name)
-                          .setScale(this.scale).setAlpha(0.5).setTint(0xffffff).setDepth(this.depth - 1);
-        ghost.setFlipX(this.flipX);
-        scene.tweens.add({ targets: ghost, alpha: 0, duration: 250, onComplete: () => ghost.destroy() });
+        const g = fx?.ghost(this.texture.key, this.x, this.y, 0, this.scale, i % 2 ? 0x9fdcff : 0xffffff, 230, 0.55 - i * 0.08, this.frame.name);
+        g?.img.setFlipX(this.flipX).setDepth(this.depth - 1);
       });
     }
   }
@@ -360,6 +379,20 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setDepth(this.y + this.displayHeight * 0.45 + 10000);
     this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46);
     this.light.setPosition(this.x, this.y + this.displayHeight * 0.3);
+    const awake = this.isAwakened();
+    if (awake !== this.aura.visible) {
+      this.aura.setVisible(awake);
+      if (awake) this.aura.play('fx_awaken_aura');
+      else this.aura.stop();
+    }
+    if (awake) {
+      this.aura.setPosition(this.x, this.y + this.displayHeight * 0.44).setDepth(this.depth - 0.5);
+      // fagulhas douradas subindo enquanto desperto
+      if (time >= (this._auraSparkAt ?? 0)) {
+        this._auraSparkAt = time + 90;
+        this.scene.fx?.burst('glow', this.x + (Math.random() - 0.5) * 40, this.y + 10, 1, -Math.PI / 2, 30, { min: 30, max: 80 });
+      }
+    }
   }
 
   // Efeito da pisada (pool de 6 imagens; nada é criado por passo)

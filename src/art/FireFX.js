@@ -161,15 +161,136 @@ function wisp(f) {
   return p;
 }
 
+// Jato de fogo do Sopro (60×88, 8 quadros), bocal em (JET_X0, meio) apontando para a
+// DIREITA: acende no bocal, estica até o fim do cone, tremula com línguas que correm
+// para fora e se solta do bocal esfriando. Desenhado no ângulo do cone do Sopro
+// (JET_HALF); o Inferno estica na vertical para o cone dele.
+export const JET_W = 60,
+  JET_H = 88,
+  JET_X0 = 2,
+  JET_LEN = 55, // comprimento do cone em pixels do quadro (o jogo escala até o alcance)
+  JET_HALF = 0.62;
+const J_REACH = [0.22, 0.5, 0.82, 1, 1, 1, 0.96, 0.9];
+const J_LIFT = [0, 0, 0, 0, 0, 0.12, 0.34, 0.58];
+const J_HEAT = [1.5, 1.35, 1.22, 1.12, 1.06, 1, 0.86, 0.68];
+function jet(f) {
+  const p = new Pix(JET_W, JET_H);
+  const n1 = tileNoise(64, JET_H, 8, 211),
+    n2 = tileNoise(64, JET_H, 4, 223);
+  const cy = JET_H / 2;
+  const tanH = Math.tan(JET_HALF);
+  for (let x = 0; x < JET_W; x++) {
+    const u = (x - JET_X0) / JET_LEN; // 0 bocal … 1 fim do cone
+    if (u < -0.02) continue;
+    // o cone incha logo depois do bocal (fogo não é triângulo) e afina na ponta
+    const hw = Math.max(1.2, tanH * Math.max(0, x - JET_X0) * (0.62 + 0.38 * Math.sqrt(Math.max(0, u))) * (1 - smooth(0.8, 1.05, u) * 0.55) + 1.4);
+    for (let y = 0; y < JET_H; y++) {
+      // ruído correndo para FORA (as línguas saem do bocal)
+      const n = 0.6 * n1((x - f * 7 + 640) & 63, y) + 0.4 * n2((x - f * 11 + 640) & 63, y);
+      const v = (y + 0.5 - cy) / hw;
+      if (Math.abs(v) > 1.25) continue;
+      // frente e base ARREDONDADAS: o meio do jato vai mais longe que as bordas
+      const reach = J_REACH[f] + (n - 0.5) * 0.22 - v * v * 0.3,
+        lift = J_LIFT[f] + (n - 0.5) * 0.16 + v * v * 0.22;
+      if (u > reach || u < lift) continue;
+      let I = (1 - Math.pow(Math.abs(v), 1.5)) * (J_HEAT[f] - u * 0.45) + (n - 0.5) * 0.85;
+      if (u > reach - 0.12) I -= (u - reach + 0.12) * 2.5; // a frente do jato esfria
+      I -= Math.max(0, lift + 0.12 - u) * 2.4; // e a base que se solta
+      // miolo branco perto do bocal nos primeiros quadros (a chama "acende")
+      if (u < 0.18 && f < 5) I += (0.18 - u) * 2.2 * (1 - Math.abs(v));
+      const c = fireCol(I, x, y);
+      if (c != null) p.set(x, y, c);
+    }
+  }
+  // fagulhas soltas à frente do jato
+  const r = rng(400 + f);
+  for (let i = 0; i < 6; i++) {
+    const u = J_REACH[f] * (0.75 + r() * 0.4);
+    const x = Math.round(JET_X0 + u * JET_LEN),
+      y = Math.round(cy + (r() - 0.5) * tanH * u * JET_LEN * 1.6);
+    if (x < JET_W && !p.get(x, y)) p.set(x, y, r() < 0.5 ? PAL.yel3 : PAL.org2);
+  }
+  return p;
+}
+
+// Fogo baixo no chão (18×16, 8 quadros em laço sem emenda: o ruído sobe 2 px por quadro
+// num período de 16) — rastro do Boitatá e do Inferno
+export const GFIRE_W = 18,
+  GFIRE_H = 16;
+function groundFire(f) {
+  const p = new Pix(GFIRE_W, GFIRE_H);
+  const n1 = tileNoise(GFIRE_W + 2, 16, 4, 301),
+    n2 = tileNoise(GFIRE_W + 2, 16, 2, 307);
+  const G = GFIRE_H - 2;
+  for (let y = 0; y < GFIRE_H; y++)
+    for (let x = 0; x < GFIRE_W; x++) {
+      const u = (x + 0.5 - GFIRE_W / 2) / (GFIRE_W / 2); // −1 … 1
+      const h = (G - y) / 12; // 0 no chão … 1 no alto
+      if (h < -0.1) continue;
+      const n = 0.6 * n1(x, (y + f * 2) & 15) + 0.4 * n2(x, (y + f * 2) & 15);
+      // três línguas (cosseno) de alturas diferentes
+      const tongue = 0.42 + 0.58 * Math.abs(Math.cos(u * 4.2 + Math.sin(f * 0.785) * 0.35)) * (1 - Math.abs(u) * 0.35);
+      const top = tongue * (1 - u * u * 0.6) + (n - 0.5) * 0.45;
+      if (h > top) continue;
+      const I = (1 - Math.abs(u)) * 1.1 + (n - 0.5) * 0.8 - h * 0.75 + (h < 0.15 ? 0.25 : 0);
+      const c = fireCol(I, x, y);
+      if (c != null) p.set(x, y, c);
+    }
+  return p;
+}
+
+// BOITATÁ — a cobra de fogo da lenda: cabeça (15×11, 2 quadros) virada para a DIREITA,
+// olho de fogo e crista de chamas; gomos do corpo (9×9, 3 quadros) que tremulam
+function boitataHead(f) {
+  // desenhada à mão (mapa): crista de chamas, testa clara, olho de fogo, mandíbula escura
+  const crest = f ? ["..y...y...y.....", "..o..oyo..o....."] : ["...y...y...y....", "...o..oyo..o...."];
+  return Pix.fromMap(
+    [
+      ...crest,
+      "..rooorooorr....",
+      ".rOOYYYYYOOrr...",
+      "rOYYWWYYYYYOOr..",
+      "rOYWWYYYYwkYOOr.",
+      "rOYYYYYYYYYYYYOr",
+      "rOOYYYYYYYYYYOOr",
+      ".rOOOOOOOOOOrrr.",
+      "..rRRRRRRRRr....",
+      "...rrrrrrr......",
+    ],
+    { y: PAL.yel3, o: PAL.org2, r: PAL.red1, O: PAL.org2, Y: PAL.yel2, W: PAL.yel3, w: PAL.white, k: PAL.ink, R: PAL.red0 },
+  ).outline(PAL.red0);
+}
+function boitataSeg(f) {
+  const p = new Pix(9, 9);
+  const n = tileNoise(16, 16, 3, 601);
+  for (let y = 0; y < 9; y++)
+    for (let x = 0; x < 9; x++) {
+      const d = Math.hypot(x + 0.5 - 4.5, y + 0.5 - 4.5) / 4.3;
+      if (d > 1) continue;
+      const I = (1 - d) * 1.3 + (n((x + f * 5) & 15, (y + f * 3) & 15) - 0.5) * 0.8;
+      const c = fireCol(I, x, y);
+      if (c != null) p.set(x, y, c);
+    }
+  return p;
+}
+
 export function registerFireFX(scene) {
   if (scene.textures.exists("fx_whirl")) return;
   registerStrip(scene, "fx_whirl", Array.from({ length: W_GROW.length }, (_, f) => whirl(f)));
   registerStrip(scene, "fx_ignite", Array.from({ length: I_GROW.length }, (_, f) => ignite(f)));
   registerStrip(scene, "fx_wisp", [0, 1, 2, 3].map((f) => wisp(f)));
+  registerStrip(scene, "fx_jet", Array.from({ length: J_REACH.length }, (_, f) => jet(f)));
+  registerStrip(scene, "fx_groundfire", Array.from({ length: 8 }, (_, f) => groundFire(f)));
+  registerStrip(scene, "px_boitata_head", [0, 1].map((f) => boitataHead(f)));
+  registerStrip(scene, "px_boitata_seg", [0, 1, 2].map((f) => boitataSeg(f)));
   const mk = (key, tex, rate, repeat = 0) => {
     if (!scene.anims.exists(key)) scene.anims.create({ key, frames: scene.anims.generateFrameNumbers(tex, {}), frameRate: rate, repeat });
   };
   mk("fx_whirl", "fx_whirl", 15);
   mk("fx_ignite", "fx_ignite", 16);
   mk("fx_wisp", "fx_wisp", 14, -1);
+  mk("fx_jet", "fx_jet", 18);
+  mk("fx_groundfire", "fx_groundfire", 12, -1);
+  mk("px_boitata_head", "px_boitata_head", 8, -1);
+  mk("px_boitata_seg", "px_boitata_seg", 10, -1);
 }

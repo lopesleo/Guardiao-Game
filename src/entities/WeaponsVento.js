@@ -148,7 +148,8 @@ export class Folhas extends WindWeapon {
     const n = this.def.count + (this.owner?.extraProj ?? 0) + this.extraProj;
     const a0 = Math.random() * Math.PI * 2;
     for (let i = 0; i < n && this.leaves.length < MAX_LEAVES; i++) {
-      const spr = this.scene.add.image(this.owner.x, this.owner.y, "px_leaf").setScale(3).setDepth(D_WFX);
+      // folha desenhada que rodopia (px_leaf_tumble); cada uma começa num ponto do giro
+      const spr = this.scene.add.sprite(this.owner.x, this.owner.y, "px_leaf_tumble", i % 4).setScale(3).setDepth(D_WFX).play({ key: "leaf_tumble", startFrame: i % 4 });
       if (this._tint) spr.setTint(this._tint);
       this.leaves.push({ a: a0 + (i / n) * Math.PI * 2, t0: this.scene.time.now, spr, last: new Map(), x: this.owner.x, y: this.owner.y });
     }
@@ -177,7 +178,7 @@ export class Folhas extends WindWeapon {
       const a = l.a + spin * (time - l.t0) / 1000;
       l.x = this.owner.x + Math.cos(a) * r;
       l.y = this.owner.y + Math.sin(a) * r * 0.8;
-      l.spr.setPosition(l.x, l.y).setRotation(a * 2).setAlpha(k > 0.85 ? (1 - k) / 0.15 : 1);
+      l.spr.setPosition(l.x, l.y).setFlipX(Math.cos(a) < 0).setAlpha(k > 0.85 ? (1 - k) / 0.15 : 1); // sem girar o sprite: o rodopio é desenhado
       this.scene.fx?.trail(l, l.x, l.y, this._trail, 60);
       if (this.owner?.links?.active.size) this._emit("folhas:move", { weapon: this, leaf: l });
       this._eachTarget((e) => {

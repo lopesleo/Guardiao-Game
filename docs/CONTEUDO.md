@@ -42,6 +42,12 @@ npm run balance      # invariantes de balanceamento
    Registre: `registerWeapon("LASH", Lash)`.
 3. **Arte**: ícone (mapa ASCII em `MAPS` de `Icons.js`) e, se tiver projétil, sprite em
    `Sprites.js`. Uma paleta só (`PAL`); ataque do herói nunca usa o vermelho de perigo.
+   **Efeito do golpe**: prefira quadros DESENHADOS (tiras de pixel em escala 3, como
+   `FireFX.js`, `IceFX.js`, `ReactionFX.js`, `AuraFX.js`) tocados por um pool do `WeaponFX`
+   (`_flame(tipo, teto, …)`) — nada de círculo/fatia vetorial, nada de criar e destruir
+   imagem por golpe, nada de girar sprite de pixel (rodopio se desenha em quadros).
+   Graphics redesenhado todo quadro: no máximo algumas centenas de retângulos (milhares
+   somem no Phaser 4). Revisar a arte: `node tools/monster-sheet.mjs saida.png fx_<nome> 6`.
 4. **Som**: um efeito em `src/audio/Synth.js` (`sfx_<nome>`).
 5. **Luz** (opcional): método `lights(add)` na classe — o mapa de luz chama sozinho.
 6. **Laços**: se a arma tem um momento interessante ("bateu", "fez a volta",

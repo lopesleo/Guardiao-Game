@@ -2,45 +2,13 @@
 // Números e ficha (texto, ícone, desbloqueio) em WEAPONS (config.js). Para criar uma
 // arma nova: ver docs/CONTEUDO.md — classe que estende Weapon + registerWeapon().
 import { WEAPONS, COLORS, GAME, ELEMENT, BOSS_FIGHT } from "../config.js";
-import { shockwave } from "../art/Telegraph.js";
 import { Pix } from "../art/PixelArt.js";
+import { frostRimTexture, frostDiskTexture, ICE_PX } from "../art/IceFX.js";
 import { PAL } from "../art/Palette.js";
 
 // Anel do campo gélido como TEXTURA (uma por raio, em cache): um Graphics
 // redesenhado todo quadro com centenas de retângulos sumia no Phaser 4 (WebGL).
 // Imagem girando é mais barata e sempre aparece. strong = Coração do Inverno.
-function auraRingTexture(scene, r, strong) {
-  const R = Math.round(r);
-  const key = `fx_aura_ring_${R}_${strong ? 1 : 0}`;
-  if (scene.textures.exists(key)) return key;
-  const S = R * 2 + 10,
-    c = S / 2;
-  const p = new Pix(S, S);
-  const dot = (x, y, rgb, size = 2) => {
-    const px = Math.round(x / size) * size,
-      py = Math.round(y / size) * size;
-    for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) p.set(px + i, py + j, rgb);
-  };
-  const step = 0.8 / R; // ~1 px de arco por passo: linha CONTÍNUA (antes: 18 pontos soltos)
-  // Contorno escuro por fora: separa o anel da grama
-  for (let a = 0; a < Math.PI * 2; a += step) dot(c + Math.cos(a) * (R + 2), c + Math.sin(a) * (R + 2), PAL.ice0);
-  // Linha base
-  for (let a = 0; a < Math.PI * 2; a += step) dot(c + Math.cos(a) * R, c + Math.sin(a) * R, PAL.ice1);
-  // Arcos claros (6 ou 8) com ponta branca — a imagem gira, então "correm" pelo anel
-  const arcs = strong ? 8 : 6,
-    len = 0.32;
-  for (let k = 0; k < arcs; k++) {
-    const a0 = (k / arcs) * Math.PI * 2;
-    for (let a = a0; a < a0 + len; a += step) {
-      const t = (a - a0) / len;
-      dot(c + Math.cos(a) * R, c + Math.sin(a) * R, t > 0.82 ? PAL.white : t > 0.4 ? PAL.ice3 : PAL.ice2);
-    }
-  }
-  // Pontilhado interno (geada no chão), bem discreto
-  for (let a = 0; a < Math.PI * 2; a += 9 / R) dot(c + Math.cos(a) * (R - 7), c + Math.sin(a) * (R - 7), PAL.ice1);
-  p.register(scene, key);
-  return key;
-}
 function auraCrystalTexture(scene) {
   if (scene.textures.exists("fx_aura_crystal")) return "fx_aura_crystal";
   Pix.fromMap(["...k...", "..kbk..", ".kbcbk.", "kbcwcbk", ".kbcbk.", "..kbk..", "...k..."], {
@@ -153,6 +121,7 @@ export class Projectile extends Phaser.GameObjects.Container {
 // BoomerangProj — visual de "L" girando, fase out + retorno até tocar o player
 // ============================================================================
 
+const SERPENT_SEGS = 9; // gomos do corpo do Boitatá
 export class BoomerangProj extends Phaser.GameObjects.Container {
   constructor(scene) {
     super(scene, -9999, -9999);
@@ -185,6 +154,30 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     this.trailFn = null;
     this.trailIntervalMs = 150;
     this._nextTrailAt = 0;
+    // Boitatá: a vara vira a COBRA DE FOGO — cabeça desenhada + gomos de chama que
+    // seguem o caminho exato (histórico de posições). Criados na 1ª vez, depois reusados.
+    this.serpent = false;
+    this.head = null;
+    this.segs = [];
+    this.path = [];
+  }
+
+  // Liga a forma de serpente (chamado pela evolução a cada disparo)
+  makeSerpent() {
+    const scene = this.scene;
+    if (!this.head) {
+      this.head = scene.add.sprite(0, 0, "px_boitata_head", 0).setScale(GAME.PIXEL_SCALE).play("px_boitata_head");
+      this.add(this.head);
+      for (let i = 0; i < SERPENT_SEGS; i++) {
+        const k = 1 - (i / SERPENT_SEGS) * 0.6;
+        this.segs.push(scene.add.sprite(-9999, -9999, "px_boitata_seg", i % 3).setScale(GAME.PIXEL_SCALE * k).play({ key: "px_boitata_seg", startFrame: i % 3 }).setVisible(false));
+      }
+    }
+    this.serpent = true;
+    this.setDepth(48545); // a cobra é fogo: acima do mapa de luz (brilha à noite)
+    this.spr.setVisible(false);
+    this.head.setVisible(true);
+    this.path.length = 0;
   }
 
   fire(x, y, dirX, dirY, dmg, crit = false) {
@@ -196,6 +189,13 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     this.phase = "out";
     this.trailFn = null; // pooled — reseta o rastro a cada disparo
     this._nextTrailAt = 0;
+    // pooled — volta a ser vara (a evolução religa a serpente logo depois)
+    this.serpent = false;
+    this.setDepth(0);
+    this.spr.setVisible(true);
+    this.head?.setVisible(false);
+    for (const g of this.segs) g.setVisible(false);
+    this.path.length = 0;
     // Alcance escala com passiva de Area do player
     const areaMult = this.scene.player?.areaMult ?? 1;
     const sp = this.outSpeed * Math.sqrt(areaMult);
@@ -208,6 +208,7 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     this.setActive(false).setVisible(false);
     this.body.enable = false;
     this.body.setVelocity(0, 0);
+    for (const g of this.segs) g.setVisible(false); // corpo do Boitatá some junto
   }
 
   // Re-hit no mesmo inimigo só depois de 250ms (passada de ida + volta)
@@ -220,11 +221,12 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
 
   update(time, dt) {
     if (!this.active) return;
-    // Rotação visual
-    this.rotation += dt * 0.03;
-    // Rastro: fantasmas do giro (lê a velocidade) + brasas
     const fx = this.scene.fx;
-    if (fx && time >= (this._ghostAt ?? 0)) {
+    // Rotação visual (a vara gira; a serpente olha para onde vai)
+    if (this.serpent) this._serpentUpdate();
+    else this.rotation += dt * 0.03;
+    // Rastro: fantasmas do giro (lê a velocidade) + brasas
+    if (fx && !this.serpent && time >= (this._ghostAt ?? 0)) {
       this._ghostAt = time + 45;
       fx.ghost("px_boomer", this.x, this.y, this.rotation, GAME.PIXEL_SCALE, 0xff9a4a, 170, 0.42);
     }
@@ -272,6 +274,32 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     }
 
     if (time >= this.deadline) this.kill();
+  }
+
+  // Cabeça vira para a velocidade (espelha indo para a esquerda, para não ficar de
+  // cabeça para baixo) e cada gomo ocupa um ponto do caminho a ~9 px do anterior
+  _serpentUpdate() {
+    const vx = this.body.velocity.x,
+      vy = this.body.velocity.y;
+    if (vx || vy) {
+      const left = vx < 0;
+      this.rotation = 0;
+      this.head.setFlipX(left).setRotation(left ? Math.atan2(vy, vx) - Math.PI : Math.atan2(vy, vx));
+    }
+    const last = this.path[0];
+    if (!last || Math.hypot(this.x - last.x, this.y - last.y) >= 3) {
+      this.path.unshift({ x: this.x, y: this.y });
+      if (this.path.length > SERPENT_SEGS * 3 + 4) this.path.length = SERPENT_SEGS * 3 + 4;
+    }
+    const depth = this.depth;
+    const t = this.scene.time.now;
+    this.segs.forEach((g, i) => {
+      const p = this.path[(i + 1) * 3];
+      if (!p) return g.setVisible(false);
+      g.setVisible(true)
+        .setPosition(p.x, p.y + Math.sin(t / 90 + i) * 2)
+        .setDepth(depth - 0.1 - i * 0.01);
+    });
   }
 }
 
@@ -470,13 +498,15 @@ export class AuraWeapon extends Weapon {
   // defKey parametrizado pra evolução (Coração do Inverno) reusar o campo
   constructor(scene, defKey = "AURA") {
     super(scene, defKey);
-    // Visual permanente: névoa fria aditiva + anel de cristais girando
+    // Visual permanente: névoa fria aditiva, chão gelado (geada pontilhada) e a borda de
+    // cristais espetados (src/art/IceFX.js, na escala de pixel do jogo)
     this.gfx = scene.add
       .image(0, 0, "fx_glow")
       .setTint(COLORS.ICE)
-      .setAlpha(0.22)
+      .setAlpha(0.18)
       .setBlendMode(Phaser.BlendModes.ADD)
       .setDepth(40);
+    this.disk = scene.add.image(0, 0, "fx_star").setDepth(41).setAlpha(0.55).setVisible(false);
     // Acima do mapa de luz: o campo é magia, tem que brilhar no escuro
     this.ring = scene.add.image(0, 0, "fx_star").setDepth(48550).setVisible(false);
     this.crystals = [];
@@ -485,6 +515,7 @@ export class AuraWeapon extends Weapon {
   }
   dispose() {
     this.gfx.destroy();
+    this.disk.destroy();
     this.ring.destroy();
     for (const c of this.crystals) c.destroy();
     this.crystals = [];
@@ -494,17 +525,20 @@ export class AuraWeapon extends Weapon {
     const r = this.range;
     const ox = this.owner.x,
       oy = this.owner.y;
-    // Textura do raio atual (o raio só muda com cartas de área/alcance)
-    const key = auraRingTexture(this.scene, r, this._ringStrong);
+    // Texturas do raio atual, a 1/3 e mostradas ×3 (o raio só muda com área/alcance)
+    const rt = Math.max(8, Math.round(r / ICE_PX));
+    const key = frostRimTexture(this.scene, rt, this._ringStrong);
     if (key !== this._ringKey) {
       this._ringKey = key;
-      this.ring.setTexture(key).setVisible(true);
+      this.ring.setTexture(key).setScale(ICE_PX).setVisible(true);
+      this.disk.setTexture(frostDiskTexture(this.scene, rt)).setScale(ICE_PX).setVisible(true);
     }
-    this.ring.setPosition(ox, oy).setRotation(time / 2600);
-    // Cristais em órbita, no sentido contrário do tracejado
+    this.ring.setPosition(ox, oy).setRotation(time / 4200);
+    this.disk.setPosition(ox, oy).setRotation(-time / 9000);
+    // Cristais em órbita, no sentido contrário da borda
     const k = this._ringStrong ? 6 : 4;
     while (this.crystals.length < k)
-      this.crystals.push(this.scene.add.image(0, 0, auraCrystalTexture(this.scene)).setScale(1.5).setDepth(48551));
+      this.crystals.push(this.scene.add.image(0, 0, auraCrystalTexture(this.scene)).setScale(ICE_PX).setDepth(48551));
     for (let i = 0; i < k; i++) {
       const a = -time / 1700 + (i / k) * Math.PI * 2;
       this.crystals[i].setPosition(Math.round(ox + Math.cos(a) * r), Math.round(oy + Math.sin(a) * r));
@@ -858,29 +892,13 @@ export class WinterHeart extends AuraWeapon {
     });
     if (scene.boss?.active) strike(scene.boss, true);
 
-    // Visual: anel expansivo + estilhaços voando pra fora (mesmo estilo do Cristal)
+    // Visual: uma ONDA DE ESPINHOS DE GELO brota do chão de dentro para fora (desenhados,
+    // de pool — src/art/IceFX.js), com o anel branco correndo na frente e geada no ar
     if (hits > 0) scene.sound.play("sfx_ice_attack", { volume: 0.35, rate: 1.1 });
-    shockwave(scene, cx, cy, r, COLORS.ICE);
-    scene.fx?.ring(cx, cy + 6, 0xffffff, 12, r, 300, 0.62, 1);
+    scene.fx?.ring(cx, cy + 6, 0xffffff, 12, r, 300, 0.78, 1);
     scene.fx?.burst("frost", cx, cy, 14, null, 360, { min: 80, max: 220 });
-    const n = this.def.nova.shards;
-    for (let i = 0; i < n; i++) {
-      const ang = (i / n) * Math.PI * 2;
-      const shard = scene.add
-        .image(cx, cy, "px_shard")
-        .setScale(GAME.PIXEL_SCALE)
-        .setDepth(61)
-        .setRotation(ang);
-      scene.tweens.add({
-        targets: shard,
-        x: cx + Math.cos(ang) * r,
-        y: cy + Math.sin(ang) * r,
-        alpha: 0,
-        duration: 340,
-        ease: "Cubic.easeOut",
-        onComplete: () => shard.destroy(),
-      });
-    }
+    scene.fx?.iceNova(cx, cy + 10, r);
+    scene.fx?.light(cx, cy, r * 1.3, 0x9fdcff, 420, 1);
   }
 }
 
@@ -892,6 +910,7 @@ export class Phoenix extends Boomerang {
     this.baseKey = this.def.evolvesFrom;
   }
   _decorateProj(proj) {
+    proj.makeSerpent();
     proj.trailIntervalMs = this.def.trail.everyMs;
     proj.trailFn = (x, y) => this._firePatch(x, y);
   }
@@ -902,26 +921,9 @@ export class Phoenix extends Boomerang {
     const rSq = r * r;
     const dmg = t.dmgPerTick * this.dmgMult * (this.owner?.dmgMultFor?.(this.def.element) ?? this.owner?._blessingDmgMult ?? 1);
     const life = t.ticks * t.tickMs;
-    // Visual: mancha de chama que encolhe até sumir
-    // Visual: brasa no chão (luz aditiva) + chamas pixeladas subindo
-    const patch = scene.add
-      .image(x, y, "fx_glow")
-      .setScale((r * 2.2) / 64)
-      .setTint(COLORS.FIRE)
-      .setAlpha(0.45)
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setDepth(45);
-    scene.tweens.add({ targets: patch, alpha: 0, scale: patch.scale * 0.5, duration: life, onComplete: () => patch.destroy() });
+    // Visual: fogo baixo DESENHADO queimando no chão pelo tempo do dano (pool) + brasas
+    scene.fx?.groundFire(x, y, r, life);
     scene.fx?.burst("ember", x, y, 2, -Math.PI / 2, 70, { min: 20, max: 70 });
-    for (let i = 0; i < 2; i++) {
-      const f = scene.add
-        .image(x + (Math.random() - 0.5) * r, y + (Math.random() - 0.5) * r * 0.6, "px_puff")
-        .setScale(1.6)
-        .setTint([0xffe58f, 0xffb36b, 0xff7a3c][i])
-        .setBlendMode(Phaser.BlendModes.ADD)
-        .setDepth(y + 10002);
-      scene.tweens.add({ targets: f, y: f.y - 26, scale: 0.4, alpha: 0, delay: i * 90, duration: 520, onComplete: () => f.destroy() });
-    }
     // Dano em ticks (sem número flutuante — mesmo padrão do DoT do Vapor)
     const burn = () => {
       scene.enemyPool.forEachActive((e) => {
@@ -1124,28 +1126,14 @@ export class Flamethrower extends Weapon {
     return Math.abs(da) <= b.half;
   }
 
-  // Leque de "puffs" de fogo que voam pelo cone e se apagam
+  // O jato: chama DESENHADA quadro a quadro (src/art/FireFX.js), presa à mão e do
+  // tamanho exato do cone que acerta; algumas labaredas soltas dão volume nas bordas
   _flameFx(px, py, dir, R, half) {
     const scene = this.scene;
-    // Jato: bolas de fogo opacas que saem pequenas do bocal e crescem pelo cone
-    // (branco → amarelo → laranja → vinho). Velocidade casada com o alcance.
-    const jet = () => {
-      if (!this.owner) return;
-      const ox = this.owner.x + Math.cos(dir) * 12,
-        oy = this.owner.y - 8 + Math.sin(dir) * 12;
-      scene.fx?.burst("jet_fire", ox, oy, 4, dir, half * 2 * 57.3 * 0.7, { min: R * 1.1, max: R * 3.3 });
-    };
-    // Cinco levas em ~120 ms e rapidez bem variada: uma COLUNA contínua, não uma bola
-    for (let i = 0; i < 5; i++) scene.time.delayedCall(i * 30, jet);
-    const glow = scene.add
-      .image(px + Math.cos(dir) * R * 0.5, py + Math.sin(dir) * R * 0.5, "fx_glow")
-      .setScale(R / 22, R / 40)
-      .setRotation(dir)
-      .setTint(0xff7a3c)
-      .setAlpha(0.22)
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setDepth(60);
-    scene.tweens.add({ targets: glow, alpha: 0, duration: 380, onComplete: () => glow.destroy() });
+    scene.fx?.flameJet(this.owner, dir, R, half);
+    const ox = px + Math.cos(dir) * 12,
+      oy = py - 8 + Math.sin(dir) * 12;
+    for (let i = 0; i < 3; i++) scene.time.delayedCall(60 + i * 50, () => scene.fx?.burst("jet_fire", ox, oy, 1, dir, half * 2 * 57.3 * 0.9, { min: R * 1.4, max: R * 2.6 }));
   }
 }
 
