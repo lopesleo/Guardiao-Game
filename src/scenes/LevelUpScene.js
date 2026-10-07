@@ -24,6 +24,13 @@ export class LevelUpScene extends Phaser.Scene {
     this._banishMode = false;
     this._locked = false;
     this._extraBusy = false;
+    // O Phaser REAPROVEITA a cena a cada nível: os botões da visita anterior (já
+    // destruídos) não podem emprestar posição — o BANIR nascia no x antigo (layout de
+    // 2 botões) e encavalava no "MAIS UMA CARTA" quando ele aparecia
+    this.banishBtn = null;
+    this.extraBtn = null;
+    this._banishAd = false;
+    this._adBusy = false;
     this.isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     const W = vw(this),
       H = vh(this);
