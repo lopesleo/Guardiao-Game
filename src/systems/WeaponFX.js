@@ -11,7 +11,8 @@
 // Hit-stop: GameFeel congela também as partículas (setTimeScale).
 import { PAL } from "../art/Palette.js";
 import { Pix, bayer, rng } from "../art/PixelArt.js";
-import { registerFireFX, WHIRL_H, IGNITE_H } from "../art/FireFX.js";
+import { registerFireFX, WHIRL_H, IGNITE_H, JET_W, JET_X0, JET_LEN, JET_HALF } from "../art/FireFX.js";
+import { registerIceFX, SPIKE_H } from "../art/IceFX.js";
 
 const PX = 3; // escala dos quadros desenhados (= GAME.PIXEL_SCALE)
 
@@ -40,7 +41,8 @@ const DECALS = 22;
 
 // ---------------------------------------------------------------- texturas
 function textures(scene) {
-  registerFireFX(scene); // redemoinho, ignição e língua de fogo (Labareda)
+  registerFireFX(scene); // redemoinho, ignição e língua de fogo (Labareda), jato do Sopro
+  registerIceFX(scene); // espinho de gelo (Coração do Inverno)
   if (scene.textures.exists("fx_star")) return;
   // Estrela de 4 pontas (clarão de impacto): miolo 3×3 e braços afinando
   const st = new Pix(13, 13);
@@ -249,7 +251,8 @@ export class WeaponFX {
     this._frameImpacts = 0;
     this._ts = 1;
     // Fogo desenhado (Labareda): sprites animados reaproveitados, criados sob demanda
-    this.flames = { whirl: [], ignite: [], wisp: [] };
+    this.flames = { whirl: [], ignite: [], wisp: [], jet: [], icespike: [] };
+    this.attached = []; // sprites que seguem um dono (jato do Sopro preso à mão)
     this.whirls = []; // redemoinhos vivos (brasas em espiral, fumaça no fim)
     this.wisps = []; // línguas de fogo em voo
   }
@@ -300,6 +303,8 @@ export class WeaponFX {
     if (!s) return null;
     s.live = true;
     s.t = 0;
+    s.flick = null;
+    s.hold = false;
     s.dur = o.ms ?? 140;
     s.s0 = o.s0 ?? 1;
     s.s1 = o.s1 ?? s.s0;
@@ -327,18 +332,85 @@ export class WeaponFX {
     const R = Math.max(8, Math.round(r1 / 6) * 6);
     const key = `fx_ring_${R}`;
     if (!this.scene.textures.exists(key)) {
-      const S = R * 2 + 4,
+      // FAIXA em células de 3 px (a grade do jogo no fim da animação): linha cheia,
+      // aro mais escuro por fora (a tinta escurece o cinza) e brilho pontilhado por
+      // dentro. O anel antigo era um traço de 2 px que parecia vetor.
+      const S = R * 2 + 12,
         c = S / 2;
       const p = new Pix(S, S);
-      for (let a = 0; a < Math.PI * 2; a += 0.7 / R) {
-        const px = Math.round(c + Math.cos(a) * R),
-          py = Math.round(c + Math.sin(a) * R);
-        p.rect(px - 1, py - 1, 2, 2, PAL.white);
+      const cell = (x, y, col) => p.rect(Math.round(x / 3) * 3 - 1, Math.round(y / 3) * 3 - 1, 3, 3, col);
+      for (let a = 0; a < Math.PI * 2; a += 1.2 / R) {
+        const cx = Math.cos(a),
+          cy = Math.sin(a);
+        cell(c + cx * (R + 3), c + cy * (R + 3), 0x8a8a8a);
+      }
+      for (let a = 0; a < Math.PI * 2; a += 1.2 / R) {
+        const cx = Math.cos(a),
+          cy = Math.sin(a);
+        cell(c + cx * R, c + cy * R, PAL.white);
+        const ix = c + cx * (R - 3),
+          iy = c + cy * (R - 3);
+        if (bayer(Math.round(ix / 3), Math.round(iy / 3)) < 0.5) cell(ix, iy, 0xd0d0d0);
       }
       p.register(this.scene, key);
     }
     return this._sprite(key, x, y, { tint, s0: r0 / R, s1: r1 / R, ms, sy: flat, a0 });
   }
+  // Onda de trovão (Tambor): faixa de pixel com raios em zigue-zague correndo pelo
+  // anel e galhos curtos para fora; duas versões que se alternam (a onda "chia").
+  // cols = [núcleo, claro, meio, escuro] já na cor certa (sem tinta).
+  thunderRing(x, y, r0, r1, ms, cols, flat = 0.7) {
+    const R = Math.max(24, Math.round(r1 / 12) * 12);
+    const tag = cols.join("_");
+    const keys = [0, 1].map((v) => `fx_thunder_${R}_${tag}_${v}`);
+    keys.forEach((key, v) => {
+      if (this.scene.textures.exists(key)) return;
+      const S = R * 2 + 30,
+        c = S / 2;
+      const p = new Pix(S, S);
+      const rnd = rng(R * 7 + v * 131);
+      const cell = (x, y, col) => p.rect(Math.round(x / 3) * 3 - 1, Math.round(y / 3) * 3 - 1, 3, 3, col);
+      const step = 3 / R;
+      let off = 0,
+        off2 = 1;
+      // brilho pontilhado da faixa (por baixo dos fios)
+      for (let a = 0; a < Math.PI * 2; a += step)
+        for (let L = -2; L <= 2; L++) {
+          const x = c + Math.cos(a) * (R + L * 3),
+            y = c + Math.sin(a) * (R + L * 3);
+          if (bayer(Math.round(x / 3), Math.round(y / 3)) < 0.55 - Math.abs(L) * 0.18) cell(x, y, Math.abs(L) > 1 ? cols[3] : cols[2]);
+        }
+      for (let a = 0; a < Math.PI * 2; a += step) {
+        if (rnd() < 0.28) off = Math.max(-2, Math.min(2, off + (rnd() < 0.5 ? -1 : 1))); // zigue-zague
+        if (rnd() < 0.22) off2 = Math.max(-2, Math.min(2, off2 + (rnd() < 0.5 ? -1 : 1)));
+        const cx = Math.cos(a),
+          cy = Math.sin(a);
+        const rr = R + off * 3;
+        // dois fios de raio que se cruzam: um de núcleo branco, outro na cor
+        cell(c + cx * (R + off2 * 3), c + cy * (R + off2 * 3), cols[1]);
+        cell(c + cx * rr, c + cy * rr, rnd() < 0.35 ? cols[0] : cols[1]);
+        if (rnd() < 0.05) {
+          // galho curto para fora
+          let bx = c + cx * rr,
+            by = c + cy * rr;
+          const ga = a + (rnd() - 0.5) * 1.2;
+          for (let k = 0; k < 3 + Math.floor(rnd() * 3); k++) {
+            bx += Math.cos(ga + (rnd() - 0.5) * 1.4) * 3;
+            by += Math.sin(ga + (rnd() - 0.5) * 1.4) * 3;
+            cell(bx, by, k === 0 ? cols[0] : cols[1]);
+          }
+        }
+      }
+      p.register(this.scene, key);
+    });
+    const s = this._sprite(keys[0], x, y, { s0: r0 / R, s1: r1 / R, ms, sy: flat, a0: 1 });
+    if (s) {
+      s.flick = keys;
+      s.hold = true; // segura acesa até a metade e só então apaga
+    }
+    return s;
+  }
+
   // Fantasma (rastro de uma arma que gira/voa)
   ghost(tex, x, y, rot, scale, tint, ms = 150, a0 = 0.5, frame) {
     const s = this._sprite(tex, x, y, { tint, s0: scale, s1: scale * 0.9, ms, rot, a0, blend: Phaser.BlendModes.ADD, depth: D_FX - 20 });
@@ -573,6 +645,35 @@ export class WeaponFX {
     else go();
   }
 
+  // Jato do Sopro: chama desenhada presa à mão do dono, no ângulo `dir`, do tamanho do
+  // alcance R e aberta no meio-ângulo `half` do cone (o quadro é desenhado em JET_HALF)
+  flameJet(owner, dir, R, half) {
+    const s = this._flame("jet", 6, owner.x, owner.y, 0.5);
+    if (!s) return;
+    const k = R / JET_LEN;
+    s.setOrigin(JET_X0 / JET_W, 0.5)
+      .setRotation(dir)
+      .setScale(k, k * (Math.tan(half) / Math.tan(JET_HALF)));
+    this.attached.push({ s, owner, ox: Math.cos(dir) * 12, oy: -8 + Math.sin(dir) * 12 });
+  }
+
+  // Onda de espinhos de gelo: brotam do chão em anéis, de dentro para fora (o atraso
+  // segue a distância), e estilhaçam. Matéria: ficam no chão, ordenados por y.
+  iceNova(x, y, r) {
+    const rings = [[0.42, 6], [0.72, 10], [1, 16]];
+    for (const [f, n] of rings)
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * Math.PI * 2 + f * 1.7 + (Math.random() - 0.5) * 0.25;
+        const sx = x + Math.cos(a) * r * f,
+          sy = y + Math.sin(a) * r * f * 0.78; // chão em perspectiva
+        this.scene.time.delayedCall(f * 220 + Math.random() * 40, () => {
+          const s = this._flame("icespike", 40, sx, sy, (SPIKE_H - 3) / SPIKE_H);
+          if (s) s.setDepth(sy + 10000).setFlipX(Math.random() < 0.5);
+          if (i % 3 === 0) this.burst("frost", sx, sy - 12, 2, -Math.PI / 2, 80, { min: 20, max: 70 });
+        });
+      }
+  }
+
   // A chama que pega num inimigo (aos pés dele), com estalo de luz e brasas
   ignite(x, fy) {
     this._flame("ignite", 14, x, fy, (IGNITE_H - 2) / IGNITE_H);
@@ -582,6 +683,13 @@ export class WeaponFX {
   }
 
   _updateFire(d) {
+    for (let i = this.attached.length - 1; i >= 0; i--) {
+      const a = this.attached[i];
+      if (!a.s.visible || !a.owner.active) {
+        a.s.setVisible(false);
+        this.attached.splice(i, 1);
+      } else a.s.setPosition(a.owner.x + a.ox, a.owner.y + a.oy);
+    }
     for (let i = this.whirls.length - 1; i >= 0; i--) {
       const w = this.whirls[i];
       w.t += d;
@@ -636,9 +744,12 @@ export class WeaponFX {
       const k = Math.min(1, s.t / s.dur);
       const e = s.ease === "out" ? 1 - (1 - k) * (1 - k) : k;
       const sc = s.s0 + (s.s1 - s.s0) * e;
-      s.img.setScale(sc, sc * s.sy).setAlpha(s.a0 * (1 - k * k));
+      const fade = s.hold ? Math.max(0, (k - 0.55) / 0.45) : k;
+      s.img.setScale(sc, sc * s.sy).setAlpha(s.a0 * (1 - fade * fade));
+      if (s.flick) s.img.setTexture(s.flick[Math.floor(s.t / 55) % s.flick.length]);
       if (k >= 1) {
         s.live = false;
+        s.flick = null;
         s.img.setVisible(false);
       }
     }

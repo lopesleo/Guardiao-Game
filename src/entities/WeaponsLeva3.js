@@ -6,6 +6,7 @@
 // Registro: registerWeapon(chave, Classe) no fim do arquivo.
 import { COLORS, ELEMENT } from "../config.js";
 import { PAL } from "../art/Palette.js";
+import { bayer } from "../art/PixelArt.js";
 import { Weapon, registerWeapon } from "./Weapons.js";
 
 const D_WFX = 48545; // acima do mapa de luz (o golpe é "aceso"), abaixo dos avisos de chefe
@@ -118,11 +119,30 @@ export class Lash extends LevaWeapon {
       onUpdate: () => {
         g.clear();
         const a = a0 + (a1 - a0) * k.t;
-        // rastro do arco já varrido (some do começo para o fim)
-        g.fillStyle(this._trailColor ?? PAL.org2, 0.26);
-        g.slice(px, py, R, Math.min(a0, a), Math.max(a0, a), false).fillPath();
-        g.fillStyle(this._trailColor ?? PAL.org2, 0.5);
-        g.slice(px, py, R, Math.min(a, a - side * 0.25), Math.max(a, a - side * 0.25), false).fillPath();
+        // rastro do arco já varrido, em PIXEL: um crescente com a borda de fora clara, o
+        // miolo na cor do golpe e o lado mais velho se desfazendo em pontilhado (nada de
+        // fatia translúcida — era a única forma vetorial do jogo)
+        const sweep = a - a0;
+        const steps = Math.ceil((Math.abs(sweep) * R) / CELL);
+        const trail = this._trailColor ?? PAL.org2,
+          dark = this._darkColor ?? PAL.red1;
+        // espessura em CAMADAS de célula (5 na ponta → 2 no fim velho): mantém o desenho
+        // abaixo de ~500 retângulos — Graphics com milhares deles some no Phaser 4
+        for (let i = 0; i <= steps; i++) {
+          const t = i / Math.max(1, steps); // 0 = começo do arco (velho) … 1 = ponta
+          const ang = a0 + sweep * t;
+          const age = (1 - t) * (0.55 + 0.45 * k.t);
+          const layers = Math.max(2, Math.round(5 - age * 3));
+          for (let L = 0; L < layers; L++) {
+            const rr = R + CELL - L * CELL;
+            const edge = L / layers; // 0 = fora … 1 = dentro
+            const x = snap(px + Math.cos(ang) * rr),
+              y = snap(py + Math.sin(ang) * rr);
+            if (bayer(x / CELL, y / CELL) < age * 1.1 + edge * 0.45 - 0.25) continue;
+            g.fillStyle(L === 0 ? (t > 0.8 ? 0xffffff : tipC) : edge < 0.6 ? trail : dark, 1);
+            g.fillRect(x - 1, y - 1, CELL, CELL);
+          }
+        }
         // o cipó: curva cheia da mão até a ponta (2 células de grossura perto da mão),
         // atrasando atrás do movimento como um chicote de verdade
         const N = Math.round(R / 3.2);
@@ -171,6 +191,7 @@ export class Lacada extends Lash {
     this._tipColor = PAL.ice3;
     this._leafColor = PAL.ice2;
     this._trailColor = PAL.ice2;
+    this._darkColor = PAL.ice1;
     this._tipBurst = "frost";
   }
   _onLashHit(e) {
@@ -694,8 +715,9 @@ export class Drum extends LevaWeapon {
     const scene = this.scene,
       o = this.owner;
     this.rings.push({ t0: scene.time.now, hit: new Set() });
-    scene.fx?.ring(o.x, o.y + 4, this._tint, 10, this.radius, this.def.growMs, RING_FLAT, 1);
-    scene.fx?.ring(o.x, o.y + 4, 0xffffff, 6, this.radius * 0.8, this.def.growMs * 0.8, RING_FLAT, 0.7);
+    // a batida: onda de trovão desenhada (raios correndo pelo anel) + anel branco atrás
+    scene.fx?.thunderRing(o.x, o.y + 4, 10, this.radius, this.def.growMs + 120, this._ringCols ?? [PAL.white, PAL.pur3, PAL.pur2, PAL.pur1], RING_FLAT);
+    scene.fx?.ring(o.x, o.y + 4, 0xffffff, 6, this.radius * 0.78, this.def.growMs * 0.8, RING_FLAT, 0.6);
     scene.fx?.burst("zap", o.x, o.y, 8, null, 360, { min: 80, max: 200 });
     scene.fx?.light(o.x, o.y, this.radius * 1.6, this._tint, 260, 1);
     scene.cameras.main.shake(70, 0.002);
@@ -735,6 +757,7 @@ export class BrasaTrovao extends Drum {
     super(scene, "BRASA_TROVAO");
     this.baseKey = this.def.evolvesFrom;
     this._tint = COLORS.FIRE;
+    this._ringCols = [PAL.white, PAL.yel3, PAL.org2, PAL.red1]; // a onda é raio E brasa
   }
 }
 
