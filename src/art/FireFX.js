@@ -213,12 +213,76 @@ function jet(f) {
   return p;
 }
 
+// Fogo baixo no chão (18×16, 8 quadros em laço sem emenda: o ruído sobe 2 px por quadro
+// num período de 16) — rastro do Boitatá e do Inferno
+export const GFIRE_W = 18,
+  GFIRE_H = 16;
+function groundFire(f) {
+  const p = new Pix(GFIRE_W, GFIRE_H);
+  const n1 = tileNoise(GFIRE_W + 2, 16, 4, 301),
+    n2 = tileNoise(GFIRE_W + 2, 16, 2, 307);
+  const G = GFIRE_H - 2;
+  for (let y = 0; y < GFIRE_H; y++)
+    for (let x = 0; x < GFIRE_W; x++) {
+      const u = (x + 0.5 - GFIRE_W / 2) / (GFIRE_W / 2); // −1 … 1
+      const h = (G - y) / 12; // 0 no chão … 1 no alto
+      if (h < -0.1) continue;
+      const n = 0.6 * n1(x, (y + f * 2) & 15) + 0.4 * n2(x, (y + f * 2) & 15);
+      // três línguas (cosseno) de alturas diferentes
+      const tongue = 0.42 + 0.58 * Math.abs(Math.cos(u * 4.2 + Math.sin(f * 0.785) * 0.35)) * (1 - Math.abs(u) * 0.35);
+      const top = tongue * (1 - u * u * 0.6) + (n - 0.5) * 0.45;
+      if (h > top) continue;
+      const I = (1 - Math.abs(u)) * 1.1 + (n - 0.5) * 0.8 - h * 0.75 + (h < 0.15 ? 0.25 : 0);
+      const c = fireCol(I, x, y);
+      if (c != null) p.set(x, y, c);
+    }
+  return p;
+}
+
+// BOITATÁ — a cobra de fogo da lenda: cabeça (15×11, 2 quadros) virada para a DIREITA,
+// olho de fogo e crista de chamas; gomos do corpo (9×9, 3 quadros) que tremulam
+function boitataHead(f) {
+  // desenhada à mão (mapa): crista de chamas, testa clara, olho de fogo, mandíbula escura
+  const crest = f ? ["..y...y...y.....", "..o..oyo..o....."] : ["...y...y...y....", "...o..oyo..o...."];
+  return Pix.fromMap(
+    [
+      ...crest,
+      "..rooorooorr....",
+      ".rOOYYYYYOOrr...",
+      "rOYYWWYYYYYOOr..",
+      "rOYWWYYYYwkYOOr.",
+      "rOYYYYYYYYYYYYOr",
+      "rOOYYYYYYYYYYOOr",
+      ".rOOOOOOOOOOrrr.",
+      "..rRRRRRRRRr....",
+      "...rrrrrrr......",
+    ],
+    { y: PAL.yel3, o: PAL.org2, r: PAL.red1, O: PAL.org2, Y: PAL.yel2, W: PAL.yel3, w: PAL.white, k: PAL.ink, R: PAL.red0 },
+  ).outline(PAL.red0);
+}
+function boitataSeg(f) {
+  const p = new Pix(9, 9);
+  const n = tileNoise(16, 16, 3, 601);
+  for (let y = 0; y < 9; y++)
+    for (let x = 0; x < 9; x++) {
+      const d = Math.hypot(x + 0.5 - 4.5, y + 0.5 - 4.5) / 4.3;
+      if (d > 1) continue;
+      const I = (1 - d) * 1.3 + (n((x + f * 5) & 15, (y + f * 3) & 15) - 0.5) * 0.8;
+      const c = fireCol(I, x, y);
+      if (c != null) p.set(x, y, c);
+    }
+  return p;
+}
+
 export function registerFireFX(scene) {
   if (scene.textures.exists("fx_whirl")) return;
   registerStrip(scene, "fx_whirl", Array.from({ length: W_GROW.length }, (_, f) => whirl(f)));
   registerStrip(scene, "fx_ignite", Array.from({ length: I_GROW.length }, (_, f) => ignite(f)));
   registerStrip(scene, "fx_wisp", [0, 1, 2, 3].map((f) => wisp(f)));
   registerStrip(scene, "fx_jet", Array.from({ length: J_REACH.length }, (_, f) => jet(f)));
+  registerStrip(scene, "fx_groundfire", Array.from({ length: 8 }, (_, f) => groundFire(f)));
+  registerStrip(scene, "px_boitata_head", [0, 1].map((f) => boitataHead(f)));
+  registerStrip(scene, "px_boitata_seg", [0, 1, 2].map((f) => boitataSeg(f)));
   const mk = (key, tex, rate, repeat = 0) => {
     if (!scene.anims.exists(key)) scene.anims.create({ key, frames: scene.anims.generateFrameNumbers(tex, {}), frameRate: rate, repeat });
   };
@@ -226,4 +290,7 @@ export function registerFireFX(scene) {
   mk("fx_ignite", "fx_ignite", 16);
   mk("fx_wisp", "fx_wisp", 14, -1);
   mk("fx_jet", "fx_jet", 18);
+  mk("fx_groundfire", "fx_groundfire", 12, -1);
+  mk("px_boitata_head", "px_boitata_head", 8, -1);
+  mk("px_boitata_seg", "px_boitata_seg", 10, -1);
 }

@@ -98,6 +98,7 @@ export class Projectile extends Phaser.GameObjects.Container {
     this.setActive(false).setVisible(false);
     this.body.enable = false;
     this.body.setVelocity(0, 0);
+    for (const g of this.segs) g.setVisible(false);
   }
 
   update(time) {
@@ -121,6 +122,7 @@ export class Projectile extends Phaser.GameObjects.Container {
 // BoomerangProj — visual de "L" girando, fase out + retorno até tocar o player
 // ============================================================================
 
+const SERPENT_SEGS = 9; // gomos do corpo do Boitatá
 export class BoomerangProj extends Phaser.GameObjects.Container {
   constructor(scene) {
     super(scene, -9999, -9999);
@@ -153,6 +155,30 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     this.trailFn = null;
     this.trailIntervalMs = 150;
     this._nextTrailAt = 0;
+    // Boitatá: a vara vira a COBRA DE FOGO — cabeça desenhada + gomos de chama que
+    // seguem o caminho exato (histórico de posições). Criados na 1ª vez, depois reusados.
+    this.serpent = false;
+    this.head = null;
+    this.segs = [];
+    this.path = [];
+  }
+
+  // Liga a forma de serpente (chamado pela evolução a cada disparo)
+  makeSerpent() {
+    const scene = this.scene;
+    if (!this.head) {
+      this.head = scene.add.sprite(0, 0, "px_boitata_head", 0).setScale(GAME.PIXEL_SCALE).play("px_boitata_head");
+      this.add(this.head);
+      for (let i = 0; i < SERPENT_SEGS; i++) {
+        const k = 1 - (i / SERPENT_SEGS) * 0.6;
+        this.segs.push(scene.add.sprite(-9999, -9999, "px_boitata_seg", i % 3).setScale(GAME.PIXEL_SCALE * k).play({ key: "px_boitata_seg", startFrame: i % 3 }).setVisible(false));
+      }
+    }
+    this.serpent = true;
+    this.setDepth(48545); // a cobra é fogo: acima do mapa de luz (brilha à noite)
+    this.spr.setVisible(false);
+    this.head.setVisible(true);
+    this.path.length = 0;
   }
 
   fire(x, y, dirX, dirY, dmg, crit = false) {
@@ -164,6 +190,13 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     this.phase = "out";
     this.trailFn = null; // pooled — reseta o rastro a cada disparo
     this._nextTrailAt = 0;
+    // pooled — volta a ser vara (a evolução religa a serpente logo depois)
+    this.serpent = false;
+    this.setDepth(0);
+    this.spr.setVisible(true);
+    this.head?.setVisible(false);
+    for (const g of this.segs) g.setVisible(false);
+    this.path.length = 0;
     // Alcance escala com passiva de Area do player
     const areaMult = this.scene.player?.areaMult ?? 1;
     const sp = this.outSpeed * Math.sqrt(areaMult);
@@ -188,11 +221,12 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
 
   update(time, dt) {
     if (!this.active) return;
-    // Rotação visual
-    this.rotation += dt * 0.03;
-    // Rastro: fantasmas do giro (lê a velocidade) + brasas
     const fx = this.scene.fx;
-    if (fx && time >= (this._ghostAt ?? 0)) {
+    // Rotação visual (a vara gira; a serpente olha para onde vai)
+    if (this.serpent) this._serpentUpdate();
+    else this.rotation += dt * 0.03;
+    // Rastro: fantasmas do giro (lê a velocidade) + brasas
+    if (fx && !this.serpent && time >= (this._ghostAt ?? 0)) {
       this._ghostAt = time + 45;
       fx.ghost("px_boomer", this.x, this.y, this.rotation, GAME.PIXEL_SCALE, 0xff9a4a, 170, 0.42);
     }
@@ -240,6 +274,32 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     }
 
     if (time >= this.deadline) this.kill();
+  }
+
+  // Cabeça vira para a velocidade (espelha indo para a esquerda, para não ficar de
+  // cabeça para baixo) e cada gomo ocupa um ponto do caminho a ~9 px do anterior
+  _serpentUpdate() {
+    const vx = this.body.velocity.x,
+      vy = this.body.velocity.y;
+    if (vx || vy) {
+      const left = vx < 0;
+      this.rotation = 0;
+      this.head.setFlipX(left).setRotation(left ? Math.atan2(vy, vx) - Math.PI : Math.atan2(vy, vx));
+    }
+    const last = this.path[0];
+    if (!last || Math.hypot(this.x - last.x, this.y - last.y) >= 3) {
+      this.path.unshift({ x: this.x, y: this.y });
+      if (this.path.length > SERPENT_SEGS * 3 + 4) this.path.length = SERPENT_SEGS * 3 + 4;
+    }
+    const depth = this.depth;
+    const t = this.scene.time.now;
+    this.segs.forEach((g, i) => {
+      const p = this.path[(i + 1) * 3];
+      if (!p) return g.setVisible(false);
+      g.setVisible(true)
+        .setPosition(p.x, p.y + Math.sin(t / 90 + i) * 2)
+        .setDepth(depth - 0.1 - i * 0.01);
+    });
   }
 }
 
@@ -850,6 +910,7 @@ export class Phoenix extends Boomerang {
     this.baseKey = this.def.evolvesFrom;
   }
   _decorateProj(proj) {
+    proj.makeSerpent();
     proj.trailIntervalMs = this.def.trail.everyMs;
     proj.trailFn = (x, y) => this._firePatch(x, y);
   }
@@ -860,26 +921,9 @@ export class Phoenix extends Boomerang {
     const rSq = r * r;
     const dmg = t.dmgPerTick * this.dmgMult * (this.owner?.dmgMultFor?.(this.def.element) ?? this.owner?._blessingDmgMult ?? 1);
     const life = t.ticks * t.tickMs;
-    // Visual: mancha de chama que encolhe até sumir
-    // Visual: brasa no chão (luz aditiva) + chamas pixeladas subindo
-    const patch = scene.add
-      .image(x, y, "fx_glow")
-      .setScale((r * 2.2) / 64)
-      .setTint(COLORS.FIRE)
-      .setAlpha(0.45)
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setDepth(45);
-    scene.tweens.add({ targets: patch, alpha: 0, scale: patch.scale * 0.5, duration: life, onComplete: () => patch.destroy() });
+    // Visual: fogo baixo DESENHADO queimando no chão pelo tempo do dano (pool) + brasas
+    scene.fx?.groundFire(x, y, r, life);
     scene.fx?.burst("ember", x, y, 2, -Math.PI / 2, 70, { min: 20, max: 70 });
-    for (let i = 0; i < 2; i++) {
-      const f = scene.add
-        .image(x + (Math.random() - 0.5) * r, y + (Math.random() - 0.5) * r * 0.6, "px_puff")
-        .setScale(1.6)
-        .setTint([0xffe58f, 0xffb36b, 0xff7a3c][i])
-        .setBlendMode(Phaser.BlendModes.ADD)
-        .setDepth(y + 10002);
-      scene.tweens.add({ targets: f, y: f.y - 26, scale: 0.4, alpha: 0, delay: i * 90, duration: 520, onComplete: () => f.destroy() });
-    }
     // Dano em ticks (sem número flutuante — mesmo padrão do DoT do Vapor)
     const burn = () => {
       scene.enemyPool.forEachActive((e) => {

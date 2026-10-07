@@ -11,7 +11,7 @@
 // Hit-stop: GameFeel congela também as partículas (setTimeScale).
 import { PAL } from "../art/Palette.js";
 import { Pix, bayer, rng } from "../art/PixelArt.js";
-import { registerFireFX, WHIRL_H, IGNITE_H, JET_W, JET_X0, JET_LEN, JET_HALF } from "../art/FireFX.js";
+import { registerFireFX, WHIRL_H, IGNITE_H, JET_W, JET_X0, JET_LEN, JET_HALF, GFIRE_H } from "../art/FireFX.js";
 import { registerIceFX, SPIKE_H } from "../art/IceFX.js";
 
 const PX = 3; // escala dos quadros desenhados (= GAME.PIXEL_SCALE)
@@ -251,7 +251,7 @@ export class WeaponFX {
     this._frameImpacts = 0;
     this._ts = 1;
     // Fogo desenhado (Labareda): sprites animados reaproveitados, criados sob demanda
-    this.flames = { whirl: [], ignite: [], wisp: [], jet: [], icespike: [] };
+    this.flames = { whirl: [], ignite: [], wisp: [], jet: [], icespike: [], groundfire: [] };
     this.attached = []; // sprites que seguem um dono (jato do Sopro preso à mão)
     this.whirls = []; // redemoinhos vivos (brasas em espiral, fumaça no fim)
     this.wisps = []; // línguas de fogo em voo
@@ -672,6 +672,29 @@ export class WeaponFX {
           if (i % 3 === 0) this.burst("frost", sx, sy - 12, 2, -Math.PI / 2, 80, { min: 20, max: 70 });
         });
       }
+  }
+
+  // Fogo baixo queimando no chão por `life` ms (rastro do Boitatá/Inferno): cresce,
+  // tremula em laço e encolhe no fim. Chão queimado por baixo. Pool de 24.
+  groundFire(x, y, r, life) {
+    const s = this._flame("groundfire", 24, x + (Math.random() - 0.5) * r * 0.4, y + 6, (GFIRE_H - 2) / GFIRE_H);
+    this.decal("fx_scorch", x, y + 2, r * 0.7, life + 900, 0.4);
+    if (!s) return;
+    const k = PX * Math.min(1.4, Math.max(0.7, r / 40));
+    this.scene.tweens.killTweensOf(s);
+    s.setDepth(y + 10006).setScale(k * 0.3).setFlipX(Math.random() < 0.5);
+    this.scene.tweens.add({ targets: s, scale: k, duration: 140, ease: "Back.easeOut" });
+    this.scene.tweens.add({
+      targets: s,
+      scale: k * 0.2,
+      delay: Math.max(0, life - 220),
+      duration: 220,
+      ease: "Quad.easeIn",
+      onComplete: () => {
+        s.stop();
+        s.setVisible(false);
+      },
+    });
   }
 
   // A chama que pega num inimigo (aos pés dele), com estalo de luz e brasas
