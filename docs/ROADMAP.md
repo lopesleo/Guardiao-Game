@@ -191,7 +191,7 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   crescente em células no lugar das fatias vetoriais; **Aura/Coração do Inverno** chão gelado + borda de
   cristais e a nova do Coração vira **onda de espinhos de gelo**; **Tambor/Trovão de Brasa** onda de
   trovão em zigue-zague; **Boitatá** vira a cobra de fogo (cabeça + 9 gomos) com **fogo no chão**
-  desenhado (também no Inferno); **Redemoinho** tornado pintado; **Folhas** folha que rodopia; reações
+  desenhado (também no Inferno); **Redemoinho** tornado pintado; **Folhas** folha que rodopia; **Vara Encantada** e **Boleadeira** maiores, com giro desenhado (8 quadros, sem girar o sprite); reações
   **Vapor** (nuvem que borbulha, translúcida: 55% e 28% com o herói dentro, para não tapar a visão), **Cristal** (espinhos brotam), **Geada** (lufada de neve), **Temporal**
   (marca no chão), **Sobrecarga** (onda amarela); **Despertar** com aura de fogo espiritual e explosão de
   ativação; **dash** com fantasmas do pool. Anel genérico vira faixa de 3 px. Teste de carga (6 evoluções,
