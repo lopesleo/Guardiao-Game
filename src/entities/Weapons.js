@@ -98,7 +98,6 @@ export class Projectile extends Phaser.GameObjects.Container {
     this.setActive(false).setVisible(false);
     this.body.enable = false;
     this.body.setVelocity(0, 0);
-    for (const g of this.segs) g.setVisible(false);
   }
 
   update(time) {
@@ -209,6 +208,7 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     this.setActive(false).setVisible(false);
     this.body.enable = false;
     this.body.setVelocity(0, 0);
+    for (const g of this.segs) g.setVisible(false); // corpo do Boitatá some junto
   }
 
   // Re-hit no mesmo inimigo só depois de 250ms (passada de ida + volta)

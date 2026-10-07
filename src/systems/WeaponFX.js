@@ -317,6 +317,7 @@ export class WeaponFX {
       .setTexture(tex)
       .setPosition(x, y)
       .setRotation(o.rot ?? 0)
+      .setFlipX(false) // o fantasma do dash espelha; o próximo uso do pool não herda
       .setTint(o.tint ?? 0xffffff)
       .setBlendMode(o.blend ?? Phaser.BlendModes.NORMAL)
       .setDepth(o.depth ?? D_FX + 10)
