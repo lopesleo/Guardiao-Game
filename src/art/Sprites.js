@@ -247,6 +247,32 @@ function shard() {
     b: PAL.ice3,
   });
 }
+// Folha que RODOPIA (9×9, 4 quadros): frente, inclinada, de lado (só a nervura) e o verso
+// mais escuro — o giro em 3D é desenhado, não é escala. Folhas ao Vento / Ventania.
+function leafTumble(f) {
+  const p = new Pix(9, 9);
+  const w = [1, 0.55, 0.12, 0.55][f]; // largura aparente da folha
+  const back = f === 3; // verso: tons mais escuros
+  const L = back ? [PAL.g3, PAL.g4, PAL.g2] : [PAL.g6, PAL.g5, PAL.g3];
+  // folha em diagonal (do cabinho, embaixo à esquerda, até a ponta, em cima à direita)
+  for (let i = 0; i <= 10; i++) {
+    const t = i / 10;
+    const cx = 1.5 + t * 6,
+      cy = 7.5 - t * 6;
+    const half = Math.sin(t * Math.PI) * 2.6 * w;
+    for (let k = -3; k <= 3; k++) {
+      const off = k * 0.5;
+      if (Math.abs(off) > half + 0.2) continue;
+      const x = Math.round(cx - off * 0.7),
+        y = Math.round(cy - off * 0.7);
+      p.set(x, y, Math.abs(off) < 0.3 ? L[2] : off < 0 ? L[0] : L[1]);
+    }
+  }
+  p.set(0, 8, PAL.n3); // cabinho
+  p.set(1, 8, PAL.n3);
+  return p.outline(PAL.g2);
+}
+
 function leaf() {
   return Pix.fromMap([".gg", "gGk"], { g: PAL.g5, G: PAL.g3, k: PAL.g2 });
 }
@@ -443,6 +469,7 @@ export function registerSprites(scene) {
   registerStrip(scene, "px_whirl", whirlFrames([PAL.wnd3, PAL.wnd2, PAL.wnd1])); // vento (era roxo/raio)
   registerStrip(scene, "px_whirl_fire", whirlFrames([PAL.yel3, PAL.org2, PAL.red1], PAL.yel3, PAL.n2));
   leaf().register(scene, "px_leaf");
+  registerStrip(scene, "px_leaf_tumble", [0, 1, 2, 3].map((f) => leafTumble(f)));
   registerGlow(scene);
 
   const anim = (key, tex, rate, frames) => {
@@ -460,5 +487,6 @@ export function registerSprites(scene) {
   anim("coin_spin", "px_coin", 8, [0, 1, 2, 3]);
   anim("awaken_spark", "px_awaken", 4, [0, 1]);
   anim("whirl_spin", "px_whirl", 16, [0, 1, 2, 3, 4, 5, 6, 7]);
+  anim("leaf_tumble", "px_leaf_tumble", 10, [0, 1, 2, 3]);
   anim("whirl_fire_spin", "px_whirl_fire", 20, [0, 1, 2, 3, 4, 5, 6, 7]);
 }
