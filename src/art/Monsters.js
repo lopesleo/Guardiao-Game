@@ -91,13 +91,10 @@ function wolf(f, ramp = FUR, eye = ROT.glow, crack = ROT.hot) {
   p.set(26, 6 + hb, PAL.ink); // nariz
   p.set(24, 8 + hb, PAL.white); // presa
   px(p, [[25, 8 + hb], [23, 8 + hb]], c0); // mandíbula
-  // Orelhas: em pé, deitadas no salto
-  const flat = k === 1 || k === 2;
-  if (flat) px(p, [[17, 2], [18, 2], [18, 3], [19, 3], [19, 2], [20, 2], [21, 2]].map(([x, y]) => [x, y + hb]), c3);
-  else {
-    px(p, [[18, 1], [18, 2], [19, 2], [18, 3], [19, 3]].map(([x, y]) => [x, y + hb]), c2);
-    px(p, [[20, 0], [20, 1], [21, 1], [20, 2], [21, 2]].map(([x, y]) => [x, y + hb]), c3);
-  }
+  // Orelhas em pé; no salto a ponta deita 1 px para trás (deitar inteira deformava a cabeça)
+  const back = k === 1 || k === 2 ? 1 : 0;
+  px(p, [[18 - back, 1], [18, 2], [19, 2], [18, 3], [19, 3]].map(([x, y]) => [x, y + hb]), c2);
+  px(p, [[20 - back, 0], [20, 1], [21, 1], [20, 2], [21, 2]].map(([x, y]) => [x, y + hb]), c3);
   // Olho
   p.set(22, 4 + hb, eye);
   // Espinha de cristais corrompidos + rachaduras
@@ -127,7 +124,7 @@ function crow(f) {
   // Asa de trás
   if (wing === "up") px(p, sh([[8, 2], [9, 2], [9, 3], [10, 3], [10, 4], [11, 4], [11, 5], [8, 3], [8, 4], [9, 4], [9, 5], [10, 5]]), c0);
   else if (wing === "down") px(p, sh([[8, 11], [9, 11], [9, 12], [10, 12], [10, 13], [8, 12], [9, 13], [11, 11], [11, 12]]), c0);
-  else px(p, sh([[6, 5], [7, 5], [8, 5], [9, 5], [10, 6], [7, 6], [8, 6], [9, 6], [5, 5], [4, 4]]), c0);
+  else px(p, sh([[4, 2], [5, 2], [6, 2], [7, 2], [8, 3], [9, 3], [10, 3], [6, 3], [7, 3], [3, 2]]), c0); // aberta: acima das costas
   // Corpo, cauda (abana), cabeça
   ell(p, 9, 8 + dy, 5.5, 3.4, FEATHER);
   const tail = wing === "down" ? 1 : wing === "up" ? -1 : 0;
@@ -140,8 +137,8 @@ function crow(f) {
   // Asa da frente
   if (wing === "up") px(p, sh([[6, 1], [7, 1], [7, 2], [8, 5], [6, 2], [6, 3], [7, 3], [7, 4], [8, 6], [5, 2], [6, 4], [7, 5], [9, 6]]), c2);
   else if (wing === "down") px(p, sh([[6, 10], [7, 10], [7, 11], [7, 12], [8, 13], [6, 11], [6, 12], [5, 11], [8, 14], [9, 14]]), c2);
-  else px(p, sh([[2, 6], [3, 6], [4, 6], [5, 6], [6, 6], [7, 7], [8, 7], [3, 7], [4, 7], [5, 7], [6, 7], [9, 7]]), c2);
-  const tip = wing === "up" ? [5, 1] : wing === "down" ? [5, 12] : [1, 6];
+  else px(p, sh([[1, 4], [2, 4], [3, 3], [4, 3], [5, 3], [6, 3], [7, 3], [8, 4], [9, 4], [3, 4], [4, 4], [5, 4], [6, 4], [7, 4], [10, 5]]), c2);
+  const tip = wing === "up" ? [5, 1] : wing === "down" ? [5, 12] : [0, 4];
   p.set(tip[0], tip[1] + dy, c3);
   // Garras recolhidas
   px(p, sh([[8, 12], [10, 12]]), PAL.yel1);
@@ -583,13 +580,15 @@ function mulaKick() {
 // braços longos com garras e olhos ocos com o brilho da Podridão
 // ---------------------------------------------------------------------------
 const SECO = [0x241e1a, 0x3e342c, 0x5a4c3e, 0x7a6a56];
-function corpoSeco(f, cast = false) {
+function corpoSeco(f, cast = false, step = 0) {
   const p = new Pix(26, 32);
   const sw = cast ? 0 : f % 2;
+  // step: cambaleio — uma perna adiante, o braço do outro lado balança (−1 / 0 / 1)
   // Pernas finas
-  for (const x0 of [10, 15]) for (let y = 22; y <= 30; y++) {
-    p.set(x0 + (y > 27 && sw ? 1 : 0), y, SECO[1]);
-    p.set(x0 + 1 + (y > 27 && sw ? 1 : 0), y, SECO[0]);
+  for (const [x0, d] of [[10, -step], [15, step]]) for (let y = 22; y <= 30; y++) {
+    const o = (y > 27 && sw ? 1 : 0) + (y > 25 ? d : 0);
+    p.set(x0 + o, y, SECO[1]);
+    p.set(x0 + 1 + o, y, SECO[0]);
   }
   // Trapos pendurados na cintura
   for (let x = 8; x <= 18; x++) for (let y = 19; y <= 23 + ((x * 3) % 3); y++) p.set(x, y, RAG[(x + y) % 3 === 0 ? 2 : 1]);
@@ -597,13 +596,13 @@ function corpoSeco(f, cast = false) {
   ell(p, 13, 13 + sw * 0.5, 5.5, 7, SECO, 0.2);
   for (let y = 10; y <= 16; y += 2) for (let x = 10; x <= 15; x++) if (x !== 12) p.set(x, y + sw, SECO[0]);
   // Braços compridos até os joelhos, garras
-  const arm = (x0, dir) => {
+  const arm = (x0, dir, swing = 0) => {
     for (let y = 9; y <= 25 - sw; y++) {
-      const x = x0 + dir * Math.round((y - 9) * 0.18);
+      const x = x0 + dir * Math.round((y - 9) * 0.18) + Math.round(((y - 9) / 16) * swing * 2);
       p.set(x, y, SECO[2]);
       p.set(x + dir, y, SECO[1]);
     }
-    const hx = x0 + dir * 3,
+    const hx = x0 + dir * 3 + swing * 2,
       hy = 26 - sw;
     px(p, [[hx, hy], [hx + dir, hy + 1], [hx - dir, hy + 1]], PAL.s4);
   };
@@ -622,8 +621,8 @@ function corpoSeco(f, cast = false) {
     armUp(7, -1);
     armUp(19, 1);
   } else {
-    arm(7, -1);
-    arm(19, 1);
+    arm(7, -1, step);
+    arm(19, 1, -step);
   }
   // Cabeça caída para a frente, cabelo ralo, olhos ocos brilhando
   ell(p, 15, 5 + sw * 0.5, 4, 4, SECO.slice(1), 0.2);
@@ -649,7 +648,7 @@ function corpoSeco(f, cast = false) {
 const MAPI_FUR = [0x1e120c, 0x352014, 0x52321f, 0x74492c, 0x93603a];
 // pose: null | "maw" (Bocarra: boca enorme, braços abertos) | "scream" (Grito/Olhar:
 // braços erguidos, olho em brasa)
-function mapinguari(f, fury, freed = false, pose = null) {
+function mapinguari(f, fury, freed = false, pose = null, swing = [0, 0]) {
   const p = new Pix(50, 56);
   const sw = pose ? 0 : f === 1 ? 1 : 0; // respiração: ombros sobem 1px
   const crack = fury ? [PAL.org1, PAL.org2, PAL.yel3] : [ROT.mid, ROT.hot, ROT.glow];
@@ -701,8 +700,8 @@ function mapinguari(f, fury, freed = false, pose = null) {
     arm(6, -1, 5); // abertos e erguidos: "venha"
     arm(44, 1, 5);
   } else {
-    arm(8, -1, sw);
-    arm(42, 1, 1 - sw);
+    arm(8, -1, sw + swing[0]);
+    arm(42, 1, 1 - sw + swing[1]);
   }
   // Cabeça afundada nos ombros, com UM olho grande na testa
   ell(p, 25, 11 - sw, 7.5, 6.5, MAPI_FUR.slice(1), 0.35);
@@ -796,7 +795,8 @@ export function registerMonsters(scene) {
   strip("mon_goblin", four.map((f) => goblin(f)));
   strip("mon_mage", four.map((f) => witch(f)));
   strip("mon_brute", four.map((f) => troll(f)));
-  strip("mon_elder", [corpoSeco(0), corpoSeco(1), corpoSeco(0, true)]); // minichefe: Corpo-Seco (2 = braços erguidos)
+  // minichefe: Corpo-Seco (2 = braços erguidos; 3-4 = cambaleio, no FIM para não mudar o 2)
+  strip("mon_elder", [corpoSeco(0), corpoSeco(1), corpoSeco(0, true), corpoSeco(0, false, 1), corpoSeco(1, false, -1)]);
   strip("mon_bee", four.map((f) => bee(f)));
   strip("mon_shroom", six.map((f) => shroom(f)));
   // 0-1 parado · 2-3 fúria · 4 libertado · 5 bocarra · 6 grito · 7 bocarra (fúria) · 8 grito (fúria)
@@ -804,6 +804,9 @@ export function registerMonsters(scene) {
     mapinguari(0, false), mapinguari(1, false), mapinguari(0, true), mapinguari(1, true), mapinguari(0, false, true),
     mapinguari(0, false, false, "maw"), mapinguari(0, false, false, "scream"),
     mapinguari(0, true, false, "maw"), mapinguari(0, true, false, "scream"),
+    // 9-12: respiração em 4 tempos (braços sobem alternados) — parado e fúria
+    mapinguari(0, false, false, null, [2, 0]), mapinguari(1, false, false, null, [0, 2]),
+    mapinguari(0, true, false, null, [2, 0]), mapinguari(1, true, false, null, [0, 2]),
   ]);
   strip("obj_chest", [chest(0), chest(1), chest(2), chest(3), chest(4)]);
   strip("px_fireball", [fireball(0), fireball(1), fireball(2)]);
@@ -814,11 +817,11 @@ export function registerMonsters(scene) {
   anim("goblin_move", "mon_goblin", four, 8);
   anim("mage_move", "mon_mage", four, 5);
   anim("brute_move", "mon_brute", four, 6);
-  anim("elder_move", "mon_elder", [0, 1], 3);
+  anim("elder_move", "mon_elder", [3, 1, 4, 0], 4);
   anim("bee_move", "mon_bee", four, 24);
   anim("shroom_move", "mon_shroom", six, 9);
-  anim("boss_idle", "mon_boss", [0, 1], 2);
-  anim("boss_fury", "mon_boss", [2, 3], 4);
+  anim("boss_idle", "mon_boss", [0, 9, 1, 10], 3);
+  anim("boss_fury", "mon_boss", [2, 11, 3, 12], 6);
   anim("mimic_bite", "obj_chest", [3, 4], 6);
   anim("fireball_fly", "px_fireball", [0, 1, 2], 14);
 }
