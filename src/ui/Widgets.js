@@ -46,6 +46,14 @@ export class Modal {
     fixed(this.root);
     scene._modals = scene._modals || [];
     scene._modals.push(this);
+    // REABRIR a mesma janela logo depois de fechar (comprar algo refaz o painel para
+    // mostrar preços/estados novos): sem animação de entrada e na MESMA rolagem — antes a
+    // lista voltava ao topo a cada compra (MetaPanels._modalList aplica restoreScroll)
+    const memo = scene._modalMemo;
+    this.restoreScroll = memo && memo.title === (o.title ?? "") && Date.now() - memo.at < 500 ? memo.scroll : null;
+    scene._modalMemo = null;
+    this._titleKey = o.title ?? "";
+    if (this.restoreScroll != null) return;
     // Entrada
     this.root.setScale(0.9).setAlpha(0);
     scene.tweens.add({ targets: this.root, scale: 1, alpha: 1, duration: 160, ease: "Back.easeOut" });
@@ -78,6 +86,7 @@ export class Modal {
     this._closed = true;
     const s = this.scene;
     s._modals = (s._modals || []).filter((m) => m !== this);
+    if (this.list) s._modalMemo = { title: this._titleKey, scroll: this.list.scroll, at: Date.now() };
     this.list?.destroy();
     this.bg.destroy();
     this.root.destroy();

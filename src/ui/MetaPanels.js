@@ -143,7 +143,11 @@ export const MetaPanels = {
     m.list = list;
     // Lista curta: depois que as linhas forem montadas (fim desta chamada), a
     // janela encolhe até o conteúdo — sem o vazio enorme embaixo (Obras, Celeiro…)
-    queueMicrotask(() => !m._closed && m.fitToList?.());
+    queueMicrotask(() => {
+      if (m._closed) return;
+      m.fitToList?.();
+      if (m.restoreScroll != null) list.setScroll(m.restoreScroll); // reaberta após compra: mesma posição
+    });
     return list;
   },
 
