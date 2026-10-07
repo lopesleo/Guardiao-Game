@@ -1535,7 +1535,11 @@ export const LANTERN = {
   MIN_DIST: 520, // nascem fora da tela…
   MAX_DIST: 900, // …mas não longe demais
   DESPAWN_DIST: 1700, // muito para trás = some (recicla)
-  TOUCH_R: 34,
+  // Toque: do CORPO do herói (altura das pernas) ao MEIO do cogumelo. Antes media do centro
+  // do herói até a BASE do cogumelo com raio 34 — de baixo era preciso subir em cima dele
+  TOUCH_R: 56,
+  TOUCH_HERO_DY: 16, // corpo do herói: um pouco abaixo do centro do sprite
+  TOUCH_CAP_DY: -12, // um pouco acima da base (o sprite é ancorado no pé): equilibra chegar por cima e por baixo
   LIGHT_R: 190,
   ITEM_LIFETIME_MS: 40000,
   ITEM_READY_MS: 650, // item recém-caído só pode ser pego depois de pousar
