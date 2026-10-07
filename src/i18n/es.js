@@ -916,4 +916,5 @@ export default {
   "{0} na floresta": "{0} en el bosque",
   "{0} descanso": "{0} descanso",
   "{0} anúncio": "{0} anuncio",
+  "REAÇÕES {0}/{1}": "REACCIONES {0}/{1}",
 };

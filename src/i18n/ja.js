@@ -916,4 +916,5 @@ export default {
   "{0} na floresta": "森で{0}",
   "{0} descanso": "{0} 休息",
   "{0} anúncio": "{0} 広告",
+  "REAÇÕES {0}/{1}": "反応 {0}/{1}",
 };
