@@ -183,6 +183,107 @@ function boomerang() {
   );
 }
 
+// Vara Encantada girando (26×26, 8 quadros = meia volta a cada 4): forquilha de folhas
+// numa ponta, brasa acesa na outra e o BORRÃO do giro atrás das duas pontas. O giro é
+// desenhado quadro a quadro (girar sprite de pixel serrilha).
+function varaSpin(f) {
+  const p = new Pix(26, 26);
+  const c = 12.5;
+  const a = (f / 8) * Math.PI * 2;
+  const L = 10.5;
+  // a vara: 2 px de grossura, luz de um lado
+  const nx = -Math.sin(a),
+    ny = Math.cos(a);
+  for (let t = -L; t <= L; t += 0.5) {
+    const x = c + Math.cos(a) * t,
+      y = c + Math.sin(a) * t;
+    p.set(Math.round(x), Math.round(y), PAL.n3);
+    p.set(Math.round(x + nx * 0.8), Math.round(y + ny * 0.8), Math.abs(t) % 4 < 1 ? PAL.n2 : PAL.n4);
+  }
+  // forquilha com folhas (ponta 0)
+  const fx = c + Math.cos(a) * L,
+    fy = c + Math.sin(a) * L;
+  for (const s of [-0.55, 0.55]) {
+    const b = a + s;
+    for (let k = 1; k <= 3; k++) p.set(Math.round(fx + Math.cos(b) * k), Math.round(fy + Math.sin(b) * k), PAL.n2);
+    p.set(Math.round(fx + Math.cos(b) * 4), Math.round(fy + Math.sin(b) * 4), PAL.g5);
+  }
+  p.set(Math.round(fx + Math.cos(a) * 2), Math.round(fy + Math.sin(a) * 2), PAL.g6);
+  // brasa do fumo (ponta π): miolo claro
+  const ex = c - Math.cos(a) * L,
+    ey = c - Math.sin(a) * L;
+  p.disc(ex, ey, 2.1, PAL.org2);
+  p.disc(ex - 0.3, ey - 0.3, 1.2, PAL.yel3);
+  p.set(Math.round(ex - 0.5), Math.round(ey - 0.5), PAL.white);
+  p.outline(PAL.ink);
+  // borrão do giro DEPOIS do contorno (com contorno virava tracejado): arco pontilhado
+  // atrás de cada ponta — a palha atrás da forquilha, brasa atrás da ponta acesa
+  for (const [end, col] of [[0, PAL.straw2], [Math.PI, PAL.org2]]) {
+    for (let k = 1; k <= 8; k++) {
+      const b = a + end - k * 0.13;
+      for (const r of [L - 1, L]) {
+        const x = Math.round(c + Math.cos(b) * r),
+          y = Math.round(c + Math.sin(b) * r);
+        if (!p.get(x, y) && bayer(x, y) < 0.85 - k * 0.09) p.set(x, y, col);
+      }
+    }
+  }
+  return p;
+}
+
+// Boleadeira girando (24×20, 8 quadros em laço: as 3 pedras andam 1/3 de volta em 8
+// quadros, então o laço não emenda): pedras amarradas a um nó, giro achatado em
+// perspectiva (a pedra do fundo fica atrás e mais escura), brilho de geada e o borrão
+function bolasSpin(f) {
+  const p = new Pix(24, 20);
+  const cx = 12,
+    cy = 10;
+  const R = 8.2;
+  const stones = [0, 1, 2].map((i) => {
+    const a = (i / 3) * Math.PI * 2 + (f / 8) * ((Math.PI * 2) / 3);
+    return { a, x: cx + Math.cos(a) * R, y: cy + Math.sin(a) * R * 0.62, back: Math.sin(a) < 0 };
+  });
+  // cordas (de trás para a frente)
+  const cord = (s) => {
+    for (let t = 0.15; t <= 0.85; t += 0.07) {
+      const x = Math.round(cx + (s.x - cx) * t),
+        y = Math.round(cy + (s.y - cy) * t + Math.sin(t * Math.PI) * 0.8);
+      p.set(x, y, s.back ? PAL.straw0 : PAL.straw2);
+    }
+  };
+  const stone = (s) => {
+    const r = s.back ? 2.3 : 2.8;
+    for (let y = Math.floor(s.y - r); y <= Math.ceil(s.y + r); y++)
+      for (let x = Math.floor(s.x - r); x <= Math.ceil(s.x + r); x++) {
+        const dx = (x + 0.5 - s.x) / r,
+          dy = (y + 0.5 - s.y) / r;
+        if (dx * dx + dy * dy > 1) continue;
+        const l = -dx * 0.6 - dy * 0.8;
+        p.set(x, y, s.back ? (l > 0.3 ? PAL.s3 : PAL.s2) : l > 0.55 ? PAL.ice3 : l > 0.1 ? PAL.s4 : l > -0.4 ? PAL.s3 : PAL.s2);
+      }
+    if (!s.back) p.set(Math.round(s.x - 1), Math.round(s.y - 1), PAL.white); // geada
+  };
+  const order = [...stones].sort((a, b) => a.y - b.y);
+  for (const s of order) if (s.back) cord(s);
+  for (const s of order) if (s.back) stone(s);
+  // nó no meio
+  p.set(cx, cy, PAL.straw1);
+  p.set(cx - 1, cy, PAL.straw2);
+  p.set(cx, cy - 1, PAL.straw2);
+  for (const s of order) if (!s.back) cord(s);
+  for (const s of order) if (!s.back) stone(s);
+  p.outline(PAL.ink);
+  // borrão do giro: rastro curto atrás de cada pedra (sem contorno)
+  for (const s of stones)
+    for (let k = 1; k <= 5; k++) {
+      const a = s.a - k * 0.16;
+      const x = Math.round(cx + Math.cos(a) * R),
+        y = Math.round(cy + Math.sin(a) * R * 0.62);
+      if (!p.get(x, y) && bayer(x, y) < 0.8 - k * 0.12) p.set(x, y, k < 3 ? PAL.s4 : PAL.s3);
+    }
+  return p;
+}
+
 // Projétil inimigo (vermelho, núcleo branco) — distinto dos do jogador
 function enemyShot() {
   return Pix.fromMap(
@@ -401,6 +502,8 @@ export function registerSprites(scene) {
   woodLog().register(scene, "ico_wood");
   shadow().register(scene, "px_shadow");
   boomerang().register(scene, "px_boomer");
+  registerStrip(scene, "px_vara_spin", Array.from({ length: 8 }, (_, f) => varaSpin(f)));
+  registerStrip(scene, "px_bolas_spin", Array.from({ length: 8 }, (_, f) => bolasSpin(f)));
   // ---- leva 3 ----
   // Bola de Ouro: bola de fogo dourada (e a versão gelada do Ouro Encantado)
   const goldBall = (warm) =>
@@ -488,5 +591,7 @@ export function registerSprites(scene) {
   anim("awaken_spark", "px_awaken", 4, [0, 1]);
   anim("whirl_spin", "px_whirl", 16, [0, 1, 2, 3, 4, 5, 6, 7]);
   anim("leaf_tumble", "px_leaf_tumble", 10, [0, 1, 2, 3]);
+  anim("vara_spin", "px_vara_spin", 22, [0, 1, 2, 3, 4, 5, 6, 7]);
+  anim("bolas_spin", "px_bolas_spin", 20, [0, 1, 2, 3, 4, 5, 6, 7]);
   anim("whirl_fire_spin", "px_whirl_fire", 20, [0, 1, 2, 3, 4, 5, 6, 7]);
 }

@@ -133,7 +133,8 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
       .setTint(COLORS.FIRE)
       .setAlpha(0.45)
       .setBlendMode(Phaser.BlendModes.ADD);
-    this.spr = scene.add.image(0, 0, "px_boomer").setScale(GAME.PIXEL_SCALE);
+    // giro DESENHADO em 8 quadros (px_vara_spin) — girar o sprite serrilhava o pixel
+    this.spr = scene.add.sprite(0, 0, "px_vara_spin", 0).setScale(GAME.PIXEL_SCALE).play("vara_spin");
     this.add([this.glow, this.spr]);
 
     scene.physics.add.existing(this);
@@ -224,11 +225,10 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     const fx = this.scene.fx;
     // Rotação visual (a vara gira; a serpente olha para onde vai)
     if (this.serpent) this._serpentUpdate();
-    else this.rotation += dt * 0.03;
     // Rastro: fantasmas do giro (lê a velocidade) + brasas
     if (fx && !this.serpent && time >= (this._ghostAt ?? 0)) {
       this._ghostAt = time + 45;
-      fx.ghost("px_boomer", this.x, this.y, this.rotation, GAME.PIXEL_SCALE, 0xff9a4a, 170, 0.42);
+      fx.ghost("px_vara_spin", this.x, this.y, 0, GAME.PIXEL_SCALE, 0xff9a4a, 170, 0.4, this.spr.frame.name);
     }
     fx?.trail(this, this.x, this.y, "fire", 40);
 

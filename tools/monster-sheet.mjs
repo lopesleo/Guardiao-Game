@@ -17,6 +17,7 @@ import { registerIcons } from "../src/art/Icons.js";
 import { registerIceFX, frostRimTexture, frostDiskTexture } from "../src/art/IceFX.js";
 import { registerReactionFX } from "../src/art/ReactionFX.js";
 import { registerAuraFX } from "../src/art/AuraFX.js";
+import { registerSprites } from "../src/art/Sprites.js";
 
 const [out = "monster-sheet.png", keysArg = "mon_alpha,mon_elder,mon_boss", scaleArg = "5"] = process.argv.slice(2);
 const S = Number(scaleArg);
@@ -34,6 +35,9 @@ const scene = {
       strips[key] = { w, h, buf, frames };
       const ctx = {
         createImageData: (iw, ih) => ({ width: iw, height: ih, data: new Uint8ClampedArray(iw * ih * 4) }),
+        // brilhos em gradiente (registerGlow) não são pixel-art: na folha ficam vazios
+        createRadialGradient: () => ({ addColorStop: () => {} }),
+        fillRect: () => {},
         putImageData(img, ox, oy) {
           for (let y = 0; y < img.height; y++)
             for (let x = 0; x < img.width; x++) {
@@ -60,6 +64,7 @@ registerIcons(scene); // ico_* (inclui os selos de elemento ico_el_*)
 registerIceFX(scene); // fx_icespike
 registerReactionFX(scene); // fx_steam, fx_frostgust
 registerAuraFX(scene); // fx_awaken_aura (Despertar)
+registerSprites(scene); // px_* (projéteis, pickups, giros desenhados)
 // campo da Aura no raio-base (40 = 120/3) e do Coração do Inverno (43): fx_frost_rim_40_0 etc.
 frostRimTexture(scene, 40, false);
 frostRimTexture(scene, 43, true);

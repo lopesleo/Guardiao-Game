@@ -577,7 +577,8 @@ export class Bolas extends LevaWeapon {
     for (let i = 0; i < n && this.shots.length < MAX_BOLAS; i++) {
       const ev = this._emit("bolas:target", { weapon: this, target: targets[i % targets.length] });
       const o = this.owner;
-      const spr = this.scene.add.image(o.x, o.y - 12, "px_bolas").setScale(3).setDepth(D_WFX);
+      // giro desenhado (px_bolas_spin): as pedras rodam em volta do nó, sem girar o sprite
+      const spr = this.scene.add.sprite(o.x, o.y - 12, "px_bolas_spin", i % 8).setScale(3).setDepth(D_WFX).play({ key: "bolas_spin", startFrame: i % 8 });
       this.shots.push({ x: o.x, y: o.y - 12, target: ev.target, spr, until: this.scene.time.now + 1600 });
     }
     this.scene.sound.play("sfx_bolas", { volume: 0.35, rate: 0.95 + Math.random() * 0.1 });
@@ -600,7 +601,7 @@ export class Bolas extends LevaWeapon {
         const sp = this.def.speed;
         b.x += (dx / d) * sp * s;
         b.y += (dy / d) * sp * s;
-        b.spr.setPosition(b.x, b.y).setRotation(b.spr.rotation + s * 14);
+        b.spr.setPosition(b.x, b.y);
         this.scene.fx?.trail(b, b.x, b.y, "ice", 40);
         if (d < 18) {
           this._bind(t, b.x, b.y);
