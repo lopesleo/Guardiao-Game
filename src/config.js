@@ -1664,7 +1664,10 @@ export const MAX_BLESSING_RANK = 10;
 // Imposto de coleção (como os PowerUps do Vampire Survivors): cada rank já comprado,
 // em QUALQUER trilha, encarece as bênçãos em TAX × o preço-base. A ordem de compra
 // não importa e a curva final fica exponencial sem tabelas gigantes.
-export const BLESSING_TAX = 0.02;
+// 06/10/2026: 2% → 5% (receio de jornada curta demais para a retenção; o jogo é grátis
+// e o fim é poder opcional). Só as bênçãos encarecem: armas, guardiões e obras iguais.
+// Catálogo das bênçãos 147 mil → 269 mil moedas; último rank ~9,9 mil → ~19 mil.
+export const BLESSING_TAX = 0.05;
 export const blessingPrice = (base, ranksOwned) => Math.round((base * (1 + BLESSING_TAX * ranksOwned)) / 5) * 5;
 
 export const BLESSINGS = [
