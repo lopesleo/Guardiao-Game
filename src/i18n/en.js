@@ -635,7 +635,6 @@ export default {
   "NÍVEL {0}!": "LEVEL {0}!",
   "Escolha uma bênção da floresta": "Choose a blessing from the forest",
   "MAIS UMA CARTA": "ONE MORE CARD",
-  "TROCAR CARTAS{0}": "REROLL CARDS{0}",
   "Sem trocas": "No rerolls",
   "BANIR +1": "BANISH +1",
   "CANCELAR": "CANCEL",
@@ -917,4 +916,6 @@ export default {
   "{0} descanso": "{0} rested",
   "{0} anúncio": "{0} ad",
   "REAÇÕES {0}/{1}": "REACTIONS {0}/{1}",
+  "TROCAR ({0}){1}": "REROLL ({0}){1}",
+  "TROCAR +1": "REROLL +1",
 };

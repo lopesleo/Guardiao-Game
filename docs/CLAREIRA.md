@@ -107,7 +107,7 @@ pegar os presentinhos dos bichos e reabastecer a tigela. **Sessão longa:** isso
 | Construção | Função | Exemplos por nível |
 |---|---|---|
 | 🔥 **Fogueira** (centro) | Nível do acampamento; libera outras construções | nv. 2 libera Horta, nv. 3 Lago, nv. 4 Toca dos Bichos… |
-| 🌿 **Horta** | Plantar e colher ingredientes (tempo real) | 3 → 9 canteiros; plantas mais raras; colheita dupla |
+| 🌿 **Horta** | Plantar e colher ingredientes (tempo real) | 2 → 5 canteiros (+1 por obra); plantas mais raras; colheita dupla |
 | 🎣 **Lago** | Minigame de pesca + peixes por raridade/horário | Varas melhores (barra maior), iscas, peixes lendários |
 | 🍲 **Cozinha** | Receitas: ingredientes → refeição (buff na próxima partida) | Mais receitas; 2º espaço de refeição (nv. 3); "cozinhar em lote" |
 | ⛩️ **Santuário** | As **Bênçãos** atuais, agora aqui | Níveis do Santuário liberam ranks mais altos das Bênçãos |

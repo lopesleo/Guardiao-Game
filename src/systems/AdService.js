@@ -26,7 +26,7 @@ export const PLACEMENTS = {
   extra_card: { perRun: 1, perDay: 20, label: tr("Mais uma carta") },
   build_speed: { perRun: 99, perDay: 3, label: tr("Adiantar obra") },
   double_coins: { perRun: 1, perDay: 20, label: tr("Dobrar moedas") },
-  extra_reroll: { perRun: 3, perDay: 20, label: tr("Troca extra") },
+  extra_reroll: { perRun: 1, perDay: 20, label: tr("Troca extra") },
   daily_chest: { perRun: 99, perDay: 1, label: tr("Baú diário") },
   extra_banish: { perRun: 1, perDay: 20, label: tr("Banir extra") },
 };

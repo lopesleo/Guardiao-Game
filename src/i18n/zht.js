@@ -635,7 +635,6 @@ export default {
   "NÍVEL {0}!": "升到{0}級！",
   "Escolha uma bênção da floresta": "選擇一份森林的祝福",
   "MAIS UMA CARTA": "再來一張卡",
-  "TROCAR CARTAS{0}": "重抽卡牌{0}",
   "Sem trocas": "沒有重抽次數",
   "BANIR +1": "放逐 +1",
   "CANCELAR": "取消",
@@ -917,4 +916,6 @@ export default {
   "{0} descanso": "{0} 休整",
   "{0} anúncio": "{0} 廣告",
   "REAÇÕES {0}/{1}": "反應 {0}/{1}",
+  "TROCAR ({0}){1}": "重抽（{0}）{1}",
+  "TROCAR +1": "重抽 +1",
 };

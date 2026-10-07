@@ -42,6 +42,7 @@ export class UpgradeSystem {
     this.pactsTaken = new Set(); // ids dos tratos aceitos nesta partida
     const shrine = scene.meta ? new Builds(scene.meta).level("shrine") : 1;
     this.banishLeft = CARDS.BANISH_BASE + CARDS.BANISH_PER_SHRINE_LEVEL * (shrine - 1);
+    this.rerollsLeft = CARDS.REROLL_BASE; // trocas da PARTIDA inteira (não por nível)
   }
 
   // Identidade de uma carta para banir/evitar repetição. Banir "melhoria" de uma arma
