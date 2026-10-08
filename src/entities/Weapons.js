@@ -319,7 +319,7 @@ export class Weapon {
     this.dmgMult = 1.0; // +X% dano
     this.cdMult = 1.0; // -X% cooldown
     this.rangeMult = 1.0; // +X% alcance
-    this.extraProj = 0; // +N projéteis (Staff, Chain)
+    this.extraProj = 0; // +N projéteis/alvos/cópias (toda arma com "proj" nos mods; soma o do guardião)
   }
   get cooldown() {
     const raw =
@@ -958,7 +958,7 @@ export class OrbitalIce extends Weapon {
     this.lastHit = new Map();
   }
   get count() {
-    return this.def.count + this.extraProj;
+    return this.def.count + (this.owner?.extraProj ?? 0) + this.extraProj;
   }
   get orbitR() {
     return this.def.range * this.rangeMult * (this.owner?.areaMult ?? 1);
@@ -1451,7 +1451,7 @@ export class Whirlwind extends Weapon {
     this._debris = "leaf"; // o que o vento arranca do chão
   }
   get count() {
-    return this.def.count + this.extraProj;
+    return this.def.count + (this.owner?.extraProj ?? 0) + this.extraProj;
   }
   get radius() {
     return this.def.radius * Math.sqrt(this.rangeMult) * (this.owner?.areaMult ?? 1);

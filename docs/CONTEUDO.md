@@ -32,6 +32,10 @@ npm run balance      # invariantes de balanceamento
      baseDmg: 10, cooldown: 1000, range: 118, ...  // números da arma
    },
    ```
+   **"proj" é marco**: a carta de +1 sai só ao subir para os níveis de `CARDS.PROJ_LEVELS` (3 e 5);
+   nos outros níveis sorteia entre os demais `mods`. Só ponha `"range"` se o alcance mudar o dano
+   de verdade (área, cone, órbita útil) — em arma que mira um alvo na tela ele não faz nada. Quem
+   tem `"proj"` deve somar `this.owner?.extraProj` (a passiva Galhos Extras) ao seu `extraProj`.
    `unlock: { start: true }` = já vem liberada. Sem `deed` = só moedas + nível da Forja.
    **A Forja, a ordem da lista, os preços e os feitos saem daqui sozinhos** (`META.*` e
    `BUILD.FORGE_WEAPON_LEVEL` são derivados — não edite).

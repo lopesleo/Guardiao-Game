@@ -181,7 +181,7 @@ export default {
   "Auras, nuvens, reações e a vara alcançam mais longe.": "Auras, clouds, reactions and the rod reach farther.",
   "+{0}% Área": "+{0}% Area",
   "Galhos Extras": "Extra Branches",
-  "+1 projétil/alvo no Cajado e no Raio.": "+1 projectile/target for the Staff and Lightning.",
+  "+1 projétil em todas as armas que ganham +1 nas cartas. Só 1 vez.": "+1 projectile for every weapon that gets +1 from cards. Once only.",
   "+1 Projétil": "+1 Projectile",
   "Sede da Mata": "Forest Thirst",
   "Parte do dano causado vira cura.": "Part of the damage you deal becomes healing.",
