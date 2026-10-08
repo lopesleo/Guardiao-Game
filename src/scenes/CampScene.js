@@ -634,6 +634,7 @@ export class CampScene extends Phaser.Scene {
     // fala comprida (traduções, texto grande) encolhe até caber nas 2-3 linhas da caixa
     for (let px = parseInt(t.style.fontSize, 10); t.height > 70 && px > 12; ) t.setFontSize(--px);
     c.add([g, face, who, t]);
+    face.play("elder_talk"); // o retrato fala junto com a caixa
     c.setAlpha(0).setY(H - 70);
     this.tweens.add({ targets: c, alpha: 1, y: H - 92, duration: 220, ease: "Back.easeOut" });
     // tempo de leitura: japonês e chinês dizem o mesmo com ~1/3 dos caracteres
@@ -809,7 +810,10 @@ export class CampScene extends Phaser.Scene {
     this.bubble.setPosition(this.elder.x, this.elder.y - this.elder.displayHeight - h / 2 - 34).setVisible(true).setAlpha(0);
     this.tweens.add({ targets: this.bubble, alpha: 1, duration: 160 });
     this._bubbleUntil = this.time.now + 4500;
-    this.tweens.add({ targets: this.elder, scaleY: (S + 1) * 1.06, duration: 120, yoyo: true });
+    // fala: a boca mexe enquanto o balão aparece, depois volta a respirar
+    this.elder.play("elder_talk");
+    this._elderTalkEvt?.remove();
+    this._elderTalkEvt = this.time.delayedCall(Math.min(3200, 900 + line.length * 35), () => this.elder?.active && this.elder.play("elder_idle"));
   }
 
   // Placa da trilha: escolher o MAPA (bioma, depois da Trilha do Sertão) e o

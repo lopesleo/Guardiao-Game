@@ -4,6 +4,7 @@
 //   2 · A CLAREIRA  título → foco volta → a Anciã chega pela mata → o guardião acorda
 // Depois vêm as falas da Anciã (o tutorial narrativo). Uma vez só, sempre pulável.
 // Os guardiões são desenhados quadro a quadro em HeroRig.js (não é o sprite de caminhada).
+import { ELDER_FRAMES } from "../art/Camp.js";
 import { CSS } from "../art/Palette.js";
 import { text, drawFrame, Button, vw, vh, fitCamera, haptic } from "../ui/Theme.js";
 import { formatTime } from "../utils.js";
@@ -38,6 +39,7 @@ export class FirstDefeatScene extends Phaser.Scene {
     this._groups = {};
     this._impacted = false;
     this._arrived = false;
+    this._crouched = false;
     this._waking = false;
     this.fx = null;
     this.won = !!data.won;
@@ -717,13 +719,14 @@ export class FirstDefeatScene extends Phaser.Scene {
     const dist = W + 160 - this.elderX;
     const ms = Math.min(4600, dist * 5.6);
     this.tweens.add({ targets: [e, sh], x: this.elderX, duration: ms, ease: "Sine.easeOut" });
-    // passos: balanço + som, cada vez mais espaçados ao chegar
+    // ANDA de verdade (quadros de passo, src/art/Camp.js) e o passo desacelera ao chegar
+    e.play("elder_walk");
     let n = 0;
     const step = () => {
       if (this._leaving) return;
       n++;
       this._sfx("sfx_step", 0.26, 0.9 + Math.random() * 0.2);
-      this.tweens.add({ targets: e, y: this.baseY - 4, duration: 110, yoyo: true, ease: "Quad.easeOut" });
+      e.anims.timeScale = Math.max(0.55, 1 - n * 0.03);
       if (e.x > this.elderX + 6) this.time.delayedCall(300 + n * 18, step);
       else this._elderArrives();
     };
@@ -735,8 +738,11 @@ export class FirstDefeatScene extends Phaser.Scene {
   _elderArrives() {
     if (this._arrived) return;
     this._arrived = true;
-    // agacha ao lado dele
-    this.tweens.add({ targets: this.elder, scaleY: SC * 0.9, scaleX: SC * 1.04, duration: 420, ease: "Sine.easeInOut" });
+    // ajoelha ao lado dele (quadro desenhado — antes o sprite era achatado)
+    this.elder.anims.timeScale = 1;
+    this.elder.anims.stop();
+    this.elder.setFrame(ELDER_FRAMES.crouch);
+    this._crouched = true;
   }
 
   // O guardião acorda, desenhado quadro a quadro
@@ -754,7 +760,8 @@ export class FirstDefeatScene extends Phaser.Scene {
       if (frame.index === 5) {
         this._sfx("sfx_dash", 0.22, 0.6);
         // a Anciã se levanta
-        this.tweens.add({ targets: this.elder, scaleY: SC, scaleX: SC, duration: 380, ease: "Back.easeOut" });
+        this._crouched = false;
+        this.elder.play(this._typing ? "elder_talk" : "elder_idle");
       }
     });
     this.hero.once("animationcomplete", () => {
@@ -839,8 +846,9 @@ export class FirstDefeatScene extends Phaser.Scene {
     this._typing = true;
     this.more.setVisible(false);
     this.lineT.setText("");
-    // a Anciã "fala": um pulinho a cada fala
-    if (this._arrived || this.won) this.tweens.add({ targets: this.elder, scaleY: this.elder.scaleY * 1.05, duration: 120, yoyo: true });
+    // a Anciã FALA: a boca mexe no retrato e nela (ajoelhada, só o retrato)
+    this.face?.play("elder_talk");
+    if ((this._arrived || this.won) && !this._crouched) this.elder.play("elder_talk");
     this._typeEvt?.remove();
     this._typeEvt = this.time.addEvent({
       delay: TYPE_MS,
@@ -863,6 +871,8 @@ export class FirstDefeatScene extends Phaser.Scene {
   _completeLine() {
     this._typeEvt?.remove();
     this._typing = false;
+    this.face?.play("elder_idle");
+    if ((this._arrived || this.won) && !this._crouched) this.elder.play("elder_idle");
     this.lineT.setText(this._full);
     this.more.setVisible(true);
   }

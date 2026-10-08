@@ -141,6 +141,10 @@ function makeTrailSign() {
 // ANCIÃ DA FOGUEIRA: senhora de xale, cabelo branco preso, cajado de galho.
 // 2 quadros (respirar). Voltada para a direita (para a fogueira).
 // ---------------------------------------------------------------------------
+// Quadros da Anciã (16×18; ancorada no pé, a linha de cima é folga para o passo):
+//   0 parada · 1 respira (ombros sobem) · 2 pisca · 3-4 fala (boca abre / fecha com
+//   respiração) · 5-8 anda (vestido balança, cajado acompanha, sobe no passo) · 9 agachada
+export const ELDER_FRAMES = { idle: 0, breath: 1, blink: 2, talk: [3, 4], walk: [5, 6, 7, 8], crouch: 9 };
 function makeElderFrames() {
   const legend = {
     k: K,
@@ -158,7 +162,7 @@ function makeElderFrames() {
     W: PAL.n2,
     l: PAL.g5,
   };
-  const rows = [
+  const BASE = [
     "......kkkk..l...",
     ".....kHhhhk.lk..",
     "....kHhhhhhkwk..",
@@ -177,12 +181,54 @@ function makeElderFrames() {
     "...kGGgggggGGGkW",
     "....kkkkkkkkkk.W",
   ];
-  const a = Pix.fromMap(rows, legend);
-  // Quadro 2: ombros sobem 1px (respiração)
-  const b = new Pix(a.w, a.h);
-  b.blit(a, 0, 0);
-  for (let y = 6; y <= 9; y++) for (let x = 0; x < a.w; x++) b.c[(y - 1) * a.w + x] = a.c[y * a.w + x] || b.c[(y - 1) * a.w + x];
-  return [a, b];
+  const H = 18,
+    W = 16;
+  const blank = ".".repeat(W);
+  const put = (rows, y0 = 1) => {
+    const out = Array.from({ length: H }, () => blank);
+    rows.forEach((r, y) => {
+      if (y + y0 >= 0 && y + y0 < H) out[y + y0] = r.padEnd(W, ".").slice(0, W);
+    });
+    return out;
+  };
+  const setCh = (rows, x, y, ch) => {
+    const r = rows[y];
+    rows[y] = r.slice(0, x) + ch + r.slice(x + 1);
+  };
+  // desloca só o VESTIDO (linhas 13-15 do desenho) para um lado: a barra balança no passo
+  const swing = (rows, dx) =>
+    rows.map((r, y) => {
+      if (y < 13 || y > 15 || !dx) return r;
+      const body = r.slice(0, 14),
+        staff = r.slice(14);
+      return (dx > 0 ? "." + body.slice(0, -1) : body.slice(1) + ".") + staff;
+    });
+  // respiração: os ombros (linhas 6-9) sobem 1 px
+  const breathe = (rows) => rows.map((r, y) => (y >= 5 && y <= 8 ? rows[y + 1] : r));
+  const frames = [];
+  const A = put(BASE);
+  frames.push(A); // 0 parada
+  frames.push(put(breathe(BASE))); // 1 respira
+  const blink = put(BASE);
+  setCh(blink, 8, 5, "S");
+  setCh(blink, 10, 5, "S");
+  frames.push(blink); // 2 pisca
+  const open = put(BASE);
+  setCh(open, 9, 6, "e"); // boca aberta (logo abaixo dos olhos)
+  setCh(open, 8, 6, "R");
+  frames.push(open); // 3 fala (aberta)
+  frames.push(put(breathe(BASE))); // 4 fala (fechada, respirando)
+  // anda: vestido para um lado, sobe, para o outro, sobe (o cajado sobe junto no passo)
+  frames.push(put(swing(BASE, 1)));
+  frames.push(put(BASE, 0));
+  frames.push(put(swing(BASE, -1)));
+  frames.push(put(BASE, 0));
+  // agachada (ajoelha ao lado do guardião): tronco 3 px mais baixo e inclinado à frente,
+  // vestido dobrado (só a barra larga)
+  const upper = BASE.slice(0, 10).map((r) => "." + r.slice(0, W - 1));
+  const kneel = put([...upper, BASE[13], BASE[14], BASE[15], BASE[16]], 18 - 14);
+  frames.push(kneel);
+  return frames.map((rows) => Pix.fromMap(rows, legend));
 }
 
 export function registerCamp(scene) {
@@ -194,5 +240,14 @@ export function registerCamp(scene) {
     if (!scene.anims.exists(key)) scene.anims.create({ key, frames: scene.anims.generateFrameNumbers(tex, { frames }), frameRate: rate, repeat: -1 });
   };
   anim("bird_idle", "camp_bird", 3, [0, 0, 0, 1, 0, 1]);
-  anim("elder_idle", "camp_elder", 1.5, [0, 1]);
+  // parada: respira devagar e pisca de vez em quando (tempos por quadro)
+  if (!scene.anims.exists("elder_idle"))
+    scene.anims.create({
+      key: "elder_idle",
+      frames: [[0, 700], [1, 600], [0, 700], [1, 600], [0, 400], [2, 120], [0, 500], [1, 600]].map(([frame, duration]) => ({ key: "camp_elder", frame, duration })),
+      frameRate: 2,
+      repeat: -1,
+    });
+  anim("elder_talk", "camp_elder", 6, [3, 4, 3, 0, 3, 4]);
+  anim("elder_walk", "camp_elder", 6, [5, 6, 7, 8]);
 }
