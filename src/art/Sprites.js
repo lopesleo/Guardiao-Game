@@ -390,15 +390,12 @@ function firefly() {
 }
 
 // Pedra de granizo: gelo opaco com reflexo
+// Pedra de granizo (9×13): bloco de gelo facetado com brilho e o RISCO da queda em cima
 function hailstone() {
-  return Pix.fromMap([".kkkk.", "kcwbbk", "kwbbBk", "kbbBBk", "kbBBDk", ".kkkk."], {
-    k: K,
-    w: PAL.white,
-    c: PAL.ice3,
-    b: PAL.ice2,
-    B: PAL.ice1,
-    D: PAL.ice0,
-  });
+  return Pix.fromMap(
+    ["...s.s...", "...s.s...", "..s...s..", "...s.s...", "...kkk...", "..kcwbk..", ".kcwwbBk.", "kcwbbbBBk", "kwbbbBBDk", ".kbbBBDk.", "..kBBDk..", "...kkk...", "........."],
+    { k: K, w: PAL.white, c: PAL.ice3, b: PAL.ice2, B: PAL.ice1, D: PAL.ice0, s: PAL.ice3 },
+  );
 }
 
 // Redemoinho do Saci: anéis de vento empilhados (largo em cima, fino embaixo) que
@@ -547,13 +544,39 @@ export function registerSprites(scene) {
   ).register(scene, "px_bolas");
   // ---- vento ----
   // Cata-vento: quatro pás de cores de festa (gira inteiro no jogo) + cabo
-  const pinwheel = (c1, c2, c3, c4) =>
-    Pix.fromMap(
-      [".....uu....", "..l..uuuu..", ".ll..uuuuu.", ".lll.uuu...", "llll.u.....", "lllllorrrrr", ".....y.rrrr", "...yyy.rrr.", ".yyyyy..rr.", "..yyyy..r..", "....yy....."],
-      { u: c1, l: c2, r: c3, y: c4, o: PAL.yel3 },
-    ).outline(K);
-  pinwheel(PAL.wnd2, PAL.cream, PAL.red2, PAL.yel2).register(scene, "px_catavento");
-  pinwheel(PAL.org2, PAL.yel3, PAL.red2, PAL.org3).register(scene, "px_catavento_brasa");
+  // Cata-vento: as pás são DESENHADAS em coordenadas polares em cada ângulo (formas limpas
+  // em qualquer giro) — 16 quadros = a volta inteira, porque cada pá tem uma cor (4 quadros
+  // de 90° fariam as cores pularem). Girar o sprite no jogo serrilhava.
+  const pinwheelFrames = (c1, c2, c3, c4) => {
+    const N = 15,
+      c = 7;
+    const cols = [c1, c2, c3, c4];
+    const shade = (col) => (col === PAL.cream ? PAL.s4 : col === PAL.yel3 ? PAL.yel2 : col === PAL.wnd2 ? PAL.wnd1 : col === PAL.red2 ? PAL.red1 : col === PAL.yel2 ? PAL.yel1 : col === PAL.org2 ? PAL.org1 : col === PAL.org3 ? PAL.org2 : col);
+    return Array.from({ length: 16 }, (_, k) => {
+      const th = (k / 16) * Math.PI * 2;
+      const p = new Pix(N, N);
+      for (let y = 0; y < N; y++)
+        for (let x = 0; x < N; x++) {
+          const dx = x + 0.5 - (c + 0.5),
+            dy = y + 0.5 - (c + 0.5);
+          const r = Math.hypot(dx, dy);
+          if (r > 6.8) continue;
+          const ang = Math.atan2(dy, dx);
+          for (let i = 0; i < 4; i++) {
+            const local = (((ang - th - (i * Math.PI) / 2) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+            if (local > 1.5) continue;
+            // pá dobrada: raio cresce até a ponta; a metade de dentro é a dobra (mais escura)
+            const R = 2.2 + (local / 1.5) * 4.6;
+            if (r > R) continue;
+            p.set(x, y, local < 0.55 ? shade(cols[i]) : cols[i]);
+          }
+        }
+      p.set(c, c, PAL.yel3); // eixo
+      return p.outline(K);
+    });
+  };
+  registerStrip(scene, "px_catavento_spin", pinwheelFrames(PAL.wnd2, PAL.cream, PAL.red2, PAL.yel2));
+  registerStrip(scene, "px_catavento_brasa_spin", pinwheelFrames(PAL.org2, PAL.yel3, PAL.red2, PAL.org3));
   Pix.fromMap(["kk", "km", "km", "km", "km", "km", "km", "km", "km", "km", "kk"], { k: K, m: PAL.n3 }).register(scene, "px_catavento_stick");
   // Rajada do cata-vento: risco de vento com a cauda se desfazendo
   Pix.fromMap([".......kk.", "..u.uuwwwk", "uu.uuwwwwk", "..u.uuwwwk", ".......kk."], { k: PAL.wnd1, u: PAL.wnd2, w: PAL.white }).register(scene, "px_gust");
@@ -593,5 +616,7 @@ export function registerSprites(scene) {
   anim("leaf_tumble", "px_leaf_tumble", 10, [0, 1, 2, 3]);
   anim("vara_spin", "px_vara_spin", 22, [0, 1, 2, 3, 4, 5, 6, 7]);
   anim("bolas_spin", "px_bolas_spin", 20, [0, 1, 2, 3, 4, 5, 6, 7]);
+  anim("catavento_spin", "px_catavento_spin", 24, [...Array(16).keys()]);
+  anim("catavento_brasa_spin", "px_catavento_brasa_spin", 28, [...Array(16).keys()]);
   anim("whirl_fire_spin", "px_whirl_fire", 20, [0, 1, 2, 3, 4, 5, 6, 7]);
 }

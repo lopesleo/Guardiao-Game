@@ -237,7 +237,8 @@ export class Catavento extends WindWeapon {
       y = o.y + 10 + (Math.random() - 0.5) * 16;
     const scene = this.scene;
     const stick = scene.add.image(x, y, "px_catavento_stick").setOrigin(0.5, 1).setScale(3).setDepth(y + 10000);
-    const blades = scene.add.image(x, y - 36, this._bladeTex ?? "px_catavento").setScale(0).setDepth(y + 10001);
+    // pás com o giro DESENHADO (4 quadros pré-girados, sem rotação de sprite)
+    const blades = scene.add.sprite(x, y - 36, this._bladeTex ?? "px_catavento_spin", 0).setScale(0).setDepth(y + 10001).play(this._bladeAnim ?? "catavento_spin");
     scene.tweens.add({ targets: blades, scale: 3, duration: 200, ease: "Back.easeOut" });
     scene.fx?.burst("gust", x, y - 30, 8, null, 360);
     scene.sound.play("sfx_catavento", { volume: 0.3 });
@@ -261,7 +262,6 @@ export class Catavento extends WindWeapon {
           this._despawn(t);
           continue;
         }
-        t.blades.rotation += s * 9;
         if (time >= t.next) {
           t.next = time + this.def.everyMs;
           const target = this._closest(t, this.range * this.area, 1)[0];
@@ -310,7 +310,8 @@ export class CataventoBrasa extends Catavento {
     this.baseKey = this.def.evolvesFrom;
     this._gustEl = ELEMENT.FIRE;
     this._gustTint = PAL.org3;
-    this._bladeTex = "px_catavento_brasa";
+    this._bladeTex = "px_catavento_brasa_spin";
+    this._bladeAnim = "catavento_brasa_spin";
   }
 }
 

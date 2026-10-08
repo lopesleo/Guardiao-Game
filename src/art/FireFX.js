@@ -274,6 +274,64 @@ function boitataSeg(f) {
   return p;
 }
 
+// FOGUEIRA DE SÃO JOÃO (26×32, 8 quadros em laço sem emenda): toras cruzadas em pé
+// (a armação de festa junina), pedras em volta e a chama alta que sobe; fagulhas soltas
+export const BONFIRE_W = 26,
+  BONFIRE_H = 32;
+function bonfire(f) {
+  const p = new Pix(BONFIRE_W, BONFIRE_H);
+  const G = BONFIRE_H - 3;
+  const cx = BONFIRE_W / 2;
+  const n1 = tileNoise(BONFIRE_W + 6, 32, 4, 701),
+    n2 = tileNoise(BONFIRE_W + 6, 32, 2, 709);
+  // chama (atrás das toras da frente): corpo largo embaixo, línguas que sobem
+  for (let y = 0; y < BONFIRE_H; y++)
+    for (let x = 0; x < BONFIRE_W; x++) {
+      const h = (G - 2 - y) / 22; // 0 na base do fogo … 1 no alto
+      if (h < -0.05) continue;
+      const u = (x + 0.5 - cx) / 8.5;
+      const n = 0.6 * n1(x, (y + f * 4) & 31) + 0.4 * n2(x, (y + f * 4) & 31);
+      const tongue = 0.55 + 0.45 * Math.abs(Math.cos(u * 3.4 + Math.sin(f * 0.785) * 0.4));
+      const top = tongue * (1 - u * u * 0.85) + (n - 0.5) * 0.4;
+      if (h > top || Math.abs(u) > 1.05) continue;
+      const I = (1 - Math.abs(u)) * 1.2 + (n - 0.5) * 0.85 - h * 0.6 + (h < 0.2 ? 0.25 : 0);
+      const c = fireCol(I, x, y);
+      if (c != null) p.set(x, y, c);
+    }
+  // toras em pé cruzadas (armação) e as de baixo deitadas
+  const log = (x0, y0, x1, y1) => {
+    const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
+    for (let i = 0; i <= n; i++) {
+      const x = Math.round(x0 + ((x1 - x0) * i) / n),
+        y = Math.round(y0 + ((y1 - y0) * i) / n);
+      p.set(x, y, PAL.n3);
+      p.set(x + 1, y, i % 3 ? PAL.n2 : PAL.n1);
+    }
+  };
+  log(5, G, 11, G - 12);
+  log(19, G, 13, G - 12);
+  for (let x = 4; x <= 21; x++) {
+    p.set(x, G, x % 4 ? PAL.n3 : PAL.n4);
+    p.set(x, G + 1, PAL.n2);
+  }
+  // brasas na base
+  for (let x = 7; x <= 18; x += 2) p.set(x, G - 1, (x + f) % 4 < 2 ? PAL.yel3 : PAL.org2);
+  // pedras em volta
+  for (const x of [2, 6, 19, 23]) {
+    p.set(x, G + 1, PAL.s3);
+    p.set(x + 1, G + 1, PAL.s4);
+    p.set(x, G, PAL.s2);
+  }
+  // fagulhas subindo (andam 4 px por quadro: laço de 8)
+  for (let k = 0; k < 4; k++) {
+    const t = ((f + k * 2) % 8) / 8;
+    const x = Math.round(cx + Math.sin(k * 2.1 + t * 6) * 5),
+      y = Math.round(G - 22 - t * 8);
+    if (y >= 0 && !p.get(x, y)) p.set(x, y, t < 0.5 ? PAL.yel3 : PAL.org2);
+  }
+  return p.outline(PAL.ink);
+}
+
 export function registerFireFX(scene) {
   if (scene.textures.exists("fx_whirl")) return;
   registerStrip(scene, "fx_whirl", Array.from({ length: W_GROW.length }, (_, f) => whirl(f)));
@@ -281,6 +339,7 @@ export function registerFireFX(scene) {
   registerStrip(scene, "fx_wisp", [0, 1, 2, 3].map((f) => wisp(f)));
   registerStrip(scene, "fx_jet", Array.from({ length: J_REACH.length }, (_, f) => jet(f)));
   registerStrip(scene, "fx_groundfire", Array.from({ length: 8 }, (_, f) => groundFire(f)));
+  registerStrip(scene, "fx_bonfire", Array.from({ length: 8 }, (_, f) => bonfire(f)));
   registerStrip(scene, "px_boitata_head", [0, 1].map((f) => boitataHead(f)));
   registerStrip(scene, "px_boitata_seg", [0, 1, 2].map((f) => boitataSeg(f)));
   const mk = (key, tex, rate, repeat = 0) => {
@@ -291,6 +350,7 @@ export function registerFireFX(scene) {
   mk("fx_wisp", "fx_wisp", 14, -1);
   mk("fx_jet", "fx_jet", 18);
   mk("fx_groundfire", "fx_groundfire", 12, -1);
+  mk("fx_bonfire", "fx_bonfire", 11, -1);
   mk("px_boitata_head", "px_boitata_head", 8, -1);
   mk("px_boitata_seg", "px_boitata_seg", 10, -1);
 }

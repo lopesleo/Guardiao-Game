@@ -634,6 +634,7 @@ export class CampScene extends Phaser.Scene {
     // fala comprida (traduções, texto grande) encolhe até caber nas 2-3 linhas da caixa
     for (let px = parseInt(t.style.fontSize, 10); t.height > 70 && px > 12; ) t.setFontSize(--px);
     c.add([g, face, who, t]);
+    face.play("elder_talk"); // o retrato fala junto com a caixa
     c.setAlpha(0).setY(H - 70);
     this.tweens.add({ targets: c, alpha: 1, y: H - 92, duration: 220, ease: "Back.easeOut" });
     // tempo de leitura: japonês e chinês dizem o mesmo com ~1/3 dos caracteres
@@ -668,9 +669,22 @@ export class CampScene extends Phaser.Scene {
     this._birdWork?.remove();
     const job = this.builds.job;
     if (!job) {
-      // Pássaro volta para o ninho
-      this.bird.setFlipX(false);
-      this.tweens.add({ targets: this.bird, x: this.nest.x, y: this.nest.y, duration: 900, ease: "Sine.easeInOut", onUpdate: () => this.bird.setDepth(this.bird.y + 1) });
+      // Pássaro volta VOANDO para o ninho e pousa
+      this.bird.setFlipX(this.nest.x > this.bird.x);
+      const far = Math.hypot(this.nest.x - this.bird.x, this.nest.y - this.bird.y) > 8;
+      if (far) this.bird.play("bird_fly");
+      this.tweens.add({
+        targets: this.bird,
+        x: this.nest.x,
+        y: this.nest.y,
+        duration: 900,
+        ease: "Sine.easeInOut",
+        onUpdate: () => this.bird.setDepth(this.bird.y + 1),
+        onComplete: () => {
+          this.bird.setFlipX(false);
+          this.bird.play("bird_idle");
+        },
+      });
       return;
     }
     const b = this.buildings[job.id];
@@ -696,7 +710,8 @@ export class CampScene extends Phaser.Scene {
     // canto direito é do selo "!")
     const bx = b.x - w / 2 + 2,
       by = top + 34;
-    this.bird.setFlipX(bx < this.bird.x);
+    this.bird.setFlipX(bx > this.bird.x); // o desenho olha para a esquerda
+    this.bird.play("bird_fly");
     this.tweens.add({
       targets: this.bird,
       x: bx,
@@ -706,11 +721,11 @@ export class CampScene extends Phaser.Scene {
       onUpdate: () => this.bird.setDepth(D_NIGHT - 1),
       onComplete: () => {
         this.bird.setFlipX(false);
+        this.bird.play("bird_work"); // bica a obra (quadros), em vez de pular parado
         this._birdWork = this.time.addEvent({
           delay: 420,
           loop: true,
           callback: () => {
-            this.tweens.add({ targets: this.bird, y: by - 8, duration: 110, yoyo: true });
             const d = this.add.image(bx + 10, by - 4, "px_dot2").setScale(3).setTint(0xc88a5a).setDepth(D_NIGHT - 1);
             this.tweens.add({ targets: d, y: by + 14, x: bx + 20 + Math.random() * 10, alpha: 0, duration: 500, onComplete: () => d.destroy() });
           },
@@ -809,7 +824,10 @@ export class CampScene extends Phaser.Scene {
     this.bubble.setPosition(this.elder.x, this.elder.y - this.elder.displayHeight - h / 2 - 34).setVisible(true).setAlpha(0);
     this.tweens.add({ targets: this.bubble, alpha: 1, duration: 160 });
     this._bubbleUntil = this.time.now + 4500;
-    this.tweens.add({ targets: this.elder, scaleY: (S + 1) * 1.06, duration: 120, yoyo: true });
+    // fala: a boca mexe enquanto o balão aparece, depois volta a respirar
+    this.elder.play("elder_talk");
+    this._elderTalkEvt?.remove();
+    this._elderTalkEvt = this.time.delayedCall(Math.min(3200, 900 + line.length * 35), () => this.elder?.active && this.elder.play("elder_idle"));
   }
 
   // Placa da trilha: escolher o MAPA (bioma, depois da Trilha do Sertão) e o

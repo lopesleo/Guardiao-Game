@@ -18,6 +18,7 @@ import { registerIceFX, frostRimTexture, frostDiskTexture } from "../src/art/Ice
 import { registerReactionFX } from "../src/art/ReactionFX.js";
 import { registerAuraFX } from "../src/art/AuraFX.js";
 import { registerSprites } from "../src/art/Sprites.js";
+import { registerCamp } from "../src/art/Camp.js";
 
 const [out = "monster-sheet.png", keysArg = "mon_alpha,mon_elder,mon_boss", scaleArg = "5"] = process.argv.slice(2);
 const S = Number(scaleArg);
@@ -65,6 +66,7 @@ registerIceFX(scene); // fx_icespike
 registerReactionFX(scene); // fx_steam, fx_frostgust
 registerAuraFX(scene); // fx_awaken_aura (Despertar)
 registerSprites(scene); // px_* (projéteis, pickups, giros desenhados)
+registerCamp(scene); // camp_elder (Anciã), camp_bird
 // campo da Aura no raio-base (40 = 120/3) e do Coração do Inverno (43): fx_frost_rim_40_0 etc.
 frostRimTexture(scene, 40, false);
 frostRimTexture(scene, 43, true);

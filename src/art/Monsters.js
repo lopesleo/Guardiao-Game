@@ -372,18 +372,33 @@ function chest(state) {
     p.set(13, y, PAL.yel1);
   }
   if (state >= 3) {
-    // MÍMICO: bocarra com dentes e língua
-    const bite = state === 4 ? 1 : 0;
-    for (let x = 2; x <= 15; x++) for (let y = 5 - bite; y <= 8; y++) p.set(x, y, ROT.dark);
+    // MÍMICO: a mordida em 4 tempos (quadros 3-6): aberta, escancarada com a língua para
+    // fora, FECHADA (dentes se encontram), entreaberta. Os olhos sobem com a tampa.
+    const lift = { 3: 0, 4: 1, 5: 2, 6: -2 }[state]; // quanto a tampa subiu
+    const shut = lift < 0;
+    const top = shut ? 7 : 5 - lift; // céu da boca
+    for (let x = 2; x <= 15; x++) for (let y = top; y <= 8; y++) p.set(x, y, ROT.dark);
+    if (!shut) p.set(8, top + 1, ROT.hot); // garganta acesa
     for (let x = 3; x <= 14; x += 2) {
-      p.set(x, 8, PAL.white);
-      p.set(x + 1, 5 - bite, PAL.white);
+      p.set(x, 8, PAL.white); // dentes de baixo
+      p.set(x + (shut ? 0 : 1), shut ? 7 : top, PAL.white); // de cima (fechado: encaixam)
     }
-    px(p, [[8, 9], [9, 9], [9, 10], [10, 10], [10, 11]], PAL.red2);
-    // Tampa levantada
-    for (let y = 0 - bite; y <= 4 - bite; y++) for (let x = 1; x <= 16; x++) p.set(x, Math.max(0, y), y === 0 - bite ? W[3] : W[2]);
-    p.set(6, 2, ROT.glow);
-    p.set(11, 2, ROT.glow);
+    // Língua: lambe para fora quando escancara, recolhe quando morde
+    if (lift === 2) px(p, [[8, 9], [9, 9], [9, 10], [10, 10], [10, 11], [11, 11], [11, 12], [12, 12]], PAL.red2);
+    else if (lift >= 0) px(p, [[8, 9], [9, 9], [9, 10], [10, 10], [10, 11]], PAL.red2);
+    else px(p, [[9, 9], [10, 9]], PAL.red1);
+    // Tampa
+    const l0 = shut ? 2 : 0 - lift;
+    for (let y = l0; y <= l0 + 4; y++) for (let x = 1; x <= 16; x++) if (y >= 0) p.set(x, y, y === l0 ? W[3] : W[2]);
+    for (let y = Math.max(0, l0); y <= l0 + 4; y++) {
+      p.set(4, y, PAL.yel2);
+      p.set(13, y, PAL.yel2);
+    }
+    // Olhos de Podridão na tampa (piscam mais forte na mordida)
+    const ey = Math.max(0, l0 + 2);
+    p.set(6, ey, shut ? PAL.white : ROT.glow);
+    p.set(11, ey, shut ? PAL.white : ROT.glow);
+    if (shut) for (const [x, y] of [[0, 4], [17, 5], [1, 1]]) p.set(x, y, PAL.yel3); // estalo da mordida
     p.outline(PAL.ink);
     return p;
   }
@@ -420,24 +435,31 @@ function chest(state) {
 const MULA = [0x120a0c, 0x24161a, 0x3a2622, 0x56382c];
 function mula(f) {
   const p = new Pix(32, 22);
-  const bob = f % 2;
-  // Pernas em galope: pares alternam para frente/trás
+  // GALOPE em 6 tempos (era só 2 posições de pata): pares de trás e da frente defasados
+  // meia volta; a pata no ar sobe 1 px; o corpo sobe e desce com o salto
+  const k = f % 6;
+  const ph = (k / 6) * Math.PI * 2;
+  const bob = [0, 1, 1, 0, 0, 1][k];
+  const gait = (phase) => {
+    const c = Math.cos(ph - phase);
+    return { sw: Math.round(c * 2.2), lift: Math.sin(ph - phase) > 0.45 ? 1 : 0 };
+  };
   const legs = [
-    [8, f < 2 ? -2 : 2],
-    [11, f < 2 ? 2 : -2],
-    [19, f < 2 ? 2 : -2],
-    [22, f < 2 ? -2 : 2],
+    [8, gait(0)],
+    [11, gait(0.6)],
+    [19, gait(Math.PI)],
+    [22, gait(Math.PI + 0.6)],
   ];
-  for (const [x0, sw] of legs) {
-    for (let y = 13 + bob; y <= 19; y++) {
+  for (const [x0, { sw, lift }] of legs) {
+    for (let y = 13 + bob; y <= 19 - lift; y++) {
       const x = x0 + Math.round(((y - 13) / 6) * sw * 0.9);
       p.set(x, y, MULA[1]);
       p.set(x + 1, y, MULA[0]);
     }
     const hx = x0 + Math.round(sw * 0.9);
-    p.set(hx, 20, PAL.s3); // ferradura
-    p.set(hx + 1, 20, PAL.s2);
-    if ((f + x0) % 3 === 0) p.set(hx + 2, 21, PAL.yel3); // faísca
+    p.set(hx, 20 - lift, PAL.s3); // ferradura
+    p.set(hx + 1, 20 - lift, PAL.s2);
+    if (!lift && (k + x0) % 3 === 0) p.set(hx + 2, 21, PAL.yel3); // faísca do casco no chão
   }
   // Corpo
   ell(p, 15, 10 + bob, 10, 4.6, MULA, 0.25);
@@ -790,7 +812,8 @@ export function registerMonsters(scene) {
   const four = [0, 1, 2, 3];
   const six = [0, 1, 2, 3, 4, 5];
   strip("mon_wolf", six.map((f) => wolf(f)));
-  strip("mon_alpha", [...four.map((f) => mulaTall(f)), mulaRear(0), mulaKick()]); // minichefe: Mula sem Cabeça (4 = empinada, 5 = coice)
+  // minichefe: Mula sem Cabeça (0-3 e 6-7 = galope de 6 tempos; 4 = empinada, 5 = coice — índices dos golpes)
+  strip("mon_alpha", [...four.map((f) => mulaTall(f)), mulaRear(0), mulaKick(), mulaTall(4), mulaTall(5)]);
   strip("mon_crow", four.map((f) => crow(f)));
   strip("mon_goblin", four.map((f) => goblin(f)));
   strip("mon_mage", four.map((f) => witch(f)));
@@ -808,11 +831,12 @@ export function registerMonsters(scene) {
     mapinguari(0, false, false, null, [2, 0]), mapinguari(1, false, false, null, [0, 2]),
     mapinguari(0, true, false, null, [2, 0]), mapinguari(1, true, false, null, [0, 2]),
   ]);
-  strip("obj_chest", [chest(0), chest(1), chest(2), chest(3), chest(4)]);
+  // 0 fechado · 1 entreaberto · 2 aberto · 3-6 MÍMICO mordendo (aberta, mais, escancarada, fechada)
+  strip("obj_chest", [chest(0), chest(1), chest(2), chest(3), chest(4), chest(5), chest(6)]);
   strip("px_fireball", [fireball(0), fireball(1), fireball(2)]);
 
   anim("wolf_move", "mon_wolf", six, 14);
-  anim("alpha_move", "mon_alpha", four, 10);
+  anim("alpha_move", "mon_alpha", [0, 1, 2, 3, 6, 7], 13);
   anim("crow_move", "mon_crow", four, 12);
   anim("goblin_move", "mon_goblin", four, 8);
   anim("mage_move", "mon_mage", four, 5);
@@ -822,6 +846,6 @@ export function registerMonsters(scene) {
   anim("shroom_move", "mon_shroom", six, 9);
   anim("boss_idle", "mon_boss", [0, 9, 1, 10], 3);
   anim("boss_fury", "mon_boss", [2, 11, 3, 12], 6);
-  anim("mimic_bite", "obj_chest", [3, 4], 6);
+  anim("mimic_bite", "obj_chest", [3, 4, 5, 4, 3, 6], 10);
   anim("fireball_fly", "px_fireball", [0, 1, 2], 14);
 }

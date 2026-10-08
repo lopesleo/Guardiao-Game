@@ -385,16 +385,28 @@ function goatHead(p, hx, hy, fire, f) {
 function cabra(f) {
   const p = new Pix(32, GOAT_H);
   const oy = GOAT_H - 22;
-  const bob = f % 2;
-  // pernas finas em salto (pares alternam)
-  const legs = [[8, f < 2 ? -2 : 2], [11, f < 2 ? 2 : -2], [19, f < 2 ? 2 : -2], [22, f < 2 ? -2 : 2]];
-  for (const [x0, sw] of legs) {
-    for (let y = 13 + bob; y <= 19; y++) {
+  // GALOPE em 6 tempos (era só 2 posições de pata): pares de trás e da frente defasados
+  // meia volta; a pata no ar sobe 1 px; o corpo sobe e desce com o salto
+  const k = f % 6;
+  const ph = (k / 6) * Math.PI * 2;
+  const bob = [0, 1, 1, 0, 0, 1][k];
+  const gait = (phase) => {
+    const c = Math.cos(ph - phase);
+    return { sw: Math.round(c * 2.2), lift: Math.sin(ph - phase) > 0.45 ? 1 : 0 };
+  };
+  const legs = [
+    [8, gait(0)],
+    [11, gait(0.6)],
+    [19, gait(Math.PI)],
+    [22, gait(Math.PI + 0.6)],
+  ];
+  for (const [x0, { sw, lift }] of legs) {
+    for (let y = 13 + bob; y <= 19 - lift; y++) {
       const x = x0 + Math.round(((y - 13) / 6) * sw * 0.9);
       p.set(x, oy + y, GOAT[1]);
     }
-    p.set(x0 + Math.round(sw * 0.9), oy + 20, PAL.ink); // casco
-    if ((f + x0) % 3 === 0) p.set(x0 + Math.round(sw * 0.9) + 1, oy + 21, PAL.yel3); // faísca
+    p.set(x0 + Math.round(sw * 0.9), oy + 20 - lift, PAL.ink); // casco
+    if (!lift && (k + x0) % 3 === 0) p.set(x0 + Math.round(sw * 0.9) + 1, oy + 21, PAL.yel3); // faísca
   }
   // corpo + barriga clara
   ell(p, 15, oy + 10 + bob, 9.5, 4.2, GOAT, 0.25);
@@ -496,7 +508,8 @@ export function registerCaatingaMonsters(scene) {
   strip("mon_calango", four.map((f) => calango(f)));
   strip("mon_carcara", four.map((f) => carcara(f)));
   strip("mon_frade", four.map((f) => frade(f)));
-  strip("mon_cabra", [cabra(0), cabra(1), cabra(2), cabra(3), cabraRear(0), cabraKick()]); // minichefe (golpes da Mula)
+  // minichefe (golpes da Mula): 0-3 e 6-7 = galope de 6 tempos; 4 = empinada, 5 = coice
+  strip("mon_cabra", [cabra(0), cabra(1), cabra(2), cabra(3), cabraRear(0), cabraKick(), cabra(4), cabra(5)]);
   // 0-1 parado · 2-3 fúria · 4 libertado · 5 chama a água · 6 arrastão · 7 chama (fúria) · 8 arrastão (fúria)
   strip("mon_caboclo", [
     caboclo(0, false), caboclo(1, false), caboclo(0, true), caboclo(1, true), caboclo(0, false, true),
@@ -511,7 +524,7 @@ export function registerCaatingaMonsters(scene) {
   anim("calango_move", "mon_calango", four, 14);
   anim("carcara_move", "mon_carcara", four, 12);
   anim("frade_move", "mon_frade", four, 7);
-  anim("cabra_move", "mon_cabra", four, 10);
+  anim("cabra_move", "mon_cabra", [0, 1, 2, 3, 6, 7], 13);
   anim("caboclo_idle", "mon_caboclo", [0, 9, 1, 10], 3);
   anim("caboclo_fury", "mon_caboclo", [2, 11, 3, 12], 6);
   anim("spout_spin", "px_spout", [0, 1, 2], 12);
