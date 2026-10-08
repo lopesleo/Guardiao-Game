@@ -436,6 +436,10 @@ Nada disso trava o desenvolvimento; só o lançamento e a receita.
   👤 Falta conferir no celular a tela "Idioma do app" (Configurações → Apps → Guardião → Idioma)
 - 👤 Testes em aparelho forte e fraco + playtest com 5–10 pessoas
 - 👤 `.aab` assinado, classificação IARC, **teste fechado** exigido pelo Play Console
+  - ✅ Assinatura por comando, sem Android Studio: `npm run android:chave` (cria a chave fora do projeto e o
+    `android/keystore.properties`, ambos fora do git), `npm run android:apk` (anúncios de teste) e
+    `npm run android:aab` (loja: liga os anúncios de verdade só na cópia empacotada); confere a assinatura e
+    salva em `dist/`. Testado com chave descartável. 👤 criar a chave de verdade e guardar o backup
 - ⬜ Ajustes pelos números de D1/D3/D7 → **produção**
 
 ---

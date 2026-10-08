@@ -1583,7 +1583,7 @@ export const ADMOB = {
 
 export const ADS = {
   ENABLED: true, // ligado: no app só aparece com o AdMob pronto e consentimento ok (ver AdService.canShow)
-  TESTING: true, // anúncios de TESTE do Google. Troque para false SÓ no build de loja
+  TESTING: true, // anúncios de TESTE do Google. Não mexa à mão: o `npm run android:aab` (loja) liga os de verdade na cópia empacotada
   TEST_EEA: false, // true = simula a Europa para ver o formulário de consentimento (só com TESTING)
   // Celulares de teste do consentimento: sem isso o Google ignora o TEST_EEA num aparelho de verdade.
   // O código do aparelho aparece no logcat ao abrir o app: addTestDeviceHashedId("…")

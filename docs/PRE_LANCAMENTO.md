@@ -71,7 +71,7 @@ Legenda — **Esforço:** P (horas) · M (1–2 dias) · G (3+ dias) ·
 | 5.2 | **Vídeo de 30s** (opcional, aumenta instalação) — gravação automatizada de uma partida | M | 🤖 |
 | 5.3 | ✅ Textos da loja nos 5 idiomas (em `PLAY_STORE.md`) | P | 🤖 |
 | 5.4 | Questionário de classificação IARC | P | 👤 |
-| 5.5 | Gerar `.aab` assinado e guardar a keystore | P | 👤 |
+| 5.5 | Gerar `.aab` assinado e guardar a keystore (`npm run android:chave` → `npm run android:aab`, ver `PLAY_STORE.md`) | P | 👤 |
 
 ## 6. Alcance
 
