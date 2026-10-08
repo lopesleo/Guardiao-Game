@@ -215,6 +215,12 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   língua chega — o dano e a queimadura dos vizinhos agora caem na chegada (~0,3 s), conferindo que o inimigo
   do pool ainda é o mesmo. Sprites reaproveitados (4 redemoinhos, 16 línguas, 14 ignições); congelam no
   hit-stop. Revisar a arte: `node tools/monster-sheet.mjs saida.png fx_whirl,fx_ignite,fx_wisp 6`
+- ✅ **Animações, rodada final**: **Anciã** respira, pisca, FALA (balão e retrato das caixas de diálogo), chega
+  ANDANDO na 1ª derrota e ajoelha com quadro desenhado (antes deslizava e o sprite era achatado);
+  **João-de-barro** voa batendo asas até a obra, bica a obra e pisca no ninho; **mímico** morde em 4 tempos
+  (língua, estalo); **Mula** e **Cabra** galopam em 6 tempos (índices de golpe preservados); **Fogueira de São
+  João** desenhada (toras em armação, pedras, chama alta em laço); **cata-vento** com pás desenhadas por ângulo
+  (16 quadros, sem girar sprite); **granizo** maior e facetado com risco de queda
 - ✅ **Animação dos monstros**: os de 2 quadros ganharam ciclos desenhados — **corvo** e **carcará** batem asa
   em 4 tempos (alta, aberta, baixa, aberta; corpo sobe na batida, rabo abana), **duende** anda em 4 tempos
   (orelhas e braço com arrasto), **bruxa** flutua (barra ondula, chapéu atrasa, orbe pulsa), **troll** pisa

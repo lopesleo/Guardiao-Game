@@ -471,15 +471,10 @@ export class Bonfire extends LevaWeapon {
   _light(x, y) {
     const scene = this.scene;
     const r = this.def.radius * this.area * Math.sqrt(this.rangeMult);
-    const logs = scene.add.image(x, y, "px_logs").setScale(3).setDepth(y + 9998);
+    // a fogueira de festa junina DESENHADA (src/art/FireFX.js): toras, pedras e chama em laço
+    const logs = scene.add.sprite(x, y + 10, "fx_bonfire", 0).setOrigin(0.5, 1).setScale(3, 0).setDepth(y + 9999).play({ key: "fx_bonfire", startFrame: Math.floor(Math.random() * 8) });
+    scene.tweens.add({ targets: logs, scaleY: 3, duration: 220, ease: "Back.easeOut" });
     const flames = [];
-    for (let i = 0; i < 3; i++) {
-      const fx = x + (i - 1) * 7,
-        fy = y + 2 - (i === 1 ? 2 : 0);
-      const f = scene.add.image(fx, fy, i % 2 ? "px_flame1" : "px_flame0").setOrigin(0.5, 1).setScale(3.4, 0).setDepth(y + 9999 + i);
-      scene.tweens.add({ targets: f, scaleY: i === 1 ? 4.4 : 3.4, duration: 180, ease: "Back.easeOut" });
-      flames.push(f);
-    }
     const glow = scene.add.image(x, y, "fx_glow").setScale((r * 2.3) / 64).setTint(COLORS.FIRE).setAlpha(0.4).setBlendMode(Phaser.BlendModes.ADD).setDepth(44);
     scene.fx?.burst("ember", x, y - 8, 10, -Math.PI / 2, 80, { min: 40, max: 120 });
     scene.sound.play("sfx_bonfire", { volume: 0.32, rate: 0.9 + Math.random() * 0.2 });
@@ -496,13 +491,11 @@ export class Bonfire extends LevaWeapon {
     super.update(time, dt);
     if (!this.fires.length) return;
     const keep = [];
-    const flick = Math.floor(time / 110) % 2;
     for (const f of this.fires) {
       if (time >= f.until) {
         this._despawn(f);
         continue;
       }
-      f.flames.forEach((fl, i) => fl.setTexture((i + flick) % 2 ? "px_flame1" : "px_flame0"));
       f.glow.setAlpha(0.32 + Math.sin(time / 80 + f.x) * 0.1);
       if (Math.random() < 0.08) this.scene.fx?.burst("ember", f.x + (Math.random() - 0.5) * 12, f.y - 14, 1, -Math.PI / 2, 40, { min: 30, max: 90 });
       if (time >= f.nextTick) {
