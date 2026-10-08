@@ -18,3 +18,8 @@ android/.gradle/
 
 # fonte original da Fusion Pixel (baixada por tools/font-subset.mjs)
 tools/.cache/
+
+# chave de assinatura do app: NUNCA no git (quem tem a chave publica atualizações no lugar do dono)
+*.jks
+*.keystore
+keystore.properties
