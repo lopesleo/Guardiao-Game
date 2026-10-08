@@ -669,9 +669,22 @@ export class CampScene extends Phaser.Scene {
     this._birdWork?.remove();
     const job = this.builds.job;
     if (!job) {
-      // Pássaro volta para o ninho
-      this.bird.setFlipX(false);
-      this.tweens.add({ targets: this.bird, x: this.nest.x, y: this.nest.y, duration: 900, ease: "Sine.easeInOut", onUpdate: () => this.bird.setDepth(this.bird.y + 1) });
+      // Pássaro volta VOANDO para o ninho e pousa
+      this.bird.setFlipX(this.nest.x > this.bird.x);
+      const far = Math.hypot(this.nest.x - this.bird.x, this.nest.y - this.bird.y) > 8;
+      if (far) this.bird.play("bird_fly");
+      this.tweens.add({
+        targets: this.bird,
+        x: this.nest.x,
+        y: this.nest.y,
+        duration: 900,
+        ease: "Sine.easeInOut",
+        onUpdate: () => this.bird.setDepth(this.bird.y + 1),
+        onComplete: () => {
+          this.bird.setFlipX(false);
+          this.bird.play("bird_idle");
+        },
+      });
       return;
     }
     const b = this.buildings[job.id];
@@ -697,7 +710,8 @@ export class CampScene extends Phaser.Scene {
     // canto direito é do selo "!")
     const bx = b.x - w / 2 + 2,
       by = top + 34;
-    this.bird.setFlipX(bx < this.bird.x);
+    this.bird.setFlipX(bx > this.bird.x); // o desenho olha para a esquerda
+    this.bird.play("bird_fly");
     this.tweens.add({
       targets: this.bird,
       x: bx,
@@ -707,11 +721,11 @@ export class CampScene extends Phaser.Scene {
       onUpdate: () => this.bird.setDepth(D_NIGHT - 1),
       onComplete: () => {
         this.bird.setFlipX(false);
+        this.bird.play("bird_work"); // bica a obra (quadros), em vez de pular parado
         this._birdWork = this.time.addEvent({
           delay: 420,
           loop: true,
           callback: () => {
-            this.tweens.add({ targets: this.bird, y: by - 8, duration: 110, yoyo: true });
             const d = this.add.image(bx + 10, by - 4, "px_dot2").setScale(3).setTint(0xc88a5a).setDepth(D_NIGHT - 1);
             this.tweens.add({ targets: d, y: by + 14, x: bx + 20 + Math.random() * 10, alpha: 0, duration: 500, onComplete: () => d.destroy() });
           },

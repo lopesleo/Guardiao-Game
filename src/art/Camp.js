@@ -35,37 +35,25 @@ function plank(p, x, y, w, h) {
 
 
 // João-de-barro (pássaro): 2 quadros (parado / pulinho com asa aberta)
+// João-de-barro (10×9): 0 pousado · 1 sacode a asa · 2 pisca · 3 bica (martelando a
+// obra) · 4-5 voo (asa em cima / embaixo). Olha para a ESQUERDA.
 function makeBirdFrames() {
   const legend = { k: K, b: PAL.n3, B: PAL.n2, c: PAL.org3, w: PAL.cream, e: PAL.white, y: PAL.yel2, d: PAL.n1 };
-  const a = Pix.fromMap(
-    [
-      "...kkk....",
-      "..kbbbk...",
-      ".kbekbbkk.",
-      "ykbbbbbBBk",
-      ".kwccbBBBk",
-      ".kwccbBBk.",
-      "..kwwBBk..",
-      "...kddk...",
-      "...k..k...",
-    ],
-    legend,
-  );
-  const b = Pix.fromMap(
-    [
-      "...kkk..kk",
-      "..kbbbkkBk",
-      ".kbekbbBBk",
-      "ykbbbbbBk.",
-      ".kwccbBBk.",
-      ".kwccbBk..",
-      "..kwwBk...",
-      "...kddk...",
-      "..........",
-    ],
-    legend,
-  );
-  return [a, b];
+  const maps = [
+    // 0 pousado
+    ["...kkk....", "..kbbbk...", ".kbekbbkk.", "ykbbbbbBBk", ".kwccbBBBk", ".kwccbBBk.", "..kwwBBk..", "...kddk...", "...k..k..."],
+    // 1 sacode a asa
+    ["...kkk..kk", "..kbbbkkBk", ".kbekbbBBk", "ykbbbbbBk.", ".kwccbBBk.", ".kwccbBk..", "..kwwBk...", "...kddk...", ".........."],
+    // 2 pisca
+    ["...kkk....", "..kbbbk...", ".kbbkbbkk.", "ykbbbbbBBk", ".kwccbBBBk", ".kwccbBBk.", "..kwwBBk..", "...kddk...", "...k..k..."],
+    // 3 bica: corpo inclina, bico para baixo e à frente (a martelada)
+    ["..........", "....kkk...", "...kbbbkk.", ".kkbekbBBk", "ykbbbbbBBk", "yykwcbBBk.", "..kwwBBk..", "...kddk...", "...k..k..."],
+    // 4 voo: asas para cima
+    ["kk......kk", "kBk....kBk", ".kBkkkkBk.", "..kbbbbk..", "ykbebbbBk.", ".kwccbBBk.", "..kwwBk...", "...kkk....", ".........."],
+    // 5 voo: asas para baixo
+    ["..........", "...kkkk...", "..kbbbbk..", "ykbebbbBk.", ".kwccbBBk.", "kBBkcbkBBk", "kBk.kk.kBk", "kk......kk", ".........."],
+  ];
+  return maps.map((rows) => Pix.fromMap(rows, legend));
 }
 
 // ---------------------------------------------------------------------------
@@ -239,7 +227,16 @@ export function registerCamp(scene) {
   const anim = (key, tex, rate, frames) => {
     if (!scene.anims.exists(key)) scene.anims.create({ key, frames: scene.anims.generateFrameNumbers(tex, { frames }), frameRate: rate, repeat: -1 });
   };
-  anim("bird_idle", "camp_bird", 3, [0, 0, 0, 1, 0, 1]);
+  // pousado: olha, pisca, sacode a asa (tempos por quadro)
+  if (!scene.anims.exists("bird_idle"))
+    scene.anims.create({
+      key: "bird_idle",
+      frames: [[0, 900], [2, 110], [0, 700], [1, 160], [0, 140], [1, 160], [0, 1200], [3, 180], [0, 600]].map(([frame, duration]) => ({ key: "camp_bird", frame, duration })),
+      frameRate: 3,
+      repeat: -1,
+    });
+  anim("bird_fly", "camp_bird", 12, [4, 5]);
+  anim("bird_work", "camp_bird", 7, [0, 3, 3, 0]); // martelando a obra com o bico
   // parada: respira devagar e pisca de vez em quando (tempos por quadro)
   if (!scene.anims.exists("elder_idle"))
     scene.anims.create({
