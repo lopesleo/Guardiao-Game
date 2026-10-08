@@ -1468,8 +1468,9 @@ export const SEASONS = [{ id: "junina", name: "Festa Junina", from: [6, 1], to: 
 // O lago "descansa": tem poucos peixes e repõe com o tempo real (sem cronômetro
 // na cara — bolhas na água mostram que há peixe). Horário REAL muda quem aparece.
 export const FISHING = {
-  // nível do Lago (obra) → zona verde (fração da barra) e peixes no lago
-  LEVELS: [null, { zone: 0.26, cap: 4 }, { zone: 0.31, cap: 6 }, { zone: 0.36, cap: 8 }],
+  // nível do Lago (obra) → zona verde (fração da barra) e peixes no lago. Era 26/31/36%:
+  // largo demais (o Stardew começa em ~17%), quase todo peixe saía sem esforço
+  LEVELS: [null, { zone: 0.2, cap: 4 }, { zone: 0.24, cap: 6 }, { zone: 0.28, cap: 8 }],
   REGEN_MIN: 20, // o lago repõe 1 peixe a cada 20 min
   BITE_S: [1.2, 3.5], // espera pela fisgada
   HOOK_S: 1.2, // tempo para puxar depois do "!"
@@ -1487,8 +1488,8 @@ export const FISHING = {
   // diff = dificuldade (0–100) · move: mixed · smooth (suave) · dart (arrancadas) · sinker (afunda) · floater (sobe)
   // w = peso no sorteio; day/night = só nesse horário (6h–18h é dia)
   FISH: {
-    lambari: { name: "Lambari", move: "mixed", diff: 15, w: 30, cm: [8, 16] },
-    cara: { name: "Cará", move: "mixed", diff: 25, w: 22, cm: [10, 22] },
+    lambari: { name: "Lambari", move: "mixed", diff: 22, w: 30, cm: [8, 16] },
+    cara: { name: "Cará", move: "mixed", diff: 32, w: 22, cm: [10, 22] },
     tilapia: { name: "Tilápia", move: "smooth", diff: 35, w: 18, cm: [18, 42] },
     traira: { name: "Traíra", move: "dart", diff: 60, w: 14, cm: [25, 60], night: true },
     pacu: { name: "Pacu", move: "sinker", diff: 55, w: 11, cm: [30, 70] },
