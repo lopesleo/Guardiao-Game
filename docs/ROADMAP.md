@@ -199,6 +199,17 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
 - ✅ **Trocar cartas escasso** (como o banir): era 1 troca grátis a CADA nível; agora **2 por partida**
   (`CARDS.REROLL_BASE`) + **"TROCAR +1" por anúncio** (1 por partida, `extra_reroll`). **Horta: +1 canteiro
   por obra** do João-de-barro (2 → 3 → 4 → 5; eram 2 → 4 → 6 → 9). Canteiros já abertos nunca somem
+- ✅ **Cartas de melhoria rebalanceadas** (medido no laboratório: +1 projétil valia 2–3× uma carta de dano,
+  e o alcance não mudava nada em metade das armas): **+1 projétil vira marco** — sai garantido ao subir a
+  arma para o **nível 3 e o 5** e nunca nos outros (`CARDS.PROJ_LEVELS`, como no Vampire Survivors).
+  **Alcance saiu** de Cajado, Raio, Orbe, Vaga-lumes, Bola de Ouro e Boleadeira. **Galhos Extras** (passiva)
+  dizia "Cajado e Raio", mas valia para 12 armas e empilhava: agora vale para **toda arma com "+1"**
+  (Orbe e Redemoinho passaram a contar) e sai **só 1 vez** (`once`). A carta "+2 Folhas" dava 1 folha:
+  agora dá 2. Texto revisado nos 6 idiomas
+- ✅ **Pesca mais difícil**: zona verde do Lago **20 / 24 / 28%** (era 26 / 31 / 36%; o Stardew começa em
+  ~17%); Lambari e Cará mais ariscos (15 → 22, 25 → 32). Robô com reação de 0,3 s, Lago 1: peixes comuns
+  ainda saem quase sempre, mas pegada Ouro cai de ~95% para 50–85%; Traíra 97% → 60%, Tucunaré 70% → 4%,
+  Dourado 29% → 5% — subir o Lago passa a valer (no Lago 3: 98%, 85%, 41%). 👤 sentir no aparelho
 - ✅ **Elementos e reações na pausa**: selo da cor do elemento no canto de cada arma (chama, floco, raio,
   lufada — `ELEMENT_SEAL` em `Icons.js`; a evolução que aplica dois elementos ganha dois) e uma coluna
   **REAÇÕES** com os 6 pares sempre à vista: conseguida na partida = nome na cor da reação e "×N";

@@ -181,7 +181,7 @@ export default {
   "Auras, nuvens, reações e a vara alcançam mais longe.": "Auras, nubes, reacciones y la vara llegan más lejos.",
   "+{0}% Área": "+{0}% Área",
   "Galhos Extras": "Ramas Extra",
-  "+1 projétil/alvo no Cajado e no Raio.": "+1 proyectil/objetivo en el Bastón y el Rayo.",
+  "+1 projétil em todas as armas que ganham +1 nas cartas. Só 1 vez.": "+1 proyectil en todas las armas que ganan +1 con las cartas. Solo 1 vez.",
   "+1 Projétil": "+1 Proyectil",
   "Sede da Mata": "Sed de la Selva",
   "Parte do dano causado vira cura.": "Parte del daño causado se vuelve curación.",

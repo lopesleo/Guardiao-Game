@@ -145,7 +145,8 @@ export class Folhas extends WindWeapon {
   _fire() {
     if (!this.owner) return false;
     if (!this._closest(this.owner, this.range * this.area + 40, 1).length) return false;
-    const n = this.def.count + (this.owner?.extraProj ?? 0) + this.extraProj;
+    // cada +1 (carta ou Galhos Extras) = +2 folhas, como a carta promete ("+2 Folhas")
+    const n = this.def.count + 2 * ((this.owner?.extraProj ?? 0) + this.extraProj);
     const a0 = Math.random() * Math.PI * 2;
     for (let i = 0; i < n && this.leaves.length < MAX_LEAVES; i++) {
       // folha desenhada que rodopia (px_leaf_tumble); cada uma começa num ponto do giro

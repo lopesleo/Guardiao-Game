@@ -181,7 +181,7 @@ export default {
   "Auras, nuvens, reações e a vara alcançam mais longe.": "オーラ、雲、反応、杖がより遠くまで届く。",
   "+{0}% Área": "範囲+{0}%",
   "Galhos Extras": "余分な枝",
-  "+1 projétil/alvo no Cajado e no Raio.": "杖と雷の弾/対象+1。",
+  "+1 projétil em todas as armas que ganham +1 nas cartas. Só 1 vez.": "カードで+1が付く全武器の弾+1。1回だけ。",
   "+1 Projétil": "弾+1",
   "Sede da Mata": "森の渇き",
   "Parte do dano causado vira cura.": "与えたダメージの一部が回復になる。",

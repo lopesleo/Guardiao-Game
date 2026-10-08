@@ -181,7 +181,7 @@ export default {
   "Auras, nuvens, reações e a vara alcançam mais longe.": "光环、云雾、反应和手杖的范围更远。",
   "+{0}% Área": "+{0}% 范围",
   "Galhos Extras": "额外枝条",
-  "+1 projétil/alvo no Cajado e no Raio.": "法杖和闪电+1投射物/目标。",
+  "+1 projétil em todas as armas que ganham +1 nas cartas. Só 1 vez.": "所有能从卡牌获得+1的武器，投射物+1。仅限1次。",
   "+1 Projétil": "+1 投射物",
   "Sede da Mata": "森林之渴",
   "Parte do dano causado vira cura.": "造成的部分伤害转化为治疗。",

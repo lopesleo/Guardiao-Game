@@ -129,11 +129,14 @@ export class UpgradeSystem {
       }
     }
 
-    // 2) Melhorias — cada arma rola UM modificador
+    // 2) Melhorias — cada arma rola UM modificador. +1 projétil é MARCO: sai garantido
+    // ao subir para os níveis de CARDS.PROJ_LEVELS (3 e 5) e nunca nos outros
     for (const w of player.weapons) {
       if (w.level >= MAX_WEAPON_LEVEL) continue;
-      const pool = WEAPON_MODS[w.key] || ["dmg"];
-      const mod = pool[Math.floor(Math.random() * pool.length)];
+      const mods = WEAPON_MODS[w.key] || ["dmg"];
+      const milestone = mods.includes("proj") && CARDS.PROJ_LEVELS.includes(w.level + 1);
+      const pool = milestone ? ["proj"] : mods.filter((m) => m !== "proj");
+      const mod = pool.length ? pool[Math.floor(Math.random() * pool.length)] : "dmg";
       let stat, apply;
       if (mod === "dmg") {
         const v = rInt(25, 45);
@@ -175,6 +178,7 @@ export class UpgradeSystem {
     for (const ps of PASSIVES) {
       const owned = !!taken[ps.id];
       if (full && !owned) continue;
+      if (ps.once && owned) continue; // passiva de 1 vez só (Galhos Extras)
       const rolled = ps.roll();
       cards.push({
         type: "passive",

@@ -237,7 +237,7 @@ export const WEAPONS = {
     name: "Cajado",
     desc: "Bola de fogo no inimigo mais próximo.",
     icon: "ico_staff",
-    mods: ["dmg", "cd", "range", "proj"], // melhorias que as cartas sorteiam
+    mods: ["dmg", "cd", "proj"], // melhorias que as cartas sorteiam
     unlock: { start: true },
     element: ELEMENT.FIRE,
     baseDmg: 10, // era 7: alvo único precisa render no chefe (laboratório de equilíbrio)
@@ -279,7 +279,7 @@ export const WEAPONS = {
     name: "Raio Concentrado",
     desc: "Raio de dano alto; prefere alvos já afetados.",
     icon: "ico_bolt",
-    mods: ["dmg", "cd", "range", "proj"],
+    mods: ["dmg", "cd", "proj"],
     unlock: { forge: 2, cost: 60 },
     element: ELEMENT.BOLT,
     baseDmg: 20, // era 15: o melhor contra o chefe, fraco no bando
@@ -359,7 +359,7 @@ export const WEAPONS = {
     name: "Orbe Gélido",
     desc: "Orbes de gelo giram ao seu redor e resfriam quem tocam.",
     icon: "ico_orb",
-    mods: ["dmg", "proj", "range"],
+    mods: ["dmg", "proj"],
     plus: "+1 Orbe",
     unlock: { forge: 3, cost: 300, deed: { stat: "VAPOR", n: 60, text: "Faça {n} Vapores (fogo + gelo)" } },
     element: ELEMENT.ICE,
@@ -421,7 +421,7 @@ export const WEAPONS = {
     name: "Vaga-lumes",
     desc: "Vaga-lumes teleguiados caçam inimigos diferentes.",
     icon: "ico_firefly",
-    mods: ["dmg", "cd", "range", "proj"],
+    mods: ["dmg", "cd", "proj"],
     plus: "+1 Vaga-lume",
     unlock: { forge: 2, cost: 150, deed: { stat: "kills", n: 1500, text: "Abata {n} criaturas" } },
     element: ELEMENT.BOLT,
@@ -555,7 +555,7 @@ export const WEAPONS = {
     name: "Bola de Ouro",
     desc: "A bola de fogo da Mãe-do-Ouro ricocheteia de inimigo em inimigo.",
     icon: "ico_goldball",
-    mods: ["dmg", "cd", "range", "proj"],
+    mods: ["dmg", "cd", "proj"],
     plus: "+1 Bola",
     unlock: { forge: 4, cost: 1100, deed: { stat: "chests", n: 40, text: "Abra {n} baús" } },
     element: ELEMENT.BOLT,
@@ -610,7 +610,7 @@ export const WEAPONS = {
     name: "Boleadeira",
     desc: "Três pedras na corda: amarram até 3 inimigos juntos e esfriam.",
     icon: "ico_bolas",
-    mods: ["dmg", "cd", "range", "proj"],
+    mods: ["dmg", "cd", "proj"],
     plus: "+1 Boleadeira",
     unlock: { forge: 3, cost: 700, deed: { stat: "CRYSTAL", n: 80, text: "Faça {n} Cristais (gelo + raio)" } },
     element: ELEMENT.ICE,
@@ -1040,10 +1040,12 @@ export const PASSIVES = [
     },
   },
   {
+    // vale para TODA arma que tem melhoria de +1 (mods com "proj"); só 1 vez por partida
     id: "proj",
     label: "Galhos Extras",
-    desc: "+1 projétil/alvo no Cajado e no Raio.",
-    roll: () => ({ name: "+1 Projétil", apply: (p) => (p.extraProj += 1) }),
+    desc: "+1 projétil em todas as armas que ganham +1 nas cartas. Só 1 vez.",
+    once: true,
+    roll: () => ({ name: tr("+1 Projétil"), apply: (p) => (p.extraProj += 1) }),
   },
   {
     id: "lifesteal",
@@ -1236,6 +1238,10 @@ export const CARDS = {
   // TROCAR cartas também é escasso (era 1 grátis a CADA nível — sempre à mão, a escolha
   // perdia peso): saldo por PARTIDA + 1 extra por anúncio (AdService "extra_reroll")
   REROLL_BASE: 2,
+  // +1 projétil é MARCO de nível (como no Vampire Survivors): sai só ao subir a arma
+  // para estes níveis. Nos outros, a carta sorteia dano, recarga ou alcance. Medido:
+  // +1 projétil vale 2–3× uma carta de dano — sorteado a qualquer nível, decidia a run.
+  PROJ_LEVELS: [3, 5],
 };
 
 // Entrada na floresta (continuação da saída da Clareira): o guardião chega
@@ -1462,8 +1468,9 @@ export const SEASONS = [{ id: "junina", name: "Festa Junina", from: [6, 1], to: 
 // O lago "descansa": tem poucos peixes e repõe com o tempo real (sem cronômetro
 // na cara — bolhas na água mostram que há peixe). Horário REAL muda quem aparece.
 export const FISHING = {
-  // nível do Lago (obra) → zona verde (fração da barra) e peixes no lago
-  LEVELS: [null, { zone: 0.26, cap: 4 }, { zone: 0.31, cap: 6 }, { zone: 0.36, cap: 8 }],
+  // nível do Lago (obra) → zona verde (fração da barra) e peixes no lago. Era 26/31/36%:
+  // largo demais (o Stardew começa em ~17%), quase todo peixe saía sem esforço
+  LEVELS: [null, { zone: 0.2, cap: 4 }, { zone: 0.24, cap: 6 }, { zone: 0.28, cap: 8 }],
   REGEN_MIN: 20, // o lago repõe 1 peixe a cada 20 min
   BITE_S: [1.2, 3.5], // espera pela fisgada
   HOOK_S: 1.2, // tempo para puxar depois do "!"
@@ -1481,8 +1488,8 @@ export const FISHING = {
   // diff = dificuldade (0–100) · move: mixed · smooth (suave) · dart (arrancadas) · sinker (afunda) · floater (sobe)
   // w = peso no sorteio; day/night = só nesse horário (6h–18h é dia)
   FISH: {
-    lambari: { name: "Lambari", move: "mixed", diff: 15, w: 30, cm: [8, 16] },
-    cara: { name: "Cará", move: "mixed", diff: 25, w: 22, cm: [10, 22] },
+    lambari: { name: "Lambari", move: "mixed", diff: 22, w: 30, cm: [8, 16] },
+    cara: { name: "Cará", move: "mixed", diff: 32, w: 22, cm: [10, 22] },
     tilapia: { name: "Tilápia", move: "smooth", diff: 35, w: 18, cm: [18, 42] },
     traira: { name: "Traíra", move: "dart", diff: 60, w: 14, cm: [25, 60], night: true },
     pacu: { name: "Pacu", move: "sinker", diff: 55, w: 11, cm: [30, 70] },
