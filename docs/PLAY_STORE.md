@@ -16,25 +16,60 @@ máquina/conta para publicar.
 | Tudo offline (fonte e libs locais) | `assets/fonts/`, `vendor/` |
 | Ferramentas de debug fora do build | teclas de debug e botão de moedas só com `?debug=1` |
 
-## Gerar o AAB (uma vez por versão)
+## Gerar o app assinado (APK para instalar, AAB para a loja)
 
-Pré-requisitos: **Node 22+**, **JDK 21** e **Android Studio** recente (Gradle 8.14, AGP 8.13).
+- **APK** (`.apk`) = instala direto no celular ou manda para amigos testarem.
+- **AAB** (`.aab`) = o que a **Play Store** aceita (APK não é aceito em app novo).
 
-```bash
-npm install
-npm run android:sync      # copia o jogo para www/ e sincroniza com android/
-npm run android:open      # abre o projeto no Android Studio
+Os dois são assinados com a **mesma chave**, que é **sua** e nunca vai para o git. Não precisa do
+Android Studio: tudo sai por comando, num PowerShell aberto na pasta do jogo (no Explorer, clique
+na barra de endereço, digite `powershell` e Enter). Pré-requisitos: **Node 22+**, **JDK 21** e o
+**Android SDK** (já instalados neste PC; ver `tools/android-install.mjs`).
+
+### 1. Criar a chave (uma vez na vida do jogo)
+
+```powershell
+npm run android:chave
 ```
 
-No Android Studio:
-1. Espere o Gradle sincronizar.
-2. Teste num celular (▶ Run) — confira som, toque, pausa ao sair do app, botão voltar.
-3. **Build → Generate Signed App Bundle** → crie uma *keystore* nova
-   (**guarde o arquivo e as senhas em lugar seguro** — sem ela não há atualização).
-4. O arquivo sai em `android/app/release/app-release.aab`.
+Pede seu nome e uma senha (mín. 8 caracteres, **sem acento** — o formato da chave não aceita).
+Cria a chave em `C:\Users\<você>\chaves-android\guardiao-upload.jks` (para outro lugar:
+`npm run android:chave -- D:\chaves\guardiao.jks`; dentro da pasta do jogo ele recusa) e o
+`android/keystore.properties`, que diz ao Gradle onde está a chave e a senha (fora do git).
+Nunca sobrescreve uma chave que já existe.
 
-A cada nova versão, aumente `versionCode` (inteiro) e `versionName` em
-`android/app/build.gradle` e rode `npm run android:sync` de novo.
+**Faça backup do `.jks` e da senha em dois lugares** (ex.: pen drive + Google Drive, senha num
+gerenciador de senhas). Sem eles não dá para lançar atualização. Em outro PC: copie o `.jks` e o
+`android/keystore.properties` (ajuste o caminho `storeFile` dentro dele).
+
+### 2. Gerar
+
+```powershell
+npm run android:apk     # APK com anúncios de TESTE  → dist/guardiao-v1.0-1-anuncios-teste.apk
+npm run android:aab     # AAB com anúncios de VERDADE → dist/guardiao-v1.0-1-anuncios-reais.aab
+```
+
+O comando copia o jogo, compila, **confere a assinatura** e põe o arquivo em `dist/` com a versão e
+o tipo de anúncio no nome. **Não mexa em `ADS.TESTING` à mão:** o `android:aab` liga os anúncios de
+verdade só na cópia empacotada; todo o resto (APK, `android:install`, navegador) usa os de teste.
+Clicar em anúncio de verdade do próprio app pode bloquear a conta do AdMob. Para inverter:
+`npm run android:apk -- --anuncios-reais` ou `npm run android:aab -- --anuncios-teste`.
+
+**Instalar o APK num celular:** mande o arquivo (cabo, Drive, WhatsApp), abra no celular e
+permita "instalar apps desconhecidos". Se o celular já tem o jogo de outra fonte (o de teste do
+`npm run android:install` ou, depois, o da Play Store), a assinatura é diferente e ele recusa:
+**desinstale antes — isso apaga o progresso salvo naquele celular.**
+
+**Na Play Store:** no 1º envio a Play guarda a chave oficial do app (*Play App Signing*) e a sua
+vira a **chave de envio**. Se um dia perder a sua, o Play Console permite pedir a troca da chave
+de envio ao suporte — mas não conte com isso: guarde a chave.
+
+A cada nova versão enviada à loja, aumente `versionCode` (inteiro: 1, 2, 3…) e `versionName`
+("1.0.1"…) em `android/app/build.gradle` — a Play recusa um código repetido.
+
+**Pelo Android Studio** (se preferir): `npm run android:sync` → `npm run android:open` →
+**Build → Generate Signed App Bundle / APK…** → escolha a mesma chave (*Choose existing…*).
+Nesse caminho os anúncios seguem o `ADS.TESTING` do `config.js` (de teste).
 
 ## Ficha da loja (6 idiomas)
 

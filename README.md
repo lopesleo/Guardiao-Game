@@ -55,13 +55,16 @@ botão de moedas) só aparecem com `?debug=1` na URL.
 
 ## Android / Play Store
 
-Veja **[`docs/PLAY_STORE.md`](docs/PLAY_STORE.md)** — build do AAB, ficha da loja,
+Veja **[`docs/PLAY_STORE.md`](docs/PLAY_STORE.md)** — app assinado, ficha da loja,
 política de privacidade ([`docs/PRIVACY.md`](docs/PRIVACY.md)).
 
 ```bash
 npm install
-npm run android:sync   # copia o jogo para www/ e sincroniza o projeto android/
-npm run android:open   # abre no Android Studio
+npm run android:install  # app de TESTE no celular plugado (depuração USB)
+npm run android:chave    # 1 vez: cria a SUA chave de assinatura (fora do git; faça backup)
+npm run android:apk      # APK assinado, anúncios de teste → dist/
+npm run android:aab      # AAB assinado para a Play Store, anúncios de verdade → dist/
+npm run android:open     # (opcional) abre no Android Studio
 ```
 
 ## Arquitetura
