@@ -69,6 +69,8 @@ let installing = null,
 
 // Sem rede o carregamento pode demorar muito: passado esse tempo, desiste (o jogador é avisado)
 const LOAD_TIMEOUT_MS = 12000;
+// Depois de fechar, quanto tempo esperar pelo aviso de recompensa que chega atrasado
+const REWARD_GRACE_MS = 600;
 
 // Um anúncio premiado. Resolve "ok" só se o jogador GANHOU a recompensa (assistiu até o fim);
 // "cancelled" = fechou antes; "unavailable" = não carregou (sem rede, sem anúncio no momento…)
@@ -97,8 +99,23 @@ function showRewarded(placement) {
     }, LOAD_TIMEOUT_MS);
     (async () => {
       try {
-        handles.push(await AdMob.addListener("onRewardedVideoAdReward", () => (rewarded = true)));
-        handles.push(await AdMob.addListener("onRewardedVideoAdDismissed", () => finish(rewarded ? "ok" : "cancelled")));
+        // A recompensa SÓ sai com o aviso de "ganhou" do SDK (assistiu até o fim). Alguns anúncios
+        // avisam "ganhou" logo DEPOIS de "fechou": após fechar, espera um instante antes de dar
+        // como cancelado — sem isso quem assistiu tudo ficava sem a recompensa
+        let dismissed = false;
+        handles.push(
+          await AdMob.addListener("onRewardedVideoAdReward", () => {
+            rewarded = true;
+            if (dismissed) finish("ok");
+          }),
+        );
+        handles.push(
+          await AdMob.addListener("onRewardedVideoAdDismissed", () => {
+            dismissed = true;
+            if (rewarded) finish("ok");
+            else setTimeout(() => finish(rewarded ? "ok" : "cancelled"), REWARD_GRACE_MS);
+          }),
+        );
         handles.push(await AdMob.addListener("onRewardedVideoAdFailedToShow", () => finish("unavailable")));
         await AdMob.prepareRewardVideoAd({ adId, isTesting: ADS.TESTING });
         if (done) return; // demorou demais: o jogador já foi avisado, não abre o anúncio depois
