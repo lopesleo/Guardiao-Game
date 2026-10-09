@@ -68,7 +68,7 @@ export class HUD {
 
     // ===== DIREITA: abates / moedas / pausa =====
     const rx = W - 16;
-    this.pauseBtn = this._iconButton(rx - 26, 52, "ico_pause", () => scene.pauseGame?.());
+    this.pauseBtn = this._iconButton(rx - 26, 52, "ico_pause", () => scene.pauseGame?.(), 3, true);
     let sx = rx - 70;
     // Tela cheia só no navegador (no app Android já é tela cheia)
     if (!window.Capacitor?.isNativePlatform?.()) {
@@ -109,7 +109,10 @@ export class HUD {
     this.banner.add([this.bannerG, this.bannerT]);
   }
 
-  _iconButton(x, y, key, onTap, scale = 3) {
+  // nativeTouch: o toque dispara ao ENCOSTAR, por um listener nativo (como Dash e
+  // Despertar). Com um dedo no joystick, o "soltar" do segundo dedo pode nunca chegar
+  // ao Phaser (o navegador cancela o toque) — era assim que a pausa falhava andando.
+  _iconButton(x, y, key, onTap, scale = 3, nativeTouch = false) {
     const s = this.scene;
     const size = 16 * P;
     const g = s.add.graphics().setScrollFactor(0).setDepth(D + 1);
@@ -120,8 +123,10 @@ export class HUD {
     draw(false);
     const ico = s.add.image(x, y, key).setScale(scale).setScrollFactor(0).setDepth(D + 2);
     const zone = s.add.zone(x, y, size + 12, size + 12).setScrollFactor(0).setDepth(D + 3).setInteractive({ useHandCursor: true });
+    const native = (p) => nativeTouch && this.isTouch && p.wasTouch;
     zone.on("pointerdown", (p, lx, ly, ev) => {
       ev?.stopPropagation?.();
+      if (native(p)) return;
       draw(true);
       ico.y = y + P / 2;
     });
@@ -130,11 +135,31 @@ export class HUD {
       ico.y = y;
     };
     zone.on("pointerout", up);
-    zone.on("pointerup", () => {
+    zone.on("pointerup", (p) => {
       up();
+      if (native(p)) return;
       haptic(10);
       onTap();
     });
+    if (nativeTouch && this.isTouch) {
+      const half = (size + 12) / 2;
+      const onTouch = (e) => {
+        if (!s.scene.isActive() || s.scene.isPaused()) return;
+        for (const t of e.changedTouches) {
+          const gx = s.scale.transformX(t.pageX),
+            gy = s.scale.transformY(t.pageY);
+          if (Math.abs(gx - x) > half || Math.abs(gy - y) > half) continue;
+          draw(true);
+          ico.y = y + P / 2;
+          s.time.delayedCall(120, up); // se o toque pausou a cena, volta ao retomar
+          haptic(10);
+          onTap();
+          return;
+        }
+      };
+      window.addEventListener("touchstart", onTouch, { passive: true, capture: true });
+      s.events.once("shutdown", () => window.removeEventListener("touchstart", onTouch, { capture: true }));
+    }
     return { g, ico, zone };
   }
 
