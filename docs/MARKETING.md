@@ -14,7 +14,7 @@ Legenda — **Quem:** 🤖 dá pra eu fazer · 👤 depende de você (conta, ros
 - **Para quem:** jogadores de ação no celular, no Brasil primeiro (16–34 anos, quem já jogou *Survivor.io*,
   *Vampire Survivors*, *Archero* ou *Brotato*); depois, quem joga roguelite no mundo e nunca viu o folclore
   brasileiro.
-- **Promessa:** *as lendas do Brasil contra a Podridão, num survivor justo de verdade.*
+- **Promessa:** *as lendas do folclore brasileiro contra a Podridão, num survivor justo de verdade.*
 - **As três apostas:**
   1. **Vídeo curto com a mecânica que se entende sem som:** *Fogo + Gelo = Vapor*. É o gancho de todos os
      posts.
@@ -48,8 +48,8 @@ Legenda — **Quem:** 🤖 dá pra eu fazer · 👤 depende de você (conta, ros
 ## 2. Posicionamento
 
 ### Frase de uma linha
-> **PT:** As lendas do Brasil contra a Podridão. Só ande: as armas atacam sozinhas.
-> **EN:** Brazil's legends against the Rot. Just move — your weapons do the rest.
+> **PT:** As lendas do folclore brasileiro contra a Podridão. Só ande: as armas atacam sozinhas.
+> **EN:** Legends of Brazilian folklore against the Rot. Just move — your weapons do the rest.
 
 Em comunidade e imprensa (nunca na ficha da loja, que proíbe citar outros apps), a comparação acelera o
 entendimento: *"um survivor no estilo Vampire Survivors, com o folclore brasileiro"*.
@@ -169,7 +169,7 @@ Kit de imprensa na página (seção "Imprensa"): ficha técnica, textos curtos, 
 
 | Alvo | Ângulo |
 |---|---|
-| **Imprensa local** (A Voz da Serra, de Nova Friburgo, e a comunicação do CEFET/RJ) | "Estudante de Nova Friburgo lança jogo com as lendas do Brasil". É a matéria mais fácil de sair, e a que abre portas |
+| **Imprensa local** (A Voz da Serra, de Nova Friburgo, e a comunicação do CEFET/RJ) | "Estudante de Nova Friburgo lança jogo com as lendas do folclore brasileiro". É a matéria mais fácil de sair, e a que abre portas |
 | **Sites de games do Brasil** (TecMundo/Voxel, que publica listas de indies brasileiros; Drops de Jogos; Arkade; Gamers & Games; Omelete; o "Só Jogo" do Correio Braziliense) | Folclore como heróis + "justo de verdade" + lançamento em data marcada |
 | **Exterior** (Pocket Gamer e o **Big Indie Pitch** deles; sites de Android) | "Brazilian folklore survivor-like", com os 6 idiomas como argumento |
 
@@ -264,7 +264,7 @@ custo por instalação passar da receita por jogador em 30 dias.
 - 🤖 Formulário de feedback do teste (5 perguntas)
 
 ### Convite para testadores (pronto para colar)
-> Fiz um jogo de celular com as lendas do Brasil: o **Guardião da Floresta**. Ele vai sair na Google Play,
+> Fiz um jogo de celular com as lendas do folclore brasileiro: o **Guardião da Floresta**. Ele vai sair na Google Play,
 > mas antes a Google exige que 12 pessoas testem por 14 dias. Me ajuda? Leva 2 minutos:
 > 1) entre no grupo pelo link da página (**lopesleo.github.io/guardiao**) com o Gmail do seu celular;
 > 2) aceite o convite de teste; 3) instale pela Play e **deixe instalado por 14 dias** (jogar uma partida de
