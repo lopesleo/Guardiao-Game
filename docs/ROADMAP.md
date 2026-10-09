@@ -412,9 +412,15 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   respostas em `PLAY_STORE.md`)
 - ⬜ **Anúncios adequados a 13+**: o público-alvo inclui 13–15 anos; no `AdService`, pedir anúncios
   com classificação máxima "T" (`maxAdContentRating`) junto com o UMP
-- ⬜ **Página do jogo** em `lopesleo.github.io` (ex.: `/guardiao/`): nome, trailer, capturas, link da
-  loja e da política. Quando existir, trocar o "Site" dos dados de contato no Play Console por ela
-  (mesmo domínio, o `app-ads.txt` continua valendo)
+- ✅ **Página oficial** em <https://lopesleo.github.io/guardiao/> (09/10/2026; repositório `lopesleo.github.io`,
+  pasta `guardiao/`): 6 idiomas, laços de gameplay, reações interativas, as 7 lendas com a origem do bestiário,
+  chefes, biomas, Clareira, "justo de verdade", trailer, inscrição no teste fechado e kit de imprensa. A fase
+  do botão principal (teste → pré-registro → loja) muda em `guardiao/config.mjs`. 👤 Trocar o "Site" dos dados
+  de contato no Play Console por ela (mesmo domínio, o `app-ads.txt` continua valendo)
+- ✅ **Versão web fora do ar** (09/10/2026): o Pages do repositório do jogo serve a branch `pages` (aviso que
+  leva à página nova, service worker que apaga a cópia offline e a política no endereço antigo)
+- ✅ **Estratégia de marketing e distribuição** em [`MARKETING.md`](MARKETING.md): lançamento planejado para
+  03/12/2026, testadores agora, Dia do Saci como aquecimento
 - ⬜ Ao ligar a compra "Remover anúncios" ou o salvamento do Play Games: rever Segurança dos dados
   (login com conta externa) — a classificação já declara compras no jogo
 
@@ -426,10 +432,13 @@ Nada disso trava o desenvolvimento; só o lançamento e a receita.
   novas exigem **teste fechado** (12 testadores por 14 dias seguidos) antes da produção — juntar testadores
 - **AdMob → Pagamentos**: informações fiscais do Brasil (CPF) e dos EUA (W-8BEN); a forma de
   pagamento (conta bancária) só aparece quando os ganhos começam; pagamento mensal a partir de US$ 100
-- ✅ `docs/PRIVACY.md` atualizada já está no ar (`lopesleo.github.io/Guardiao-Game/docs/PRIVACY.html`)
+- ✅ `docs/PRIVACY.md` no ar em `lopesleo.github.io/guardiao/privacidade/` (+ inglês em `/guardiao/en/privacy/`);
+  o endereço antigo `lopesleo.github.io/Guardiao-Game/docs/PRIVACY.html` continua respondendo. 👤 Trocar a URL
+  no Play Console e na mensagem de consentimento do AdMob
 
 ### M6 — Loja e lançamento 👤
-- ⬜ Capturas de tela + imagem de destaque (geradas do jogo) + vídeo de 30 s
+- ✅ Capturas de tela + imagem de destaque (geradas do jogo, 6 idiomas) e vídeo promocional 16:9/9:16. 👤 Subir o
+  promo no YouTube para o campo de vídeo da ficha
 - ✅ **Idiomas: inglês, espanhol, japonês e chinês simplificado** (ver `IDIOMAS.md`): 933 textos por
   idioma, idioma do aparelho na 1ª abertura (sem suporte = inglês) e seletor em Opções → Jogo; fichas do
   `config.js` traduzidas por campo; Fusion Pixel (OFL) recortada para japonês/chinês com quebra por caractere;
