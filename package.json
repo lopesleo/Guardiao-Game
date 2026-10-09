@@ -15,7 +15,7 @@
     "android:chave": "node tools/android-key.mjs",
     "android:apk": "node tools/android-release.mjs apk",
     "android:aab": "node tools/android-release.mjs aab",
-    "icons": "npx @capacitor/assets generate --android --iconBackgroundColor '#10202a' --splashBackgroundColor '#070b14'"
+    "icons": "npx @capacitor/assets generate --android --assetPath resources --iconBackgroundColor '#10202a' --splashBackgroundColor '#070b14'"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.0.0"
