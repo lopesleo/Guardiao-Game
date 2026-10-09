@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guardião da Floresta</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://lopesleo.github.io/guardiao/">
+<noscript><meta http-equiv="refresh" content="0; url=https://lopesleo.github.io/guardiao/"></noscript>
+<style>html,body{margin:0;background:#10201f;color:#f4ecd6;font:17px/1.6 system-ui,sans-serif}main{max-width:560px;margin:18vh auto;padding:0 16px;text-align:center}a{color:#7fd9bd}</style>
+<script>
+  (function () {
+    var go = function () { location.replace("https://lopesleo.github.io/guardiao/" + location.search); };
+    var timer = setTimeout(go, 1500);
+    var jobs = [];
+    // tira a cópia offline do jogo antigo antes de sair
+    if ("serviceWorker" in navigator) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.filter(function (r) { return r.scope.indexOf("/Guardiao-Game/") >= 0; }).map(function (r) { return r.unregister(); })); }));
+    if (window.caches) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.filter(function (k) { return /^guardiao-/.test(k); }).map(function (k) { return caches.delete(k); })); }));
+    Promise.all(jobs).then(function () { clearTimeout(timer); go(); }, go);
+  })();
+</script>
+</head>
+<body><main>
+<p><strong>Guardião da Floresta</strong> agora está em <a href="https://lopesleo.github.io/guardiao/">lopesleo.github.io/guardiao/</a>.</p>
+<p lang="en"><strong>Forest Guardian</strong> has moved to <a href="https://lopesleo.github.io/guardiao/en/">lopesleo.github.io/guardiao/en/</a>.</p>
+</main></body>
+</html>
