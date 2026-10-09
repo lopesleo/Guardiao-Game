@@ -229,18 +229,37 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 
 **Gráfico de destaque (1024×500):** obrigatório — use o menu (título + herói).
 
-## Política de privacidade
+## O que foi declarado no Play Console (09/10/2026)
 
-Obrigatória mesmo sem coleta de dados. Texto pronto em `docs/PRIVACY.md` —
-publique no GitHub Pages (ex.: `https://lopesleo.github.io/Guardiao-Game/docs/PRIVACY.html`)
-e cole o link no Play Console. Na seção **Segurança dos dados**, declare:
-*o app não coleta nem compartilha dados*.
+Refazer quando o app mudar (compra "Remover anúncios", login do Play Games, novos SDKs).
+
+- **App:** "Guardião da Floresta", `com.lopesleo.guardiao`, jogo, **grátis** (não pode virar pago depois
+  de publicado), idioma padrão pt-BR, categoria **Ação**. Contato: `lopesleo.dev@gmail.com`, site
+  `https://lopesleo.github.io` (é dele que o AdMob lê o `app-ads.txt`)
+- **Política de privacidade:** `https://lopesleo.github.io/Guardiao-Game/docs/PRIVACY.html`
+- **Anúncios:** sim. **ID de publicidade:** sim (análise, publicidade, prevenção de fraudes); a permissão
+  `AD_ID` entra pelo SDK do AdMob
+- **Detalhes do login:** nada restrito. Apps governamentais, recursos financeiros, saúde: não
+- **Público-alvo:** 13–15, 16–17 e 18+
+- **Classificação (IARC):** violência contra criaturas fantásticas, irreal, pixelizada, vista de longe, sem
+  sangue; elementos assustadores raros; sem tabaco (a Vara Encantada é "acesa em brasa"); compras de bens
+  digitais (sem itens aleatórios pagos). Resultado: Livre/PG/PEGI 7 na maior parte, **14 no Brasil**
+  (a ClassInd não listou descritor de conteúdo — o que sobra é "Compras no jogo")
+- **Segurança dos dados:** coleta e compartilha; criptografado em trânsito; sem conta; sem pedido de
+  exclusão (os dados do Firebase não são ligados a uma pessoa). Tipos:
+
+  | Dado | Coleta | Compartilha | Obrigatório? | Finalidades |
+  |---|---|---|---|---|
+  | Local aproximado (IP, AdMob) | sim | sim | sim | análise, publicidade, fraudes |
+  | Interações no app | sim | sim | sim | análise, publicidade, fraudes |
+  | Registros de falhas (Crashlytics) | sim | não | **opcional** (Opções) | análise |
+  | Diagnóstico | sim | sim | sim | análise, publicidade, fraudes |
+  | IDs do dispositivo | sim | sim | sim | análise, publicidade, fraudes |
 
 ## Preço
 
-Jogo pago no Brasil: o valor mínimo aceito pelo Google muda por país (confira no
-Play Console ao definir o preço). Para vender, a conta precisa de um **perfil de
-pagamentos** configurado.
+**Grátis**, com anúncios opcionais e a compra "Remover anúncios" (precisa de **perfil de pagamentos**
+na conta para vender).
 
 ## Próximos passos recomendados (pós-lançamento)
 
