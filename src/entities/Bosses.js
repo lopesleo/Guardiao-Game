@@ -233,7 +233,7 @@ export class MulaBrain extends Brain {
       });
       steps.push({
         enter: () => {
-          o.play({ key: "alpha_move", startFrame: 0 });
+          o.play({ key: o._moveAnim ?? "alpha_move", startFrame: 0 }); // a do bioma (Cabra na Caatinga)
           o.anims.timeScale = 2.2;
           run = { x0: o.x, y0: o.y, lastX: o.x, lastY: o.y, t: 0, hit: false, minD: 1e9 };
           this.sfx("sfx_boss_roar", { volume: 0.3, rate: 1.6 });
@@ -466,7 +466,7 @@ export class SecoBrain extends Brain {
       o.shadow.setVisible(true);
       if (o.rimColor) o.rim.setVisible(true);
     }
-    if (o.active) o.play({ key: "elder_move", startFrame: 0 });
+    if (o.active) o.play({ key: o._moveAnim ?? "elder_move", startFrame: 0 });
   }
 
   // A SECA: ergue os braços; quem fica no círculo tem a vida sugada (ele cura).
