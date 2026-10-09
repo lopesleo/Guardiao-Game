@@ -16,7 +16,7 @@ export default {
   "Aura Gélida": "Aura Gélida",
   "Campo gélido: dano contínuo e congela quem demora dentro.": "Campo gélido: daño continuo y congela a quien se quede dentro.",
   "Vara Encantada": "Vara Encantada",
-  "A vara da Caipora, acesa no fumo: gira, atravessa e volta.": "La vara de la Caipora, encendida con humo: gira, atraviesa y vuelve.",
+  "A vara da Caipora, acesa em brasa: gira, atravessa e volta.": "La vara de la Caipora, encendida con una brasa: gira, atraviesa y vuelve.",
   "Raio Concentrado": "Rayo Concentrado",
   "Raio de dano alto; prefere alvos já afetados.": "Rayo de daño alto; prefiere objetivos ya afectados.",
   "Tempestade de Vapor": "Tormenta de Vapor",

@@ -16,7 +16,7 @@ export default {
   "Aura Gélida": "氷のオーラ",
   "Campo gélido: dano contínuo e congela quem demora dentro.": "凍てつく領域：継続ダメージを与え、長くとどまった敵を凍らせる。",
   "Vara Encantada": "魔法の杖",
-  "A vara da Caipora, acesa no fumo: gira, atravessa e volta.": "煙で灯したカイポラの杖：回転し、貫き、戻ってくる。",
+  "A vara da Caipora, acesa em brasa: gira, atravessa e volta.": "火で灯したカイポラの杖：回転し、貫き、戻ってくる。",
   "Raio Concentrado": "集中雷撃",
   "Raio de dano alto; prefere alvos já afetados.": "高威力の雷。すでに状態異常の敵を優先して狙う。",
   "Tempestade de Vapor": "蒸気の嵐",

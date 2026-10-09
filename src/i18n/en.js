@@ -16,7 +16,7 @@ export default {
   "Aura Gélida": "Frost Aura",
   "Campo gélido: dano contínuo e congela quem demora dentro.": "Freezing field: constant damage, and it freezes anyone who lingers inside.",
   "Vara Encantada": "Enchanted Rod",
-  "A vara da Caipora, acesa no fumo: gira, atravessa e volta.": "The Caipora's rod, lit with smoke: it spins, pierces and comes back.",
+  "A vara da Caipora, acesa em brasa: gira, atravessa e volta.": "The Caipora's rod, lit by an ember: it spins, pierces and comes back.",
   "Raio Concentrado": "Focused Lightning",
   "Raio de dano alto; prefere alvos já afetados.": "High-damage lightning; prefers targets already affected.",
   "Tempestade de Vapor": "Steam Storm",
