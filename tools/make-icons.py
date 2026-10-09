@@ -76,10 +76,12 @@ def outlined(img, color, n=1):
 
 
 def hero_frame():
-    """Quadro 0 do herói (exportado do jogo: resources/hero_guardian_strip.png),
-    centralizado num quadrado."""
-    strip = Image.open("resources/hero_guardian_strip.png").convert("RGBA")
-    f = strip.crop((0, 0, 24, 28))
+    """Quadro 0 do herói inicial (Curupira), tirado na hora do código do jogo
+    (tools/sprite-export.mjs) para o ícone nunca ficar com uma arte antiga."""
+    import subprocess, tempfile
+    tmp = tempfile.mkdtemp()
+    subprocess.run(["node", "tools/sprite-export.mjs", tmp, "hero_guardian:0"], check=True, capture_output=True)
+    f = Image.open(os.path.join(tmp, "hero_guardian_0.png")).convert("RGBA")
     sq = Image.new("RGBA", (28, 28), (0, 0, 0, 0))
     sq.alpha_composite(f, (2, 0))
     return sq
@@ -109,7 +111,9 @@ def icon(size, hero_frac=0.62, with_bg=True):
 # Ícone completo (loja, PWA) e camadas do ícone adaptativo do Android
 icon(1024).save("resources/icon-only.png")
 background(1024).save("resources/icon-background.png")
-icon(1024, hero_frac=0.46, with_bg=False).save("resources/icon-foreground.png")
+# o Android já põe 16,7% de margem (inset do ic_launcher.xml): aqui o herói pode ocupar
+# quase tudo, ficando dentro do círculo seguro (66 de 72 dp visíveis)
+icon(1024, hero_frac=0.64, with_bg=False).save("resources/icon-foreground.png")
 for s in (192, 512):
     icon(s).convert("RGB").save(f"icons/icon-{s}.png")
 # Maskable: herói menor, dentro da zona segura (80%)
@@ -119,7 +123,7 @@ icon(512).convert("RGB").save("resources/playstore-icon-512.png")
 
 # Splash: céu + herói pequeno central
 sp = background(2732)
-hr = hero(2732, 0.16)
+hr = hero(2732, 0.22)
 sp.alpha_composite(hr, ((2732 - hr.width) // 2, (2732 - hr.height) // 2))
 sp.convert("RGB").save("resources/splash.png")
 sp.convert("RGB").save("resources/splash-dark.png")
