@@ -118,7 +118,7 @@ vê um post / matéria / a loja  →  abre a página ou a ficha  →  instala  �
 | Quando | O quê | Quem |
 |---|---|---|
 | **09–12/10** | Página oficial no ar; versão web fora do ar com a política preservada. A **BGS 2026** está acontecendo agora (Anhembi, SP): não há tempo de expor, mas vale para contatos se você estiver lá | 🤖 / 👤 |
-| **até 14/10** | **Grupo do Google de testadores** criado e ligado à faixa de teste fechado; **20–25 convites** (12 é o mínimo e sempre alguém sai): família, amigos, turma do CEFET, colegas de trabalho, Discords de gamedev | 👤 (eu preparo os textos) |
+| **até 14/10** | **Lista de e-mails "Testadores Guardião"** (10 em 09/10/2026) até chegar a **20–25 pessoas** (12 é o mínimo e sempre alguém sai): família, amigos, turma do CEFET, colegas de trabalho, Discords de gamedev | 👤 (eu preparo os textos) |
 | 14/10 → 28/10 | **Teste fechado** de 14 dias. Formulário de feedback curto (5 perguntas); corrigir o que travar; anotar **quem jogou de verdade**, porque o pedido de produção pergunta como foi o teste | 👤 + 🤖 |
 | 14/10 → 03/12 | **Conteúdo curto 3×/semana** (ver [seção 6.1](#61-vídeo-curto-tiktok-reels-shorts)) para chegar ao lançamento com público | 👤 posta · 🤖 corta |
 | **31/10 (sáb.)** | **Dia do Saci**: vídeo do Saci com o Redemoinho ("aqui o Saci é guardião") e chamada para a última leva de testadores. Falar com a **SOSACI** (Sociedade dos Observadores de Saci, de São Luiz do Paraitinga) | 👤 + 🤖 |
@@ -256,8 +256,9 @@ custo por instalação passar da receita por jogador em 30 dias.
 
 ## 11. Checklist desta semana
 
-- 👤 Criar o Grupo do Google **guardiao-testadores** ("qualquer pessoa pode participar") e adicioná-lo à faixa
-  **Teste fechado → Testadores**; colar o link em `guardiao/config.mjs` (eu atualizo e publico)
+- 👤 Juntar e-mails de testadores (Gmail do celular Android) e me mandar: eu cadastro na lista do Console.
+  **Não trocar a lista por um Grupo do Google durante o teste:** o Console usa uma OU outra, e quem perder o
+  acesso no meio zera a contagem dos 14 dias. Grupo do Google só depois da produção, se fizer sentido
 - 👤 Mandar o convite para 20–25 pessoas (texto pronto abaixo)
 - 👤 Trocar a URL da política no Play Console e no AdMob (opcional: o endereço antigo continua valendo)
 - 🤖 Cortar os 6 primeiros vídeos curtos (3 reações, 2 lendas, 1 chefe) em 9:16
@@ -266,8 +267,9 @@ custo por instalação passar da receita por jogador em 30 dias.
 ### Convite para testadores (pronto para colar)
 > Fiz um jogo de celular com as lendas do folclore brasileiro: o **Guardião da Floresta**. Ele vai sair na Google Play,
 > mas antes a Google exige que 12 pessoas testem por 14 dias. Me ajuda? Leva 2 minutos:
-> 1) entre no grupo pelo link da página (**lopesleo.github.io/guardiao**) com o Gmail do seu celular;
-> 2) aceite o convite de teste; 3) instale pela Play e **deixe instalado por 14 dias** (jogar uma partida de
+> 1) me manda o Gmail do seu celular Android (ou pede pelo botão em **lopesleo.github.io/guardiao**);
+> 2) quando eu avisar, abra **play.google.com/apps/testing/com.lopesleo.guardiao** e toque em "Tornar-se testador";
+> 3) instale pela Play e **deixe instalado por 14 dias** (jogar uma partida de
 > 7 min já ajuda muito). Valeu demais!
 
 ---
