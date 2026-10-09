@@ -16,7 +16,7 @@ export default {
   "Aura Gélida": "冰霜光環",
   "Campo gélido: dano contínuo e congela quem demora dentro.": "冰凍領域：持續造成傷害，並凍結在其中停留過久的敵人。",
   "Vara Encantada": "魔法手杖",
-  "A vara da Caipora, acesa no fumo: gira, atravessa e volta.": "凱波拉的手杖，以煙點燃：旋轉、穿透並飛回。",
+  "A vara da Caipora, acesa em brasa: gira, atravessa e volta.": "凱波拉的手杖，以火點燃：旋轉、穿透並飛回。",
   "Raio Concentrado": "聚能閃電",
   "Raio de dano alto; prefere alvos já afetados.": "高傷害閃電，優先攻擊已受影響的目標。",
   "Tempestade de Vapor": "蒸汽風暴",

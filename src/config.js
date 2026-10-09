@@ -261,10 +261,10 @@ export const WEAPONS = {
     freezeImmuneMs: 3000,
   },
   // Vara Encantada (da Caipora): a lenda dá a ela uma vara mágica; aqui ela vem
-  // acesa no fumo do cachimbo, gira, atravessa o bando e volta para a mão.
+  // acesa em brasa, gira, atravessa o bando e volta para a mão.
   BOOMER: {
     name: "Vara Encantada",
-    desc: "A vara da Caipora, acesa no fumo: gira, atravessa e volta.",
+    desc: "A vara da Caipora, acesa em brasa: gira, atravessa e volta.",
     icon: "ico_boomer",
     mods: ["dmg", "cd", "range"],
     unlock: { forge: 1, cost: 30 },
