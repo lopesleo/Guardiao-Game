@@ -236,7 +236,9 @@ Refazer quando o app mudar (compra "Remover anúncios", login do Play Games, nov
 - **App:** "Guardião da Floresta", `com.lopesleo.guardiao`, jogo, **grátis** (não pode virar pago depois
   de publicado), idioma padrão pt-BR, categoria **Ação**. Contato: `lopesleo.dev@gmail.com`, site
   `https://lopesleo.github.io` (é dele que o AdMob lê o `app-ads.txt`)
-- **Política de privacidade:** `https://lopesleo.github.io/Guardiao-Game/docs/PRIVACY.html`
+- **Política de privacidade:** `https://lopesleo.github.io/Guardiao-Game/docs/PRIVACY.html` (continua no ar, gerada
+  pelo site). Endereço novo, para trocar aqui quando der: `https://lopesleo.github.io/guardiao/privacidade/`.
+  Ao mudar `docs/PRIVACY.md`, copiar para `guardiao/privacy/pt.md` no repositório `lopesleo.github.io` (e revisar o `en.md`)
 - **Anúncios:** sim. **ID de publicidade:** sim (análise, publicidade, prevenção de fraudes); a permissão
   `AD_ID` entra pelo SDK do AdMob
 - **Detalhes do login:** nada restrito. Apps governamentais, recursos financeiros, saúde: não

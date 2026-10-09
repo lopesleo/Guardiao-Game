@@ -8,7 +8,8 @@ inimigo disparam Vapor, Cristal ou Sobrecarga.
 Feito em **JavaScript + Phaser 4**, empacotado para Android com **Capacitor**.
 Roda 100% offline.
 
-**Jogue no navegador:** <https://lopesleo.github.io/Guardiao-Game/>
+**Página oficial:** <https://lopesleo.github.io/guardiao/> (6 idiomas, kit de imprensa).
+O jogo está em teste fechado na Google Play; a versão web saiu do ar em 09/10/2026.
 
 ## Conteúdo
 
