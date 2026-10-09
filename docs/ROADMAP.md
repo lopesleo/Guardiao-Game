@@ -408,19 +408,25 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   git. 👤 **Falta testar no aparelho** (compilar no Android Studio e olhar o DebugView do Firebase) e,
   antes de publicar, ligar o consentimento (UMP) para o EEE chamando `Telemetry.setEnabled(false)` em quem
   recusar; vincular o app do AdMob ao Firebase quando o app estiver na loja
-- ⬜ Política de privacidade e Segurança dos dados atualizadas
+- ✅ Política de privacidade no ar e **Conteúdo do app** declarado no Play Console (09/10/2026;
+  respostas em `PLAY_STORE.md`)
+- ⬜ **Anúncios adequados a 13+**: o público-alvo inclui 13–15 anos; no `AdService`, pedir anúncios
+  com classificação máxima "T" (`maxAdContentRating`) junto com o UMP
+- ⬜ **Página do jogo** em `lopesleo.github.io` (ex.: `/guardiao/`): nome, trailer, capturas, link da
+  loja e da política. Quando existir, trocar o "Site" dos dados de contato no Play Console por ela
+  (mesmo domínio, o `app-ads.txt` continua valendo)
+- ⬜ Ao ligar a compra "Remover anúncios" ou o salvamento do Play Games: rever Segurança dos dados
+  (login com conta externa) — a classificação já declara compras no jogo
 
 ### Pendências suas, adiadas (anotadas em 01/10/2026) 👤
 Nada disso trava o desenvolvimento; só o lançamento e a receita.
-- **Conta de desenvolvedor pessoal na Play Console**: tipo "Você", taxa única de ~US$ 25, documento
-  com foto e confirmação do aparelho. Depois: cadastrar `https://lopesleo.github.io` como site do
-  desenvolvedor e ligar o app à loja no AdMob ("Adicionar loja"). Atenção: o endereço pode ficar
-  público (compra "Remover anúncios" = desenvolvedor comercial) e contas pessoais novas exigem
-  **teste fechado** (a regra recente: 12 testadores por 14 dias) antes da produção
+- ✅ **Conta de desenvolvedor pessoal na Play Console** criada; app criado em 09/10/2026
+  (`com.lopesleo.guardiao`, jogo, grátis), site do desenvolvedor `https://lopesleo.github.io`.
+  Falta: ligar o app à loja no AdMob ("Adicionar loja") quando ele estiver publicado. Contas pessoais
+  novas exigem **teste fechado** (12 testadores por 14 dias seguidos) antes da produção — juntar testadores
 - **AdMob → Pagamentos**: informações fiscais do Brasil (CPF) e dos EUA (W-8BEN); a forma de
   pagamento (conta bancária) só aparece quando os ganhos começam; pagamento mensal a partir de US$ 100
-- **Push do repositório do jogo** para a `docs/PRIVACY.md` atualizada ir ao ar (a mensagem de
-  consentimento do AdMob aponta para ela)
+- ✅ `docs/PRIVACY.md` atualizada já está no ar (`lopesleo.github.io/Guardiao-Game/docs/PRIVACY.html`)
 
 ### M6 — Loja e lançamento 👤
 - ⬜ Capturas de tela + imagem de destaque (geradas do jogo) + vídeo de 30 s
