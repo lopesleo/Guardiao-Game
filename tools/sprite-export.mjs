@@ -13,6 +13,10 @@ const { registerHeroes } = await imp("src/art/Hero.js");
 const { registerCaatingaMonsters } = await imp("src/art/MonstersCaatinga.js");
 const { registerCamp } = await imp("src/art/Camp.js");
 const { registerSprites } = await imp("src/art/Sprites.js");
+const { registerIcons } = await imp("src/art/Icons.js");
+const { registerKitchen } = await imp("src/art/Kitchen.js");
+const { registerPond } = await imp("src/art/Pond.js");
+const { registerGarden } = await imp("src/art/Garden.js");
 
 const strips = {};
 const scene = {
@@ -36,7 +40,8 @@ const scene = {
   },
   anims: { exists: () => true, create: () => {}, generateFrameNumbers: () => [] },
 };
-registerMonsters(scene); registerHeroes(scene); registerCaatingaMonsters(scene); registerCamp(scene); registerSprites(scene);
+registerMonsters(scene); registerHeroes(scene); registerCaatingaMonsters(scene); registerCamp(scene); registerSprites(scene); registerIcons(scene);
+for (const reg of [registerKitchen, registerPond, registerGarden]) try { reg(scene); } catch (e) { console.log("aviso:", reg.name, e.message); }
 for (const st of Object.values(strips)) if (!st.frames.length) st.frames.push({ x: 0, y: 0, w: st.w, h: st.h });
 
 function png(w, h, rgba) {

@@ -79,7 +79,7 @@ público brasileiro, com potencial internacional.
 ## Pendências atuais (atualizar a cada sessão)
 
 Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um item, apagar daqui e
-marcar no `docs/ROADMAP.md`. Última revisão: **09/10/2026** (noite).
+marcar no `docs/ROADMAP.md`. Última revisão: **10/10/2026**.
 
 **Agora**
 - 👤 **Enviar para revisão** (Play Console → Visão geral da publicação → "Enviar mudanças para revisão"): a
@@ -107,6 +107,10 @@ marcar no `docs/ROADMAP.md`. Última revisão: **09/10/2026** (noite).
 - Lançamento planejado: **quinta, 03/12/2026** (calendário completo em `docs/MARKETING.md`).
 
 **Marketing e loja** (`docs/MARKETING.md`)
+- Redes (`docs/REDES_SOCIAIS.md`): 👤 criar o Instagram `@guardiaodafloresta` e postar os 4 reels + carrossel
+  (`videos/promo/entrega/`). Discord no ar (https://discord.gg/TTYnNtQAes), configurado por `tools/discord/`;
+  👤 falta o Guia do servidor e a proteção contra raids (à mão) e subir o cargo do bot ao topo para o script
+  renomear "Guardião" → "Equipe" e ordenar os cargos.
 - 31/10 Dia do Saci (vídeo do Saci + chamada de testadores); vídeos curtos 3×/semana; formulário de feedback.
 - Imprensa e criadores a partir de 10/11 (kit em `lopesleo.github.io/guardiao/#press`).
 - Inscrição no BIG Festival 2027 (deve abrir entre nov./2026 e jan./2027).
@@ -130,6 +134,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **09/10/2026** (noite).
 | **Roadmap (ordem de execução e status)** | `docs/ROADMAP.md` |
 | Plano antes de publicar (anúncios, retenção, loja) | `docs/PRE_LANCAMENTO.md` |
 | **Marketing, distribuição e calendário de lançamento** | `docs/MARKETING.md` |
+| Instagram, reels e servidor do Discord (`tools/discord/`) | `docs/REDES_SOCIAIS.md` |
 | Página oficial (`lopesleo.github.io/guardiao/`) | repositório `lopesleo.github.io`, pasta `guardiao/` |
 | Publicação na Play Store, privacidade | `docs/PLAY_STORE.md`, `docs/PRIVACY.md` |
 | Clareira (acampamento, obras, bichos, fases) | `docs/CLAREIRA.md` |
