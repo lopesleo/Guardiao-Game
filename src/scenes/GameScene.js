@@ -191,6 +191,12 @@ export class GameScene extends Phaser.Scene {
       this.time.delayedCall(2500, () => this._toast(`${r.name}: ${bonusText(r, meal.q)}`, 2600, "#ffc86b"));
       Analytics.track("meal_eaten", { id: meal.id, q: meal.q });
     }
+    // Balanceamento: com que força permanente e com qual refeição a partida começou
+    // (vai no run_start e no run_end para separar as vitórias por buff)
+    this._runPower = BLESSINGS.reduce((s, b) => s + this.meta.blessingRank(b.id), 0);
+    this._runAnc = anc;
+    this._runMeal = meal && recipe(meal.id) ? meal.id : "";
+    this._runMealQ = meal && recipe(meal.id) ? meal.q : 0;
     // Locks de habilidades: bloqueia se não comprou
     this.player.dashUnlocked = this.meta.hasAbility("DASH");
     this.player.awakenUnlocked = this.meta.hasAbility("AWAKEN");
@@ -208,7 +214,16 @@ export class GameScene extends Phaser.Scene {
     AdService.newRun();
     // nº desta partida na vida do jogador: o funil da 1ª sessão (onde o novato desiste) sai daqui
     this._runN = (this.meta.data.runsPlayed || 0) + 1;
-    Analytics.track("run_start", { run_n: this._runN, character: this.character.id, difficulty: this.diff.id, biome: this.biomeId });
+    Analytics.track("run_start", {
+      run_n: this._runN,
+      character: this.character.id,
+      difficulty: this.diff.id,
+      biome: this.biomeId,
+      power: this._runPower,
+      anc: this._runAnc,
+      meal: this._runMeal,
+      meal_q: this._runMealQ,
+    });
     this.runEvents = new RunEvents(this);
     this.lanterns = new LanternSystem(this);
     this.shrines = new ShrineSystem(this);
@@ -1031,6 +1046,36 @@ export class GameScene extends Phaser.Scene {
     if (this.hud.boss === e) this.hud.clearBoss();
   }
 
+  // Balanceamento: a build no fim da partida em texto curto (cabe nos 100 caracteres do Firebase).
+  // armas "STAFF5,AURA3" (chave + nível; evoluída = chave da evolução), passivas "hp2,speed1"
+  _buildSummary() {
+    const p = this.player;
+    const evolved = (w) => !!WEAPONS[w.key]?.evolvesFrom;
+    return {
+      weapons: p.weapons.map((w) => `${w.key}${w.level}`).join(","),
+      passives: Object.entries(p.passivesTaken || {}).map(([id, n]) => `${id}${n}`).join(","),
+      links: p.links?.active?.size || 0,
+      evos: p.weapons.filter(evolved).length,
+      pacts: this.upgrades?.pactsTaken?.size || 0,
+    };
+  }
+
+  // Uma linha por arma, por passiva e pelas reações da partida: dá para ver no Analytics a taxa de
+  // vitória de cada arma/passiva por Perigo, sem quebrar texto (o Firebase não separa listas)
+  _trackBuild(won, quit, byType) {
+    const base = { won, quit, difficulty: this.diff.id, run_n: this._runN, character: this.character.id };
+    for (const w of this.player.weapons) {
+      const evo = WEAPONS[w.key]?.evolvesFrom;
+      Analytics.track("run_weapon", { ...base, weapon: w.key, base_weapon: evo || w.key, lvl: w.level, evolved: !!evo });
+    }
+    for (const [id, n] of Object.entries(this.player.passivesTaken || {})) {
+      Analytics.track("run_passive", { ...base, passive: id, stacks: n });
+    }
+    const rx = {};
+    for (const [k, n] of Object.entries(byType)) if (n > 0) rx[`rx_${k.toLowerCase()}`] = n;
+    Analytics.track("run_reactions", { ...base, ...rx });
+  }
+
   // "Desviou de tudo": nenhum golpe especial acertou o herói nesta luta
   _flawlessBonus(x, y, wood, log) {
     this.meta.recordStat("flawless"); // feitos: Miragem / Anhangá
@@ -1302,6 +1347,7 @@ export class GameScene extends Phaser.Scene {
     this._runChests++;
     this.meta.recordStat("chests"); // feitos: Bola de Ouro / Mãe-do-Ouro
     const { kind, x, y } = result;
+    Analytics.track("chest_open", { kind, t: Math.floor(this.elapsedMs / 1000), level: this.player.level });
 
     // Som de abertura imediato
     this.sound.play("sfx_chest_open", { volume: 0.7 });
@@ -1574,15 +1620,16 @@ export class GameScene extends Phaser.Scene {
     for (const c of this._charDeedsOpen || []) if (this.meta.characterDeed(c.id)?.done) this._newUnlocksThisRun.push(tr("Feito cumprido: {0} na Fogueira", c.name));
     const newAchievements = this._checkAchievements(won, true);
     this._newUnlocksThisRun.push(...newAchievements.map((a) => a.name));
+    // Reações DESTA partida, por tipo (missões do dia e medição de balanceamento)
+    const nowReactions = this.meta.data.stats.reactions || {};
+    const byType = {};
+    let reactions = 0;
+    for (const k of Object.keys(nowReactions)) {
+      byType[k] = (nowReactions[k] || 0) - (this._reactionsAtStart[k] || 0);
+      reactions += byType[k];
+    }
     // Missões do dia (o prêmio se pega no Mural da Clareira)
     if (dailyUnlocked(this.meta.data)) {
-      const now = this.meta.data.stats.reactions || {};
-      const byType = {};
-      let reactions = 0;
-      for (const k of Object.keys(now)) {
-        byType[k] = (now[k] || 0) - (this._reactionsAtStart[k] || 0);
-        reactions += byType[k];
-      }
       const done = new Daily(this.meta).runEnd({ kills: this.hud.kills, reactions, byType, seconds: this.elapsedMs / 1000, chests: this._runChests, lanterns: this._runLanterns, won });
       this._newUnlocksThisRun.push(...done.map((t) => tr("Missão: {0}", t)));
     }
@@ -1599,7 +1646,15 @@ export class GameScene extends Phaser.Scene {
       wood: this._woodThisRun,
       difficulty: this.diff.id,
       character: this.character.id,
+      ...this._buildSummary(),
+      biome: this.biomeId,
+      power: this._runPower,
+      meal: this._runMeal,
+      reactions,
+      chests: this._runChests,
+      lanterns: this._runLanterns,
     });
+    this._trackBuild(won, quit, byType);
     // Morte: câmera lenta dramática antes do fade
     if (!won && !quit) {
       this.physics.world.timeScale = 3;

@@ -187,7 +187,24 @@ partidas ficam menos previsíveis.
 
 ## Como medir
 
-Eventos que já existem no Analytics: `run_end` com as armas. Antes do teste
-fechado, vale incluir a **arma escolhida em cada carta de nível** e as **evoluções
-obtidas**, para ver o que é escolhido e o que é ignorado (escolha ignorada = arma
-fraca ou sem graça).
+Eventos de balanceamento no Analytics (versão 1.0.1, 09/10/2026; Firebase só no app Android):
+
+| Evento | Quando | Parâmetros |
+|---|---|---|
+| `card_pick` | cada carta escolhida no nível | `card` (`new:AURA`, `upgrade:STAFF`, `passive:hp`, `pact:…`, `evolution:…`), `kind`, `offered` (as cartas da mesa, separadas por `\|`), `n`, `level`, `t`, `run_n` |
+| `run_start` | início da partida | `run_n`, `character`, `difficulty`, `biome`, `power` (soma das bênçãos), `anc` (Tesouro Ancestral), `meal` + `meal_q` (refeição da Clareira) |
+| `run_end` | fim da partida | o de antes (`won`, `quit`, `t`, `level`, `kills`, `coins`…) + `weapons` (`STAFF5,AURA3`), `passives` (`hp2,speed1`), `links`, `evos`, `pacts`, `power`, `meal`, `reactions`, `chests`, `lanterns`, `biome` |
+| `run_weapon` | fim da partida, 1 por arma | `weapon` (evoluída = chave da evolução), `base_weapon`, `lvl`, `evolved`, `won`, `quit`, `difficulty`, `run_n`, `character` |
+| `run_passive` | fim da partida, 1 por passiva | `passive`, `stacks`, `won`, `quit`, `difficulty`, `run_n`, `character` |
+| `run_reactions` | fim da partida | `rx_vapor`, `rx_crystal`, `rx_overload`, `rx_labareda`, `rx_geada`, `rx_temporal` (só as que aconteceram) + `won`, `difficulty`… |
+| `chest_open` | baú aberto | `kind` (`normal`/`golden`), `t`, `level` |
+
+Já existiam: `pact_taken`, `card_banish`, `lantern_item`, `shrine_used`, `meal_eaten`, `level_up`.
+
+**Como ler:** taxa de escolha = `card_pick` de uma carta ÷ vezes em que ela estava em `offered`
+(escolha ignorada = arma fraca ou sem graça); taxa de vitória de uma arma = `run_weapon` com
+`won = 1` ÷ total daquela arma, **separando por `difficulty`** e olhando a `power` (quem tem muita
+bênção vence com qualquer coisa). As dimensões usadas nos relatórios estão registradas no Google
+Analytics (propriedade `p557044087`); um parâmetro novo só aparece nos relatórios depois de
+registrado lá, e não vale para trás. O dano por arma ainda **não** é medido (os golpes não
+carregam a arma de origem até o inimigo).
