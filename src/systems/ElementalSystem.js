@@ -49,6 +49,7 @@ export class ElementalSystem {
       def,
       lastTickAt: prev?.lastTickAt ?? now,
       since: prev?.since ?? now, // reapplicar não "rejuvenesce": decide a ordem das reações
+      src: this.scene._hitSrc ?? null, // arma que aplicou (assistência da reação)
     };
     enemy._lastEl = element; // a morte "fala" a língua do último elemento
 
@@ -57,6 +58,7 @@ export class ElementalSystem {
 
     // CRISTAL forte: raio num inimigo CONGELADO estilhaça mesmo sem o status de gelo
     if (element === ELEMENT.BOLT && enemy.isFrozen?.(now) && now >= (enemy._reactUntil ?? 0)) {
+      this._rxBy = [...new Set([enemy.statuses.ice?.src, this.scene._hitSrc].filter(Boolean))];
       delete enemy.statuses.bolt;
       delete enemy.statuses.ice;
       enemy._reactUntil = now + REACTION.LOCK_MS;
@@ -94,6 +96,8 @@ export class ElementalSystem {
     for (const [x, y] of pairs) {
       const reactionKey = REACTION_MAP[`${x}+${y}`];
       if (!reactionKey) continue;
+      // Assistência: as armas que puseram os dois elementos (a mesma arma pode ter posto os dois)
+      this._rxBy = [...new Set([enemy.statuses[x]?.src, enemy.statuses[y]?.src].filter(Boolean))];
       // Consome os status do par (evita disparo contínuo)
       delete enemy.statuses[x];
       delete enemy.statuses[y];
@@ -167,10 +171,12 @@ export class ElementalSystem {
     return list.slice(0, n).map((o) => o.e);
   }
 
-  // src = fonte no livro de dano (rx_labareda, rx_geada, rx_temporal)
-  _hurt(e, dmg, fx, fy, src) {
+  // src = fonte no livro de dano (rx_labareda, rx_geada, rx_temporal); by = dupla da assistência
+  _hurt(e, dmg, fx, fy, src, by = null) {
     const scene = this.scene;
     scene._dmgSrc = src;
+    scene._dmgAssist = by;
+    scene._hitSrc = null; // a chama/geada que a reação espalhar não é de nenhuma arma
     const died = e.takeDamage(dmg * (scene.player?.prism ?? 1), null, fx, fy);
     if (died) scene._onEnemyDeath(e);
     return died;
@@ -180,17 +186,18 @@ export class ElementalSystem {
   // línguas de fogo da coluna até os vizinhos — a chama "pega" quando a língua chega
   _labareda(enemy, def, areaMult, fx) {
     const scene = this.scene;
+    const by = this._rxBy;
     const x = enemy.x,
       y = enemy.y;
     const R = def.radius * areaMult;
     const feet = (e) => e.y + (e.displayHeight || 40) * 0.42;
     const fxOn = fx && scene.fx;
     if (fxOn) scene.fx.fireWhirl(x, feet(enemy), R);
-    this._hurt(enemy, def.dmg, x, y, "rx_labareda");
+    this._hurt(enemy, def.dmg, x, y, "rx_labareda", by);
     const near = this._near(x, y, R, enemy, def.spread);
     near.forEach((e, i) => {
       const catchFire = () => {
-        this._hurt(e, def.dmg * 0.6, x, y, "rx_labareda");
+        this._hurt(e, def.dmg * 0.6, x, y, "rx_labareda", by);
         if (e.active) this.applyStatus(e, "fire"); // a chama "pega" (pode reagir de novo noutro par)
       };
       if (!fxOn) return catchFire();
@@ -207,6 +214,7 @@ export class ElementalSystem {
   // GEADA (gelo + vento): rajada fria em volta — dano, lentidão forte e congela quem já estava gelado
   _geada(enemy, def, areaMult, fx) {
     const scene = this.scene;
+    const by = this._rxBy;
     const now = scene.time.now;
     const x = enemy.x,
       y = enemy.y;
@@ -214,7 +222,7 @@ export class ElementalSystem {
     const hit = [enemy, ...this._near(x, y, R, enemy)];
     for (const e of hit) {
       const wasCold = !!e.statuses?.ice || e === enemy;
-      if (this._hurt(e, def.dmg, x, y, "rx_geada")) continue;
+      if (this._hurt(e, def.dmg, x, y, "rx_geada", by)) continue;
       if (e.miniBoss) continue;
       e._bindUntil = now + def.slowMs;
       e._bindSlow = def.slow;
@@ -231,6 +239,7 @@ export class ElementalSystem {
   // TEMPORAL (raio + vento): raios caem do céu em quem está em volta
   _temporal(enemy, def, areaMult, fx) {
     const scene = this.scene;
+    const by = this._rxBy;
     const targets = [enemy, ...this._near(enemy.x, enemy.y, def.radius * areaMult, enemy, def.strikes - 1)];
     targets.forEach((e, i) => {
       scene.time.delayedCall(i * 90, () => {
@@ -239,7 +248,7 @@ export class ElementalSystem {
           this._drawBolt(e.x + 24 - i * 12, e.y - 260, e.x, e.y - 4, def.color, 5);
           scene.fx?.strikeMark(e.x, e.y + 10, [PAL.white, PAL.ice3, PAL.wnd2, PAL.ice1]);
         }
-        this._hurt(e, def.dmg, e.x, e.y - 30, "rx_temporal");
+        this._hurt(e, def.dmg, e.x, e.y - 30, "rx_temporal", by);
       });
     });
     if (fx) scene.cameras.main.shake(140, 0.005);
@@ -248,6 +257,7 @@ export class ElementalSystem {
   // VAPOR = nuvem ESCALDANTE: dano contínuo (DoT) na área. Não causa mais slow.
   _vapor(enemy, def, areaMult = 1) {
     const scene = this.scene;
+    const by = this._rxBy; // a nuvem tica por 2 s: guarda quem a montou
     const now = scene.time.now;
     const cx = enemy.x,
       cy = enemy.y;
@@ -274,6 +284,7 @@ export class ElementalSystem {
           dy = e.y - cy;
         if (dx * dx + dy * dy <= radiusSq) {
           scene._dmgSrc = "rx_vapor";
+          scene._dmgAssist = by;
           const died = e.takeDamage(tickDmg, null, null, null, false, true);
           if (died) scene._onEnemyDeath(e);
         }
@@ -283,6 +294,7 @@ export class ElementalSystem {
           dy = scene.boss.y - cy;
         if (dx * dx + dy * dy <= radiusSq) {
           scene._dmgSrc = "rx_vapor";
+          scene._dmgAssist = by;
           const died = scene.boss.takeDamage(tickDmg);
           if (died) scene._onBossDeath();
         }
@@ -376,6 +388,7 @@ export class ElementalSystem {
 
   _shatterMechanic(target, def, showFx, frozen = false) {
     const scene = this.scene;
+    const by = this._rxBy;
     const cx = target.x, cy = target.y;
     const areaMult = scene.player?.areaMult ?? 1;
     const fm = frozen ? def.frozenMult : 1; // congelado: estilhaço maior e mais forte
@@ -386,6 +399,7 @@ export class ElementalSystem {
     target._frozenUntil = 0;
     target._freezeLockUntil = scene.time.now + 2000; // breve imunidade pós-quebra
     scene._dmgSrc = "rx_crystal";
+    scene._dmgAssist = by;
     const tdied = target.takeDamage(def.selfDmg * fm * (scene.player?.prism ?? 1), null);
     if (tdied) scene._onEnemyDeath(target);
 
@@ -406,6 +420,7 @@ export class ElementalSystem {
       const dx = e.x - cx, dy = e.y - cy;
       if (dx * dx + dy * dy <= radiusSq) {
         scene._dmgSrc = "rx_crystal";
+        scene._dmgAssist = by;
         const died = e.takeDamage(def.dmg * fm * (scene.player?.prism ?? 1), null);
         if (died) scene._onEnemyDeath(e);
       }
@@ -421,6 +436,7 @@ export class ElementalSystem {
 
   _overload(enemy, def, areaMult = 1) {
     const scene = this.scene;
+    const by = this._rxBy;
     const visited = new Set([enemy]);
     let prev = enemy;
     const reach = (def.jumpRange ?? 200) * areaMult;
@@ -446,6 +462,7 @@ export class ElementalSystem {
       // Raio da Sobrecarga é GROSSO e amarelo-elétrico (distinto do raio fino da arma)
       this._drawBolt(prev.x, prev.y, best.x, best.y, def.color, 6);
       scene._dmgSrc = "rx_overload";
+      scene._dmgAssist = by;
       const died = best.takeDamage(def.dmgPerJump * (scene.player?.prism ?? 1), null, prev.x, prev.y);
       scene.fx?.impact(best.x, best.y - 6, "bolt", { power: 1 });
       if (died) scene._onEnemyDeath(best);

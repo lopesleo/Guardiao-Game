@@ -1436,7 +1436,8 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
   takeDamage(dmg) {
     // Livro de dano (balanceamento): consome a fonte marcada por quem bateu
     const src = this.scene._dmgSrc;
-    this.scene._dmgSrc = null;
+    const assist = this.scene._dmgAssist;
+    this.scene._dmgSrc = this.scene._dmgAssist = null;
     // Invulnerável durante o êxtase da virada de fase (a barra está recarregando)
     if (this._transitioning) return false;
     const before = this.hp;
@@ -1448,7 +1449,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     const eff = this._armor(raw, now);
     const lost = eff * amp;
     this.hp -= lost;
-    this.scene._recordDmg?.(src, Math.min(Math.max(before, 0), lost));
+    this.scene._recordDmg?.(src, Math.min(Math.max(before, 0), lost), assist);
     // A Couraça segurou boa parte do golpe: o jogador precisa VER isso (senão parece que a
     // build "não presta" contra o chefe). O número na tela mostra o que o chefe PERDEU.
     const resisted = eff < raw * BOSS.ARMOR.SHOW_BELOW;

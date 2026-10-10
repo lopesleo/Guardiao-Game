@@ -342,9 +342,10 @@ export class Weapon {
   get srcKey() {
     return this.def.evolvesFrom || this.key;
   }
-  // Marca esta arma como autora do próximo golpe (o alvo consome em takeDamage)
+  // Marca esta arma como autora do próximo golpe (o alvo consome em takeDamage) e do status que
+  // o golpe aplicar (_hitSrc: a reação credita assistência às armas que a montaram)
   _src() {
-    this.scene._dmgSrc = this.srcKey;
+    this.scene._dmgSrc = this.scene._hitSrc = this.srcKey;
   }
 
   rollHit() {

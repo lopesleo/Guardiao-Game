@@ -194,7 +194,7 @@ Eventos de balanceamento no Analytics (versão 1.0.1, 09/10/2026; Firebase só n
 | `card_pick` | cada carta escolhida no nível | `card` (`new:AURA`, `upgrade:STAFF`, `passive:hp`, `pact:…`, `evolution:…`), `kind`, `offered` (as cartas da mesa, separadas por `\|`), `n`, `level`, `t`, `run_n` |
 | `run_start` | início da partida | `run_n`, `character`, `difficulty`, `biome`, `power` (soma das bênçãos), `anc` (Tesouro Ancestral), `meal` + `meal_q` (refeição da Clareira) |
 | `run_end` | fim da partida | o de antes (`won`, `quit`, `t`, `level`, `kills`, `coins`…) + `weapons` (`STAFF5,AURA3`), `passives` (`hp2,speed1`), `links`, `evos`, `pacts`, `power`, `meal`, `reactions`, `chests`, `lanterns`, `biome`, `dmg_total` |
-| `run_weapon` | fim da partida, 1 por arma | `weapon` (evoluída = chave da evolução), `base_weapon`, `lvl`, `evolved`, `dmg` (vida que a linha da arma tirou na partida inteira, evolução incluída), `dmg_pct` (% de todo o dano), `won`, `quit`, `difficulty`, `run_n`, `character` |
+| `run_weapon` | fim da partida, 1 por arma | `weapon` (evoluída = chave da evolução), `base_weapon`, `lvl`, `evolved`, `dmg` (vida que a linha da arma tirou na partida inteira, evolução incluída), `dmg_pct` (% de todo o dano), `dmg_assist` + `assist_pct` (dano das reações que a arma ajudou a montar), `won`, `quit`, `difficulty`, `run_n`, `character` |
 | `run_passive` | fim da partida, 1 por passiva | `passive`, `stacks`, `won`, `quit`, `difficulty`, `run_n`, `character` |
 | `run_reactions` | fim da partida | `rx_*` (quantas vezes) e `rxd_*` (dano) de `vapor`, `crystal`, `overload`, `labareda`, `geada`, `temporal` (só as que aconteceram), `dmg_status` (queimadura/choque), `dmg_other` (Sopro Ancestral, reviver), `dmg_total` + `won`, `difficulty`… |
 | `chest_open` | baú aberto | `kind` (`normal`/`golden`), `t`, `level` |
@@ -210,5 +210,8 @@ registrado lá, e não vale para trás.
 
 **Livro de dano:** quem bate marca `scene._dmgSrc` logo antes de `takeDamage` (`Weapon._src()`, `proj.src`,
 `rx_*`/`st_*` no `ElementalSystem`); o inimigo/chefe consome a marca e anota a vida que **realmente** perdeu
-(sem o excesso do golpe final) em `GameScene._dmgBy`. **Arma nova que bate direto** (sem `_hit`) precisa
+(sem o excesso do golpe final) em `GameScene._dmgBy`. **Assistência:** cada status guarda a arma que o
+aplicou (`_hitSrc`); a reação junta as duas armas do par e divide o dano dela entre elas em `_assistBy`
+(a reação continua contando na linha dela; a assistência é crédito a mais, para arma de suporte não
+parecer fraca). **Arma nova que bate direto** (sem `_hit`) precisa
 chamar `this._src()` antes do `takeDamage`; senão o dano cai em `dmg_other` (que deve ficar perto de 0).
