@@ -85,7 +85,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **09/10/2026** (noite).
 - 👤 **Enviar para revisão** (Play Console → Visão geral da publicação → "Enviar mudanças para revisão"): a
   versão 1.0.1 (código 2, teste fechado) já está salva, junto com a ficha nova nos 8 idiomas (texto "desvie
   andando ou com o dash" e capturas 05/07 refeitas). Esperando o OK do Leonardo.
-- 👤 **Teste fechado:** 7 de 12 testadores aceitaram (14 e-mails na lista "Testadores Guardião"). A contagem de
+- 👤 **Teste fechado:** 8 de 12 testadores aceitaram em 10/10 (14 e-mails na lista "Testadores Guardião"). A contagem de
   14 dias só começa com 12 aceitos ao mesmo tempo. Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`.
   Cadastrar e-mails à mão na lista (só contas Google); **não trocar por Grupo do Google durante o teste**.
   Falta o Gmail do Manuel (o outlook dele foi recusado).
