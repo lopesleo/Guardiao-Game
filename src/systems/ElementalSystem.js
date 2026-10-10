@@ -167,8 +167,10 @@ export class ElementalSystem {
     return list.slice(0, n).map((o) => o.e);
   }
 
-  _hurt(e, dmg, fx, fy) {
+  // src = fonte no livro de dano (rx_labareda, rx_geada, rx_temporal)
+  _hurt(e, dmg, fx, fy, src) {
     const scene = this.scene;
+    scene._dmgSrc = src;
     const died = e.takeDamage(dmg * (scene.player?.prism ?? 1), null, fx, fy);
     if (died) scene._onEnemyDeath(e);
     return died;
@@ -184,11 +186,11 @@ export class ElementalSystem {
     const feet = (e) => e.y + (e.displayHeight || 40) * 0.42;
     const fxOn = fx && scene.fx;
     if (fxOn) scene.fx.fireWhirl(x, feet(enemy), R);
-    this._hurt(enemy, def.dmg, x, y);
+    this._hurt(enemy, def.dmg, x, y, "rx_labareda");
     const near = this._near(x, y, R, enemy, def.spread);
     near.forEach((e, i) => {
       const catchFire = () => {
-        this._hurt(e, def.dmg * 0.6, x, y);
+        this._hurt(e, def.dmg * 0.6, x, y, "rx_labareda");
         if (e.active) this.applyStatus(e, "fire"); // a chama "pega" (pode reagir de novo noutro par)
       };
       if (!fxOn) return catchFire();
@@ -212,7 +214,7 @@ export class ElementalSystem {
     const hit = [enemy, ...this._near(x, y, R, enemy)];
     for (const e of hit) {
       const wasCold = !!e.statuses?.ice || e === enemy;
-      if (this._hurt(e, def.dmg, x, y)) continue;
+      if (this._hurt(e, def.dmg, x, y, "rx_geada")) continue;
       if (e.miniBoss) continue;
       e._bindUntil = now + def.slowMs;
       e._bindSlow = def.slow;
@@ -237,7 +239,7 @@ export class ElementalSystem {
           this._drawBolt(e.x + 24 - i * 12, e.y - 260, e.x, e.y - 4, def.color, 5);
           scene.fx?.strikeMark(e.x, e.y + 10, [PAL.white, PAL.ice3, PAL.wnd2, PAL.ice1]);
         }
-        this._hurt(e, def.dmg, e.x, e.y - 30);
+        this._hurt(e, def.dmg, e.x, e.y - 30, "rx_temporal");
       });
     });
     if (fx) scene.cameras.main.shake(140, 0.005);
@@ -271,6 +273,7 @@ export class ElementalSystem {
         const dx = e.x - cx,
           dy = e.y - cy;
         if (dx * dx + dy * dy <= radiusSq) {
+          scene._dmgSrc = "rx_vapor";
           const died = e.takeDamage(tickDmg, null, null, null, false, true);
           if (died) scene._onEnemyDeath(e);
         }
@@ -279,6 +282,7 @@ export class ElementalSystem {
         const dx = scene.boss.x - cx,
           dy = scene.boss.y - cy;
         if (dx * dx + dy * dy <= radiusSq) {
+          scene._dmgSrc = "rx_vapor";
           const died = scene.boss.takeDamage(tickDmg);
           if (died) scene._onBossDeath();
         }
@@ -381,6 +385,7 @@ export class ElementalSystem {
     // O alvo "quebra": leva um golpe de estilhaçamento (e perde o congelamento)
     target._frozenUntil = 0;
     target._freezeLockUntil = scene.time.now + 2000; // breve imunidade pós-quebra
+    scene._dmgSrc = "rx_crystal";
     const tdied = target.takeDamage(def.selfDmg * fm * (scene.player?.prism ?? 1), null);
     if (tdied) scene._onEnemyDeath(target);
 
@@ -400,6 +405,7 @@ export class ElementalSystem {
       if (e === target) return;
       const dx = e.x - cx, dy = e.y - cy;
       if (dx * dx + dy * dy <= radiusSq) {
+        scene._dmgSrc = "rx_crystal";
         const died = e.takeDamage(def.dmg * fm * (scene.player?.prism ?? 1), null);
         if (died) scene._onEnemyDeath(e);
       }
@@ -439,6 +445,7 @@ export class ElementalSystem {
       if (!best) break;
       // Raio da Sobrecarga é GROSSO e amarelo-elétrico (distinto do raio fino da arma)
       this._drawBolt(prev.x, prev.y, best.x, best.y, def.color, 6);
+      scene._dmgSrc = "rx_overload";
       const died = best.takeDamage(def.dmgPerJump * (scene.player?.prism ?? 1), null, prev.x, prev.y);
       scene.fx?.impact(best.x, best.y - 6, "bolt", { power: 1 });
       if (died) scene._onEnemyDeath(best);
@@ -536,6 +543,7 @@ export class ElementalSystem {
           time - s.lastTickAt >= s.def.tickMs
         ) {
           s.lastTickAt = time;
+          scene._dmgSrc = `st_${k}`; // queimadura/choque (status)
           const died = enemy.takeDamage(s.def.dmgPerTick, null, null, null, false, true);
           if (died) {
             scene._onEnemyDeath(enemy);

@@ -146,6 +146,10 @@ export class GameScene extends Phaser.Scene {
     this._runChests = 0;
     this._runLanterns = 0;
     this._reactionsAtStart = { ...(this.meta.data.stats.reactions || {}) };
+    // Livro de dano (balanceamento): vida que cada fonte tirou nesta partida. A fonte é marcada
+    // em _dmgSrc logo antes do golpe (arma = chave da arma de origem, rx_* = reação, st_* = status)
+    this._dmgBy = Object.create(null);
+    this._dmgSrc = null;
     // Sementes raras só depois que a Horta apareceu (uma novidade por vez)
     this._seedsOn = (this.meta.data.revealed || []).includes("garden");
     this.heartPool = new Pool(() => new HeartPickup(this), 10);
@@ -666,6 +670,7 @@ export class GameScene extends Phaser.Scene {
         const dx = this.boss.x - p.x,
           dy = this.boss.y - p.y;
         if (dx * dx + dy * dy < 56 * 56) {
+          this._dmgSrc = p.src || "other";
           const died = this.boss.takeDamage(p.dmg, null, p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
           this._showDmg(this.boss.x, this.boss.y, p.dmg, p.element, p.crit);
@@ -683,6 +688,7 @@ export class GameScene extends Phaser.Scene {
         const dx = e.x - p.x,
           dy = e.y - p.y;
         if (dx * dx + dy * dy < 22 * 22) {
+          this._dmgSrc = p.src || "other";
           const died = e.takeDamage(p.dmg, p.element, p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
           this._showDmg(e.x, e.y, p.dmg, p.element, p.crit);
@@ -706,6 +712,7 @@ export class GameScene extends Phaser.Scene {
         const dx = this.boss.x - p.x,
           dy = this.boss.y - p.y;
         if (dx * dx + dy * dy < 56 * 56 && p.canHit(this.boss, time)) {
+          this._dmgSrc = p.src || "other";
           const died = this.boss.takeDamage(p.dmg, null, p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
           this._showDmg(this.boss.x, this.boss.y, p.dmg, "fire", p.crit);
@@ -719,6 +726,7 @@ export class GameScene extends Phaser.Scene {
         const dx = e.x - p.x,
           dy = e.y - p.y;
         if (dx * dx + dy * dy < 22 * 22 && p.canHit(e, time)) {
+          this._dmgSrc = p.src || "other";
           const died = e.takeDamage(p.dmg, "fire", p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
           this._showDmg(e.x, e.y, p.dmg, "fire", p.crit);
@@ -1046,6 +1054,12 @@ export class GameScene extends Phaser.Scene {
     if (this.hud.boss === e) this.hud.clearBoss();
   }
 
+  _recordDmg(src, n) {
+    if (!(n > 0) || !this._dmgBy) return;
+    const k = src || "other";
+    this._dmgBy[k] = (this._dmgBy[k] || 0) + n;
+  }
+
   // Balanceamento: a build no fim da partida em texto curto (cabe nos 100 caracteres do Firebase).
   // armas "STAFF5,AURA3" (chave + nível; evoluída = chave da evolução), passivas "hp2,speed1"
   _buildSummary() {
@@ -1064,16 +1078,32 @@ export class GameScene extends Phaser.Scene {
   // vitória de cada arma/passiva por Perigo, sem quebrar texto (o Firebase não separa listas)
   _trackBuild(won, quit, byType) {
     const base = { won, quit, difficulty: this.diff.id, run_n: this._runN, character: this.character.id };
+    // Dano: arma = linha da arma (evolução soma na de origem); % sobre TODO o dano da partida
+    const by = this._dmgBy || {};
+    const total = this._dmgTotal();
+    const pct = (n) => (total > 0 ? Math.round((1000 * n) / total) / 10 : 0);
     for (const w of this.player.weapons) {
       const evo = WEAPONS[w.key]?.evolvesFrom;
-      Analytics.track("run_weapon", { ...base, weapon: w.key, base_weapon: evo || w.key, lvl: w.level, evolved: !!evo });
+      const dmg = by[evo || w.key] || 0;
+      Analytics.track("run_weapon", { ...base, weapon: w.key, base_weapon: evo || w.key, lvl: w.level, evolved: !!evo, dmg: Math.round(dmg), dmg_pct: pct(dmg) });
     }
     for (const [id, n] of Object.entries(this.player.passivesTaken || {})) {
       Analytics.track("run_passive", { ...base, passive: id, stacks: n });
     }
+    // Reações: quantas (rx_*) e quanto dano (rxd_*); status (queimadura/choque) e o resto
     const rx = {};
     for (const [k, n] of Object.entries(byType)) if (n > 0) rx[`rx_${k.toLowerCase()}`] = n;
-    Analytics.track("run_reactions", { ...base, ...rx });
+    let st = 0, other = 0;
+    for (const [k, n] of Object.entries(by)) {
+      if (k.startsWith("rx_")) rx[`rxd_${k.slice(3)}`] = Math.round(n);
+      else if (k.startsWith("st_")) st += n;
+      else if (!WEAPONS[k]) other += n; // item, revive, other
+    }
+    Analytics.track("run_reactions", { ...base, ...rx, dmg_status: Math.round(st), dmg_other: Math.round(other), dmg_total: Math.round(total) });
+  }
+
+  _dmgTotal() {
+    return Object.values(this._dmgBy || {}).reduce((s, n) => s + n, 0);
   }
 
   // "Desviou de tudo": nenhum golpe especial acertou o herói nesta luta
@@ -1475,6 +1505,7 @@ export class GameScene extends Phaser.Scene {
       const dx = e.x - p.x,
         dy = e.y - p.y;
       if (dx * dx + dy * dy > R * R) return;
+      this._dmgSrc = "revive";
       const died = e.takeDamage(e.maxHp * 0.6, null, p.x, p.y, true);
       if (died) this._onEnemyDeath(e);
     });
@@ -1653,6 +1684,7 @@ export class GameScene extends Phaser.Scene {
       reactions,
       chests: this._runChests,
       lanterns: this._runLanterns,
+      dmg_total: Math.round(this._dmgTotal()),
     });
     this._trackBuild(won, quit, byType);
     // Morte: câmera lenta dramática antes do fade

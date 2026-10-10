@@ -193,10 +193,10 @@ Eventos de balanceamento no Analytics (versão 1.0.1, 09/10/2026; Firebase só n
 |---|---|---|
 | `card_pick` | cada carta escolhida no nível | `card` (`new:AURA`, `upgrade:STAFF`, `passive:hp`, `pact:…`, `evolution:…`), `kind`, `offered` (as cartas da mesa, separadas por `\|`), `n`, `level`, `t`, `run_n` |
 | `run_start` | início da partida | `run_n`, `character`, `difficulty`, `biome`, `power` (soma das bênçãos), `anc` (Tesouro Ancestral), `meal` + `meal_q` (refeição da Clareira) |
-| `run_end` | fim da partida | o de antes (`won`, `quit`, `t`, `level`, `kills`, `coins`…) + `weapons` (`STAFF5,AURA3`), `passives` (`hp2,speed1`), `links`, `evos`, `pacts`, `power`, `meal`, `reactions`, `chests`, `lanterns`, `biome` |
-| `run_weapon` | fim da partida, 1 por arma | `weapon` (evoluída = chave da evolução), `base_weapon`, `lvl`, `evolved`, `won`, `quit`, `difficulty`, `run_n`, `character` |
+| `run_end` | fim da partida | o de antes (`won`, `quit`, `t`, `level`, `kills`, `coins`…) + `weapons` (`STAFF5,AURA3`), `passives` (`hp2,speed1`), `links`, `evos`, `pacts`, `power`, `meal`, `reactions`, `chests`, `lanterns`, `biome`, `dmg_total` |
+| `run_weapon` | fim da partida, 1 por arma | `weapon` (evoluída = chave da evolução), `base_weapon`, `lvl`, `evolved`, `dmg` (vida que a linha da arma tirou na partida inteira, evolução incluída), `dmg_pct` (% de todo o dano), `won`, `quit`, `difficulty`, `run_n`, `character` |
 | `run_passive` | fim da partida, 1 por passiva | `passive`, `stacks`, `won`, `quit`, `difficulty`, `run_n`, `character` |
-| `run_reactions` | fim da partida | `rx_vapor`, `rx_crystal`, `rx_overload`, `rx_labareda`, `rx_geada`, `rx_temporal` (só as que aconteceram) + `won`, `difficulty`… |
+| `run_reactions` | fim da partida | `rx_*` (quantas vezes) e `rxd_*` (dano) de `vapor`, `crystal`, `overload`, `labareda`, `geada`, `temporal` (só as que aconteceram), `dmg_status` (queimadura/choque), `dmg_other` (Sopro Ancestral, reviver), `dmg_total` + `won`, `difficulty`… |
 | `chest_open` | baú aberto | `kind` (`normal`/`golden`), `t`, `level` |
 
 Já existiam: `pact_taken`, `card_banish`, `lantern_item`, `shrine_used`, `meal_eaten`, `level_up`.
@@ -206,5 +206,9 @@ Já existiam: `pact_taken`, `card_banish`, `lantern_item`, `shrine_used`, `meal_
 `won = 1` ÷ total daquela arma, **separando por `difficulty`** e olhando a `power` (quem tem muita
 bênção vence com qualquer coisa). As dimensões usadas nos relatórios estão registradas no Google
 Analytics (propriedade `p557044087`); um parâmetro novo só aparece nos relatórios depois de
-registrado lá, e não vale para trás. O dano por arma ainda **não** é medido (os golpes não
-carregam a arma de origem até o inimigo).
+registrado lá, e não vale para trás.
+
+**Livro de dano:** quem bate marca `scene._dmgSrc` logo antes de `takeDamage` (`Weapon._src()`, `proj.src`,
+`rx_*`/`st_*` no `ElementalSystem`); o inimigo/chefe consome a marca e anota a vida que **realmente** perdeu
+(sem o excesso do golpe final) em `GameScene._dmgBy`. **Arma nova que bate direto** (sem `_hit`) precisa
+chamar `this._src()` antes do `takeDamage`; senão o dano cai em `dmg_other` (que deve ficar perto de 0).

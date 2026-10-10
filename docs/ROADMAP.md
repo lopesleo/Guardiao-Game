@@ -404,7 +404,7 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   cada nível (`card_pick`), build no fim (`run_weapon`, `run_passive`, `run_reactions` e o resumo no `run_end`),
   força permanente e refeição da partida (`power`, `anc`, `meal`) e baús (`chest_open`). Tabela em
   [`ARMAS_E_COMBOS.md`](ARMAS_E_COMBOS.md#como-medir). Dimensões registradas no Google Analytics
-  (`p557044087`). Falta medir o dano por arma
+  (`p557044087`). **Dano por arma** (livro de dano): `dmg`/`dmg_pct` em cada `run_weapon`, dano por reação e por status
 - ⬜ Compra "Remover anúncios"
 - ✅ Firebase Analytics + Crashlytics plugados (`src/systems/Telemetry.js`, plugins `@capacitor-firebase/*`):
   projeto `guardiao-da-floresta` (plano Spark, grátis), app Android `com.lopesleo.guardiao`, GA4 em conta
