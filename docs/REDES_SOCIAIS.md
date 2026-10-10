@@ -128,81 +128,50 @@ stories com a enquete "Qual reação?".
 
 ## 2. Discord
 
-Servidor pequeno, para testadores e primeiros jogadores (MARKETING.md, 6.2). Sem bot no começo.
+**No ar desde 10/10/2026.** Convite permanente: **https://discord.gg/TTYnNtQAes** (está no rodapé, na
+chamada e no kit de imprensa da página oficial).
 
-### Estrutura
+O servidor inteiro é definido em código, no repositório: `tools/discord/servidor.mjs` (estrutura, cargos,
+textos, integração, figurinhas, sons, eventos) e aplicado por `tools/discord/setup.mjs` pela API, com o bot
+"Guardião da Floresta". O script é idempotente: procura tudo por nome, edita as mensagens fixas em vez de
+repostar e não duplica nada.
 
-| Categoria | Canal | Tipo | Quem escreve |
-|---|---|---|---|
-| **INÍCIO** | `#boas-vindas` | texto | só a equipe |
-| | `#regras` | texto (canal de regras da Comunidade) | só a equipe |
-| | `#avisos` | anúncios | só a equipe |
-| | `#como-testar` | texto | só a equipe |
-| **A CLAREIRA** | `#geral` | texto | todos |
-| | `#prints-e-clipes` | texto (com mídia) | todos |
-| | `#builds-e-reações` | texto | todos |
-| | `#sugestões` | fórum (tags: Arma, Lenda, Clareira, Interface, Outro) | todos |
-| | `#bugs` | fórum (tags: Trava, Visual, Som, Anúncio, Resolvido) | todos |
-| **TESTE FECHADO** | `#testadores` | texto, privado do cargo Testador | Testador |
-| **VOZ** | `Fogueira` | voz | todos |
-
-**Cargos:** `Guardião` (equipe, Administrador) · `Testador` (quem está no teste fechado; cor verde
-`#9ccf62`) · `Jogador` (padrão). Ícone do servidor = ícone do jogo. Ativar **Comunidade** (dá o canal
-de regras e as boas-vindas), nível de verificação **Médio** e filtro de conteúdo explícito para todos.
-
-### Textos
-
-**#boas-vindas**
-```
-Bem-vindo à Clareira! 🌳
-
-Guardião da Floresta é um roguelite para Android com as lendas do folclore brasileiro. Você só se move,
-as armas atacam sozinhas e os elementos se misturam: Fogo + Gelo = Vapor.
-
-• Leia as #regras
-• Quer jogar antes de todo mundo? Veja #como-testar
-• Achou um bug? Abra um tópico em #bugs
-• Ideia? Mande em #sugestões
-
-Página do jogo: https://lopesleo.github.io/guardiao/?utm_source=discord
+```bash
+python tools/discord/arte.py          # emojis, figurinhas e sons a partir do jogo (tools/discord/arte/)
+node tools/discord/setup.mjs --ver    # mostra o que mudaria
+node tools/discord/setup.mjs          # aplica
 ```
 
-**#regras**
-```
-1. Respeito com todo mundo. Sem ofensa, preconceito ou assédio.
-2. Nada de conteúdo adulto, violento ou ilegal.
-3. Sem spam nem divulgação de outros servidores sem combinar com a equipe.
-4. Spoilers de chefes e segredos: use ||spoiler||.
-5. Bugs e sugestões nos fóruns certos, um tópico por assunto.
-6. Respeite a idade mínima do Discord (13 anos).
+O token do bot fica em `tools/discord/.env` (fora do git). O cargo do bot precisa estar **no topo** da lista
+de cargos; senão ele não consegue renomear nem ordenar os cargos acima dele.
 
-A equipe pode apagar mensagens e remover quem descumprir as regras.
-```
+### O que tem (seguindo o [guia oficial do Discord para jogos](https://docs.discord.com/developers/game-development/how-to-create-a-community-for-your-game))
 
-**#como-testar**
-```
-O jogo está em teste fechado na Google Play (só Android).
+| Parte | Como ficou |
+|---|---|
+| Comunidade | ligada; verificação média, filtro de conteúdo para todos, idioma pt-BR, notificações só de menções |
+| INÍCIO (só leitura) | `#boas-vindas`, `#regras`, `#avisos` (anúncios, dá para seguir), `#como-testar`, `#perguntas-frequentes` |
+| A CLAREIRA | `#geral`, `#prints-e-clipes`, `#builds-e-reações`, fóruns `#sugestões` (tags + 👍 padrão) e `#bugs` (tags + diretrizes) |
+| TESTE FECHADO | `#testadores`, privado (Testador e Equipe) |
+| VOZ | `Fogueira` |
+| EQUIPE | `#moderação`, privado: alertas do AutoMod e avisos do Discord |
+| Cargos | Equipe (moderação), Testador (dado pela Equipe), 7 cargos de lenda favorita (cor do elemento), Novidades (avisos) |
+| Integração | 3 perguntas: lenda favorita, o que trouxe a pessoa (abre os canais certos), quer avisos |
+| Tela de boas-vindas | 5 atalhos com emojis do jogo |
+| AutoMod | palavrões/ofensas, spam, menções em massa (castigo de 10 min), convites de outros servidores |
+| Arte do jogo | 40 emojis (lendas, chefes, elementos, reações, itens), 5 figurinhas animadas, 8 sons no painel |
+| Eventos | Dia do Saci na Fogueira (31/10, 19h) |
 
-1. Mande o e-mail da sua conta Google (a do celular) para a equipe aqui ou pelo botão da página.
-2. Quando avisarmos que você entrou na lista, aceite o convite:
-   https://play.google.com/apps/testing/com.lopesleo.guardiao
-3. Instale pela Play e deixe o jogo no celular por pelo menos 14 dias. Uma partida de vez em quando ajuda muito.
+### Rotina
 
-Quem testar ganha o cargo Testador e o canal #testadores. Obrigado por ajudar a lenda a chegar na loja!
-```
+- Aviso em `#avisos` a cada versão de teste e marco do calendário (`docs/MARKETING.md`); marcar o cargo
+  Novidades só nos avisos importantes.
+- Dar o cargo **Testador** a quem estiver na lista do teste fechado (pelo nome no Discord, não automático).
+- Um evento por mês (o próximo depois do Dia do Saci: o lançamento, 03/12).
+- Responder `#bugs` e `#sugestões` marcando as tags *Resolvido* e *Planejado* (só a Equipe aplica).
 
-**Primeiro aviso (#avisos)**
-```
-A Clareira abriu! 🔥
+### Falta fazer à mão (a API não cobre)
 
-Este é o servidor oficial do Guardião da Floresta. Aqui saem as novidades, as datas e as versões de teste
-antes de qualquer outro lugar.
-
-Agora: teste fechado na Google Play. Precisamos de mais testadores Android: veja #como-testar.
-Lançamento planejado: 03/12/2026.
-```
-
-### Depois de criar
-
-- Link de convite **permanente** (sem expirar), para pôr na bio do Instagram, na página e no jogo.
-- Colocar o convite no site (botão "Discord" no rodapé) e na tela de Opções do jogo numa próxima versão.
+- **Guia do servidor** (Configurações → Integração → Guia do servidor): placa de boas-vindas, 3 a 5
+  tarefas para quem chega e `#como-testar`/`#perguntas-frequentes` como páginas de recursos.
+- **Proteção contra raids e CAPTCHA** (Configurações → Configuração de segurança).
