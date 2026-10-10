@@ -76,6 +76,51 @@ público brasileiro, com potencial internacional.
 - Status do `docs/ROADMAP.md` atualizado no mesmo merge.
 - Push só quando o Leonardo pedir.
 
+## Pendências atuais (atualizar a cada sessão)
+
+Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um item, apagar daqui e
+marcar no `docs/ROADMAP.md`. Última revisão: **09/10/2026**.
+
+**Agora**
+- 👤 **Subir o AAB 1.0.1 (código 2)** no Play Console → Teste fechado - Alpha → nova versão (rascunho já
+  aberto, com notas pt/en). Arquivo: `dist/guardiao-v1.0.1-2-anuncios-reais.aab` (gerado 09/10 às 22:21; traz
+  a medição de balanceamento, o dano por arma e a assistência das reações). Depois: revisar e "Salvar e publicar".
+- 👤 **Teste fechado:** 7 de 12 testadores aceitaram (14 e-mails na lista "Testadores Guardião"). A contagem de
+  14 dias só começa com 12 aceitos ao mesmo tempo. Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`.
+  Cadastrar e-mails à mão na lista (só contas Google); **não trocar por Grupo do Google durante o teste**.
+  Falta o Gmail do Manuel (o outlook dele foi recusado).
+- Analytics: as 17 dimensões e 16 métricas personalizadas levam 24–48 h para aparecer nos relatórios; quando
+  houver dados dos testadores, analisar taxa de escolha das cartas, vitória por arma/Perigo, dano e
+  assistência (como ler: `docs/ARMAS_E_COMBOS.md`, "Como medir").
+
+**Decisões pendentes**
+- **Escala do dano das reações** (hoje fixo): proposta e plano de validação em `docs/BALANCING.md`.
+- Refazer a captura 07 da loja com "7 LENDAS DO FOLCLORE BRASILEIRO" (6 idiomas; `videos/promo/store/`) e
+  decidir a descrição curta em espanhol ("leyendas de Brasil" → "del folclore brasileño"?).
+- Antes de ligar a compra "Remover anúncios": conta pessoal expõe nome e endereço (ver `docs/PLAY_STORE.md`).
+
+**Depois de 12 testadores × 14 dias (~28/10)**
+- 👤 Pedir acesso à produção no Painel do Play Console (análise de ~7 dias).
+- Com a produção: vincular o app à loja no AdMob; ligar o **pré-registro**; trocar `STAGE` para `"pre"`
+  (depois `"loja"`) em `guardiao/config.mjs` no repositório `lopesleo.github.io` e publicar.
+- Lançamento planejado: **quinta, 03/12/2026** (calendário completo em `docs/MARKETING.md`).
+
+**Marketing e loja** (`docs/MARKETING.md`)
+- 31/10 Dia do Saci (vídeo do Saci + chamada de testadores); vídeos curtos 3×/semana; formulário de feedback.
+- Imprensa e criadores a partir de 10/11 (kit em `lopesleo.github.io/guardiao/#press`).
+- Inscrição no BIG Festival 2027 (deve abrir entre nov./2026 e jan./2027).
+- 👤 Opcional: trocar a URL da política no Play Console e no AdMob para `lopesleo.github.io/guardiao/privacidade/`;
+  trocar o "Site" do desenvolvedor para `/guardiao/`; subir o promo no YouTube para o vídeo da ficha.
+
+**Jogo (backlog do roadmap)**
+- `maxAdContentRating "T"` no AdMob (público 13+); compra "Remover anúncios"; salvamento na nuvem
+  (branch `feat/m6-nuvem-play-games`, falta testar no aparelho); revisão nativa ja/zh; testes em aparelho fraco.
+
+**Repositórios**
+- `main` deste repo está ~140 commits à frente do `origin` (sem push, por regra). O Pages daqui serve a
+  branch `pages` (jogo web fora do ar; política no endereço antigo). Página oficial: repo `lopesleo.github.io`,
+  pasta `guardiao/` (deploy = push na `dev`).
+
 ## Onde está cada coisa
 
 | Assunto | Documento |

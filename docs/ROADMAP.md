@@ -369,9 +369,8 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   política, botão "Não consentir" ligado). Falta dar push da `docs/PRIVACY.md` atualizada (a
   mensagem aponta para ela) e, no app, integrar o SDK da UMP no M5
 - ✅ `app-ads.txt` no ar em https://lopesleo.github.io/app-ads.txt (repo `lopesleo.github.io`, `public/`)
-- 👤 Falta: **criar a conta de desenvolvedor da Play Console** (taxa única + verificação de identidade) e
-  cadastrar `https://lopesleo.github.io` como site do desenvolvedor; ligar o app à loja no AdMob;
-  informações fiscais (CPF e W-8BEN) e forma de pagamento no AdMob; conta do Firebase
+- ✅ Conta da Play Console (09/10/2026), site do desenvolvedor `https://lopesleo.github.io`, Firebase e perfil de
+  pagamentos do AdMob. 👤 Falta: **ligar o app à loja no AdMob** (só depois de publicado em produção)
 - ✅ AdMob + consentimento (UMP) plugados (`src/systems/AdMobBridge.js`): consentimento → SDK → anúncios
   premiados em todos os pontos; na Europa o uso de dados (Firebase) começa desligado; sem consentimento ou sem
   AdMob pronto o app NÃO oferece anúncio. `ADS.TESTING = true` usa anúncios de TESTE do Google:
