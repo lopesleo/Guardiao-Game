@@ -146,7 +146,7 @@ Os 60 clipes de 4 s e o promo 9:16 já dão material para ~2 meses.
 |---|---|---|
 | **Pergunta da reação** | "Fogo + Gelo = ?" → a resposta aparece em 2 s | `re_vapor`, `re_crystal`, `re_overload`… |
 | **Lenda do dia** | "A Caipora anda montada num porco-do-mato. No jogo, ela protege os bichos com uma vara encantada." | `leg_*` + origem do bestiário |
-| **Desvie só andando** | Chefe solta o golpe enorme, o herói passa ileso | `mapi_*`, `mula_charge`, `cab_*` |
+| **Desvie na hora certa** | Chefe avisa o golpe enorme; o herói passa ileso andando ou no dash | `mapi_*`, `mula_charge`, `cab_*` |
 | **Horda virando pó** | Evolução de arma limpando a tela | `evo_*` |
 | **Do código à tela** | Toda a arte e a música do jogo são geradas por código (sem pacote de assets comprado) | captura do `art-preview.html` + jogo |
 | **Vida na Clareira** | Pescar, plantar e cozinhar entre as partidas | `camp_*` |
