@@ -79,12 +79,12 @@ público brasileiro, com potencial internacional.
 ## Pendências atuais (atualizar a cada sessão)
 
 Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um item, apagar daqui e
-marcar no `docs/ROADMAP.md`. Última revisão: **09/10/2026**.
+marcar no `docs/ROADMAP.md`. Última revisão: **09/10/2026** (noite).
 
 **Agora**
-- 👤 **Subir o AAB 1.0.1 (código 2)** no Play Console → Teste fechado - Alpha → nova versão (rascunho já
-  aberto, com notas pt/en). Arquivo: `dist/guardiao-v1.0.1-2-anuncios-reais.aab` (gerado 09/10 às 22:21; traz
-  a medição de balanceamento, o dano por arma e a assistência das reações). Depois: revisar e "Salvar e publicar".
+- 👤 **Enviar para revisão** (Play Console → Visão geral da publicação → "Enviar mudanças para revisão"): a
+  versão 1.0.1 (código 2, teste fechado) já está salva, junto com a ficha nova nos 8 idiomas (texto "desvie
+  andando ou com o dash" e capturas 05/07 refeitas). Esperando o OK do Leonardo.
 - 👤 **Teste fechado:** 7 de 12 testadores aceitaram (14 e-mails na lista "Testadores Guardião"). A contagem de
   14 dias só começa com 12 aceitos ao mesmo tempo. Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`.
   Cadastrar e-mails à mão na lista (só contas Google); **não trocar por Grupo do Google durante o teste**.
@@ -95,8 +95,9 @@ marcar no `docs/ROADMAP.md`. Última revisão: **09/10/2026**.
 
 **Decisões pendentes**
 - **Escala do dano das reações** (hoje fixo): proposta e plano de validação em `docs/BALANCING.md`.
-- Refazer a captura 07 da loja com "7 LENDAS DO FOLCLORE BRASILEIRO" (6 idiomas; `videos/promo/store/`) e
-  decidir a descrição curta em espanhol ("leyendas de Brasil" → "del folclore brasileño"?).
+- Descrição curta em espanhol: "leyendas de Brasil" → "del folclore brasileño"? (a captura 07 já foi refeita).
+- Vídeo promocional e trailer (`videos/promo/promo-*`) ainda mostram as animações antigas: os clipes já
+  foram recapturados em 09/10, falta renderizar de novo as composições (HyperFrames) e conferir o tempo.
 - Antes de ligar a compra "Remover anúncios": conta pessoal expõe nome e endereço (ver `docs/PLAY_STORE.md`).
 
 **Depois de 12 testadores × 14 dias (~28/10)**
