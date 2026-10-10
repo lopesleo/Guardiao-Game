@@ -405,6 +405,8 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   força permanente e refeição da partida (`power`, `anc`, `meal`) e baús (`chest_open`). Tabela em
   [`ARMAS_E_COMBOS.md`](ARMAS_E_COMBOS.md#como-medir). Dimensões registradas no Google Analytics
   (`p557044087`). **Dano por arma** (livro de dano): `dmg`/`dmg_pct` em cada `run_weapon`, dano por reação e por status, e **assistência** (dano das reações creditado às armas que montaram o par)
+- ⬜ **Decidir a escala do dano das reações** (hoje fixo; some no fim da partida e nos Perigos altos): proposta e
+  plano de validação (laboratório minuto a minuto + dados da 1.0.1) em [`BALANCING.md`](BALANCING.md#decisão-pendente-escala-do-dano-das-reações-anotada-em-09102026)
 - ⬜ Compra "Remover anúncios"
 - ✅ Firebase Analytics + Crashlytics plugados (`src/systems/Telemetry.js`, plugins `@capacitor-firebase/*`):
   projeto `guardiao-da-floresta` (plano Spark, grátis), app Android `com.lopesleo.guardiao`, GA4 em conta

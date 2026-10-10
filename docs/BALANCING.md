@@ -4,6 +4,37 @@ Toda decisão numérica do jogo, com justificativa. Tweak em `src/config.js`.
 
 > **Princípio (D16):** preferir fórmulas paramétricas a números mágicos. Permite tunar dificuldade global mexendo em coeficientes.
 
+## Decisão pendente: escala do dano das reações (anotada em 09/10/2026)
+
+**Problema:** o dano das reações é **fixo** (valores de `REACTION` em `config.js`, só multiplicado pelo
+Prisma). A vida dos inimigos cresce com o tempo (`ENEMY.HP(wave) = 12 + 6 × wave`: 12 no início → 96
+aos 7:00, e ×2,1 no Pesadelo). Um tique do Vapor (4) tira 1/3 da vida no começo e ~4% no fim; a
+reação tende a sumir no fim da partida e nos Perigos altos.
+
+**Proposta (a validar com números):**
+1. Base que acompanha a partida: multiplicar o dano da reação pela curva de vida dos inimigos,
+   `(ENEMY.HP(wave) / ENEMY.HP(0)) ^ k` com `k` um pouco abaixo de 1. **Sem** o `hpMult` do Perigo
+   (os Perigos altos continuam mais difíceis).
+2. Alavanca de build nas cartas: uma passiva tipo "Maestria da Mata" (+X% de dano de reação),
+   no espírito da Maestria Elemental das reações transformativas do Genshin. Prisma continua.
+3. **Não** escalar pelo golpe que disparou (modelo Path of Exile / reações amplificadoras do Genshin):
+   as armas de área disparam reações em massa e isso já gerou explosões (Vapor chegou a 2/3 do dano;
+   Sobrecarga a 70% — ver comentários em `ElementalSystem.js` e `config.js`).
+
+**Como validar antes de decidir:**
+- **Laboratório de balanceamento** (simulação headless): medir a **fatia das reações no dano por
+  minuto (0–7) e por Perigo**, com 3–4 builds típicas (2 elementos, Prisma, só área, só projétil).
+  Meta proposta: reações entre **20% e 35%** do dano em qualquer minuto, sem passar de 40% em nenhuma build.
+- **Dados reais (versão 1.0.1 em diante):** `run_reactions` (`rxd_*`, `dmg_total`) e `run_weapon`
+  (`dmg_pct`, `assist_pct`) por `difficulty` e `t`. Só dão o total da partida, então confirmam a tendência
+  (partidas longas/Perigo alto → fatia menor), não a curva minuto a minuto.
+- Calibrar `k` e o bônus da passiva com a simulação; conferir de novo nos dados reais depois da
+  atualização.
+
+Pesquisa de referência (Genshin, Path of Exile 2, Divinity OS2, Brotato, Soulstone Survivors, Halls of
+Torment): resumo e fontes na conversa de 09/10/2026; o modelo "progresso + alavanca de carta" foi o
+recomendado.
+
 ## Curva de inimigos
 
 `wave = floor(t / 30)` — sobe 1 wave a cada 30 segundos.
@@ -19,6 +50,10 @@ Fórmulas:
 - `HP(wave) = 8 + 2.5 × wave`
 - `DMG(wave) = 1 + 0.3 × wave`
 - `SPAWN_RATE(t) = 1 + t/30`
+
+> ⚠ **Desatualizado (conferido em 09/10/2026):** o HP hoje é `ENEMY.HP(wave) = 12 + 6 × wave` (12 → 42 → 72 →
+> 96 nas ondas 0/5/10/14), multiplicado pelo `hpMult` do Perigo. Conferir dano e spawn em `src/config.js`
+> antes de usar esta tabela.
 
 ## Curva do jogador
 
