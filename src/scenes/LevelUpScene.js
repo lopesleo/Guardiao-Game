@@ -293,6 +293,17 @@ export class LevelUpScene extends Phaser.Scene {
     if (this._banishMode) return this._banish(card, cont);
     this._locked = true;
     this.sound.play("sfx_ui_click", { volume: 0.5 });
+    // Balanceamento: o que foi escolhido e o que estava na mesa (carta ignorada = fraca ou sem graça)
+    const up = this.gameScene.upgrades;
+    Analytics.track("card_pick", {
+      card: up.cardId(card),
+      kind: card.type,
+      offered: this.cards.map((c) => up.cardId(c)).join("|"),
+      n: this.cards.length,
+      level: this.player.level,
+      t: Math.floor((this.gameScene.elapsedMs || 0) / 1000),
+      run_n: this.gameScene._runN,
+    });
     this._cardObjs.forEach((c) => {
       if (c === cont) this.tweens.add({ targets: c, scale: 1.08, duration: 120, yoyo: true });
       else this.tweens.add({ targets: c, alpha: 0, y: c.y + 30, duration: 160 });

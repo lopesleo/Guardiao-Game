@@ -400,6 +400,11 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   1ª sessão) e `shop_buy` em toda compra (arma, bênção, dom, guardião, Tesouro, obra). Economia simulada de
   novo com o catálogo atual: 63 / 37 / 22 dias (casual / médio / hardcore), sem buracos de compra; ver
   `META_LOOP.md`
+- ✅ **Medição de balanceamento (09/10/2026, versão 1.0.1 / código 2):** carta escolhida e cartas da mesa em
+  cada nível (`card_pick`), build no fim (`run_weapon`, `run_passive`, `run_reactions` e o resumo no `run_end`),
+  força permanente e refeição da partida (`power`, `anc`, `meal`) e baús (`chest_open`). Tabela em
+  [`ARMAS_E_COMBOS.md`](ARMAS_E_COMBOS.md#como-medir). Dimensões registradas no Google Analytics
+  (`p557044087`). Falta medir o dano por arma
 - ⬜ Compra "Remover anúncios"
 - ✅ Firebase Analytics + Crashlytics plugados (`src/systems/Telemetry.js`, plugins `@capacitor-firebase/*`):
   projeto `guardiao-da-floresta` (plano Spark, grátis), app Android `com.lopesleo.guardiao`, GA4 em conta
