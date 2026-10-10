@@ -150,6 +150,10 @@ export class GameScene extends Phaser.Scene {
     // em _dmgSrc logo antes do golpe (arma = chave da arma de origem, rx_* = reação, st_* = status)
     this._dmgBy = Object.create(null);
     this._dmgSrc = null;
+    // Assistência: o dano de cada reação dividido entre as armas que puseram os dois elementos
+    this._assistBy = Object.create(null);
+    this._dmgAssist = null;
+    this._hitSrc = null;
     // Sementes raras só depois que a Horta apareceu (uma novidade por vez)
     this._seedsOn = (this.meta.data.revealed || []).includes("garden");
     this.heartPool = new Pool(() => new HeartPickup(this), 10);
@@ -670,7 +674,7 @@ export class GameScene extends Phaser.Scene {
         const dx = this.boss.x - p.x,
           dy = this.boss.y - p.y;
         if (dx * dx + dy * dy < 56 * 56) {
-          this._dmgSrc = p.src || "other";
+          this._dmgSrc = this._hitSrc = p.src || "other";
           const died = this.boss.takeDamage(p.dmg, null, p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
           this._showDmg(this.boss.x, this.boss.y, p.dmg, p.element, p.crit);
@@ -688,7 +692,7 @@ export class GameScene extends Phaser.Scene {
         const dx = e.x - p.x,
           dy = e.y - p.y;
         if (dx * dx + dy * dy < 22 * 22) {
-          this._dmgSrc = p.src || "other";
+          this._dmgSrc = this._hitSrc = p.src || "other";
           const died = e.takeDamage(p.dmg, p.element, p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
           this._showDmg(e.x, e.y, p.dmg, p.element, p.crit);
@@ -712,7 +716,7 @@ export class GameScene extends Phaser.Scene {
         const dx = this.boss.x - p.x,
           dy = this.boss.y - p.y;
         if (dx * dx + dy * dy < 56 * 56 && p.canHit(this.boss, time)) {
-          this._dmgSrc = p.src || "other";
+          this._dmgSrc = this._hitSrc = p.src || "other";
           const died = this.boss.takeDamage(p.dmg, null, p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
           this._showDmg(this.boss.x, this.boss.y, p.dmg, "fire", p.crit);
@@ -726,7 +730,7 @@ export class GameScene extends Phaser.Scene {
         const dx = e.x - p.x,
           dy = e.y - p.y;
         if (dx * dx + dy * dy < 22 * 22 && p.canHit(e, time)) {
-          this._dmgSrc = p.src || "other";
+          this._dmgSrc = this._hitSrc = p.src || "other";
           const died = e.takeDamage(p.dmg, "fire", p.x, p.y, p.crit);
           this.player.lifestealFrom(p.dmg);
           this._showDmg(e.x, e.y, p.dmg, "fire", p.crit);
@@ -1054,10 +1058,16 @@ export class GameScene extends Phaser.Scene {
     if (this.hud.boss === e) this.hud.clearBoss();
   }
 
-  _recordDmg(src, n) {
+  _recordDmg(src, n, assist = null) {
     if (!(n > 0) || !this._dmgBy) return;
     const k = src || "other";
     this._dmgBy[k] = (this._dmgBy[k] || 0) + n;
+    // Reação: divide o dano entre as armas que montaram o par (só armas; status vindos de
+    // reação não têm autor). A reação continua contando na linha dela; isto é um crédito a mais
+    if (assist?.length && k.startsWith("rx_")) {
+      const share = n / assist.length;
+      for (const w of assist) this._assistBy[w] = (this._assistBy[w] || 0) + share;
+    }
   }
 
   // Balanceamento: a build no fim da partida em texto curto (cabe nos 100 caracteres do Firebase).
@@ -1085,7 +1095,12 @@ export class GameScene extends Phaser.Scene {
     for (const w of this.player.weapons) {
       const evo = WEAPONS[w.key]?.evolvesFrom;
       const dmg = by[evo || w.key] || 0;
-      Analytics.track("run_weapon", { ...base, weapon: w.key, base_weapon: evo || w.key, lvl: w.level, evolved: !!evo, dmg: Math.round(dmg), dmg_pct: pct(dmg) });
+      const assist = this._assistBy?.[evo || w.key] || 0;
+      Analytics.track("run_weapon", {
+        ...base, weapon: w.key, base_weapon: evo || w.key, lvl: w.level, evolved: !!evo,
+        dmg: Math.round(dmg), dmg_pct: pct(dmg),
+        dmg_assist: Math.round(assist), assist_pct: pct(assist), // reações que esta arma ajudou a montar
+      });
     }
     for (const [id, n] of Object.entries(this.player.passivesTaken || {})) {
       Analytics.track("run_passive", { ...base, passive: id, stacks: n });

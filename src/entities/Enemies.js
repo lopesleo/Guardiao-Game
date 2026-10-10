@@ -267,13 +267,14 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   takeDamage(dmg, element = null, fromX = null, fromY = null, crit = false, soft = false) {
     // Livro de dano (balanceamento): quem bateu marca scene._dmgSrc logo antes; consome aqui
     const src = this.scene._dmgSrc;
-    this.scene._dmgSrc = null;
+    const assist = this.scene._dmgAssist; // reação: armas que montaram o par
+    this.scene._dmgSrc = this.scene._dmgAssist = null;
     const before = this.hp;
     const iceAmp = this.statuses.ice ? 1.35 : 1;
     // Ponto fraco aberto (golpe especial de minichefe): leva mais dano
     const amp = this.scene.time.now < this._exposedUntil ? this._exposedMult ?? BOSS_FIGHT.EXPOSED_MULT : 1;
     this.hp -= dmg * iceAmp * amp;
-    this.scene._recordDmg?.(src, Math.min(Math.max(before, 0), before - this.hp)); // sem o excesso do golpe final
+    this.scene._recordDmg?.(src, Math.min(Math.max(before, 0), before - this.hp), assist); // sem o excesso do golpe final
     if (amp > 1) this.scene._markAmp?.(this, amp);
 
     // "Soco": achata e volta (em update). Golpe empurra 3px no sentido dele.
