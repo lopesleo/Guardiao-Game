@@ -15,7 +15,7 @@ import { tr } from "../i18n/i18n.js";
 const plugin = () => window.Capacitor?.Plugins?.AdMob;
 
 // privacy: o Google pede um botão de "opções de privacidade" para este jogador? (REQUIRED só onde há
-// mensagem de consentimento publicada no AdMob — hoje a europeia/GDPR; no Brasil vem NOT_REQUIRED)
+// mensagem publicada no AdMob — a europeia/GDPR e a dos estados dos EUA (10/10/2026); no Brasil vem NOT_REQUIRED)
 let state = { ready: false, consent: "UNKNOWN", privacy: "UNKNOWN", busy: false, step: "idle", error: "" };
 
 // Status do UMP: NOT_REQUIRED (fora da Europa) e OBTAINED (já respondeu) liberam anúncios

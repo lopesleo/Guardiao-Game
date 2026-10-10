@@ -109,7 +109,7 @@ export function openSettings(scene, o = {}) {
     if (Telemetry.available())
       row(tr("Dados de uso e erros"), new Toggle(scene, 0, 0, Telemetry.enabled(), (v) => Telemetry.setEnabled(v)), tr("Ajuda a melhorar o jogo · anônimo"));
     if (AdMobBridge.available()) {
-      // Rever o consentimento só existe onde o Google tem mensagem para a região (hoje a Europa);
+      // Rever o consentimento só existe onde o Google tem mensagem para a região (Europa e estados dos EUA);
       // nos outros lugares o botão fica apagado e a dica explica o porquê
       const privacy = AdMobBridge.privacy;
       const hint = { REQUIRED: tr("Mude sua escolha quando quiser"), NOT_REQUIRED: tr("Não é exigido na sua região") }[privacy] ?? tr("Precisa de internet");
