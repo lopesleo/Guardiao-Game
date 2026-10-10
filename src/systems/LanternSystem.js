@@ -197,6 +197,7 @@ export class LanternSystem {
         if (!e.active || !Phaser.Geom.Rectangle.Contains(view, e.x, e.y)) return;
         const tough = e.miniBoss || e._elite; // elites, mímicos e minichefes resistem
         const dmg = tough ? e.maxHp * LANTERN.BREATH_TOUGH_DMG_PCT : e.hp + 1;
+        s._dmgSrc = "item"; // Sopro Ancestral (livro de dano)
         const died = e.takeDamage(dmg, null, p.x, p.y, true);
         if (died) s._onEnemyDeath(e);
       });

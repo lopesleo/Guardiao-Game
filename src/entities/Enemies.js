@@ -265,10 +265,15 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   // soft = tique (queimadura, choque, nuvem): sem pisca-branco nem som de golpe —
   // 8 tiques/s piscando viravam ruído e escondiam os golpes de verdade.
   takeDamage(dmg, element = null, fromX = null, fromY = null, crit = false, soft = false) {
+    // Livro de dano (balanceamento): quem bateu marca scene._dmgSrc logo antes; consome aqui
+    const src = this.scene._dmgSrc;
+    this.scene._dmgSrc = null;
+    const before = this.hp;
     const iceAmp = this.statuses.ice ? 1.35 : 1;
     // Ponto fraco aberto (golpe especial de minichefe): leva mais dano
     const amp = this.scene.time.now < this._exposedUntil ? this._exposedMult ?? BOSS_FIGHT.EXPOSED_MULT : 1;
     this.hp -= dmg * iceAmp * amp;
+    this.scene._recordDmg?.(src, Math.min(Math.max(before, 0), before - this.hp)); // sem o excesso do golpe final
     if (amp > 1) this.scene._markAmp?.(this, amp);
 
     // "Soco": achata e volta (em update). Golpe empurra 3px no sentido dele.

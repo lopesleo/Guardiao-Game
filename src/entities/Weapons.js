@@ -338,6 +338,14 @@ export class Weapon {
   get range() {
     return (this.def.range ?? 9999) * this.rangeMult;
   }
+  // Livro de dano (balanceamento): a evolução soma na arma de origem (a linha da arma na partida)
+  get srcKey() {
+    return this.def.evolvesFrom || this.key;
+  }
+  // Marca esta arma como autora do próximo golpe (o alvo consome em takeDamage)
+  _src() {
+    this.scene._dmgSrc = this.srcKey;
+  }
 
   rollHit() {
     const base = this.damage;
@@ -373,6 +381,7 @@ export class Weapon {
     const isBoss = t === this.scene.boss;
     const crit = Math.random() < (this.owner?.critChance ?? 0);
     const dmg = crit ? base * (this.owner?.critMult ?? 2) : base;
+    this._src();
     const died = t.takeDamage(dmg, isBoss ? undefined : null, fromX, fromY, crit);
     this.owner?.lifestealFrom(dmg);
     if (showNum || crit) this.scene._showDmg(t.x, t.y, dmg, element, crit);
@@ -461,6 +470,7 @@ export class Staff extends Weapon {
       const offset = (i - (total - 1) / 2) * spread;
       const a = baseAng + offset;
       const proj = this.scene.projectilePool.acquire();
+      proj.src = this.srcKey; // livro de dano
       const { dmg, crit } = this.rollHit();
       proj.fire(
         ox,
@@ -487,6 +497,7 @@ export class Staff extends Weapon {
     const sp = this.def.projSpeed;
     const { dmg, crit } = this.rollHit();
     const proj = this.scene.projectilePool.acquire();
+    proj.src = this.srcKey; // livro de dano
     proj.fire(x, y, Math.cos(a) * sp, Math.sin(a) * sp, dmg, ELEMENT.FIRE, ((this.range * 1.35) / sp) * 1000, COLORS.FIRE, crit);
     this._decorateProj?.(proj);
     this.scene.fx?.muzzle(x, y, a, "fire");
@@ -578,6 +589,7 @@ export class AuraWeapon extends Weapon {
       if (dx * dx + dy * dy > r2) return;
       // Chip damage + chill (slow + amplificação) enquanto dentro do campo
       const { dmg, crit } = this.rollHit();
+      this._src();
       const died = e.takeDamage(dmg, null, this.owner.x, this.owner.y, crit);
       this.owner.lifestealFrom(dmg);
       this.scene._showDmg(e.x, e.y, dmg, ELEMENT.ICE, crit);
@@ -612,6 +624,7 @@ export class AuraWeapon extends Weapon {
         dy = boss.y - this.owner.y;
       if (dx * dx + dy * dy <= r2) {
         const { dmg, crit } = this.rollHit();
+        this._src();
         const died = boss.takeDamage(
           dmg,
           null,
@@ -680,6 +693,7 @@ export class Boomerang extends Weapon {
     const target = this._nearestEnemyInRange();
     if (!target) return false;
     const proj = this.scene.boomerPool.acquire();
+    proj.src = this.srcKey; // livro de dano
     const dx = target.x - this.owner.x,
       dy = target.y - this.owner.y;
     const len = Math.hypot(dx, dy) || 1;
@@ -715,6 +729,7 @@ export class ChainLightning extends Weapon {
       const isBoss = cur === this.scene.boss;
       const isCrit = Math.random() < (this.owner?.critChance ?? 0);
       const finalDmg = this._emit("chain:damage", { weapon: this, target: cur, dmg: isCrit ? dmg * this.owner.critMult : dmg }).dmg;
+      this._src();
       const died = cur.takeDamage(
         finalDmg,
         isBoss ? undefined : null,
@@ -810,6 +825,7 @@ export class OverloadX extends ChainLightning {
       const isBoss = cur === this.scene.boss;
       const isCrit = Math.random() < (this.owner?.critChance ?? 0);
       const finalDmg = this._emit("chain:damage", { weapon: this, target: cur, dmg: isCrit ? dmg * this.owner.critMult : dmg }).dmg;
+      this._src();
       const died = cur.takeDamage(
         finalDmg,
         isBoss ? undefined : null,
@@ -877,6 +893,7 @@ export class WinterHeart extends AuraWeapon {
       if (dx * dx + dy * dy > rSq) return;
       const isCrit = Math.random() < (this.owner?.critChance ?? 0);
       const dmg = isCrit ? dmgBase * this.owner.critMult : dmgBase;
+      this._src();
       const died = t.takeDamage(dmg, isBoss ? undefined : null, cx, cy, isCrit);
       this.owner.lifestealFrom(dmg);
       scene._showDmg(t.x, t.y, dmg, ELEMENT.ICE, isCrit);
@@ -930,6 +947,7 @@ export class Phoenix extends Boomerang {
         const dx = e.x - x,
           dy = e.y - y;
         if (dx * dx + dy * dy > rSq) return;
+        this._src();
         const died = e.takeDamage(dmg, null, null, null, false, true);
         scene.elemental.applyStatus(e, ELEMENT.FIRE);
         if (died) scene._onEnemyDeath(e);
@@ -938,6 +956,7 @@ export class Phoenix extends Boomerang {
         const dx = scene.boss.x - x,
           dy = scene.boss.y - y;
         if (dx * dx + dy * dy <= rSq) {
+          this._src();
           const died = scene.boss.takeDamage(dmg);
           scene.elemental.applyStatus(scene.boss, ELEMENT.FIRE);
           if (died) scene._onBossDeath();
@@ -1019,6 +1038,7 @@ export class OrbitalIce extends Weapon {
         if (time - last < cd) return;
         this.lastHit.set(e, time);
         const { dmg, crit } = this.rollHit();
+        this._src();
         const died = e.takeDamage(dmg, isBoss ? undefined : null, x, y, crit);
         this.owner.lifestealFrom(dmg);
         this.scene._showDmg(e.x, e.y, dmg, ELEMENT.ICE, crit);
@@ -1085,6 +1105,7 @@ export class Flamethrower extends Weapon {
       da = Math.atan2(Math.sin(da), Math.cos(da));
       if (Math.abs(da) > half && d > 30) return;
       const { dmg, crit } = this.rollHit();
+      this._src();
       const died = e.takeDamage(dmg, isBoss ? undefined : null, px, py, crit);
       this.owner.lifestealFrom(dmg);
       scene._showDmg(e.x, e.y, dmg, ELEMENT.FIRE, crit);
