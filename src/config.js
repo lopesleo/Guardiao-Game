@@ -1588,6 +1588,9 @@ export const ADS = {
   // Celulares de teste do consentimento: sem isso o Google ignora o TEST_EEA num aparelho de verdade.
   // O código do aparelho aparece no logcat ao abrir o app: addTestDeviceHashedId("…")
   TEST_DEVICE_IDS: [],
+  // Teto de classificação dos anúncios: o público inclui 13–15 anos (Play Console), então nada acima de
+  // "Teen" (T). Valores do plugin: General, ParentalGuidance, Teen, MatureAudience
+  MAX_AD_RATING: "Teen",
   REVIVE_HP_PCT: 0.5, // volta com metade da vida
   REVIVE_INVULN_MS: 3000,
   REVIVE_CLEAR_RADIUS: 280, // onda que empurra/fere quem está em volta
