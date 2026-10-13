@@ -40,7 +40,8 @@ async function askConsent(AdMob) {
 // Liga o SDK e passa a servir anúncios (no boot ou logo depois de o jogador consentir)
 async function startAds(AdMob) {
   state.step = "sdk";
-  await AdMob.initialize({ initializeForTesting: ADS.TESTING });
+  // maxAdContentRating vale para todos os pedidos de anúncio a partir daqui (público 13+)
+  await AdMob.initialize({ initializeForTesting: ADS.TESTING, maxAdContentRating: ADS.MAX_AD_RATING });
   AdService.setProvider({ show: showRewarded });
   state.ready = true;
   state.error = "";

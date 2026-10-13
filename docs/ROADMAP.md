@@ -416,8 +416,9 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   recusar; vincular o app do AdMob ao Firebase quando o app estiver na loja
 - ✅ Política de privacidade no ar e **Conteúdo do app** declarado no Play Console (09/10/2026;
   respostas em `PLAY_STORE.md`)
-- ⬜ **Anúncios adequados a 13+**: o público-alvo inclui 13–15 anos; no `AdService`, pedir anúncios
-  com classificação máxima "T" (`maxAdContentRating`) junto com o UMP
+- ✅ **Anúncios adequados a 13+** (13/10/2026): o público-alvo inclui 13–15 anos; o `AdMobBridge` liga o SDK com
+  classificação máxima "T" (`ADS.MAX_AD_RATING = "Teen"` → `maxAdContentRating`), valendo para todo pedido de anúncio.
+  👤 No AdMob (Configurações do app → Controles de bloqueio → Classificação máxima) deixar também em "T"
 - ✅ **Página oficial** em <https://lopesleo.github.io/guardiao/> (09/10/2026; repositório `lopesleo.github.io`,
   pasta `guardiao/`): 6 idiomas, laços de gameplay, reações interativas, as 7 lendas com a origem do bestiário,
   chefes, biomas, Clareira, "justo de verdade", trailer, inscrição no teste fechado e kit de imprensa. A fase
