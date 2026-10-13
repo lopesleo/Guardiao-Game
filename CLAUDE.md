@@ -84,7 +84,9 @@ marcar no `docs/ROADMAP.md`. Última revisão: **13/10/2026**.
 **Agora**
 - 👤 **Enviar para revisão** (Play Console → Visão geral da publicação → "Enviar mudanças para revisão"): a
   versão 1.0.1 (código 2, teste fechado) já está salva, junto com a ficha nova nos 8 idiomas (texto "desvie
-  andando ou com o dash" e capturas 05/07 refeitas). Esperando o OK do Leonardo.
+  andando ou com o dash" e capturas 05/07 refeitas). **Nova: 1.0.2 (código 3)** em
+  `dist/guardiao-v1.0.2-3-anuncios-reais.aab` (13/10: anúncios 13+, nuvem do Play Games embutida e desligada):
+  trocar o pacote da versão em rascunho do teste fechado pelo código 3 antes de enviar. Esperando o OK do Leonardo.
 - 👤 **Teste fechado:** 8 de 12 testadores aceitaram em 10/10 (14 e-mails na lista "Testadores Guardião"). A contagem de
   14 dias só começa com 12 aceitos ao mesmo tempo. Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`.
   Cadastrar e-mails à mão na lista (só contas Google); **não trocar por Grupo do Google durante o teste**.
