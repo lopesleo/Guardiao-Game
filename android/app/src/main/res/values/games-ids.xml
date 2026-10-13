@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ID do projeto do Play Games (Play Console → Play Games Services → Configuração; só números).
+     Vazio = progresso na nuvem desligado (o app funciona normalmente, só sem nuvem). -->
+<resources>
+    <string name="game_services_project_id" translatable="false"></string>
+</resources>

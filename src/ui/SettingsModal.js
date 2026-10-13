@@ -5,10 +5,12 @@ import { Settings } from "../systems/Settings.js";
 import { Notify } from "../systems/Notify.js";
 import { Telemetry } from "../systems/Telemetry.js";
 import { AdMobBridge } from "../systems/AdMobBridge.js";
+import { CloudSave } from "../systems/CloudSave.js";
+import { cloudToast } from "./CloudSaveUI.js";
 import { CSS } from "../art/Palette.js";
 import { text, Button, FONTS, TEXT_SIZES, LANG_FONT } from "./Theme.js";
 import { Modal, Slider, Toggle } from "./Widgets.js";
-import { tr, lang, LANGS, setLang } from "../i18n/i18n.js";
+import { tr, lang, LANGS, setLang, locale } from "../i18n/i18n.js";
 
 let lastTab = "tela";
 
@@ -105,6 +107,7 @@ export function openSettings(scene, o = {}) {
     );
     if (Notify.available())
       row(tr("Avisos"), new Toggle(scene, 0, 0, Notify.enabled(), (v) => (v ? Notify.enable() : Notify.disable())), tr("Baú do dia e colheita pronta"));
+    if (CloudSave.available() && CloudSave.state !== "off") cloudRow(scene, m, o, row);
   } else {
     if (Telemetry.available())
       row(tr("Dados de uso e erros"), new Toggle(scene, 0, 0, Telemetry.enabled(), (v) => Telemetry.setEnabled(v)), tr("Ajuda a melhorar o jogo · anônimo"));
@@ -139,11 +142,49 @@ export function openSettings(scene, o = {}) {
       }
     }
     if (o.onReset) {
-      m.add(text(scene, 0, m.h / 2 - 104, tr("Apaga moedas, bênçãos, armas, conquistas e a Clareira deste aparelho"), { size: 14, color: CSS.muted, origin: 0.5 }));
+      const what = CloudSave.connected()
+        ? tr("Apaga moedas, bênçãos, armas, conquistas e a Clareira deste aparelho e do Play Games")
+        : tr("Apaga moedas, bênçãos, armas, conquistas e a Clareira deste aparelho");
+      m.add(text(scene, 0, m.h / 2 - 104, what, { size: 14, color: CSS.muted, origin: 0.5 }));
       m.add(new Button(scene, 0, m.h / 2 - 60, 320, 52, tr("APAGAR PROGRESSO"), o.onReset, { size: 18, style: "danger", color: CSS.redHi }));
     }
   }
   return m;
+}
+
+// Progresso na nuvem (Play Games): entrar na conta, ou ver quando salvou e salvar já
+function cloudRow(scene, m, o, row) {
+  const st = CloudSave.state;
+  const reopen = () => {
+    if (!m._closed) m.close();
+    openSettings(scene, { ...o, tab: "jogo" });
+  };
+  if (st === "ready") {
+    const at = new Date(CloudSave.lastSync).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+    const b = new Button(scene, 0, 0, 220, 44, tr("SALVAR AGORA"), async () => {
+      b.setEnabled(false);
+      CloudSave.touch();
+      await CloudSave.flush();
+      if (b.active) reopen();
+    }, { size: 18 });
+    row(tr("Progresso na nuvem"), b, tr("Salvo no Play Games às {0}", at));
+  } else if (st === "checking" || st === "ask") {
+    const b = new Button(scene, 0, 0, 220, 44, tr("CONECTAR"), () => {}, { size: 18 });
+    b.setEnabled(false);
+    row(tr("Progresso na nuvem"), b, tr("Conferindo o Play Games…"));
+  } else {
+    const b = new Button(scene, 0, 0, 220, 44, tr("CONECTAR"), async () => {
+      b.setEnabled(false);
+      const ok = await CloudSave.signIn();
+      if (!b.active) return;
+      if (ok) reopen();
+      else {
+        b.setEnabled(true);
+        cloudToast(scene, tr("Não foi possível entrar no Play Games"));
+      }
+    }, { size: 18 });
+    row(tr("Progresso na nuvem"), b, st === "error" ? tr("Sem conexão com o Play Games") : tr("Guarda seu progresso na conta Google"));
+  }
 }
 
 // Escolha de idioma: cada nome no próprio idioma; trocar recarrega o jogo (o progresso fica)

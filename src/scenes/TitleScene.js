@@ -2,7 +2,8 @@
 // névoa, vaga-lumes e o guardião escolhido na fogueira. JOGAR leva à Clareira
 // do Guardião (o acampamento caminhável), de onde se parte para a floresta.
 import { CHARACTERS } from "../config.js";
-import { MetaProgression } from "../systems/MetaProgression.js";
+import { MetaProgression, SaveLock } from "../systems/MetaProgression.js";
+import { CloudSave } from "../systems/CloudSave.js";
 import { DEBUG, isNative } from "../systems/Platform.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
@@ -289,14 +290,23 @@ export class TitleScene extends Phaser.Scene {
     text(this, W - 12, H - 8, "v1.0", { size: 12, color: CSS.dim, origin: [1, 1], shadow: false });
   }
 
-  _play() {
+  async _play() {
     if (this._leaving) return;
     this._leaving = true;
     haptic(30);
-    this.cameras.main.fadeOut(300, 5, 8, 6);
     // 1ª vez: direto para a floresta (primeiro sucesso em segundos); a Clareira
     // aparece depois da 1ª partida
     const firstTime = !(this.meta.data.runsPlayed > 0) && !(this.meta.data.highScoreSeconds > 0);
+    // Aparelho sem progresso: antes da 1ª partida, confere se a conta tem progresso no
+    // Play Games (reinstalou ou trocou de celular). Se tiver, o jogo recarrega com ele.
+    if (firstTime && CloudSave.available()) {
+      const wait = text(this, this.playBtn.x, this.playBtn.y - 66, tr("Procurando progresso salvo…"), { size: 16, color: CSS.muted, origin: 0.5 });
+      this.tweens.add({ targets: wait, alpha: 0.4, duration: 600, yoyo: true, repeat: -1 });
+      await CloudSave.settled(8000);
+      if (SaveLock.frozen || !this.sys.isActive()) return;
+      wait.destroy();
+    }
+    this.cameras.main.fadeOut(300, 5, 8, 6);
     this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start(firstTime ? "GameScene" : "CampScene"));
   }
 }
