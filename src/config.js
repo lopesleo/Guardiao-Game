@@ -169,6 +169,8 @@ export const STATUS = {
   WIND: { duration: 2200, slowFactor: 0.85, drift: 38 },
 };
 
+// Dano das reações FIXO (só × Prisma), por decisão medida em 13/10/2026: elas já fazem 25–60% do
+// dano na horda em qualquer minuto e Perigo. Ver docs/BALANCING.md antes de escalar ou cortar.
 export const REACTION = {
   // Fôlego por inimigo depois de reagir: os status pegam, mas só reagem de novo depois disto
   LOCK_MS: 900,
