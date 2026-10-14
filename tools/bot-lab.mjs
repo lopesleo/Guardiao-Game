@@ -78,11 +78,15 @@ const TMP = process.env.LAB_TMP || path.join(DIR, "..", "..", "_tmp", "edge");
 fs.mkdirSync(TMP, { recursive: true });
 process.env.TEMP = process.env.TMP = TMP;
 
-const browser = await chromium.launch({
-  executablePath: process.env.EDGE || "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
-  headless: MODE !== "assistir",
-  args: MODE === "assistir" ? ["--window-size=1300,800", "--autoplay-policy=no-user-gesture-required"] : [],
-});
+// O Edge acumula memória ao longo de centenas de partidas (e o Windows chegou a ficar sem memória):
+// no treino ele é fechado e reaberto a cada geração
+const launch = () =>
+  chromium.launch({
+    executablePath: process.env.EDGE || "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+    headless: MODE !== "assistir",
+    args: MODE === "assistir" ? ["--window-size=1300,800", "--autoplay-policy=no-user-gesture-required"] : [],
+  });
+let browser = await launch();
 
 async function runOne(theta, build, diff, seed, live = null) {
   const ctx = live?.ctx || (await browser.newContext({ viewport: { width: 960, height: 540 }, serviceWorkers: "block" }));
@@ -604,6 +608,8 @@ if (MODE === "treinar") {
     const games = DIFFS.flatMap((d) => SEEDS.map((s) => [d, s * 1000 + gen]));
     const jobs = pop.flatMap((u, k) => games.map(([d, s]) => [k, d, s]));
     const res = await pool(jobs, (k, d, s) => runOne(decode(pop[k]), BUILDS[0], d, s));
+    await browser.close().catch(() => {});
+    browser = await launch();
     const fit = pop.map((_, k) => {
       const rs = res.filter((r, j) => r && jobs[j][0] === k);
       return rs.length ? rs.reduce((a, r) => a + score(r), 0) / rs.length : 0;
