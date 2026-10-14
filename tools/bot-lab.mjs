@@ -43,10 +43,14 @@ const CEREBRO = process.env.CEREBRO || path.join(DIR, "cerebro.json");
 
 // Pesos do cérebro: nome → [mínimo, máximo]. O treino trabalha em [0,1] e converte.
 const GENES = {
-  eR: [80, 320], // raio em que um inimigo já empurra (px)
+  eR: [50, 320], // raio em que um inimigo já empurra (px); acima de ~220 o bando sai do alcance das armas
   eW: [0, 3], // força da fuga do bando
   eP: [0.5, 3], // curva da fuga (alto = só foge de quem está colado)
-  orbit: [0, 1.5], // contornar o bando (andar de lado) em vez de fugir reto
+  orbit: [0, 3], // contornar o bando (andar de lado) em vez de fugir reto
+  kR: [90, 260], // distância de combate do bando: mais longe que isso, vai buscar (as armas atiram sozinhas)
+  kW: [0, 2.5], // força para ir buscar o bando
+  esc: [0, 1], // >0,5 = quando cercado, sai pelo maior buraco (de dash se der)
+  lD: [300, 1100], // até onde vai atrás de lanterna/baú/item (px)
   pW: [0, 5], // força do desvio de projéteis
   pT: [150, 1200], // quanto à frente olha a trajetória dos projéteis (ms)
   tW: [0, 6], // força para sair dos avisos de golpe (chefes, mula, corpo-seco, fogo, esporos)
@@ -54,7 +58,7 @@ const GENES = {
   gW: [0, 2.5], // atração pelas gemas
   gR: [150, 900], // até onde enxerga gemas (px)
   gSafe: [0, 2], // quanto a coleta cede ao perigo por perto
-  lW: [0, 2], // atração por lanternas, itens delas e baús
+  lW: [0, 3], // atração por lanternas (cogumelos), itens delas e baús
   hW: [0, 3], // atração por coração quando ferido
   cW: [0, 2], // puxão para longe da muralha
   inertia: [0, 0.9], // suavização da direção (alto = vira devagar)
@@ -64,6 +68,19 @@ const GENES = {
   bW: [0, 3], // força para manter essa distância
   bT: [0, 1.5], // circular em volta do chefe
 };
+// Pesos "de jogador", ajustados à mão olhando como uma pessoa joga: deixa o bando chegar perto das
+// armas e contorna, sai de dentro só do que está colado, quebra lanternas e pega itens no caminho
+// livre, desvia de projéteis e avisos sempre. Ponto de partida do treino (INICIO=jogador) e do
+// assistir/medir (CEREBRO=jogador)
+const JOGADOR = {
+  eR: 110, eW: 2, eP: 1.3, orbit: 1.8, kR: 170, kW: 1.2, esc: 1, lD: 800,
+  pW: 3.5, pT: 600, tW: 4, tM: 25,
+  gW: 1.2, gR: 500, gSafe: 0.5, lW: 1.6, hW: 2, cW: 1.5, inertia: 0.45,
+  dashOn: 3, dashThreat: 0.8, bR: 200, bW: 2, bT: 1,
+};
+// AJUSTE="kW=0,orbit=1" sobrescreve pesos no medir/assistir (para isolar o efeito de um comportamento)
+const AJUSTE = Object.fromEntries((process.env.AJUSTE || "").split(",").filter(Boolean).map((kv) => kv.split("=")).map(([k, v]) => [k, Number(v)]));
+const lerPesos = (f) => ({ ...(f === "jogador" ? JOGADOR : JSON.parse(fs.readFileSync(f, "utf8")).pesos), ...(MODE === "treinar" ? {} : AJUSTE) });
 const NAMES = Object.keys(GENES);
 const decode = (u) => Object.fromEntries(NAMES.map((n, i) => [n, GENES[n][0] + Math.min(1, Math.max(0, u[i])) * (GENES[n][1] - GENES[n][0])]));
 // pesos salvos → [0,1]; genes que o cérebro ainda não tinha começam no meio da faixa
@@ -247,30 +264,76 @@ async function runOne(theta, build, diff, seed, live = null, start = null) {
       gs.enemyPool.forEachActive((e) => e._brain?.threat && out.push(e._brain.threat));
       return out;
     };
+    const enemies = [];
+    // quantos inimigos estão no caminho reto até (x,y): o jogador não atravessa a horda para pegar um item
+    const blocked = (px, py, x, y) => {
+      const vx = x - px,
+        vy = y - py;
+      const L2 = vx * vx + vy * vy || 1;
+      let n = 0;
+      for (const e of enemies) {
+        const t = Math.max(0, Math.min(1, ((e.x - px) * vx + (e.y - py) * vy) / L2));
+        if (Math.hypot(px + vx * t - e.x, py + vy * t - e.y) < 50) n += e._elite ? 3 : 1;
+      }
+      return n;
+    };
     const decide = () => {
       const px = pl.x,
         py = pl.y;
       let fx = 0,
         fy = 0,
         danger = 0,
-        inThreat = false;
-      // bando
+        inThreat = false,
+        holdStill = false;
+      // bando: como um jogador, mantém o bando num anel em volta — colado demais (eR) se afasta,
+      // longe demais (kR) vai buscar, e no meio contorna (orbit). As armas atiram sozinhas em quem
+      // está a 120–280 px: fugir para sempre com a horda atrás não é jogar
       let mx = 0,
         my = 0,
-        mn = 0;
+        mn = 0,
+        nd = 1e9,
+        nx0 = 0,
+        ny0 = 0;
+      const sectors = new Array(12).fill(0); // quem está colado, por direção (para ver se está cercado)
+      enemies.length = 0;
       gs.enemyPool.forEachActive((e) => {
         const dx = px - e.x,
           dy = py - e.y;
         const d = Math.hypot(dx, dy) || 1;
+        if (d < 700) enemies.push(e);
+        if (d < nd) (nd = d), (nx0 = e.x), (ny0 = e.y);
+        if (d < th.kR + 80) (mx += e.x), (my += e.y), mn++;
+        if (d < 150) sectors[Math.floor(((Math.atan2(-dy, -dx) + Math.PI) / (2 * Math.PI)) * 12) % 12]++;
         if (d > th.eR) return;
         const s = Math.pow((th.eR - d) / th.eR, th.eP) * (e._elite ? 2 : 1);
         fx += (dx / d) * s * th.eW;
         fy += (dy / d) * s * th.eW;
         danger += s;
-        mx += e.x;
-        my += e.y;
-        mn++;
       });
+      let fkx = 0,
+        fky = 0;
+      if (nd > th.kR && nd < 900) {
+        const s = th.kW * Math.min(1, (nd - th.kR) / 120);
+        fkx = ((nx0 - px) / nd) * s;
+        fky = ((ny0 - py) / nd) * s;
+      }
+      // cercado (bando colado em 3/4 das direções): sai pelo maior buraco, de dash se der
+      const busy = sectors.filter((n) => n > 0).length;
+      let escape = null;
+      if (busy >= 9 && th.esc > 0.5) {
+        let best = -1,
+          bestLen = 0;
+        for (let i = 0; i < 12; i++) {
+          let len = 0;
+          while (len < 12 && sectors[(i + len) % 12] === 0) len++;
+          if (len > bestLen) (bestLen = len), (best = i);
+        }
+        if (best >= 0) {
+          const a = ((best + bestLen / 2) / 12) * 2 * Math.PI - Math.PI;
+          escape = [Math.cos(a), Math.sin(a)];
+          danger += 3;
+        }
+      }
       // chefe: é para LUTAR, não só fugir. Mantém a distância de combate bR (as armas disparam
       // sozinhas e alcançam 120–280 px), circulando em volta (bT); só foge reto do encostão
       if (gs.boss?.active) {
@@ -405,35 +468,35 @@ async function runOne(theta, build, diff, seed, live = null, start = null) {
         fx += (gx / gm) * s;
         fy += (gy / gm) * s;
       }
-      // lanternas (quebram ao toque e soltam item), itens no chão e baús fechados
-      let lx = 0,
-        ly = 0,
-        ld = 700;
-      const near = (x, y) => {
-        const d = Math.hypot(x - px, y - py);
-        if (d < ld) (ld = d), (lx = x), (ly = y);
-      };
-      for (const l of gs.lanterns?.list || []) near(l.x, l.y);
-      for (const it of gs.lanterns?.items || []) near(it.spr.x, it.spr.y);
-      for (const c of gs.chests || []) if (!c.opened) near(c.x, c.y);
-      if (ld < 700 && ld > 1) {
-        fx += ((lx - px) / ld) * th.lW * calm;
-        fy += ((ly - py) / ld) * th.lW * calm;
-      }
+      // objetivo do momento, como um jogador escolhe: lanterna de cogumelo (quebra ao toque e solta
+      // item), item no chão, baú fechado, coração quando ferido. Vale mais o que está perto e com o
+      // caminho livre — não atravessa a horda. As lanternas nascem a 520–900 px, fora da tela
       const hurt = 1 - pl.hp / pl.maxHp;
-      if (hurt > 0.3) {
-        let hx = 0,
-          hy = 0,
-          hd = 900;
-        gs.heartPool.forEachActive((q) => {
-          const d = Math.hypot(q.x - px, q.y - py);
-          if (d < hd) (hd = d), (hx = q.x), (hy = q.y);
-        });
-        if (hd < 900 && hd > 1) {
-          fx += ((hx - px) / hd) * hurt * th.hW;
-          fy += ((hy - py) / hd) * hurt * th.hW;
-        }
+      let goal = null,
+        goalV = 0;
+      const want = (x, y, w, kind, far = th.lD) => {
+        const d = Math.hypot(x - px, y - py);
+        if (d < 1 || d > far) return;
+        const v = (w / (d + 150)) / (1 + 0.5 * blocked(px, py, x, y));
+        if (v > goalV) (goalV = v), (goal = [x, y, d, w, kind]);
+      };
+      // toque da lanterna: do corpo do herói (16 px abaixo do centro) ao chapéu (12 px acima do pé)
+      for (const l of gs.lanterns?.list || []) want(l.x, l.y - 28, th.lW, "lanterna");
+      for (const it of gs.lanterns?.items || []) want(it.spr.x, it.spr.y, th.lW * 1.3, "item");
+      for (const c of gs.chests || []) if (!c.opened) want(c.x, c.y, th.lW * 1.5, "bau");
+      if (hurt > 0.25) gs.heartPool.forEachActive((q) => want(q.x, q.y, th.hW * hurt * 2, "coracao", 900));
+      // baú só abre depois de ~0,3 s encostado: chegando nele, para em cima (se não estiver apertado)
+      if (goal?.[4] === "bau" && goal[2] < 30 && danger < th.dashOn) holdStill = true;
+      if (goal) {
+        const [x, y, d, w] = goal;
+        const s = Math.min(1.5, w) * calm;
+        fx += ((x - px) / d) * s;
+        fy += ((y - py) / d) * s;
       }
+      // ir buscar o bando só quando não há nada melhor a fazer
+      const fetch = goal ? 0.3 : 1;
+      fx += fkx * fetch;
+      fy += fky * fetch;
       // muralha: puxa para dentro quando passa de 60% do caminho até a borda
       const ex = (px - cx) / (A.width / 2),
         ey = (py - cy) / (A.height / 2);
@@ -455,6 +518,7 @@ async function runOne(theta, build, diff, seed, live = null, start = null) {
       let nx = fx,
         ny = fy;
       if (now < kickUntil) (nx = kickX), (ny = kickY);
+      if (escape) (nx = escape[0] * 2 + nx * 0.3), (ny = escape[1] * 2 + ny * 0.3);
       const n = Math.hypot(nx, ny);
       if (n > 0.02) (nx /= n), (ny /= n);
       else (nx = dirX), (ny = dirY); // nada por perto: segue andando (parado é alvo fácil)
@@ -462,7 +526,7 @@ async function runOne(theta, build, diff, seed, live = null, start = null) {
       dirY = th.inertia * dirY + (1 - th.inertia) * ny;
       const m = Math.hypot(dirX, dirY) || 1;
       (dirX /= m), (dirY /= m);
-      gs.inputMgr.joystickVec = { x: dirX, y: dirY };
+      gs.inputMgr.joystickVec = holdStill && !inThreat ? { x: 0, y: 0 } : { x: dirX, y: dirY };
       if (pl.dashReady?.() && (danger > th.dashOn || (inThreat && th.dashThreat > 0.5))) gs.inputMgr.dashPressed = true;
       if (pl.awakenMeter >= pl.awakenMax) gs.inputMgr.awakenPressed = true;
     };
@@ -565,6 +629,9 @@ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}  nível ${pl.level}  vi
       killer: window.__lab.end === "morreu" ? window.__lastSrc() : null,
       bossHpLeft: b?.maxHp ? Math.max(0, b.hp) / b.maxHp : null,
       lvl: gs.player.level,
+      kills: gs.hud?.kills || 0,
+      lanterns: gs._runLanterns || 0,
+      chests: gs._runChests || 0,
       weapons: gs.player.weapons.map((w) => `${w.key}${w.level}`),
     };
   });
@@ -573,12 +640,17 @@ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}  nível ${pl.level}  vi
 }
 
 // Pontuação de treino: fração do tempo até o chefe sobrevivida + vitória + quanto do chefe tirou.
-// No treino de chefe só conta a luta: vida tirada do chefe + vitória
+// Mais um bônus por JOGAR como jogador: abates por minuto e lanternas quebradas (sem ele, o treino
+// aprendeu a só fugir com a horda atrás, fora do alcance das armas). No treino de chefe só conta a luta
+const KPM = Number(process.env.KPM || 120); // abates por minuto que valem o bônus inteiro
 function score(r) {
   if (r.start === "chefe") return (r.bossHpLeft == null ? 0 : 1 - r.bossHpLeft) + (r.end === "venceu" ? 1 : 0);
   let s = Math.min(1, r.t / r.dur);
   if (r.bossStart != null && r.bossHpLeft != null) s += 0.5 * (1 - r.bossHpLeft);
   if (r.end === "venceu") s += 1;
+  s += 0.3 * Math.min(1, (r.kills || 0) / Math.max(1, (r.t / 60) * KPM));
+  s += 0.2 * Math.min(1, (r.lanterns || 0) / Math.max(1, (r.t / 60) * 2)); // nascem ~4 por minuto
+  s += 0.1 * Math.min(1, (r.chests || 0) / 3);
   return s;
 }
 
@@ -616,7 +688,7 @@ if (MODE === "treinar") {
   let gen0 = 0;
   // INICIO=cerebro-antigo.json: parte dos pesos de outro cérebro (genes novos começam no meio da faixa)
   if (process.env.INICIO) {
-    mu = encode(JSON.parse(fs.readFileSync(process.env.INICIO, "utf8")).pesos);
+    mu = encode(lerPesos(process.env.INICIO));
   }
   // CONTINUAR=1: retoma do cérebro salvo (média, desvio, histórico e contagem de gerações)
   if (fs.existsSync(CEREBRO) && process.env.CONTINUAR) {
@@ -662,15 +734,15 @@ if (MODE === "treinar") {
   for (let k = 0; ; k++) {
     let c = null;
     try {
-      c = JSON.parse(fs.readFileSync(CEREBRO, "utf8"));
+      c = CEREBRO === "jogador" ? { pesos: JOGADOR } : JSON.parse(fs.readFileSync(CEREBRO, "utf8"));
     } catch {}
     const theta = decode(encode(c?.pesos));
     const d = DIFFS[k % DIFFS.length];
-    const label = `robô · ${c ? `cérebro da geração ${c.treino.geracoes}` : "sem treino"} · Perigo ${d} · build ${BUILDS[0]}`;
+    const label = `robô · ${c?.treino ? (typeof c.treino.geracoes === "string" ? `cérebro ${c.treino.geracoes.split(" ")[0]}` : `cérebro da geração ${c.treino.geracoes}`) : c ? "pesos de jogador" : "sem treino"} · Perigo ${d} · build ${BUILDS[0]}`;
     console.log(label);
     try {
       const r = await runOne(theta, BUILDS[0], d, 0, { ctx, page, label });
-      console.log(`  ${r.end} em ${fmtS(r.t)} · nível ${r.lvl}${r.killer ? " · último golpe: " + r.killer : ""}`);
+      console.log(`  ${r.end} em ${fmtS(r.t)} · nível ${r.lvl} · ${r.kills} abates · ${r.lanterns} lanternas · ${r.chests} baús${r.killer ? " · último golpe: " + r.killer : ""}`);
     } catch (e) {
       if (/closed|Target/.test(e.message)) break; // fechou a janela: acabou
       console.log(`  falhou: ${e.message.split("\n")[0]}`);
@@ -679,16 +751,16 @@ if (MODE === "treinar") {
   }
 } else {
   const OUT = process.argv[3] || "bot-lab.json";
-  const theta = fs.existsSync(CEREBRO) ? decode(encode(JSON.parse(fs.readFileSync(CEREBRO, "utf8")).pesos)) : decode(encode(null));
-  if (!fs.existsSync(CEREBRO)) console.log("(sem cérebro treinado: usando os pesos do meio da faixa)");
+  const theta = CEREBRO === "jogador" || fs.existsSync(CEREBRO) ? decode(encode(lerPesos(CEREBRO))) : decode(encode(null));
+  if (CEREBRO !== "jogador" && !fs.existsSync(CEREBRO)) console.log("(sem cérebro treinado: usando os pesos do meio da faixa)");
   const jobs = [];
   for (const b of BUILDS) for (const d of DIFFS) for (const s of SEEDS) jobs.push([b, d, s]);
   const res = (await pool(jobs, (b, d, s) => runOne(theta, b, d, s, null, process.env.CHEFE ? "chefe" : null))).filter(Boolean);
   fs.writeFileSync(OUT, JSON.stringify(res, null, 1));
-  console.log("\nbuild        Perigo  fim     tempo   nível  chefe   matou");
+  console.log("\nbuild        Perigo  fim     tempo   nível  abates  lant.  baús  chefe   matou");
   for (const r of res)
     console.log(
-      `${r.build.padEnd(12)} ${String(r.diff).padStart(4)}    ${r.end.padEnd(7)} ${fmtS(r.t).padStart(6)}  ${String(r.lvl).padStart(5)}  ${r.bossHpLeft == null ? "  -   " : (100 - r.bossHpLeft * 100).toFixed(0).padStart(4) + "% "}  ${r.killer || ""}${r.errs.length ? "  ERRO " + r.errs[0] : ""}`,
+      `${r.build.padEnd(12)} ${String(r.diff).padStart(4)}    ${r.end.padEnd(7)} ${fmtS(r.t).padStart(6)}  ${String(r.lvl).padStart(5)}  ${String(r.kills).padStart(6)}  ${String(r.lanterns).padStart(5)}  ${String(r.chests).padStart(4)}  ${r.bossHpLeft == null ? "  -   " : (100 - r.bossHpLeft * 100).toFixed(0).padStart(4) + "% "}  ${r.killer || ""}${r.errs.length ? "  ERRO " + r.errs[0] : ""}`,
     );
   // dano recebido por fonte, somado por Perigo
   for (const d of DIFFS) {
