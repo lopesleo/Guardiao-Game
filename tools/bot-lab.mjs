@@ -48,7 +48,7 @@ const GENES = {
   // 1. sobreviver agora
   tW: [1, 6], // força para sair dos avisos de golpe (chefes, mula, corpo-seco, fogo, esporos)
   tM: [0, 80], // folga além da borda do aviso (px)
-  pW: [0.5, 5], // força do desvio de projéteis
+  pW: [0.5, 5], // no desvio, quanto vale passar longe dos tiros contra seguir para onde queria ir
   pT: [150, 1200], // quanto à frente olha a trajetória dos projéteis (ms)
   cR: [40, 140], // inimigo mais perto que isso está "encostando" (px)
   cW: [0.5, 5], // força para sair de quem está encostando
@@ -383,7 +383,8 @@ async function runOne(theta, build, diff, seed, live = null, start = null) {
 
       // ---- camada 1: sobreviver agora --------------------------------------------------------
       let inThreat = false,
-        projHot = 0;
+        projHot = 0,
+        projThreat = false;
       const push = (x, y, w) => {
         add1(x, y, w * th.tW, "aviso de golpe");
         inThreat = true;
@@ -481,7 +482,7 @@ async function runOne(theta, build, diff, seed, live = null, start = null) {
           e.flags++;
           e.last = { t: +t.toFixed(2), od: Math.round(od), dir: [+(ox / od).toFixed(2), +(oy / od).toFixed(2)] };
         }
-        add1(ox / od, oy / od, s * th.pW, "projétil");
+        projThreat = true; // a direção é escolhida depois, testando direções (ver "desvio de projéteis")
       });
       // cercado (inimigos colados em 3/4 das direções): sai pelo maior buraco
       let encircled = false;
@@ -639,6 +640,47 @@ async function runOne(theta, build, diff, seed, live = null, start = null) {
       } else if (goal) {
         intent = `${low && goal.kind === "coracao" ? "vida baixa" : "objetivo"}: ${NOME[goal.kind]} a ${Math.round(gd)} px`;
       } else intent = combat || "explorando";
+      // desvio de projéteis, como um jogador de olho na tela: testa 16 direções, simula T ms à frente e
+      // fica com a que passa mais longe de TODOS os tiros (somar "fuja deste" com "fuja daquele" se
+      // anulava com tiros de lados diferentes); entre as seguras, a mais perto de onde queria ir
+      let dodged = false;
+      if (projThreat) {
+        const dm = Math.hypot(nx, ny) || 1;
+        const wx = nx / dm,
+          wy = ny / dm;
+        const spd = pl.speed || 160;
+        const projs = [];
+        gs.enemyProjPool.forEachActive((q) => {
+          if (Math.abs(q.x - px) < 450 && Math.abs(q.y - py) < 450) projs.push([q.x, q.y, q.body?.velocity?.x || 0, q.body?.velocity?.y || 0]);
+        });
+        let best = null,
+          bs = -1e9;
+        for (let k = 0; k < 16; k++) {
+          const a = (k / 16) * 2 * Math.PI,
+            dx = Math.cos(a),
+            dy = Math.sin(a);
+          let clear = 1e9;
+          for (let tau = 0.05; tau <= T + 1e-6; tau += 0.05) {
+            const hx = px + dx * spd * tau,
+              hy = py + dy * spd * tau;
+            for (const [qx, qy, vx, vy] of projs) clear = Math.min(clear, Math.hypot(qx + vx * tau - hx, qy + vy * tau - hy));
+          }
+          // não troca o tiro por um encontrão: inimigo no caminho ou muralha à frente
+          const ax = px + dx * 60,
+            ay = py + dy * 60;
+          let en = 0;
+          for (const e of enemies) if (Math.abs(e.x - ax) < 45 && Math.abs(e.y - ay) < 45) en++;
+          const fx2 = px + dx * spd * T,
+            fy2 = py + dy * spd * T;
+          const wall = fx2 < A.x + 40 || fx2 > A.right - 40 || fy2 < A.y + 40 || fy2 > A.bottom - 40;
+          const sc = Math.min(clear, 60) * th.pW + 20 * (dx * wx + dy * wy) - en * 15 - (wall ? 60 : 0);
+          if (sc > bs) (bs = sc), (best = [dx, dy, clear]);
+        }
+        (nx = best[0]), (ny = best[1]), (dodged = true);
+        projHot = best[2] < 26 ? 1 : 0; // nem a melhor direção escapa: dash
+        intent = "sobreviver: projétil";
+        holdStill = false;
+      }
       window.__intent = intent;
       // girar sempre para o mesmo lado; troca de lado só se a muralha estiver na frente
       if (nearWall && dirX * -ex + dirY * -ey < -0.3 && now - lastFlip > 2500) (side = -side), (lastFlip = now);
@@ -656,12 +698,13 @@ async function runOne(theta, build, diff, seed, live = null, start = null) {
         }
         (stuckT = now), (sx = px), (sy = py);
       }
-      if (now < kickUntil) (nx = kickX), (ny = kickY);
+      if (now < kickUntil && !dodged) (nx = kickX), (ny = kickY);
       const n = Math.hypot(nx, ny);
       if (n > 0.02) (nx /= n), (ny /= n);
       else (nx = (cx - px) / (Math.hypot(cx - px, cy - py) || 1)), (ny = (cy - py) / (Math.hypot(cx - px, cy - py) || 1)); // nada a fazer: vai para o meio
-      dirX = th.inertia * dirX + (1 - th.inertia) * nx;
-      dirY = th.inertia * dirY + (1 - th.inertia) * ny;
+      const inr = dodged ? 0 : th.inertia; // desviando, vira na hora
+      dirX = inr * dirX + (1 - inr) * nx;
+      dirY = inr * dirY + (1 - inr) * ny;
       const m = Math.hypot(dirX, dirY) || 1;
       (dirX /= m), (dirY /= m);
       gs.inputMgr.joystickVec = holdStill ? { x: 0, y: 0 } : { x: dirX, y: dirY };
