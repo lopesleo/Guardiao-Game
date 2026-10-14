@@ -117,8 +117,20 @@ const launch = () =>
   });
 let browser = await launch();
 
+// Uma partida. A aba é SEMPRE fechada no fim, mesmo quando a partida falha: antes, uma falha ao
+// carregar deixava a aba aberta, as abas presas pesavam o Edge, mais partidas falhavam ao carregar e
+// uma geração inteira travou assim
 async function runOne(theta, build, diff, seed, live = null, start = null) {
-  const ctx = live?.ctx || (await browser.newContext({ viewport: { width: 960, height: 540 }, serviceWorkers: "block" }));
+  if (live) return runOneIn(live.ctx, theta, build, diff, seed, live, start);
+  const ctx = await browser.newContext({ viewport: { width: 960, height: 540 }, serviceWorkers: "block" });
+  try {
+    return await runOneIn(ctx, theta, build, diff, seed, live, start);
+  } finally {
+    await ctx.close().catch(() => {});
+  }
+}
+
+async function runOneIn(ctx, theta, build, diff, seed, live, start) {
   const p = live?.page || (await ctx.newPage());
   const errs = [];
   if (!live) p.on("pageerror", (e) => errs.push(e.message));
@@ -135,7 +147,7 @@ async function runOne(theta, build, diff, seed, live = null, start = null) {
     };
     window.__seed(seed);
   }, seed);
-  await p.goto(URL, { waitUntil: "load" });
+  await p.goto(URL, { waitUntil: "load", timeout: 90000 });
   await p.waitForFunction(() => window.game && window.game.isBooted, null, { timeout: 180000 });
   await p.waitForTimeout(2500);
   // save de laboratório: todas as armas, 4 vagas, dash e Despertar, Perigo escolhido, sem tutorial.
@@ -825,7 +837,6 @@ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}  nível ${pl.level}  vi
       weapons: gs.player.weapons.map((w) => `${w.key}${w.level}`),
     };
   });
-  if (!live) await ctx.close();
   return { build, diff, seed, dur, start, errs: errs.slice(0, 3), ...res, end: res.end || "tempo" };
 }
 
