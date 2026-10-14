@@ -51,6 +51,7 @@ const GENES = {
   kW: [0, 2.5], // força para ir buscar o bando
   esc: [0, 1], // >0,5 = quando cercado, sai pelo maior buraco (de dash se der)
   lD: [300, 1100], // até onde vai atrás de lanterna/baú/item (px)
+  mB: [0, 1], // >0,5 = mantém a distância de combate também dos minichefes (só afasta e circula)
   pW: [0, 5], // força do desvio de projéteis
   pT: [150, 1200], // quanto à frente olha a trajetória dos projéteis (ms)
   tW: [0, 6], // força para sair dos avisos de golpe (chefes, mula, corpo-seco, fogo, esporos)
@@ -118,20 +119,26 @@ async function runOne(theta, build, diff, seed, live = null, start = null) {
   const errs = [];
   if (!live) p.on("pageerror", (e) => errs.push(e.message));
   if (!live) await p.addInitScript((seed) => {
-    let s = seed >>> 0;
-    Math.random = () => {
-      s = (s + 0x6d2b79f5) >>> 0;
-      let t = s;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    window.__seed = (seed) => {
+      let s = seed >>> 0;
+      Math.random = () => {
+        s = (s + 0x6d2b79f5) >>> 0;
+        let t = s;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
     };
+    window.__seed(seed);
   }, seed);
   await p.goto(URL, { waitUntil: "load" });
   await p.waitForFunction(() => window.game && window.game.isBooted, null, { timeout: 180000 });
   await p.waitForTimeout(2500);
-  // save de laboratório: todas as armas, 4 vagas, dash e Despertar, Perigo escolhido, sem tutorial
-  await p.evaluate(async (diff) => {
+  // save de laboratório: todas as armas, 4 vagas, dash e Despertar, Perigo escolhido, sem tutorial.
+  // Partida REPRODUZÍVEL: o laço do jogo dorme ANTES de a partida começar, com relógio virtual e
+  // sorteio reiniciado pela semente (antes, quadros em tempo real no começo — em número diferente a
+  // cada vez — gastavam sorteios e a mesma semente dava partidas totalmente diferentes)
+  await p.evaluate(async ({ diff, live, seed }) => {
     const { MetaProgression } = await import("/src/systems/MetaProgression.js");
     const { BASE_WEAPONS } = await import("/src/systems/UpgradeSystem.js");
     const m = new MetaProgression();
@@ -145,9 +152,25 @@ async function runOne(theta, build, diff, seed, live = null, start = null) {
     m.data.selectedCharacter = "guardian";
     m._save();
     const g = window.game;
+    if (!live) {
+      g.loop.sleep();
+      window.__vt0 = window.__vt = Math.floor(Date.now() / 3.6e6) * 3.6e6;
+      window.__perf0 = performance.now();
+      Date.now = () => window.__vt;
+      performance.now = () => window.__perf0 + (window.__vt - window.__vt0);
+      window.__seed(seed * 7919 + 1);
+    }
     for (const sc of g.scene.getScenes(true)) g.scene.stop(sc.scene.key);
     g.scene.start("GameScene");
-  }, diff);
+    if (!live)
+      for (let i = 0; i < 200; i++) {
+        const gs = g.scene.getScene("GameScene");
+        if (gs?.sys.isActive() && gs.player) break;
+        window.__vt += 33;
+        g.scene.update(window.__vt, 33);
+        await new Promise((r) => setTimeout(r, 0)); // deixa terminar o que a cena carrega sem pressa
+      }
+  }, { diff, live: !!live, seed });
   await p.waitForFunction(() => {
     const gs = window.game.scene.getScene("GameScene");
     return gs && gs.sys.isActive() && gs.player;
@@ -157,14 +180,11 @@ async function runOne(theta, build, diff, seed, live = null, start = null) {
     const g = window.game;
     const gs = g.scene.getScene("GameScene");
     gs._god = false;
-    let vt = Date.now();
+    let vt = live ? Date.now() : window.__vt;
     if (!live) {
-      g.loop.sleep();
-      // relógio virtual (tweens e timers do Phaser usam o relógio real)
-      const perf0 = performance.now();
-      const vt0 = vt;
+      // relógio virtual (tweens e timers do Phaser usam o relógio real), continuando o do começo
       Date.now = () => vt;
-      performance.now = () => perf0 + (vt - vt0);
+      performance.now = () => window.__perf0 + (vt - window.__vt0);
     }
 
     // ---- cartas: escolhidas e aplicadas sem abrir a tela -------------------------------------
@@ -336,11 +356,16 @@ async function runOne(theta, build, diff, seed, live = null, start = null) {
       }
       // chefe: é para LUTAR, não só fugir. Mantém a distância de combate bR (as armas disparam
       // sozinhas e alcançam 120–280 px), circulando em volta (bT); só foge reto do encostão
-      if (gs.boss?.active) {
-        const dx = px - gs.boss.x,
-          dy = py - gs.boss.y;
+      // minichefes (Mula, Corpo-Seco): mesma distância de combate, mas só afasta e circula — ir até
+      // eles (como no chefe, que é obrigatório) derrubou as vitórias de 5 para 2 em 12 partidas
+      const bigs = gs.boss?.active ? [gs.boss] : [];
+      if (th.mB > 0.5) for (const e of enemies) if (e.miniBoss) bigs.push(e);
+      for (const big of bigs) {
+        const dx = px - big.x,
+          dy = py - big.y;
         const d = Math.hypot(dx, dy) || 1;
-        const err = Math.max(-1.5, Math.min(1.5, (d - th.bR) / 100));
+        if (big !== gs.boss && d > th.bR + 60) continue;
+        const err = Math.max(-1.5, Math.min(big === gs.boss ? 1.5 : 0, (d - th.bR) / 100));
         fx -= (dx / d) * err * th.bW;
         fy -= (dy / d) * err * th.bW;
         const side = dirX * (-dy / d) + dirY * (dx / d) >= 0 ? 1 : -1;
