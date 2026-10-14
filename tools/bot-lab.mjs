@@ -49,8 +49,10 @@ const GENES = {
   pT: [150, 1200], // quanto à frente olha a trajetória dos projéteis (ms)
   tW: [0, 6], // força para sair dos avisos de golpe (chefes, mula, corpo-seco, fogo, esporos)
   tM: [0, 80], // folga além da borda do aviso (px)
-  gW: [0, 2], // atração pelas gemas
-  gR: [100, 600], // até onde enxerga gemas (px)
+  gW: [0, 2.5], // atração pelas gemas
+  gR: [150, 900], // até onde enxerga gemas (px)
+  gSafe: [0, 2], // quanto a coleta cede ao perigo por perto
+  lW: [0, 2], // atração por lanternas, itens delas e baús
   hW: [0, 3], // atração por coração quando ferido
   cW: [0, 2], // puxão para longe da muralha
   inertia: [0, 0.9], // suavização da direção (alto = vira devagar)
@@ -69,6 +71,12 @@ const ELEMS = {
   fogo_vento: ["fire", "wind"],
   prisma: ["fire", "ice", "bolt"],
 };
+
+// Perfis temporários do Edge (um por partida, com cache) ficam no disco do repositório (_tmp/, fora do
+// git), não no TEMP do C:, que enche e aperta a memória virtual do Windows
+const TMP = process.env.LAB_TMP || path.join(DIR, "..", "..", "_tmp", "edge");
+fs.mkdirSync(TMP, { recursive: true });
+process.env.TEMP = process.env.TMP = TMP;
 
 const browser = await chromium.launch({
   executablePath: process.env.EDGE || "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
@@ -143,9 +151,13 @@ async function runOne(theta, build, diff, seed, live = null) {
       const fits = (c) => !elems || elems.includes(c.element);
       const nw = pool.find((c) => c.type === "new" && fits(c));
       if (nw && (elems || gs.player.weapons.length < 3)) return nw;
+      // passivas que um jogador comum pega cedo: ímã (1ª), vida e recarga
+      const taken = (id) => gs.player.passivesTaken?.[id] || 0;
+      const pasPick = pool.find((c) => c.type === "passive" && c.passiveId === "magnet" && taken("magnet") < 2);
+      if (pasPick) return pasPick;
       const upg = pool.filter((c) => c.type === "upgrade").sort(dmgFirst);
       if (upg.length) return upg[0];
-      const pas = pool.find((c) => c.type === "passive");
+      const pas = ["cooldown", "hp", "area", "magnet", "regen"].map((id) => pool.find((c) => c.type === "passive" && c.passiveId === id)).find(Boolean) || pool.find((c) => c.type === "passive");
       return pas || nw || pool[0];
     };
     gs._openNextLevelUp = function () {
@@ -355,18 +367,40 @@ async function runOne(theta, build, diff, seed, live = null) {
       }
       for (const h of gs.hazards?.list || []) zone(h.x, h.y, h.r);
       for (const c of gs._spores || []) zone(c.x, c.y, c.r);
-      // gemas (a mais próxima no alcance) e corações quando ferido
+      // coleta: vai para onde há MAIS gemas (soma ponderada pelo valor e pela distância, não só a
+      // mais próxima), e cede quando o perigo aperta (gSafe)
+      const calm = 1 / (1 + th.gSafe * danger);
       let gx = 0,
-        gy = 0,
-        gd = th.gR;
+        gy = 0;
       gs.xpPool.forEachActive((q) => {
-        const d = Math.hypot(q.x - px, q.y - py);
-        if (d < gd) (gd = d), (gx = q.x), (gy = q.y);
+        const dx = q.x - px,
+          dy = q.y - py;
+        const d = Math.hypot(dx, dy);
+        if (d < 1 || d > th.gR) return;
+        const w = (q.xpValue || 1) / Math.max(40, d);
+        gx += (dx / d) * w;
+        gy += (dy / d) * w;
       });
-      if (gd < th.gR && gd > 1) {
-        const s = (1 - gd / th.gR) * th.gW;
-        fx += ((gx - px) / gd) * s;
-        fy += ((gy - py) / gd) * s;
+      const gm = Math.hypot(gx, gy);
+      if (gm > 0) {
+        const s = Math.min(1, gm * 20) * th.gW * calm;
+        fx += (gx / gm) * s;
+        fy += (gy / gm) * s;
+      }
+      // lanternas (quebram ao toque e soltam item), itens no chão e baús fechados
+      let lx = 0,
+        ly = 0,
+        ld = 700;
+      const near = (x, y) => {
+        const d = Math.hypot(x - px, y - py);
+        if (d < ld) (ld = d), (lx = x), (ly = y);
+      };
+      for (const l of gs.lanterns?.list || []) near(l.x, l.y);
+      for (const it of gs.lanterns?.items || []) near(it.spr.x, it.spr.y);
+      for (const c of gs.chests || []) if (!c.opened) near(c.x, c.y);
+      if (ld < 700 && ld > 1) {
+        fx += ((lx - px) / ld) * th.lW * calm;
+        fy += ((ly - py) / ld) * th.lW * calm;
       }
       const hurt = 1 - pl.hp / pl.maxHp;
       if (hurt > 0.3) {
@@ -547,15 +581,24 @@ if (MODE === "treinar") {
   const histPath = path.join(DIR, "treino.json");
   let mu = NAMES.map(() => 0.5),
     sd = NAMES.map(() => 0.25);
-  const hist = [];
+  let hist = [];
+  let gen0 = 0;
+  // INICIO=cerebro-antigo.json: parte dos pesos de outro cérebro (genes novos começam no meio da faixa)
+  if (process.env.INICIO) {
+    const old = JSON.parse(fs.readFileSync(process.env.INICIO, "utf8")).pesos;
+    mu = NAMES.map((n) => (old[n] == null ? 0.5 : Math.min(1, Math.max(0, (old[n] - GENES[n][0]) / (GENES[n][1] - GENES[n][0])))));
+  }
+  // CONTINUAR=1: retoma do cérebro salvo (média, desvio, histórico e contagem de gerações)
   if (fs.existsSync(CEREBRO) && process.env.CONTINUAR) {
     const c = JSON.parse(fs.readFileSync(CEREBRO, "utf8"));
     mu = c.u;
     sd = c.sd.map((v) => Math.max(v, 0.08));
+    gen0 = c.treino?.geracoes || 0;
+    if (fs.existsSync(histPath)) hist = JSON.parse(fs.readFileSync(histPath, "utf8"));
   }
   const gauss = () => Math.sqrt(-2 * Math.log(1 - Math.random())) * Math.cos(2 * Math.PI * Math.random());
   let best = null;
-  for (let gen = 0; gen < GENS; gen++) {
+  for (let gen = gen0; gen < gen0 + GENS; gen++) {
     const t0 = Date.now();
     const pop = Array.from({ length: POP }, (_, k) => (k === 0 ? mu.slice() : mu.map((m, i) => Math.min(1, Math.max(0, m + sd[i] * gauss())))));
     const games = DIFFS.flatMap((d) => SEEDS.map((s) => [d, s * 1000 + gen]));
