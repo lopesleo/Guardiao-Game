@@ -170,7 +170,10 @@ async function runOneIn(ctx, theta, build, diff, seed, live, start) {
     const g = window.game;
     if (!live) {
       g.loop.sleep();
-      window.__vt0 = window.__vt = Math.floor(Date.now() / 3.6e6) * 3.6e6;
+      // instante FIXO: o tempo da cena entra em fórmulas de movimento (ex.: o mergulho do corvo usa
+      // Math.sin(time / 200 + x)); começar na hora cheia atual fazia a mesma semente dar partidas
+      // diferentes em horas diferentes
+      window.__vt0 = window.__vt = Date.UTC(2026, 9, 14, 12);
       window.__perf0 = performance.now();
       Date.now = () => window.__vt;
       performance.now = () => window.__perf0 + (window.__vt - window.__vt0);
