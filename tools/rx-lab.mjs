@@ -2,7 +2,7 @@
 // escolhe cartas por build, medindo a fatia das reações no dano minuto a minuto e na luta do chefe.
 // Serviu para decidir a escala do dano das reações (docs/BALANCING.md, 13/10/2026).
 //
-//   python videos/promo/tools/serve.py 8151        (ou outro servidor estático na raiz; ver LAB_URL)
+//   (o servidor do jogo sobe sozinho, tools/lab-server.mjs; LAB_URL=… usa outro já rodando)
 //   npm i --no-save playwright-core                 (usa o Edge instalado, headless)
 //   node tools/rx-lab.mjs saida.json [none|hp] [k] [maestria]
 //
@@ -13,6 +13,7 @@
 // aplicadas sem abrir a tela, ímã de gemas a cada 5 s (o robô sozinho mal sobe de nível).
 import { chromium } from "playwright-core";
 import fs from "fs";
+import { startLabServer } from "./lab-server.mjs";
 
 const OUT = process.argv[2] || "rx-lab.json";
 const CURVE = process.argv[3] || "none";
@@ -23,7 +24,8 @@ const DIFFS = (process.env.DIFFS || "1,4").split(",").map(Number);
 const SEEDS = (process.env.SEEDS || "11,23").split(",").map(Number);
 const PAR = Number(process.env.PAR || 3);
 const BOOST = Number(process.env.BOOST || 1); // dano das ARMAS (emula bênçãos/poder permanente)
-const URL = process.env.LAB_URL || "http://127.0.0.1:8151/?debug=1";
+const server = process.env.LAB_URL ? null : await startLabServer();
+const URL = process.env.LAB_URL || server.url + "?debug=1";
 
 const ELEMS = {
   fogo_gelo: ["fire", "ice"],
@@ -208,6 +210,7 @@ async function worker() {
 }
 await Promise.all(Array.from({ length: PAR }, worker));
 await browser.close();
+server?.close();
 
 // ---- resumo: fatia das reações por minuto (média das sementes), nível final, chefe ----
 const rs = results;

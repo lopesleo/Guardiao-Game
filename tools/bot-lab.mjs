@@ -10,7 +10,7 @@
 // dano recebido por fonte (bando, projétil, golpe de chefe) e estratégias degeneradas (se o robô
 // aprender a vencer de um jeito que não é divertido, isso é um furo do jogo, não mérito dele).
 //
-//   python videos/promo/tools/serve.py 8151        (ou outro servidor estático na raiz; ver LAB_URL)
+//   (o servidor do jogo sobe sozinho, tools/lab-server.mjs; LAB_URL=… usa outro já rodando)
 //   npm i --no-save playwright-core                 (usa o Edge instalado, headless)
 //   node tools/bot-lab.mjs treinar [gerações]       → grava tools/bot-lab/cerebro.json (+ histórico)
 //   node tools/bot-lab.mjs medir [saida.json]       → resumo por Perigo/build e causas de morte
@@ -25,6 +25,7 @@
 // sementes: sempre ≥2 sementes, e compare cérebros nas MESMAS sementes.
 import { chromium } from "playwright-core";
 import fs from "fs";
+import { startLabServer } from "./lab-server.mjs";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -35,7 +36,8 @@ const BUILDS = (process.env.BUILDS || "jogador").split(",");
 const PAR = Number(process.env.PAR || 4);
 const POP = Number(process.env.POP || 12);
 const BOOST = Number(process.env.BOOST || 1);
-const URL = process.env.LAB_URL || "http://127.0.0.1:8151/?debug=1";
+const server = process.env.LAB_URL ? null : await startLabServer();
+const URL = process.env.LAB_URL || server.url + "?debug=1";
 const DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "bot-lab");
 const CEREBRO = process.env.CEREBRO || path.join(DIR, "cerebro.json");
 
@@ -673,3 +675,4 @@ if (MODE === "treinar") {
   }
 }
 await browser.close();
+server?.close();
