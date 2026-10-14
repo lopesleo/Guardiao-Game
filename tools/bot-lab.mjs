@@ -60,9 +60,14 @@ const GENES = {
   inertia: [0, 0.9], // suavização da direção (alto = vira devagar)
   dashOn: [0.5, 6], // perigo a partir do qual usa o dash
   dashThreat: [0, 1], // >0,5 = dasha também ao estar dentro de um aviso de golpe
+  bR: [90, 380], // distância de combate do chefe (px)
+  bW: [0, 3], // força para manter essa distância
+  bT: [0, 1.5], // circular em volta do chefe
 };
 const NAMES = Object.keys(GENES);
 const decode = (u) => Object.fromEntries(NAMES.map((n, i) => [n, GENES[n][0] + Math.min(1, Math.max(0, u[i])) * (GENES[n][1] - GENES[n][0])]));
+// pesos salvos → [0,1]; genes que o cérebro ainda não tinha começam no meio da faixa
+const encode = (pesos) => NAMES.map((n) => (pesos?.[n] == null ? 0.5 : Math.min(1, Math.max(0, (pesos[n] - GENES[n][0]) / (GENES[n][1] - GENES[n][0])))));
 
 const ELEMS = {
   jogador: null, // escolhe como um jogador comum (evolução > arma nova até 3 > dano > passiva)
@@ -90,7 +95,7 @@ const launch = () =>
   });
 let browser = await launch();
 
-async function runOne(theta, build, diff, seed, live = null) {
+async function runOne(theta, build, diff, seed, live = null, start = null) {
   const ctx = live?.ctx || (await browser.newContext({ viewport: { width: 960, height: 540 }, serviceWorkers: "block" }));
   const p = live?.page || (await ctx.newPage());
   const errs = [];
@@ -131,7 +136,7 @@ async function runOne(theta, build, diff, seed, live = null) {
     return gs && gs.sys.isActive() && gs.player;
   }, null, { timeout: 60000 });
 
-  await p.evaluate(({ th, elems, random, boost, trace, live, label }) => {
+  await p.evaluate(({ th, elems, random, boost, trace, live, label, start, bossLevel }) => {
     const g = window.game;
     const gs = g.scene.getScene("GameScene");
     gs._god = false;
@@ -266,15 +271,22 @@ async function runOne(theta, build, diff, seed, live = null) {
         my += e.y;
         mn++;
       });
+      // chefe: é para LUTAR, não só fugir. Mantém a distância de combate bR (as armas disparam
+      // sozinhas e alcançam 120–280 px), circulando em volta (bT); só foge reto do encostão
       if (gs.boss?.active) {
         const dx = px - gs.boss.x,
           dy = py - gs.boss.y;
         const d = Math.hypot(dx, dy) || 1;
-        const R = th.eR * 1.5;
-        if (d < R) {
-          const s = Math.pow((R - d) / R, th.eP) * 3;
-          fx += (dx / d) * s * th.eW;
-          fy += (dy / d) * s * th.eW;
+        const err = Math.max(-1.5, Math.min(1.5, (d - th.bR) / 100));
+        fx -= (dx / d) * err * th.bW;
+        fy -= (dy / d) * err * th.bW;
+        const side = dirX * (-dy / d) + dirY * (dx / d) >= 0 ? 1 : -1;
+        fx += (-dy / d) * side * th.bT;
+        fy += (dx / d) * side * th.bT;
+        if (d < 110) {
+          const s = ((110 - d) / 110) * 4;
+          fx += (dx / d) * s;
+          fy += (dy / d) * s;
           danger += s;
         }
       }
@@ -490,6 +502,17 @@ async function runOne(theta, build, diff, seed, live = null) {
       return "ok";
     };
     window.__lastSrc = () => lastSrc;
+    // Treino de chefe: começa com o herói no nível em que um jogador chega ao chefe (cartas
+    // escolhidas pelo mesmo critério) e o relógio 2 s antes do Mapinguari nascer
+    if (start === "chefe") {
+      pl.gainXp(1e7);
+      while (pl.level < bossLevel) pl.gainXp(0);
+      pl.xp = 0;
+      gs._openNextLevelUp();
+      gs.elapsedMs = gs.runDurationS * 1000 - 2000;
+      if (gs.spawnDirector) gs.spawnDirector.elapsedMs = gs.elapsedMs;
+      gs.bossWarned = true;
+    }
     if (live) {
       // tempo real: o jogo roda normal e o cérebro decide a cada ~100 ms; a legenda mostra quem joga
       let tag = document.getElementById("__bot");
@@ -520,7 +543,7 @@ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}  nível ${pl.level}  vi
         if (!g.scene.isActive("ReviveScene")) g.scene.resume("GameScene");
       }, 500);
     }
-  }, { th: theta, elems: ELEMS[build], random: build === "aleatoria", boost: BOOST, trace: !!process.env.TRACE, live: !!live, label: live?.label || "" });
+  }, { th: theta, elems: ELEMS[build], random: build === "aleatoria", boost: BOOST, trace: !!process.env.TRACE, live: !!live, label: live?.label || "", start, bossLevel: Number(process.env.CHEFE_NIVEL || 16) });
 
   const dur = await p.evaluate(() => window.game.scene.getScene("GameScene").diff.durationS);
   const limitS = dur + 300;
@@ -546,11 +569,13 @@ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}  nível ${pl.level}  vi
     };
   });
   if (!live) await ctx.close();
-  return { build, diff, seed, dur, errs: errs.slice(0, 3), ...res, end: res.end || "tempo" };
+  return { build, diff, seed, dur, start, errs: errs.slice(0, 3), ...res, end: res.end || "tempo" };
 }
 
-// Pontuação de treino: fração do tempo até o chefe sobrevivida + vitória + quanto do chefe tirou
+// Pontuação de treino: fração do tempo até o chefe sobrevivida + vitória + quanto do chefe tirou.
+// No treino de chefe só conta a luta: vida tirada do chefe + vitória
 function score(r) {
+  if (r.start === "chefe") return (r.bossHpLeft == null ? 0 : 1 - r.bossHpLeft) + (r.end === "venceu" ? 1 : 0);
   let s = Math.min(1, r.t / r.dur);
   if (r.bossStart != null && r.bossHpLeft != null) s += 0.5 * (1 - r.bossHpLeft);
   if (r.end === "venceu") s += 1;
@@ -591,8 +616,7 @@ if (MODE === "treinar") {
   let gen0 = 0;
   // INICIO=cerebro-antigo.json: parte dos pesos de outro cérebro (genes novos começam no meio da faixa)
   if (process.env.INICIO) {
-    const old = JSON.parse(fs.readFileSync(process.env.INICIO, "utf8")).pesos;
-    mu = NAMES.map((n) => (old[n] == null ? 0.5 : Math.min(1, Math.max(0, (old[n] - GENES[n][0]) / (GENES[n][1] - GENES[n][0])))));
+    mu = encode(JSON.parse(fs.readFileSync(process.env.INICIO, "utf8")).pesos);
   }
   // CONTINUAR=1: retoma do cérebro salvo (média, desvio, histórico e contagem de gerações)
   if (fs.existsSync(CEREBRO) && process.env.CONTINUAR) {
@@ -607,9 +631,11 @@ if (MODE === "treinar") {
   for (let gen = gen0; gen < gen0 + GENS; gen++) {
     const t0 = Date.now();
     const pop = Array.from({ length: POP }, (_, k) => (k === 0 ? mu.slice() : mu.map((m, i) => Math.min(1, Math.max(0, m + sd[i] * gauss())))));
-    const games = DIFFS.flatMap((d) => SEEDS.map((s) => [d, s * 1000 + gen]));
-    const jobs = pop.flatMap((u, k) => games.map(([d, s]) => [k, d, s]));
-    const res = await pool(jobs, (k, d, s) => runOne(decode(pop[k]), BUILDS[0], d, s));
+    // partidas inteiras + (CHEFE=1) uma luta de chefe por Perigo, para ele praticar a luta
+    const games = DIFFS.flatMap((d) => SEEDS.map((s) => [d, s * 1000 + gen, null]));
+    if (process.env.CHEFE) for (const d of DIFFS) games.push([d, 7000 + gen, "chefe"]);
+    const jobs = pop.flatMap((u, k) => games.map(([d, s, st]) => [k, d, s, st]));
+    const res = await pool(jobs, (k, d, s, st) => runOne(decode(pop[k]), BUILDS[0], d, s, null, st));
     await browser.close().catch(() => {});
     browser = await launch();
     const fit = pop.map((_, k) => {
@@ -638,7 +664,7 @@ if (MODE === "treinar") {
     try {
       c = JSON.parse(fs.readFileSync(CEREBRO, "utf8"));
     } catch {}
-    const theta = c?.pesos || decode(NAMES.map(() => 0.5));
+    const theta = decode(encode(c?.pesos));
     const d = DIFFS[k % DIFFS.length];
     const label = `robô · ${c ? `cérebro da geração ${c.treino.geracoes}` : "sem treino"} · Perigo ${d} · build ${BUILDS[0]}`;
     console.log(label);
@@ -653,11 +679,11 @@ if (MODE === "treinar") {
   }
 } else {
   const OUT = process.argv[3] || "bot-lab.json";
-  const theta = fs.existsSync(CEREBRO) ? JSON.parse(fs.readFileSync(CEREBRO, "utf8")).pesos : decode(NAMES.map(() => 0.5));
+  const theta = fs.existsSync(CEREBRO) ? decode(encode(JSON.parse(fs.readFileSync(CEREBRO, "utf8")).pesos)) : decode(encode(null));
   if (!fs.existsSync(CEREBRO)) console.log("(sem cérebro treinado: usando os pesos do meio da faixa)");
   const jobs = [];
   for (const b of BUILDS) for (const d of DIFFS) for (const s of SEEDS) jobs.push([b, d, s]);
-  const res = (await pool(jobs, (b, d, s) => runOne(theta, b, d, s))).filter(Boolean);
+  const res = (await pool(jobs, (b, d, s) => runOne(theta, b, d, s, null, process.env.CHEFE ? "chefe" : null))).filter(Boolean);
   fs.writeFileSync(OUT, JSON.stringify(res, null, 1));
   console.log("\nbuild        Perigo  fim     tempo   nível  chefe   matou");
   for (const r of res)
