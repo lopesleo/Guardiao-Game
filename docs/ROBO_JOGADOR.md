@@ -52,7 +52,15 @@ Variáveis: `DIFFS=1,3 SEEDS=11,23 PAR=3 POP=12 CHEFE=1` (treino de chefe), `CER
 - **Partidas reproduzíveis são obrigatórias.** Até 14/10 a mesma semente dava partidas totalmente
   diferentes (quadros em tempo real antes de pausar o relógio gastavam sorteios): comparações com 6–12
   partidas eram sorte, e o treino também. Agora mesma semente = mesma partida.
-- Comparar cérebros sempre nas **mesmas sementes** e com **≥ 24 partidas** (12 sementes × Perigo 1 e 3).
+- O relógio virtual começa num **instante fixo**: o tempo da cena entra no movimento dos inimigos (o
+  mergulho do corvo usa `Math.sin(time / 200 + x)`), e começar na hora cheia atual fazia a mesma
+  semente dar partidas diferentes em horas diferentes.
+- **O jogo é caótico**: uma diferença mínima no começo muda a partida inteira. Mesmo com partidas
+  reproduzíveis, 24 partidas só separam diferenças grandes (0 → 6 vitórias); entre dois cérebros
+  treinados parecidos, a diferença cabe na sorte. Comparar cérebros sempre nas **mesmas sementes**,
+  com **≥ 24 partidas** (12 sementes × Perigo 1 e 2), e desconfiar de diferenças de nota < 0,3.
+- Treino: Perigo 1 e 2 (Perigo 3 sem bênçãos é pesado demais). Cérebro atual: `cerebro-v7-g5`
+  (6 vitórias em 24, nota ~1,9; o v6 de partida: 0 vitórias, nota ~1,55).
 - **Projéteis eram o que mais matava** (55–70% do dano), quase sempre tiros lentos (135–180 px/s) vindos
   de 200+ px — fáceis para um jogador. Três defeitos em sequência: prever o tiro com o herói parado
   (reagia tarde), fugir "perpendicular à velocidade relativa" (tiro alcançando por trás) e SOMAR os
