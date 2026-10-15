@@ -12,6 +12,7 @@ import { text, drawFrame, Button, haptic } from "./Theme.js";
 import { Modal, ScrollList } from "./Widgets.js";
 import { openSettings } from "./SettingsModal.js";
 import { applyZoom } from "./Zoom.js";
+import { joyRight } from "./VirtualJoystick.js";
 import { tr, fmt } from "../i18n/i18n.js";
 
 const BLESSING_ICON = {
@@ -471,7 +472,7 @@ export const MetaPanels = {
     const list = this._modalList(m);
     const touch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
     const sections = [
-      ["ico_dash", tr("Movimento"), touch ? tr("Arraste o polegar na metade esquerda da tela para andar. O ataque é automático.") : tr("WASD ou setas para andar. O ataque é automático — posicione-se.")],
+      ["ico_dash", tr("Movimento"), touch ? (joyRight() ? tr("Arraste o polegar na metade direita da tela para andar. O ataque é automático.") : tr("Arraste o polegar na metade esquerda da tela para andar. O ataque é automático.")) :tr("WASD ou setas para andar. O ataque é automático — posicione-se.")],
       ["ico_gem", tr("Nível"), tr("Colete gemas verdes para subir de nível e escolher 1 de 3 cartas: novas armas, melhorias ou passivas.")],
       ["ico_staff", tr("Elementos"), tr("Cada arma aplica um elemento: Fogo, Gelo ou Raio. Dois elementos no mesmo inimigo disparam uma REAÇÃO.")],
       ["ico_cloud", tr("Vapor (Fogo + Gelo)"), tr("Nuvem escaldante que causa dano contínuo na área.")],

@@ -1478,6 +1478,11 @@ export const FISHING = {
   REGEN_MIN: 20, // o lago repõe 1 peixe a cada 20 min
   BITE_S: [1.2, 3.5], // espera pela fisgada
   HOOK_S: 1.5, // tempo para puxar depois do "!" (era 1,2: o toque no celular chega atrasado)
+  // Pesca assistida (Opções → Controles; acessibilidade motora): zona verde maior, o peixe escapa
+  // mais devagar e mais tempo para puxar. Quem joga continua sendo o jogador — só fica tolerante.
+  // tools/pesca-lab.mjs, perfil "motor" (reação lenta, mão imprecisa), Lago 1: peixes comuns de
+  // 1–10% para ~80%; Dourado e Surubim seguem raros (6–8%). Com 1,6/0,5 tudo saía 100% (sem jogo)
+  ASSIST: { zone: 1.4, drain: 0.7, hook: 2 },
   // Física do minijogo = BobberBar do Stardew Valley (valores por quadro a 60 Hz,
   // pista de 568 unidades; a zona é a fração `zone` da pista).
   STEP_HZ: 60,

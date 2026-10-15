@@ -11,6 +11,9 @@ import { CSS } from "../art/Palette.js";
 import { text, Button, FONTS, TEXT_SIZES, LANG_FONT } from "./Theme.js";
 import { Modal, Slider, Toggle } from "./Widgets.js";
 import { ZOOMS } from "./Zoom.js";
+import { JOY_SIZES, refreshJoysticks } from "./VirtualJoystick.js";
+
+const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
 import { tr, lang, LANGS, setLang, locale } from "../i18n/i18n.js";
 
 let lastTab = "tela";
@@ -20,6 +23,7 @@ export function openSettings(scene, o = {}) {
   const tabs = [
     ["tela", tr("ÁUDIO E TELA")],
     ["jogo", tr("JOGO")],
+    ["controles", tr("CONTROLES")],
   ];
   if (privacyRows || o.onReset) tabs.push(["dados", tr("PRIVACIDADE")]);
   const want = o.tab ?? lastTab;
@@ -63,12 +67,13 @@ export function openSettings(scene, o = {}) {
       scene.scene.restart();
     } else scene._toast?.(tr("Vale a partir da próxima tela"));
   };
-  const cycle = (label, keys, get, set) => {
+  // apply: o que fazer depois de trocar (padrão: recomeçar a tela, como fonte e tamanho)
+  const cycle = (label, keys, get, set, apply = applyLook) => {
     const b = new Button(scene, 0, 0, 220, 44, label(get()), () => {
       const i = (keys.indexOf(get()) + 1) % keys.length;
       set(keys[i]);
       b.setLabel(label(keys[i]));
-      applyLook();
+      apply();
     }, { size: 20, style: "button" });
     return b;
   };
@@ -107,6 +112,8 @@ export function openSettings(scene, o = {}) {
     row(tr("Idioma"), new Button(scene, 0, 0, 220, 44, LANGS.find((l) => l.id === lang).label, () => pickLanguage(scene), { size: 20, family: LANG_FONT }), "Language · Idioma");
     row(tr("Vibração"), new Toggle(scene, 0, 0, Settings.get("haptics"), (v) => Settings.set("haptics", v)));
     row(tr("Tremor de tela"), new Toggle(scene, 0, 0, Settings.get("shake"), (v) => Settings.set("shake", v)), tr("Também desliga as pausas de impacto"));
+    // Fotossensibilidade: vale na hora (o gancho do flash lê a opção a cada clarão)
+    row(tr("Clarões suaves"), new Toggle(scene, 0, 0, Settings.get("softFlash"), (v) => Settings.set("softFlash", v)), tr("Flashes de tela bem mais fracos (fotossensibilidade)"));
     row(
       tr("Números de dano"),
       new Toggle(scene, 0, 0, Settings.get("dmgNumbers"), (v) => {
@@ -117,6 +124,17 @@ export function openSettings(scene, o = {}) {
     if (Notify.available())
       row(tr("Avisos"), new Toggle(scene, 0, 0, Notify.enabled(), (v) => (v ? Notify.enable() : Notify.disable())), tr("Baú do dia e colheita pronta"));
     if (CloudSave.available() && CloudSave.state !== "off") cloudRow(scene, m, o, row);
+  } else if (tab === "controles") {
+    // Joystick (só no toque): modo e tamanho valem na hora; o lado move também Dash, Despertar e o
+    // botão de ação, então segue a regra da fonte (recomeça a tela ou vale na próxima)
+    if (isTouch) {
+      const modes = { dynamic: tr("Flutuante"), static: tr("Fixo") };
+      row(tr("Joystick"), cycle((k) => modes[k], Object.keys(modes), () => Settings.get("joyMode"), (k) => Settings.set("joyMode", k), refreshJoysticks), tr("Fixo fica sempre no canto da tela"));
+      const sides = { left: tr("Esquerda"), right: tr("Direita") };
+      row(tr("Lado do joystick"), cycle((k) => sides[k], Object.keys(sides), () => Settings.get("joySide"), (k) => Settings.set("joySide", k)), tr("Direita para canhotos: os botões trocam de lado"));
+      row(tr("Tamanho do joystick"), cycle((i) => JOY_SIZES[i].label, JOY_SIZES.map((_, i) => i), () => Settings.get("joySize"), (i) => Settings.set("joySize", i), refreshJoysticks));
+    }
+    row(tr("Pesca assistida"), new Toggle(scene, 0, 0, Settings.get("fishAssist"), (v) => Settings.set("fishAssist", v)), tr("Zona verde maior e o peixe escapa mais devagar"));
   } else {
     if (Telemetry.available())
       row(tr("Dados de uso e erros"), new Toggle(scene, 0, 0, Telemetry.enabled(), (v) => Telemetry.setEnabled(v)), tr("Ajuda a melhorar o jogo · anônimo"));

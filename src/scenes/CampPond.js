@@ -11,6 +11,10 @@ import { PAL, CSS, hex } from "../art/Palette.js";
 import { POND_AW, POND_AH, pondShape, ISLE } from "../art/Pond.js";
 import { text, drawFrame, haptic } from "../ui/Theme.js";
 import { tr } from "../i18n/i18n.js";
+import { Settings } from "../systems/Settings.js";
+
+// Pesca assistida (Opções → Controles): multiplicadores de FISHING.ASSIST, ou 1 com a opção desligada
+const assist = (k) => (Settings.get("fishAssist") ? FISHING.ASSIST[k] : 1);
 
 const S = GAME.PIXEL_SCALE;
 const D_NIGHT = 50000; // luzes (ADD) por cima da camada de noite
@@ -396,7 +400,7 @@ export const CampPond = {
       if (f.t <= 0) {
         // Fisgada!
         f.state = "bite";
-        f.t = FISHING.HOOK_S;
+        f.t = FISHING.HOOK_S * assist("hook");
         f.bobber.y = f.by + 6;
         this._splash(f.bx, f.by, 8);
         haptic(60);
@@ -423,7 +427,7 @@ export const CampPond = {
     const fish = FISHING.FISH[roll.id];
     const F = FISHING;
     const diff = roll.tutorial ? 15 : fish.diff;
-    const barH = Math.round(this.pond.zone * F.TRACK * (roll.tutorial ? 1.4 : 1));
+    const barH = Math.min(F.TRACK * 0.6, Math.round(this.pond.zone * F.TRACK * (roll.tutorial ? 1.4 : 1) * assist("zone")));
     Object.assign(f, {
       state: "fight",
       fishId: roll.id,
@@ -511,7 +515,7 @@ export const CampPond = {
       haptic(10);
     }
     f.inZone = inBar;
-    f.prog = Math.max(0, Math.min(1, f.prog + (inBar ? F.FILL : -F.DRAIN)));
+    f.prog = Math.max(0, Math.min(1, f.prog + (inBar ? F.FILL : -F.DRAIN * assist("drain"))));
   },
 
   _fightUpdate(f, dt) {

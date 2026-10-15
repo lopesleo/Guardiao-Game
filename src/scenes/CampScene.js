@@ -15,7 +15,7 @@ import { Kitchen } from "../systems/Kitchen.js";
 import { Pond } from "../systems/Pond.js";
 import { REVEALS, pendingReveals } from "../systems/Reveal.js";
 import { InputManager } from "../systems/InputManager.js";
-import { VirtualJoystick } from "../ui/VirtualJoystick.js";
+import { VirtualJoystick, joyRight } from "../ui/VirtualJoystick.js";
 import { DEBUG } from "../systems/Platform.js";
 import { Analytics } from "../systems/Analytics.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
@@ -435,13 +435,15 @@ export class CampScene extends Phaser.Scene {
     this.promptG = this.add.graphics();
     this.promptT = text(this, 0, 0, "", { size: 18, color: CSS.goldHi, origin: 0.5, stroke: true });
     this.prompt.add([this.promptG, this.promptT]);
-    // Botão de ação (toque)
+    // Botão de ação (toque) — do lado oposto ao joystick (canhoto: Opções → Controles)
+    const right = joyRight();
     if (this.isTouch) {
-      this.actionBtn = fix(new Button(this, W - 150, H - 80, 250, 84, "", () => this._interact(), { size: 22, style: "primary", color: CSS.goldHi }));
+      this.actionBtn = fix(new Button(this, right ? 150 : W - 150, H - 80, 250, 84, "", () => this._interact(), { size: 22, style: "primary", color: CSS.goldHi }));
       this.actionBtn.setVisible(false);
     }
     // Dica de movimento na 1ª visita
-    const hint = this.isTouch ? tr("Arraste à esquerda para andar · toque no botão para interagir") : tr("WASD/setas para andar · E para interagir · a trilha ao norte leva à floresta");
+    const touchHint = right ? tr("Arraste à direita para andar · toque no botão para interagir") : tr("Arraste à esquerda para andar · toque no botão para interagir");
+    const hint = this.isTouch ? touchHint : tr("WASD/setas para andar · E para interagir · a trilha ao norte leva à floresta");
     this.hint = fix(text(this, W / 2, H - 26, hint, { size: 16, color: CSS.muted, origin: 0.5 }));
     this.tweens.add({ targets: this.hint, alpha: 0, delay: 7000, duration: 800 });
     // Balão de fala da Anciã
@@ -517,6 +519,8 @@ export class CampScene extends Phaser.Scene {
       return;
     }
     const busy = this._modals.length > 0 || this._leaving || this._cutscene;
+    // Joystick fora de cena com janela aberta, cena ou pescaria (o fixo não fica por cima delas)
+    this.joystick?.setActive(!busy && !this._fishing);
     const mx = busy ? 0 : this.inputMgr.move.x,
       my = busy ? 0 : this.inputMgr.move.y;
     p.setVelocity(mx * SPEED, my * SPEED);

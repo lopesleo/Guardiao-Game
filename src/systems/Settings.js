@@ -7,6 +7,7 @@ const DEFAULTS = {
   sfx: 0.8,
   haptics: true,
   shake: true,
+  softFlash: false, // clarões suaves (fotossensibilidade): flash de tela e luzes passageiras bem mais fracos
   dmgNumbers: true,
   lighting: true,
   font: "pixel", // fonte do jogo (ver FONTS em ui/Theme.js)
@@ -15,6 +16,10 @@ const DEFAULTS = {
   notify: false, // avisos (só no app, só depois que o jogador aceitar)
   notifyAsked: false,
   telemetry: true, // dados de uso e erros (Firebase, só no app); o jogador pode desligar
+  joyMode: "dynamic", // joystick: "dynamic" (nasce onde o dedo encosta) ou "static" (fixo no canto)
+  joySide: "left", // lado do joystick ("right" = canhoto: Dash/Despertar e o botão de ação vão para a esquerda)
+  joySize: 0, // índice em JOY_SIZES (ui/VirtualJoystick.js)
+  fishAssist: false, // pesca assistida: zona verde bem maior e o peixe escapa mais devagar
   lang: null, // idioma (ver i18n/i18n.js); null = o do aparelho
   langDevice: null, // idioma do aparelho quando o jogador escolheu o do jogo (se mudar, o aparelho vence)
 };
@@ -95,6 +100,14 @@ export function installSettingsHooks(g) {
     cam.shake = function (...args) {
       if (!Settings.get("shake")) return this;
       return shake.apply(this, args);
+    };
+    // Clarões suaves (fotossensibilidade): o flash de tela começa com 25% da opacidade e dura no
+    // mínimo 300 ms (sem piscar rápido). O Phaser guarda a opacidade inicial em flashEffect.alpha
+    const flash = cam.flash;
+    cam.flash = function (duration = 250, ...rest) {
+      const soft = Settings.get("softFlash");
+      this.flashEffect.alpha = soft ? 0.25 : 1;
+      return flash.call(this, soft ? Math.max(300, duration) : duration, ...rest);
     };
   }
   try {

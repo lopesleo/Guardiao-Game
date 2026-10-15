@@ -76,7 +76,7 @@ import { AdService } from "../systems/AdService.js";
 import { QualityWatchdog } from "../systems/QualityWatchdog.js";
 import { LanternSystem } from "../systems/LanternSystem.js";
 import { Builds } from "../systems/Builds.js";
-import { VirtualJoystick } from "../ui/VirtualJoystick.js";
+import { VirtualJoystick, joyRight } from "../ui/VirtualJoystick.js";
 import { tr } from "../i18n/i18n.js";
 
 const BOSS_TEX = { mapinguari: "mon_boss", caboclo: "mon_caboclo" };
@@ -96,9 +96,17 @@ export class GameScene extends Phaser.Scene {
 
     this.inputMgr = new InputManager(this);
     this.joystick = new VirtualJoystick(this.inputMgr);
+    // Pausa, cartas de nível, baú: o joystick (fixo fica sempre visível) sai de cena junto
+    // (a cena é reaproveitada: os ouvintes saem no shutdown, senão acumulam a cada partida)
+    const joyOff = () => this.joystick?.setEnabled(false),
+      joyOn = () => this.joystick?.setEnabled(true);
+    this.events.on("pause", joyOff);
+    this.events.on("resume", joyOn);
     // O Phaser não chama shutdown() sozinho: sem isto, cada partida deixava uma
     // camada de toque (joystick) e a música anteriores para trás
     this.events.once("shutdown", () => {
+      this.events.off("pause", joyOff);
+      this.events.off("resume", joyOn);
       this.joystick?.destroy();
       this.joystick = null;
       this.shutdown();
@@ -554,7 +562,9 @@ export class GameScene extends Phaser.Scene {
       this._hint(
         "move",
         touch
-          ? tr("Arraste o polegar na esquerda para andar.\nO ataque é automático!")
+          ? joyRight()
+            ? tr("Arraste o polegar na direita para andar.\nO ataque é automático!")
+            : tr("Arraste o polegar na esquerda para andar.\nO ataque é automático!")
           : tr("Ande com WASD ou setas.\nO ataque é automático!"),
       ),
     );

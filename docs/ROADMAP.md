@@ -424,6 +424,21 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   depois do "!" (era 1,2). Medido em `tools/pesca-lab.mjs` (jogador simulado): novato no Lago 1 pega o
   Lambari 48% das vezes (era 17%) e o Cará 22% (era 4%); para quem já pesca bem, Tucunaré (27%), Dourado
   (16%) e Surubim (7%) no Lago 1 continuam o desafio, e subir o Lago continua valendo
+- ✅ **Pacote de acessibilidade** (15/10/2026; Opções ganhou a aba **Controles**; textos nos 6 idiomas):
+  - **Clarões suaves** (aba Jogo, fotossensibilidade): os 8 flashes de tela começam com 25% da opacidade e duram
+    ≥ 300 ms; as luzes passageiras (raio, explosões) ficam com 40% e sem piscar rápido; o clarão branco da
+    primeira derrota também. Gancho global em `Settings.js`, como o do tremor
+  - **Joystick** (só no toque): flutuante ou **fixo** no canto; **lado** (direita = canhoto: Dash, Despertar e o
+    botão de ação da Clareira vão para a esquerda, e as dicas dizem "direita"); **tamanho** 120/150/180. Modo e
+    tamanho mudam na hora (até na Pausa); o joystick some na pausa, nas janelas e na pescaria
+  - **Pesca assistida**: zona verde ×1,4, o peixe escapa 30% mais devagar e o dobro do tempo para puxar
+    (`FISHING.ASSIST`). No `tools/pesca-lab.mjs`, um jogador com dificuldade motora no Lago 1 passa de 1–10%
+    para ~80% nos peixes comuns; Dourado e Surubim continuam raros (com 1,6/0,5 tudo saía 100%: sem jogo)
+  - **Daltonismo** (auditoria com simulação Machado 2009 de protanopia, deuteranopia e tritanopia em 22
+    capturas dos dois biomas): todo pixel de aviso ganhou contorno escuro (o vermelho sumia na Caatinga para
+    protanopes; até na visão normal era 1,5:1); o tiro inimigo ganhou 4 pontas em X e sombra escura (para
+    deuteranopes tinha a mesma cor da gema de XP); no Grito do Mapinguari, as pontas da brecha ficaram brancas
+    e a saída ganhou setas para fora. Tritanopia sem problemas
 - ✅ **Robô jogador** (14/10/2026, `tools/bot-lab.mjs`, modelo em [`ROBO_JOGADOR.md`](ROBO_JOGADOR.md)): joga
   partidas reais sem modo deus com as prioridades de um jogador em camadas (sobreviver > vida baixa > objetivo:
   baú > item > lanterna > gemas > combate) e um treino evolutivo que só ajusta os números; partidas

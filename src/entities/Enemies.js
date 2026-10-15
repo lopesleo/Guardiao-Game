@@ -487,7 +487,10 @@ export class EnemyProjectile extends Phaser.GameObjects.Container {
       .setAlpha(0.6)
       .setBlendMode(Phaser.BlendModes.ADD);
     this.core = scene.add.image(0, 0, "px_eshot").setScale(GAME.PIXEL_SCALE);
-    this.add([this.glow, this.core]);
+    // Sombra escura (blend normal) sob o halo: recorta o tiro do chão claro da Caatinga, onde o halo
+    // aditivo virava só um brilho creme sobre a areia
+    this.shade = scene.add.image(0, 0, "fx_glow").setScale(0.34).setTint(0x1a1420).setAlpha(0.45);
+    this.add([this.shade, this.glow, this.core]);
     scene.physics.add.existing(this);
     this.body.setCircle(7, -7, -7);
     this.setActive(false).setVisible(false);
@@ -504,6 +507,7 @@ export class EnemyProjectile extends Phaser.GameObjects.Container {
     this.lifeUntil = this.scene.time.now + 3000;
     this.core.setScale(GAME.PIXEL_SCALE * scale).setTint(color === 0xff5a6e ? 0xffffff : color);
     this.glow.setScale(0.6 * scale).setTint(color === 0xff5a6e ? 0xff3040 : color);
+    this.shade.setScale(0.34 * scale);
     this.setDepth(60);
   }
   kill() {
