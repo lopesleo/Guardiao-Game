@@ -409,6 +409,11 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Perigo e só caem no chefe (alvo único); uma curva pela onda as multiplicaria por ~5× no fim e no chefe.
   Sem carta de Maestria por agora. Conferir `run_reactions` nos dados reais (critério em
   [`BALANCING.md`](BALANCING.md#decisão-dano-das-reações-continua-fixo-13102026))
+- ✅ **Zoom de acessibilidade** (15/10/2026, Opções → Áudio e tela → Zoom: Normal 1× / Grande 1,15× / Muito
+  grande 1,3×): aproxima o mundo sem aumentar a interface (segunda câmera, `src/ui/Zoom.js`); vale na hora,
+  também pela Pausa; a partida não muda (inimigos nascem na mesma distância)
+- ✅ **Pesca: toque na tela inteira** (15/10/2026): no celular, a zona do joystick (canto inferior esquerdo)
+  engolia os toques durante a pescaria; agora fica desligada enquanto se pesca
 - ✅ **Robô jogador** (14/10/2026, `tools/bot-lab.mjs`, modelo em [`ROBO_JOGADOR.md`](ROBO_JOGADOR.md)): joga
   partidas reais sem modo deus com as prioridades de um jogador em camadas (sobreviver > vida baixa > objetivo:
   baú > item > lanterna > gemas > combate) e um treino evolutivo que só ajusta os números; partidas
