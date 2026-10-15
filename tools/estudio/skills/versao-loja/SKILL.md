@@ -17,7 +17,7 @@ de fato já quebrou ou pode quebrar neste projeto. Cada item: **OK**, **FALHOU**
 2. `npm run check` sem erro (conteúdo e os 6 idiomas).
 3. `npm run balance` sem FALHA.
 4. Teste de fumaça: `DIFFS=0 SEEDS=11 node tools/bot-lab.mjs medir` roda até o fim **sem "ERRO"** na
-   coluna final (erro de página = exceção no jogo). Com servidor em :8151.
+   coluna final (erro de página = exceção no jogo). O servidor sobe sozinho com o script.
 5. `src/config.js`: `ADS.TESTING` continua `true` no repositório — **nunca** mudar à mão; o
    `npm run android:aab` só inverte na cópia empacotada. `ADS.MAX_AD_RATING` = "Teen".
 6. Nada de debug fora de `?debug=1`.
