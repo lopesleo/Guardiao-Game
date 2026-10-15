@@ -1470,20 +1470,22 @@ export const SEASONS = [{ id: "junina", name: "Festa Junina", from: [6, 1], to: 
 // O lago "descansa": tem poucos peixes e repõe com o tempo real (sem cronômetro
 // na cara — bolhas na água mostram que há peixe). Horário REAL muda quem aparece.
 export const FISHING = {
-  // nível do Lago (obra) → zona verde (fração da barra) e peixes no lago. Era 26/31/36%:
-  // largo demais (o Stardew começa em ~17%), quase todo peixe saía sem esforço
-  LEVELS: [null, { zone: 0.2, cap: 4 }, { zone: 0.24, cap: 6 }, { zone: 0.28, cap: 8 }],
+  // nível do Lago (obra) → zona verde (fração da barra) e peixes no lago. Era 26/31/36% (largo
+  // demais: quase todo peixe saía sem esforço); 20/24/28% ficou duro demais no celular — no
+  // simulador (tools/pesca-lab.mjs), um novato no Lago 1 pegava o lambari 17% das vezes. Com
+  // 22/26/30%, menos dreno e começo maior: ~48%; tucunaré, dourado e surubim continuam o desafio
+  LEVELS: [null, { zone: 0.22, cap: 4 }, { zone: 0.26, cap: 6 }, { zone: 0.3, cap: 8 }],
   REGEN_MIN: 20, // o lago repõe 1 peixe a cada 20 min
   BITE_S: [1.2, 3.5], // espera pela fisgada
-  HOOK_S: 1.2, // tempo para puxar depois do "!"
+  HOOK_S: 1.5, // tempo para puxar depois do "!" (era 1,2: o toque no celular chega atrasado)
   // Física do minijogo = BobberBar do Stardew Valley (valores por quadro a 60 Hz,
   // pista de 568 unidades; a zona é a fração `zone` da pista).
   STEP_HZ: 60,
   TRACK: 568,
   FISH_MAX: 532, // o peixe anda de 0 a 532 (o ícone tem 32 de folga)
-  START: 0.3, // progresso inicial
+  START: 0.35, // progresso inicial (era 0,3)
   FILL: 0.002, // por quadro com o peixe na zona (~8 s para encher de 0 a 1)
-  DRAIN: 0.003, // por quadro com o peixe fora (~5,5 s para esvaziar)
+  DRAIN: 0.0025, // por quadro com o peixe fora (~6,7 s para esvaziar; era 0,003)
   GRAVITY: 0.25, // segurando sobe (−), soltando cai (+)
   IN_BAR_GRAVITY: 0.6, // com o peixe dentro, a zona pesa 40% menos
   BOUNCE: 2 / 3, // a zona quica nas bordas com 2/3 da velocidade
