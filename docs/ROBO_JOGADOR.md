@@ -59,7 +59,7 @@ Variáveis: `DIFFS=1,3 SEEDS=11,23 PAR=3 POP=12 CHEFE=1` (treino de chefe), `CER
   reproduzíveis, 24 partidas só separam diferenças grandes (0 → 6 vitórias); entre dois cérebros
   treinados parecidos, a diferença cabe na sorte. Comparar cérebros sempre nas **mesmas sementes**,
   com **≥ 24 partidas** (12 sementes × Perigo 1 e 2), e desconfiar de diferenças de nota < 0,3.
-- Treino: Perigo 1 e 2 (Perigo 3 sem bênçãos é pesado demais). Cérebro atual: `cerebro-v7-g5`
+- Treino: Perigo 1 e 2 (Perigo 3 sem bênçãos é pesado demais). Cérebro atual: `tools/bot-lab/cerebro.json` (geração 5 do treino com o desvio novo; versões antigas no histórico do git)
   (6 vitórias em 24, nota ~1,9; o v6 de partida: 0 vitórias, nota ~1,55).
 - **Projéteis eram o que mais matava** (55–70% do dano), quase sempre tiros lentos (135–180 px/s) vindos
   de 200+ px — fáceis para um jogador. Três defeitos em sequência: prever o tiro com o herói parado
