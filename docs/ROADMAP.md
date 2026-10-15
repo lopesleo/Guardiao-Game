@@ -411,9 +411,19 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   [`BALANCING.md`](BALANCING.md#decisão-dano-das-reações-continua-fixo-13102026))
 - ✅ **Zoom de acessibilidade** (15/10/2026, Opções → Áudio e tela → Zoom: Normal 1× / Grande 1,15× / Muito
   grande 1,3×): aproxima o mundo sem aumentar a interface (segunda câmera, `src/ui/Zoom.js`); vale na hora,
-  também pela Pausa; a partida não muda (inimigos nascem na mesma distância)
+  também pela Pausa; a partida não muda (inimigos nascem na mesma distância). **Vale também na Clareira**
+  (15/10, visto no aparelho: só valia na partida): lá a interface começa em 60000 e a noite/vinheta ficam com
+  o mundo; troca na hora pelas Opções da Clareira
+- ✅ **Botão das Opções virava um traço ao ser tocado** (15/10, achado no aparelho com a 1.0.3): o `Button`
+  guardava a largura em `w`, que o `setPosition(x, y)` do Phaser zera; as linhas das Opções reposicionam os
+  botões, e o redesenho do toque saía com largura 0. Agora é `bw`
 - ✅ **Pesca: toque na tela inteira** (15/10/2026): no celular, a zona do joystick (canto inferior esquerdo)
   engolia os toques durante a pescaria; agora fica desligada enquanto se pesca
+- ✅ **Pesca um pouco mais fácil** (15/10/2026, pedido depois de jogar no aparelho): zona verde do Lago
+  **22 / 26 / 30%** (era 20 / 24 / 28%), começo em 35% (era 30%), dreno 0,0025 (era 0,003) e 1,5 s para puxar
+  depois do "!" (era 1,2). Medido em `tools/pesca-lab.mjs` (jogador simulado): novato no Lago 1 pega o
+  Lambari 48% das vezes (era 17%) e o Cará 22% (era 4%); para quem já pesca bem, Tucunaré (27%), Dourado
+  (16%) e Surubim (7%) no Lago 1 continuam o desafio, e subir o Lago continua valendo
 - ✅ **Robô jogador** (14/10/2026, `tools/bot-lab.mjs`, modelo em [`ROBO_JOGADOR.md`](ROBO_JOGADOR.md)): joga
   partidas reais sem modo deus com as prioridades de um jogador em camadas (sobreviver > vida baixa > objetivo:
   baú > item > lanterna > gemas > combate) e um treino evolutivo que só ajusta os números; partidas
