@@ -87,8 +87,10 @@ marcar no `docs/ROADMAP.md`. Última revisão: **15/10/2026**.
   Games embutida e desligada), o zoom de acessibilidade e o toque da pesca na tela inteira. Notas nos 8 idiomas
   em `docs/PLAY_STORE.md`. Os 2 avisos do Console (sem arquivo de desofuscação, sem símbolos nativos) são os de
   sempre. Já instalada no S23 (15/10): no aparelho apareceram o botão das Opções virando traço ao ser tocado
-  e o zoom só na partida — **corrigidos na `main`** junto com a pesca um pouco mais fácil; vão na próxima
-  versão (1.0.4, código 5) quando o Leonardo pedir.
+  e o zoom só na partida — **corrigidos na `main`** junto com a pesca um pouco mais fácil e o pacote de
+  acessibilidade (clarões suaves, joystick fixo/canhoto/tamanho, pesca assistida, ameaças legíveis para
+  daltônicos; ver `docs/ROADMAP.md`); vão na próxima versão (1.0.4, código 5) quando o Leonardo pedir.
+  👤 Sentir no aparelho o joystick fixo e o canhoto (só dá para testar de verdade com o dedo).
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
   ~14/10 (pedido de produção possível por volta de **28/10**). 👤 Manter os 12 ativos (ninguém sair da lista).
   Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`. Cadastrar e-mails à mão (só contas
