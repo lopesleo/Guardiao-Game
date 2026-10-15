@@ -14,12 +14,14 @@ export const ZOOMS = [
 ];
 export const zoomK = () => (ZOOMS[Settings.get("zoom")] ?? ZOOMS[0]).k;
 
-// Preso na tela e desenhado ACIMA do mundo = interface (HUD 50000+, seta do desafio, mapa de luz,
-// vinheta, avisos). O chão também é preso na tela, mas fica embaixo de tudo (camada -100): é mundo
-// e acompanha o zoom
+// Preso na tela e desenhado ACIMA do mundo = interface (na partida: HUD 50000+, seta do desafio, mapa
+// de luz, vinheta, avisos). O chão também é preso na tela, mas fica embaixo de tudo (camada -100): é
+// mundo e acompanha o zoom. Cada cena pode dizer onde começa a sua interface (a Clareira usa 60000:
+// a noite e a vinheta, presas na tela em 50000, escurecem o mundo e as luzes somam por cima delas,
+// então ficam na câmera do mundo; com zoom ≥ 1 continuam cobrindo a tela toda)
 const UI_DEPTH = 48000;
 
-export function installZoom(scene) {
+export function installZoom(scene, uiDepth = UI_DEPTH) {
   const main = scene.cameras.main;
   const ui = scene.cameras.add(0, 0, vw(scene), vh(scene));
   const onResize = () => ui.setSize(vw(scene), vh(scene));
@@ -29,7 +31,7 @@ export function installZoom(scene) {
   const both = main.id | ui.id;
   const sort = () => {
     for (const o of scene.children.list) {
-      const isUi = o.scrollFactorX === 0 && o.depth >= UI_DEPTH;
+      const isUi = o.scrollFactorX === 0 && o.depth >= uiDepth;
       o.cameraFilter = (o.cameraFilter & ~both) | (isUi ? main.id : ui.id);
     }
   };
@@ -51,8 +53,8 @@ export function installZoom(scene) {
 
 // Liga o zoom só para quem escolheu (com zoom 1 a cena fica exatamente como sempre foi) e
 // troca na hora quando o jogador muda a opção no meio da partida
-export function applyZoom(scene) {
+export function applyZoom(scene, uiDepth) {
   if (!scene._zoom && zoomK() === 1) return;
-  scene._zoom ??= installZoom(scene);
+  scene._zoom ??= installZoom(scene, uiDepth);
   scene._zoom.set(zoomK());
 }

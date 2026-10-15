@@ -86,7 +86,9 @@ marcar no `docs/ROADMAP.md`. Última revisão: **15/10/2026**.
   gerenciada desligada = vai direto aos testadores quando aprovada). Inclui a 1.0.2 (anúncios 13+, nuvem do Play
   Games embutida e desligada), o zoom de acessibilidade e o toque da pesca na tela inteira. Notas nos 8 idiomas
   em `docs/PLAY_STORE.md`. Os 2 avisos do Console (sem arquivo de desofuscação, sem símbolos nativos) são os de
-  sempre. 👤 Conferir a aprovação e instalar pelo link de teste para ver o zoom e a pesca no aparelho.
+  sempre. Já instalada no S23 (15/10): no aparelho apareceram o botão das Opções virando traço ao ser tocado
+  e o zoom só na partida — **corrigidos na `main`** junto com a pesca um pouco mais fácil; vão na próxima
+  versão (1.0.4, código 5) quando o Leonardo pedir.
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
   ~14/10 (pedido de produção possível por volta de **28/10**). 👤 Manter os 12 ativos (ninguém sair da lista).
   Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`. Cadastrar e-mails à mão (só contas

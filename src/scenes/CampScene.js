@@ -22,6 +22,7 @@ import { PAL, CSS, hex } from "../art/Palette.js";
 import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
 import { Modal, closeTopModal } from "../ui/Widgets.js";
 import { MetaPanels } from "../ui/MetaPanels.js";
+import { applyZoom } from "../ui/Zoom.js";
 import { CampGarden } from "./CampGarden.js";
 import { CampKitchen } from "./CampKitchen.js";
 import { CampPond } from "./CampPond.js";
@@ -111,6 +112,8 @@ export class CampScene extends Phaser.Scene {
     const cam = this.cameras.main;
     cam.setBounds(-CAMP_W / 2 - 160, TOP - 260, CAMP_W + 320, CAMP_H + 380);
     cam.startFollow(this.player, true, 0.14, 0.14);
+    this._zoom = null; // a cena é reaproveitada: a câmera da interface da visita anterior já se foi
+    applyZoom(this, D_HUD); // acessibilidade: mundo maior, interface (60000+) do mesmo tamanho
 
     if (this.cache.audio.exists("music_menu")) {
       this.music = this.sound.add("music_menu", { loop: true, volume: 0.35 });

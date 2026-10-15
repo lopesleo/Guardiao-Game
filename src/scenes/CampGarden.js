@@ -244,7 +244,8 @@ export const CampGarden = {
     // Da posição no mundo até o botão fixo do Celeiro
     const cam = this.cameras.main;
     const b = this.barnBtn;
-    const ic = this.add.image(v.x - cam.scrollX, v.y - 20 - cam.scrollY, cropIcon(r.crop)).setScale(3).setScrollFactor(0).setDepth(this.D_HUD + 1);
+    const z = cam.zoom, wv = cam.worldView; // com zoom de acessibilidade o mundo está ampliado
+    const ic = this.add.image((v.x - wv.x) * z, (v.y - 20 - wv.y) * z, cropIcon(r.crop)).setScale(3).setScrollFactor(0).setDepth(this.D_HUD + 1);
     this.tweens.add({
       targets: ic,
       x: b.x,
