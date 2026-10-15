@@ -8,6 +8,7 @@ import { WEAPON_ICON, PASSIVE_ICON, ELEMENT_SEAL } from "../art/Icons.js";
 import { text, drawFrame, dim, Button, vw, vh, fitCamera } from "../ui/Theme.js";
 import { Modal, closeTopModal } from "../ui/Widgets.js";
 import { openSettings } from "../ui/SettingsModal.js";
+import { applyZoom } from "../ui/Zoom.js";
 import { tr } from "../i18n/i18n.js";
 
 // As seis reações (par de elementos → reação), na ordem em que o jogo as apresenta
@@ -117,7 +118,7 @@ export class PauseScene extends Phaser.Scene {
     // Botões
     const by = H - 150;
     new Button(this, W / 2, by, 320, 68, tr("CONTINUAR"), () => this._resume(), { size: 30, style: "primary", color: CSS.goldHi });
-    new Button(this, W / 2 - 170, by + 76, 300, 52, tr("OPÇÕES"), () => openSettings(this, { onDmgNumbers: (v) => (gs._showDmgNumbers = v), onLighting: (v) => gs.lighting?.setEnabled(v) }), {
+    new Button(this, W / 2 - 170, by + 76, 300, 52, tr("OPÇÕES"), () => openSettings(this, { onDmgNumbers: (v) => (gs._showDmgNumbers = v), onLighting: (v) => gs.lighting?.setEnabled(v), onZoom: () => applyZoom(gs) }), {
       size: 20,
       icon: "ico_gear",
       iconScale: 2.5,

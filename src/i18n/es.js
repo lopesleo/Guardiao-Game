@@ -897,6 +897,8 @@ export default {
   "Efeitos": "Efectos",
   "Fonte": "Fuente",
   "Tamanho do texto": "Tamaño del texto",
+  "Zoom": "Zoom",
+  "Mundo maior; vê menos ao redor": "Mundo más grande; ves menos alrededor",
   "Iluminação dinâmica": "Iluminación dinámica",
   "Desligue se o celular esquentar ou travar": "Desactívala si el móvil se calienta o se traba",
   "Idioma": "Idioma",

@@ -897,6 +897,8 @@ export default {
   "Efeitos": "効果音",
   "Fonte": "フォント",
   "Tamanho do texto": "文字サイズ",
+  "Zoom": "ズーム",
+  "Mundo maior; vê menos ao redor": "世界が大きく見える・周りは狭くなる",
   "Iluminação dinâmica": "動的な照明",
   "Desligue se o celular esquentar ou travar": "スマホが熱くなったり、カクついたりするならオフに",
   "Idioma": "言語",

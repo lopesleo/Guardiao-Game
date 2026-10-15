@@ -897,6 +897,8 @@ export default {
   "Efeitos": "音效",
   "Fonte": "字型",
   "Tamanho do texto": "文字大小",
+  "Zoom": "縮放",
+  "Mundo maior; vê menos ao redor": "畫面放大；視野變小",
   "Iluminação dinâmica": "動態光照",
   "Desligue se o celular esquentar ou travar": "手機發熱或卡頓時請關閉",
   "Idioma": "語言",

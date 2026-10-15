@@ -41,6 +41,17 @@ export class VirtualJoystick {
     document.addEventListener('webkitfullscreenchange', this._onFsChange);
   }
 
+  // Liga/desliga o joystick sem destruí-lo. Desligado, a zona dele (canto inferior esquerdo, FORA
+  // do canvas) deixa o toque passar para o jogo — na pesca, o toque vale na tela inteira
+  setEnabled(on) {
+    if (!this.zone) return;
+    this.zone.style.pointerEvents = on ? 'auto' : 'none';
+    if (!on) {
+      this.input.joystickVec.x = 0;
+      this.input.joystickVec.y = 0;
+    }
+  }
+
   // Anexa a zona do joystick ao elemento em fullscreen (se houver) ou ao body.
   _mount() {
     if (!this.zone) return;
