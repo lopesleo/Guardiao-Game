@@ -79,19 +79,19 @@ público brasileiro, com potencial internacional.
 ## Pendências atuais (atualizar a cada sessão)
 
 Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um item, apagar daqui e
-marcar no `docs/ROADMAP.md`. Última revisão: **14/10/2026**.
+marcar no `docs/ROADMAP.md`. Última revisão: **15/10/2026**.
 
 **Agora**
-- 👤 **Enviar para revisão** (Play Console → Visão geral da publicação → "Enviar mudanças para revisão"): a
-  versão 1.0.1 (código 2, teste fechado) já está salva, junto com a ficha nova nos 8 idiomas (texto "desvie
-  andando ou com o dash" e capturas 05/07 refeitas). **Nova: 1.0.3 (código 4)** em
-  `dist/guardiao-v1.0.3-4-anuncios-reais.aab` (15/10: zoom de acessibilidade e toque da pesca na tela inteira;
-  inclui a 1.0.2 — anúncios 13+, nuvem do Play Games embutida e desligada): trocar o pacote da versão em rascunho
-  do teste fechado pelo código 4, colar as notas de `docs/PLAY_STORE.md` ("Notas da versão") e enviar.
-- 👤 **Teste fechado:** 8 de 12 testadores aceitaram em 10/10 (14 e-mails na lista "Testadores Guardião"). A contagem de
-  14 dias só começa com 12 aceitos ao mesmo tempo. Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`.
-  Cadastrar e-mails à mão na lista (só contas Google); **não trocar por Grupo do Google durante o teste**.
-  Falta o Gmail do Manuel (o outlook dele foi recusado).
+- **1.0.3 (código 4) enviada para revisão em 15/10** (teste fechado Alpha, lançamento completo; publicação
+  gerenciada desligada = vai direto aos testadores quando aprovada). Inclui a 1.0.2 (anúncios 13+, nuvem do Play
+  Games embutida e desligada), o zoom de acessibilidade e o toque da pesca na tela inteira. Notas nos 8 idiomas
+  em `docs/PLAY_STORE.md`. Os 2 avisos do Console (sem arquivo de desofuscação, sem símbolos nativos) são os de
+  sempre. 👤 Conferir a aprovação e instalar pelo link de teste para ver o zoom e a pesca no aparelho.
+- **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
+  ~14/10 (pedido de produção possível por volta de **28/10**). 👤 Manter os 12 ativos (ninguém sair da lista).
+  Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`. Cadastrar e-mails à mão (só contas
+  Google); **não trocar por Grupo do Google durante o teste**. Conta do Play Console: "Komedy Games Studio"
+  (login leonardolopes952@gmail.com).
 - Dano das reações **fica fixo** (decidido em 13/10 pelo laboratório `tools/rx-lab.mjs`): conferir nos dados reais
   `run_reactions` (`rxd_*` ÷ `dmg_total`) com o critério de corte/reabertura em `docs/BALANCING.md`.
 - Analytics: as 17 dimensões e 16 métricas personalizadas levam 24–48 h para aparecer nos relatórios; quando
