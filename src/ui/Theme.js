@@ -175,7 +175,9 @@ export class Button extends Phaser.GameObjects.Container {
   constructor(scene, x, y, w, h, label, onClick, o = {}) {
     super(scene, Math.round(x), Math.round(y));
     scene.add.existing(this);
-    this.w = w;
+    // NÃO usar "this.w": Transform.setPosition(x, y) zera o "w" do Phaser e o botão reposicionado
+    // (linhas das Opções) virava um traço ao ser tocado
+    this.bw = w;
     this.h = h;
     this.onClick = onClick;
     this.baseStyle = o.style ?? "button";
@@ -245,7 +247,7 @@ export class Button extends Phaser.GameObjects.Container {
       s.body = s.hi;
     }
     const oy = down ? P : 0;
-    drawFrame(g, -this.w / 2, -this.h / 2 + oy, this.w, this.h - oy, s, { flat: down });
+    drawFrame(g, -this.bw / 2, -this.h / 2 + oy, this.bw, this.h - oy, s, { flat: down });
     this.content.y = oy / 2;
   }
   setEnabled(on) {
@@ -264,7 +266,7 @@ export class Button extends Phaser.GameObjects.Container {
     const t = this.label;
     if (!t || this.ico) return;
     t.setScale(1);
-    const room = this.w - 8 * P;
+    const room = this.bw - 8 * P;
     if (t.width > room) t.setScale(room / t.width);
   }
 }
