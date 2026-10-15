@@ -229,6 +229,48 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 
 **Gráfico de destaque (1024×500):** obrigatório — use o menu (título + herói).
 
+## Notas da versão ("Novidades")
+
+Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
+O chinês tradicional vale para `zh-TW` e `zh-HK`.
+
+### 1.0.3 (código 4) — 15/10/2026
+
+```
+<pt-BR>
+• Novo: Zoom nas Opções (acessibilidade) — o mundo fica maior na tela, a interface continua do mesmo tamanho.
+• Pesca: o toque agora vale na tela inteira.
+</pt-BR>
+<en-US>
+• New: Zoom in Options (accessibility) — the world looks bigger on screen while the interface keeps its size.
+• Fishing: taps now work anywhere on the screen.
+</en-US>
+<es-419>
+• Nuevo: Zoom en Opciones (accesibilidad): el mundo se ve más grande y la interfaz mantiene su tamaño.
+• Pesca: ahora el toque funciona en toda la pantalla.
+</es-419>
+<es-ES>
+• Nuevo: Zoom en Opciones (accesibilidad): el mundo se ve más grande y la interfaz mantiene su tamaño.
+• Pesca: ahora el toque funciona en toda la pantalla.
+</es-ES>
+<ja-JP>
+• 新機能：オプションに「ズーム」を追加（アクセシビリティ）。画面の世界が大きく見え、UIのサイズはそのままです。
+• 釣り：画面のどこをタップしても反応するようになりました。
+</ja-JP>
+<zh-CN>
+• 新增：选项中的“缩放”（无障碍）——游戏画面放大，界面大小不变。
+• 钓鱼：现在点击屏幕任何位置都有效。
+</zh-CN>
+<zh-TW>
+• 新增：選項中的「縮放」（無障礙）——遊戲畫面放大，介面大小不變。
+• 釣魚：現在點擊螢幕任何位置都有效。
+</zh-TW>
+<zh-HK>
+• 新增：選項中的「縮放」（無障礙）——遊戲畫面放大，介面大小不變。
+• 釣魚：現在點擊螢幕任何位置都有效。
+</zh-HK>
+```
+
 ## O que foi declarado no Play Console (09/10/2026)
 
 Refazer quando o app mudar (compra "Remover anúncios", login do Play Games, novos SDKs).
