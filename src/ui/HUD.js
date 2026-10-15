@@ -10,6 +10,7 @@ import { Pix } from "../art/PixelArt.js";
 import { WEAPON_ICON } from "../art/Icons.js";
 import { vw, vh, text, drawFrame, Bar, P, haptic } from "./Theme.js";
 import { tr, dec } from "../i18n/i18n.js";
+import { joyRight } from "./VirtualJoystick.js";
 
 const D = 50000; // profundidade base do HUD (acima do mundo e da vinheta)
 
@@ -197,10 +198,12 @@ export class HUD {
     };
     const W = this.W,
       H = this.H;
-    this.btnDash = mk(W - 92, H - 96, 3.4, "ico_dash", () => {
+    // Joystick à direita (canhoto, Opções → Controles): os botões vão para o canto esquerdo
+    const fromRight = (d) => (joyRight() ? d : W - d);
+    this.btnDash = mk(fromRight(92), H - 96, 3.4, "ico_dash", () => {
       this.scene.inputMgr.dashPressed = true;
     });
-    this.btnAwaken = mk(W - 212, H - 70, 2.6, "ico_star", () => {
+    this.btnAwaken = mk(fromRight(212), H - 70, 2.6, "ico_star", () => {
       this.scene.inputMgr.awakenPressed = true;
     });
     // Toque NATIVO nos botões: cada dedo novo é testado contra os botões, sem passar

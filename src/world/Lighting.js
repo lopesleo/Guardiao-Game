@@ -104,6 +104,12 @@ export class Lighting {
   // Luz passageira (clarão de raio, explosão, reação)
   flash(x, y, r, color, ms = 180, power = 1) {
     if (!this.enabled) return;
+    // Clarões suaves (fotossensibilidade): 40% da força e nada mais curto que 300 ms — a corrente
+    // do raio, que acende em 120–170 ms, deixa de piscar
+    if (Settings.get("softFlash")) {
+      power *= 0.4;
+      ms = Math.max(300, ms);
+    }
     this.flashes.push({ x, y, r, color, t0: this.scene.time.now, ms, power });
   }
 

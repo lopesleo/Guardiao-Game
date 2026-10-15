@@ -578,8 +578,9 @@ export class FirstDefeatScene extends Phaser.Scene {
   // O golpe: clarão, congelamento, sacudida — e a queda em câmera lenta
   _strike(wolf) {
     const cam = this.cameras.main;
-    this.flash.setAlpha(0.9);
-    this.tweens.add({ targets: this.flash, alpha: 0, duration: 320, ease: "Cubic.easeOut" });
+    const soft = Settings.get("softFlash"); // clarões suaves (fotossensibilidade)
+    this.flash.setAlpha(soft ? 0.25 : 0.9);
+    this.tweens.add({ targets: this.flash, alpha: 0, duration: soft ? 420 : 320, ease: "Cubic.easeOut" });
     this._sfx("sfx_strike", 0.85);
     this._sfx("sfx_player_hit", 0.6, 0.7);
     cam.shake(300, 0.016);

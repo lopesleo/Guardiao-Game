@@ -4,11 +4,13 @@
 //   node tools/pesca-lab.mjs                       → valores atuais (perfis novato e casual)
 //   SK=novato,casual,bom N=2000 node tools/pesca-lab.mjs
 //   SO_NOVO=1 NOVO='{"DRAIN":0.0025}' node tools/pesca-lab.mjs   → testa uma proposta
+//   ASSIST=1 node tools/pesca-lab.mjs              → com a pesca assistida (FISHING.ASSIST)
 import { FISHING } from "../src/config.js";
 const N = +(process.env.N ?? 3000);
 function run(F, fish, zone, skill) {
   const rnd = Math.random, ri = (a, b) => a + Math.floor(rnd() * (b - a));
-  const d = fish.diff, barH = Math.round(zone * F.TRACK);
+  const A = process.env.ASSIST ? F.ASSIST : { zone: 1, drain: 1 };
+  const d = fish.diff, barH = Math.min(F.TRACK * 0.6, Math.round(zone * F.TRACK * A.zone));
   const f = { move: fish.move, barH, barPos: F.TRACK - barH, barSpeed: 0, pos: 508, target: ((100 - d) / 100) * 548, speed: 0, fsa: 0, prog: F.START };
   const hist = [];
   let held = false, nextDecide = 0;
@@ -44,11 +46,11 @@ function run(F, fish, zone, skill) {
     f.barSpeed += g; f.barPos += f.barSpeed;
     if (f.barPos + barH > F.TRACK) { f.barPos = F.TRACK - barH; f.barSpeed = -f.barSpeed * F.BOUNCE; }
     else if (f.barPos < 0) { f.barPos = 0; f.barSpeed = -f.barSpeed * F.BOUNCE; }
-    f.prog = Math.max(0, Math.min(1, f.prog + (inBar ? F.FILL : -F.DRAIN)));
+    f.prog = Math.max(0, Math.min(1, f.prog + (inBar ? F.FILL : -F.DRAIN * A.drain)));
   }
   return f.prog >= 1;
 }
-const SKILLS = { novato: { react: 24, lead: 5, noise: 140, tap: 10 }, casual: { react: 18, lead: 10, noise: 60, tap: 6 }, bom: { react: 12, lead: 12, noise: 30, tap: 4 } };
+const SKILLS = { motor: { react: 30, lead: 3, noise: 220, tap: 14 }, novato: { react: 24, lead: 5, noise: 140, tap: 10 }, casual: { react: 18, lead: 10, noise: 60, tap: 6 }, bom: { react: 12, lead: 12, noise: 30, tap: 4 } };
 export function table(F, label) {
   const ids = Object.keys(F.FISH);
   console.log(`\n${label}`);

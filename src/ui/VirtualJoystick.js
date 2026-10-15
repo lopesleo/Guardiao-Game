@@ -1,5 +1,22 @@
 // Joystick virtual via nipplejs (carregado globalmente em index.html).
 // Só ativa em devices touch. Atualiza inputManager.joystickVec.
+// Acessibilidade (Opções → Controles): flutuante ou fixo, lado (canhoto) e tamanho.
+import { Settings } from "../systems/Settings.js";
+import { tr } from "../i18n/i18n.js";
+
+export const JOY_SIZES = [
+  { label: tr("Normal"), px: 120 },
+  { label: tr("Grande"), px: 150 },
+  { label: tr("Muito grande"), px: 180 },
+];
+export const joyRight = () => Settings.get("joySide") === "right";
+
+// Joysticks vivos: modo e tamanho mudam na hora pelas Opções (até com a partida pausada)
+const live = new Set();
+export function refreshJoysticks() {
+  for (const j of live) j._build();
+}
+
 export class VirtualJoystick {
   constructor(inputManager) {
     this.input = inputManager;
@@ -11,16 +28,38 @@ export class VirtualJoystick {
     if (!isTouch) return;
     if (typeof nipplejs === 'undefined') return;
 
-    const zone = document.createElement('div');
-    zone.style.cssText = 'position:fixed;left:0;bottom:0;width:50%;height:50%;z-index:10;pointer-events:auto;';
-    this.zone = zone;
+    this.zone = document.createElement('div');
     this._mount(); // anexa no elemento certo (fullscreen ativo OU body)
+    this._build();
+    live.add(this);
 
+    // Ao entrar/sair de fullscreen, o joystick precisa estar DENTRO do elemento
+    // em fullscreen, senão some e não recebe toque (não dá pra andar no mobile).
+    this._onFsChange = () => this._mount();
+    document.addEventListener('fullscreenchange', this._onFsChange);
+    document.addEventListener('webkitfullscreenchange', this._onFsChange);
+  }
+
+  // (Re)cria o nipplejs com as opções atuais. Metade da tela do lado escolhido; "fixo" deixa o
+  // joystick sempre no canto (quem tem pouca mobilidade não precisa achar onde ele nasce)
+  _build() {
+    const zone = this.zone;
+    if (!zone) return;
+    try { this.manager?.destroy(); } catch {}
+    this.input.joystickVec.x = 0;
+    this.input.joystickVec.y = 0;
+    const right = joyRight();
+    const size = (JOY_SIZES[Settings.get('joySize')] ?? JOY_SIZES[0]).px;
+    const fixed = Settings.get('joyMode') === 'static';
+    const enabled = zone.style.pointerEvents !== 'none';
+    zone.style.cssText = `position:fixed;${right ? 'right' : 'left'}:0;bottom:0;width:50%;height:50%;z-index:10;pointer-events:${enabled ? 'auto' : 'none'};visibility:${enabled ? 'visible' : 'hidden'};`;
+    const edge = `${Math.round(size / 2 + 28)}px`;
     this.manager = nipplejs.create({
       zone,
-      mode: 'dynamic',
+      mode: fixed ? 'static' : 'dynamic',
       color: '#d9b25c',
-      size: 120,
+      size,
+      ...(fixed ? { position: { [right ? 'right' : 'left']: edge, bottom: edge } } : {}),
     });
 
     this.manager.on('move', (_, data) => {
@@ -33,23 +72,25 @@ export class VirtualJoystick {
       this.input.joystickVec.x = 0;
       this.input.joystickVec.y = 0;
     });
-
-    // Ao entrar/sair de fullscreen, o joystick precisa estar DENTRO do elemento
-    // em fullscreen, senão some e não recebe toque (não dá pra andar no mobile).
-    this._onFsChange = () => this._mount();
-    document.addEventListener('fullscreenchange', this._onFsChange);
-    document.addEventListener('webkitfullscreenchange', this._onFsChange);
   }
 
-  // Liga/desliga o joystick sem destruí-lo. Desligado, a zona dele (canto inferior esquerdo, FORA
-  // do canvas) deixa o toque passar para o jogo — na pesca, o toque vale na tela inteira
+  // Liga/desliga o joystick sem destruí-lo. Desligado, a zona dele (canto inferior, FORA do
+  // canvas) deixa o toque passar para o jogo — na pesca, o toque vale na tela inteira
   setEnabled(on) {
     if (!this.zone) return;
     this.zone.style.pointerEvents = on ? 'auto' : 'none';
+    this.zone.style.visibility = on ? 'visible' : 'hidden'; // o fixo some (não cobre a pesca nem menus)
     if (!on) {
       this.input.joystickVec.x = 0;
       this.input.joystickVec.y = 0;
     }
+  }
+
+  // Liga/desliga só quando muda (chamado a cada quadro pela cena)
+  setActive(on) {
+    if (on === this._active) return;
+    this._active = on;
+    this.setEnabled(on);
   }
 
   // Anexa a zona do joystick ao elemento em fullscreen (se houver) ou ao body.
@@ -61,6 +102,7 @@ export class VirtualJoystick {
   }
 
   destroy() {
+    live.delete(this);
     if (this._onFsChange) {
       document.removeEventListener('fullscreenchange', this._onFsChange);
       document.removeEventListener('webkitfullscreenchange', this._onFsChange);
