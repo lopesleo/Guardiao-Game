@@ -346,6 +346,9 @@ export const CampPond = {
     f.onKey = () => this._fishTap();
     f.keys.E.on("down", f.onKey);
     f.keys.SPACE.on("down", f.onKey);
+    // Toque em QUALQUER lugar da tela: a zona do joystick (canto inferior esquerdo, fora do canvas)
+    // engolia os toques ali; durante a pescaria ela fica desligada
+    this.joystick?.setEnabled(false);
     f.tick = (time, dtMs) => this._fishUpdate(Math.min(0.05, dtMs / 1000));
     this.events.on("update", f.tick);
     Analytics.track("fish_cast", {});
@@ -589,6 +592,7 @@ export const CampPond = {
       this.input.off("pointerupoutside", f.onUp);
       f.keys.E.off("down", f.onKey);
       f.keys.SPACE.off("down", f.onKey);
+      this.joystick?.setEnabled(true);
       this.events.off("update", f.tick);
       [f.line, f.bobber, f.ui, f.card, f.hint, f.bang].forEach((o) => o?.destroy());
       this._modals = this._modals.filter((m) => m !== f);
