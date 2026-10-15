@@ -897,6 +897,8 @@ export default {
   "Efeitos": "Effects",
   "Fonte": "Font",
   "Tamanho do texto": "Text size",
+  "Zoom": "Zoom",
+  "Mundo maior; vê menos ao redor": "Bigger world; you see less around you",
   "Iluminação dinâmica": "Dynamic lighting",
   "Desligue se o celular esquentar ou travar": "Turn it off if your phone gets hot or stutters",
   "Idioma": "Language",

@@ -110,9 +110,14 @@ export class Lighting {
   // Enfileira uma luz (em coordenadas do mapa de luz, 1/RES da tela)
   _light(x, y, r, color, alpha = 1) {
     if (this._n >= MAX_LIGHTS || alpha <= 0.02) return;
+    // posição NA TELA: o mapa de luz é preso à tela e sem zoom, o mundo pode ter zoom
+    // (acessibilidade) — com zoom 1 dá exatamente x - scrollX
     const cam = this.scene.cameras.main;
-    const sx = x - cam.scrollX,
-      sy = y - cam.scrollY;
+    const z = cam.zoom,
+      wv = cam.worldView;
+    const sx = (x - wv.x) * z,
+      sy = (y - wv.y) * z;
+    r *= z;
     if (sx < -r || sy < -r || sx > cam.width + r || sy > cam.height + r) return;
     let st = this.stamps[this._n];
     if (!st) {

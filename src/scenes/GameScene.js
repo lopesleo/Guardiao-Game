@@ -67,6 +67,7 @@ import { HUD } from "../ui/HUD.js";
 import { ForestWorld } from "../world/ForestWorld.js";
 import { Lighting } from "../world/Lighting.js";
 import { vw, vh, text, drawFrame, fitCamera, Button } from "../ui/Theme.js";
+import { applyZoom } from "../ui/Zoom.js";
 import { CSS, PAL, hex } from "../art/Palette.js";
 import { DEBUG } from "../systems/Platform.js";
 import { Settings } from "../systems/Settings.js";
@@ -247,6 +248,8 @@ export class GameScene extends Phaser.Scene {
     // Câmera — trava nas bordas do mundo; começa PARADA para o guardião entrar
     // pela trilha (ver _startIntro) e só então passa a segui-lo
     this.cameras.main.setBounds(-GAME.WORLD_RADIUS, -GAME.WORLD_RADIUS, WS, WS);
+    this._zoom = null; // a cena é reaproveitada em "Jogar de novo"
+    applyZoom(this); // acessibilidade: mundo maior, interface do mesmo tamanho
 
     this._poofCount = 0;
 
@@ -1706,7 +1709,7 @@ export class GameScene extends Phaser.Scene {
     if (!won && !quit) {
       this.physics.world.timeScale = 3;
       this.tweens.timeScale = 0.35;
-      this.cameras.main.zoomTo(1.25, 700);
+      this.cameras.main.zoomTo(this.cameras.main.zoom * 1.25, 700);
     }
     this.cameras.main.fade(quit ? 250 : 800, 0, 0, 0);
     this.time.delayedCall(quit ? 300 : 900, () => {

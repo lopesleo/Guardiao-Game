@@ -11,6 +11,7 @@ const DEFAULTS = {
   lighting: true,
   font: "pixel", // fonte do jogo (ver FONTS em ui/Theme.js)
   textSize: 0, // índice em TEXT_SIZES (Normal/Grande/Muito grande)
+  zoom: 0, // índice em ZOOMS (ui/Zoom.js): aproxima o mundo, a interface fica do mesmo tamanho
   notify: false, // avisos (só no app, só depois que o jogador aceitar)
   notifyAsked: false,
   telemetry: true, // dados de uso e erros (Firebase, só no app); o jogador pode desligar

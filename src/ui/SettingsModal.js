@@ -10,6 +10,7 @@ import { cloudToast } from "./CloudSaveUI.js";
 import { CSS } from "../art/Palette.js";
 import { text, Button, FONTS, TEXT_SIZES, LANG_FONT } from "./Theme.js";
 import { Modal, Slider, Toggle } from "./Widgets.js";
+import { ZOOMS } from "./Zoom.js";
 import { tr, lang, LANGS, setLang, locale } from "../i18n/i18n.js";
 
 let lastTab = "tela";
@@ -86,6 +87,14 @@ export function openSettings(scene, o = {}) {
     );
     row(tr("Fonte"), cycle((k) => FONTS[k].label, Object.keys(FONTS), () => Settings.get("font"), (k) => Settings.set("font", k)));
     row(tr("Tamanho do texto"), cycle((i) => TEXT_SIZES[i].label, TEXT_SIZES.map((_, i) => i), () => Settings.get("textSize"), (i) => Settings.set("textSize", i)));
+    // Zoom: vale na hora (na partida pela Pausa, na Clareira direto), sem reiniciar a cena
+    const zb = new Button(scene, 0, 0, 220, 44, ZOOMS[Settings.get("zoom")]?.label ?? ZOOMS[0].label, () => {
+      const i = ((Settings.get("zoom") ?? 0) + 1) % ZOOMS.length;
+      Settings.set("zoom", i);
+      zb.setLabel(ZOOMS[i].label);
+      o.onZoom?.();
+    }, { size: 20, style: "button" });
+    row(tr("Zoom"), zb, tr("Mundo maior; vê menos ao redor"));
     row(
       tr("Iluminação dinâmica"),
       new Toggle(scene, 0, 0, Settings.get("lighting"), (v) => {
