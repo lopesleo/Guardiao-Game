@@ -129,8 +129,10 @@ marcar no `docs/ROADMAP.md`. Última revisão: **14/10/2026**.
   camadas + treino que só ajusta os números; vence ~25% em Perigo 1–2. Próximos: medir com 48–60 partidas por
   cérebro (o jogo é caótico), entender as mortes em Perigo 3 com `BOOST` (sem bênçãos é pesado demais) e, mais
   adiante, o modo `assistir` pronto para **live** (1080p, som, legenda no tema, chat escolhe as cartas).
-- 👤 Instalar as skills do estúdio (revisão de design, balanço, versão da loja) e a guarda do git: comando em
-  `tools/estudio/README.md` (o Claude não pode escrever em `.claude/`).
+- Skills do estúdio instaladas em `.claude/` (15/10/2026; fora do git, fonte em `tools/estudio/`): revisão de
+  design, balanço e versão da loja, mais a guarda do git (bloqueia Co-Authored-By, commit direto na `main`,
+  merge sem `--no-ff`, mensagem fora do padrão e `ADS.TESTING: false`; push pede confirmação). Mudou a fonte?
+  Reinstalar com o comando de `tools/estudio/README.md`.
 
 **Repositórios**
 - `main` deste repo está ~185 commits à frente do `origin` (sem push, por regra). O Pages daqui serve a
