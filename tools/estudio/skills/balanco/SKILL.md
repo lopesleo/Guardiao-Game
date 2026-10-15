@@ -16,17 +16,17 @@ Liste cada entrada que a pergunta precisa e marque **ACHADO** ou **AUSENTE**. Se
 **NÃO AVALIADO — SEM DADOS** (diga o que faltou e qual ferramenta produz). Nunca estime no lugar de
 medir; um laboratório que não rodou não "passou".
 
-## 1. Ferramentas (servidor: `python videos/promo/tools/serve.py 8151`; `npm i --no-save playwright-core`)
+## 1. Ferramentas (`npm i --no-save playwright-core`; os laboratórios sobem o próprio servidor, `tools/lab-server.mjs`)
 
 | Pergunta | Ferramenta | O que mede |
 |---|---|---|
 | Invariantes das tabelas | `npm run balance` | sai com código 1 se um invariante quebrar |
 | Fatia das reações no dano | `node tools/rx-lab.mjs saida.json` | robô imortal, cartas por build, minuto a minuto |
-| Vitória por Perigo, causa e minuto das mortes | `node tools/bot-lab.mjs medir saida.json` | robô treinado que desvia (sem modo deus) |
+| Vitória por Perigo, causa e minuto das mortes | `node tools/bot-lab.mjs medir saida.json` | robô que joga com as prioridades de um jogador, sem modo deus (`docs/ROBO_JOGADOR.md`) |
 | Estratégia degenerada | `bot-lab` com `BUILDS=...` diferentes | uma build que vence tudo, ou um jeito "chato" de vencer |
 | Economia | sim. de economia (ver memória `reference_balance_lab`) | dias até comprar tudo |
 
-Sempre ≥ 2 sementes (`SEEDS=11,23`) e compare versões nas MESMAS sementes. `BOOST=1.7` emula um
+Compare versões nas MESMAS sementes e com muitas partidas: o jogo é caótico, e no bot-lab 24 partidas (12 sementes × Perigo 1 e 2) só separam diferenças grandes. `BOOST=1.7` emula um
 veterano (bênçãos de dano no máximo).
 
 ## 2. Metas (de `docs/BALANCING.md`, `docs/CHEFES.md`, `CLAUDE.md`)

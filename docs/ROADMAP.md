@@ -409,6 +409,11 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Perigo e só caem no chefe (alvo único); uma curva pela onda as multiplicaria por ~5× no fim e no chefe.
   Sem carta de Maestria por agora. Conferir `run_reactions` nos dados reais (critério em
   [`BALANCING.md`](BALANCING.md#decisão-dano-das-reações-continua-fixo-13102026))
+- ✅ **Robô jogador** (14/10/2026, `tools/bot-lab.mjs`, modelo em [`ROBO_JOGADOR.md`](ROBO_JOGADOR.md)): joga
+  partidas reais sem modo deus com as prioridades de um jogador em camadas (sobreviver > vida baixa > objetivo:
+  baú > item > lanterna > gemas > combate) e um treino evolutivo que só ajusta os números; partidas
+  reproduzíveis pela semente. Hoje vence ~25% em Perigo 1–2 (~600 abates, 13 baús por partida). Serve para medir
+  vitória por Perigo e causas de morte e é a base da ideia de deixar o robô jogando em live
 - ⬜ Compra "Remover anúncios"
 - ✅ Firebase Analytics + Crashlytics plugados (`src/systems/Telemetry.js`, plugins `@capacitor-firebase/*`):
   projeto `guardiao-da-floresta` (plano Spark, grátis), app Android `com.lopesleo.guardiao`, GA4 em conta
@@ -497,6 +502,7 @@ Nada disso trava o desenvolvimento; só o lançamento e a receita.
 | 6 | Mutações/híbridos na horta, novos pontos de pesca, estações Cheia/Vazante |
 | 7 | Relíquias + Sementes Ancestrais; eventos temáticos; temporada com passe |
 | 8 | **Coop de 2 jogadores** com servidor Nakama (Oracle Cloud) — ver abaixo |
+| — | **Robô jogando em live** (ideia de 14/10/2026): modo `assistir` do `bot-lab` em 1080p com som, legenda no tema do jogo e o chat escolhendo as cartas |
 
 ## Coop online (ideia aprovada em 01/10/2026, depois do lançamento)
 - **Escopo:** 2 jogadores, entrada por **código de convite**, sem matchmaking com desconhecidos. 4 jogadores

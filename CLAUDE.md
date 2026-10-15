@@ -79,7 +79,7 @@ público brasileiro, com potencial internacional.
 ## Pendências atuais (atualizar a cada sessão)
 
 Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um item, apagar daqui e
-marcar no `docs/ROADMAP.md`. Última revisão: **13/10/2026**.
+marcar no `docs/ROADMAP.md`. Última revisão: **14/10/2026**.
 
 **Agora**
 - 👤 **Enviar para revisão** (Play Console → Visão geral da publicação → "Enviar mudanças para revisão"): a
@@ -124,8 +124,16 @@ marcar no `docs/ROADMAP.md`. Última revisão: **13/10/2026**.
   Play Console (passo a passo em `docs/PLAY_STORE.md`, inclusive o texto da política), pôr o ID em
   `games-ids.xml` e testar no aparelho. Compra "Remover anúncios"; revisão nativa ja/zh; testes em aparelho fraco.
 
+**Laboratório e ferramentas**
+- **Robô jogador** (`tools/bot-lab.mjs`, modelo e lições em `docs/ROBO_JOGADOR.md`): prioridades de jogador em
+  camadas + treino que só ajusta os números; vence ~25% em Perigo 1–2. Próximos: medir com 48–60 partidas por
+  cérebro (o jogo é caótico), entender as mortes em Perigo 3 com `BOOST` (sem bênçãos é pesado demais) e, mais
+  adiante, o modo `assistir` pronto para **live** (1080p, som, legenda no tema, chat escolhe as cartas).
+- 👤 Instalar as skills do estúdio (revisão de design, balanço, versão da loja) e a guarda do git: comando em
+  `tools/estudio/README.md` (o Claude não pode escrever em `.claude/`).
+
 **Repositórios**
-- `main` deste repo está ~165 commits à frente do `origin` (sem push, por regra). O Pages daqui serve a
+- `main` deste repo está ~185 commits à frente do `origin` (sem push, por regra). O Pages daqui serve a
   branch `pages` (jogo web fora do ar; política no endereço antigo). Página oficial: repo `lopesleo.github.io`,
   pasta `guardiao/` (deploy = push na `dev`).
 
