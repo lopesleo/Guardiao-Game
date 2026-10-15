@@ -140,7 +140,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **15/10/2026**.
   Reinstalar com o comando de `tools/estudio/README.md`.
 
 **Repositórios**
-- `main` deste repo está ~185 commits à frente do `origin` (sem push, por regra). O Pages daqui serve a
+- `main` deste repo subiu para o `origin` em 15/10/2026 (push só quando o Leonardo pedir). O Pages daqui serve a
   branch `pages` (jogo web fora do ar; política no endereço antigo). Página oficial: repo `lopesleo.github.io`,
   pasta `guardiao/` (deploy = push na `dev`).
 
