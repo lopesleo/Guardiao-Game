@@ -284,17 +284,21 @@ function bolasSpin(f) {
   return p;
 }
 
-// Projétil inimigo (vermelho, núcleo branco) — distinto dos do jogador
+// Projétil inimigo (vermelho, núcleo branco) — distinto dos do jogador. As 4 pontas em X dão uma
+// silhueta própria: para deuteranopes o vermelho fica da MESMA cor da gema verde de XP (losango) e
+// da bola de gelo do herói (redonda); com as pontas, "é tiro" se lê pela forma
 function enemyShot() {
   return Pix.fromMap(
     [
-      "..kkk..",
-      ".krrrk.",
-      "krhwhRk",
-      "krwwwRk",
-      "krhwhRk",
-      ".kRRRk.",
-      "..kkk..",
+      "h.......h",
+      ".k.kkk.k.",
+      "..krrrk..",
+      ".krhwhRk.",
+      ".krwwwRk.",
+      ".krhwhRk.",
+      "..kRRRk..",
+      ".k.kkk.k.",
+      "h.......h",
     ],
     { k: K, r: PAL.red2, R: PAL.red1, h: PAL.red3, w: PAL.white },
   );

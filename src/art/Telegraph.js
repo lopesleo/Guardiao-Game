@@ -7,17 +7,27 @@ import { ROT } from "./Monsters.js";
 
 const CELL = 3; // 1 pixel de arte
 
+// Pixels do aviso com CONTORNO escuro por baixo: o aviso se lê por luminância, não só pela cor.
+// Sem ele o vermelho de perigo sumia no chão da Caatinga para quem tem protanopia (e quase some
+// até na visão normal: 1,5:1). Auditoria de daltonismo de 15/10/2026
+const _pts = [];
+function dots(g, color, alpha) {
+  g.fillStyle(PAL.ink, alpha * 0.55);
+  for (let i = 0; i < _pts.length; i += 2) g.fillRect(_pts[i] - 2, _pts[i + 1] - 2, CELL + 2, CELL + 2);
+  g.fillStyle(color, alpha);
+  for (let i = 0; i < _pts.length; i += 2) g.fillRect(_pts[i] - 1, _pts[i + 1] - 1, CELL, CELL);
+  _pts.length = 0;
+}
+
 // Anel de "pixels" (quadrados de 3px) — tracejado opcional
 function pixelRing(g, cx, cy, r, color, alpha, dash = 0, rot = 0) {
   const n = Math.max(16, Math.round((2 * Math.PI * r) / (CELL * 2)));
-  g.fillStyle(color, alpha);
   for (let i = 0; i < n; i++) {
     if (dash && i % dash === dash - 1) continue;
     const a = rot + (i / n) * Math.PI * 2;
-    const x = Math.round((cx + Math.cos(a) * r) / CELL) * CELL;
-    const y = Math.round((cy + Math.sin(a) * r) / CELL) * CELL;
-    g.fillRect(x - 1, y - 1, CELL, CELL);
+    _pts.push(Math.round((cx + Math.cos(a) * r) / CELL) * CELL, Math.round((cy + Math.sin(a) * r) / CELL) * CELL);
   }
+  dots(g, color, alpha);
 }
 
 // Zona circular que "carrega": anel externo tracejado piscando + anel interno
@@ -151,24 +161,24 @@ function pixelArc(g, cx, cy, r, a0, a1, color, alpha, dash = 0, dense = false) {
   if (r <= 1) return;
   const span = a1 - a0;
   const n = Math.max(4, Math.round((Math.abs(span) * r) / (CELL * (dense ? 1 : 2))));
-  g.fillStyle(color, alpha);
   for (let i = 0; i <= n; i++) {
     if (dash && i % dash === dash - 1) continue;
     const a = a0 + (span * i) / n;
-    g.fillRect(snap(cx + Math.cos(a) * r) - 1, snap(cy + Math.sin(a) * r) - 1, CELL, CELL);
+    _pts.push(snap(cx + Math.cos(a) * r), snap(cy + Math.sin(a) * r));
   }
+  dots(g, color, alpha);
 }
 
 // Linha de "pixels" (tracejada opcional)
 function pixelLine(g, x0, y0, x1, y1, color, alpha, dash = 0) {
   const len = Math.hypot(x1 - x0, y1 - y0);
   const n = Math.max(1, Math.round(len / (CELL * 2)));
-  g.fillStyle(color, alpha);
   for (let i = 0; i <= n; i++) {
     if (dash && i % dash === dash - 1) continue;
     const k = i / n;
-    g.fillRect(snap(x0 + (x1 - x0) * k) - 1, snap(y0 + (y1 - y0) * k) - 1, CELL, CELL);
+    _pts.push(snap(x0 + (x1 - x0) * k), snap(y0 + (y1 - y0) * k));
   }
+  dots(g, color, alpha);
 }
 
 // Setor preenchido (cone/varredura) — polígono com passo de ~6°
@@ -334,8 +344,17 @@ export function drawGapRing(g, x, y, r, band, gapAng, gapHalf, color, alpha = 1)
   // faixa translúcida (lê de longe) + bordas cheias de pixel + miolo branco
   g.lineStyle(band, color, 0.22 * alpha).beginPath().arc(x, y, r, a0, a1).strokePath();
   for (let k = -1; k <= 1; k++) pixelArc(g, x, y, r + k * (band / 3), a0, a1, k === 0 ? 0xffffff : color, alpha * (k === 0 ? 0.95 : 0.85), 0, true);
-  // pontas da brecha marcadas (onde passar)
-  for (const a of [a0, a1]) pixelLine(g, x + Math.cos(a) * (r - band), y + Math.sin(a) * (r - band), x + Math.cos(a) * (r + band), y + Math.sin(a) * (r + band), PAL.g6, alpha);
+  // pontas da brecha marcadas (onde passar) — brancas: em verde, para deuteranopes, se igualavam ao
+  // anel vermelho
+  for (const a of [a0, a1]) pixelLine(g, x + Math.cos(a) * (r - band), y + Math.sin(a) * (r - band), x + Math.cos(a) * (r + band), y + Math.sin(a) * (r + band), 0xffffff, alpha);
+}
+
+// Seta (divisa) de pixels com a ponta em (px, py) apontando para o ângulo a
+function chevron(g, px, py, a, alpha) {
+  const bx = Math.cos(a),
+    by = Math.sin(a);
+  for (let j = 0; j < 4; j++) _pts.push(snap(px - bx * j * 3 - by * j * 3), snap(py - by * j * 3 + bx * j * 3), snap(px - bx * j * 3 + by * j * 3), snap(py - by * j * 3 - bx * j * 3));
+  dots(g, 0xffffff, alpha);
 }
 
 // Arco guia (prévia da brecha): só a parte segura, em verde, na distância do herói
@@ -344,6 +363,11 @@ export function drawSafeArc(g, x, y, r, gapAng, gapHalf, alpha = 1) {
   pixelArc(g, x, y, r - 6, gapAng - gapHalf, gapAng + gapHalf, PAL.g6, alpha, 0, true);
   pixelArc(g, x, y, r + 6, gapAng - gapHalf, gapAng + gapHalf, PAL.g6, alpha, 0, true);
   pixelArc(g, x, y, r, gapAng - gapHalf * 0.6, gapAng + gapHalf * 0.6, 0xffffff, alpha * 0.8, 2);
+  // setas para FORA pela brecha: a saída se lê pela forma, não só pelo verde (daltonismo)
+  for (const k of [-0.5, 0, 0.5]) {
+    const a = gapAng + gapHalf * k;
+    chevron(g, x + Math.cos(a) * (r + 18), y + Math.sin(a) * (r + 18), a, alpha * 0.9);
+  }
 }
 
 export { pixelArc, pixelLine, fillSector };
