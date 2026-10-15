@@ -11,6 +11,7 @@ import { WEAPON_DESC } from "../systems/UpgradeSystem.js";
 import { text, drawFrame, Button, haptic } from "./Theme.js";
 import { Modal, ScrollList } from "./Widgets.js";
 import { openSettings } from "./SettingsModal.js";
+import { applyZoom } from "./Zoom.js";
 import { tr, fmt } from "../i18n/i18n.js";
 
 const BLESSING_ICON = {
@@ -507,7 +508,10 @@ export const MetaPanels = {
   },
 
   _showSettings() {
-    openSettings(this, { onReset: () => this._confirmReset(), restartable: true });
+    // Zoom na hora só na Clareira (D_HUD = onde começa a interface); a tela de título não tem mundo
+    // para aproximar
+    const onZoom = this.D_HUD ? () => applyZoom(this, this.D_HUD) : undefined;
+    openSettings(this, { onReset: () => this._confirmReset(), restartable: true, onZoom });
   },
 
   // Depois de trocar fonte/tamanho a cena recomeça; este gancho reabre as Opções.

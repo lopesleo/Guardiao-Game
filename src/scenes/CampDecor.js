@@ -249,8 +249,9 @@ export const CampDecor = {
       callback: () => {
         const cam = this.cameras.main;
         if (Math.random() < 0.55) {
-          const x = cam.scrollX + Math.random() * this.W,
-            y = cam.scrollY - 20;
+          const wv = cam.worldView; // o que está na tela (menor com o zoom de acessibilidade)
+          const x = wv.x + Math.random() * wv.width,
+            y = wv.y - 20;
           const leaf = this.add.image(x, y, "px_leaf").setScale(S).setTint([0x9ccf62, 0xc7922b, 0x6aab4a][Math.floor(Math.random() * 3)]).setDepth(D_NIGHT - 5);
           const drift = (Math.random() - 0.5) * 240;
           this.tweens.add({ targets: leaf, y: y + this.H * (0.6 + Math.random() * 0.5), x: x + drift, duration: 6000 + Math.random() * 3000, ease: "Sine.easeIn", onComplete: () => leaf.destroy() });
