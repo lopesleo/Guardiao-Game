@@ -300,6 +300,10 @@ Refazer quando o app mudar (compra "Remover anúncios", login do Play Games, nov
   | Diagnóstico | sim | sim | sim | análise, publicidade, fraudes |
   | IDs do dispositivo | sim | sim | sim | análise, publicidade, fraudes |
 
+  Ao publicar a compra "Sem anúncios", acrescentar: **Informações financeiras → Histórico de compras** |
+  coleta: sim | compartilha: não | **opcional** (Opções) | análise. O Firebase Analytics registra sozinho o
+  evento `in_app_purchase` (produto, preço, moeda); o jogo nunca vê dados de pagamento.
+
 ## Progresso na nuvem (Google Play Games)
 
 O código está pronto (`android/.../PlayGamesPlugin.java` + `src/systems/CloudSave.js`), mas fica
@@ -349,8 +353,8 @@ Games no formulário.
 
 ## Preço
 
-**Grátis**, com anúncios opcionais e a compra "Remover anúncios" (precisa de **perfil de pagamentos**
-na conta para vender).
+**Grátis**, com anúncios opcionais e a compra única **"Sem anúncios"** (perfil de pagamentos criado em
+16/10/2026).
 
 **Conta pessoal, sem CNPJ (decidido em 16/10/2026).** Ao vender pela Play Store, a ficha passa a mostrar o
 nome legal e o **endereço residencial** do Leonardo, o que foi aceito. O CNPJ foi descartado: o MEI não cobre
@@ -358,6 +362,54 @@ nome legal e o **endereço residencial** do Leonardo, o que foi aceito. O CNPJ f
 endereço fiscal separado. Se um dia mudar de ideia, o Google converte a conta pessoal em organização sem
 trocar de conta (pede D-U-N-S, site verificado e perfil de pagamentos da empresa; não tem volta). A receita
 do Google entra como pessoa física (carnê-leão).
+
+## Compra "Sem anúncios" (Play Billing)
+
+**O que é:** compra única (não consumível) que libera os prêmios dos anúncios sem assistir: reviver, mais
+uma carta, troca e banimento extras, dobrar moedas, baú do dia e adiantar obra, **com os mesmos limites**.
+Não vende moeda nem poder. No jogo: botão "SEM ANÚNCIOS" no título (ao lado de Créditos, some depois da
+compra) e linha em **Opções → Privacidade**; com a compra, os botões de prêmio trocam o ▶ por ★.
+
+**Código:** `src/systems/Billing.js` (plugin `@capgo/native-purchases` 8.8.1, versão fixa, Play Billing 9),
+janela em `src/ui/NoAdsModal.js`, id do produto em `STORE.NO_ADS` (`src/config.js`). Sem servidor: a cada
+abertura e a cada volta ao app (no máximo a cada 30 s) o jogo pergunta à loja o que a conta comprou.
+- **Reconhecimento:** o próprio jogo reconhece a compra e espera a resposta (sem isso o Google devolve o
+  dinheiro em 3 dias). Se falhar, a próxima conferência tenta de novo.
+- **Pendente** (boleto, Pix em análise): não libera até virar comprado; a janela mostra "Pagamento pendente"
+  e o botão CONFERIR AGORA.
+- **Reinstalar ou trocar de aparelho** na mesma conta Google: volta sozinho ("Restaurar compra" força).
+- **Reembolso:** a compra some da loja e o jogo tira o "sem anúncios" (só o que veio da loja).
+- **Métricas (GA4):** `iap_view` (de onde abriu), `iap_start`, `iap_result` (ok, pending, cancelled,
+  unavailable), `iap_grant`, `iap_revoked`, `iap_ack_fail`, além do `in_app_purchase` automático do Firebase.
+- Teste sem celular: Playwright com `window.Capacitor.Plugins.NativePurchases` falso (cenários de compra,
+  pendente, cancelada, reembolso e loja fora do ar).
+
+**Passo a passo no Play Console (👤):**
+1. **Enviar uma versão com a compra** (1.0.4, código 5) ao teste fechado. O Console só deixa criar produtos
+   depois que um pacote com a permissão `com.android.vending.BILLING` foi enviado.
+2. **Monetizar com o Google Play → Produtos → Produtos únicos → Criar.** ID do produto: **`sem_anuncios`**
+   (igual ao `STORE.NO_ADS`; não dá para mudar nem reaproveitar depois). Opção de compra: comprar (não
+   alugar). Preço: **R$ 9,90**, e deixar o Google converter para os outros países. Ativar.
+3. **Nome e descrição** (nome até 55 caracteres, descrição até 200). O `es-419` vale também para `es-ES`, e
+   o `zh-TW` vale para `zh-HK`:
+
+   | Idioma | Nome | Descrição |
+   |---|---|---|
+   | pt-BR | Sem anúncios | Os prêmios dos anúncios (reviver, mais uma carta, dobrar moedas, baú do dia…) saem na hora, sem assistir. Compra única que apoia um jogo independente feito no Brasil. |
+   | en-US | No Ads | Ad rewards (revive, one more card, double coins, daily chest…) are yours instantly, no watching. A one-time purchase that supports an indie game made in Brazil. |
+   | es-419 | Sin anuncios | Las recompensas de los anuncios (revivir, una carta más, duplicar monedas, cofre diario…) son tuyas al instante. Compra única que apoya un juego independiente de Brasil. |
+   | ja-JP | 広告なし | 広告の報酬（復活、カードをもう1枚、コイン2倍、毎日の宝箱など）を、見ずにすぐ受け取れます。ブラジルのインディーゲームを応援できる買い切りアイテムです。 |
+   | zh-CN | 免广告 | 广告奖励（复活、再来一张卡、金币翻倍、每日宝箱等）无需观看，立即到手。一次性购买，支持一款巴西独立游戏。 |
+   | zh-TW | 免廣告 | 廣告獎勵（復活、再來一張卡、金幣翻倍、每日寶箱等）無需觀看，立即到手。一次性購買，支持一款巴西獨立遊戲。 |
+
+4. **Teste de licença:** Configuração → Teste de licença → pôr a sua conta (e, se quiser, a de testadores).
+   Essas contas compram com "cartão de teste", sem cobrança.
+5. **Testar no celular instalado pela Play Store** (link do teste; o APK de depuração não conversa com o
+   produto). Cartão de teste "sempre aprova" → libera e o botão do título some. Cartão "aprova com atraso"
+   → aparece "Pagamento pendente" e, minutos depois, libera. "Sempre recusa" → aviso de falha. Desinstalar e
+   reinstalar → volta ativo. Reembolsar em **Pedidos** → ao reabrir, os anúncios voltam.
+6. **Segurança dos dados:** acrescentar "Histórico de compras" (ver a tabela acima) e copiar a política
+   (`docs/PRIVACY.md`, seção Compras) para o site.
 
 ## Próximos passos recomendados (pós-lançamento)
 

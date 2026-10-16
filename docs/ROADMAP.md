@@ -444,7 +444,11 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   baú > item > lanterna > gemas > combate) e um treino evolutivo que só ajusta os números; partidas
   reproduzíveis pela semente. Hoje vence ~25% em Perigo 1–2 (~600 abates, 13 baús por partida). Serve para medir
   vitória por Perigo e causas de morte e é a base da ideia de deixar o robô jogando em live
-- ⬜ Compra "Remover anúncios"
+- 👤 Compra **"Sem anúncios"** (antes chamada "Remover anúncios"): código pronto em 16/10/2026
+  (`src/systems/Billing.js`, janela `src/ui/NoAdsModal.js`, botão no título e em Opções → Privacidade, ★ nos
+  botões de prêmio, 6 idiomas, testada no navegador com loja falsa). Falta no Play Console: enviar a 1.0.4,
+  criar o produto `sem_anuncios` (R$ 9,90), teste de licença e Segurança dos dados — passo a passo em
+  [`PLAY_STORE.md`](PLAY_STORE.md), "Compra Sem anúncios"
 - ✅ Firebase Analytics + Crashlytics plugados (`src/systems/Telemetry.js`, plugins `@capacitor-firebase/*`):
   projeto `guardiao-da-floresta` (plano Spark, grátis), app Android `com.lopesleo.guardiao`, GA4 em conta
   própria (local Brasil). Coleta desligada no manifesto e ligada pelo jogo; opção "Dados de uso e erros"
