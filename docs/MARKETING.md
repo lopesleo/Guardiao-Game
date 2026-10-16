@@ -249,7 +249,7 @@ custo por instalação passar da receita por jogador em 30 dias.
   diferencial). Nunca dizer "feito à mão, pixel a pixel". A Steam pede declaração de conteúdo gerado com IA,
   então a resposta precisa estar pronta e coerente com o que foi dito antes.
 - **Nome legal:** a compra "Remover anúncios" (Play Billing) torna público o nome e o endereço de uma conta
-  pessoal. Decidir antes de ligar a compra (ver `PLAY_STORE.md`).
+  pessoal. Decidido em 16/10/2026: seguir com a conta pessoal, sem CNPJ (ver `PLAY_STORE.md`, "Preço").
 - **Público 14+ no Brasil:** nada de campanha em escolas para menores de 14, nem criadores infantis.
 
 ---
