@@ -163,7 +163,7 @@ export class GameOverScene extends Phaser.Scene {
         if (this._coinText) this.tweens.add({ targets: this._coinText, scale: { from: 1.5, to: 1 }, duration: 260, ease: "Back.easeOut" });
         this.sound.play("sfx_coin_cascade", { volume: 0.7 });
         haptic(30);
-      }, { size: 22, style: "primary", color: CSS.goldHi, icon: "ico_play", iconScale: 2.5 });
+      }, { size: 22, style: "primary", color: CSS.goldHi, icon: AdService.icon, iconScale: 2.5 });
     }
 
     // Botões

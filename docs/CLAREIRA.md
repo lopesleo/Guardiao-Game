@@ -161,7 +161,7 @@ com o tema do folclore). Cada um faz **1 obra por vez**.
 - **Anúncio opcional:** −30 min numa obra (até 3× por dia).
 - **Poção do Construtor** (rara, cai de baús e de missões semanais): 1 h de todas
   as obras passa num instante.
-- A compra "Remover anúncios" transforma os −30 min em toques sem anúncio.
+- A compra "Sem anúncios" transforma os −30 min em toques sem anúncio.
 
 **Visual:** a construção em obra ganha andaime, placa e o João-de-Barro
 trabalhando (bater de martelo, pó); ao terminar, confete e um "Novo nível!".
@@ -298,7 +298,7 @@ eles param de vir → o jogador volta para encher. Mesmo efeito de retenção do
 - Árvore Sagrada: dobrar a coleta.
 - Cozinhar 2 refeições de uma vez (1× por dia).
 
-A compra **"Remover anúncios"** concede tudo isso sem assistir.
+A compra **"Sem anúncios"** concede tudo isso sem assistir.
 
 ---
 

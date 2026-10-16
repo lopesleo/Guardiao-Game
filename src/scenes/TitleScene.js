@@ -10,6 +10,8 @@ import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.
 import { closeTopModal } from "../ui/Widgets.js";
 import { MetaPanels } from "../ui/MetaPanels.js";
 import { tr } from "../i18n/i18n.js";
+import { Billing } from "../systems/Billing.js";
+import { openNoAds } from "../ui/NoAdsModal.js";
 
 export class TitleScene extends Phaser.Scene {
   constructor() {
@@ -283,7 +285,16 @@ export class TitleScene extends Phaser.Scene {
     this.playBtn = new Button(this, cx, H * 0.56, 380, 86, tr("JOGAR"), () => this._play(), { size: 42, style: "primary", color: CSS.goldHi });
     this.tweens.add({ targets: this.playBtn, scale: 1.04, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
     new Button(this, cx, H * 0.56 + 92, 380, 58, tr("OPÇÕES"), () => !this._modals.length && this._showSettings(), { size: 22, icon: "ico_gear", iconScale: 2.5, style: "dark" });
-    new Button(this, cx, H * 0.56 + 160, 380, 58, tr("CRÉDITOS"), () => !this._modals.length && this._showCredits(), { size: 22, style: "dark" });
+    const credits = () => !this._modals.length && this._showCredits();
+    // App com loja e sem a compra: "Sem anúncios" divide a linha com os Créditos (discreto, nunca sozinho na tela)
+    if (Billing.available() && !Billing.owned) {
+      new Button(this, cx - 96, H * 0.56 + 160, 186, 58, tr("CRÉDITOS"), credits, { size: 20, style: "dark" });
+      new Button(this, cx + 96, H * 0.56 + 160, 186, 58, tr("SEM ANÚNCIOS"), () => {
+        if (this._modals.length) return;
+        // comprou: o botão sai (a cena recomeça sem ele)
+        openNoAds(this, { from: "title", onClose: () => Billing.owned && this.scene.restart() });
+      }, { size: 20, style: "dark", color: CSS.goldHi });
+    } else new Button(this, cx, H * 0.56 + 160, 380, 58, tr("CRÉDITOS"), credits, { size: 22, style: "dark" });
     // Tela cheia (só navegador)
     if (!isNative()) new Button(this, 44, 40, 52, 52, null, () => this.scale.toggleFullscreen(), { icon: "ico_fullscreen", style: "dark", iconScale: 2.5 });
     if (!this.meta.available) text(this, 20, H - 20, tr("Modo privado: o progresso não será salvo"), { size: 14, color: CSS.redHi, origin: [0, 1] });

@@ -37,7 +37,7 @@ export class ReviveScene extends Phaser.Scene {
       size: 30,
       style: "primary",
       color: CSS.goldHi,
-      icon: "ico_play",
+      icon: AdService.icon,
       iconScale: 3,
     });
     this.hint = text(this, W / 2, cy + 184, tr("Assista a um anúncio e volte com {0}% da vida", Math.round(ADS.REVIVE_HP_PCT * 100)), {

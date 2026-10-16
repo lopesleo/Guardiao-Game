@@ -23,7 +23,7 @@ segundo loop de "vida na floresta" que apoia a ação.
 ## Finalidade
 
 Lançar na **Google Play** como jogo **gratuito com anúncios opcionais** (modelo
-"free-for-real" do Vampire Survivors) + compra "Remover anúncios". Foco no
+"free-for-real" do Vampire Survivors) + compra "Sem anúncios". Foco no
 público brasileiro, com potencial internacional.
 
 ## Objetivos
@@ -91,6 +91,11 @@ marcar no `docs/ROADMAP.md`. Última revisão: **16/10/2026**.
   acessibilidade (clarões suaves, joystick fixo/canhoto/tamanho, pesca assistida, ameaças legíveis para
   daltônicos; ver `docs/ROADMAP.md`); vão na próxima versão (1.0.4, código 5) quando o Leonardo pedir.
   👤 Sentir no aparelho o joystick fixo e o canhoto (só dá para testar de verdade com o dedo).
+- **Compra "Sem anúncios" pronta na `main`** (16/10; perfil de pagamentos já criado): vai na 1.0.4. 👤 Depois de
+  enviar a 1.0.4 ao teste fechado: criar o produto `sem_anuncios` (R$ 9,90, textos nos idiomas), pôr a conta no
+  teste de licença, testar comprar/pendente/reinstalar/reembolso no celular instalado pela loja e acrescentar
+  "Histórico de compras" na Segurança dos dados. Passo a passo em `docs/PLAY_STORE.md` ("Compra Sem anúncios");
+  copiar a política nova (`docs/PRIVACY.md`, Compras) para o site.
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
   ~14/10 (pedido de produção possível por volta de **28/10**). 👤 Manter os 12 ativos (ninguém sair da lista).
   Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`. Cadastrar e-mails à mão (só contas
@@ -126,7 +131,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **16/10/2026**.
 - Anúncios já pedem classificação máxima "T" no app; 👤 deixar também "T" no console do AdMob (Controles de
   bloqueio). Salvamento na nuvem está na `main`, **desligado** até o ID do Play Games: 👤 criar o projeto na
   Play Console (passo a passo em `docs/PLAY_STORE.md`, inclusive o texto da política), pôr o ID em
-  `games-ids.xml` e testar no aparelho. Compra "Remover anúncios"; revisão nativa ja/zh; testes em aparelho fraco.
+  `games-ids.xml` e testar no aparelho. Revisão nativa ja/zh; testes em aparelho fraco.
 
 **Laboratório e ferramentas**
 - **Robô jogador** (`tools/bot-lab.mjs`, modelo e lições em `docs/ROBO_JOGADOR.md`): prioridades de jogador em

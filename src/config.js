@@ -1606,6 +1606,12 @@ export const ADS = {
   REVIVE_OFFER_S: 8, // tempo para decidir antes de encerrar a partida
 };
 
+// Compras pela Play Store (ver systems/Billing.js). O id tem de ser IGUAL ao do produto criado no Play
+// Console (Monetizar → Produtos → Produtos no app), como compra única (não consumível)
+export const STORE = {
+  NO_ADS: "sem_anuncios", // "Sem anúncios": prêmios dos anúncios sem assistir; ~R$ 9,90
+};
+
 // Drops aleatórios no chão (chance por kill)
 export const DROPS = {
   COIN_CHANCE: 0.2, // 20%: playtest mostrou tudo comprado em ~25 partidas; alonga a progressão

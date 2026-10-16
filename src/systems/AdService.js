@@ -66,6 +66,10 @@ export const AdService = {
     state.noAds = !!v;
     save();
   },
+  // Ícone dos botões de prêmio: ▶ (vai abrir um anúncio) ou ★ (com "Sem anúncios", sai na hora)
+  get icon() {
+    return state.noAds ? "ico_star" : "ico_play";
+  },
   // Como terminou o último pedido: "ok" | "cancelled" (fechou antes do fim) | "unavailable" | "busy"
   lastResult: null,
   // Registrado pelo AdMobBridge quando o SDK fica pronto

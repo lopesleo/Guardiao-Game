@@ -7,6 +7,8 @@ import { Telemetry } from "../systems/Telemetry.js";
 import { AdMobBridge } from "../systems/AdMobBridge.js";
 import { CloudSave } from "../systems/CloudSave.js";
 import { cloudToast } from "./CloudSaveUI.js";
+import { Billing } from "../systems/Billing.js";
+import { openNoAds } from "./NoAdsModal.js";
 import { CSS } from "../art/Palette.js";
 import { text, Button, FONTS, TEXT_SIZES, LANG_FONT } from "./Theme.js";
 import { Modal, Slider, Toggle } from "./Widgets.js";
@@ -19,7 +21,7 @@ import { tr, lang, LANGS, setLang, locale } from "../i18n/i18n.js";
 let lastTab = "tela";
 
 export function openSettings(scene, o = {}) {
-  const privacyRows = (Telemetry.available() ? 1 : 0) + (AdMobBridge.available() ? 1 : 0);
+  const privacyRows = (Telemetry.available() ? 1 : 0) + (AdMobBridge.available() ? 1 : 0) + (Billing.available() ? 1 : 0);
   const tabs = [
     ["tela", tr("ÁUDIO E TELA")],
     ["jogo", tr("JOGO")],
@@ -167,6 +169,15 @@ export function openSettings(scene, o = {}) {
           }
         });
       }
+      y += 36; // a linha de estado ocupa o espaço logo abaixo
+    }
+    // Compra "Sem anúncios": o botão mostra o preço (ou ATIVO) e abre a janela com os detalhes
+    if (Billing.available()) {
+      const label = () => (Billing.owned ? tr("ATIVO") : Billing.pending ? tr("PENDENTE") : Billing.price || tr("VER"));
+      const b = new Button(scene, 0, 0, 220, 44, label(), () => {
+        openNoAds(scene, { from: "options", onClose: () => b.active && b.setLabel(label()) });
+      }, { size: 18, style: Billing.owned ? "dark" : "button", color: Billing.owned ? CSS.goldHi : undefined });
+      row(tr("Sem anúncios"), b, Billing.owned ? tr("Obrigado pelo apoio!") : tr("Prêmios sem assistir · compra única"));
     }
     if (o.onReset) {
       const what = CloudSave.connected()
