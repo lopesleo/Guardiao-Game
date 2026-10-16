@@ -447,8 +447,8 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
 - 👤 Compra **"Sem anúncios"** (antes chamada "Remover anúncios"): código pronto em 16/10/2026
   (`src/systems/Billing.js`, janela `src/ui/NoAdsModal.js`, botão no título e em Opções → Privacidade, ★ nos
   botões de prêmio, 6 idiomas, testada no navegador com loja falsa). Vai na 1.0.4 (código 5, AAB gerado em 16/10;
-  política no site e no endereço antigo atualizada). Falta no Play Console: enviar a 1.0.4,
-  criar o produto `sem_anuncios` (R$ 9,90), teste de licença e Segurança dos dados — passo a passo em
+  política no site e no endereço antigo atualizada). 1.0.4 enviada para revisão e produto
+  `sem_anuncios` ativo (R$ 14,90 / US$ 2,99) em 16/10, com teste de licença e Segurança dos dados — passo a passo em
   [`PLAY_STORE.md`](PLAY_STORE.md), "Compra Sem anúncios"
 - ✅ Firebase Analytics + Crashlytics plugados (`src/systems/Telemetry.js`, plugins `@capacitor-firebase/*`):
   projeto `guardiao-da-floresta` (plano Spark, grátis), app Android `com.lopesleo.guardiao`, GA4 em conta

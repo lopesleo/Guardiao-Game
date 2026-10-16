@@ -445,7 +445,8 @@ abertura e a cada volta ao app (no máximo a cada 30 s) o jogo pergunta à loja 
    depois que um pacote com a permissão `com.android.vending.BILLING` foi enviado.
 2. **Monetizar com o Google Play → Produtos → Produtos únicos → Criar.** ID do produto: **`sem_anuncios`**
    (igual ao `STORE.NO_ADS`; não dá para mudar nem reaproveitar depois). Opção de compra: comprar (não
-   alugar). Preço: **R$ 9,90**, e deixar o Google converter para os outros países. Ativar.
+   alugar). Preço (definido em 16/10): **US$ 2,99** em massa para todos os países (Set prices → Editar preços em massa) e
+   depois o Brasil à mão em **R$ 14,90** (a conversão dá R$ 14,99). Ativar. Opção de compra criada: `compra`.
 3. **Nome e descrição** (nome até 55 caracteres, descrição até 200). O `es-419` vale também para `es-ES`, e
    o `zh-TW` vale para `zh-HK`:
 
