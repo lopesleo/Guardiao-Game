@@ -10,7 +10,7 @@ import { cloudToast } from "./CloudSaveUI.js";
 import { Billing } from "../systems/Billing.js";
 import { openNoAds } from "./NoAdsModal.js";
 import { CSS } from "../art/Palette.js";
-import { text, Button, FONTS, TEXT_SIZES, LANG_FONT } from "./Theme.js";
+import { text, Button, FONTS, TEXT_SIZES, LANG_FONT, vh } from "./Theme.js";
 import { Modal, Slider, Toggle } from "./Widgets.js";
 import { ZOOMS } from "./Zoom.js";
 import { JOY_SIZES, refreshJoysticks } from "./VirtualJoystick.js";
@@ -33,7 +33,10 @@ export function openSettings(scene, o = {}) {
   lastTab = tab;
 
   const STEP = 62;
-  const m = new Modal(scene, { title: tr("OPÇÕES"), w: 760, h: 560 });
+  // Montada com a altura máxima e encolhida no fim (fitContent): 560 de sempre, mais alta só quando o
+  // conteúdo pede (japonês/chinês com texto "Muito grande")
+  const m = new Modal(scene, { title: tr("OPÇÕES"), w: 760, h: vh(scene) });
+  const BASE_BOTTOM = m.top + 490; // fundo da janela de 560
 
   // Abas
   const tabW = Math.min(230, (m.w - 60) / tabs.length - 12);
@@ -48,17 +51,27 @@ export function openSettings(scene, o = {}) {
     );
   });
 
-  let y = m.top + 104;
+  // Linhas de cima para baixo: cada uma tem no mínimo STEP de altura e cresce se o nome + a dica não
+  // couberem (japonês/chinês com texto "Muito grande" ficam bem mais altos e encostavam na linha vizinha)
+  let rowTop = m.top + 104 - STEP / 2;
   const row = (label, widget, hint) => {
-    m.add(text(scene, -m.w / 2 + 56, hint ? y - 10 : y, label, { size: 22, origin: [0, 0.5] }));
-    if (hint) m.add(text(scene, -m.w / 2 + 56, y + 16, hint, { size: 14, color: CSS.muted, origin: [0, 0.5] }));
+    const x = -m.w / 2 + 56;
+    const lab = m.add(text(scene, x, 0, label, { size: 22, origin: [0, 0] }));
     // controles alinhados pela borda DIREITA (mesma margem do texto à esquerda)
     // meia-largura de cada tipo ("w" no Phaser é coordenada, não largura): slider 220 + alça,
     // interruptor 84, botões 220
     const half = widget instanceof Slider ? 122 : widget instanceof Toggle ? 42 : 110;
-    widget.setPosition(m.w / 2 - 56 - half, y);
+    // a dica quebra antes de chegar ao controle
+    const room = m.w / 2 - 56 - 2 * half - 20 - x;
+    const hn = hint ? m.add(text(scene, x, 0, hint, { size: 14, color: CSS.muted, origin: [0, 0], wrap: room })) : null;
+    const h = lab.height + (hn ? hn.height + 2 : 0);
+    const step = Math.max(STEP, h + 14);
+    const cy = rowTop + step / 2;
+    lab.setY(Math.round(cy - h / 2));
+    hn?.setY(Math.round(cy - h / 2 + lab.height + 2));
+    widget.setPosition(m.w / 2 - 56 - half, cy);
     m.add(widget);
-    y += STEP;
+    rowTop += step;
   };
 
   // Fonte / tamanho: textos já criados não mudam sozinhos — na Clareira/Título a cena
@@ -155,7 +168,8 @@ export function openSettings(scene, o = {}) {
       review.setEnabled(privacy === "REQUIRED");
       row(tr("Consentimento de anúncios"), review, hint);
       // Linha discreta de estado dos anúncios (toque tenta de novo se algo falhou)
-      const st = m.add(text(scene, -m.w / 2 + 56, y - 8, tr("Anúncios: {0}", AdMobBridge.statusText()), { size: 14, color: CSS.muted, origin: [0, 0.5] }));
+      const st = m.add(text(scene, -m.w / 2 + 56, rowTop - 6, tr("Anúncios: {0}", AdMobBridge.statusText()), { size: 14, color: CSS.muted, origin: [0, 0] }));
+      rowTop += st.height + 2; // a linha de estado ocupa o espaço logo abaixo
       if (!AdMobBridge.ready) {
         st.setInteractive({ useHandCursor: true }).on("pointerup", async () => {
           st.setText(tr("Anúncios: tentando…"));
@@ -169,7 +183,6 @@ export function openSettings(scene, o = {}) {
           }
         });
       }
-      y += 36; // a linha de estado ocupa o espaço logo abaixo
     }
     // Compra "Sem anúncios": o botão mostra o preço (ou ATIVO) e abre a janela com os detalhes
     if (Billing.available()) {
@@ -183,10 +196,14 @@ export function openSettings(scene, o = {}) {
       const what = CloudSave.connected()
         ? tr("Apaga moedas, bênçãos, armas, conquistas e a Clareira deste aparelho e do Play Games")
         : tr("Apaga moedas, bênçãos, armas, conquistas e a Clareira deste aparelho");
-      m.add(text(scene, 0, m.h / 2 - 104, what, { size: 14, color: CSS.muted, origin: 0.5 }));
-      m.add(new Button(scene, 0, m.h / 2 - 60, 320, 52, tr("APAGAR PROGRESSO"), o.onReset, { size: 18, style: "danger", color: CSS.redHi }));
+      // no pé da janela (ou logo abaixo das linhas, se elas forem mais longe)
+      const ry = Math.max(rowTop + 24, BASE_BOTTOM - 104);
+      const wt = m.add(text(scene, 0, ry, what, { size: 14, color: CSS.muted, origin: [0.5, 0], align: "center", wrap: m.w - 80 }));
+      m.add(new Button(scene, 0, ry + wt.height + 36, 320, 52, tr("APAGAR PROGRESSO"), o.onReset, { size: 18, style: "danger", color: CSS.redHi }));
+      rowTop = ry + wt.height + 62;
     }
   }
+  m.fitContent(Math.max(rowTop + 16, BASE_BOTTOM));
   return m;
 }
 
