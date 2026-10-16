@@ -81,6 +81,18 @@ export class Modal {
     for (const c of this.root.list) if (c !== this._frame) c.y += delta;
     L.setRect(L.x, L.y + delta, L.w, L.h - spare);
   }
+  // Encolhe a janela até o fim do conteúdo (`bottom`, coordenada local já com a margem de baixo): para
+  // janelas montadas de cima para baixo cuja altura depende do idioma e do tamanho do texto
+  fitContent(bottom) {
+    const newH = Math.max(this._minH, Math.round(bottom + this.h / 2));
+    if (newH >= this.h - 4) return;
+    const delta = (this.h - newH) / 2;
+    this.h = newH;
+    this.top += delta;
+    this._frame.clear();
+    drawFrame(this._frame, -this.w / 2, -this.h / 2, this.w, this.h, this._style);
+    for (const c of this.root.list) if (c !== this._frame) c.y += delta;
+  }
   close() {
     if (this._closed) return;
     this._closed = true;

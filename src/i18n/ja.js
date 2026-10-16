@@ -903,7 +903,7 @@ export default {
   "Os prêmios dos anúncios saem na hora, sem assistir nada.": "広告の報酬を、見ずにすぐ受け取れます。",
   "Obrigado por apoiar um jogo independente feito no Brasil!": "ブラジルのインディーゲームを応援してくれてありがとう！",
   "FECHAR": "閉じる",
-  "Reviver, mais uma carta, dobrar moedas, baú do dia: o prêmio sai na hora, sem assistir anúncio.": "復活、カードをもう1枚、コイン2倍、毎日の宝箱：\n広告を見ずに、報酬をすぐ受け取れます。",
+  "Reviver, mais uma carta, dobrar moedas, baú do dia: o prêmio sai na hora, sem assistir anúncio.": "復活、カードをもう1枚、コイン2倍、毎日の宝箱：広告を見ずに、報酬をすぐ受け取れます。",
   "Apoia um jogo independente feito no Brasil.": "ブラジル生まれのインディーゲームを応援できます。",
   "Compra única. Vale para sempre nesta conta Google, também se reinstalar.": "買い切り。再インストールしても、このGoogleアカウントでずっと有効です。",
   "Os limites de cada prêmio continuam os mesmos.": "各報酬の回数制限は変わりません。",
