@@ -234,6 +234,62 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.4 (código 5) — 16/10/2026
+
+AAB: `dist/guardiao-v1.0.4-5-anuncios-reais.aab`. **Antes de mandar para revisão**, criar o produto
+`sem_anuncios` (ver "Compra Sem anúncios" abaixo): sem ele, a janela da compra mostra "Loja indisponível".
+
+```
+<pt-BR>
+• Novo: compra opcional "Sem anúncios" — os prêmios dos anúncios saem na hora, sem assistir.
+• Acessibilidade nas Opções: clarões suaves, joystick fixo, para canhotos e maior, pesca assistida e avisos de perigo mais fáceis de ver para daltônicos.
+• Zoom também na Clareira e pesca um pouco mais fácil.
+• Correção: o botão das Opções não vira mais um traço ao ser tocado.
+</pt-BR>
+<en-US>
+• New: optional "No Ads" purchase — ad rewards are yours instantly, no watching.
+• Accessibility in Options: softer flashes, fixed, left-handed and larger joystick, assisted fishing, and danger warnings easier to see for colorblind players.
+• Zoom now works in the Clearing too, and fishing is a little easier.
+• Fix: the Options button no longer turns into a line when tapped.
+</en-US>
+<es-419>
+• Nuevo: compra opcional "Sin anuncios": las recompensas de los anuncios son tuyas al instante, sin verlos.
+• Accesibilidad en Opciones: destellos suaves, joystick fijo, para zurdos y más grande, pesca asistida y avisos de peligro más fáciles de ver para daltónicos.
+• Zoom también en el Claro y pesca un poco más fácil.
+• Corrección: el botón de Opciones ya no se convierte en una raya al tocarlo.
+</es-419>
+<es-ES>
+• Nuevo: compra opcional "Sin anuncios": las recompensas de los anuncios son tuyas al instante, sin verlos.
+• Accesibilidad en Opciones: destellos suaves, joystick fijo, para zurdos y más grande, pesca asistida y avisos de peligro más fáciles de ver para daltónicos.
+• Zoom también en el Claro y pesca un poco más fácil.
+• Corrección: el botón de Opciones ya no se convierte en una raya al tocarlo.
+</es-ES>
+<ja-JP>
+• 新機能：任意の購入「広告なし」— 広告の報酬を、見ずにすぐ受け取れます。
+• オプションにアクセシビリティを追加：フラッシュ軽減、固定・左利き用・大きいジョイスティック、釣りアシスト、色覚多様性に配慮した見やすい危険表示。
+• ズームが広場でも使えるように。釣りが少し簡単に。
+• 修正：オプションボタンをタップすると線になる問題を修正。
+</ja-JP>
+<zh-CN>
+• 新增：可选购买“免广告”——广告奖励立即到手，无需观看。
+• 选项中新增无障碍功能：柔和闪光、固定/左手/更大的摇杆、钓鱼辅助，以及色觉障碍玩家更易辨认的危险提示。
+• 空地也能使用缩放；钓鱼稍微变简单。
+• 修复：点击选项按钮时不再变成一条线。
+</zh-CN>
+<zh-TW>
+• 新增：可選購買「免廣告」——廣告獎勵立即到手，無需觀看。
+• 選項中新增無障礙功能：柔和閃光、固定／左手／更大的搖桿、釣魚輔助，以及色覺障礙玩家更易辨認的危險提示。
+• 空地也能使用縮放；釣魚稍微變簡單。
+• 修正：點擊選項按鈕時不再變成一條線。
+</zh-TW>
+<zh-HK>
+• 新增：可選購買「免廣告」——廣告獎勵立即到手，無需觀看。
+• 選項中新增無障礙功能：柔和閃光、固定／左手／更大的搖桿、釣魚輔助，以及色覺障礙玩家更易辨認的危險提示。
+• 空地也能使用縮放；釣魚稍微變簡單。
+• 修正：點擊選項按鈕時不再變成一條線。
+</zh-HK>
+```
+
 ### 1.0.3 (código 4) — 15/10/2026
 
 ```
