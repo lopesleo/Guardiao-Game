@@ -446,7 +446,8 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   vitória por Perigo e causas de morte e é a base da ideia de deixar o robô jogando em live
 - 👤 Compra **"Sem anúncios"** (antes chamada "Remover anúncios"): código pronto em 16/10/2026
   (`src/systems/Billing.js`, janela `src/ui/NoAdsModal.js`, botão no título e em Opções → Privacidade, ★ nos
-  botões de prêmio, 6 idiomas, testada no navegador com loja falsa). Falta no Play Console: enviar a 1.0.4,
+  botões de prêmio, 6 idiomas, testada no navegador com loja falsa). Vai na 1.0.4 (código 5, AAB gerado em 16/10;
+  política no site e no endereço antigo atualizada). Falta no Play Console: enviar a 1.0.4,
   criar o produto `sem_anuncios` (R$ 9,90), teste de licença e Segurança dos dados — passo a passo em
   [`PLAY_STORE.md`](PLAY_STORE.md), "Compra Sem anúncios"
 - ✅ Firebase Analytics + Crashlytics plugados (`src/systems/Telemetry.js`, plugins `@capacitor-firebase/*`):

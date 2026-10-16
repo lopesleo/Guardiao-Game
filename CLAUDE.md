@@ -82,20 +82,16 @@ Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um 
 marcar no `docs/ROADMAP.md`. Última revisão: **16/10/2026**.
 
 **Agora**
-- **1.0.3 (código 4) enviada para revisão em 15/10** (teste fechado Alpha, lançamento completo; publicação
-  gerenciada desligada = vai direto aos testadores quando aprovada). Inclui a 1.0.2 (anúncios 13+, nuvem do Play
-  Games embutida e desligada), o zoom de acessibilidade e o toque da pesca na tela inteira. Notas nos 8 idiomas
-  em `docs/PLAY_STORE.md`. Os 2 avisos do Console (sem arquivo de desofuscação, sem símbolos nativos) são os de
-  sempre. Já instalada no S23 (15/10): no aparelho apareceram o botão das Opções virando traço ao ser tocado
-  e o zoom só na partida — **corrigidos na `main`** junto com a pesca um pouco mais fácil e o pacote de
-  acessibilidade (clarões suaves, joystick fixo/canhoto/tamanho, pesca assistida, ameaças legíveis para
-  daltônicos; ver `docs/ROADMAP.md`); vão na próxima versão (1.0.4, código 5) quando o Leonardo pedir.
-  👤 Sentir no aparelho o joystick fixo e o canhoto (só dá para testar de verdade com o dedo).
-- **Compra "Sem anúncios" pronta na `main`** (16/10; perfil de pagamentos já criado): vai na 1.0.4. 👤 Depois de
-  enviar a 1.0.4 ao teste fechado: criar o produto `sem_anuncios` (R$ 9,90, textos nos idiomas), pôr a conta no
-  teste de licença, testar comprar/pendente/reinstalar/reembolso no celular instalado pela loja e acrescentar
-  "Histórico de compras" na Segurança dos dados. Passo a passo em `docs/PLAY_STORE.md` ("Compra Sem anúncios");
-  copiar a política nova (`docs/PRIVACY.md`, Compras) para o site.
+- **1.0.4 (código 5) gerada em 16/10, falta enviar:** `dist/guardiao-v1.0.4-5-anuncios-reais.aab` (anúncios reais,
+  assinada). Traz a compra **"Sem anúncios"**, o pacote de acessibilidade (clarões suaves, joystick fixo/canhoto/
+  tamanho, pesca assistida, ameaças legíveis para daltônicos), o zoom também na Clareira, a pesca um pouco mais
+  fácil e o botão das Opções que virava traço. Notas nos 8 idiomas em `docs/PLAY_STORE.md`. Os 2 avisos de sempre
+  do Console (sem desofuscação, sem símbolos nativos) podem ser ignorados. 👤 Na ordem: (1) teste fechado → nova
+  versão → subir o AAB (rascunho); (2) **criar o produto `sem_anuncios`** (R$ 9,90; nomes e descrições prontos em
+  `docs/PLAY_STORE.md`, "Compra Sem anúncios") e ativar; (3) mandar a versão para revisão; (4) pôr a sua conta em
+  Teste de licença e testar no celular instalado pela loja (comprar, pendente, reinstalar, reembolso); (5)
+  Segurança dos dados: acrescentar "Histórico de compras". A política nova já foi para o site e para o endereço
+  antigo (16/10). 👤 Sentir no aparelho o joystick fixo e o canhoto (só dá para testar de verdade com o dedo).
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
   ~14/10 (pedido de produção possível por volta de **28/10**). 👤 Manter os 12 ativos (ninguém sair da lista).
   Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`. Cadastrar e-mails à mão (só contas
