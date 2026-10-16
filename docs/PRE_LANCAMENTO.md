@@ -22,7 +22,7 @@ Legenda — **Esforço:** P (horas) · M (1–2 dias) · G (3+ dias) ·
 | 1.6 | **Baú diário** no menu (grátis 1×/dia; 2º baú com anúncio) | P | 🤖 |
 | 1.6b | Anúncio premiado **"Dobrar este baú"** no momento em que o baú abre (modelo do Vampire Survivors) | P | 🤖 |
 | 1.7 | ~~Tela cheia (interstitial)~~ → **começar SEM** (modelo "free-for-real" do Vampire Survivors = avaliações melhores). Deixar pronto e desligado; ligar só se os números pedirem (fim de partida, nunca antes da 3ª, máx. 1 a cada 3) | P | 🤖 |
-| 1.8 | **Compra "Sem anúncios"** (R$ 9,90): dá os prêmios dos anúncios sem assistir. Código pronto (16/10/2026); falta o produto no Play Console (`PLAY_STORE.md`) | M | ✅ 🤖 · 👤 Console |
+| 1.8 | **Compra "Sem anúncios"** (R$ 14,90 / US$ 2,99): dá os prêmios dos anúncios sem assistir. Código pronto e produto ativo no Play Console (16/10/2026) | M | ✅ 🤖 · 👤 Console |
 | 1.9 | Política de privacidade e **Segurança dos dados** atualizadas (ID de publicidade, SDK do AdMob) + permissão `AD_ID` | P | 🤖 texto · 👤 formulário |
 | 1.10 | Público-alvo **13+** no Play Console (evita as regras de "Famílias", que limitam anúncios) | P | 👤 |
 
