@@ -79,7 +79,7 @@ público brasileiro, com potencial internacional.
 ## Pendências atuais (atualizar a cada sessão)
 
 Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um item, apagar daqui e
-marcar no `docs/ROADMAP.md`. Última revisão: **15/10/2026**.
+marcar no `docs/ROADMAP.md`. Última revisão: **16/10/2026**.
 
 **Agora**
 - **1.0.3 (código 4) enviada para revisão em 15/10** (teste fechado Alpha, lançamento completo; publicação
@@ -104,7 +104,6 @@ marcar no `docs/ROADMAP.md`. Última revisão: **15/10/2026**.
 
 **Decisões pendentes**
 - Descrição curta em espanhol: "leyendas de Brasil" → "del folclore brasileño"? (a captura 07 já foi refeita).
-- Antes de ligar a compra "Remover anúncios": conta pessoal expõe nome e endereço (ver `docs/PLAY_STORE.md`).
 
 **Depois de 12 testadores × 14 dias (~28/10)**
 - 👤 Pedir acesso à produção no Painel do Play Console (análise de ~7 dias).

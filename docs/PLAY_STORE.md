@@ -352,6 +352,13 @@ Games no formulário.
 **Grátis**, com anúncios opcionais e a compra "Remover anúncios" (precisa de **perfil de pagamentos**
 na conta para vender).
 
+**Conta pessoal, sem CNPJ (decidido em 16/10/2026).** Ao vender pela Play Store, a ficha passa a mostrar o
+nome legal e o **endereço residencial** do Leonardo, o que foi aceito. O CNPJ foi descartado: o MEI não cobre
+"edição de jogos eletrônicos" (CNAE 5821-2/00; exigiria uma SLU com contador), e só traria privacidade com um
+endereço fiscal separado. Se um dia mudar de ideia, o Google converte a conta pessoal em organização sem
+trocar de conta (pede D-U-N-S, site verificado e perfil de pagamentos da empresa; não tem volta). A receita
+do Google entra como pessoa física (carnê-leão).
+
 ## Próximos passos recomendados (pós-lançamento)
 
 - Conquistas do Google Play Games (os ids de `ACHIEVEMENTS` já servem de chave).
