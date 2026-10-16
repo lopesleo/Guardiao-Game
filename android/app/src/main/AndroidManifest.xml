@@ -50,4 +50,6 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Compra "Sem anúncios" (Play Billing; ver src/systems/Billing.js) -->
+    <uses-permission android:name="com.android.vending.BILLING" />
 </manifest>

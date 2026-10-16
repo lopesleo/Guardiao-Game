@@ -111,7 +111,7 @@ export class LevelUpScene extends Phaser.Scene {
         size: 17,
         style: "primary",
         color: CSS.goldHi,
-        icon: "ico_play",
+        icon: AdService.icon,
         iconScale: 2,
       });
     }
@@ -150,7 +150,7 @@ export class LevelUpScene extends Phaser.Scene {
     this.rerollBtn?.destroy();
     this._rerollAd = ad;
     this.rerollBtn = ad
-      ? new Button(this, x, vh(this) - 34, 280, 44, tr("TROCAR +1"), () => this._adReroll(), { size: 17, style: "ice", icon: "ico_play", iconScale: 2 })
+      ? new Button(this, x, vh(this) - 34, 280, 44, tr("TROCAR +1"), () => this._adReroll(), { size: 17, style: "ice", icon: AdService.icon, iconScale: 2 })
       : new Button(this, x, vh(this) - 34, 280, 44, "", () => this._reroll(), { size: 17, style: "ice" });
     this.rerollBtn._baseX = x;
     if (ad) Analytics.track("ad_offer_show", { placement: "extra_reroll" });
@@ -186,7 +186,7 @@ export class LevelUpScene extends Phaser.Scene {
     this.banishBtn?.destroy();
     this._banishAd = ad;
     this.banishBtn = ad
-      ? new Button(this, x, vh(this) - 34, 280, 44, tr("BANIR +1"), () => this._adBanish(), { size: 17, style: "danger", color: CSS.redHi, icon: "ico_play", iconScale: 2 })
+      ? new Button(this, x, vh(this) - 34, 280, 44, tr("BANIR +1"), () => this._adBanish(), { size: 17, style: "danger", color: CSS.redHi, icon: AdService.icon, iconScale: 2 })
       : new Button(this, x, vh(this) - 34, 280, 44, "", () => this._toggleBanish(), { size: 17, style: "danger" });
     this.banishBtn._baseX = x;
     if (ad) Analytics.track("ad_offer_show", { placement: "extra_banish" });

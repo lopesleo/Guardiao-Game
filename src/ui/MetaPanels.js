@@ -90,7 +90,7 @@ export const MetaPanels = {
       list.addRow(
         this._shopRow({
           h: 56,
-          icon: "ico_play",
+          icon: AdService.icon,
           name: tr("ADIANTAR {0} MIN", BUILD.AD_SPEEDUP_MIN),
           desc: tr("Assista a um anúncio (opcional)"),
           style: "button",

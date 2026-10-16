@@ -17,6 +17,7 @@ import { EndlessChoiceScene } from './scenes/EndlessChoiceScene.js';
 import { setupPlatform } from './systems/Platform.js';
 import { Telemetry } from './systems/Telemetry.js';
 import { AdMobBridge } from './systems/AdMobBridge.js';
+import { Billing } from './systems/Billing.js';
 import { Clock } from './systems/Clock.js';
 import { CloudSave } from './systems/CloudSave.js';
 import { installCloudSaveUI } from './ui/CloudSaveUI.js';
@@ -67,6 +68,7 @@ window.addEventListener('load', () => {
   setupPlatform(window.game);
   Telemetry.install(); // Firebase (só no app Android)
   AdMobBridge.install(); // consentimento (UMP) + anúncios premiados (só no app Android)
+  Billing.install(); // compra "Sem anúncios" pela Play Store: preço e o que esta conta já comprou (só no app)
   installCloudSaveUI(window.game);
   CloudSave.install(window.game); // progresso na nuvem pelo Play Games (só no app Android)
 });
