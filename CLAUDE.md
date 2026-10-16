@@ -86,12 +86,13 @@ marcar no `docs/ROADMAP.md`. Última revisão: **16/10/2026**.
   assinada). Traz a compra **"Sem anúncios"**, o pacote de acessibilidade (clarões suaves, joystick fixo/canhoto/
   tamanho, pesca assistida, ameaças legíveis para daltônicos), o zoom também na Clareira, a pesca um pouco mais
   fácil e o botão das Opções que virava traço. Notas nos 8 idiomas em `docs/PLAY_STORE.md`. Os 2 avisos de sempre
-  do Console (sem desofuscação, sem símbolos nativos) podem ser ignorados. 👤 Na ordem: (1) teste fechado → nova
-  versão → subir o AAB (rascunho); (2) **criar o produto `sem_anuncios`** (R$ 9,90; nomes e descrições prontos em
-  `docs/PLAY_STORE.md`, "Compra Sem anúncios") e ativar; (3) mandar a versão para revisão; (4) pôr a sua conta em
-  Teste de licença e testar no celular instalado pela loja (comprar, pendente, reinstalar, reembolso); (5)
-  Segurança dos dados: acrescentar "Histórico de compras". A política nova já foi para o site e para o endereço
-  antigo (16/10). 👤 Sentir no aparelho o joystick fixo e o canhoto (só dá para testar de verdade com o dedo).
+  do Console (sem desofuscação, sem símbolos nativos) podem ser ignorados. Já cadastrado no Console (16/10):
+  **Teste de licença** com a lista "Teste de compras" (só leonardolopes952@gmail.com) e **Segurança dos dados** com
+  "Histórico de compras" (coletado, não compartilhado, opcional, análise; vai junto com a versão). 👤 Na ordem: (1)
+  subir o AAB na nova versão do Alpha e salvar como rascunho; (2) **criar o produto `sem_anuncios`** (o Console só
+  libera depois do pacote com a permissão BILLING; R$ 9,90, textos em `docs/PLAY_STORE.md`); (3) colar as notas e
+  mandar para revisão; (4) testar no celular instalado pela loja (comprar, pendente, reinstalar, reembolso). A
+  política nova já foi para o site e para o endereço antigo (16/10). 👤 Sentir no aparelho o joystick fixo e o canhoto (só dá para testar de verdade com o dedo).
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
   ~14/10 (pedido de produção possível por volta de **28/10**). 👤 Manter os 12 ativos (ninguém sair da lista).
   Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`. Cadastrar e-mails à mão (só contas
