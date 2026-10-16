@@ -17,6 +17,8 @@ import { REVEALS, pendingReveals } from "../systems/Reveal.js";
 import { InputManager } from "../systems/InputManager.js";
 import { VirtualJoystick, joyRight } from "../ui/VirtualJoystick.js";
 import { DEBUG } from "../systems/Platform.js";
+import { Billing } from "../systems/Billing.js";
+import { openNoAds } from "../ui/NoAdsModal.js";
 import { Analytics } from "../systems/Analytics.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
@@ -400,14 +402,13 @@ export class CampScene extends Phaser.Scene {
     const W = this.W,
       H = this.H;
     const fix = (o) => o.setScrollFactor(0).setDepth(D_HUD);
-    // Local + resumo
-    const lg = fix(this.add.graphics());
-    drawFrame(lg, 14, 14, 330, 62, "dark", { alpha: 0.92 });
+    // Local + resumo (o quadro acompanha o texto: ver _layoutHud)
+    this.hudFrame = fix(this.add.graphics());
     // Tocar no quadro abre a escolha de Perigo de qualquer ponto da Clareira
-    const hz = fix(this.add.zone(14, 14, 330, 62).setOrigin(0).setInteractive({ useHandCursor: true }));
-    hz.on("pointerup", () => !this._modals.length && !this._cutscene && !this._leaving && this._showDifficulty());
-    fix(text(this, 30, 32, tr("CLAREIRA DO GUARDIÃO"), { size: 20, color: CSS.goldHi, origin: [0, 0.5], stroke: true }));
-    this.hudInfo = fix(text(this, 30, 58, "", { size: 14, color: CSS.muted, origin: [0, 0.5] }));
+    this.hudZone = fix(this.add.zone(14, 14, 330, 62).setOrigin(0).setInteractive({ useHandCursor: true }));
+    this.hudZone.on("pointerup", () => !this._modals.length && !this._cutscene && !this._leaving && this._showDifficulty());
+    this.hudTitle = fix(text(this, 30, 32, tr("CLAREIRA DO GUARDIÃO"), { size: 20, color: CSS.goldHi, origin: [0, 0], stroke: true }));
+    this.hudInfo = fix(text(this, 30, 58, "", { size: 14, color: CSS.muted, origin: [0, 0] }));
     // Moedas + guia + opções
     const cg = fix(this.add.graphics());
     drawFrame(cg, W - 204, 14, 186, 52, "dark");
@@ -422,9 +423,15 @@ export class CampScene extends Phaser.Scene {
     fix(new Button(this, W - 244, 40, 52, 52, "?", () => !this._modals.length && this._showGuide(), { size: 26, style: "dark" }));
     fix(new Button(this, W - 304, 40, 52, 52, null, () => !this._modals.length && this._showSettings(), { icon: "ico_gear", style: "dark", iconScale: 2.5 }));
     this._barnHudButton(W - 364, 40); // Celeiro (aparece junto com a Horta)
+    // Loja "Sem anúncios" (app com loja e sem a compra): discreta, na fileira de botões; some ao comprar
+    if (Billing.available() && !Billing.owned)
+      this.noAdsBtn = fix(new Button(this, W - 364, 40, 52, 52, null, () => {
+        if (this._modals.length || this._cutscene || this._leaving) return;
+        openNoAds(this, { from: "camp", onClose: () => this.sys.isActive() && this._refreshAll() });
+      }, { icon: "ico_star", style: "dark", iconScale: 2.5 }));
     if (DEBUG) {
       fix(
-        new Button(this, W - 480, 40, 150, 44, "+500 (dev)", () => {
+        new Button(this, W - 540, 40, 150, 44, "+500 (dev)", () => {
           this.meta.addCoins(500);
           this._refreshAll();
         }, { size: 14, style: "green" }),
@@ -453,6 +460,30 @@ export class CampScene extends Phaser.Scene {
     this.bubble.add([this.bubbleG, this.bubbleT]);
   }
 
+  // Fileira da direita (Celeiro aparece com a Horta; "Sem anúncios" some ao comprar) e o quadro da
+  // esquerda do tamanho do texto — com texto grande ou nome comprido ele cresce, e só encolhe a letra
+  // se fosse invadir os botões
+  _layoutHud() {
+    if (this.noAdsBtn) {
+      this.noAdsBtn.setVisible(!Billing.owned);
+      this.noAdsBtn.x = this.W - (this.barnBtn?.visible ? 424 : 364);
+    }
+    const left = this.noAdsBtn?.visible ? this.noAdsBtn.x : this.barnBtn?.visible ? this.barnBtn.x : this.W - 304;
+    const maxW = left - 26 - 14 - 14; // até a borda do botão, com folga
+    const pad = 16;
+    [this.hudTitle, this.hudInfo].forEach((t) => {
+      t.setScale(1);
+      if (t.width + pad * 2 > maxW) t.setScale(Math.max(0.6, (maxW - pad * 2) / t.width));
+    });
+    const w = Math.round(Math.min(maxW, Math.max(330, this.hudTitle.displayWidth + pad * 2, this.hudInfo.displayWidth + pad * 2)));
+    this.hudTitle.setPosition(14 + pad, 14 + 8);
+    this.hudInfo.setPosition(14 + pad, this.hudTitle.y + this.hudTitle.displayHeight + 2);
+    const h = Math.round(Math.max(62, this.hudInfo.y + this.hudInfo.displayHeight + 8 - 14));
+    this.hudFrame.clear();
+    drawFrame(this.hudFrame, 14, 14, w, h, "dark", { alpha: 0.92 });
+    this.hudZone.setSize(w, h); // a área de toque acompanha
+  }
+
   _refreshAll() {
     this.meta.checkAchievements?.();
     this.coinText.setText(String(this.meta.coins));
@@ -463,6 +494,7 @@ export class CampScene extends Phaser.Scene {
     const d = DIFFICULTY[Math.min(this.meta.selectedDifficulty, DIFFICULTY.length - 1)];
     const bio = this.meta.selectedBiome !== "amazonia" ? `${BIOMES[this.meta.selectedBiome].name}  ·  ` : "";
     this.hudInfo.setText(tr("{0}  ·  {1}Perigo: {2} ({3} min)  »", c.name, bio, d.name, Math.round(d.durationS / 60)));
+    this._layoutHud();
     if (this.signLabel) {
       this.signLabelT.setText(bio ? `${BIOMES[this.meta.selectedBiome].name.toUpperCase()} · ${d.name.toUpperCase()}` : tr("PERIGO: {0}", d.name.toUpperCase()));
       // bioma novo aberto e ainda não visitado: selo "!" na placa

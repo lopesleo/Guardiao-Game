@@ -111,6 +111,7 @@ export const CampGarden = {
       reveal: () => {
         this.tweens.add({ targets: fade, alpha: (t) => t._ra ?? 1, duration: 700, delay: 300 });
         this.barnBtn?.setVisible(true);
+        this._layoutHud(); // o botão "Sem anúncios" abre espaço para o Celeiro
       },
     };
     // Ruína: examinar (some quando a Horta aparece)
