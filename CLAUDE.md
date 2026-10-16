@@ -106,6 +106,10 @@ marcar no `docs/ROADMAP.md`. Última revisão: **16/10/2026**.
   houver dados dos testadores, analisar taxa de escolha das cartas, vitória por arma/Perigo, dano e
   assistência (como ler: `docs/ARMAS_E_COMBOS.md`, "Como medir").
 
+- **Na `main` para a próxima versão (1.0.5):** o quadro "Clareira do Guardião" (canto superior esquerdo)
+  acompanha o texto (vazava com texto grande, visto no S23 em 16/10) e a Clareira ganhou o botão ★ da loja
+  "Sem anúncios" na fileira de cima (some depois da compra).
+
 **Decisões pendentes**
 - Descrição curta em espanhol: "leyendas de Brasil" → "del folclore brasileño"? (a captura 07 já foi refeita).
 
