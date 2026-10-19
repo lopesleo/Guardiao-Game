@@ -186,6 +186,33 @@ const MAPS = {
     "knnnnnnnNk",
     "kkkkkkkkkk",
   ],
+  // Insígnia de Fundador (Pacote Fundador): medalhão dourado com o jequitibá ancestral
+  fundador: [
+    "...kkkkk...",
+    ".kkzzzzzkk.",
+    ".kzGeeeGzk.",
+    "kzGegggeGzk",
+    "kyGgggggGyk",
+    "kyGGgggGGyk",
+    "kyGGGnGGGyk",
+    ".kyGGnGGyk.",
+    ".kkYnnnYkk.",
+    "...kkkkk...",
+  ],
+  // Clareira Ancestral (Pacote Fundador): o jequitibá, copa verde com folhas de cobre
+  ancestral: [
+    "...kkkkk...",
+    ".kkegegekk.",
+    "kegoggegoek",
+    "kggggoggggk",
+    "kGogggggoGk",
+    ".kGGGGGGGk.",
+    "..kkknkkk..",
+    "....knk....",
+    "...knnNk...",
+    "..knnnnNk..",
+    ".kkkkkkkkk.",
+  ],
   // Guarda-roupa (cosméticos): camiseta com a listra rosa do ipê
   wardrobe: [
     "..kkk..kkk..",

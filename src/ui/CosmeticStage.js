@@ -38,6 +38,28 @@ export class CosmeticStage {
   showKit(eq, onPhase) {
     this._build(eq, ["trail", "kill", "awaken"], onPhase);
   }
+  // Skin da Clareira (null = a de sempre): a árvore-marco ao lado do herói, a luz e as folhas caindo
+  showCamp(skin) {
+    this._build({}, ["camp"], null);
+    const s = this.scene;
+    const anc = skin === "ancestral";
+    const tree = s.add.image(this.w * 0.3, this.h + 40, anc ? "camp_jequitiba" : "camp_kapok").setOrigin(0.5, 1).setScale(anc ? 1.9 : 2.1);
+    this.back.add(tree);
+    if (anc) this.back.add(s.add.image(this.w * 0.3 + 92, this.h - 14, "camp_plaque").setOrigin(0.5, 1).setScale(2));
+    this.heroS.setPosition(this.w * 0.72, this.h * 0.68);
+    this.shadow.setPosition(this.heroS.x, this.heroS.y + 30);
+    // luz do fim de tarde (a Ancestral) por cima de tudo: o tom quente e os raios de sol da Clareira
+    if (anc) {
+      this.over.add(s.add.rectangle(0, 0, this.w, this.h, 0xf2b890, 0.12).setOrigin(0));
+      for (const [fx, sx, a] of [[0.12, 2.6, 0.55], [0.42, 1.8, 0.4], [0.7, 2.2, 0.45]]) {
+        const r = s.add.image(this.w * fx, -30, "fx_shaft").setOrigin(0.5, 0).setScale(sx, (this.h * 1.5) / 256).setAngle(-24).setTint(0xffcf7a).setBlendMode(Phaser.BlendModes.ADD).setAlpha(a);
+        this.over.add(r);
+        s.tweens.add({ targets: r, alpha: a * 0.5, duration: 3600 + Math.random() * 2400, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+      }
+    }
+    this._leafTints = anc ? [0xc88a5a, 0xc7922b, 0xe3c37e, 0x9ccf62] : [0x9ccf62, 0xc7922b, 0x6aab4a];
+    this._leafRate = anc ? 260 : 520;
+  }
 
   _build(eq, phases, onPhase) {
     this._clear();
@@ -194,6 +216,14 @@ export class CosmeticStage {
       this.flash.setFillStyle((r << 16) | (g << 8) | b, 0.55);
       s.tweens.add({ targets: this.flash, fillAlpha: 0, duration: 260 });
       this.cosm?.awaken(hero.x, hero.y + hero.displayHeight * 0.42);
+    }
+    if (this.slot === "camp" && time >= this._next) {
+      // folhas caindo da copa (cobre na Ancestral)
+      this._next = time + this._leafRate;
+      const leaf = s.add.image(Math.random() * this.w, -8, "px_leaf").setScale(PX).setTint(this._leafTints[(Math.random() * this._leafTints.length) | 0]);
+      this.air.add(leaf);
+      s.tweens.add({ targets: leaf, y: this.h + 10, x: leaf.x + (Math.random() - 0.5) * 120, duration: 4200 + Math.random() * 1800, ease: "Sine.easeIn", onComplete: () => leaf.active && leaf.destroy() });
+      s.tweens.add({ targets: leaf, angle: { from: -40, to: 40 }, duration: 900, yoyo: true, repeat: 6, ease: "Sine.easeInOut" });
     }
     if (this._awakeOn && time >= this._awakeUntil) {
       this._awakeOn = false;

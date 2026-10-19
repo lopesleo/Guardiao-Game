@@ -20,6 +20,7 @@ import { registerAuraFX } from "../src/art/AuraFX.js";
 import { registerSprites } from "../src/art/Sprites.js";
 import { registerCamp } from "../src/art/Camp.js";
 import { registerCosmeticFX } from "../src/art/CosmeticFX.js";
+import { registerCampDecor } from "../src/art/CampDecor.js";
 
 const [out = "monster-sheet.png", keysArg = "mon_alpha,mon_elder,mon_boss", scaleArg = "5"] = process.argv.slice(2);
 const S = Number(scaleArg);
@@ -69,6 +70,9 @@ registerAuraFX(scene); // fx_awaken_aura (Despertar)
 registerSprites(scene); // px_* (projéteis, pickups, giros desenhados)
 registerCamp(scene); // camp_elder (Anciã), camp_bird
 registerCosmeticFX(scene); // cos_* e fx_awaken_aura_<peça> (cosméticos, docs/COSMETICOS.md)
+try {
+  registerCampDecor(scene); // camp_kapok, camp_jequitiba (Clareira Ancestral), camp_plaque…
+} catch {} // a vinheta usa gradiente de canvas, que a cena falsa não tem
 // campo da Aura no raio-base (40 = 120/3) e do Coração do Inverno (43): fx_frost_rim_40_0 etc.
 frostRimTexture(scene, 40, false);
 frostRimTexture(scene, 43, true);

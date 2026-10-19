@@ -8,6 +8,7 @@ import { PAL } from "../art/Palette.js";
 import { paintGround, FLAG_COUNT } from "../art/CampDecor.js";
 import { Clock } from "../systems/Clock.js";
 import { tr } from "../i18n/i18n.js";
+import { Wardrobe, cosmeticsOn } from "../systems/Cosmetics.js";
 
 const S = GAME.PIXEL_SCALE;
 const D_NIGHT = 50000;
@@ -107,19 +108,27 @@ export const CampDecor = {
     this._solid(hx - 60, hy - 6, 14, 12);
     this._solid(hx + 60, hy - 6, 14, 12);
     // (o espantalho e o regador pertencem à horta: ver CampGarden, aparecem junto com ela)
-    // Samaúma: a gigante da mata, marco da Clareira (a noroeste)
+    // Samaúma: a gigante da mata, marco da Clareira (a noroeste). Com a Clareira Ancestral (skin do
+    // Pacote Fundador, docs/COSMETICOS.md) é o jequitibá ancestral no lugar, com a placa dos Fundadores
+    this._ancestral = cosmeticsOn() && Wardrobe.activeCamp() === "ancestral";
     const kx = -250,
       ky = -250;
-    this.add.image(kx, ky + 6, "px_shadow").setScale(18, 6).setAlpha(0.5).setDepth(ky - 1);
-    const kapok = this.add.image(kx, ky, "camp_kapok").setOrigin(0.5, 1).setScale(S).setDepth(ky);
-    this._solid(kx, ky - 16, 90, 28);
+    const big = this._ancestral;
+    this.add.image(kx, ky + 6, "px_shadow").setScale(big ? 26 : 18, big ? 8 : 6).setAlpha(0.5).setDepth(ky - 1);
+    const kapok = this.add.image(kx, ky, big ? "camp_jequitiba" : "camp_kapok").setOrigin(0.5, 1).setScale(S).setDepth(ky);
+    this._solid(kx, ky - 16, big ? 130 : 90, 28);
     this.tweens.add({ targets: kapok, scaleX: { from: S, to: S * 1.01 }, duration: 3000, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
-    // Vaga-lumes rondando a copa (entram no mesmo balé dos outros)
-    for (let k = 0; k < 9; k++) {
-      const x = kx + (Math.random() - 0.5) * 200,
-        y = ky - 220 + Math.random() * 120;
-      const g = this.add.image(x, y, "fx_glow").setScale(0.3).setTint(0xd8ffb0).setBlendMode(Phaser.BlendModes.ADD).setDepth(D_NIGHT + 1);
-      const c = this.add.image(x, y, "px_dot2").setScale(2).setTint(0xe8ffc8).setDepth(D_NIGHT + 1);
+    if (big) {
+      this.add.image(kx + 150, ky + 34, "px_shadow").setScale(5, 2).setAlpha(0.4).setDepth(ky + 33);
+      this.add.image(kx + 150, ky + 36, "camp_plaque").setOrigin(0.5, 1).setScale(S).setDepth(ky + 36);
+      this._sunShafts(kx, ky);
+    }
+    // Vaga-lumes rondando a copa (entram no mesmo balé dos outros) — dourados e mais no jequitibá
+    for (let k = 0; k < (big ? 18 : 9); k++) {
+      const x = kx + (Math.random() - 0.5) * (big ? 320 : 200),
+        y = ky - (big ? 330 : 220) + Math.random() * (big ? 170 : 120);
+      const g = this.add.image(x, y, "fx_glow").setScale(0.3).setTint(big ? 0xffd98a : 0xd8ffb0).setBlendMode(Phaser.BlendModes.ADD).setDepth(D_NIGHT + 1);
+      const c = this.add.image(x, y, "px_dot2").setScale(2).setTint(big ? 0xffe9b0 : 0xe8ffc8).setDepth(D_NIGHT + 1);
       this.flies.push({ g, c, ph: Math.random() * 7, ox: x, oy: y });
     }
     // Pedras com samambaia (nordeste) e helicônias perto das construções
@@ -138,11 +147,27 @@ export const CampDecor = {
     this.time.addEvent({ delay: 30000, loop: true, callback: () => this._applyTimeOfDay() });
   },
 
+  // Clareira Ancestral: o sol de fim de tarde entra pela copa do jequitibá (raios inclinados, do oeste) e
+  // doura o canto de cima da tela. Ficam sob a camada da noite: de noite quase somem, como luz do sol
+  _sunShafts(kx, ky) {
+    for (const [dx, w, a] of [[-150, 3.4, 0.5], [-10, 2.4, 0.38], [120, 3, 0.45], [300, 2, 0.3]]) {
+      const r = this.add.image(kx + dx, ky - 300, "fx_shaft").setOrigin(0.5, 0).setScale(w, 3.4).setAngle(-24).setTint(0xffcf7a).setBlendMode(Phaser.BlendModes.ADD).setAlpha(a).setDepth(D_NIGHT - 4);
+      this.tweens.add({ targets: r, alpha: a * 0.5, scaleX: w * 0.85, duration: 4200 + Math.random() * 3000, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: Math.random() * 2000 });
+    }
+    this.add.image(0, 0, "fx_glow").setScrollFactor(0).setDisplaySize(this.W * 1.3, this.H * 1.5).setTint(0xffb060).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.4).setDepth(D_NIGHT - 3);
+  },
+
   // Aplica o céu da hora atual (chamado ao entrar e a cada 30 s)
   _applyTimeOfDay() {
     const now = Clock.date();
     const hour = this._hourOverride ?? now.getHours() + now.getMinutes() / 60;
     const sky = skyAt(hour);
+    // Clareira Ancestral: o fim de tarde dourado nunca acaba (de dia puxa para o dourado; à noite, um
+    // pouco mais quente) e as luzes ficam sempre um pouco acesas
+    if (this._ancestral) {
+      sky.color = lerpColor(sky.color, 0xf2b890, sky.color === 0xffffff ? 0.55 : 0.2);
+      sky.k = Math.max(sky.k, 0.32);
+    }
     this._lightK = sky.k;
     this.nightRect.setFillStyle(sky.color, 1).setVisible(sky.color !== 0xffffff);
     this.vignette?.setAlpha(0.3 + 0.28 * sky.k);
@@ -248,11 +273,11 @@ export const CampDecor = {
       loop: true,
       callback: () => {
         const cam = this.cameras.main;
-        if (Math.random() < 0.55) {
+        if (Math.random() < (this._ancestral ? 0.8 : 0.55)) {
           const wv = cam.worldView; // o que está na tela (menor com o zoom de acessibilidade)
           const x = wv.x + Math.random() * wv.width,
             y = wv.y - 20;
-          const leaf = this.add.image(x, y, "px_leaf").setScale(S).setTint([0x9ccf62, 0xc7922b, 0x6aab4a][Math.floor(Math.random() * 3)]).setDepth(D_NIGHT - 5);
+          const leaf = this.add.image(x, y, "px_leaf").setScale(S).setTint((this._ancestral ? [0xc88a5a, 0xc7922b, 0xe3c37e, 0x9ccf62] : [0x9ccf62, 0xc7922b, 0x6aab4a])[Math.floor(Math.random() * (this._ancestral ? 4 : 3))]).setDepth(D_NIGHT - 5); // Ancestral: folhas de cobre
           const drift = (Math.random() - 0.5) * 240;
           this.tweens.add({ targets: leaf, y: y + this.H * (0.6 + Math.random() * 0.5), x: x + drift, duration: 6000 + Math.random() * 3000, ease: "Sine.easeIn", onComplete: () => leaf.destroy() });
           this.tweens.add({ targets: leaf, angle: { from: -40, to: 40 }, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
