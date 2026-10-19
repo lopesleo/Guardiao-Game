@@ -82,8 +82,9 @@ Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um 
 marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 
 **Agora**
-- **1.0.5 (código 6) gerada em 19/10, falta enviar:** `dist/guardiao-v1.0.5-6-anuncios-reais.aab` (anúncios reais,
-  assinada). **Substitui a 1.0.4 do Alpha**, que tem o joystick morrendo depois da 1ª carta (também depois do ⏸ e
+- **1.0.5 (código 6) está no Alpha como RASCUNHO (19/10, `npm run play:versao -- subir`):** 👤 no Console, Teste
+  fechado → abrir o rascunho 1.0.5 → Avançar → Salvar e publicar → Visão geral da publicação → Enviar para revisão.
+  `dist/guardiao-v1.0.5-6-anuncios-reais.aab` (anúncios reais, assinada). **Substitui a 1.0.4 do Alpha**, que tem o joystick morrendo depois da 1ª carta (também depois do ⏸ e
   do reviver; achado no aparelho em 18/10 — no celular a partida ficava injogável). Traz também o **aviso de
   estorno** ("COMPRA ESTORNADA"; no teste de 18/10 a compra aceita e reconhecida foi estornada e o item sumiu
   calado), o pendente aprovado com o jogo aberto passa a ser reconhecido ("PAGAMENTO APROVADO"), o quadro da
@@ -91,7 +92,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
   obrigatório na skill `versao-loja`). Notas nos 8 idiomas em `docs/PLAY_STORE.md`. Os 2 avisos de sempre do
   Console podem ser ignorados. A 1.0.4 foi enviada para revisão em 16/10 com o produto `sem_anuncios` (R$ 14,90 /
   US$ 2,99, opção `compra`), Teste de licença ("Teste de compras", só leonardolopes952@gmail.com) e Segurança dos
-  dados com "Histórico de compras" já cadastrados. 👤 Enviar a 1.0.5 no Alpha. Depois, com ela instalada pela
+  dados com "Histórico de compras" já cadastrados. Depois, com ela instalada pela
   loja: andar depois de escolher uma carta; comprar, estornar em **Pedidos** e voltar ao jogo → "COMPRA
   ESTORNADA"; comprar com o cartão "aprova com atraso" **com o jogo aberto** → "PAGAMENTO APROVADO" e, 10 min
   depois, sem estorno; reinstalar → volta ativo. Sentir o joystick fixo e o canhoto com o dedo.

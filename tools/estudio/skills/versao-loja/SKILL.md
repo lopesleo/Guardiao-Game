@@ -35,6 +35,11 @@ de fato já quebrou ou pode quebrar neste projeto. Cada item: **OK**, **FALHOU**
 10. `cap sync` costuma deixar `android/app/capacitor.build.gradle` alterado só por fim de linha: confira
    com `git diff` e reverta se for só isso.
 
+10b. Enviar: `npm run play:versao -- subir --seco` e depois `npm run play:versao -- subir` → a versão fica como
+   **rascunho** no Teste fechado (alpha), com as notas dos 8 idiomas deste `docs/PLAY_STORE.md`. Publicar e
+   mandar para revisão é do Leonardo, no Console. Sem a credencial (`~/chaves-android/play-api.json`), ele
+   arrasta o AAB à mão.
+
 ## Loja e documentos
 
 11. Notas da versão ("Novidades") curtas, nos 8 idiomas da ficha, sem prometer o que não está no app.
@@ -45,5 +50,5 @@ de fato já quebrou ou pode quebrar neste projeto. Cada item: **OK**, **FALHOU**
 ## Fim
 
 Resumo em português: arquivo gerado (caminho e tamanho), o que mudou desde a última versão
-(`git log --oneline <tag-ou-commit-anterior>..main`), e os passos 👤 que só o Leonardo faz (enviar no
-Play Console, trocar o pacote do rascunho, mandar para revisão). **Push só se ele pedir.**
+(`git log --oneline <tag-ou-commit-anterior>..main`), e os passos 👤 que só o Leonardo faz (abrir o
+rascunho no Play Console, publicar, mandar para revisão). **Push só se ele pedir.**

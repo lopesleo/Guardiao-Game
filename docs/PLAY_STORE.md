@@ -558,6 +558,23 @@ massa", impostos incluídos) e o Brasil fica com o valor exato do catálogo. `--
    Floresta → **Gerenciar presença na loja** (inclui "Editar preços, produtos no app") → Convidar.
 4. `npm run play:produtos -- listar`. Se responder 403, a permissão ainda não chegou (pode levar algumas horas).
 
+## Versão nova pelo script
+
+`npm run android:aab` gera o AAB; `npm run play:versao -- subir` o envia e cria a versão na faixa como
+**rascunho**, com as notas dos 8 idiomas da seção "### X.Y.Z (código N)" deste arquivo (sem limite de 10 MB,
+sem arrastar arquivo). Nada vai para revisão sozinho: 👤 no Console, abrir o rascunho → Avançar → Salvar e
+publicar → Visão geral da publicação → Enviar mudanças para revisão.
+
+```
+npm run play:versao -- faixas                       # o que está em cada faixa (só leitura)
+npm run play:versao -- subir --seco                 # confere arquivo, notas e faixa sem gravar
+npm run play:versao -- subir                        # Teste fechado (alpha), rascunho
+npm run play:versao -- subir --faixa=internal       # Teste interno (sem revisão do Google; minutos)
+```
+
+Este app grava as mudanças "enviando para revisão automaticamente" (a API recusa `changesNotSentForReview`);
+o rascunho, mesmo assim, não é revisado nem chega a ninguém até ser publicado no Console.
+
 ## Kits de cosméticos (fase 2 dos cosméticos, `docs/COSMETICOS.md`)
 
 Quatro **produtos únicos** (não consumíveis), cada um libera 3 peças do Guarda-roupa. Só aparência: não
