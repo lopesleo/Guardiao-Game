@@ -3,6 +3,7 @@
 // pur1 (roxo escuro) e luz em creme — nada de vermelho, que é a cor dos avisos de perigo.
 import { PAL } from "./Palette.js";
 import { Pix } from "./PixelArt.js";
+import { registerAuraVariant } from "./AuraFX.js";
 
 export function registerCosmeticFX(scene) {
   if (scene.textures.exists("cos_petal")) return;
@@ -31,4 +32,6 @@ export function registerCosmeticFX(scene) {
       f.set(x, y, col);
     }
   f.register(scene, "cos_bloom");
+  // Aura do Despertar em rosa: mesma chama, fagulhas creme no lugar das verdes de vaga-lume
+  registerAuraVariant(scene, "fx_awaken_aura_ipe", { core: PAL.white, hi: PAL.pinkHi, mid: PAL.pink, low: PAL.pur1, fleck: PAL.cream, faint: PAL.pink });
 }

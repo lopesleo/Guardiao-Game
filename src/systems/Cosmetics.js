@@ -8,7 +8,9 @@
 //           SOMA ao efeito de morte do elemento (que mostra quem matou); nunca o substitui. A pétala que
 //           termina a queda pousa no chão: o "tapete de ipê" marca onde se lutou.
 //   trail   Rastro: uma pétala cai atrás dos pés ao andar; no dash, um punhado.
-//   awaken  Despertar (R): ao despertar, explosão de pétalas e um anel de ipês florescendo em volta do
+//   awaken  Despertar (R): o Despertar inteiro fica ROSA (aura, tinta do herói, clarão, onda, luz e
+//           fagulhas — ver awakenLook; mesma forma e força do dourado, então o estado continua legível),
+//           e ao despertar, explosão de pétalas e um anel de ipês florescendo em volta do
 //           herói; enquanto dura, pétalas sobem de um anel EM VOLTA dele e se afastam (no protótipo, saindo
 //           de perto e vivendo muito, elas cobriam o próprio herói). A aura dourada continua (mostra o estado).
 // ?kit=ipe equipa tudo de uma vez enquanto nada foi escolhido no Guarda-roupa (atalho para ver o kit).
@@ -72,6 +74,16 @@ export const Wardrobe = {
   any: () => COSM_SLOTS.some((s) => load()[s.id]),
 };
 
+// Despertar de ipê: troca TODOS os tons do dourado, mantendo a forma (o mesmo formato do AWAKEN_GOLD do Player)
+const IPE_AWAKEN = {
+  tint: PAL.pinkHi, // herói desperto
+  aura: "fx_awaken_aura_ipe",
+  flash: [255, 150, 200], // clarão da tela ao despertar
+  ring: [PAL.white, PAL.pinkHi, PAL.pink, PAL.cream], // onda de trovão
+  light: PAL.pink,
+  sparks: [PAL.white, PAL.pinkHi, PAL.pink], // fagulhas (no dourado são vaga-lumes)
+};
+
 // ---------------------------------------------------------------- efeitos
 export class Cosmetics {
   // Uma instância por partida, ou null se nenhuma peça está equipada (ou fora do modo de teste)
@@ -119,6 +131,11 @@ export class Cosmetics {
     this._trailAt = 0;
     this._awakeAt = 0;
     this._wasDashing = false;
+  }
+
+  // Visual do Despertar (Player.tryActivateAwaken e o laço do Player); null = o dourado do jogo
+  get awakenLook() {
+    return this.on.awaken ? IPE_AWAKEN : null;
   }
 
   // Aparelho fraco (iluminação desligada) → metade, como o WeaponFX; e a quantidade escolhida

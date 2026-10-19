@@ -8,6 +8,10 @@ import { registerAuraFX, AURA_H } from '../art/AuraFX.js';
 
 import { tr } from "../i18n/i18n.js";
 
+// Visual do Despertar. Um cosmético equipado (systems/Cosmetics.js, awakenLook) troca os tons e
+// mantém a forma; sparks = null usa os vaga-lumes dourados
+const AWAKEN_GOLD = { tint: 0xffd96b, aura: 'fx_awaken_aura', flash: [240, 200, 80], ring: [PAL.white, PAL.yel3, PAL.yel2, PAL.g5], light: 0xffe58f, sparks: null };
+
 export class Player extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, heroId = 'guardian') {
     super(scene, x, y, `hero_${heroId}`, 0);
@@ -173,7 +177,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.scene.sound.play('sfx_player_hit', { volume: 0.7 });
     this.setTint(0xff5a6e);
     this.scene.time.delayedCall(120, () => {
-      if (this.isAwakened()) this.setTint(0xffd96b);
+      if (this.isAwakened()) this.setTint(this._awakenLook.tint);
       else this.clearTint();
     });
   }
@@ -192,6 +196,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   // --- Despertar ---
   get awakenMax() { return PLAYER.AWAKEN_METER_MAX(this.level); }
   isAwakened() { return this.scene.time.now < this.awakenedUntil; }
+  get _awakenLook() { return this.scene.cosm?.awakenLook ?? AWAKEN_GOLD; }
   awakenReady() {
     if (!this.awakenUnlocked) return false;
     const now = this.scene.time.now;
@@ -208,18 +213,22 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.awakenMeter = 0;
     this.awakenLockUntil = this.awakenedUntil + PLAYER.AWAKEN_CD_AFTER_MS;
     // Feedback
-    this.setTint(0xffd96b);
+    const look = this._awakenLook;
+    this.setTint(look.tint);
     this.scene.cameras.main.shake(300, 0.012);
-    this.scene.cameras.main.flash(180, 240, 200, 80);
+    this.scene.cameras.main.flash(180, ...look.flash);
     // O despertar: onda dourada de trovão saindo do herói, anel, vaga-lumes subindo
     const fx = this.scene.fx;
     if (fx) {
       const fy = this.y + this.displayHeight * 0.42;
-      fx.thunderRing(this.x, fy, 10, 230, 520, [PAL.white, PAL.yel3, PAL.yel2, PAL.g5], 0.6);
+      fx.thunderRing(this.x, fy, 10, 230, 520, look.ring, 0.6);
       fx.ring(this.x, fy, 0xffffff, 8, 150, 360, 0.6, 0.9);
-      fx.burst('glow', this.x, this.y, 22, -Math.PI / 2, 140, { min: 60, max: 220 });
-      fx.burst('ember', this.x, fy, 14, -Math.PI / 2, 120, { min: 80, max: 200 });
-      fx.light(this.x, this.y, 320, 0xffe58f, 600, 1);
+      if (look.sparks) fx.burst('spark', this.x, this.y, 22, -Math.PI / 2, 140, { min: 60, max: 220 }, look.sparks);
+      else {
+        fx.burst('glow', this.x, this.y, 22, -Math.PI / 2, 140, { min: 60, max: 220 });
+        fx.burst('ember', this.x, fy, 14, -Math.PI / 2, 120, { min: 80, max: 200 });
+      }
+      fx.light(this.x, this.y, 320, look.light, 600, 1);
       this.scene.cosm?.awaken(this.x, fy); // cosmético (protótipo, docs/COSMETICOS.md)
     }
     this.scene.sound.play('sfx_boss_roar', { volume: 0.55, rate: 1.25 });
@@ -383,15 +392,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const awake = this.isAwakened();
     if (awake !== this.aura.visible) {
       this.aura.setVisible(awake);
-      if (awake) this.aura.play('fx_awaken_aura');
+      if (awake) this.aura.play(this._awakenLook.aura);
       else this.aura.stop();
     }
     if (awake) {
       this.aura.setPosition(this.x, this.y + this.displayHeight * 0.44).setDepth(this.depth - 0.5);
-      // fagulhas douradas subindo enquanto desperto
+      // fagulhas subindo enquanto desperto (douradas, ou as do cosmético)
       if (time >= (this._auraSparkAt ?? 0)) {
         this._auraSparkAt = time + 90;
-        this.scene.fx?.burst('glow', this.x + (Math.random() - 0.5) * 40, this.y + 10, 1, -Math.PI / 2, 30, { min: 30, max: 80 });
+        const sp = this._awakenLook.sparks;
+        this.scene.fx?.burst(sp ? 'spark' : 'glow', this.x + (Math.random() - 0.5) * 40, this.y + 10, 1, -Math.PI / 2, 30, { min: 30, max: 80 }, sp);
       }
     }
   }

@@ -69,8 +69,12 @@ se confundiria com a gema dourada e as brasas.
 - **Tapete de ipê:** a pétala que termina a queda pousa no chão e desbota em ~2–3 s (pool de 48) — marca
   onde se lutou, como o chão embaixo de um ipê florido.
 - **Rastro:** uma pétala cai atrás dos pés de vez em quando ao andar; no dash, um punhado.
-- **Despertar (R):** explosão de pétalas e um anel de 7 ipês florescendo em onda em volta do herói; enquanto
-  dura, pétalas sobem de um anel largo e se afastam. A aura dourada continua (é ela que mostra o estado).
+- **Despertar (R):** o Despertar inteiro fica **rosa** — aura (mesma chama, outra paleta:
+  `registerAuraVariant` em `src/art/AuraFX.js`), tinta do herói (`PAL.pinkHi`), clarão da tela, onda, luz e
+  fagulhas — com a mesma forma e força do dourado, então o estado continua legível. Mais: explosão de
+  pétalas e um anel de 7 ipês florescendo em onda; enquanto dura, pétalas sobem de um anel largo e se
+  afastam. Com a peça em "Padrão", tudo dourado como sempre. (Na 1ª versão só se somavam pétalas ao dourado;
+  o Leonardo pediu o Despertar rosa de verdade, 19/10/2026.)
 - **Personalizável — Guarda-roupa** (Clareira, botão verde de teste): cada peça (libertação, rastro,
   Despertar) se equipa à parte, e a **quantidade de pétalas** é do jogador (discreta, normal, cheia — a
   discreta também serve a quem quer a tela mais limpa). Guardado em `guardiao_cosmetics_v1`; vale na partida
