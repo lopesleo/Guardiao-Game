@@ -439,7 +439,7 @@ function makeGardenPlaqueAnc() {
 
 // Espantalho da horta (26×40, 6 quadros de vento): poncho tecido com faixa de palha, ziguezague de barro e
 // losangos azuis, franja longa; cabeça de saco com olhos de botão e sorriso cosido, chapéu largo com fita de
-// cobre e uma pena de borboleta-azul, broche de cobre na gola. O vento corre em onda pela franja, pelos punhos
+// cobre e uma pena azul (a cor das borboletas), broche de cobre na gola. O vento corre em onda pela franja, pelos punhos
 // e pela pena. A lamparina do braço é outra peça (a cena pendura em SCARECROW_ANC.hook).
 export const SCARECROW_ANC = { w: 26, h: 40, hook: { x: 23.5, y: 20 } };
 function makeScarecrowAnc(f) {
@@ -541,7 +541,7 @@ function makeScarecrowAnc(f) {
     for (let x = 13 - half; x < 13 + half; x++) p.set(x, y, x < 11 ? PAL.straw3 : (x + y) % 3 === 0 ? PAL.straw1 : PAL.straw2);
   }
   for (let x = 8; x < 18; x++) p.set(x, 5, x === 10 ? PAL.straw3 : PAL.clay2);
-  // pena de borboleta-azul na fita (a ponta acompanha o vento)
+  // pena azul na fita (a ponta acompanha o vento)
   const tip = wave(30, 0.8);
   p.line(17, 5, 19, 2, PAL.ice1);
   p.set(18, 3, PAL.ice2);
