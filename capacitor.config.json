@@ -10,6 +10,12 @@
     "webContentsDebuggingEnabled": false
   },
   "plugins": {
-    "SplashScreen": { "launchShowDuration": 0 }
+    "SplashScreen": {
+      "launchShowDuration": 0
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_guardiao",
+      "iconColor": "#6AAB4A"
+    }
   }
 }

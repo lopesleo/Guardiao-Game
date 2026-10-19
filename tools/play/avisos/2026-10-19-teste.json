@@ -1,0 +1,20 @@
+{
+  "id": "2026-10-19-teste",
+  "validade_dias": 2,
+  "titulo": {
+    "pt": "Novidades ligadas",
+    "en": "News is on",
+    "es": "Novedades activadas",
+    "ja": "最新情報をオンにしました",
+    "zh": "最新消息已开启",
+    "zht": "最新消息已開啟"
+  },
+  "texto": {
+    "pt": "Aviso de teste do Guardião da Floresta. Se ele chegou, as novidades por notificação estão funcionando.",
+    "en": "A test notice from Forest Guardian. If you got it, news notifications are working.",
+    "es": "Aviso de prueba de Guardián del Bosque. Si te llegó, las notificaciones de novedades funcionan.",
+    "ja": "森の守護者からのテスト通知です。届いていれば、最新情報の通知は正常に動いています。",
+    "zh": "这是森林守护者的测试通知。收到它就说明最新消息通知运作正常。",
+    "zht": "這是森林守護者的測試通知。收到它就表示最新消息通知運作正常。"
+  }
+}

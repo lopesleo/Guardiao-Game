@@ -91,6 +91,13 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
   (1.0.8) e a horta da Ancestral (cerca entalhada, portal com lamparinas, espantalho de poncho).
   👤 No celular (teste interno, `https://play.google.com/apps/internaltest/4700140413216190768`): atualizar e testar
   joystick (carta, ⏸, reviver), Loja, Fundador com cartão de teste → Clareira Ancestral (de dia e à noite, horta), estorno.
+- **Novidades por notificação** (FCM, na 1.0.10; `docs/PLAY_STORE.md`, "Novidades por notificação"): app e script
+  `npm run aviso` prontos. 👤 Dar à conta de serviço o papel **"Administrador da API Firebase Cloud Messaging"** no
+  Google Cloud (passo a passo no documento; hoje o envio dá 403). Depois: instalar a 1.0.10 do Teste interno,
+  ligar Opções › Jogo › Novidades e mandar `tools/play/avisos/2026-10-19-teste.json`. Ao levar ao Alpha/produção:
+  "Segurança dos dados" (IDs do dispositivo + Funcionalidade do app e Comunicações do desenvolvedor) e copiar a
+  política nova para o site (`guardiao/privacy/pt.md` e `en.md` no `lopesleo.github.io`, e a página antiga do
+  branch `pages`).
 - **Próximo: Clareira da Caatinga** (grátis): liberar quem vencer no Perigo máximo na Caatinga + uma conquista.
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
   ~14/10 (pedido de produção possível por volta de **28/10**). 👤 Manter os 12 ativos (ninguém sair da lista).

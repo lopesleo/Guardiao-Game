@@ -18,6 +18,7 @@ import { setupPlatform } from './systems/Platform.js';
 import { Telemetry } from './systems/Telemetry.js';
 import { AdMobBridge } from './systems/AdMobBridge.js';
 import { Billing } from './systems/Billing.js';
+import { News } from './systems/News.js';
 import { Clock } from './systems/Clock.js';
 import { CloudSave } from './systems/CloudSave.js';
 import { installCloudSaveUI } from './ui/CloudSaveUI.js';
@@ -69,6 +70,7 @@ window.addEventListener('load', () => {
   Telemetry.install(); // Firebase (só no app Android)
   AdMobBridge.install(); // consentimento (UMP) + anúncios premiados (só no app Android)
   Billing.install(); // compra "Sem anúncios" pela Play Store: preço e o que esta conta já comprou (só no app)
+  News.install(); // novidades por notificação (FCM), só para quem aceitou (só no app Android)
   installCloudSaveUI(window.game);
   CloudSave.install(window.game); // progresso na nuvem pelo Play Games (só no app Android)
 });

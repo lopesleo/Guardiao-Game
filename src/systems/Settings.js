@@ -15,6 +15,8 @@ const DEFAULTS = {
   zoom: 0, // índice em ZOOMS (ui/Zoom.js): aproxima o mundo, a interface fica do mesmo tamanho
   notify: false, // avisos (só no app, só depois que o jogador aceitar)
   notifyAsked: false,
+  news: null, // novidades por notificação (News.js): null = segue os avisos; true/false = escolha do jogador
+  newsTopic: null, // tópico do FCM em que o aparelho está inscrito (para sair dele ao trocar de idioma)
   telemetry: true, // dados de uso e erros (Firebase, só no app); o jogador pode desligar
   joyMode: "dynamic", // joystick: "dynamic" (nasce onde o dedo encosta) ou "static" (fixo no canto)
   joySide: "left", // lado do joystick ("right" = canhoto: Dash/Despertar e o botão de ação vão para a esquerda)

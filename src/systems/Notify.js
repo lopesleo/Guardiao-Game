@@ -4,6 +4,7 @@
 // amanhã e a colheita mais demorada. No navegador, tudo aqui é inofensivo.
 import { Settings } from "./Settings.js";
 import { isNative } from "./Platform.js";
+import { News } from "./News.js";
 
 const plugin = () => window.Capacitor?.Plugins?.LocalNotifications;
 export const NOTIFY_ID = { chest: 1, crop: 2 };
@@ -22,6 +23,7 @@ export const Notify = {
       const r = await p.requestPermissions();
       const ok = r?.display === "granted";
       Settings.set("notify", ok);
+      if (ok) News.sync(); // o pedido também conta das novidades (sem escolha própria, elas seguem os avisos)
       return ok;
     } catch {
       return false;

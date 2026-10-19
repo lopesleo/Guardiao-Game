@@ -135,6 +135,12 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   UMA vez no momento certo (abriu o baú do dia; plantou algo de 1 h+), no máximo 2
   avisos (baú de amanhã às 10h e a colheita); chave em Opções — no app, rodar
   `npm install` + `npm run android:sync` 👤
+- ✅ **Novidades por notificação** (19/10/2026, 1.0.10; Firebase Cloud Messaging, `src/systems/News.js`): versão
+  nova e eventos para quem aceitou notificações, no tópico do idioma; chave própria em Opções › Jogo e canal
+  próprio no Android; sem aceite não há token. Envio por `npm run aviso` (`tools/play-aviso.mjs`, avisos em
+  `tools/play/avisos/`), no máximo 1 a cada 7 dias. Teste: `npm run test:avisos` (Firebase falso). Ícone pequeno
+  das notificações (broto em pixels) também nos lembretes. 👤 papel do FCM na conta de serviço e "Segurança dos
+  dados" (ver `docs/PLAY_STORE.md`)
 - Valores em `DAILY` no config
 - ✅ **Anti-trapaça de tempo** (`src/systems/Clock.js`): tudo com tempo real lê o
   relógio confiável, que só AVANÇA pelo que dá para confirmar — com o jogo aberto,
