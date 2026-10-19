@@ -984,4 +984,11 @@ export default {
   "Muito grande": "特大",
   "SIM": "オン",
   "NÃO": "オフ",
+  // Aviso da loja: pagamento aprovado / compra estornada (ui/NoAdsModal.js)
+  "COMPRA ESTORNADA": "購入が返金されました",
+  "PAGAMENTO APROVADO": "支払いが完了しました",
+  "A Play Store estornou a compra “Sem anúncios” e devolveu o pagamento.": "Playストアが「広告なし」の購入を返金し、代金は返されました。",
+  "Os prêmios voltam a pedir um anúncio. O seu progresso continua igual.": "報酬はまた広告を見て受け取る形に戻ります。進行状況はそのままです。",
+  "Se foi engano, dá para comprar de novo.": "間違いだった場合は、もう一度購入できます。",
+  "O Google confirmou o pagamento. “Sem anúncios” está ativo nesta conta.": "Googleが支払いを確認しました。このアカウントで「広告なし」が有効になりました。",
 };

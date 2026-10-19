@@ -9,6 +9,46 @@ import { Modal } from "./Widgets.js";
 import { cloudToast } from "./CloudSaveUI.js";
 import { tr } from "../i18n/i18n.js";
 
+// Aviso da loja (Billing.notice): pagamento pendente que o Google aprovou, ou compra estornada. Só nas
+// telas de menu (Título e Clareira chamam no update, sem janela aberta), nunca no meio da partida;
+// aparece uma vez. Antes o estorno tirava o "sem anúncios" calado e o jogador achava que perdeu o item.
+export function showStoreNotice(scene, o = {}) {
+  const kind = Billing.notice;
+  if (!kind) return null;
+  Billing.clearNotice();
+  Analytics.track("iap_notice", { kind });
+  const revoked = kind === "revoked";
+  let toShop = false;
+  const m = new Modal(scene, { title: revoked ? tr("COMPRA ESTORNADA") : tr("PAGAMENTO APROVADO"), w: 640, h: vh(scene), onClose: () => !toShop && o.onClose?.() });
+  let y = m.top + 16;
+  const note = (str, size, color, gap) => {
+    const t = m.add(text(scene, 0, y, str, { size, color, origin: [0.5, 0], align: "center", wrap: m.w - 100 }));
+    y += t.height + gap;
+  };
+  if (revoked) {
+    note(tr("A Play Store estornou a compra “Sem anúncios” e devolveu o pagamento."), 20, CSS.txt, 16);
+    note(tr("Os prêmios voltam a pedir um anúncio. O seu progresso continua igual."), 18, CSS.muted, 10);
+    note(tr("Se foi engano, dá para comprar de novo."), 18, CSS.muted, 24);
+    const by = y + 28;
+    m.add(new Button(scene, -140, by, 250, 56, tr("SEM ANÚNCIOS"), () => {
+      toShop = true;
+      m.close();
+      openNoAds(scene, { from: "notice", onClose: o.onClose });
+    }, { size: 20, style: "dark", color: CSS.goldHi }));
+    m.add(new Button(scene, 140, by, 250, 56, tr("FECHAR"), () => m.close(), { size: 20 }));
+    y = by + 28 + 16;
+  } else {
+    scene.sound.play("sfx_coin", { volume: 0.6 });
+    note(tr("O Google confirmou o pagamento. “Sem anúncios” está ativo nesta conta."), 20, CSS.goldHi, 16);
+    note(tr("Os prêmios dos anúncios saem na hora, sem assistir nada."), 18, CSS.txt, 10);
+    note(tr("Obrigado por apoiar um jogo independente feito no Brasil!"), 18, CSS.muted, 24);
+    m.add(new Button(scene, 0, y + 28, 300, 56, tr("FECHAR"), () => m.close(), { size: 20, style: "primary", color: CSS.goldHi }));
+    y += 56 + 16;
+  }
+  m.fitContent(y + 14);
+  return m;
+}
+
 export function openNoAds(scene, o = {}) {
   if (!o.again) Analytics.track("iap_view", { from: o.from ?? "?", owned: Billing.owned, ready: Billing.ready });
   // onClose do chamador só quando o jogador fecha de vez (refazer a janela com o estado novo não conta)

@@ -984,4 +984,11 @@ export default {
   "Muito grande": "特大",
   "SIM": "開",
   "NÃO": "關",
+  // Aviso da loja: pagamento aprovado / compra estornada (ui/NoAdsModal.js)
+  "COMPRA ESTORNADA": "購買已退款",
+  "PAGAMENTO APROVADO": "付款已確認",
+  "A Play Store estornou a compra “Sem anúncios” e devolveu o pagamento.": "Play 商店已將「免廣告」的購買退款，款項已退回。",
+  "Os prêmios voltam a pedir um anúncio. O seu progresso continua igual.": "領取獎勵將重新需要觀看廣告。你的進度不受影響。",
+  "Se foi engano, dá para comprar de novo.": "如果是誤會，可以再次購買。",
+  "O Google confirmou o pagamento. “Sem anúncios” está ativo nesta conta.": "Google 已確認付款。「免廣告」已在此帳戶生效。",
 };

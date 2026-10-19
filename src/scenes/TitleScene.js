@@ -11,7 +11,7 @@ import { closeTopModal } from "../ui/Widgets.js";
 import { MetaPanels } from "../ui/MetaPanels.js";
 import { tr } from "../i18n/i18n.js";
 import { Billing } from "../systems/Billing.js";
-import { openNoAds } from "../ui/NoAdsModal.js";
+import { openNoAds, showStoreNotice } from "../ui/NoAdsModal.js";
 
 export class TitleScene extends Phaser.Scene {
   constructor() {
@@ -188,6 +188,8 @@ export class TitleScene extends Phaser.Scene {
   update(time, dt) {
     const W = this.W,
       H = this.H;
+    // Aviso da loja (pagamento aprovado / compra estornada): o botão "Sem anúncios" muda → recomeça a cena
+    if (Billing.notice && !this._modals.length && !this._leaving) showStoreNotice(this, { onClose: () => this.sys.isActive() && this.scene.restart() });
     for (const f of this.flies || []) {
       f.g.x += f.vx + Math.sin(time / 700 + f.ph) * 0.25;
       f.g.y += f.vy;

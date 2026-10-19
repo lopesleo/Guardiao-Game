@@ -4,14 +4,20 @@
 //   Billing.install()  → no boot: lê o preço e confere se a conta já comprou (reinstalar = recupera sozinho)
 //   Billing.buy()      → "ok" | "pending" | "cancelled" | "unavailable"
 //   Billing.sync()     → confere de novo na loja (botão "Restaurar compra" e a volta ao app)
+//   Billing.notice     → "approved" | "revoked" | null: aviso para o jogador (Título/Clareira mostram
+//                        e chamam Billing.clearNotice(); nunca no meio da partida)
 //
 // Sem servidor: a loja é a fonte da verdade e o jogo confere a cada abertura. Regras do Google seguidas:
-//  · RECONHECER a compra em até 3 dias, senão o Google devolve o dinheiro. O jogo reconhece ele mesmo
-//    (autoAcknowledge do plugin desligado) e espera a resposta: o plugin fecha a conexão com a loja a
-//    cada chamada e um reconhecimento "solto" podia ser cortado no meio.
-//  · Pagamento PENDENTE (boleto, Pix em análise, dinheiro em loteria) não libera nada até virar comprado;
-//    quando vira, o próximo sync() libera e reconhece.
-//  · Reembolso: a compra some da lista da loja → o jogo tira o "sem anúncios" (só o que veio da loja).
+//  · RECONHECER a compra em até 3 dias (testador de licença: 3 a 5 MINUTOS), senão o Google estorna. O
+//    jogo reconhece ele mesmo (autoAcknowledge do plugin desligado) e espera a resposta: o plugin fecha
+//    a conexão com a loja a cada chamada e um reconhecimento "solto" podia ser cortado no meio. Se falhar,
+//    tenta de novo sozinho (o sync() reconhece toda compra paga que ainda não foi reconhecida).
+//  · Pagamento PENDENTE (boleto, Pix em análise, cartão de teste lento) não libera nada até virar
+//    comprado. O plugin não avisa quando vira: com o app aberto, o jogo confere a loja a cada 20 s
+//    enquanto houver pendente (antes só conferia na volta ao app, e o pendente aprovado com o jogo
+//    aberto nunca era reconhecido → estorno automático, visto no teste de 18/10/2026).
+//  · Estorno/reembolso: a compra some da lista da loja → o jogo confere uma 2ª vez, tira o "sem
+//    anúncios" (só o que veio da loja) e AVISA o jogador na próxima tela de menu.
 // As chamadas ao plugin vão em FILA: cada uma recria o cliente da loja e fecharia a anterior.
 import { STORE } from "../config.js";
 import { isNative } from "./Platform.js";
@@ -25,6 +31,14 @@ const PURCHASED = "1",
   PENDING = "2";
 // Volta ao app: confere a loja no máximo a cada 30 s (um boleto pago enquanto o jogo estava fechado)
 const RESUME_MS = 30000;
+// Pendente com o app aberto: confere a loja a cada 20 s (o teste de licença estorna em 3–5 min)
+const PENDING_POLL_MS = 20000;
+// Reconhecimento que falhou: nova tentativa (via sync) depois de 15 s, até 8 vezes por abertura
+const ACK_RETRY_MS = 15000,
+  ACK_RETRIES = 8;
+// Logo depois de liberar, a lista da loja pode ainda não trazer a compra: não tirar nada nesse meio-tempo
+const GRANT_GRACE_MS = 120000;
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function load() {
   try {
@@ -33,7 +47,9 @@ function load() {
     return {};
   }
 }
-let saved = load(); // { owned: true se o "sem anúncios" veio da loja, pending: true se há pagamento pendente }
+// { owned: o "sem anúncios" veio da loja, pending: pagamento pendente, acked: a loja confirmou o
+//   reconhecimento, grantedAt: quando liberou, notice: aviso ainda não mostrado ("approved"/"revoked") }
+let saved = load();
 function save() {
   try {
     localStorage.setItem(KEY, JSON.stringify(saved));
@@ -42,7 +58,9 @@ function save() {
 
 let state = { step: "idle", price: "", error: "", busy: false };
 let lastSync = 0,
-  hooked = false;
+  hooked = false,
+  ackTries = 0,
+  ackTimer = null;
 let queue = Promise.resolve();
 const call = (fn) => (queue = queue.then(fn, fn));
 
@@ -66,6 +84,14 @@ export const Billing = {
   },
   get busy() {
     return state.busy;
+  },
+  get notice() {
+    return saved.notice ?? null;
+  },
+  clearNotice() {
+    if (!saved.notice) return;
+    delete saved.notice;
+    save();
   },
 
   async install() {
@@ -95,6 +121,9 @@ export const Billing = {
       if (state.step === "error") this.retry();
       else this.sync();
     });
+    setInterval(() => {
+      if (saved.pending && !AdService.noAds && !document.hidden && !state.busy && Date.now() - lastSync >= PENDING_POLL_MS - 500) this.sync();
+    }, PENDING_POLL_MS);
   },
 
   // Loja não respondeu (sem rede na abertura): tenta de novo (janela "Sem anúncios", volta ao app)
@@ -107,29 +136,47 @@ export const Billing = {
   async sync() {
     if (!this.available()) return false;
     lastSync = Date.now();
-    const NP = plugin();
-    let purchases;
-    try {
-      ({ purchases = [] } = await call(() => NP.getPurchases({ productType: "inapp" })));
-    } catch {
-      return false; // falha na consulta NÃO é "não comprou": não tira nada de quem pagou
+    let mine = await this._query();
+    if (!mine) return false; // falha na consulta NÃO é "não comprou": não tira nada de quem pagou
+    const paid = (list) => list.find((p) => String(p.purchaseState) === PURCHASED);
+    // Sumiu uma compra que a loja tinha dado: confere de novo antes de tirar (resposta velha do cache
+    // da loja logo depois de comprar, ou consulta pela metade)
+    if (!paid(mine) && saved.owned) {
+      if (Date.now() - (saved.grantedAt ?? 0) < GRANT_GRACE_MS) return true;
+      await wait(1500);
+      mine = await this._query();
+      if (!mine) return false;
     }
-    const mine = purchases.filter((p) => p.productIdentifier === STORE.NO_ADS);
-    const bought = mine.find((p) => String(p.purchaseState) === PURCHASED);
-    if (bought) await this._grant(bought, "restore");
-    else {
+    const bought = paid(mine);
+    if (bought) {
+      // Pendente que virou pago (boleto compensado, cartão de teste lento): avisa o jogador
+      if (saved.pending && !AdService.noAds) saved.notice = "approved";
+      await this._grant(bought, "restore");
+    } else {
       const wasPending = !!saved.pending;
       saved.pending = mine.some((p) => String(p.purchaseState) === PENDING);
-      // Reembolsada (sumiu da loja): tira só o que a própria loja tinha dado
+      // Estornada/reembolsada (sumiu da loja): tira só o que a própria loja tinha dado, e avisa
       if (!saved.pending && saved.owned) {
+        Analytics.track("iap_revoked", { product: STORE.NO_ADS, acked: !!saved.acked });
         saved.owned = false;
+        saved.acked = false;
+        saved.notice = "revoked";
         AdService.setNoAds(false);
-        Analytics.track("iap_revoked", { product: STORE.NO_ADS });
       }
       if (wasPending && !saved.pending) Analytics.track("iap_pending_end", { product: STORE.NO_ADS });
       save();
     }
     return true;
+  },
+
+  // Compras desta conta na loja (só as do "sem anúncios"); null = a consulta falhou
+  async _query() {
+    try {
+      const { purchases = [] } = await call(() => plugin().getPurchases({ productType: "inapp" }));
+      return purchases.filter((p) => p.productIdentifier === STORE.NO_ADS);
+    } catch {
+      return null;
+    }
   },
 
   async buy() {
@@ -163,20 +210,30 @@ export const Billing = {
     return result;
   },
 
-  // Libera e reconhece (sem reconhecer, o Google devolve o dinheiro em 3 dias; se falhar agora, o
-  // próximo sync() tenta de novo — a compra continua na lista como não reconhecida)
+  // Libera e reconhece (sem reconhecer, o Google estorna: 3 dias, ou 3–5 min no teste de licença). Se
+  // falhar, um sync() daqui a 15 s tenta de novo — a compra continua na lista como não reconhecida
   async _grant(p, how) {
     const first = !AdService.noAds;
+    if (first || !saved.owned) saved.grantedAt = Date.now();
     saved.owned = true;
     saved.pending = false;
+    if (p?.isAcknowledged) saved.acked = true;
     save();
     AdService.setNoAds(true);
     if (first) Analytics.track("iap_grant", { product: STORE.NO_ADS, how });
     if (p?.isAcknowledged || !p?.purchaseToken) return;
     try {
       await call(() => plugin().acknowledgePurchase({ purchaseToken: p.purchaseToken }));
+      saved.acked = true;
+      save();
+      ackTries = 0;
     } catch (e) {
-      Analytics.track("iap_ack_fail", { msg: reason(e).trim().slice(0, 80) });
+      Analytics.track("iap_ack_fail", { msg: reason(e).trim().slice(0, 80), try: ackTries + 1 });
+      if (ackTries++ < ACK_RETRIES && !ackTimer)
+        ackTimer = setTimeout(() => {
+          ackTimer = null;
+          this.sync();
+        }, ACK_RETRY_MS);
     }
   },
 };
