@@ -96,9 +96,13 @@ async function api(method, url, body) {
     body: body ? JSON.stringify(body) : undefined,
   });
   if (r.status === 404 && method === "GET") return null;
-  const j = await r.json().catch(() => ({}));
+  const txt = await r.text();
+  let j = {};
+  try {
+    j = txt ? JSON.parse(txt) : {};
+  } catch {}
   if (!r.ok) {
-    const msg = j.error?.message || r.statusText;
+    const msg = j.error?.message || `${r.statusText} ${txt.replace(/<[^>]+>/g, " ").replace(/s+/g, " ").trim().slice(0, 160)}`;
     const dica = r.status === 403 ? "\n  → a conta de serviço não tem permissão neste app (Play Console → Usuários e permissões); a liberação pode levar algumas horas" : "";
     throw new Error(`${method} ${url}: ${r.status} ${msg}${dica}`);
   }
@@ -138,7 +142,8 @@ function resumo(prod) {
   const langs = (prod.listings || []).map((l) => l.languageCode);
   const faltam = IDIOMAS.filter((l) => !langs.includes(l));
   const nome = (prod.listings || []).find((l) => l.languageCode === "pt-BR")?.title ?? "?";
-  return `${prod.productId.padEnd(22)} ${nome.slice(0, 28).padEnd(28)} ${(o?.state || "sem opção").padEnd(9)} BR ${fmt(precoEm(prod, "BR")).padEnd(11)} US ${fmt(precoEm(prod, "US")).padEnd(10)} ${o?.regionalPricingAndAvailabilityConfigs?.length ?? 0} países  ${langs.length} idiomas${faltam.length ? ` (faltam ${faltam.join(", ")})` : ""}`;
+  // "compat" = compatível com versões anteriores (o plugin de compras do jogo só enxerga essa opção)
+  return `${prod.productId.padEnd(22)} ${nome.slice(0, 28).padEnd(28)} ${(o?.state || "sem opção").padEnd(9)} ${o?.buyOption?.legacyCompatible ? "compat" : "!compat"} BR ${fmt(precoEm(prod, "BR")).padEnd(11)} US ${fmt(precoEm(prod, "US")).padEnd(10)} ${o?.regionalPricingAndAvailabilityConfigs?.length ?? 0} países  ${langs.length} idiomas${faltam.length ? ` (faltam ${faltam.join(", ")})` : ""}`;
 }
 
 // Diferenças entre o que está no Console e o catálogo (para o "enviar" sem --atualizar avisar)
@@ -196,7 +201,8 @@ async function enviar() {
       continue;
     }
     const q = new URLSearchParams({ allowMissing: "true", updateMask: "listings,purchaseOptions", "regionsVersion.version": pr.versao || "2022/02" });
-    const salvo = await api("PATCH", `oneTimeProducts/${p.id}?${q}`, corpo);
+    // (a rota de gravar é em minúsculas, "onetimeproducts"; a de ler aceita "oneTimeProducts")
+    const salvo = await api("PATCH", `onetimeproducts/${p.id}?${q}`, corpo);
     if (opcao(salvo)?.state !== "ACTIVE" && p.ativo !== false) await estado(p.id, true);
     console.log(`  ✓  ${oque} · ativo`);
   }
