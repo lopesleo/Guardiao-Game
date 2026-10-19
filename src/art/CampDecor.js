@@ -374,6 +374,116 @@ function makeKapok() {
   return p.outline(K);
 }
 
+// Jequitibá ancestral (Clareira Ancestral, a skin do Pacote Fundador): bem maior que a samaúma, tronco
+// grosso com sapopemas largas, copa enorme em camadas pegando a luz dourada do fim de tarde pela
+// esquerda, folhas de cobre aqui e ali e cipós. O "rei da mata" que vive milênios — quem chegou primeiro
+function makeJequitiba() {
+  const W = 124,
+    H = 150;
+  const p = new Pix(W, H);
+  const r = rng(733);
+  const cx = 62;
+  const bark = [PAL.n1, PAL.n2, PAL.n3, PAL.n4];
+  // Sapopemas (raízes-tábua) abrindo no chão
+  for (const [dir, reach, h] of [[-1, 40, 34], [1, 42, 32], [-1, 24, 40], [1, 22, 38], [-1, 10, 44], [1, 9, 42]]) {
+    for (let y = 0; y < h; y++) {
+      const t = y / h;
+      const x0 = cx + dir * (7 + t * t * reach);
+      const top = H - 4 - h + y;
+      const half = 2 + t * 2;
+      for (let x = Math.floor(x0 - half); x <= x0 + half; x++) p.set(x, top, x < x0 ? bark[3] : bark[1]);
+    }
+  }
+  // Tronco grosso, casca com sulcos verticais
+  for (let y = 54; y < H - 10; y++) {
+    const half = 9 + Math.max(0, (y - 100) / 6);
+    for (let x = Math.floor(cx - half); x <= cx + half; x++) {
+      const u = (x - (cx - half)) / (2 * half);
+      let c = u < 0.2 ? bark[3] : u < 0.55 ? bark[2] : u < 0.85 ? bark[1] : bark[0];
+      if ((x * 7) % 5 === 0 && (y + x) % 9 < 6) c = bark[1]; // sulcos
+      if (u < 0.13) c = (y * 5 + x) % 13 === 0 ? PAL.n4 : PAL.straw2; // luz dourada contínua na casca (oeste)
+      p.set(x, y, c);
+    }
+  }
+  // Galhos grossos subindo
+  for (const [x0, y0, x1, y1] of [[cx - 2, 58, cx - 30, 38], [cx + 2, 58, cx + 32, 36], [cx, 56, cx - 8, 30], [cx + 1, 56, cx + 12, 28]]) {
+    p.line(x0, y0, x1, y1, bark[1]);
+    p.line(x0 + 1, y0, x1 + 1, y1, bark[2]);
+  }
+  // Copa em camadas: tufos de trás para a frente; luz do pôr do sol (palha/amarelo) na borda alta à
+  // esquerda, sombra fria embaixo, folhas de cobre espalhadas
+  const blob = (bx, by, rx, ry) => {
+    for (let y = Math.floor(by - ry - 1); y <= by + ry + 1; y++)
+      for (let x = Math.floor(bx - rx - 1); x <= bx + rx + 1; x++) {
+        const dx = (x + 0.5 - bx) / rx,
+          dy = (y + 0.5 - by) / ry;
+        const wob = 0.13 * Math.sin(Math.atan2(dy, dx) * 6 + bx);
+        const d = Math.sqrt(dx * dx + dy * dy) - wob;
+        if (d > 1.12) continue;
+        if (d > 1) {
+          if (dy > -0.2) p.set(x, y, PAL.g1);
+          continue;
+        }
+        const n = Math.sin(x * 1.7 + y * 0.9) + Math.sin(x * 0.6 - y * 2.1);
+        let c = PAL.g3;
+        if (dy < -0.15 && dx < 0.5) c = n > 0.2 ? PAL.g5 : PAL.g4;
+        if (dy < -0.45 && dx < 0.2) c = n > 0.6 ? PAL.straw3 : PAL.g5; // luz dourada
+        if (dy < -0.7 && dx < -0.1 && n > 0.9) c = PAL.yel3;
+        if (dy > 0.35) c = n > 0.5 ? PAL.g3 : PAL.g2;
+        if (n > 1.82 && dy > -0.3 && dx > -0.6) c = PAL.clay2; // folha de cobre (poucas)
+        p.set(x, y, c);
+      }
+  };
+  for (const [bx, by, rx, ry] of [
+    [62, 12, 20, 10],
+    [36, 18, 18, 10],
+    [88, 17, 18, 10],
+    [16, 30, 14, 8],
+    [108, 29, 14, 8],
+    [48, 28, 18, 11],
+    [76, 28, 18, 11],
+    [26, 40, 14, 7],
+    [98, 40, 14, 7],
+    [62, 38, 18, 9],
+  ])
+    blob(bx, by, rx, ry);
+  // Cipós pendurados
+  for (let k = 0; k < 10; k++) {
+    let x = 10 + Math.floor(r() * 104);
+    const len = 10 + Math.floor(r() * 24);
+    for (let y = 44; y < 44 + len; y++) {
+      p.set(x, y, PAL.t3);
+      if (y % 6 === 0) {
+        x += r() < 0.5 ? -1 : 1;
+        p.set(x + 1, y, PAL.g4);
+      }
+    }
+  }
+  return p.outline(K);
+}
+
+// Placa dos Fundadores (ao pé do jequitibá): tábua em dois postes com a insígnia dourada
+function makePlaque() {
+  const p = new Pix(24, 22);
+  for (let y = 9; y < 22; y++) {
+    p.set(4, y, PAL.n2);
+    p.set(19, y, PAL.n2);
+  }
+  for (let y = 0; y < 13; y++)
+    for (let x = 1; x < 23; x++) {
+      const edge = y === 0 || y === 12 || x === 1 || x === 22;
+      p.set(x, y, edge ? PAL.n2 : y < 3 ? PAL.n4 : PAL.n3);
+    }
+  // insígnia: anel dourado com a copa verde
+  for (let y = 2; y < 11; y++)
+    for (let x = 7; x < 17; x++) {
+      const d = Math.hypot(x - 11.5, y - 6.5);
+      if (d > 4.6) continue;
+      p.set(x, y, d > 3.4 ? (x + y < 18 ? PAL.yel3 : PAL.yel1) : y < 7 ? PAL.g5 : y < 9 ? PAL.g3 : PAL.n3);
+    }
+  return p.outline(K);
+}
+
 // Helicônia (bananeirinha-do-mato): folhas em remo e brácteas em zigue-zague
 function makeHeliconia(tone) {
   const p = new Pix(16, 22);
@@ -445,6 +555,29 @@ function makeVignette(scene) {
   c.refresh();
 }
 
+// Raio de sol (Clareira Ancestral): faixa vertical suave, some nas bordas e no pé (NÃO-pixel, só para luz
+// aditiva, como o fx_glow)
+function makeShaft(scene) {
+  if (scene.textures.exists("fx_shaft")) return;
+  const c = scene.textures.createCanvas("fx_shaft", 48, 256);
+  const ctx = c.getContext();
+  const h = ctx.createLinearGradient(0, 0, 48, 0);
+  h.addColorStop(0, "rgba(255,255,255,0)");
+  h.addColorStop(0.5, "rgba(255,255,255,1)");
+  h.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = h;
+  ctx.fillRect(0, 0, 48, 256);
+  ctx.globalCompositeOperation = "destination-in";
+  const v = ctx.createLinearGradient(0, 0, 0, 256);
+  v.addColorStop(0, "rgba(0,0,0,0)");
+  v.addColorStop(0.12, "rgba(0,0,0,1)");
+  v.addColorStop(0.55, "rgba(0,0,0,0.6)");
+  v.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = v;
+  ctx.fillRect(0, 0, 48, 256);
+  c.refresh();
+}
+
 export function registerCampDecor(scene) {
   makeFire().register(scene, "camp_fire");
   makeLogSeat().register(scene, "camp_logseat");
@@ -455,10 +588,13 @@ export function registerCampDecor(scene) {
   makeBulb().register(scene, "camp_bulb");
   FLAG_COLORS.forEach((c, i) => makeFlag(c).register(scene, `camp_flag${i}`));
   makeKapok().register(scene, "camp_kapok");
+  makeJequitiba().register(scene, "camp_jequitiba");
+  makePlaque().register(scene, "camp_plaque");
   makeHeliconia(true).register(scene, "camp_heliconia0");
   makeHeliconia(false).register(scene, "camp_heliconia1");
   makeRocks().register(scene, "camp_rocks");
   makeVignette(scene);
+  makeShaft(scene);
 }
 
 export const FLAG_COUNT = FLAG_COLORS.length;

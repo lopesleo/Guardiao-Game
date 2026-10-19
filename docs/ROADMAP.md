@@ -444,6 +444,14 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   kits pagos de 3 peças (Ipê-rosa, Paineira, Coruja-buraqueira, Festa Junina), nas cores livres do combate e
   com teto de partículas; vitrine com prévia ao vivo e compra do kit ali mesmo; Billing com um registro por
   produto (pendente, reconhecimento, estorno com aviso). Desligado na loja até criar os produtos (👤)
+- ✅ **Loja e Pacote Fundador** (19/10/2026, [`COSMETICOS.md`](COSMETICOS.md), "Estratégia de preços"): preços
+  revistos com pesquisa (kit R$ 4,90 como entrada barata; o pacote é o destaque). Loja em três degraus (Sem
+  anúncios · **Pacote Fundador R$ 19,90** · kits) na ★ da Clareira e no LOJA do título, com "Separado sai por" e
+  "Você economiza N%" vindos da Play Store; versão sem o Sem anúncios (R$ 9,90) e o Pacote Apoiador depois da
+  janela (31/01/2027). Exclusivos: **Clareira Ancestral** (jequitibá, placa dos Fundadores, raios de sol pela
+  copa, folhas de cobre; aba Clareira no Guarda-roupa) e **insígnia de Fundador** na Clareira. Estorno do pacote
+  tira o que ele deu e diz o quê; 4 cenários novos no `test:compra`. Janelas que não cabem (celular + japonês +
+  texto "Muito grande") encolhem por inteiro em vez de cortar. Desligado na loja até criar os produtos (👤)
 - ✅ **Joystick morria depois da 1ª carta** (19/10/2026, achado no aparelho com a 1.0.4): um `off("resume")`
   geral no `GameScene` (do conserto antigo das cartas em dobro) apagava o ouvinte que religava o joystick depois
   da pausa da acessibilidade — em todos os modos, também depois do ⏸ e do reviver. Agora o joystick religa no

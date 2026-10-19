@@ -1613,12 +1613,23 @@ export const STORE = {
   // Kits de cosméticos (docs/COSMETICOS.md): cada um é um produto único que libera as 3 peças do kit.
   // Os ids têm de ser IGUAIS aos do Play Console (criados na fase 2; não dá para reaproveitar depois)
   KITS: { ipe: "kit_ipe", paina: "kit_paineira", coruja: "kit_coruja", junina: "kit_junina" },
+  // Pacotes: 1 compra libera várias coisas (docs/COSMETICOS.md, "Estratégia de preços"). A janela do
+  // Fundador é controlada no Play Console (desativar o produto no fim; quem comprou mantém tudo). A lista
+  // de kits é FIXA por produto: kit novo não entra de graça em pacote vendido antes dele
+  PACKS: {
+    fundador: { product: "pacote_fundador", noAds: true, kits: ["ipe", "paina", "coruja", "junina"], founder: true },
+    // para quem já tem o "Sem anúncios" (o Play não faz "complete o conjunto")
+    fundador_lite: { product: "pacote_fundador_kits", noAds: false, kits: ["ipe", "paina", "coruja", "junina"], founder: true },
+    // depois da janela do Fundador: sem os exclusivos
+    apoiador: { product: "pacote_apoiador", noAds: true, kits: ["ipe", "paina", "coruja", "junina"], founder: false },
+  },
 };
 
 // Cosméticos (docs/COSMETICOS.md). Só aparência: nenhum muda dano, vida, moedas ou o que for de jogo.
 export const COSMETICS = {
   ENABLED: false, // Guarda-roupa no build da loja (o modo de teste ?debug=1 sempre mostra)
   SHOP: false, // kits à venda (fase 2: Billing com catálogo). Desligado = "Em breve" nas peças pagas
+  FOUNDER_UNTIL: [2027, 1, 31], // fim da janela do Pacote Fundador (só para MOSTRAR a data; quem vende é o Console)
   PETAL_BUDGET: 14, // partículas de libertação por janela de 120 ms, somando todas as mortes
   AMOUNTS: [0.5, 1, 1.6], // quantidade de pétalas: discreta, normal, cheia
 };

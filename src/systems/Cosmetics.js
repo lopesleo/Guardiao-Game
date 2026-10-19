@@ -13,6 +13,7 @@ import { COSMETICS, STORE } from "../config.js";
 import { registerCosmeticFX } from "../art/CosmeticFX.js";
 import { PIECE_FX } from "./CosmeticPieces.js";
 import { Billing } from "./Billing.js";
+import { AdService } from "./AdService.js";
 import { tr } from "../i18n/i18n.js";
 
 // ---------------------------------------------------------------- catálogo
@@ -57,6 +58,11 @@ export const COSM_PIECES = {
 for (const [id, p] of Object.entries(COSM_PIECES)) p.id = id;
 export const piecesOf = (slot) => Object.values(COSM_PIECES).filter((p) => p.slot === slot);
 export const kitPieces = (kit) => Object.values(COSM_PIECES).filter((p) => p.kit === kit);
+// Skins da Clareira (aba "Clareira" do Guarda-roupa). founder = exclusiva do Pacote Fundador, nunca vendida
+export const COSM_CAMP = {
+  ancestral: { name: tr("Clareira Ancestral"), desc: tr("Um jequitibá ancestral, luz de fim de tarde e folhas de cobre caindo."), icon: "ico_fundador", founder: true },
+};
+for (const [id, c] of Object.entries(COSM_CAMP)) c.id = id;
 export const COSM_AMOUNTS = [
   { k: COSMETICS.AMOUNTS[0], name: tr("Pouca") },
   { k: COSMETICS.AMOUNTS[1], name: tr("Normal") },
@@ -127,10 +133,35 @@ export const Wardrobe = {
     load().amount = i;
     save();
   },
-  // O jogador tem o kit? A loja (Billing; estorno tira) ou, no modo de teste, a loja simulada
+  // O jogador tem o kit? A loja (Billing: o kit ou um pacote que o inclui; estorno tira) ou, no modo de
+  // teste, a loja simulada
   ownsKit(kit) {
     load();
-    return Billing.ownsKit(kit) || (DEBUG && devOwned.has(kit));
+    return Billing.ownsKit(kit) || (DEBUG && (devOwned.has(kit) || Object.entries(STORE.PACKS).some(([k, p]) => devOwned.has("pack:" + k) && p.kits.includes(kit))));
+  },
+  // Fundador (insígnia e Clareira Ancestral): comprou um pacote do Fundador
+  isFounder() {
+    load();
+    return Billing.isFounder || (DEBUG && Object.entries(STORE.PACKS).some(([k, p]) => p.founder && devOwned.has("pack:" + k)));
+  },
+  ownsPack(pack) {
+    load();
+    return Billing.ownsPack(pack) || (DEBUG && devOwned.has("pack:" + pack));
+  },
+  ownsCamp(id) {
+    return !!COSM_CAMP[id] && (!COSM_CAMP[id].founder || this.isFounder());
+  },
+  // Skin da Clareira em uso (só se for do jogador)
+  activeCamp() {
+    const id = this.get("camp");
+    return id && this.ownsCamp(id) ? id : null;
+  },
+  // Modo de teste: "compra" de pacote na loja simulada (o "sem anúncios" do pacote também)
+  devBuyPack(pack) {
+    load();
+    devOwned.add("pack:" + pack);
+    if (STORE.PACKS[pack]?.noAds) AdService.setNoAds(true);
+    save();
   },
   owns(id) {
     const p = COSM_PIECES[id];

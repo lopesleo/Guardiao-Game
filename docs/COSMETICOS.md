@@ -1,10 +1,12 @@
 # Cosméticos e novos itens à venda
 
 Ideias anotadas em 19/10/2026 (conversa com o Leonardo), a partir da pergunta "podemos lançar mais itens
-para venda?". **Status (19/10/2026): fases 1 e 2 prontas no código, desligadas no build da loja.** As 16 peças, o
-Guarda-roupa-vitrine e a compra dos kits pela Play Store funcionam no modo de teste (`?debug=1`, com loja
-simulada). Para vender: 👤 criar os 4 produtos no Play Console (tabela em `docs/PLAY_STORE.md`) e ligar
-`COSMETICS.ENABLED` e `COSMETICS.SHOP` em `src/config.js` numa versão nova.
+para venda?". **Status (19/10/2026): fases 1, 2 e 3 prontas no código, desligadas no build da loja.** As 16 peças, o
+Guarda-roupa-vitrine, a Loja (Sem anúncios · Pacote Fundador · kits), a Clareira Ancestral e a compra de kits e
+pacotes pela Play Store funcionam no modo de teste (`?debug=1`, com loja simulada). Preços e o porquê:
+[Estratégia de preços](#estratégia-de-preços-revista-em-19102026-com-pesquisa). Para vender: 👤 criar os 4 kits
+e os 2 pacotes do Fundador no Play Console (tabelas em `docs/PLAY_STORE.md`) e ligar `COSMETICS.ENABLED` e
+`COSMETICS.SHOP` em `src/config.js` numa versão nova.
 
 ## Princípio (não muda)
 
@@ -16,14 +18,72 @@ Vender **só o que não dá vantagem**: sem moedas, sem bênçãos, sem pular o 
 1. **Gorjeta ao estúdio** (consumível, R$ 4,90 / 9,90 / 19,90): só um obrigado e um selo de apoiador na
    Clareira. Barata de fazer (janela + produto consumível; o plugin já consome). Para quem comprou o "Sem
    anúncios" e quer apoiar mais.
-2. **Kits cosméticos temáticos** (R$ 9,90): um conjunto que vale para **todos os guardiões** de uma vez —
-   efeito de libertação + rastro + um enfeite da Clareira. Ver abaixo.
+2. **Kits cosméticos temáticos** (R$ 4,90) e o **Pacote Fundador** (R$ 19,90): ver a estratégia de preços
+   abaixo.
 3. **Trajes de silhueta nova**, avulsos (R$ 4,90) ou em pacote: mais caros de fazer (cada herói tem a sua
    função de desenho em `src/art/Hero.js` e as poses de cair/levantar em `src/art/HeroRig.js`).
 4. Depois, só com dados de retenção: **bioma novo como expansão** (ex.: Pantanal), como o Vampire Survivors.
 
 Não vender: moedas, bênçãos, atalhos de tempo, baú pago, passe de temporada premium (exige conteúdo novo
 toda temporada; só depois dos números de retenção).
+
+## Estratégia de preços (revista em 19/10/2026, com pesquisa)
+
+O Leonardo pediu para repensar ("talvez vender algo mais barato dê mais retorno"). O que a pesquisa mostrou:
+
+- **Cosmético vende pouco em jogo de um jogador só.** O motivo nº 1 de comprar visual é ser visto (status,
+  identidade no grupo); sem multijogador sobram "gostei do jogo" e "quero apoiar". O kit avulso é a escada de
+  entrada, não o carro-chefe. ([Illinois][f1], [Bristol][f2])
+- **No gênero, conteúdo pago é barato:** Vampire Survivors vende DLC a US$ 1,99 (US$ 0,99 no celular, no
+  lançamento); Brotato, a US$ 2,99. ([TouchArcade][f3], [App Pricing Lab][f4])
+- **A primeira compra é a mais difícil; depois dela o jogador volta.** O pacote de primeira compra da Kongregate
+  subiu a conversão de 0,68% para 0,90%, e 74% de quem comprou comprou de novo. Mas o item de US$ 8 fez 99% da
+  receita contra o de US$ 4: o barato converte, quem paga a conta é o pacote de valor alto.
+  ([Kongregate][f5], [Deconstructor of Fun][f6])
+- **Brasil:** 73% dos jogos vivem de anúncios, o Pix facilitou a microtransação e o mínimo do Google Play é
+  R$ 0,99. ([Mordor Intelligence][f7], [Google][f8]) Três ofertas lado a lado, com a do meio em destaque, é o
+  arranjo clássico de âncora. ([Unity][f9])
+
+**Decisão — degraus, do mais barato ao destaque:**
+
+| Produto | Preço (Brasil · base dos outros países) | Papel |
+|---|---|---|
+| Kit (cada um dos 4) | **R$ 4,90 · US$ 0,99** (era R$ 9,90) | entrada barata: a primeira compra |
+| Sem anúncios | R$ 14,90 · US$ 2,99 | já à venda, não muda |
+| **Pacote Fundador** | **R$ 19,90 · US$ 3,99** | o destaque: Sem anúncios + 4 kits (R$ 34,50 separados, 42% de economia) + exclusivos |
+| Pacote Fundador sem o Sem anúncios | R$ 9,90 · US$ 1,99 | para quem já tem o Sem anúncios (o Play não faz "complete o conjunto") |
+| Pacote Apoiador | R$ 24,90 · US$ 4,99 | depois da janela do Fundador: mesmo conteúdo, sem os exclusivos |
+
+- **Âncora:** a Loja (`src/ui/ShopModal.js`) põe os três lado a lado; o pacote do meio custa R$ 5 a mais que o
+  Sem anúncios sozinho e traz tudo ("MELHOR VALOR", "Separado sai por R$ 34,50", "Você economiza 42%"). Os
+  números vêm da própria Play Store (preço e moeda de cada país); a economia arredonda para baixo e só soma o
+  que também se vende avulso — os exclusivos ficam de bônus, então a vitrine nunca exagera.
+- **Exclusivos do Fundador (só aparência):** a **Clareira Ancestral** (skin do acampamento: jequitibá no lugar
+  da samaúma, placa dos Fundadores, raios de sol de fim de tarde pela copa, céu dourado, folhas de cobre caindo,
+  vaga-lumes dourados) e a **insígnia de Fundador** (medalhão ao lado do título da Clareira). O "kit Jequitibá
+  premium" saiu: o jequitibá virou a Clareira Ancestral, vista toda vez que se abre o jogo, sem competir com os
+  kits. Placar no futuro: a insígnia vai junto do nome (`Wardrobe.isFounder()`).
+- **Janela:** à venda até **31/01/2027** (`COSMETICS.FOUNDER_UNTIL`, só o texto "Só até…"). Quem encerra de
+  verdade é o Play Console (👤 desativar `pacote_fundador` e `pacote_fundador_kits`): produto desativado some
+  do `getProducts` e a Loja passa sozinha para o Pacote Apoiador. Quem comprou continua Fundador para sempre.
+- **O momento bom:** comprou o Fundador (ou o pagamento pendente foi aprovado) → ao fechar a Loja a Clareira já
+  é a Ancestral; dá para voltar à de sempre na aba **Clareira** do Guarda-roupa.
+- **Estorno do pacote:** sai tudo o que ele deu, com aviso que diz o quê (kits, Clareira Ancestral, insígnia; os
+  anúncios só voltam se nenhuma outra compra ainda os tira). `npm run test:compra`: cenários `pacote*`.
+- **Onde se compra:** ★ da Clareira e botão LOJA do título (com a loja de cosméticos desligada, os dois
+  continuam sendo só o "Sem anúncios"); atalhos no Guarda-roupa (aba Kits e aba Clareira). Nunca na partida.
+- **Medir:** `shop_view` → `pack_buy_ui` e `iap_result` por produto. Se o Fundador não converter, testar o
+  preço com "Experimentos de preço" do Play Console antes de mexer no conteúdo.
+
+[f1]: https://www.ideals.illinois.edu/items/114139/bitstreams/374302/data.pdf
+[f2]: https://bristoluniversitypressdigital.com/view/journals/consoc/5/2/article-p285.xml
+[f3]: https://toucharcade.com/2022/12/15/vampire-survivors-legacy-of-the-moonspell-dlc-mobile-release-date-2023-ios-android-iphone-price/
+[f4]: https://apppricinglab.com/iap/apple/1668755109
+[f5]: https://www.gamedeveloper.com/business/using-new-buyer-packs-to-enhance-player-experience-and-increase-conversion
+[f6]: https://www.deconstructoroffun.com/blog/2024/4/8/free-to-play-starter-pack-pricing-when-conversion-is-king-we-may-price-too-low
+[f7]: https://www.mordorintelligence.com/industry-reports/latin-america-mobile-gaming-market
+[f8]: https://android-developers.googleblog.com/2015/11/minimum-purchase-price-for-apps-and-in.html?hl=pt_BR
+[f9]: https://unity.com/resources/in-app-purchases-guide
 
 ## Por que não só trocar a paleta
 
@@ -100,7 +160,7 @@ cada passo" (cai enquanto anda); "varal na cabeça" (é sobre); "Loja de teste (
 
 | Problema | Solução |
 |---|---|
-| Cada peça paga mostrava "R$ 9,90" (parecia o preço de cada uma) | preço só no **kit**; a peça diz "Vem no Kit …" com cadeado e o botão **VER KIT · R$ 9,90** |
+| Cada peça paga mostrava o preço (parecia o preço de cada uma) | preço só no **kit**; a peça diz "Vem no Kit …" com cadeado e o botão **VER KIT · R$ 4,90** |
 | Dois destaques confusos (moldura = prévia, ✓ = em uso) | moldura dourada = na prévia · selo ✓ = em uso · cadeado = falta comprar (nunca só a cor) |
 | Sem lugar para ver os kits | aba **Kits**: os 4 kits com as 3 peças; a prévia toca o kit inteiro (Rastro → Libertação → Despertar) |
 | Compra numa 2ª janela | compra direto na aba Kits (a Play Store já confirma); depois, **USAR O KIT INTEIRO** |
@@ -127,10 +187,13 @@ cada passo" (cai enquanto anda); "varal na cabeça" (é sobre); "Loja de teste (
    4 kits): preço, compra, pendente (conferido a cada 20 s com o app aberto), reconhecimento com nova
    tentativa, carência, conferência dupla e **aviso de estorno/aprovação por kit** (com atalho para o
    Guarda-roupa). O "Sem anúncios" continua no mesmo formato salvo de antes. `npm run test:compra` com 12
-   cenários (3 de kit). Falta 👤: criar os produtos e ligar as chaves (acima). Preço: **R$ 9,90 por kit**.
-   A ★ de cima continua sendo só o "Sem anúncios"; a vitrine dos kits é o Guarda-roupa (camiseta).
-3. **Depois:** pacote do apoiador (abaixo), gorjeta (consumível), kits sazonais, trajes regionais,
-   entrada/vitória, acessório do bicho.
+   cenários (3 de kit). Falta 👤: criar os produtos e ligar as chaves (acima). Preço: **R$ 4,90 por kit**.
+3. ✅ **Loja e pacotes (código, 19/10/2026):** Loja com os três degraus (`ShopModal.js`, ★ da Clareira e LOJA
+   do título), Pacote Fundador / sem o Sem anúncios / Apoiador (`STORE.PACKS`, `Billing.buyPack`), Clareira
+   Ancestral (`COSM_CAMP`, aba Clareira do Guarda-roupa, `src/scenes/CampDecor.js`), insígnia na Clareira,
+   chamada do pacote na aba Kits. `npm run test:compra` com 16 cenários (4 de pacote).
+4. **Depois:** gorjeta (consumível), kits sazonais, trajes regionais, entrada/vitória, acessório do bicho,
+   insígnia no placar.
 
 ### Como as peças foram conferidas (19/10/2026)
 
@@ -145,22 +208,16 @@ cada passo" (cai enquanto anda); "varal na cabeça" (é sobre); "Loja de teste (
 - Partida real com cada kit inteiro em "Cheia" (pior caso): matança em massa e Despertar com gemas, moedas,
   baús e herói legíveis; no máximo ~60 partículas de cosmético vivas na tela.
 
-### Pacote do apoiador (só pensado; não implementar ainda)
+### Pacotes — o que ficou da primeira ideia (19/10/2026)
 
-**Ideia:** uma compra que leva **"Sem anúncios" + os 4 kits** por bem menos que separado, e um selo de
-apoiador na Clareira (cosmético, sem poder).
+A 1ª conta (R$ 29,90 com kits a R$ 9,90) foi trocada pela estratégia de preços acima. Continua valendo:
 
-- **Conta:** separado = R$ 14,90 + 4 × R$ 9,90 = **R$ 54,50**. Pacote a **R$ 29,90** (~45% de desconto) —
-  abaixo de R$ 30 é a faixa de "compra de impulso" de quem já gostou do jogo; US$ 5,99 fora do Brasil.
-- **Quem já comprou uma parte:** o Play não faz "complete o conjunto" para produtos únicos. Saídas: (a) a
-  loja só oferece o pacote a quem **não** tem nada (e mostra "falta só X" a quem tem), ou (b) dois produtos —
-  "Pacote do apoiador" e "Pacote do apoiador (sem o Sem anúncios)" a R$ 19,90. A (b) é mais justa.
-- **Kits futuros:** prometer "todos os kits futuros" prende o calendário e corta receita; melhor "todos os
-  kits **lançados até a compra**" + o selo. Kit novo depois → preço cheio ou desconto de apoiador.
-- **Quando:** só depois de haver 4 kits na loja e dados de conversão do "Sem anúncios" (`iap_view` → `iap_result`);
-  o pacote vira a oferta do lançamento (03/12) ou de uma data (Dia do Folclore, 22/08).
-- **Cuidado de política:** o pacote não pode parecer obrigatório nem aparecer no meio da partida; a vitrine
-  diz exatamente o que vem dentro.
+- **Quem já comprou uma parte:** o Play não faz "complete o conjunto" para produtos únicos → dois produtos
+  (com e sem o Sem anúncios); a Loja mostra só o que serve para quem está olhando.
+- **Kits futuros:** o pacote leva os kits **lançados até a compra** (o texto diz "os 4 kits"); kit novo depois
+  é vendido à parte.
+- **Política:** o pacote não parece obrigatório, não aparece no meio da partida e a vitrine diz exatamente o
+  que vem dentro.
 
 ## Protótipo: Kit Ipê-rosa (19/10/2026)
 
@@ -199,7 +256,7 @@ Rodadas de autocrítica (capturas de partida real, com e sem o kit):
 5. Guarda-roupa: o subtítulo da janela encostava no título em japonês com texto muito grande → a nota
    "protótipo" foi para o pé da janela (que cresce com o texto).
 
-Falta sentir no celular (S23 e um aparelho fraco) e decidir se o Kit vale R$ 9,90 para quem joga.
+Falta sentir no celular (S23 e um aparelho fraco). Preço do kit decidido: R$ 4,90 (ver a estratégia de preços).
 
 Próximo passo, se o protótipo convencer: sistema de cosméticos (guardar o que tem e o que está equipado),
 guarda-roupa na Clareira, produto no Play Console, peça grátis por conquista.

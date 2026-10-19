@@ -536,8 +536,9 @@ loja fica tudo desligado até `COSMETICS.ENABLED` e `COSMETICS.SHOP` (`src/confi
 **Passo a passo (👤), depois de a versão com o Guarda-roupa estar no Alpha:**
 1. **Monetizar → Produtos → Produtos únicos → Criar**, um por kit, com os IDs **exatamente** iguais aos de
    `STORE.KITS` (não dá para mudar nem reaproveitar): `kit_ipe`, `kit_paineira`, `kit_coruja`, `kit_junina`.
-2. Opção de compra: comprar. Preço: **R$ 9,90** no Brasil e **US$ 1,99** de base nos outros países (mesmo
-   jeito do "Sem anúncios": editar em massa e depois o Brasil à mão). Ativar.
+2. Opção de compra: comprar. Preço: **R$ 4,90** no Brasil e **US$ 0,99** de base nos outros países (mesmo
+   jeito do "Sem anúncios": editar em massa e depois o Brasil à mão). Ativar. (Por que esse preço:
+   `docs/COSMETICOS.md`, "Estratégia de preços".)
 3. Nome e descrição (nome ≤ 55, descrição ≤ 200; `es-419` vale para `es-ES`, `zh-TW` para `zh-HK`):
 
    | Idioma | Kit | Nome | Descrição |
@@ -567,10 +568,52 @@ loja fica tudo desligado até `COSMETICS.ENABLED` e `COSMETICS.SHOP` (`src/confi
    | zh-TW | coruja | 穴鴞套裝 | 被解放者身上飛出小貓頭鷹、羽毛拖尾，以及覺醒時展開的貓頭鷹之翼。僅外觀。 |
    | zh-TW | junina | 六月節套裝 | 花布彩旗、彩旗拖尾，以及覺醒時在你身邊辦起的六月慶典。僅外觀。 |
 
-4. **Segurança dos dados:** nada muda (o "Histórico de compras" já declarado cobre os kits).
-5. Ligar `COSMETICS.ENABLED` e `COSMETICS.SHOP`, gerar a versão e testar no celular instalado pela loja:
-   comprar um kit, estornar em **Pedidos** e voltar ao jogo ("COMPRA ESTORNADA" do kit), cartão
-   "aprova com atraso" com o jogo aberto ("PAGAMENTO APROVADO"), reinstalar (os kits voltam).
+4. **Segurança dos dados:** nada muda (o "Histórico de compras" já declarado cobre os kits e os pacotes).
+5. Criar também os pacotes (abaixo), ligar `COSMETICS.ENABLED` e `COSMETICS.SHOP`, gerar a versão e testar no
+   celular instalado pela loja: comprar um kit, estornar em **Pedidos** e voltar ao jogo ("COMPRA ESTORNADA" do
+   kit), cartão "aprova com atraso" com o jogo aberto ("PAGAMENTO APROVADO"), reinstalar (os kits voltam).
+
+## Pacotes (Fundador e Apoiador)
+
+Também **produtos únicos**. O código (`STORE.PACKS`, `Billing.buyPack`) já sabe o que cada um libera; a Loja
+mostra "Separado sai por" e "Você economiza N%" com os preços que a Play Store devolver em cada país.
+
+| ID (exato) | Leva | Preço (Brasil · base) | Quando |
+|---|---|---|---|
+| `pacote_fundador` | Sem anúncios + 4 kits + Clareira Ancestral + insígnia | **R$ 19,90 · US$ 3,99** | do lançamento até 31/01/2027 |
+| `pacote_fundador_kits` | 4 kits + Clareira Ancestral + insígnia (para quem já tem o Sem anúncios) | **R$ 9,90 · US$ 1,99** | idem |
+| `pacote_apoiador` | Sem anúncios + 4 kits (sem exclusivos) | **R$ 24,90 · US$ 4,99** | criar só em 01/02/2027 |
+
+👤 Passo a passo: criar os dois do Fundador junto com os kits; em **31/01/2027**, **desativar** os dois (não
+apagar: quem comprou continua com eles) e **ativar** o `pacote_apoiador`. A Loja troca sozinha (produto
+desativado não volta no `getProducts`). O "Só até 31 de jan. de 2027" na Loja vem de `COSMETICS.FOUNDER_UNTIL`.
+
+Nome e descrição (nome ≤ 55, descrição ≤ 200):
+
+| Idioma | ID | Nome | Descrição |
+|---|---|---|---|
+| pt-BR | fundador | Pacote Fundador | Sem anúncios, os 4 kits de cosméticos (12 peças), a Clareira Ancestral e a insígnia de Fundador, exclusivas. Só aparência; por tempo limitado. |
+| pt-BR | fundador_kits | Pacote Fundador (sem o Sem anúncios) | Para quem já tem o Sem anúncios: os 4 kits de cosméticos (12 peças), a Clareira Ancestral e a insígnia de Fundador, exclusivas. Só aparência; por tempo limitado. |
+| pt-BR | apoiador | Pacote Apoiador | Sem anúncios e os 4 kits de cosméticos (12 peças) por menos que separados. Só aparência; apoia um jogo independente feito no Brasil. |
+| en-US | fundador | Founder Pack | No Ads, all 4 cosmetic kits (12 pieces), plus the exclusive Ancestral Clearing and Founder badge. Looks only; for a limited time. |
+| en-US | fundador_kits | Founder Pack (without No Ads) | For players who already have No Ads: all 4 cosmetic kits (12 pieces), plus the exclusive Ancestral Clearing and Founder badge. Looks only; for a limited time. |
+| en-US | apoiador | Supporter Pack | No Ads and all 4 cosmetic kits (12 pieces) for less than buying them separately. Looks only; supports an indie game made in Brazil. |
+| es-419 | fundador | Pack Fundador | Sin anuncios, los 4 kits de cosméticos (12 piezas), el Claro Ancestral y la insignia de Fundador, exclusivos. Solo apariencia; por tiempo limitado. |
+| es-419 | fundador_kits | Pack Fundador (sin el Sin anuncios) | Para quien ya tiene Sin anuncios: los 4 kits de cosméticos (12 piezas), el Claro Ancestral y la insignia de Fundador, exclusivos. Solo apariencia; por tiempo limitado. |
+| es-419 | apoiador | Pack Colaborador | Sin anuncios y los 4 kits de cosméticos (12 piezas) por menos que por separado. Solo apariencia; apoya un juego independiente hecho en Brasil. |
+| ja-JP | fundador | 創設者パック | 「広告なし」、コスメセット4つ（12点）、限定の「いにしえの広場」と創設者バッジ。見た目だけのアイテムです。期間限定。 |
+| ja-JP | fundador_kits | 創設者パック（広告なしを除く） | 「広告なし」を購入済みの方へ：コスメセット4つ（12点）、限定の「いにしえの広場」と創設者バッジ。見た目だけのアイテムです。期間限定。 |
+| ja-JP | apoiador | サポーターパック | 「広告なし」とコスメセット4つ（12点）を、別々に買うよりお得に。見た目だけのアイテムです。ブラジル生まれのインディーゲームを応援できます。 |
+| zh-CN | fundador | 创始者礼包 | 免广告、全部 4 个外观套装（12 件），以及独家的远古空地和创始者徽章。仅外观；限时发售。 |
+| zh-CN | fundador_kits | 创始者礼包（不含免广告） | 适合已拥有免广告的玩家：全部 4 个外观套装（12 件），以及独家的远古空地和创始者徽章。仅外观；限时发售。 |
+| zh-CN | apoiador | 支持者礼包 | 免广告和全部 4 个外观套装（12 件），比单独购买更划算。仅外观；支持一款巴西制作的独立游戏。 |
+| zh-TW | fundador | 創始者禮包 | 免廣告、全部 4 個外觀套裝（12 件），以及獨家的遠古空地和創始者徽章。僅外觀；限時販售。 |
+| zh-TW | fundador_kits | 創始者禮包（不含免廣告） | 適合已擁有免廣告的玩家：全部 4 個外觀套裝（12 件），以及獨家的遠古空地和創始者徽章。僅外觀；限時販售。 |
+| zh-TW | apoiador | 支持者禮包 | 免廣告和全部 4 個外觀套裝（12 件），比單獨購買更划算。僅外觀；支持一款巴西製作的獨立遊戲。 |
+
+Testar no celular instalado pela loja (Teste de licença): comprar o Fundador (anúncios somem, os 4 kits e a
+Clareira Ancestral aparecem), estornar em **Pedidos** (aviso diz o que saiu; o Sem anúncios avulso, se houver,
+continua) e reinstalar (tudo volta).
 
 ## Próximos passos recomendados (pós-lançamento)
 
