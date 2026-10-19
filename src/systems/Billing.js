@@ -14,10 +14,11 @@
 //    tenta de novo sozinho (o sync() reconhece toda compra paga que ainda não foi reconhecida).
 //  · Pagamento PENDENTE (boleto, Pix em análise, cartão de teste lento) não libera nada até virar
 //    comprado. O plugin não avisa quando vira: com o app aberto, o jogo confere a loja a cada 20 s
-//    enquanto houver pendente (antes só conferia na volta ao app, e o pendente aprovado com o jogo
-//    aberto nunca era reconhecido → estorno automático, visto no teste de 18/10/2026).
+//    enquanto houver pendente (antes só conferia na volta ao app: um pendente aprovado com o jogo
+//    aberto ficaria sem reconhecer e o Google estornaria em minutos no teste de licença).
 //  · Estorno/reembolso: a compra some da lista da loja → o jogo confere uma 2ª vez, tira o "sem
-//    anúncios" (só o que veio da loja) e AVISA o jogador na próxima tela de menu.
+//    anúncios" (só o que veio da loja) e AVISA o jogador na próxima tela de menu. Até 18/10/2026 tirava
+//    calado: no teste, a compra aceita e reconhecida foi estornada e o jogador só viu o item sumir.
 // As chamadas ao plugin vão em FILA: cada uma recria o cliente da loja e fecharia a anterior.
 import { STORE } from "../config.js";
 import { isNative } from "./Platform.js";
