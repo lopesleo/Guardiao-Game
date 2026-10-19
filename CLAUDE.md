@@ -82,22 +82,13 @@ Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um 
 marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 
 **Agora**
-- **1.0.5 (código 6) publicada no TESTE INTERNO (19/10, 16:54; sem revisão, só a lista "Teste de compras") e como
-  RASCUNHO no Alpha.** 👤 No celular: abrir `https://play.google.com/apps/internaltest/4700140413216190768` → Aceitar →
-  atualizar o jogo pela Play Store (até ~1 h) e testar. Passou → no Console, Teste fechado → rascunho 1.0.5 → Avançar
-  → Salvar e publicar → Visão geral da publicação → Enviar para revisão.
-  `dist/guardiao-v1.0.5-6-anuncios-reais.aab` (anúncios reais, assinada). **Substitui a 1.0.4 do Alpha**, que tem o joystick morrendo depois da 1ª carta (também depois do ⏸ e
-  do reviver; achado no aparelho em 18/10 — no celular a partida ficava injogável). Traz também o **aviso de
-  estorno** ("COMPRA ESTORNADA"; no teste de 18/10 a compra aceita e reconhecida foi estornada e o item sumiu
-  calado), o pendente aprovado com o jogo aberto passa a ser reconhecido ("PAGAMENTO APROVADO"), o quadro da
-  Clareira que acompanha o texto grande e o botão ★ da loja na Clareira. Passou em `npm test` (toque + compra,
-  obrigatório na skill `versao-loja`). Notas nos 8 idiomas em `docs/PLAY_STORE.md`. Os 2 avisos de sempre do
-  Console podem ser ignorados. A 1.0.4 foi enviada para revisão em 16/10 com o produto `sem_anuncios` (R$ 14,90 /
-  US$ 2,99, opção `compra`), Teste de licença ("Teste de compras", só leonardolopes952@gmail.com) e Segurança dos
-  dados com "Histórico de compras" já cadastrados. Depois, com ela instalada pela
-  loja: andar depois de escolher uma carta; comprar, estornar em **Pedidos** e voltar ao jogo → "COMPRA
-  ESTORNADA"; comprar com o cartão "aprova com atraso" **com o jogo aberto** → "PAGAMENTO APROVADO" e, 10 min
-  depois, sem estorno; reinstalar → volta ativo. Sentir o joystick fixo e o canhoto com o dedo.
+- **1.0.6 (código 7) PUBLICADA no Teste interno e no Teste fechado/Alpha (19/10, `npm run play:versao -- subir
+  --publicar`):** loja de cosméticos ligada (Guarda-roupa, kits R$ 4,90, Pacote Fundador R$ 19,90, Clareira Ancestral)
+  e joystick em toda a metade da tela; inclui a correção do joystick da 1.0.5 (a 1.0.5 ficou só no interno). O Alpha
+  está na **revisão do Google** (a 1.0.4 continua valendo até aprovar). `dist/guardiao-v1.0.6-7-anuncios-reais.aab`.
+  👤 No celular (teste interno, `https://play.google.com/apps/internaltest/4700140413216190768`): atualizar e testar
+  joystick (carta, ⏸, reviver, polegar no meio da tela), Loja (★ e LOJA), comprar o Pacote Fundador com cartão de
+  teste → Clareira Ancestral; estornar em **Pedidos** → "COMPRA ESTORNADA" diz o que saiu. Sentir o joystick fixo/canhoto.
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
   ~14/10 (pedido de produção possível por volta de **28/10**). 👤 Manter os 12 ativos (ninguém sair da lista).
   Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`. Cadastrar e-mails à mão (só contas
@@ -110,7 +101,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
   assistência (como ler: `docs/ARMAS_E_COMBOS.md`, "Como medir").
 
 **Decisões pendentes**
-- **Cosméticos e Loja** (`docs/COSMETICOS.md`, "Estratégia de preços", com pesquisa): prontos no código (19/10), desligados no build da loja (`COSMETICS.ENABLED`/`SHOP` em `config.js`). 16 peças (4 grátis + 4 kits de 3 peças), Guarda-roupa com prévia ao vivo e a **Loja** (★ da Clareira e LOJA do título) em três degraus: kit **R$ 4,90** (era 9,90) · Sem anúncios R$ 14,90 · **Pacote Fundador R$ 19,90** em destaque (Sem anúncios + 4 kits, 42% de economia, + exclusivos **Clareira Ancestral** e **insígnia de Fundador**; versão sem o Sem anúncios a R$ 9,90; janela até 31/01/2027, depois Pacote Apoiador R$ 24,90). 16 cenários no `test:compra`. Produtos no Play Console: os 4 kits e os 2 pacotes do Fundador **criados e ativos** (19/10; `npm run play:produtos`, catálogo em `tools/play/produtos.json`, credencial em `~/chaves-android/play-api.json`). 👤 Jogar com `?debug=1` e aprovar; depois ligar `COSMETICS.ENABLED`/`SHOP` numa versão. Próximo: `npm run play:versao` (subir o AAB no Alpha como rascunho, notas nos 8 idiomas). 👤 Em 31/01/2027: desativar os 2 do Fundador e ativar `pacote_apoiador`.
+- **Cosméticos e Loja** (`docs/COSMETICOS.md`, "Estratégia de preços", com pesquisa): prontos no código (19/10), desligados no build da loja (`COSMETICS.ENABLED`/`SHOP` em `config.js`). 16 peças (4 grátis + 4 kits de 3 peças), Guarda-roupa com prévia ao vivo e a **Loja** (★ da Clareira e LOJA do título) em três degraus: kit **R$ 4,90** (era 9,90) · Sem anúncios R$ 14,90 · **Pacote Fundador R$ 19,90** em destaque (Sem anúncios + 4 kits, 42% de economia, + exclusivos **Clareira Ancestral** e **insígnia de Fundador**; versão sem o Sem anúncios a R$ 9,90; janela até 31/01/2027, depois Pacote Apoiador R$ 24,90). 16 cenários no `test:compra`. Produtos no Play Console: os 4 kits e os 2 pacotes do Fundador **criados e ativos** (19/10; `npm run play:produtos`, catálogo em `tools/play/produtos.json`, credencial em `~/chaves-android/play-api.json`). **Ligado no app na 1.0.6** (`COSMETICS.ENABLED`/`SHOP`). Versões sobem por `npm run play:versao` (rascunho; `--publicar` só quando o Leonardo pedir). 👤 Em 31/01/2027: desativar os 2 do Fundador e ativar `pacote_apoiador`.
 - Descrição curta em espanhol: "leyendas de Brasil" → "del folclore brasileño"? (a captura 07 já foi refeita).
 
 **Depois de 12 testadores × 14 dias (~28/10)**
