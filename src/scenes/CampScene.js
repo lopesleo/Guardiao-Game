@@ -97,6 +97,8 @@ export class CampScene extends Phaser.Scene {
     this.glows = [];
     this.buildings = {}; // a trilha (placa) também é construção e vem antes das outras
 
+    // Clareira Ancestral (skin do Pacote Fundador): decidida antes de montar o mundo, porque a horta também troca
+    this._ancestral = cosmeticsOn() && Wardrobe.activeCamp() === "ancestral";
     this._ground();
     this._forestWall();
     this._trail();
