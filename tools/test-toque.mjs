@@ -130,6 +130,10 @@ async function runCombo(mode, side) {
     });
     await tap(p);
     await until(() => !window.game.scene.isActive("LevelUpScene") || window.game.scene.getScene("LevelUpScene")._locked, null, 10000);
+    // O joystick liga no próprio toque da carta (antes a partida esperava 260 ms parada e o polegar que já
+    // tinha encostado não andava, 19/10/2026)
+    const ja = await page.evaluate(() => window.game.scene.getScene("GameScene").joystick?.zone?.style.pointerEvents);
+    check(ja === "auto", "o joystick liga no próprio toque da carta", `zona=${ja}`);
   };
   const gameRunning = () => until(() => window.game.scene.isActive("GameScene") && !window.game.scene.isPaused("GameScene") && !window.game.scene.isActive("LevelUpScene"), null, 30000);
   // Partida previsível: herói imune e sem subir de nível sozinho (as armas automáticas matam, e as gemas
