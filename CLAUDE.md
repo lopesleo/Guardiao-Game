@@ -82,8 +82,10 @@ Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um 
 marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 
 **Agora**
-- **1.0.5 (código 6) está no Alpha como RASCUNHO (19/10, `npm run play:versao -- subir`):** 👤 no Console, Teste
-  fechado → abrir o rascunho 1.0.5 → Avançar → Salvar e publicar → Visão geral da publicação → Enviar para revisão.
+- **1.0.5 (código 6) publicada no TESTE INTERNO (19/10, 16:54; sem revisão, só a lista "Teste de compras") e como
+  RASCUNHO no Alpha.** 👤 No celular: abrir `https://play.google.com/apps/internaltest/4700140413216190768` → Aceitar →
+  atualizar o jogo pela Play Store (até ~1 h) e testar. Passou → no Console, Teste fechado → rascunho 1.0.5 → Avançar
+  → Salvar e publicar → Visão geral da publicação → Enviar para revisão.
   `dist/guardiao-v1.0.5-6-anuncios-reais.aab` (anúncios reais, assinada). **Substitui a 1.0.4 do Alpha**, que tem o joystick morrendo depois da 1ª carta (também depois do ⏸ e
   do reviver; achado no aparelho em 18/10 — no celular a partida ficava injogável). Traz também o **aviso de
   estorno** ("COMPRA ESTORNADA"; no teste de 18/10 a compra aceita e reconhecida foi estornada e o item sumiu
