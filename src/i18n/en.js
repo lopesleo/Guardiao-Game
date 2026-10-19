@@ -1067,7 +1067,7 @@ export default {
   "Uma nuvem de algodão sobe em volta de você e frutos estalam em roda.": "A cotton cloud rises around you as pods pop in a ring.",
   "LOJA": "SHOP",
   "Clareira Ancestral": "Ancestral Clearing",
-  "Um jequitibá ancestral, luz de fim de tarde e folhas de cobre caindo.": "An ancient jequitibá tree, late-afternoon light and copper leaves falling.",
+  "O jequitibá ancestral, lamparinas de cabaça, um tucano e borboletas-azuis na luz do fim de tarde.": "The ancient jequitibá, gourd lanterns, a toucan and blue morpho butterflies in the late-afternoon light.",
   "Pacote Fundador": "Founder Pack",
   "Pacote Apoiador": "Supporter Pack",
   "JÁ É SEU": "ALREADY YOURS",

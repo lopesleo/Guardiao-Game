@@ -45,7 +45,32 @@ export class CosmeticStage {
     const anc = skin === "ancestral";
     const tree = s.add.image(this.w * 0.3, this.h + 40, anc ? "camp_jequitiba" : "camp_kapok").setOrigin(0.5, 1).setScale(anc ? 1.9 : 2.1);
     this.back.add(tree);
-    if (anc) this.back.add(s.add.image(this.w * 0.3 + 92, this.h - 14, "camp_plaque").setOrigin(0.5, 1).setScale(2));
+    if (anc) {
+      // o que se vê da Clareira Ancestral além da árvore: tapete de cobre e cogumelos nas raízes, a placa, o
+      // esteio entalhado com as lamparinas e o tucano, e uma borboleta-azul passando
+      const W = this.w,
+        H = this.h;
+      for (const [x, y, f] of [[W * 0.3 - 60, H - 8, 0], [W * 0.3 + 46, H - 4, 1]]) this.ground.add(s.add.image(x, y, "camp_anc_leaves", f).setScale(2));
+      for (const [x, y, f] of [[W * 0.3 - 78, H - 2, 0], [W * 0.3 + 30, H + 4, 2]]) this.back.add(s.add.image(x, y, "camp_anc_shrooms", f).setOrigin(0.5, 1).setScale(2));
+      this.back.add(s.add.image(W * 0.3 + 92, H - 14, "camp_plaque").setOrigin(0.5, 1).setScale(2));
+      const px = W * 0.92,
+        base = H + 6;
+      this.back.add(s.add.image(px, base, "camp_anc_post").setOrigin(0.5, 1).setScale(2));
+      this.back.add(s.add.sprite(px, base - 92, "camp_anc_toucan", 0).setOrigin(0.61, 0.93).setScale(2));
+      for (const [dx, f0] of [[-11, 0], [9, 1]]) {
+        const lamp = s.add.sprite(px + dx, base - 84, "camp_anc_lamp", f0).setOrigin(0.5, 0).setScale(2);
+        this.back.add(lamp);
+        s.tweens.add({ targets: lamp, angle: { from: -6, to: 6 }, duration: 1400 + Math.random() * 600, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+        let fr = f0;
+        this._timers.push(s.time.addEvent({ delay: 220, loop: true, callback: () => lamp.active && lamp.setFrame((fr ^= 1)) }));
+      }
+      const bf = s.add.sprite(W * 0.5, H * 0.32, "camp_anc_morpho", 0).setScale(2);
+      this.air.add(bf);
+      s.tweens.add({ targets: bf, x: W * 0.62, duration: 2600, yoyo: true, repeat: -1, ease: "Sine.easeInOut", onYoyo: () => bf.setFlipX(true), onRepeat: () => bf.setFlipX(false) });
+      s.tweens.add({ targets: bf, y: H * 0.22, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+      let bfr = 0;
+      this._timers.push(s.time.addEvent({ delay: 120, loop: true, callback: () => bf.active && bf.setFrame((bfr ^= 1)) }));
+    }
     this.heroS.setPosition(this.w * 0.72, this.h * 0.68);
     this.shadow.setPosition(this.heroS.x, this.heroS.y + 30);
     // luz do fim de tarde (a Ancestral) por cima de tudo: o tom quente e os raios de sol da Clareira

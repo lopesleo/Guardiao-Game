@@ -58,9 +58,13 @@ O Leonardo pediu para repensar ("talvez vender algo mais barato dê mais retorno
   Sem anúncios sozinho e traz tudo ("MELHOR VALOR", "Separado sai por R$ 34,50", "Você economiza 42%"). Os
   números vêm da própria Play Store (preço e moeda de cada país); a economia arredonda para baixo e só soma o
   que também se vende avulso — os exclusivos ficam de bônus, então a vitrine nunca exagera.
-- **Exclusivos do Fundador (só aparência):** a **Clareira Ancestral** (skin do acampamento: jequitibá no lugar
-  da samaúma, placa dos Fundadores, raios de sol de fim de tarde pela copa, céu dourado, folhas de cobre caindo,
-  vaga-lumes dourados) e a **insígnia de Fundador** (medalhão ao lado do título da Clareira). O "kit Jequitibá
+- **Exclusivos do Fundador (só aparência):** a **Clareira Ancestral** (skin do acampamento inteiro, 19/10/2026:
+  jequitibá no lugar da samaúma, placa e estandarte dos Fundadores, raios de sol de fim de tarde com pólen
+  dourado, céu dourado, folhas de cobre caindo e em tapete nas raízes, vaga-lumes dourados; no terreiro, quatro
+  esteios entalhados com ponteira de cobre, um cordão de lamparinas de cabaça por cima da fogueira e lamparinas
+  nos ganchos, bancos entalhados com almofada e a rede de varanda; um tucano-toco pousado num esteio, borboletas-
+  azuis de dia e cogumelos flor-de-coco que brilham à noite — arte em `src/art/CampAncestral.js`; na 1ª versão
+  era só a árvore e a luz, e o Leonardo pediu mais) e a **insígnia de Fundador** (medalhão ao lado do título da Clareira). O "kit Jequitibá
   premium" saiu: o jequitibá virou a Clareira Ancestral, vista toda vez que se abre o jogo, sem competir com os
   kits. Placar no futuro: a insígnia vai junto do nome (`Wardrobe.isFounder()`).
 - **Janela:** à venda até **31/01/2027** (`COSMETICS.FOUNDER_UNTIL`, só o texto "Só até…"). Quem encerra de

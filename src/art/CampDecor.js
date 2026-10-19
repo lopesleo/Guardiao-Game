@@ -4,6 +4,7 @@
 // luzinhas, rede listrada, espantalho, regador e a vinheta da câmera.
 import { PAL } from "./Palette.js";
 import { Pix, bayer, rng } from "./PixelArt.js";
+import { registerCampAncestral } from "./CampAncestral.js";
 
 const K = PAL.ink;
 const DIRT = [PAL.n0, PAL.n1, PAL.n2, PAL.n3];
@@ -590,6 +591,7 @@ export function registerCampDecor(scene) {
   makeKapok().register(scene, "camp_kapok");
   makeJequitiba().register(scene, "camp_jequitiba");
   makePlaque().register(scene, "camp_plaque");
+  registerCampAncestral(scene); // o resto da Clareira Ancestral (portal, lamparinas, bichos…)
   makeHeliconia(true).register(scene, "camp_heliconia0");
   makeHeliconia(false).register(scene, "camp_heliconia1");
   makeRocks().register(scene, "camp_rocks");

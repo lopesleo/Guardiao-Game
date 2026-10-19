@@ -1067,7 +1067,7 @@ export default {
   "Uma nuvem de algodão sobe em volta de você e frutos estalam em roda.": "Una nube de algodón sube a tu alrededor y los frutos estallan en ronda.",
   "LOJA": "TIENDA",
   "Clareira Ancestral": "Claro Ancestral",
-  "Um jequitibá ancestral, luz de fim de tarde e folhas de cobre caindo.": "Un jequitibá ancestral, luz de atardecer y hojas cobrizas cayendo.",
+  "O jequitibá ancestral, lamparinas de cabaça, um tucano e borboletas-azuis na luz do fim de tarde.": "El jequitibá ancestral, faroles de calabaza, un tucán y mariposas morfo azules en la luz del atardecer.",
   "Pacote Fundador": "Pack Fundador",
   "Pacote Apoiador": "Pack Colaborador",
   "JÁ É SEU": "YA ES TUYO",
