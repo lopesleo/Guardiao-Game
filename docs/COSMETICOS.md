@@ -58,6 +58,52 @@ Cada kit tem uma peça que **também sai jogando** (conquista ou maestria). A lo
 todos. Kits com tema brasileiro: ipê, festa junina (junho), carnaval (fevereiro), boi-bumbá de Parintins
 (Amazônia, com respeito), cerrado em flor.
 
+## Próximos passos (decididos com o Leonardo em 19/10/2026)
+
+### O Guarda-roupa vira um lugar da Clareira: o Varal
+
+Um **varal** entre dois postes, perto da cabana: as peças que o jogador tem **ficam penduradas** (a pétala de
+ipê, a bandeirinha…) e a equipada brilha. Interagir (E / botão de ação) abre o Guarda-roupa. Aparece por
+**progresso**, não por data: quando o jogador ganha a 1ª peça grátis (ex.: vencer o 1º chefe dá o Rastro de
+ipê) — a peça apresenta o lugar, "uma novidade por vez".
+
+### A loja em dois caminhos (nunca no meio da partida)
+
+- **Menu de cima** (a ★ que hoje abre o "Sem anúncios") vira a **Loja**: Sem anúncios, kits e gorjeta.
+- **Direto no Guarda-roupa**: peça que o jogador não tem mostra o **preço no botão**; tocar abre a compra
+  daquele kit ali mesmo. Peça que sai jogando mostra **como ganhar** ("Vença o Mapinguari") no lugar do preço.
+- Técnico: o `Billing.js` hoje conhece um produto só; passa a ter um catálogo (cada kit = produto não
+  consumível; gorjeta = consumível), com restaurar, pendente e aviso de estorno **por produto**, e o
+  `npm run test:compra` cobrindo todos.
+
+### Mais peças e kits
+
+**A restrição que manda:** quase toda cor já é linguagem do combate (fogo, gelo, raio, vento, perigo, gemas
+verde/azul/dourada). Sobram **rosa, creme, marrons e cinzas** — então os kits se diferenciam por **forma e
+movimento**, e cada um passa pelo teste de legibilidade (matança em massa, Despertar, herói sempre à vista).
+
+| Kit | Libertação | Rastro | Despertar | Clareira | Risco de leitura |
+|---|---|---|---|---|---|
+| **Ipê-rosa** (protótipo) | pétalas + flor que brota | pétalas | Despertar rosa + anel de ipês | um ipê-rosa plantado | baixo (testado) |
+| **Paineira** | painas (sementes de algodão) flutuando devagar | paina que se solta dos pés | nuvem de paina subindo | uma barriguda | baixo (creme, movimento lento) |
+| **Coruja-buraqueira** | penas marrom e creme rodopiando | pegadas de coruja | asas abrindo atrás do herói | toca com a corujinha | baixo |
+| **Festa Junina** | bandeirinhas caindo | bandeirinha ao vento | fogueira de São João (sem fogo de verdade) | varal de bandeirinhas | **alto** (multicor: testar muito) |
+
+**Peças novas (além de libertação, rastro e Despertar):**
+- **Traje** (silhueta nova por guardião) — as **versões regionais das lendas** (ver acima). O mais caro de fazer.
+- **Entrada:** como o guardião chega pela trilha no começo da partida (pétalas no caminho, paina no ar).
+- **Vitória:** a comemoração ao vencer o chefe — o momento que se grava e compartilha.
+- **Acessório do bicho companheiro:** lencinho, coroa de flores (os bichos já são queridos; peça barata).
+- **Enfeite da Clareira** de cada kit (acima), que o herói pode usar quando der (rede, banco).
+
+### Ordem recomendada
+
+1. **Varal + Guarda-roupa de verdade** (fora do modo de teste) com **1 peça grátis por conquista** — valida
+   se o jogador usa, sem envolver dinheiro.
+2. **Loja unificada + Billing com catálogo + Kit Ipê-rosa à venda** (R$ 9,90) e a gorjeta.
+3. **Kit Paineira** (2º kit, para a loja não ter um item só) + enfeites da Clareira.
+4. **Trajes regionais** (pesquisa + desenho por guardião).
+
 ## Protótipo: Kit Ipê-rosa (19/10/2026)
 
 Rosa (`PAL.pink`) porque nenhuma cor de jogo usa rosa (só flores e bandeirinhas de decoração); o ipê-amarelo
