@@ -11,6 +11,7 @@ import { Analytics } from "../systems/Analytics.js";
 import { Clock } from "../systems/Clock.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { cropIcon } from "../art/Garden.js";
+import { ARCH_ANC, SCARECROW_ANC } from "../art/CampAncestral.js";
 import { text, drawFrame, haptic } from "../ui/Theme.js";
 import { Modal } from "../ui/Widgets.js";
 import { tr } from "../i18n/i18n.js";
@@ -40,8 +41,12 @@ export const CampGarden = {
     const shown = this._isShown("garden");
     const g = (this.gardenGfx = { plots: [] });
     const fade = []; // o que aparece na cena de revelação
+    const lamps = []; // lamparinas da Ancestral: o brilho só nasce com a horta à vista
+    const anc = this._ancestral;
+    const tex = (k) => (anc ? "garden_anc_" : "garden_") + k;
     // Cerca de taquara atrás, com o portal de bambu no meio (onde a trilha
-    // chega), e mourões de bambu nas laterais
+    // chega), e mourões de bambu nas laterais. Na Clareira Ancestral: estacas
+    // entalhadas com trançado de palha e o portal de esteios com ponteira de cobre
     const x0 = GX - 1.5 * COL - 16,
       x1 = GX + 1.5 * COL + 16,
       y0 = GY - 1.5 * ROW - 6,
@@ -50,13 +55,26 @@ export const CampGarden = {
     const fy = y0 - 6;
     const leftW = Math.round((GX - gateHalf - x0) / S),
       rightW = Math.round((x1 - (GX + gateHalf)) / S);
-    const fenceL = this.add.tileSprite(x0, fy, leftW, 14, "garden_fence").setOrigin(0, 1).setScale(S).setDepth(fy);
-    const fenceR = this.add.tileSprite(GX + gateHalf, fy, rightW, 14, "garden_fence").setOrigin(0, 1).setScale(S).setDepth(fy);
-    const arch = this.add.image(GX, fy + 2, "garden_arch").setOrigin(0.5, 1).setScale(S).setDepth(fy + 2);
+    const fenceL = this.add.tileSprite(x0, fy, leftW, 14, tex("fence")).setOrigin(0, 1).setScale(S).setDepth(fy);
+    const fenceR = this.add.tileSprite(GX + gateHalf, fy, rightW, 14, tex("fence")).setOrigin(0, 1).setScale(S).setDepth(fy);
+    const arch = this.add.image(GX, fy + 2, tex("arch")).setOrigin(0.5, 1).setScale(S).setDepth(fy + 2);
     fade.push(fenceL, fenceR, arch);
+    if (anc) {
+      // placa do broto pendurada na viga e uma lamparina em cada ponta, balançando no vento da Clareira
+      const top = fy + 2 - ARCH_ANC.h * S,
+        ax = (u) => GX + (u + 0.5 - ARCH_ANC.w / 2) * S;
+      const plaque = this.add.image(GX, top + ARCH_ANC.plaqueY * S, "garden_anc_plaque").setOrigin(0.5, 0).setScale(S).setDepth(fy + 3);
+      this.tweens.add({ targets: plaque, angle: { from: -2.5, to: 2.5 }, duration: 2100, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: this._wind(GX) + 180 });
+      fade.push(plaque);
+      ARCH_ANC.hooks.forEach((u, i) => {
+        const l = this._ancLamp(ax(u), top + ARCH_ANC.hookY * S, i, fy + 3);
+        fade.push(l.lamp);
+        lamps.push(l);
+      });
+    }
     for (const x of [x0 - 2, x1 - 16])
       for (let y = y0 + 40; y <= y1; y += 46) {
-        const post = this.add.image(x, y, "garden_fence_post").setOrigin(0, 1).setScale(S).setDepth(y);
+        const post = this.add.image(x, y, tex("fence_post")).setOrigin(0, 1).setScale(S).setDepth(y);
         fade.push(post);
       }
     // postes do portal e as cercas não se atravessam
@@ -90,8 +108,25 @@ export const CampGarden = {
     const scx = -175,
       scy = 350;
     const crowShadow = this.add.image(scx, scy + 4, "px_shadow").setScale(4, 2).setAlpha(0.5).setDepth(scy - 1);
-    const crow = this.add.image(scx, scy, "camp_scarecrow").setOrigin(0.5, 1).setScale(S).setDepth(scy);
-    this.tweens.add({ targets: crow, angle: { from: -2, to: 2 }, duration: 2600, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    const crow = (anc ? this.add.sprite(scx, scy, "camp_anc_scarecrow", 0) : this.add.image(scx, scy, "camp_scarecrow")).setOrigin(0.5, 1).setScale(S).setDepth(scy);
+    if (anc) {
+      // espantalho de poncho: balança no vento da Clareira, a franja e a pena correm em onda (6 quadros) e a
+      // lamparina pendurada no braço acompanha o balanço
+      const l = this._ancLamp(scx, scy, 1, scy + 1);
+      const hx = (SCARECROW_ANC.hook.x - SCARECROW_ANC.w / 2) * S,
+        hy = (SCARECROW_ANC.hook.y - SCARECROW_ANC.h) * S;
+      const arm = () => {
+        const c = Math.cos(crow.rotation),
+          s = Math.sin(crow.rotation);
+        l.moveTo(scx + hx * c - hy * s, scy + hx * s + hy * c);
+      };
+      arm();
+      this.tweens.add({ targets: crow, angle: { from: -2, to: 2 }, duration: 2100, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: this._wind(scx), onUpdate: arm });
+      let cf = 0;
+      this.time.addEvent({ delay: 120, loop: true, callback: () => crow.setFrame((cf = (cf + 1) % 6)) });
+      fade.push(l.lamp);
+      lamps.push(l);
+    } else this.tweens.add({ targets: crow, angle: { from: -2, to: 2 }, duration: 2600, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
     this._solid(scx, scy - 4, 12, 10);
     const can = this.add.image(158, 344, "camp_can").setOrigin(0.5, 1).setScale(S).setDepth(344);
     shadow._ra = 0.55; // opacidade final de cada sombra na revelação
@@ -100,6 +135,7 @@ export const CampGarden = {
     this._addInteract({ x: BARN_X, y: BARN_Y, top: BARN_Y - barn.displayHeight, r: 110, name: tr("CELEIRO"), verb: tr("CELEIRO"), hiddenUntil: "garden", action: () => this._showBarn() });
     // Enquanto em ruínas: tudo escondido, ruína no meio da horta
     if (!shown) fade.forEach((o) => o.setAlpha(0));
+    else lamps.forEach((l) => l.light());
     g.ruin = shown ? null : this.add.image(GX, GY + 30, "camp_ruin").setOrigin(0.5, 1).setScale(S).setDepth(GY + 30);
     this.buildings.garden = {
       x: GX,
@@ -110,6 +146,7 @@ export const CampGarden = {
       dot: this._notifyDot(GX + 1.5 * COL + 20, GY - 1.5 * ROW - 50).setDepth(this.D_HUD - 10).setVisible(false),
       reveal: () => {
         this.tweens.add({ targets: fade, alpha: (t) => t._ra ?? 1, duration: 700, delay: 300 });
+        this.time.delayedCall(700, () => lamps.forEach((l) => l.light()));
         this.barnBtn?.setVisible(true);
         this._layoutHud(); // o botão "Sem anúncios" abre espaço para o Celeiro
       },

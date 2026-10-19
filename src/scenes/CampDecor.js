@@ -100,7 +100,6 @@ export const CampDecor = {
   _decor() {
     // Clareira Ancestral (skin do Pacote Fundador, docs/COSMETICOS.md): troca a árvore, os bancos, a rede e o
     // varal do terreiro e põe o portal de lamparinas, os bichos, os cogumelos e a luz do fim de tarde
-    this._ancestral = cosmeticsOn() && Wardrobe.activeCamp() === "ancestral";
     this.morphos = []; // a cena é reaproveitada (trocar de skin recomeça): nada da rodada anterior
     this._shaftDefs = null;
     this._campfireSeats();
@@ -158,21 +157,44 @@ export const CampDecor = {
   // Clareira Ancestral: um cordão de lamparinas de cabaça entre os esteios de cima do terreiro (por cima da
   // fogueira) e uma lamparina em cada gancho dos esteios de baixo — nada cruza o meio do terreiro, por onde o
   // herói anda. Balançam, tremulam e acendem com a noite
+  // O vento da Clareira passa em onda, de oeste para leste: tudo o que balança usa o mesmo ritmo (2,1 s) e este
+  // atraso pela posição
+  _wind(x) {
+    return ((x + 400) / 800) * 1400;
+  },
+
+  // Lamparina de cabaça pendurada em (x, y): balança com o vento e a chama tremula. O brilho só nasce com
+  // light() (o laço dos brilhos manda na opacidade, então o que ainda está escondido não pode ter brilho).
+  _ancLamp(x, y, fr, depth) {
+    x = Math.round(x / 3) * 3;
+    y = Math.round(y / 3) * 3;
+    const lamp = this.add.sprite(x, y, "camp_anc_lamp", fr).setOrigin(0.5, 0).setScale(S).setDepth(depth);
+    const amp = 4 + Math.random() * 1.5;
+    this.tweens.add({ targets: lamp, angle: { from: -amp, to: amp }, duration: 2100, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: this._wind(x) });
+    let f = fr;
+    this.time.addEvent({ delay: 200 + Math.random() * 180, loop: true, callback: () => lamp.setFrame((f ^= 1)) });
+    const o = {
+      lamp,
+      glow: null,
+      light: () => {
+        if (o.glow) return o;
+        o.glow = this.add.image(lamp.x, lamp.y + 30, "fx_glow").setScale(0.8).setTint(0xffc46a).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0).setDepth(D_NIGHT + 1);
+        this.glows.push({ g: o.glow, base: 0.55, ph: Math.random() * 10 });
+        return o;
+      },
+      // a lamparina do espantalho anda com o braço
+      moveTo: (nx, ny) => {
+        lamp.setPosition(nx, ny);
+        o.glow?.setPosition(nx, ny + 30);
+      },
+    };
+    return o;
+  },
+
   _lampStrings() {
     const { poles, H } = this._terreiroPosts();
     const g = this.add.graphics().setDepth(D_NIGHT - 20);
-    // o vento passa em onda: todas balançam no mesmo ritmo, atrasadas pela posição (oeste → leste)
-    const lampAt = (x, y, fr) => {
-      x = Math.round(x / 3) * 3;
-      y = Math.round(y / 3) * 3;
-      const lamp = this.add.sprite(x, y, "camp_anc_lamp", fr).setOrigin(0.5, 0).setScale(S).setDepth(D_NIGHT - 19);
-      const amp = 4 + Math.random() * 1.5;
-      this.tweens.add({ targets: lamp, angle: { from: -amp, to: amp }, duration: 2100, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: ((x + 400) / 800) * 1400 });
-      let f = fr;
-      this.time.addEvent({ delay: 200 + Math.random() * 180, loop: true, callback: () => lamp.setFrame((f ^= 1)) });
-      const glow = this.add.image(x, y + 30, "fx_glow").setScale(0.8).setTint(0xffc46a).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.5).setDepth(D_NIGHT + 1);
-      this.glows.push({ g: glow, base: 0.55, ph: Math.random() * 10 });
-    };
+    const lampAt = (x, y, fr) => this._ancLamp(x, y, fr, D_NIGHT - 19).light();
     // esteios de baixo: uma lamparina em cada gancho
     for (const i of [2, 3]) {
       const [x, y] = poles[i];
@@ -218,7 +240,7 @@ export const CampDecor = {
       [-250, 0, 1],
       [258, 230, 0],
       [-560, 130, 2],
-      [-180, 250, 0],
+      [-290, 225, 0], // fora da sombra do espantalho da horta
     ]) {
       if (this.groundPaint?.onPath(x, y, 8) || !decorFree(x, y)) continue;
       this.add.image(x, y, "camp_anc_shrooms", fr).setOrigin(0.5, 1).setScale(S).setDepth(y);

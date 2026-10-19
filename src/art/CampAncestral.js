@@ -285,6 +285,273 @@ function makeBanner(f) {
   return p.outline(K);
 }
 
+// ---------------------------------------------------------------------------
+// HORTA ANCESTRAL: a cerca, o portal e o espantalho da horta na mesma madeira entalhada com cobre e no mesmo pano
+// tecido da rede e do estandarte
+// ---------------------------------------------------------------------------
+
+// Cerca (ladrilho de 40, período 8): estacas entalhadas com ponteira de cobre na frente de duas travessas, um
+// trançado de palha em sarja entre elas e amarras de barro nos cruzamentos. Com w = 6 vira o mourão das laterais.
+function makeFenceAnc(w) {
+  const p = new Pix(w, 14);
+  for (let x = 0; x < w; x++) {
+    p.set(x, 3, PAL.n3);
+    p.set(x, 4, PAL.n1);
+    for (let y = 5; y <= 8; y++) {
+      const t = (x + y) % 4;
+      p.set(x, y, t < 2 ? PAL.straw3 : t === 2 ? PAL.straw2 : PAL.straw1); // sarja: diagonal da trama
+    }
+    p.set(x, 9, PAL.n3);
+    p.set(x, 10, PAL.n1);
+  }
+  for (let x0 = 1; x0 < w - 1; x0 += 8) {
+    for (let y = 2; y < 14; y++) {
+      p.set(x0, y, PAL.n4);
+      p.set(x0 + 1, y, PAL.n3);
+      p.set(x0 + 2, y, PAL.n2);
+    }
+    // sulco talhado e um ponto de cobre
+    for (let x = x0; x <= x0 + 2; x++) p.set(x, 12, PAL.n1);
+    p.set(x0 + 1, 7, PAL.n1);
+    p.set(x0 + 1, 6, PAL.clay2);
+    // ponteira de cobre
+    p.set(x0, 1, PAL.clay3);
+    p.set(x0 + 1, 1, PAL.clay2);
+    p.set(x0 + 2, 1, PAL.clay1);
+    p.set(x0 + 1, 0, PAL.straw3);
+    p.set(x0, 2, PAL.clay2);
+    p.set(x0 + 1, 2, PAL.clay1);
+    p.set(x0 + 2, 2, PAL.clay0);
+    // amarras de barro onde a estaca cruza as travessas
+    for (const y of [3, 9]) {
+      if (x0 > 0) p.set(x0 - 1, y + 1, PAL.clay1);
+      if (x0 + 3 < w) p.set(x0 + 3, y, PAL.clay1);
+    }
+  }
+  // capim no pé, entre as estacas
+  for (const [x, y, c] of [[5, 13, PAL.g4], [6, 12, PAL.g5], [6, 13, PAL.g3], [21, 13, PAL.g4], [22, 12, PAL.g5], [30, 13, PAL.g3], [37, 13, PAL.g4], [38, 12, PAL.g5]])
+    if (x < w) p.set(x, y, c);
+  return p.outline(K);
+}
+
+// Portal da horta (38×44; o vão fica do tamanho do de sempre): dois esteios entalhados com ponteira de cobre
+// atravessando a viga, viga talhada em ziguezague com tachas de cobre, sanefa de palha franjada e os ganchos das
+// pontas, de onde a cena pendura duas lamparinas. A placa do broto é outra peça (balança ao vento).
+export const ARCH_ANC = { w: 38, h: 44, hookY: 15, hooks: [2, 35], plaqueY: 14 };
+function makeGardenArchAnc() {
+  const { w: W, h: H } = ARCH_ANC;
+  const p = new Pix(W, H);
+  const wood = (u) => (u === 0 ? PAL.n4 : u < 3 ? PAL.n3 : PAL.n2);
+  for (const x0 of [6, 28]) {
+    for (let y = 9; y < H - 2; y++) for (let u = 0; u < 4; u++) p.set(x0 + u, y, wood(u));
+    // faixas talhadas com incrustação
+    for (const by of [19, 31]) {
+      for (let u = 0; u < 4; u++) {
+        p.set(x0 + u, by, PAL.n1);
+        p.set(x0 + u, by + 1, u < 2 ? PAL.straw2 : PAL.n4);
+        p.set(x0 + u, by + 2, PAL.n1);
+      }
+      p.set(x0 + 1, by + 1, PAL.straw3);
+      p.set(x0 + 2, by + 1, PAL.clay2);
+    }
+    // ziguezague talhado entre as faixas
+    for (const [y0, y1] of [[22, 31], [34, 41]])
+      for (let y = y0; y < y1; y++) p.set(x0 + 1 + (Math.floor((y - y0) / 2) % 2) + ((y - y0) % 2), y, PAL.n1);
+    // pé alargado com musgo
+    for (let x = x0 - 1; x <= x0 + 4; x++) {
+      p.set(x, H - 2, x <= x0 ? PAL.n3 : PAL.n2);
+      p.set(x, H - 1, PAL.n1);
+      if (bayer(x, H - 3) < 0.5) p.set(x, H - 3, PAL.g4);
+    }
+    // ponteira de cobre em cima da viga
+    for (let y = 3; y < 9; y++) {
+      const half = y < 5 ? 1 : 2;
+      for (let x = x0 + 2 - half; x < x0 + 2 + half; x++) {
+        const u = x - (x0 + 2 - half);
+        p.set(x, y, y === 8 ? PAL.clay1 : u === 0 ? PAL.clay3 : u === half * 2 - 1 ? PAL.clay1 : PAL.clay2);
+      }
+    }
+    p.set(x0 + 1, 2, PAL.clay2);
+    p.set(x0 + 2, 2, PAL.clay1);
+    p.set(x0 + 1, 1, PAL.straw3);
+    p.set(x0 + 1, 5, PAL.straw3); // brilho do cobre
+  }
+  // viga: topo claro, ziguezague talhado, sombra embaixo; colar de cobre onde o esteio atravessa
+  for (let x = 1; x < W - 1; x++) {
+    if ((x >= 6 && x <= 9) || (x >= 28 && x <= 31)) {
+      p.set(x, 9, PAL.clay1);
+      for (let y = 10; y <= 12; y++) p.set(x, y, wood(x >= 28 ? x - 28 : x - 6));
+      p.set(x, 13, PAL.n1);
+      continue;
+    }
+    p.set(x, 9, PAL.n4);
+    p.set(x, 10, PAL.n3);
+    p.set(x, 11, PAL.n3);
+    p.set(x, 12, PAL.n2);
+    p.set(x, 13, PAL.n1);
+    p.set(x, x % 4 < 2 ? 10 : 11, PAL.n1);
+  }
+  for (const x of [1, W - 2]) {
+    p.set(x, 9, PAL.n3);
+    p.set(x, 13, PAL.n1);
+  }
+  for (const x of [4, 14, 23, 33]) p.set(x, 12, PAL.clay2); // tachas
+  // sanefa de palha franjada entre os esteios
+  for (let x = 10; x < 28; x++) {
+    p.set(x, 14, PAL.straw2);
+    if (x % 3 !== 1) p.set(x, 15, x % 3 ? PAL.straw3 : PAL.straw1);
+    if (x % 3 === 0) p.set(x, 16, PAL.straw1);
+  }
+  // ganchos das lamparinas
+  for (const hx of ARCH_ANC.hooks) {
+    p.set(hx, 14, PAL.n2);
+    p.set(hx, 15, PAL.n2);
+  }
+  return p.outline(K);
+}
+
+// Placa do broto, pendurada por dois cordões na viga: tábua com moldura de cobre e o broto pintado
+function makeGardenPlaqueAnc() {
+  const p = new Pix(14, 13);
+  for (let y = 0; y < 3; y++) {
+    p.set(3, y, PAL.straw1);
+    p.set(10, y, PAL.straw1);
+  }
+  for (let y = 3; y < 13; y++)
+    for (let x = 1; x < 13; x++) {
+      if ((x === 1 || x === 12) && (y === 3 || y === 12)) continue; // cantos arredondados
+      const edge = x === 1 || x === 12 || y === 3 || y === 12;
+      p.set(x, y, edge ? (x === 1 || y === 3 ? PAL.clay3 : PAL.clay1) : y < 5 ? PAL.n4 : PAL.n3);
+    }
+  // broto: terra, caule e duas folhas
+  p.rect(5, 10, 4, 1, PAL.n1);
+  p.rect(6, 7, 2, 3, PAL.g4);
+  p.set(6, 7, PAL.g5);
+  p.set(5, 6, PAL.g5);
+  p.set(4, 5, PAL.g6);
+  p.set(5, 5, PAL.g5);
+  p.set(8, 6, PAL.g4);
+  p.set(9, 5, PAL.g5);
+  p.set(9, 4, PAL.g6);
+  p.set(3, 4, PAL.straw3); // brilho da moldura
+  return p.outline(K);
+}
+
+// Espantalho da horta (26×40, 6 quadros de vento): poncho tecido com faixa de palha, ziguezague de barro e
+// losangos azuis, franja longa; cabeça de saco com olhos de botão e sorriso cosido, chapéu largo com fita de
+// cobre e uma pena de borboleta-azul, broche de cobre na gola. O vento corre em onda pela franja, pelos punhos
+// e pela pena. A lamparina do braço é outra peça (a cena pendura em SCARECROW_ANC.hook).
+export const SCARECROW_ANC = { w: 26, h: 40, hook: { x: 23.5, y: 20 } };
+function makeScarecrowAnc(f) {
+  const { w: W, h: H } = SCARECROW_ANC;
+  const p = new Pix(W, H);
+  const ph = (f / 6) * Math.PI * 2;
+  const wave = (x, a) => Math.round(Math.sin(x * 0.55 - ph) * a);
+  // estaca entalhada e o braço
+  for (let y = 17; y < H - 1; y++) {
+    p.set(12, y, PAL.n3);
+    p.set(13, y, PAL.n2);
+  }
+  p.set(12, 32, PAL.n1);
+  p.set(13, 32, PAL.n1);
+  p.set(12, 33, PAL.clay2);
+  p.set(13, 33, PAL.n4);
+  p.set(12, 34, PAL.n1);
+  p.set(13, 34, PAL.n1);
+  for (let x = 10; x <= 15; x++) {
+    p.set(x, H - 1, x <= 12 ? PAL.n3 : PAL.n2);
+    if (bayer(x, H - 2) < 0.5 && (x < 12 || x > 13)) p.set(x, H - 2, PAL.g4);
+  }
+  for (let x = 2; x <= 23; x++) {
+    p.set(x, 18, PAL.n3);
+    p.set(x, 19, PAL.n2);
+  }
+  // poncho: trapézio dos ombros (y 16) à barra (y 26), trama em faixas; sombra na coluna da direita
+  const top = 16,
+    hem = 26;
+  const halfAt = (y) => 4 + Math.round((y - top) * 0.36);
+  for (let y = top; y <= hem; y++) {
+    const dy = y - top,
+      half = halfAt(y);
+    for (let x = 13 - half; x <= 12 + half; x++) {
+      let c = PAL.cream;
+      if (dy === 2) c = PAL.straw2;
+      if ((dy === 4 && (x + 1) % 4 < 2) || (dy === 5 && (x + 1) % 4 >= 2)) c = PAL.clay2;
+      if (x % 4 === 1 && dy >= 7 && dy <= 9) c = dy === 8 ? PAL.ice2 : PAL.ice1; // losangos azuis (a cor das borboletas)
+      if ((x % 4 === 0 || x % 4 === 2) && dy === 8) c = PAL.ice1;
+      if (y === hem) c = PAL.clay1;
+      if (x === 12 + half) c = c === PAL.cream ? PAL.straw3 : c === PAL.clay2 ? PAL.clay1 : c === PAL.straw2 ? PAL.straw1 : c === PAL.ice2 ? PAL.ice1 : c === PAL.ice1 ? PAL.ice0 : c;
+      p.set(x, y, c);
+    }
+  }
+  // mangas finas no braço, punho que bate ao vento e palha saindo
+  for (const side of [-1, 1]) {
+    const inner = side < 0 ? 13 - halfAt(18) - 1 : 12 + halfAt(18) + 1,
+      cuff = side < 0 ? 4 : 21;
+    for (let x = Math.min(inner, cuff); x <= Math.max(inner, cuff); x++) {
+      p.set(x, 18, (x + 1) % 4 < 2 ? PAL.clay2 : PAL.cream);
+      p.set(x, 19, PAL.straw2);
+    }
+    const d = wave(cuff, 0.9);
+    p.set(cuff, 18, PAL.clay1);
+    p.set(cuff, 19, PAL.clay1);
+    p.set(cuff, 20 + (d > 0 ? 1 : 0), PAL.clay1);
+    p.set(cuff - side, 20, PAL.clay1);
+    p.set(cuff + side, 18, PAL.straw3);
+    p.set(cuff + side * 2, 19 + (d !== 0 ? 1 : 0), PAL.straw2);
+    p.set(cuff + side, 20, PAL.straw3);
+  }
+  // franja longa: a onda corre da esquerda para a direita e o fio de baixo mexe mais
+  const fh = halfAt(hem);
+  for (let x = 13 - fh; x <= 12 + fh; x++) {
+    const c = x % 2 ? PAL.cream : PAL.clay2;
+    p.set(x + wave(x, 0.5), hem + 1, c);
+    p.set(x + wave(x, 1.1), hem + 2, c);
+    if ((x * 7) % 3 === 0) p.set(x + wave(x, 1.5), hem + 3, c);
+  }
+  // gola com broche de cobre
+  for (let x = 11; x <= 14; x++) p.set(x, 16, PAL.clay1);
+  p.set(12, 17, PAL.clay2);
+  p.set(13, 17, PAL.clay2);
+  p.set(12, 16, PAL.straw3);
+  p.set(13, 16, PAL.clay2);
+  // cabeça de saco: trama, olhos de botão, bochechas e sorriso cosido; amarra no pescoço
+  p.disc(12.5, 11, 4.3, PAL.straw3);
+  for (let y = 6; y <= 16; y++)
+    for (let x = 7; x <= 18; x++) {
+      if (p.alpha(x, y) === 0) continue;
+      if (Math.hypot(x - 14, y - 12.5) > 3.6 && x + y > 22) p.set(x, y, PAL.straw2);
+      else if (bayer(x, y) < 0.12) p.set(x, y, PAL.straw2);
+    }
+  for (const [x, y] of [[10, 10], [10, 11], [15, 10], [15, 11]]) p.set(x, y, K); // olhos de botão
+  p.set(9, 12, PAL.clay3);
+  p.set(16, 12, PAL.clay3);
+  for (const [x, y] of [[10, 13], [11, 14], [13, 14], [15, 13]]) p.set(x, y, K); // sorriso cosido, ponto a ponto
+  p.set(12, 14, PAL.n1);
+  p.set(14, 14, PAL.n1);
+  for (let x = 10; x <= 15; x++) p.set(x, 15, x % 2 ? PAL.straw1 : PAL.clay1);
+  // chapéu de aba larga com trama e fita de cobre
+  for (let x = 3; x <= 22; x++) {
+    p.set(x, 7, x < 6 || x > 19 ? PAL.straw2 : PAL.straw3);
+    p.set(x, 8, PAL.straw1);
+  }
+  for (let x = 5; x <= 20; x++) p.set(x, 6, PAL.straw3);
+  for (let y = 1; y <= 5; y++) {
+    const half = y === 1 ? 3 : y === 2 ? 4 : 5;
+    for (let x = 13 - half; x < 13 + half; x++) p.set(x, y, x < 11 ? PAL.straw3 : (x + y) % 3 === 0 ? PAL.straw1 : PAL.straw2);
+  }
+  for (let x = 8; x < 18; x++) p.set(x, 5, x === 10 ? PAL.straw3 : PAL.clay2);
+  // pena de borboleta-azul na fita (a ponta acompanha o vento)
+  const tip = wave(30, 0.8);
+  p.line(17, 5, 19, 2, PAL.ice1);
+  p.set(18, 3, PAL.ice2);
+  p.set(19, 3, PAL.ice2);
+  p.set(20 + tip, 1, PAL.ice2);
+  p.set(20 + tip, 0, PAL.ice3);
+  p.set(19, 1, PAL.ice0);
+  return p.outline(K);
+}
+
 export function registerCampAncestral(scene) {
   makePost().register(scene, "camp_anc_post");
   registerStrip(scene, "camp_anc_lamp", [makeLamp(false), makeLamp(true)]);
@@ -295,6 +562,11 @@ export function registerCampAncestral(scene) {
   registerStrip(scene, "camp_anc_toucan", [0, 1, 2, 3, 4].map(makeToucan));
   registerStrip(scene, "camp_anc_morpho", [0, 1, 2, 3, 4].map(makeMorpho));
   registerStrip(scene, "camp_anc_banner", [0, 1, 2, 3, 4, 5].map(makeBanner));
+  makeFenceAnc(40).register(scene, "garden_anc_fence");
+  makeFenceAnc(6).register(scene, "garden_anc_fence_post");
+  makeGardenArchAnc().register(scene, "garden_anc_arch");
+  makeGardenPlaqueAnc().register(scene, "garden_anc_plaque");
+  registerStrip(scene, "camp_anc_scarecrow", [0, 1, 2, 3, 4, 5].map(makeScarecrowAnc));
 }
 
 // Voo da borboleta-azul (a Clareira e a prévia do Guarda-roupa usam o mesmo): passeia em volta de um ponto em
