@@ -429,16 +429,26 @@ compra) e linha em **Opções → Privacidade**; com a compra, os botões de pr�
 **Código:** `src/systems/Billing.js` (plugin `@capgo/native-purchases` 8.8.1, versão fixa, Play Billing 9),
 janela em `src/ui/NoAdsModal.js`, id do produto em `STORE.NO_ADS` (`src/config.js`). Sem servidor: a cada
 abertura e a cada volta ao app (no máximo a cada 30 s) o jogo pergunta à loja o que a conta comprou.
-- **Reconhecimento:** o próprio jogo reconhece a compra e espera a resposta (sem isso o Google devolve o
-  dinheiro em 3 dias). Se falhar, a próxima conferência tenta de novo.
-- **Pendente** (boleto, Pix em análise): não libera até virar comprado; a janela mostra "Pagamento pendente"
-  e o botão CONFERIR AGORA.
+- **Reconhecimento:** o próprio jogo reconhece a compra e espera a resposta (sem isso o Google estorna em
+  3 dias — e em **3 a 5 minutos** para conta de teste de licença). Se falhar, tenta de novo sozinho a cada
+  15 s (até 8 vezes) e em toda conferência seguinte.
+- **Pendente** (boleto, Pix em análise, cartão de teste "aprova com atraso"): não libera até virar comprado;
+  a janela mostra "Pagamento pendente" e o botão CONFERIR AGORA. O plugin não avisa quando vira pago, então
+  **com o app aberto o jogo confere a loja a cada 20 s** enquanto houver pendente; quando libera, mostra o
+  aviso "PAGAMENTO APROVADO" na próxima tela de menu. (Até 18/10/2026 só conferia na volta ao app: o
+  pendente aprovado com o jogo aberto não era reconhecido, o Google estornava e o jogador perdia o item
+  sem aviso.)
 - **Reinstalar ou trocar de aparelho** na mesma conta Google: volta sozinho ("Restaurar compra" força).
-- **Reembolso:** a compra some da loja e o jogo tira o "sem anúncios" (só o que veio da loja).
+- **Estorno/reembolso:** a compra some da loja → o jogo confere uma 2ª vez (e nunca nos 2 min logo depois de
+  liberar), tira o "sem anúncios" (só o que veio da loja) e mostra o aviso **"COMPRA ESTORNADA"** no título
+  ou na Clareira, com o botão para comprar de novo. A estrela da loja volta na Clareira.
 - **Métricas (GA4):** `iap_view` (de onde abriu), `iap_start`, `iap_result` (ok, pending, cancelled,
-  unavailable), `iap_grant`, `iap_revoked`, `iap_ack_fail`, além do `in_app_purchase` automático do Firebase.
-- Teste sem celular: Playwright com `window.Capacitor.Plugins.NativePurchases` falso (cenários de compra,
-  pendente, cancelada, reembolso e loja fora do ar).
+  unavailable), `iap_grant`, `iap_revoked` (`acked`: se o jogo tinha reconhecido — `false` = estorno por falta
+  de reconhecimento), `iap_ack_fail` (`try`), `iap_notice` (`approved`/`revoked`), além do `in_app_purchase`
+  automático do Firebase.
+- Teste sem celular: **`npm run test:compra`** (`tools/test-compra.mjs`, loja falsa no navegador): compra,
+  reconhecimento que falha, pendente aprovado com o app aberto, estorno com aviso (título e Clareira),
+  resposta vazia isolada, loja fora do ar e carência logo depois da compra.
 
 **Passo a passo no Play Console (👤):**
 1. **Enviar uma versão com a compra** (1.0.4, código 5) ao teste fechado. O Console só deixa criar produtos
@@ -463,8 +473,9 @@ abertura e a cada volta ao app (no máximo a cada 30 s) o jogo pergunta à loja 
    Essas contas compram com "cartão de teste", sem cobrança.
 5. **Testar no celular instalado pela Play Store** (link do teste; o APK de depuração não conversa com o
    produto). Cartão de teste "sempre aprova" → libera e o botão do título some. Cartão "aprova com atraso"
-   → aparece "Pagamento pendente" e, minutos depois, libera. "Sempre recusa" → aviso de falha. Desinstalar e
-   reinstalar → volta ativo. Reembolsar em **Pedidos** → ao reabrir, os anúncios voltam.
+   → aparece "Pagamento pendente" e, minutos depois, libera **com o jogo aberto** (aviso "PAGAMENTO APROVADO");
+   esperar 10 min e conferir em **Pedidos** que não foi estornado. "Sempre recusa" → aviso de falha. Desinstalar e
+   reinstalar → volta ativo. Reembolsar em **Pedidos** → ao reabrir, os anúncios voltam e aparece o aviso "COMPRA ESTORNADA".
 6. **Segurança dos dados:** acrescentar "Histórico de compras" (ver a tabela acima) e copiar a política
    (`docs/PRIVACY.md`, seção Compras) para o site.
 

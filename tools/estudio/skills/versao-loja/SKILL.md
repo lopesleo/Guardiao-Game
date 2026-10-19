@@ -18,25 +18,29 @@ de fato já quebrou ou pode quebrar neste projeto. Cada item: **OK**, **FALHOU**
 3. `npm run balance` sem FALHA.
 4. Teste de fumaça: `DIFFS=0 SEEDS=11 node tools/bot-lab.mjs medir` roda até o fim **sem "ERRO"** na
    coluna final (erro de página = exceção no jogo). O servidor sobe sozinho com o script.
-5. `src/config.js`: `ADS.TESTING` continua `true` no repositório — **nunca** mudar à mão; o
+5. `npm test` sem FALHA (~5 min, Edge headless; antes, `npm i --no-save playwright-core`): o toque
+   (`test:toque` — joystick volta depois de carta, pausa, reviver, "Jogar de novo", nos 4 jeitos de
+   joystick) e a compra (`test:compra` — reconhece, pendente aprovado com o app aberto, estorno com
+   aviso). Os dois bugs da 1.0.4 (18/10/2026) só apareciam no celular; o teclado e o PC não pegavam.
+6. `src/config.js`: `ADS.TESTING` continua `true` no repositório — **nunca** mudar à mão; o
    `npm run android:aab` só inverte na cópia empacotada. `ADS.MAX_AD_RATING` = "Teen".
-6. Nada de debug fora de `?debug=1`.
+7. Nada de debug fora de `?debug=1`.
 
 ## Versão
 
-7. `android/app/build.gradle`: `versionCode` +1 e `versionName` novo (ver `docs/PLAY_STORE.md`).
+8. `android/app/build.gradle`: `versionCode` +1 e `versionName` novo (ver `docs/PLAY_STORE.md`).
    Commit `chore(versao): X.Y.Z (código N) — <resumo>` numa branch `chore/versao-X.Y.Z`, merge `--no-ff`.
-8. `npm run android:aab` → `dist/guardiao-vX.Y.Z-N-anuncios-reais.aab`. **Nunca** crie a chave de
+9. `npm run android:aab` → `dist/guardiao-vX.Y.Z-N-anuncios-reais.aab`. **Nunca** crie a chave de
    assinatura pelo Leonardo; se faltar `android/keystore.properties`, pare e avise.
-9. `cap sync` costuma deixar `android/app/capacitor.build.gradle` alterado só por fim de linha: confira
+10. `cap sync` costuma deixar `android/app/capacitor.build.gradle` alterado só por fim de linha: confira
    com `git diff` e reverta se for só isso.
 
 ## Loja e documentos
 
-10. Notas da versão ("Novidades") curtas, nos 8 idiomas da ficha, sem prometer o que não está no app.
-11. Mudou dado coletado (Analytics, nuvem, anúncios)? Conferir política (`docs/PRIVACY.md`, site
+11. Notas da versão ("Novidades") curtas, nos 8 idiomas da ficha, sem prometer o que não está no app.
+12. Mudou dado coletado (Analytics, nuvem, anúncios)? Conferir política (`docs/PRIVACY.md`, site
     `lopesleo.github.io/guardiao/privacidade/`) e "Segurança dos dados" no Play Console.
-12. `CLAUDE.md` → "Pendências atuais": item do envio aponta para o AAB novo. `docs/ROADMAP.md` em dia.
+13. `CLAUDE.md` → "Pendências atuais": item do envio aponta para o AAB novo. `docs/ROADMAP.md` em dia.
 
 ## Fim
 

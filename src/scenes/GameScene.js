@@ -96,17 +96,18 @@ export class GameScene extends Phaser.Scene {
 
     this.inputMgr = new InputManager(this);
     this.joystick = new VirtualJoystick(this.inputMgr);
-    // Pausa, cartas de nível, baú: o joystick (fixo fica sempre visível) sai de cena junto
-    // (a cena é reaproveitada: os ouvintes saem no shutdown, senão acumulam a cada partida)
-    const joyOff = () => this.joystick?.setEnabled(false),
-      joyOn = () => this.joystick?.setEnabled(true);
+    // Pausa, cartas de nível, baú: o joystick (fixo fica sempre visível) sai de cena junto e volta
+    // sozinho no update(), que só roda com a partida andando. NÃO depender de um ouvinte de
+    // "resume": um off("resume") geral já o apagou e o joystick morria depois da 1ª carta (18/10/2026)
+    // (a cena é reaproveitada: os ouvintes saem no shutdown, pelo nome, senão acumulam a cada partida)
+    const joyOff = () => this.joystick?.setActive(false);
     this.events.on("pause", joyOff);
-    this.events.on("resume", joyOn);
     // O Phaser não chama shutdown() sozinho: sem isto, cada partida deixava uma
     // camada de toque (joystick) e a música anteriores para trás
     this.events.once("shutdown", () => {
       this.events.off("pause", joyOff);
-      this.events.off("resume", joyOn);
+      this.events.off("player:levelup", this._onLevelUp, this);
+      this.events.off("resume", this._onResume, this);
       this.joystick?.destroy();
       this.joystick = null;
       this.shutdown();
@@ -338,26 +339,13 @@ export class GameScene extends Phaser.Scene {
     // FILA de level-ups: vários de uma vez (XP alto, baú dourado) abrem a tela
     // de cartas em sequência — antes, reabrir por cima descartava escolhas.
     this._pendingLevelUps = 0;
-    // O emissor de eventos da cena SOBREVIVE a reinícios (Jogar de novo):
-    // sem limpar, cada partida somava mais um ouvinte → cartas em dobro/triplo.
-    this.events.off("player:levelup");
-    this.events.off("resume");
-    this.events.on("player:levelup", () => {
-      this.lighting?.flash(this.player.x, this.player.y, 420, 0xffe58f, 500, 1);
-      this.feel.levelUp();
-      this._pendingLevelUps++;
-      Analytics.track("level_up", { level: this.player.level, t: Math.floor(this.elapsedMs / 1000) });
-      this._openNextLevelUp();
-    });
+    // O emissor de eventos da cena SOBREVIVE a reinícios (Jogar de novo): os dois saem pelo nome no
+    // shutdown (sem isso, cada partida somava mais um ouvinte → cartas em dobro/triplo). Nunca
+    // off("evento") sem a função: apaga também os ouvintes dos outros (ex.: o do joystick)
+    this.events.on("player:levelup", this._onLevelUp, this);
     // Quando o LevelUpScene termina, atualiza painel de armas + checa
     // conquistas de arma (Lv máximo / arsenal completo)
-    this.events.on("resume", () => {
-      this.quality.reset();
-      this._levelUpOpen = false;
-      this.hud.refreshWeapons();
-      this._checkAchievements();
-      if (this._pendingLevelUps > 0) this.time.delayedCall(120, () => this._openNextLevelUp());
-    });
+    this.events.on("resume", this._onResume, this);
 
     // Música
     if (!this.bgMusic) {
@@ -577,6 +565,7 @@ export class GameScene extends Phaser.Scene {
 
   update(time, dt) {
     if (this.gameOver) return;
+    this.joystick?.setActive(true); // partida andando = joystick ligado (a pausa desliga)
     if (this._intro) return this._updateIntro(time, dt);
     this.elapsedMs += dt;
 
@@ -878,6 +867,22 @@ export class GameScene extends Phaser.Scene {
     if (m.cd) p.cdMult *= m.cd;
     if (m.dmg) p._blessingDmgMult = (p._blessingDmgMult || 1) * m.dmg;
     if (m.luck) p.luck = (p.luck || 0) + m.luck;
+  }
+
+  _onLevelUp() {
+    this.lighting?.flash(this.player.x, this.player.y, 420, 0xffe58f, 500, 1);
+    this.feel.levelUp();
+    this._pendingLevelUps++;
+    Analytics.track("level_up", { level: this.player.level, t: Math.floor(this.elapsedMs / 1000) });
+    this._openNextLevelUp();
+  }
+
+  _onResume() {
+    this.quality.reset();
+    this._levelUpOpen = false;
+    this.hud.refreshWeapons();
+    this._checkAchievements();
+    if (this._pendingLevelUps > 0) this.time.delayedCall(120, () => this._openNextLevelUp());
   }
 
   _openNextLevelUp() {

@@ -984,4 +984,11 @@ export default {
   "Muito grande": "Very large",
   "SIM": "YES",
   "NÃO": "NO",
+  // Aviso da loja: pagamento aprovado / compra estornada (ui/NoAdsModal.js)
+  "COMPRA ESTORNADA": "PURCHASE REFUNDED",
+  "PAGAMENTO APROVADO": "PAYMENT APPROVED",
+  "A Play Store estornou a compra “Sem anúncios” e devolveu o pagamento.": "The Play Store refunded the “No ads” purchase and returned your payment.",
+  "Os prêmios voltam a pedir um anúncio. O seu progresso continua igual.": "Rewards will ask for an ad again. Your progress stays the same.",
+  "Se foi engano, dá para comprar de novo.": "If this was a mistake, you can buy it again.",
+  "O Google confirmou o pagamento. “Sem anúncios” está ativo nesta conta.": "Google confirmed your payment. “No ads” is now active on this account.",
 };
