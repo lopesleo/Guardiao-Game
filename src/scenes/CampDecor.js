@@ -6,6 +6,7 @@
 import { GAME, SEASONS } from "../config.js";
 import { PAL } from "../art/Palette.js";
 import { paintGround, FLAG_COUNT } from "../art/CampDecor.js";
+import { morphoFlight } from "../art/CampAncestral.js";
 import { Clock } from "../systems/Clock.js";
 import { tr } from "../i18n/i18n.js";
 import { Wardrobe, cosmeticsOn } from "../systems/Cosmetics.js";
@@ -160,11 +161,13 @@ export const CampDecor = {
   _lampStrings() {
     const { poles, H } = this._terreiroPosts();
     const g = this.add.graphics().setDepth(D_NIGHT - 20);
+    // o vento passa em onda: todas balançam no mesmo ritmo, atrasadas pela posição (oeste → leste)
     const lampAt = (x, y, fr) => {
       x = Math.round(x / 3) * 3;
       y = Math.round(y / 3) * 3;
       const lamp = this.add.sprite(x, y, "camp_anc_lamp", fr).setOrigin(0.5, 0).setScale(S).setDepth(D_NIGHT - 19);
-      this.tweens.add({ targets: lamp, angle: { from: -5, to: 5 }, duration: 1500 + Math.random() * 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: Math.random() * 1000 });
+      const amp = 4 + Math.random() * 1.5;
+      this.tweens.add({ targets: lamp, angle: { from: -amp, to: amp }, duration: 2100, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: ((x + 400) / 800) * 1400 });
       let f = fr;
       this.time.addEvent({ delay: 200 + Math.random() * 180, loop: true, callback: () => lamp.setFrame((f ^= 1)) });
       const glow = this.add.image(x, y + 30, "fx_glow").setScale(0.8).setTint(0xffc46a).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.5).setDepth(D_NIGHT + 1);
@@ -219,7 +222,8 @@ export const CampDecor = {
     ]) {
       if (this.groundPaint?.onPath(x, y, 8) || !decorFree(x, y)) continue;
       this.add.image(x, y, "camp_anc_shrooms", fr).setOrigin(0.5, 1).setScale(S).setDepth(y);
-      this._glow(x, y - 12, 0.55, 0x9cffb0, true);
+      const gl = this._glow(x, y - 12, 0.55, 0x9cffb0, false);
+      this.glows.push({ g: gl, base: 0.42, ph: Math.random() * 10, sp: 700, amp: 0.16 }); // respira (~4 s), não tremula
     }
     // estandarte dos Fundadores ao lado da placa, ao pé do jequitibá (o cantinho dos Fundadores)
     const bx = kx + 205,
@@ -227,46 +231,61 @@ export const CampDecor = {
     this.add.image(bx - 12, by + 2, "px_shadow").setScale(2.5, 1.5).setAlpha(0.4).setDepth(by - 1);
     const banner = this.add.sprite(bx, by, "camp_anc_banner", 0).setOrigin(0.5, 1).setScale(S).setDepth(by);
     let bf = 0;
-    this.time.addEvent({ delay: 420, loop: true, callback: () => banner.setFrame([0, 1, 2, 1][(bf = (bf + 1) % 4)]) });
+    this.time.addEvent({ delay: 115, loop: true, callback: () => banner.setFrame((bf = (bf + 1) % 6)) }); // onda contínua
     this._solid(bx - 16, by - 4, 10, 8);
-    // tucano-toco no esteio de baixo à direita (à vista de quem chega): pisca, levanta o bico, vira de lado
-    const tu = this.add.sprite(215, 58, "camp_anc_toucan", 0).setOrigin(0.61, 0.93).setScale(S).setDepth(206);
+    // tucano-toco no esteio de baixo à direita (à vista de quem chega): respira, pisca (às vezes duas vezes), olha
+    // para cima, alisa a pena do peito e vira de lado com um pulinho
+    const tuY = 58;
+    const tu = this.add.sprite(215, tuY, "camp_anc_toucan", 0).setOrigin(0.61, 14 / 16).setScale(S).setDepth(206);
+    let busy = false,
+      breath = 0;
+    this.time.addEvent({ delay: 650, loop: true, callback: () => !busy && tu.active && tu.setFrame((breath ^= 1) ? 4 : 0) }); // respiração
+    const pose = (fr, ms) => {
+      busy = true;
+      tu.setFrame(fr);
+      this.time.delayedCall(ms, () => {
+        if (!tu.active) return;
+        tu.setFrame(0);
+        busy = false;
+      });
+    };
     const mexe = () => {
       if (!tu.active) return;
       const r = Math.random();
-      if (r < 0.55) {
-        tu.setFrame(1);
-        this.time.delayedCall(150, () => tu.active && tu.setFrame(0));
-      } else if (r < 0.8) {
-        tu.setFrame(2);
-        this.time.delayedCall(700, () => tu.active && tu.setFrame(0));
-      } else tu.setFlipX(!tu.flipX);
-      this.time.delayedCall(1600 + Math.random() * 2200, mexe);
+      if (r < 0.4) {
+        pose(1, 130);
+        if (Math.random() < 0.35) this.time.delayedCall(260, () => tu.active && pose(1, 120)); // piscada dupla
+      } else if (r < 0.62) pose(2, 700 + Math.random() * 500);
+      else if (r < 0.8) {
+        pose(3, 260); // alisa a pena: bico para baixo, duas bicadinhas
+        this.time.delayedCall(420, () => tu.active && pose(3, 240));
+      } else {
+        // vira: pulinho de 3 px de arte e troca de lado lá em cima
+        busy = true;
+        tu.setFrame(0);
+        this.tweens.add({ targets: tu, y: tuY - 9, duration: 110, ease: "Quad.easeOut", yoyo: true, onYoyo: () => tu.setFlipX(!tu.flipX), onComplete: () => { tu.y = tuY; busy = false; } });
+      }
+      this.time.delayedCall(1700 + Math.random() * 2600, mexe);
     };
     this.time.delayedCall(1200, mexe);
-    // borboletas-azuis: voo em oito em volta de um ponto, batendo as asas (o azul faísca)
+    // borboletas-azuis (de dia): voo em curvas com sombra no chão, planadas e pousos nos canteiros perto de casa
     this.morphos = [];
     for (const [mx, my] of [
       [-330, -80],
-      [320, 140],
+      [360, 150],
       [-150, -170],
     ]) {
-      const m = this.add.sprite(mx, my, "camp_anc_morpho", 0).setScale(S).setDepth(D_NIGHT - 6);
-      this.morphos.push(m);
-      const ph = Math.random() * 6,
-        dur = 8000 + Math.random() * 5000;
-      this.tweens.addCounter({
-        from: 0,
-        to: Math.PI * 2,
-        duration: dur,
-        repeat: -1,
-        onUpdate: (tw) => {
-          const t = tw.getValue() + ph;
-          m.setPosition(mx + Math.sin(t) * 80, my + Math.sin(2 * t) * 30 - Math.abs(Math.sin(t * 9)) * 8);
-          m.setFlipX(Math.cos(t) < 0);
-          m.setFrame(Math.floor(this.time.now / 110) % 2);
-        },
-      });
+      const perches = [];
+      for (let k = 0; perches.length < 3 && k < 40; k++) {
+        const px = mx + (Math.random() - 0.5) * 220,
+          py = my + (Math.random() - 0.5) * 140;
+        if (!this.groundPaint?.onPath(px, py, 10) && decorFree(px, py)) perches.push({ x: px, y: py });
+      }
+      const shadow = this.add.image(mx, my, "px_shadow").setDepth(my - 1);
+      const m = this.add.sprite(mx, my, "camp_anc_morpho", 0).setScale(S);
+      this.morphos.push(m, shadow);
+      const fly = morphoFlight({ sprite: m, shadow, home: { x: mx, y: my }, radius: 100, scale: S, perches, depth: (y, alt) => y + 30 + alt });
+      this.time.addEvent({ delay: 16, loop: true, callback: () => fly(this.time.now) });
     }
   },
 
@@ -281,7 +300,8 @@ export const CampDecor = {
       y = sh.y + Math.cos(a) * along - Math.sin(a) * across;
     const d = this.add.image(Math.round(x / 3) * 3, Math.round(y / 3) * 3, "px_dot1").setScale(3).setTint(0xfff0b0).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0).setDepth(D_NIGHT - 4);
     this.tweens.add({ targets: d, alpha: 0.85, duration: 1100, yoyo: true, ease: "Sine.easeInOut" });
-    this.tweens.add({ targets: d, x: d.x + 18, y: d.y + 30, duration: 2200, onComplete: () => d.destroy() });
+    this.tweens.add({ targets: d, y: d.y + 30, duration: 2200, onComplete: () => d.destroy() });
+    this.tweens.add({ targets: d, x: d.x + 18, duration: 2200, ease: (t) => t + Math.sin(t * Math.PI * 4) * 0.12 }); // zigue-zague leve
   },
 
   // Clareira Ancestral: o sol de fim de tarde entra pela copa do jequitibá (raios inclinados, do oeste) e

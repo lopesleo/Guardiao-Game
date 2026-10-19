@@ -179,40 +179,46 @@ function makeLeafCarpet(seed) {
   return p;
 }
 
-// Tucano-toco pousado, de perfil para a esquerda: 0 parado, 1 piscando, 2 bico para o alto
+// Tucano-toco pousado, de perfil para a esquerda. Quadros: 0 parado, 1 piscando, 2 bico para o alto, 3 bico para
+// baixo (alisando a pena do peito), 4 respirando (peito um pouco mais cheio, cabeça meio pixel abaixo)
 function makeToucan(f) {
-  const p = new Pix(18, 15);
-  const up = f === 2 ? 1 : 0;
-  // corpo preto (cinza-escuro, o preto puro é do contorno) e cauda
-  p.ellipse(11, 8.5, 3.6, 4.6, PAL.s0);
-  p.ellipse(10.4, 7.6, 1.4, 2.4, PAL.inkSoft);
-  for (let y = 11; y < 15; y++) p.set(13, y, PAL.s0);
-  p.set(14, 13, PAL.s0);
+  const p = new Pix(18, 16);
+  const tilt = f === 2 ? 1 : f === 3 ? -1 : 0;
+  const breath = f === 4 ? 1 : 0;
+  const hy = 4 + (f === 3 ? 1 : 0) + breath * 0.5; // a cabeça desce ao alisar e ao respirar
+  // corpo preto (cinza-escuro: o preto puro é do contorno), peito mais cheio ao respirar, e a cauda
+  p.ellipse(11, 9, 3.6 + breath * 0.4, 4.6 + breath * 0.3, PAL.s0);
+  p.ellipse(10.4, 8, 1.4, 2.4, PAL.inkSoft); // brilho da asa
+  for (let y = 12; y < 16; y++) p.set(13, y, PAL.s0);
+  p.set(14, 14, PAL.s0);
+  p.set(14, 15, PAL.s0);
   // cabeça
-  p.ellipse(9, 4 - up * 0.5, 2.6, 2.4, PAL.s0);
-  // garganta branca
-  p.ellipse(8.4, 6.6, 1.6, 1.8, PAL.cream);
-  p.set(8, 8, PAL.yel3);
-  // bico enorme laranja, ponta preta (sobe um pouco no quadro 2)
+  p.ellipse(9, hy, 2.6, 2.4, PAL.s0);
+  // garganta branca com a franja amarela
+  p.ellipse(8.4, hy + 2.8, 1.6, 1.8, PAL.cream);
+  p.set(8, Math.round(hy + 4.4), PAL.yel3);
+  p.set(9, Math.round(hy + 4.4), PAL.yel2);
+  // bico enorme: laranja com a quilha clara em cima, a base escura e a ponta preta; inclina com o quadro
   for (let x = 0; x <= 7; x++) {
-    const yTop = 3 - up * Math.round((7 - x) / 3);
+    const yTop = Math.round(hy - 1 - tilt * ((7 - x) / 3));
     const h = x < 2 ? 1 : x < 5 ? 2 : 3;
     for (let y = yTop; y < yTop + h; y++) p.set(x, y, x < 2 ? PAL.s0 : y === yTop ? PAL.org3 : PAL.org2);
     if (x >= 2) p.set(x, yTop + h - 1, PAL.org1);
   }
-  // olho com o anel azul
+  // olho com o anel azul (fechado no quadro 1)
+  const ey = Math.round(hy - 1);
   if (f === 1) {
-    p.set(9, 3 - up, PAL.ice1);
-    p.set(10, 3 - up, PAL.ice1);
+    p.set(9, ey, PAL.ice1);
+    p.set(10, ey, PAL.ice1);
   } else {
-    p.set(9, 3 - up, PAL.ice2);
-    p.set(10, 3 - up, PAL.white);
+    p.set(9, ey, PAL.ice2);
+    p.set(10, ey, PAL.white);
+    p.set(10, ey + 1, PAL.ice1);
   }
-  // pés
-  p.set(10, 13, PAL.ice1);
-  p.set(12, 13, PAL.ice1);
-  // crisso vermelho sob a cauda
-  p.set(12, 12, PAL.red2);
+  // pés no poleiro e o crisso vermelho sob a cauda
+  p.set(10, 14, PAL.ice1);
+  p.set(12, 14, PAL.ice1);
+  p.set(12, 13, PAL.red2);
   return p.outline(K);
 }
 
@@ -223,21 +229,28 @@ function fromMap(rows, legend) {
   return p;
 }
 
-// Borboleta-azul (morfo): 0 asas abertas (o azul faísca, borda escura com pintas brancas), 1 fechadas (o
-// avesso marrom com os olhos)
-const MORPHO = { k: K, b: PAL.ice1, B: PAL.ice2, C: PAL.ice3, s: PAL.s0, w: PAL.cream, n: PAL.n3, N: PAL.n2, y: PAL.straw3 };
+// Borboleta-azul (morfo), vista de cima, batendo as asas. 0 abertas (o azul faísca, borda azul-escura, pintas
+// brancas), 1 a ¾ e 2 a meio caminho (a asa encurta em perspectiva e escurece), 3 quase de pé (aparece a borda do
+// avesso marrom), 4 fechadas para cima (só o avesso, com os olhos). Voando: 0-1-2-3-4-3-2-1; pousada: 4, abrindo
+// devagar até 2 de vez em quando
+const MORPHO = { d: PAL.ice0, b: PAL.ice1, B: PAL.ice2, C: PAL.ice3, s: PAL.s0, w: PAL.cream, n: PAL.n3, N: PAL.n2, y: PAL.straw3 };
+const MORPHO_FRAMES = [
+  ["dd...........dd", "dCdd.......ddCd", "dCBBd.....dBBCd", "dBCBBd.s.dBBCBd", ".dBBBbdsdbBBBd.", "..dbbbbsbbbbd..", "..dBBbdsdbBBd..", ".dBBBBd.dBBBBd.", ".dBBBd...dBBBd.", "..dwd.....dwd..", "..............."],
+  [".dd.........dd.", ".dCd.......dCd.", ".dCBd.....dBCd.", ".dBBBd.s.dBBBd.", "..dBBbdsdbBBd..", "...dbbbsbbbd...", "...dBbdsdbBd...", "..dBBBd.dBBBd..", "..dBBd...dBBd..", "...dw.....wd...", "..............."],
+  ["...............", "...dd.....dd...", "...dBd...dBd...", "...dbBdsdBbd...", "....dbbsbbd....", "....dbbsbbd....", "....dBdsdBd....", "...dbBd.dBbd...", "...dbd...dbd...", "...............", "..............."],
+  ["...............", "...............", ".....dd.dd.....", ".....dnsnd.....", ".....dbsbd.....", ".....dnsnd.....", ".....dbsbd.....", ".....dnsnd.....", ".....dd.dd.....", "...............", "..............."],
+  ["...............", "...............", "......d.d......", "......nsn......", ".....nNsNn.....", ".....nysyn.....", ".....nNsNn.....", ".....nysyn.....", "......nsn......", "......d.d......", "..............."],
+];
+export const MORPHO_FLAP = [0, 1, 2, 3, 4, 3, 2, 1];
 function makeMorpho(f) {
-  const rows =
-    f === 0
-      ? ["kkk.....kkk", "kBBk...kBBk", "kCBBk.kBBCk", "kCBBbsbBBCk", "kBBBbsbBBBk", ".kBbbsbbBk.", "..kbkskbk..", ".kbBk.kBbk.", ".kwk...kwk."]
-      : ["...........", ".....k.....", "....knk....", "...knNnk...", "...kNyNk...", "...knNnk...", "....kNk....", ".....s.....", "..........."];
-  return fromMap(rows, MORPHO).outline(K);
+  return fromMap(MORPHO_FRAMES[f], MORPHO).outline(K);
 }
 
-// Estandarte dos Fundadores: haste com ponta de cobre, pano barro de borda creme, medalhão (anel dourado com a
-// copa) e franja; 3 quadros de vento
+// Estandarte dos Fundadores: haste com ponta de cobre e travessa, pano barro de borda creme com o medalhão (anel
+// dourado com a copa) e a ponta em V com borlas de palha. 6 quadros de uma onda que corre de cima para baixo: o
+// pano preso na travessa mexe pouco em cima e mais na ponta solta
 function makeBanner(f) {
-  const p = new Pix(16, 40);
+  const p = new Pix(18, 40);
   for (let y = 2; y < 40; y++) {
     p.set(2, y, PAL.n3);
     p.set(3, y, PAL.n2);
@@ -246,32 +259,29 @@ function makeBanner(f) {
   p.rect(1, 1, 4, 2, PAL.clay2);
   for (let x = 2; x < 15; x++) p.set(x, 4, PAL.n2); // travessa
   p.set(14, 3, PAL.clay2);
-  const sway = [0, 1, 0][f],
-    tail = [0, 1, 2][f];
-  for (let y = 5; y < 27; y++) {
-    const off = Math.round(((y - 5) / 22) * sway);
+  // o pano sem onda (x 5..13, y 5..31), depois cada linha desloca pela onda
+  const cloth = [];
+  for (let y = 5; y < 32; y++) {
+    const row = [];
     for (let x = 5; x < 14; x++) {
-      const X = x + off;
-      const edge = x === 5 || x === 13 || y === 5;
-      p.set(X, y, edge ? PAL.cream : y % 6 === 0 ? PAL.clay2 : PAL.clay1);
+      let c = null;
+      if (y < 27) {
+        const edge = x === 5 || x === 13 || y === 5;
+        c = edge ? PAL.cream : y % 6 === 0 ? PAL.clay2 : PAL.clay1;
+        const d = Math.hypot(x - 9, y - 13);
+        if (d <= 3.8) c = d > 2.7 ? (x + y < 22 ? PAL.yel3 : PAL.yel1) : y < 13 ? PAL.g5 : y < 15 ? PAL.g3 : PAL.n3;
+      } else if (y < 27 + (4 - Math.abs(x - 9))) c = PAL.clay1; // ponta em V
+      if ((y === 27 && (x === 5 || x === 13)) || (y === 31 && x === 9)) c = PAL.straw2; // borlas
+      row.push(c);
     }
+    cloth.push(row);
   }
-  // medalhão
-  for (let y = 9; y < 18; y++)
-    for (let x = 5; x < 14; x++) {
-      const d = Math.hypot(x - 9, y - 13);
-      if (d > 3.8) continue;
-      const X = x + Math.round(((y - 5) / 22) * sway);
-      p.set(X, y, d > 2.7 ? (x + y < 22 ? PAL.yel3 : PAL.yel1) : y < 13 ? PAL.g5 : y < 15 ? PAL.g3 : PAL.n3);
-    }
-  // ponta em V com borlas de palha
-  for (let x = 5; x < 14; x++) {
-    const depth = 27 + (4 - Math.abs(x - 9));
-    for (let y = 27; y < depth; y++) p.set(x + sway + (y > 29 ? tail - 1 : 0), y, PAL.clay1);
-  }
-  p.set(9 + sway + tail - 1, 31 + 1, PAL.straw2);
-  p.set(5 + sway, 27, PAL.straw2);
-  p.set(13 + sway, 27, PAL.straw2);
+  const ph = (f / 6) * Math.PI * 2;
+  cloth.forEach((row, i) => {
+    const k = i / (cloth.length - 1); // 0 na travessa, 1 na ponta
+    const off = Math.round(Math.sin(i * 0.38 - ph) * (0.4 + k * 1.6));
+    row.forEach((c, j) => c != null && p.set(5 + j + off, 5 + i, c));
+  });
   return p.outline(K);
 }
 
@@ -282,7 +292,89 @@ export function registerCampAncestral(scene) {
   makeHammockAnc().register(scene, "camp_anc_hammock");
   registerStrip(scene, "camp_anc_shrooms", [makeShrooms(11), makeShrooms(29), makeShrooms(47)]);
   registerStrip(scene, "camp_anc_leaves", [makeLeafCarpet(3), makeLeafCarpet(8), makeLeafCarpet(15)]);
-  registerStrip(scene, "camp_anc_toucan", [makeToucan(0), makeToucan(1), makeToucan(2)]);
-  registerStrip(scene, "camp_anc_morpho", [makeMorpho(0), makeMorpho(1)]);
-  registerStrip(scene, "camp_anc_banner", [makeBanner(0), makeBanner(1), makeBanner(2)]);
+  registerStrip(scene, "camp_anc_toucan", [0, 1, 2, 3, 4].map(makeToucan));
+  registerStrip(scene, "camp_anc_morpho", [0, 1, 2, 3, 4].map(makeMorpho));
+  registerStrip(scene, "camp_anc_banner", [0, 1, 2, 3, 4, 5].map(makeBanner));
+}
+
+// Voo da borboleta-azul (a Clareira e a prévia do Guarda-roupa usam o mesmo): passeia em volta de um ponto em
+// curvas suaves (vira devagar, nunca em ângulo), o corpo sobe na descida das asas, plana de asas abertas de vez
+// em quando e pousa nos pontos de pouso (asas fechadas, abrindo devagar) antes de seguir. A sombra fica no chão e
+// encolhe e clareia com a altura. Devolve update(agora em ms): chamar a cada quadro.
+//   o = { sprite, shadow, home: {x, y}, radius, scale (pixel da arte), perches: [{x, y}], depth: (y, alt) => n }
+export function morphoFlight(o) {
+  const k = o.scale / 3; // tudo foi pensado no tamanho do mundo (pixel de arte = 3)
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const st = { x: o.home.x + rnd(-20, 20), y: o.home.y + rnd(-20, 20), alt: 26 * k, head: rnd(0, Math.PI * 2), turn: 0, mode: "fly", until: 0, last: 0, t0: rnd(0, 2000), perch: null, face: 1 };
+  let nextTurn = 0,
+    nextGlide = 0;
+  return (now) => {
+    const dt = Math.min(0.05, st.last ? (now - st.last) / 1000 : 0.016);
+    st.last = now;
+    const spr = o.sprite;
+    if (!spr.active) return;
+    let frame;
+    if (st.mode === "perched") {
+      // pousada: asas fechadas, abrindo devagar até a metade de vez em quando (4-3-2-3-4)
+      st.alt = Math.max(0, st.alt - 60 * k * dt);
+      const c = (now - st.t0) % 2400;
+      frame = c < 1500 ? 4 : [3, 2, 2, 3][Math.floor((c - 1500) / 225)] ?? 4;
+      if (now > st.until) {
+        st.mode = "fly";
+        st.until = now + rnd(2500, 5000);
+        st.head = rnd(0, Math.PI * 2);
+      }
+    } else {
+      // rumo: curva suave para um alvo que muda; perto da borda, volta para casa; às vezes vai pousar
+      if (now > nextTurn) {
+        nextTurn = now + rnd(700, 1600);
+        st.turn = rnd(-1.6, 1.6);
+        if (o.perches?.length && st.mode === "fly" && Math.random() < 0.09) {
+          st.perch = o.perches[Math.floor(Math.random() * o.perches.length)];
+          st.mode = "land";
+        }
+      }
+      const tx = st.mode === "land" ? st.perch.x : o.home.x,
+        ty = st.mode === "land" ? st.perch.y : o.home.y;
+      const far = Math.hypot(st.x - o.home.x, st.y - o.home.y) > o.radius;
+      if (far || st.mode === "land") {
+        const want = Math.atan2(ty - st.y, tx - st.x);
+        let d = want - st.head;
+        d = Math.atan2(Math.sin(d), Math.cos(d));
+        st.turn = Math.max(-2.4, Math.min(2.4, d * 2.2));
+      }
+      st.head += st.turn * dt;
+      const gliding = st.mode === "fly" && now < nextGlide + 700 && now > nextGlide;
+      if (now > nextGlide + 700) nextGlide = now + rnd(2500, 6000);
+      const speed = (gliding ? 34 : 46) * k;
+      st.x += Math.cos(st.head) * speed * dt;
+      st.y += Math.sin(st.head) * speed * dt * 0.8;
+      // batida: a altura acompanha (sobe na descida das asas); planando, desce devagar
+      const i = Math.floor((now + st.t0) / 42) % 8;
+      frame = gliding ? 0 : [0, 1, 2, 3, 4, 3, 2, 1][i];
+      const lift = Math.sin(((now + st.t0) / 336) * Math.PI * 2) * 3 * k;
+      const target = st.mode === "land" ? Math.max(4 * k, 26 * k * Math.min(1, Math.hypot(tx - st.x, ty - st.y) / (60 * k))) : 26 * k;
+      st.alt += (target + lift - st.alt) * Math.min(1, dt * (gliding ? 1.2 : 4));
+      if (st.mode === "land" && Math.hypot(tx - st.x, ty - st.y) < 4 * k) {
+        st.mode = "perched";
+        st.x = tx;
+        st.y = ty;
+        st.until = now + rnd(1800, 3600);
+        st.t0 = now;
+      }
+      // vira o desenho só quando o rumo de lado é claro (sem tremer em voo reto para cima/baixo)
+      const vx = Math.cos(st.head);
+      if (vx > 0.3) st.face = 1;
+      else if (vx < -0.3) st.face = -1;
+    }
+    spr.setFrame(frame).setFlipX(st.face < 0);
+    spr.setPosition(Math.round(st.x / k) * k, Math.round((st.y - st.alt) / k) * k);
+    if (o.shadow) {
+      const h = Math.min(1, st.alt / (30 * k));
+      // a sombra tem a envergadura da borboleta no chão e encolhe/clareia com a altura
+      o.shadow.setPosition(Math.round(st.x), Math.round(st.y + 2 * k)).setScale((3.2 - h * 1.2) * k, (2 - h * 0.6) * k).setAlpha(1 - h * 0.35);
+      if (o.depth) o.shadow.setDepth(st.y - 1);
+    }
+    if (o.depth) spr.setDepth(o.depth(st.y, st.alt));
+  };
 }
