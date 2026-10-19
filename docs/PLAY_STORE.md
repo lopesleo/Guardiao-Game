@@ -234,6 +234,56 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.7 (código 8) — 19/10/2026
+
+AAB: `dist/guardiao-v1.0.7-8-anuncios-reais.aab`. Clareira Ancestral redesenhada (o acampamento inteiro: esteios
+entalhados, lamparinas de cabaça, bancos e rede, tucano, borboletas-azuis, cogumelos que brilham, estandarte, pólen
+nos raios) e o joystick religando no próprio toque da carta. As notas contam também o que veio na 1.0.6 (loja e
+Guarda-roupa): os testadores do Alpha pulam da 1.0.4 direto para esta.
+
+```
+<pt-BR>
+• Novo: Guarda-roupa na Clareira (efeitos de libertação, rastro e Despertar; peças grátis e kits) e Loja com o Pacote Fundador por tempo limitado.
+• Clareira Ancestral do Fundador: esteios entalhados, lamparinas que acendem à noite, tucano, borboletas-azuis e cogumelos que brilham.
+• Joystick: anda logo depois de escolher a carta e em toda a metade da tela.
+</pt-BR>
+<en-US>
+• New: Wardrobe in the Clearing (freeing, trail and Awakening effects; free pieces and kits) and a Shop with the limited-time Founder Pack.
+• Founder's Ancestral Clearing: carved posts, lanterns that light up at night, a toucan, blue morpho butterflies and glowing mushrooms.
+• Joystick: move right after picking a card, anywhere on your half of the screen.
+</en-US>
+<es-419>
+• Nuevo: Vestuario en el Claro (efectos de liberación, estela y Despertar; piezas gratis y kits) y Tienda con el Pack Fundador por tiempo limitado.
+• Claro Ancestral del Fundador: postes tallados, faroles que se encienden de noche, un tucán, mariposas morfo azules y hongos que brillan.
+• Joystick: te mueves justo después de elegir la carta, en toda tu mitad de la pantalla.
+</es-419>
+<es-ES>
+• Nuevo: Vestuario en el Claro (efectos de liberación, estela y Despertar; piezas gratis y kits) y Tienda con el Pack Fundador por tiempo limitado.
+• Claro Ancestral del Fundador: postes tallados, faroles que se encienden de noche, un tucán, mariposas morfo azules y hongos que brillan.
+• Joystick: te mueves justo después de elegir la carta, en toda tu mitad de la pantalla.
+</es-ES>
+<ja-JP>
+• 新機能：広場に衣装箱（解放・軌跡・覚醒のエフェクト。無料アイテムとセット）、期間限定の創設者パックがあるショップ。
+• 創設者の「いにしえの広場」：彫刻の柱、夜に灯るランプ、オオハシ、青いモルフォチョウ、光るキノコ。
+• ジョイスティック：カードを選んだ直後から、片側半分のどこでも操作できるように。
+</ja-JP>
+<zh-CN>
+• 新内容：空地新增衣橱（解放、拖尾和觉醒特效，含免费物品与套装），以及推出限时创始者礼包的商店。
+• 创始者的远古空地：雕花木柱、夜里点亮的灯、巨嘴鸟、蓝色大闪蝶和会发光的蘑菇。
+• 摇杆：选完卡牌后立刻就能移动，屏幕一侧任意位置都能操作。
+</zh-CN>
+<zh-TW>
+• 新內容：空地新增衣櫥（解放、拖尾和覺醒特效，含免費物品與套裝），以及推出限時創始者禮包的商店。
+• 創始者的遠古空地：雕花木柱、夜裡點亮的燈、巨嘴鳥、藍色大閃蝶和會發光的蘑菇。
+• 搖桿：選完卡牌後立刻就能移動，螢幕一側任意位置都能操作。
+</zh-TW>
+<zh-HK>
+• 新內容：空地新增衣櫥（解放、拖尾和覺醒特效，含免費物品與套裝），以及推出限時創始者禮包的商店。
+• 創始者的遠古空地：雕花木柱、夜裡點亮的燈、巨嘴鳥、藍色大閃蝶和會發光的蘑菇。
+• 搖桿：選完卡牌後立刻就能移動，螢幕一側任意位置都能操作。
+</zh-HK>
+```
+
 ### 1.0.6 (código 7) — 19/10/2026
 
 AAB: `dist/guardiao-v1.0.6-7-anuncios-reais.aab`. Liga a loja de cosméticos (`COSMETICS.ENABLED`/`SHOP`):
