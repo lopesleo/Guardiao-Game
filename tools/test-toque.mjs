@@ -72,18 +72,18 @@ async function runCombo(mode, side) {
       { side, W, H },
     );
   // Encosta e arrasta. Devolve o vetor do joystick com o dedo ainda no lugar
-  const press = async (id, scene) => {
-    const b = await thumb();
+  const press = async (id, scene, at) => {
+    const b = at || (await thumb());
     await touch("touchStart", [{ x: b.x, y: b.y, id }]);
     for (let k = 1; k <= 6; k++) await touch("touchMove", [{ x: b.x + k * 9, y: b.y - k * 5, id }]);
     await page.waitForTimeout(120);
     return page.evaluate((s) => ({ ...window.game.scene.getScene(s).inputMgr.joystickVec }), scene);
   };
   // Anda de verdade: o vetor sobe e o herói sai do lugar
-  const walks = async (what, scene = "GameScene") => {
+  const walks = async (what, scene = "GameScene", at) => {
     const pos = () => page.evaluate((s) => { const p = window.game.scene.getScene(s).player; return { x: p.x, y: p.y }; }, scene);
     const a = await pos();
-    const v = await press(41, scene);
+    const v = await press(41, scene, at);
     await page.waitForTimeout(700);
     const b = await pos();
     await touch("touchEnd");
@@ -146,6 +146,9 @@ async function runCombo(mode, side) {
     await calm();
     await page.waitForTimeout(500);
     await walks("anda no começo da partida");
+    // 0b) Polegar encostando no MEIO da altura (a zona vai do pé até perto do topo; antes era só o quarto
+    // de baixo e no celular o dedo "não pegava" — 19/10/2026). No fixo o joystick fica no canto, de propósito
+    if (mode !== "static") await walks("anda com o polegar começando no meio da altura da tela", "GameScene", { x: side === "right" ? W - 260 : 260, y: Math.round(H * 0.3) });
     const before = await listeners();
 
     // 1) Sobe de nível COM o dedo no joystick (o normal: quem joga nunca solta o polegar)
@@ -206,6 +209,25 @@ async function runCombo(mode, side) {
     await until(() => window.game.scene.isActive("CampScene") && window.game.scene.getScene("CampScene").player && !window.game.scene.getScene("CampScene")._cutscene, null, 60000);
     await page.waitForTimeout(800);
     await walks("anda na Clareira", "CampScene");
+    // O topo do lado do joystick continua tocável (a zona deixa a faixa de cima livre): esquerdo = quadro
+    // da Clareira (escolha de Perigo); canhoto = engrenagem das Opções
+    const topo = await page.evaluate((right) => {
+      const c = window.game.scene.getScene("CampScene"),
+        r = window.game.canvas.getBoundingClientRect(),
+        k = r.width / window.game.scale.width;
+      const o = right ? c.children.list.find((b) => b.ico?.texture?.key === "ico_gear") : c.hudZone;
+      if (!o) return null;
+      const b = o.getBounds();
+      return { x: r.left + (b.x + b.width / 2) * k, y: r.top + (b.y + b.height / 2) * k };
+    }, side === "right");
+    if (topo) {
+      await tap(topo);
+      await until(() => window.game.scene.getScene("CampScene")._modals.length > 0, null, 5000).catch(() => {});
+      check(await page.evaluate(() => window.game.scene.getScene("CampScene")._modals.length > 0), "o botão do topo do lado do joystick continua tocável");
+      await page.evaluate(() => void window.game.scene.getScene("CampScene")._modals.at(-1)?.close());
+      await until(() => window.game.scene.getScene("CampScene")._modals.length === 0, null, 10000);
+      await page.waitForTimeout(300);
+    } else check(false, "o botão do topo do lado do joystick continua tocável", "(não achei o botão)");
     await page.evaluate(() => void window.game.scene.getScene("CampScene")._showSettings());
     await until(() => window.game.scene.getScene("CampScene")._modals.length > 0);
     await page.waitForTimeout(300);

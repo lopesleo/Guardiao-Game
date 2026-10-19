@@ -10,6 +10,8 @@ export const JOY_SIZES = [
   { label: tr("Muito grande"), px: 180 },
 ];
 export const joyRight = () => Settings.get("joySide") === "right";
+// Faixa de cima sem joystick (fração da altura da tela): pausa, cronômetro e o topo da Clareira
+export const JOY_TOP = 0.18;
 
 // Joysticks vivos: modo e tamanho mudam na hora pelas Opções (até com a partida pausada)
 const live = new Set();
@@ -40,8 +42,11 @@ export class VirtualJoystick {
     document.addEventListener('webkitfullscreenchange', this._onFsChange);
   }
 
-  // (Re)cria o nipplejs com as opções atuais. Metade da tela do lado escolhido; "fixo" deixa o
-  // joystick sempre no canto (quem tem pouca mobilidade não precisa achar onde ele nasce)
+  // (Re)cria o nipplejs com as opções atuais. A metade da tela do lado escolhido, do pé até perto do topo:
+  // a zona é uma camada por cima do jogo e bloqueia o toque embaixo dela, então fica livre só a faixa de
+  // cima (JOY_TOP), onde estão a pausa e os botões/quadro da Clareira; dash, Despertar e o botão de ação
+  // ficam na outra metade. (Antes era só o quarto de baixo: no celular o polegar "não pegava" no meio.)
+  // "Fixo" deixa o joystick sempre no canto (quem tem pouca mobilidade não precisa achar onde ele nasce)
   _build() {
     const zone = this.zone;
     if (!zone) return;
@@ -52,7 +57,7 @@ export class VirtualJoystick {
     const size = (JOY_SIZES[Settings.get('joySize')] ?? JOY_SIZES[0]).px;
     const fixed = Settings.get('joyMode') === 'static';
     const enabled = zone.style.pointerEvents !== 'none';
-    zone.style.cssText = `position:fixed;${right ? 'right' : 'left'}:0;bottom:0;width:50%;height:50%;z-index:10;pointer-events:${enabled ? 'auto' : 'none'};visibility:${enabled ? 'visible' : 'hidden'};`;
+    zone.style.cssText = `position:fixed;${right ? 'right' : 'left'}:0;top:${JOY_TOP * 100}%;bottom:0;width:50%;z-index:10;pointer-events:${enabled ? 'auto' : 'none'};visibility:${enabled ? 'visible' : 'hidden'};`;
     const edge = `${Math.round(size / 2 + 28)}px`;
     this.manager = nipplejs.create({
       zone,
