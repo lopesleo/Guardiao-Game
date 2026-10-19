@@ -77,6 +77,7 @@ export class VirtualJoystick {
   // Liga/desliga o joystick sem destruí-lo. Desligado, a zona dele (canto inferior, FORA do
   // canvas) deixa o toque passar para o jogo — na pesca, o toque vale na tela inteira
   setEnabled(on) {
+    this._active = on; // setActive() compara com o estado real, mesmo quando alguém chama este direto
     if (!this.zone) return;
     this.zone.style.pointerEvents = on ? 'auto' : 'none';
     this.zone.style.visibility = on ? 'visible' : 'hidden'; // o fixo some (não cobre a pesca nem menus)
