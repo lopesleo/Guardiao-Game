@@ -234,6 +234,54 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.5 (código 6) — 19/10/2026
+
+AAB: `dist/guardiao-v1.0.5-6-anuncios-reais.aab`. Corrige o joystick da 1.0.4 (morria depois da 1ª carta
+no celular): substituir a 1.0.4 do Alpha por esta.
+
+```
+<pt-BR>
+• Correção: o joystick parava de funcionar depois de escolher uma carta, pausar ou reviver.
+• Compra "Sem anúncios": o jogo agora avisa quando o pagamento é aprovado e quando a compra é estornada.
+• Clareira: botão da loja "Sem anúncios" no topo, e o quadro do canto se ajusta ao texto grande.
+</pt-BR>
+<en-US>
+• Fix: the joystick stopped working after picking a card, pausing or reviving.
+• "No Ads" purchase: the game now tells you when your payment is approved and when a purchase is refunded.
+• Clearing: "No Ads" shop button at the top, and the corner panel now fits large text.
+</en-US>
+<es-419>
+• Corrección: el joystick dejaba de funcionar después de elegir una carta, pausar o revivir.
+• Compra "Sin anuncios": el juego ahora avisa cuando el pago se aprueba y cuando la compra se reembolsa.
+• Claro: botón de la tienda "Sin anuncios" arriba, y el panel de la esquina se ajusta al texto grande.
+</es-419>
+<es-ES>
+• Corrección: el joystick dejaba de funcionar después de elegir una carta, pausar o revivir.
+• Compra "Sin anuncios": el juego ahora avisa cuando el pago se aprueba y cuando la compra se reembolsa.
+• Claro: botón de la tienda "Sin anuncios" arriba, y el panel de la esquina se ajusta al texto grande.
+</es-ES>
+<ja-JP>
+• 修正：カードを選んだ後・一時停止後・復活後にジョイスティックが動かなくなる問題を修正。
+• 購入「広告なし」：支払いが完了したときと、購入が返金されたときにお知らせするように。
+• 広場：上部に「広告なし」ショップボタンを追加。隅のパネルが大きい文字に合わせて広がるように。
+</ja-JP>
+<zh-CN>
+• 修复：选择卡牌、暂停或复活后摇杆失灵的问题。
+• “免广告”购买：付款确认和购买退款时，游戏现在会提示你。
+• 空地：顶部新增“免广告”商店按钮，角落面板会随大字号自动调整。
+</zh-CN>
+<zh-TW>
+• 修正：選擇卡牌、暫停或復活後搖桿失靈的問題。
+• 「免廣告」購買：付款確認和購買退款時，遊戲現在會提示你。
+• 空地：頂部新增「免廣告」商店按鈕，角落面板會隨大字級自動調整。
+</zh-TW>
+<zh-HK>
+• 修正：選擇卡牌、暫停或復活後搖桿失靈的問題。
+• 「免廣告」購買：付款確認和購買退款時，遊戲現在會提示你。
+• 空地：頂部新增「免廣告」商店按鈕，角落面板會隨大字級自動調整。
+</zh-HK>
+```
+
 ### 1.0.4 (código 5) — 16/10/2026
 
 AAB: `dist/guardiao-v1.0.4-5-anuncios-reais.aab`. **Antes de mandar para revisão**, criar o produto

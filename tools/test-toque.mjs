@@ -89,7 +89,10 @@ async function runCombo(mode, side) {
     await touch("touchEnd");
     await page.waitForTimeout(150);
     const zone = await page.evaluate((s) => window.game.scene.getScene(s).joystick?.zone?.style.pointerEvents, scene);
-    return check(Math.hypot(v.x, v.y) > 0.3 && Math.hypot(b.x - a.x, b.y - a.y) > 4, what, `vetor=${Math.hypot(v.x, v.y).toFixed(2)} andou=${Math.hypot(b.x - a.x, b.y - a.y).toFixed(0)}px zona=${zone}`);
+    const ok = Math.hypot(v.x, v.y) > 0.3 && Math.hypot(b.x - a.x, b.y - a.y) > 4;
+    // Na falha, o estado da partida (morte = fim de jogo de propósito, não bug do joystick)
+    const why = ok ? "" : await page.evaluate((s) => { const g = window.game.scene.getScene(s); return ` fimDeJogo=${!!g.gameOver} vida=${Math.round(g.player?.hp ?? -1)} cenas=${window.game.scene.getScenes(true).map((x) => x.scene.key).join(",")}`; }, scene);
+    return check(ok, what, `vetor=${Math.hypot(v.x, v.y).toFixed(2)} andou=${Math.hypot(b.x - a.x, b.y - a.y).toFixed(0)}px zona=${zone}${why}`);
   };
   // Toca um texto visível de uma cena (botões do kit), pelo conteúdo
   const tapText = async (scene, re) => {
@@ -129,6 +132,10 @@ async function runCombo(mode, side) {
     await until(() => !window.game.scene.isActive("LevelUpScene") || window.game.scene.getScene("LevelUpScene")._locked, null, 10000);
   };
   const gameRunning = () => until(() => window.game.scene.isActive("GameScene") && !window.game.scene.isPaused("GameScene") && !window.game.scene.isActive("LevelUpScene"), null, 30000);
+  // Partida previsível: herói imune e sem subir de nível sozinho (as armas automáticas matam, e as gemas
+  // podiam abrir cartas no meio de um arrasto — o joystick sai de cena com as cartas, como deve; o teste
+  // é que ficava instável, 19/10/2026). As cartas do teste vêm só de _openNextLevelUp/player:levelup
+  const calm = () => page.evaluate(() => { const g = window.game.scene.getScene("GameScene"); g._god = true; g.player.gainXp = () => {}; });
   const listeners = () => page.evaluate(() => { const e = window.game.scene.getScene("GameScene").events; return ["pause", "resume", "player:levelup", "shutdown"].map((k) => `${k}:${e.listenerCount(k)}`).join(" "); });
 
   try {
@@ -136,6 +143,7 @@ async function runCombo(mode, side) {
     await until(() => window.game?.scene?.isActive("TitleScene"), null, 120000);
     await page.evaluate(() => void window.game.scene.getScene("TitleScene").scene.start("GameScene"));
     await until(() => window.game.scene.getScene("GameScene")?.player && !window.game.scene.getScene("GameScene")._intro, null, 60000);
+    await calm();
     await page.waitForTimeout(500);
     await walks("anda no começo da partida");
     const before = await listeners();
@@ -177,6 +185,7 @@ async function runCombo(mode, side) {
     // 5) "Jogar de novo": a cena é reaproveitada — ouvintes não podem somar, e as cartas abrem 1×
     await page.evaluate(() => void window.game.scene.getScene("GameScene").scene.restart());
     await until(() => window.game.scene.getScene("GameScene")?.player && !window.game.scene.getScene("GameScene")._intro && window.game.scene.getScene("GameScene").elapsedMs > 0, null, 60000);
+    await calm();
     check((await listeners()) === before, "ouvintes iguais depois de Jogar de novo", `${await listeners()} (antes ${before})`);
     await walks("anda na partida nova");
     await page.evaluate(() => void window.game.scene.getScene("GameScene").events.emit("player:levelup"));
