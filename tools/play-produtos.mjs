@@ -17,17 +17,12 @@
 // Credencial (👤, uma vez; passo a passo em docs/PLAY_STORE.md): chave JSON de uma conta de serviço com a API
 // "Google Play Android Developer" ativada e convidada no Play Console. Fica FORA do git, em
 // ~/chaves-android/play-api.json (ou no caminho de PLAY_KEY).
-import crypto from "node:crypto";
 import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
 import { STORE } from "../src/config.js";
+import { PKG, api } from "./play/api.mjs";
 
 const CAT = JSON.parse(fs.readFileSync(new URL("./play/produtos.json", import.meta.url), "utf8"));
 const IDIOMAS = ["pt-BR", "en-US", "es-419", "es-ES", "ja-JP", "zh-CN", "zh-TW", "zh-HK"];
-const API = process.env.PLAY_API || "https://androidpublisher.googleapis.com/androidpublisher/v3";
-const KEY = process.env.PLAY_KEY || path.join(os.homedir(), "chaves-android", "play-api.json");
-const PKG = CAT.pacote;
 const OPCAO = CAT.opcaoDeCompra;
 
 const args = process.argv.slice(2);
@@ -51,6 +46,7 @@ function textos(p) {
 
 function conferir() {
   const erros = [];
+  if (CAT.pacote !== PKG) erros.push(`o catálogo é de ${CAT.pacote}, a API está em ${PKG}`);
   const noCodigo = [...Object.values(STORE.KITS), ...Object.values(STORE.PACKS).map((p) => p.product)];
   const noCat = CAT.produtos.map((p) => p.id);
   for (const id of noCodigo) if (!noCat.includes(id)) erros.push(`${id}: está no config.js (STORE) e falta no catálogo`);
@@ -69,46 +65,7 @@ function conferir() {
   return erros;
 }
 
-// ------------------------------------------------------------------ API
-let token = null;
-async function auth() {
-  if (token) return token;
-  if (!fs.existsSync(KEY)) {
-    console.error(`Sem a credencial em ${KEY}.\nCrie a conta de serviço (docs/PLAY_STORE.md, "Produtos pelo script") ou aponte PLAY_KEY para o JSON.`);
-    process.exit(2);
-  }
-  const k = JSON.parse(fs.readFileSync(KEY, "utf8"));
-  const b64 = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
-  const now = Math.floor(Date.now() / 1000);
-  const aud = k.token_uri || "https://oauth2.googleapis.com/token";
-  const body = `${b64({ alg: "RS256", typ: "JWT" })}.${b64({ iss: k.client_email, scope: "https://www.googleapis.com/auth/androidpublisher", aud, iat: now, exp: now + 3600 })}`;
-  const jwt = `${body}.${crypto.sign("RSA-SHA256", Buffer.from(body), k.private_key).toString("base64url")}`;
-  const r = await fetch(aud, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion: jwt }) });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok || !j.access_token) throw new Error(`login da conta de serviço falhou (${r.status}): ${j.error_description || j.error || "?"}`);
-  return (token = j.access_token);
-}
-
-async function api(method, url, body) {
-  const r = await fetch(`${API}/applications/${PKG}/${url}`, {
-    method,
-    headers: { authorization: `Bearer ${await auth()}`, "content-type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-  if (r.status === 404 && method === "GET") return null;
-  const txt = await r.text();
-  let j = {};
-  try {
-    j = txt ? JSON.parse(txt) : {};
-  } catch {}
-  if (!r.ok) {
-    const msg = j.error?.message || `${r.statusText} ${txt.replace(/<[^>]+>/g, " ").replace(/s+/g, " ").trim().slice(0, 160)}`;
-    const dica = r.status === 403 ? "\n  → a conta de serviço não tem permissão neste app (Play Console → Usuários e permissões); a liberação pode levar algumas horas" : "";
-    throw new Error(`${method} ${url}: ${r.status} ${msg}${dica}`);
-  }
-  return j;
-}
-
+// ------------------------------------------------------------------ API (login e chamadas: tools/play/api.mjs)
 const listarTodos = async () => {
   const out = [];
   let page = "";
