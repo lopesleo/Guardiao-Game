@@ -527,13 +527,48 @@ abertura e a cada volta ao app (no máximo a cada 30 s) o jogo pergunta à loja 
 6. **Segurança dos dados:** acrescentar "Histórico de compras" (ver a tabela acima) e copiar a política
    (`docs/PRIVACY.md`, seção Compras) para o site.
 
+## Produtos pelo script (recomendado)
+
+Cadastrar produto à mão no site leva ~25 min cada (8 idiomas, menus que mudam de lugar, preço em massa que
+arredonda o Brasil). O catálogo inteiro — IDs, preços, nomes e descrições nos 8 idiomas — vive em
+`tools/play/produtos.json` (fonte de verdade; as tabelas abaixo são a mesma coisa para leitura) e
+`tools/play-produtos.mjs` envia pela Google Play Developer API:
+
+```
+npm run play:produtos -- conferir      # o catálogo sozinho: tamanhos, 8 idiomas, IDs iguais aos do config.js
+npm run play:produtos -- listar        # o que está no Console (só leitura; serve para testar a credencial)
+npm run play:produtos -- enviar        # cria o que falta e ativa; o que já existe só é conferido (avisa se difere)
+npm run play:produtos -- enviar --atualizar      # reescreve também os existentes com o catálogo
+npm run play:produtos -- desativar pacote_fundador pacote_fundador_kits    # 31/01/2027
+npm run play:produtos -- enviar pacote_apoiador                             # 01/02/2027
+```
+
+Preço: o base em US$ é convertido pela própria Play Store para cada país (o mesmo do "Editar preços em
+massa", impostos incluídos) e o Brasil fica com o valor exato do catálogo. `--seco` mostra sem gravar.
+
+**👤 Credencial (uma vez, ~10 min).** A chave é da sua conta Google, por isso fica com você:
+1. [Google Cloud Console](https://console.cloud.google.com/) no projeto **guardiao-da-floresta** (o mesmo do
+   Firebase) → **APIs e serviços → Biblioteca** → "Google Play Android Developer API" → **Ativar**.
+2. **IAM e administrador → Contas de serviço → Criar conta de serviço**: nome `play-produtos`; pular os papéis
+   → Concluir. Abrir a conta → **Chaves → Adicionar chave → Criar nova chave → JSON**. Salvar como
+   `C:\Users\leona\chaves-android\play-api.json` (fora do git, junto da chave de upload; quem tem esse
+   arquivo mexe nos produtos do app).
+3. **Play Console → Usuários e permissões → Convidar novos usuários**: o e-mail da conta de serviço
+   (`play-produtos@guardiao-da-floresta.iam.gserviceaccount.com`) → **Permissões do app** → Guardião da
+   Floresta → **Gerenciar presença na loja** (inclui "Editar preços, produtos no app") → Convidar.
+4. `npm run play:produtos -- listar`. Se responder 403, a permissão ainda não chegou (pode levar algumas horas).
+
 ## Kits de cosméticos (fase 2 dos cosméticos, `docs/COSMETICOS.md`)
 
 Quatro **produtos únicos** (não consumíveis), cada um libera 3 peças do Guarda-roupa. Só aparência: não
 mexem em dano, vida, moedas nem anúncios. Código pronto (`Billing.buyKit`, `npm run test:compra`); no build da
 loja fica tudo desligado até `COSMETICS.ENABLED` e `COSMETICS.SHOP` (`src/config.js`) irem para `true`.
 
-**Passo a passo (👤), depois de a versão com o Guarda-roupa estar no Alpha:**
+**Estado (19/10/2026):** `kit_ipe` e `kit_paineira` criados à mão e ativos (R$ 4,90 / US$ 0,99, 8 idiomas,
+174 países, opção `compra` compatível com versões anteriores). Os outros 4 (`kit_coruja`, `kit_junina`,
+`pacote_fundador`, `pacote_fundador_kits`) saem pelo script assim que existir a credencial.
+
+**Passo a passo à mão (👤, se não for pelo script):**
 1. **Monetizar → Produtos → Produtos únicos → Criar**, um por kit, com os IDs **exatamente** iguais aos de
    `STORE.KITS` (não dá para mudar nem reaproveitar): `kit_ipe`, `kit_paineira`, `kit_coruja`, `kit_junina`.
 2. Opção de compra: comprar. Preço: **R$ 4,90** no Brasil e **US$ 0,99** de base nos outros países (mesmo

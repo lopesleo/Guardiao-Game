@@ -1,0 +1,230 @@
+{
+  "_sobre": "Catálogo dos produtos únicos do Play Console (fonte de verdade). Enviar: node tools/play-produtos.mjs enviar. Ver docs/PLAY_STORE.md, 'Produtos pelo script'.",
+  "pacote": "com.lopesleo.guardiao",
+  "opcaoDeCompra": "compra",
+  "copiasDeIdioma": {
+    "es-ES": "es-419",
+    "zh-HK": "zh-TW"
+  },
+  "produtos": [
+    {
+      "id": "kit_ipe",
+      "brl": 4.9,
+      "usd": 0.99,
+      "textos": {
+        "pt-BR": {
+          "nome": "Kit Ipê-rosa",
+          "descricao": "Pétalas de ipê ao libertar a mata, rastro de pétalas e o Despertar em rosa com um anel de ipês. Só aparência."
+        },
+        "en-US": {
+          "nome": "Pink Ipê Kit",
+          "descricao": "Ipê petals when you free the forest, a petal trail and a pink Awakening with a ring of ipês. Looks only."
+        },
+        "es-419": {
+          "nome": "Kit Ipê rosa",
+          "descricao": "Pétalos de ipê al liberar el bosque, estela de pétalos y el Despertar rosa con un anillo de ipês. Solo apariencia."
+        },
+        "ja-JP": {
+          "nome": "ピンクのイペーセット",
+          "descricao": "解放するとイペーの花びらが舞い、花びらの軌跡、イペーの輪が咲くピンクの覚醒。見た目だけのアイテムです。"
+        },
+        "zh-CN": {
+          "nome": "粉色风铃木套装",
+          "descricao": "解放时飘落风铃木花瓣、花瓣拖尾，以及绽放一圈风铃木花的粉色觉醒。仅外观。"
+        },
+        "zh-TW": {
+          "nome": "粉紅風鈴木套裝",
+          "descricao": "解放時飄落風鈴木花瓣、花瓣拖尾，以及綻放一圈風鈴木花的粉色覺醒。僅外觀。"
+        }
+      }
+    },
+    {
+      "id": "kit_paineira",
+      "brl": 4.9,
+      "usd": 0.99,
+      "textos": {
+        "pt-BR": {
+          "nome": "Kit Paineira",
+          "descricao": "O fruto da barriguda estala e solta painas, rastro de algodão e uma nuvem de algodão no Despertar. Só aparência."
+        },
+        "en-US": {
+          "nome": "Silk Floss Tree Kit",
+          "descricao": "The pod cracks open and lets out floss, a cotton trail and a cotton cloud when you awaken. Looks only."
+        },
+        "es-419": {
+          "nome": "Kit Palo borracho",
+          "descricao": "El fruto se abre y suelta copos, estela de algodón y una nube de algodón en el Despertar. Solo apariencia."
+        },
+        "ja-JP": {
+          "nome": "トックリキワタセット",
+          "descricao": "実がはじけて綿毛が舞い、綿毛の軌跡、覚醒で綿の雲が立ちのぼります。見た目だけのアイテムです。"
+        },
+        "zh-CN": {
+          "nome": "美丽异木棉套装",
+          "descricao": "果实裂开飘出棉絮、棉絮拖尾，以及觉醒时升起的棉絮之云。仅外观。"
+        },
+        "zh-TW": {
+          "nome": "美人樹套裝",
+          "descricao": "果實裂開飄出棉絮、棉絮拖尾，以及覺醒時升起的棉絮之雲。僅外觀。"
+        }
+      }
+    },
+    {
+      "id": "kit_coruja",
+      "brl": 4.9,
+      "usd": 0.99,
+      "textos": {
+        "pt-BR": {
+          "nome": "Kit Coruja-buraqueira",
+          "descricao": "Uma corujinha voa de cada libertado, rastro de penas e asas de coruja no Despertar. Só aparência."
+        },
+        "en-US": {
+          "nome": "Burrowing Owl Kit",
+          "descricao": "A little owl flies out of everyone you free, a feather trail and owl wings when you awaken. Looks only."
+        },
+        "es-419": {
+          "nome": "Kit Lechucita vizcachera",
+          "descricao": "Una lechucita sale volando de cada liberado, estela de plumas y alas en el Despertar. Solo apariencia."
+        },
+        "ja-JP": {
+          "nome": "アナホリフクロウセット",
+          "descricao": "解放した者から小さなフクロウが飛び立ち、羽根の軌跡、覚醒でフクロウの翼。見た目だけのアイテムです。"
+        },
+        "zh-CN": {
+          "nome": "穴鸮套装",
+          "descricao": "被解放者身上飞出小猫头鹰、羽毛拖尾，以及觉醒时展开的猫头鹰之翼。仅外观。"
+        },
+        "zh-TW": {
+          "nome": "穴鴞套裝",
+          "descricao": "被解放者身上飛出小貓頭鷹、羽毛拖尾，以及覺醒時展開的貓頭鷹之翼。僅外觀。"
+        }
+      }
+    },
+    {
+      "id": "kit_junina",
+      "brl": 4.9,
+      "usd": 0.99,
+      "textos": {
+        "pt-BR": {
+          "nome": "Kit Festa Junina",
+          "descricao": "Bandeirinhas de chita, rastro de bandeirinhas e um arraiá em volta de você no Despertar. Só aparência."
+        },
+        "en-US": {
+          "nome": "Festa Junina Kit",
+          "descricao": "Calico bunting flags, a flag trail and a June party around you when you awaken. Looks only."
+        },
+        "es-419": {
+          "nome": "Kit Fiesta Junina",
+          "descricao": "Banderines de chita, estela de banderines y una verbena a tu alrededor en el Despertar. Solo apariencia."
+        },
+        "ja-JP": {
+          "nome": "フェスタ・ジュニーナセット",
+          "descricao": "花柄の小旗、小旗の軌跡、覚醒でまわりに村祭りが始まります。見た目だけのアイテムです。"
+        },
+        "zh-CN": {
+          "nome": "六月节套装",
+          "descricao": "花布彩旗、彩旗拖尾，以及觉醒时在你身边办起的六月庆典。仅外观。"
+        },
+        "zh-TW": {
+          "nome": "六月節套裝",
+          "descricao": "花布彩旗、彩旗拖尾，以及覺醒時在你身邊辦起的六月慶典。僅外觀。"
+        }
+      }
+    },
+    {
+      "id": "pacote_fundador",
+      "brl": 19.9,
+      "usd": 3.99,
+      "textos": {
+        "pt-BR": {
+          "nome": "Pacote Fundador",
+          "descricao": "Sem anúncios, os 4 kits de cosméticos (12 peças), a Clareira Ancestral e a insígnia de Fundador, exclusivas. Só aparência; por tempo limitado."
+        },
+        "en-US": {
+          "nome": "Founder Pack",
+          "descricao": "No Ads, all 4 cosmetic kits (12 pieces), plus the exclusive Ancestral Clearing and Founder badge. Looks only; for a limited time."
+        },
+        "es-419": {
+          "nome": "Pack Fundador",
+          "descricao": "Sin anuncios, los 4 kits de cosméticos (12 piezas), el Claro Ancestral y la insignia de Fundador, exclusivos. Solo apariencia; por tiempo limitado."
+        },
+        "ja-JP": {
+          "nome": "創設者パック",
+          "descricao": "「広告なし」、コスメセット4つ（12点）、限定の「いにしえの広場」と創設者バッジ。見た目だけのアイテムです。期間限定。"
+        },
+        "zh-CN": {
+          "nome": "创始者礼包",
+          "descricao": "免广告、全部 4 个外观套装（12 件），以及独家的远古空地和创始者徽章。仅外观；限时发售。"
+        },
+        "zh-TW": {
+          "nome": "創始者禮包",
+          "descricao": "免廣告、全部 4 個外觀套裝（12 件），以及獨家的遠古空地和創始者徽章。僅外觀；限時販售。"
+        }
+      }
+    },
+    {
+      "id": "pacote_fundador_kits",
+      "brl": 9.9,
+      "usd": 1.99,
+      "textos": {
+        "pt-BR": {
+          "nome": "Pacote Fundador (sem o Sem anúncios)",
+          "descricao": "Para quem já tem o Sem anúncios: os 4 kits de cosméticos (12 peças), a Clareira Ancestral e a insígnia de Fundador, exclusivas. Só aparência; por tempo limitado."
+        },
+        "en-US": {
+          "nome": "Founder Pack (without No Ads)",
+          "descricao": "For players who already have No Ads: all 4 cosmetic kits (12 pieces), plus the exclusive Ancestral Clearing and Founder badge. Looks only; for a limited time."
+        },
+        "es-419": {
+          "nome": "Pack Fundador (sin el Sin anuncios)",
+          "descricao": "Para quien ya tiene Sin anuncios: los 4 kits de cosméticos (12 piezas), el Claro Ancestral y la insignia de Fundador, exclusivos. Solo apariencia; por tiempo limitado."
+        },
+        "ja-JP": {
+          "nome": "創設者パック（広告なしを除く）",
+          "descricao": "「広告なし」を購入済みの方へ：コスメセット4つ（12点）、限定の「いにしえの広場」と創設者バッジ。見た目だけのアイテムです。期間限定。"
+        },
+        "zh-CN": {
+          "nome": "创始者礼包（不含免广告）",
+          "descricao": "适合已拥有免广告的玩家：全部 4 个外观套装（12 件），以及独家的远古空地和创始者徽章。仅外观；限时发售。"
+        },
+        "zh-TW": {
+          "nome": "創始者禮包（不含免廣告）",
+          "descricao": "適合已擁有免廣告的玩家：全部 4 個外觀套裝（12 件），以及獨家的遠古空地和創始者徽章。僅外觀；限時販售。"
+        }
+      }
+    },
+    {
+      "id": "pacote_apoiador",
+      "brl": 24.9,
+      "usd": 4.99,
+      "desde": "2027-02-01",
+      "_nota": "só depois da janela do Fundador (desativar pacote_fundador e pacote_fundador_kits em 31/01/2027)",
+      "textos": {
+        "pt-BR": {
+          "nome": "Pacote Apoiador",
+          "descricao": "Sem anúncios e os 4 kits de cosméticos (12 peças) por menos que separados. Só aparência; apoia um jogo independente feito no Brasil."
+        },
+        "en-US": {
+          "nome": "Supporter Pack",
+          "descricao": "No Ads and all 4 cosmetic kits (12 pieces) for less than buying them separately. Looks only; supports an indie game made in Brazil."
+        },
+        "es-419": {
+          "nome": "Pack Colaborador",
+          "descricao": "Sin anuncios y los 4 kits de cosméticos (12 piezas) por menos que por separado. Solo apariencia; apoya un juego independiente hecho en Brasil."
+        },
+        "ja-JP": {
+          "nome": "サポーターパック",
+          "descricao": "「広告なし」とコスメセット4つ（12点）を、別々に買うよりお得に。見た目だけのアイテムです。ブラジル生まれのインディーゲームを応援できます。"
+        },
+        "zh-CN": {
+          "nome": "支持者礼包",
+          "descricao": "免广告和全部 4 个外观套装（12 件），比单独购买更划算。仅外观；支持一款巴西制作的独立游戏。"
+        },
+        "zh-TW": {
+          "nome": "支持者禮包",
+          "descricao": "免廣告和全部 4 個外觀套裝（12 件），比單獨購買更划算。僅外觀；支持一款巴西製作的獨立遊戲。"
+        }
+      }
+    }
+  ]
+}

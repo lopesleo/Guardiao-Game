@@ -452,6 +452,10 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   copa, folhas de cobre; aba Clareira no Guarda-roupa) e **insígnia de Fundador** na Clareira. Estorno do pacote
   tira o que ele deu e diz o quê; 4 cenários novos no `test:compra`. Janelas que não cabem (celular + japonês +
   texto "Muito grande") encolhem por inteiro em vez de cortar. Desligado na loja até criar os produtos (👤)
+- ✅ **Produtos do Play Console pelo script** (19/10/2026): catálogo em `tools/play/produtos.json` (IDs, preços,
+  8 idiomas) e `npm run play:produtos` (conferir · listar · enviar · ativar · desativar) pela Google Play Developer
+  API, com o preço base em US$ convertido pela própria loja e o Brasil exato. `kit_ipe` e `kit_paineira` já estão no
+  Console (à mão); os outros 4 esperam a credencial (👤, `docs/PLAY_STORE.md`)
 - ✅ **Joystick morria depois da 1ª carta** (19/10/2026, achado no aparelho com a 1.0.4): um `off("resume")`
   geral no `GameScene` (do conserto antigo das cartas em dobro) apagava o ouvinte que religava o joystick depois
   da pausa da acessibilidade — em todos os modos, também depois do ⏸ e do reviver. Agora o joystick religa no

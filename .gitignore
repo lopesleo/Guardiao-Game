@@ -30,3 +30,5 @@ tools/discord/estado.json
 
 # histórico do treino do robô (gerado a cada treino; o cérebro atual fica em tools/bot-lab/cerebro.json)
 tools/bot-lab/treino.json
+# credencial da API do Play (conta de serviço) — mora em ~/chaves-android, nunca no repo
+play-api*.json
