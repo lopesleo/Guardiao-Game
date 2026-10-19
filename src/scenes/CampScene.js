@@ -20,6 +20,7 @@ import { DEBUG } from "../systems/Platform.js";
 import { Billing } from "../systems/Billing.js";
 import { openNoAds, showStoreNotice } from "../ui/NoAdsModal.js";
 import { openWardrobe } from "../ui/WardrobeModal.js";
+import { cosmeticsOn } from "../systems/Cosmetics.js";
 import { Analytics } from "../systems/Analytics.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
@@ -431,15 +432,19 @@ export class CampScene extends Phaser.Scene {
         if (this._modals.length || this._cutscene || this._leaving) return;
         openNoAds(this, { from: "camp", onClose: () => this.sys.isActive() && this._refreshAll() });
       }, { icon: "ico_star", style: "dark", iconScale: 2.5 }));
+    // Guarda-roupa (cosméticos, docs/COSMETICOS.md): na fileira de cima; a loja dos kits abre lá dentro
+    if (cosmeticsOn())
+      this.wardrobeBtn = fix(new Button(this, W - 424, 40, 52, 52, null, () => {
+        if (this._modals.length || this._cutscene || this._leaving) return;
+        openWardrobe(this, { from: "camp", onClose: () => this.sys.isActive() && this._refreshAll() });
+      }, { icon: "ico_wardrobe", style: "dark", iconScale: 2.5 }));
     if (DEBUG) {
       fix(
-        new Button(this, W - 540, 40, 150, 44, "+500 (dev)", () => {
+        new Button(this, W - 540, 92, 150, 44, "+500 (dev)", () => {
           this.meta.addCoins(500);
           this._refreshAll();
         }, { size: 14, style: "green" }),
       );
-      // Protótipo dos cosméticos (docs/COSMETICOS.md): escolher as peças do Kit Ipê-rosa
-      fix(new Button(this, W - 540, 92, 150, 44, tr("GUARDA-ROUPA"), () => !this._modals.length && openWardrobe(this), { size: 14, style: "green" }));
     }
     // Aviso de interação (no mundo, sobre o alvo)
     this.prompt = this.add.container(0, 0).setDepth(D_HUD - 5).setVisible(false);
@@ -468,11 +473,16 @@ export class CampScene extends Phaser.Scene {
   // esquerda do tamanho do texto — com texto grande ou nome comprido ele cresce, e só encolhe a letra
   // se fosse invadir os botões
   _layoutHud() {
+    // da direita para a esquerda, depois das Opções: Celeiro (com a Horta), "Sem anúncios" (some ao
+    // comprar), Guarda-roupa — cada um só ocupa lugar se estiver aparecendo
+    let x = this.W - 364;
+    if (this.barnBtn?.visible) x -= 60;
     if (this.noAdsBtn) {
       this.noAdsBtn.setVisible(!Billing.owned);
-      this.noAdsBtn.x = this.W - (this.barnBtn?.visible ? 424 : 364);
+      if (this.noAdsBtn.visible) [this.noAdsBtn.x, x] = [x, x - 60];
     }
-    const left = this.noAdsBtn?.visible ? this.noAdsBtn.x : this.barnBtn?.visible ? this.barnBtn.x : this.W - 304;
+    if (this.wardrobeBtn) [this.wardrobeBtn.x, x] = [x, x - 60];
+    const left = x + 60; // o botão mais à esquerda (ou as Opções, se não houver nenhum)
     const maxW = left - 26 - 14 - 14; // até a borda do botão, com folga
     const pad = 16;
     [this.hudTitle, this.hudInfo].forEach((t) => {
@@ -556,7 +566,7 @@ export class CampScene extends Phaser.Scene {
     }
     const busy = this._modals.length > 0 || this._leaving || this._cutscene;
     // Aviso da loja (pagamento aprovado / compra estornada), com a Clareira livre
-    if (Billing.notice && !busy && !this._fishing) showStoreNotice(this, { onClose: () => this.sys.isActive() && this._refreshAll() });
+    if (Billing.hasNotice && !busy && !this._fishing) showStoreNotice(this, { onClose: () => this.sys.isActive() && this._refreshAll() });
     // Joystick fora de cena com janela aberta, cena ou pescaria (o fixo não fica por cima delas)
     this.joystick?.setActive(!busy && !this._fishing);
     const mx = busy ? 0 : this.inputMgr.move.x,
