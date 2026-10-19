@@ -107,7 +107,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
   assistência (como ler: `docs/ARMAS_E_COMBOS.md`, "Como medir").
 
 **Decisões pendentes**
-- **Itens à venda além do "Sem anúncios"** (`docs/COSMETICOS.md`): 👤 julgar o protótipo do Kit Ipê-rosa (`?debug=1` no navegador → Clareira → GUARDA-ROUPA; libertação, rastro e Despertar com ipê, cada peça à parte, e a quantidade de pétalas). Se aprovar: sistema de cosméticos + guarda-roupa + produto; e/ou a gorjeta (consumível, rápida).
+- **Cosméticos à venda** (`docs/COSMETICOS.md`): fases 1 e 2 prontas no código (19/10) — 16 peças (4 grátis + 4 kits pagos de 3 peças: Ipê-rosa, Paineira, Coruja-buraqueira, Festa Junina), Guarda-roupa-vitrine com prévia ao vivo (camiseta no menu de cima da Clareira) e compra dos kits pelo `Billing` (12 cenários no `test:compra`). Desligado no build da loja (`COSMETICS.ENABLED`/`SHOP` em `config.js`). 👤 Jogar com `?debug=1` (loja de teste) e aprovar; depois criar `kit_ipe`, `kit_paineira`, `kit_coruja`, `kit_junina` no Play Console (nomes e descrições em `docs/PLAY_STORE.md`, R$ 9,90) e ligar as chaves numa versão. Pacote do apoiador só pensado (`docs/COSMETICOS.md`).
 - Descrição curta em espanhol: "leyendas de Brasil" → "del folclore brasileño"? (a captura 07 já foi refeita).
 
 **Depois de 12 testadores × 14 dias (~28/10)**
@@ -165,7 +165,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 | Pesquisa de mercado e ideias de retenção/tema | `docs/IDEIAS_RETENCAO.md` |
 | **Tema folclore: decisão, papéis e cuidados** | `docs/TEMA_FOLCLORE.md` |
 | Meta-progressão atual (Perigo, Bênçãos, conquistas) | `docs/META_LOOP.md` |
-| **Cosméticos e novos itens à venda** (ideias, regras de legibilidade, protótipo Kit Ipê-rosa) | `docs/COSMETICOS.md` |
+| **Cosméticos e itens à venda** (catálogo, Guarda-roupa, kits, legibilidade, pacote do apoiador) | `docs/COSMETICOS.md` |
 | Armas, evoluções e próximos combos | `docs/ARMAS_E_COMBOS.md` |
 | **Chefes: golpes especiais e regras de justiça** | `docs/CHEFES.md` |
 | **Como adicionar armas, laços, guardiões e desbloqueios** (`npm run check`) | `docs/CONTEUDO.md` |

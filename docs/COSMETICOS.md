@@ -1,7 +1,10 @@
 # Cosméticos e novos itens à venda
 
 Ideias anotadas em 19/10/2026 (conversa com o Leonardo), a partir da pergunta "podemos lançar mais itens
-para venda?". Status: **ideia + protótipo** (Kit Ipê-rosa, só com `?debug=1&kit=ipe`). Nada aqui está à venda.
+para venda?". **Status (19/10/2026): fases 1 e 2 prontas no código, desligadas no build da loja.** As 16 peças, o
+Guarda-roupa-vitrine e a compra dos kits pela Play Store funcionam no modo de teste (`?debug=1`, com loja
+simulada). Para vender: 👤 criar os 4 produtos no Play Console (tabela em `docs/PLAY_STORE.md`) e ligar
+`COSMETICS.ENABLED` e `COSMETICS.SHOP` em `src/config.js` numa versão nova.
 
 ## Princípio (não muda)
 
@@ -54,55 +57,80 @@ caricatura; nada de símbolos sagrados de povos indígenas, como cocar).
 
 ## Justiça
 
-Cada kit tem uma peça que **também sai jogando** (conquista ou maestria). A loja vende os exclusivos, nunca
-todos. Kits com tema brasileiro: ipê, festa junina (junho), carnaval (fevereiro), boi-bumbá de Parintins
-(Amazônia, com respeito), cerrado em flor.
+Cosmético não dá poder: pago ou grátis, ninguém joga melhor por ter. As grátis existem para todo mundo ter
+algo para personalizar desde o começo.
 
-## Próximos passos (decididos com o Leonardo em 19/10/2026)
+## Plano estruturado (decidido com o Leonardo em 19/10/2026)
 
-### O Guarda-roupa vira um lugar da Clareira: o Varal
+Decisões: as peças **pagas** são as trabalhadas (nível da pétala de ipê); as **grátis** são simples e de
+todos desde o começo (nada de "ganhar a peça por conquista"). Cada **kit pago = uma compra** que libera as
+3 peças dele. Loja em dois caminhos: menu de cima e direto no Guarda-roupa. Nunca durante a partida.
 
-Um **varal** entre dois postes, perto da cabana: as peças que o jogador tem **ficam penduradas** (a pétala de
-ipê, a bandeirinha…) e a equipada brilha. Interagir (E / botão de ação) abre o Guarda-roupa. Aparece por
-**progresso**, não por data: quando o jogador ganha a 1ª peça grátis (ex.: vencer o 1º chefe dá o Rastro de
-ipê) — a peça apresenta o lugar, "uma novidade por vez".
+### Catálogo (16 peças: 4 grátis + 12 pagas em 4 kits)
 
-### A loja em dois caminhos (nunca no meio da partida)
+| Peça | Libertação | Rastro | Despertar (R) |
+|---|---|---|---|
+| **Grátis** | **Sementes** — sementinhas pulam e caem | **Pegadas** — marcas no chão que somem · **Folhas secas** | **Luar** — aura prateada |
+| **Kit Ipê-rosa** | pétalas + flor que brota + tapete | pétalas | Despertar rosa + anel de ipês |
+| **Kit Paineira** | o fruto da barriguda estala e solta painas que sobem devagar | paina se soltando | Despertar creme + nuvem de paina |
+| **Kit Coruja-buraqueira** | uma corujinha sai voando do libertado + penas | pena caindo em pêndulo | Despertar terroso + **asas abertas** atrás do herói |
+| **Kit Festa Junina** | bandeirinhas de chita caindo | bandeirinha ao vento | Despertar de chita + varal de bandeirinhas sobre a cabeça |
 
-- **Menu de cima** (a ★ que hoje abre o "Sem anúncios") vira a **Loja**: Sem anúncios, kits e gorjeta.
-- **Direto no Guarda-roupa**: peça que o jogador não tem mostra o **preço no botão**; tocar abre a compra
-  daquele kit ali mesmo. Peça que sai jogando mostra **como ganhar** ("Vença o Mapinguari") no lugar do preço.
-- Técnico: o `Billing.js` hoje conhece um produto só; passa a ter um catálogo (cada kit = produto não
-  consumível; gorjeta = consumível), com restaurar, pendente e aviso de estorno **por produto**, e o
-  `npm run test:compra` cobrindo todos.
+Cores: só as livres do combate (rosa, creme, palha, barro, marrons, cinzas). A Festa Junina usa a chita nesses
+tons (sem vermelho/azul/verde de jogo). Cada peça paga passa pelo teste de legibilidade (matança em massa,
+Despertar, herói sempre à vista) antes de ir à loja.
 
-### Mais peças e kits
+### Guarda-roupa (vitrine)
 
-**A restrição que manda:** quase toda cor já é linguagem do combate (fogo, gelo, raio, vento, perigo, gemas
-verde/azul/dourada). Sobram **rosa, creme, marrons e cinzas** — então os kits se diferenciam por **forma e
-movimento**, e cada um passa pelo teste de legibilidade (matança em massa, Despertar, herói sempre à vista).
+- Botão no **menu de cima da Clareira**; abas **Libertação · Rastro · Despertar**; cartões das peças.
+- **Prévia ao vivo** à esquerda: o guardião escolhido com a peça tocando em laço — também nas peças que o
+  jogador ainda não tem (ver antes de comprar é o que vende).
+- Cartão: **EQUIPADA** · **EQUIPAR** · **preço** (abre a compra do kit ali mesmo) · **Em breve** (loja desligada).
+- Quantidade de pétalas (discreta · normal · cheia) continua valendo para todas as peças.
 
-| Kit | Libertação | Rastro | Despertar | Clareira | Risco de leitura |
-|---|---|---|---|---|---|
-| **Ipê-rosa** (protótipo) | pétalas + flor que brota | pétalas | Despertar rosa + anel de ipês | um ipê-rosa plantado | baixo (testado) |
-| **Paineira** | painas (sementes de algodão) flutuando devagar | paina que se solta dos pés | nuvem de paina subindo | uma barriguda | baixo (creme, movimento lento) |
-| **Coruja-buraqueira** | penas marrom e creme rodopiando | pegadas de coruja | asas abrindo atrás do herói | toca com a corujinha | baixo |
-| **Festa Junina** | bandeirinhas caindo | bandeirinha ao vento | fogueira de São João (sem fogo de verdade) | varal de bandeirinhas | **alto** (multicor: testar muito) |
+### Fases
 
-**Peças novas (além de libertação, rastro e Despertar):**
-- **Traje** (silhueta nova por guardião) — as **versões regionais das lendas** (ver acima). O mais caro de fazer.
-- **Entrada:** como o guardião chega pela trilha no começo da partida (pétalas no caminho, paina no ar).
-- **Vitória:** a comemoração ao vencer o chefe — o momento que se grava e compartilha.
-- **Acessório do bicho companheiro:** lencinho, coroa de flores (os bichos já são queridos; peça barata).
-- **Enfeite da Clareira** de cada kit (acima), que o herói pode usar quando der (rede, banco).
+1. ✅ **Peças e vitrine (19/10/2026):** motor de peças com um "palco" que serve à partida E à prévia
+   (`src/systems/Cosmetics.js`, `CosmeticPieces.js`, `src/ui/CosmeticStage.js`, `WardrobeModal.js`, arte em
+   `src/art/CosmeticFX.js`), 4 grátis + 12 pagas, botão de camiseta no menu de cima da Clareira, 6 idiomas.
+2. ✅ **Compra dos kits (código, 19/10/2026):** `Billing.js` com um registro por produto ("Sem anúncios" +
+   4 kits): preço, compra, pendente (conferido a cada 20 s com o app aberto), reconhecimento com nova
+   tentativa, carência, conferência dupla e **aviso de estorno/aprovação por kit** (com atalho para o
+   Guarda-roupa). O "Sem anúncios" continua no mesmo formato salvo de antes. `npm run test:compra` com 12
+   cenários (3 de kit). Falta 👤: criar os produtos e ligar as chaves (acima). Preço: **R$ 9,90 por kit**.
+   A ★ de cima continua sendo só o "Sem anúncios"; a vitrine dos kits é o Guarda-roupa (camiseta).
+3. **Depois:** pacote do apoiador (abaixo), gorjeta (consumível), kits sazonais, trajes regionais,
+   entrada/vitória, acessório do bicho.
 
-### Ordem recomendada
+### Como as peças foram conferidas (19/10/2026)
 
-1. **Varal + Guarda-roupa de verdade** (fora do modo de teste) com **1 peça grátis por conquista** — valida
-   se o jogador usa, sem envolver dinheiro.
-2. **Loja unificada + Billing com catálogo + Kit Ipê-rosa à venda** (R$ 9,90) e a gorjeta.
-3. **Kit Paineira** (2º kit, para a loja não ter um item só) + enfeites da Clareira.
-4. **Trajes regionais** (pesquisa + desenho por guardião).
+- Arte: `node tools/monster-sheet.mjs saida.png cos_owl,cos_wings,... 8` (folha de contato sem navegador).
+  Rodadas: a paina virava "olho" (disco com ponto) → tufo em leque com a semente embaixo; a corujinha parecia
+  um bonequinho de braços → asas largas e corpo de ovo; as asas pareciam escovas → silhueta de asa de coruja
+  (borda de ataque, cobertas pintadas, "dedos" nas primárias); a aura da paineira lembrava o dourado → algodão.
+- Prévia do Guarda-roupa (as 16): a pegada escura sumia na grama → clara; as asas ficavam atrás da aura →
+  NA FRENTE da aura e atrás do herói, maiores que a chama; o lobo da prévia nascia em cima do herói.
+- Bug achado e corrigido: trocar de peça na prévia destruía objetos com tweens rodando → exceção no laço e a
+  prévia congelava. Agora a prévia cancela atrasos/tweens antes (atrasos das peças via `host.delay`).
+- Partida real com cada kit inteiro em "Cheia" (pior caso): matança em massa e Despertar com gemas, moedas,
+  baús e herói legíveis; no máximo ~60 partículas de cosmético vivas na tela.
+
+### Pacote do apoiador (só pensado; não implementar ainda)
+
+**Ideia:** uma compra que leva **"Sem anúncios" + os 4 kits** por bem menos que separado, e um selo de
+apoiador na Clareira (cosmético, sem poder).
+
+- **Conta:** separado = R$ 14,90 + 4 × R$ 9,90 = **R$ 54,50**. Pacote a **R$ 29,90** (~45% de desconto) —
+  abaixo de R$ 30 é a faixa de "compra de impulso" de quem já gostou do jogo; US$ 5,99 fora do Brasil.
+- **Quem já comprou uma parte:** o Play não faz "complete o conjunto" para produtos únicos. Saídas: (a) a
+  loja só oferece o pacote a quem **não** tem nada (e mostra "falta só X" a quem tem), ou (b) dois produtos —
+  "Pacote do apoiador" e "Pacote do apoiador (sem o Sem anúncios)" a R$ 19,90. A (b) é mais justa.
+- **Kits futuros:** prometer "todos os kits futuros" prende o calendário e corta receita; melhor "todos os
+  kits **lançados até a compra**" + o selo. Kit novo depois → preço cheio ou desconto de apoiador.
+- **Quando:** só depois de haver 4 kits na loja e dados de conversão do "Sem anúncios" (`iap_view` → `iap_result`);
+  o pacote vira a oferta do lançamento (03/12) ou de uma data (Dia do Folclore, 22/08).
+- **Cuidado de política:** o pacote não pode parecer obrigatório nem aparecer no meio da partida; a vitrine
+  diz exatamente o que vem dentro.
 
 ## Protótipo: Kit Ipê-rosa (19/10/2026)
 

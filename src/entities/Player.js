@@ -10,7 +10,7 @@ import { tr } from "../i18n/i18n.js";
 
 // Visual do Despertar. Um cosmético equipado (systems/Cosmetics.js, awakenLook) troca os tons e
 // mantém a forma; sparks = null usa os vaga-lumes dourados
-const AWAKEN_GOLD = { tint: 0xffd96b, aura: 'fx_awaken_aura', flash: [240, 200, 80], ring: [PAL.white, PAL.yel3, PAL.yel2, PAL.g5], light: 0xffe58f, sparks: null };
+export const AWAKEN_GOLD = { tint: 0xffd96b, aura: 'fx_awaken_aura', flash: [240, 200, 80], ring: [PAL.white, PAL.yel3, PAL.yel2, PAL.g5], light: 0xffe58f, sparks: null };
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, heroId = 'guardian') {

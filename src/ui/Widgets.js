@@ -107,7 +107,7 @@ export class Modal {
 }
 
 // Encolhe um texto de uma linha até caber na largura
-function fitTo(t, room) {
+export function fitTo(t, room) {
   if (t.width > room) t.setScale(room / t.width);
   return t;
 }
