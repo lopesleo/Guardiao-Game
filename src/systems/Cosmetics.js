@@ -26,7 +26,7 @@ export const COSM_KITS = {
   ipe: { name: tr("Ipê-rosa"), product: STORE.KITS.ipe, icon: "cos_bloom" },
   paina: { name: tr("Paineira"), product: STORE.KITS.paina, icon: "cos_pod", frame: 2 },
   coruja: { name: tr("Coruja-buraqueira"), product: STORE.KITS.coruja, icon: "cos_owl", frame: 1 },
-  junina: { name: tr("Festa Junina"), product: STORE.KITS.junina, icon: "cos_bunting" },
+  junina: { name: tr("Festa Junina"), product: STORE.KITS.junina, icon: "cos_arraia" },
 };
 for (const [id, k] of Object.entries(COSM_KITS)) k.id = id;
 
@@ -34,33 +34,33 @@ for (const [id, k] of Object.entries(COSM_KITS)) k.id = id;
 export const COSM_PIECES = {
   // Grátis: simples, de todo mundo desde o começo
   sementes: { slot: "kill", name: tr("Sementes"), desc: tr("Sementinhas pulam de quem foi libertado."), icon: "cos_seed" },
-  pegadas: { slot: "trail", name: tr("Pegadas"), desc: tr("As marcas dos seus pés ficam no chão."), icon: "cos_print" },
-  folhas: { slot: "trail", name: tr("Folhas secas"), desc: tr("Uma folha seca cai a cada passo."), icon: "cos_dryleaf" },
+  pegadas: { slot: "trail", name: tr("Pegadas"), desc: tr("As marcas dos seus pés ficam no chão por um tempo."), icon: "cos_print" },
+  folhas: { slot: "trail", name: tr("Folhas secas"), desc: tr("Folhas secas caem enquanto você anda."), icon: "cos_dryleaf" },
   luar: { slot: "awaken", name: tr("Luar"), desc: tr("O Despertar em prata."), icon: "fx_awaken_aura_luar" },
   // Kit Ipê-rosa
-  ipe_kill: { slot: "kill", kit: "ipe", name: tr("Pétalas de ipê"), desc: tr("Pétalas sobem e uma flor de ipê brota no chão."), icon: "cos_bloom" },
+  ipe_kill: { slot: "kill", kit: "ipe", name: tr("Pétalas de ipê"), desc: tr("Pétalas sobem de quem foi libertado e uma flor de ipê brota no chão."), icon: "cos_bloom" },
   ipe_trail: { slot: "trail", kit: "ipe", name: tr("Rastro de ipê"), desc: tr("Pétalas caem atrás de você e forram o chão."), icon: "cos_petal" },
   ipe_awaken: { slot: "awaken", kit: "ipe", name: tr("Despertar de ipê"), desc: tr("O Despertar em rosa, com um anel de ipês florescendo."), icon: "fx_awaken_aura_ipe" },
   // Kit Paineira (a barriguda solta a paina, o "algodão" que voa com a semente)
-  paina_kill: { slot: "kill", kit: "paina", name: tr("Fruto da paineira"), desc: tr("O fruto estala e solta painas que sobem devagar."), icon: "cos_pod", frame: 2 },
+  paina_kill: { slot: "kill", kit: "paina", name: tr("Fruto da paineira"), desc: tr("Um fruto de paineira estala onde estava o corrompido e solta painas."), icon: "cos_pod", frame: 2 },
   paina_trail: { slot: "trail", kit: "paina", name: tr("Rastro de paina"), desc: tr("Painas se soltam dos seus pés e voam."), icon: "cos_paina" },
-  paina_awaken: { slot: "awaken", kit: "paina", name: tr("Despertar de algodão"), desc: tr("O Despertar branco como paina, numa nuvem que sobe."), icon: "fx_awaken_aura_paina" },
+  paina_awaken: { slot: "awaken", kit: "paina", name: tr("Despertar de algodão"), desc: tr("Uma nuvem de algodão sobe em volta de você e frutos estalam em roda."), icon: "fx_awaken_aura_paina", frame: 3 },
   // Kit Coruja-buraqueira
   coruja_kill: { slot: "kill", kit: "coruja", name: tr("Corujinha"), desc: tr("Uma corujinha sai voando de quem foi libertado."), icon: "cos_owl", frame: 1 },
   coruja_trail: { slot: "trail", kit: "coruja", name: tr("Rastro de penas"), desc: tr("Penas descem balançando atrás de você."), icon: "cos_feather" },
-  coruja_awaken: { slot: "awaken", kit: "coruja", name: tr("Asas da coruja"), desc: tr("Asas de coruja se abrem atrás de você no Despertar."), icon: "cos_wings" },
+  coruja_awaken: { slot: "awaken", kit: "coruja", name: tr("Asas da coruja"), desc: tr("Asas de coruja se abrem atrás de você e duas corujinhas levantam voo."), icon: "cos_wings" },
   // Kit Festa Junina (bandeirinhas de chita nos tons livres do combate)
   junina_kill: { slot: "kill", kit: "junina", name: tr("Bandeirinhas"), desc: tr("Bandeirinhas de chita caem de quem foi libertado."), icon: "cos_flag", tint: 0xff7eb6 },
   junina_trail: { slot: "trail", kit: "junina", name: tr("Rastro de bandeirinhas"), desc: tr("Uma bandeirinha voa atrás de você."), icon: "cos_flag", frame: 1, tint: 0xe3c37e },
-  junina_awaken: { slot: "awaken", kit: "junina", name: tr("Arraiá"), desc: tr("O Despertar de chita, com um varal de bandeirinhas na cabeça."), icon: "cos_bunting" },
+  junina_awaken: { slot: "awaken", kit: "junina", name: tr("Arraiá"), desc: tr("Um arraiá em volta de você: mastro e cordões de bandeirinhas de chita."), icon: "cos_arraia" },
 };
 for (const [id, p] of Object.entries(COSM_PIECES)) p.id = id;
 export const piecesOf = (slot) => Object.values(COSM_PIECES).filter((p) => p.slot === slot);
 export const kitPieces = (kit) => Object.values(COSM_PIECES).filter((p) => p.kit === kit);
 export const COSM_AMOUNTS = [
-  { k: COSMETICS.AMOUNTS[0], name: tr("Discreta") },
+  { k: COSMETICS.AMOUNTS[0], name: tr("Pouca") },
   { k: COSMETICS.AMOUNTS[1], name: tr("Normal") },
-  { k: COSMETICS.AMOUNTS[2], name: tr("Cheia") },
+  { k: COSMETICS.AMOUNTS[2], name: tr("Muita") },
 ];
 
 // Guarda-roupa disponível? (loja: COSMETICS.ENABLED; modo de teste: sempre)
@@ -113,6 +113,13 @@ export const Wardrobe = {
     load()[slot] = id;
     save();
   },
+  // Usa as 3 peças do kit de uma vez (depois de comprar, ou pela aba Kits)
+  equipKit(kit) {
+    for (const p of kitPieces(kit)) load()[p.slot] = p.id;
+    save();
+  },
+  // O kit inteiro está em uso?
+  wearingKit: (kit) => kitPieces(kit).every((p) => load()[p.slot] === p.id),
   get amount() {
     return load().amount ?? 1;
   },
