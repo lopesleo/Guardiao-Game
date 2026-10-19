@@ -287,7 +287,10 @@ export class LevelUpScene extends Phaser.Scene {
     if (i < this.cards.length) this._choose(this.cards[i], this._cardObjs[i]);
   }
 
-  // Confirma: carta escolhida pulsa, as outras somem, e a cena volta
+  // Confirma: a partida volta NO MESMO TOQUE (carta aplicada, joystick religado) e a mesa some por cima
+  // dela em ~0,2 s. Antes a partida esperava 260 ms parada pela animação e o joystick só religava no 1º
+  // quadro depois: no celular o polegar já tinha encostado e não andava até levantar e encostar de novo
+  // (19/10/2026)
   _choose(card, cont) {
     if (this._locked) return;
     if (this._banishMode) return this._banish(card, cont);
@@ -304,14 +307,15 @@ export class LevelUpScene extends Phaser.Scene {
       t: Math.floor((this.gameScene.elapsedMs || 0) / 1000),
       run_n: this.gameScene._runN,
     });
+    this.gameScene.upgrades.apply(card, this.player);
+    this.gameScene.joystick?.setActive(true);
+    this.scene.resume("GameScene");
     this._cardObjs.forEach((c) => {
       if (c === cont) this.tweens.add({ targets: c, scale: 1.08, duration: 120, yoyo: true });
       else this.tweens.add({ targets: c, alpha: 0, y: c.y + 30, duration: 160 });
     });
-    this.time.delayedCall(260, () => {
-      this.gameScene.upgrades.apply(card, this.player);
-      this.scene.resume("GameScene");
-      this.scene.stop();
-    });
+    // a mesa (fundo escuro, placa, botões e a carta escolhida) some por cima da partida já andando
+    this.tweens.add({ targets: this.children.list.filter((o) => !this._cardObjs.includes(o) || o === cont), alpha: 0, delay: 60, duration: 160 });
+    this.time.delayedCall(240, () => this.scene.stop());
   }
 }
