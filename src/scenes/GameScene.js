@@ -42,6 +42,7 @@ import { ElementalSystem } from "../systems/ElementalSystem.js";
 import { WeaponFX } from "../systems/WeaponFX.js";
 import { UpgradeSystem } from "../systems/UpgradeSystem.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
+import { Leaderboards } from "../systems/Leaderboards.js";
 import { Player } from "../entities/Player.js";
 import { Enemy, EnemyProjectile, BossEnt } from "../entities/Enemies.js";
 import {
@@ -1680,6 +1681,8 @@ export class GameScene extends Phaser.Scene {
     // 1ª vitória sobre o chefe deste bioma (antes de registerRun contar)
     const firstBiomeWin = won && !(this.meta.biomeWins()[this.biomeId] > 0);
     this.meta.registerRun(this.elapsedMs / 1000, won, this.diff.id, this.biomeId);
+    // Rankings (Play Games): pontos desta partida e o recorde; o envio segue sozinho (ou espera na fila)
+    const rank = Leaderboards.submitRun({ kills: this.hud.kills, won, difficulty: this.diff.id, mode: "solo" });
     if (firstBiomeWin) {
       const next = Object.values(BIOMES).find((b) => b.unlock?.won === this.biomeId);
       if (next) this._newUnlocksThisRun.push(tr("Nova trilha na Clareira: {0}", next.name));
@@ -1744,6 +1747,8 @@ export class GameScene extends Phaser.Scene {
         elapsedMs: this.elapsedMs,
         kills: this.hud.kills,
         coinsGained: coinsFinal,
+        score: rank.score,
+        scoreRecord: rank.record,
         coinsDoubleable: runCoins, // o anúncio dobra a partida, não o prêmio da 1ª vitória
         coinsRun: this._coinsGainedThisRun, // moedas da floresta, antes dos multiplicadores (a conta na tela)
         restedMult,

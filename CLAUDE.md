@@ -133,9 +133,11 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 
 **Jogo (backlog do roadmap)**
 - Anúncios já pedem classificação máxima "T" no app; 👤 deixar também "T" no console do AdMob (Controles de
-  bloqueio). Salvamento na nuvem está na `main`, **desligado** até o ID do Play Games: 👤 criar o projeto na
-  Play Console (passo a passo em `docs/PLAY_STORE.md`, inclusive o texto da política), pôr o ID em
-  `games-ids.xml` e testar no aparelho. Revisão nativa ja/zh; testes em aparelho fraco.
+  bloqueio). Salvamento na nuvem **e rankings** (Pontuação e Maior Perigo, só solo) estão na `main`,
+  **desligados** até o ID do Play Games: 👤 criar o projeto na Play Console (passo a passo em
+  `docs/PLAY_STORE.md`, "Progresso na nuvem" e "Rankings", inclusive o texto da política), pôr o ID em
+  `games-ids.xml`, rodar `npm run play:rankings -- criar`, publicar o Play Games Services e testar no aparelho.
+  Revisão nativa ja/zh; testes em aparelho fraco.
 
 **Laboratório e ferramentas**
 - **Robô jogador** (`tools/bot-lab.mjs`, modelo e lições em `docs/ROBO_JOGADOR.md`): prioridades de jogador em

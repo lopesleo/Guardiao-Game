@@ -5,10 +5,13 @@ import { WEAPONS } from "../config.js";
 import { formatTime } from "../utils.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { WEAPON_ICON } from "../art/Icons.js";
-import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
+import { text, drawFrame, Button, vw, vh, haptic, fitCamera, textPx } from "../ui/Theme.js";
+import { fitTo } from "../ui/Widgets.js";
 import { AdService } from "../systems/AdService.js";
 import { Analytics } from "../systems/Analytics.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
+import { Leaderboards } from "../systems/Leaderboards.js";
+import { openRanking } from "../ui/RankingModal.js";
 import { tr, fmt, dec } from "../i18n/i18n.js";
 
 export class GameOverScene extends Phaser.Scene {
@@ -17,7 +20,7 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   create(data) {
-    const { won, quit, elapsedMs, kills, coinsGained, coinsDoubleable = coinsGained, coinsRun = null, restedMult = 1, firstClear = 0, woodGained = 0, seedsGained = 0, newUnlocks = [], difficulty, unlockedNextDifficulty, level = 1, weapons = [], endlessS = 0, endlessRecord = false, biome = null } = data;
+    const { won, quit, elapsedMs, kills, coinsGained, coinsDoubleable = coinsGained, coinsRun = null, restedMult = 1, firstClear = 0, woodGained = 0, seedsGained = 0, newUnlocks = [], difficulty, unlockedNextDifficulty, score = 0, scoreRecord = false, level = 1, weapons = [], endlessS = 0, endlessRecord = false, biome = null } = data;
     fitCamera(this);
     // O Phaser REAPROVEITA a instância da cena: todo estado de "visita" precisa
     // ser zerado aqui, senão sobra da vez anterior (ex.: herói preso andando).
@@ -45,13 +48,16 @@ export class GameOverScene extends Phaser.Scene {
           : quit
             ? tr("Você recuou para lutar outro dia.")
             : tr("A floresta caiu… por enquanto.");
-    text(this, cx, 132, sub, { size: 22, color: CSS.muted, origin: 0.5 });
+    // a frase fica embaixo do título de verdade (japonês/chinês com texto grande: o título cresce e a frase
+    // invadia as letras dele)
+    const subY = Math.max(132, 78 + t.height / 2 + textPx(22) / 2 - 2); // pt com texto normal: 132, como sempre
+    fitTo(text(this, cx, subY, sub, { size: 22, color: CSS.muted, origin: 0.5 }), W - 40); // frase comprida (es/ja, texto grande) passava da tela
 
     // Painel de resultados — altura CALCULADA (antes: fixa em 300, e com Madeira +
     // Sementes a 5ª linha caía em cima da fileira de armas)
     const pw = Math.min(700, W - 60);
     const px = cx - pw / 2,
-      py = 164;
+      py = Math.max(164, Math.round(subY + textPx(22) / 2 + 14));
 
     const stats = [
       { icon: "ico_hourglass", label: tr("Tempo"), value: elapsedMs / 1000, fmt: (v) => formatTime(v * 1000) },
@@ -78,7 +84,28 @@ export class GameOverScene extends Phaser.Scene {
     const ph = HEAD + stats.length * rowH + BUILD + FOOT;
     const g = this.add.graphics();
     drawFrame(g, px, py, pw, ph, won ? "gold" : "dark");
-    text(this, cx, py + 30, tr("PERIGO: {0}   ·   NÍVEL {1}", (difficulty?.name ?? "").toUpperCase(), level), { size: 18, color: CSS.muted, origin: 0.5 });
+    const head = text(this, cx, py + 30, tr("PERIGO: {0}   ·   NÍVEL {1}", (difficulty?.name ?? "").toUpperCase(), level), { size: 18, color: CSS.muted, origin: 0.5 });
+    // Pontos do ranking (só com os rankings do Play Games ligados): à direita da faixa, tocar abre o ranking
+    if (Leaderboards.available() && score > 0) {
+      const label = scoreRecord ? tr("RECORDE! {0} pontos", fmt(score)) : tr("{0} pontos", fmt(score));
+      const probe = text(this, 0, 0, label, { size: 18 });
+      const pw2 = Math.min(pw * 0.5, this.textures.get("ico_trophy").getSourceImage().width * 2 + 10 + probe.width + 34);
+      probe.destroy();
+      const open = () => !this._leaving && !this._modals?.length && openRanking(this, { board: "score", from: "fim", fresh: true });
+      const pb = new Button(this, px + pw - 22 - pw2 / 2, py + 30, pw2, Math.min(56, Math.max(40, textPx(18) + 14)), label, open, {
+        size: 18,
+        style: scoreRecord ? "gold" : "dark",
+        color: scoreRecord ? CSS.goldHi : CSS.txt,
+        icon: "ico_trophy",
+        iconScale: 2,
+      });
+      // a faixa "PERIGO · NÍVEL" vai para a esquerda e encolhe se precisar
+      head.setOrigin(0, 0.5).setX(px + 26);
+      fitTo(head, pw - 26 - pw2 - 40);
+      pb.setAlpha(0);
+      this.tweens.add({ targets: pb, alpha: 1, delay: 350 + stats.length * 250, duration: 260 });
+      if (scoreRecord) this.tweens.add({ targets: pb, scale: { from: 1.15, to: 1 }, delay: 350 + stats.length * 250, duration: 320, ease: "Back.easeOut" });
+    }
     const small = rowH < 44,
       tiny = rowH < 34;
     stats.forEach((s, i) => {

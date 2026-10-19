@@ -1279,6 +1279,20 @@ export const ENDLESS = {
   EVENT_EVERY_S: 45, // um evento (enxame/cerco/minichefe) a cada 45 s
 };
 
+// Rankings do Google Play Games (src/systems/Leaderboards.js; docs/PLAY_STORE.md, "Rankings"). Só partidas SOLO:
+// o coop, quando vier, terá ranking próprio (em dupla a pontuação sobe demais). Os IDs vêm do Play Games (o
+// `npm run play:rankings -- criar` preenche); vazio = ranking desligado.
+export const RANKING = {
+  IDS: { score: "", perigo: "" },
+  // Pontos da partida = (abates × KILL + VICTORY se venceu) × multiplicador do Perigo (índice = Perigo). Na Noite
+  // Eterna os abates continuam contando. Pontos só de jogar: nada à venda muda a conta.
+  KILL: 10,
+  VICTORY: 5000,
+  PERIGO_MULT: [1, 1.3, 1.7, 2.2, 3],
+  SCORE_MAX: 5000000, // teto aceito pelo Play Games (pontuação adulterada acima disso é recusada)
+  TOP: 10, // quantos aparecem na lista (mais a linha do jogador, se estiver fora)
+};
+
 // Bestiário das LENDAS (aba do Mural). Cada ficha: quem é no jogo + a ORIGEM
 // da lenda (cuidado de representação: citar a origem — ver TEMA_FOLCLORE.md).
 // char = liberada junto com o guardião; as outras, ao encontrá-las na mata.
