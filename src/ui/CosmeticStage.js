@@ -12,6 +12,7 @@ import { registerAuraFX } from "../art/AuraFX.js";
 import { registerCosmeticFX } from "../art/CosmeticFX.js";
 import { Cosmetics } from "../systems/Cosmetics.js";
 import { AWAKEN_GOLD } from "../entities/Player.js";
+import { morphoFlight } from "../art/CampAncestral.js";
 
 const PX = 3;
 const PHASE_MS = { trail: 3000, kill: 3300, awaken: 4000 }; // duração de cada momento no modo kit
@@ -60,16 +61,17 @@ export class CosmeticStage {
       for (const [dx, f0] of [[-11, 0], [9, 1]]) {
         const lamp = s.add.sprite(px + dx, base - 84, "camp_anc_lamp", f0).setOrigin(0.5, 0).setScale(2);
         this.back.add(lamp);
-        s.tweens.add({ targets: lamp, angle: { from: -6, to: 6 }, duration: 1400 + Math.random() * 600, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+        s.tweens.add({ targets: lamp, angle: { from: -5, to: 5 }, duration: 2100, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: dx < 0 ? 0 : 220 }); // mesmo vento, um atrás do outro
         let fr = f0;
         this._timers.push(s.time.addEvent({ delay: 220, loop: true, callback: () => lamp.active && lamp.setFrame((fr ^= 1)) }));
       }
-      const bf = s.add.sprite(W * 0.5, H * 0.32, "camp_anc_morpho", 0).setScale(2);
+      // a borboleta-azul com o mesmo voo da Clareira (curvas, sombra, pouso nos cogumelos das raízes)
+      const shadow = s.add.image(W * 0.5, H * 0.8, "px_shadow");
+      this.ground.add(shadow);
+      const bf = s.add.sprite(W * 0.5, H * 0.5, "camp_anc_morpho", 0).setScale(2);
       this.air.add(bf);
-      s.tweens.add({ targets: bf, x: W * 0.62, duration: 2600, yoyo: true, repeat: -1, ease: "Sine.easeInOut", onYoyo: () => bf.setFlipX(true), onRepeat: () => bf.setFlipX(false) });
-      s.tweens.add({ targets: bf, y: H * 0.22, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
-      let bfr = 0;
-      this._timers.push(s.time.addEvent({ delay: 120, loop: true, callback: () => bf.active && bf.setFrame((bfr ^= 1)) }));
+      const fly = morphoFlight({ sprite: bf, shadow, home: { x: W * 0.5, y: H * 0.72 }, radius: 70, scale: 2, perches: [{ x: W * 0.3 - 78, y: H - 14 }, { x: W * 0.3 + 30, y: H - 8 }] });
+      this._timers.push(s.time.addEvent({ delay: 16, loop: true, callback: () => fly(s.time.now) }));
     }
     this.heroS.setPosition(this.w * 0.72, this.h * 0.68);
     this.shadow.setPosition(this.heroS.x, this.heroS.y + 30);

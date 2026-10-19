@@ -620,7 +620,8 @@ export class CampScene extends Phaser.Scene {
 
     // Luzes tremulando e vaga-lumes
     const k = this._lightK ?? 1; // luzes acesas conforme escurece (hora real)
-    for (const g of this.glows) g.g.setAlpha((g.base + Math.sin(time / 90 + g.ph) * 0.06 + Math.random() * 0.04) * k);
+    // chama tremula (rápido e com ruído); o que respira (cogumelos da Ancestral) tem sp e amp próprios
+    for (const g of this.glows) g.g.setAlpha((g.base + Math.sin(time / (g.sp ?? 90) + g.ph) * (g.amp ?? 0.06) + (g.sp ? 0 : Math.random() * 0.04)) * k);
     for (const f of this.flies) {
       const x = f.ox + Math.sin(time / 1300 + f.ph) * 40,
         y = f.oy + Math.cos(time / 1700 + f.ph) * 30;
