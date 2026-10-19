@@ -234,6 +234,38 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.8 (código 9) — 19/10/2026
+
+AAB: `dist/guardiao-v1.0.8-9-anuncios-reais.aab`. Só no Teste interno (o Alpha fica na 1.0.7 em revisão). Animações
+da Clareira Ancestral refeitas (borboleta com voo de verdade e sombra, tucano, estandarte, lamparinas, cogumelos).
+
+```
+<pt-BR>
+• Clareira Ancestral (Pacote Fundador) com animações refeitas: borboletas-azuis com voo de verdade e sombra, pousando nos canteiros; tucano mais vivo; estandarte ao vento; lamparinas balançando com o vento; cogumelos que respiram à noite.
+</pt-BR>
+<en-US>
+• Ancestral Clearing (Founder Pack) with redone animations: blue morpho butterflies with real flight and shadows, landing on the flowerbeds; a livelier toucan; a banner in the wind; lanterns swaying in the breeze; mushrooms that breathe at night.
+</en-US>
+<es-419>
+• Claro Ancestral (Pack Fundador) con animaciones rehechas: mariposas morfo azules con vuelo de verdad y sombra, posándose en los canteros; un tucán más vivo; estandarte al viento; faroles que se mecen con la brisa; hongos que respiran de noche.
+</es-419>
+<es-ES>
+• Claro Ancestral (Pack Fundador) con animaciones rehechas: mariposas morfo azules con vuelo de verdad y sombra, posándose en los canteros; un tucán más vivo; estandarte al viento; faroles que se mecen con la brisa; hongos que respiran de noche.
+</es-ES>
+<ja-JP>
+• いにしえの広場（創設者パック）のアニメーションを作り直し：影を落として本当に飛び、花壇にとまる青いモルフォチョウ、もっと生き生きしたオオハシ、風になびく旗、そよ風に揺れるランプ、夜に呼吸するように光るキノコ。
+</ja-JP>
+<zh-CN>
+• 远古空地（创始者礼包）动画全面重做：蓝色大闪蝶真正飞舞、投下影子、停在花圃上；巨嘴鸟更加生动；旗帜随风飘扬；灯笼随微风摇曳；蘑菇在夜里像呼吸一样发光。
+</zh-CN>
+<zh-TW>
+• 遠古空地（創始者禮包）動畫全面重做：藍色大閃蝶真正飛舞、投下影子、停在花圃上；巨嘴鳥更加生動；旗幟隨風飄揚；燈籠隨微風搖曳；蘑菇在夜裡像呼吸一樣發光。
+</zh-TW>
+<zh-HK>
+• 遠古空地（創始者禮包）動畫全面重做：藍色大閃蝶真正飛舞、投下影子、停在花圃上；巨嘴鳥更加生動；旗幟隨風飄揚；燈籠隨微風搖曳；蘑菇在夜裡像呼吸一樣發光。
+</zh-HK>
+```
+
 ### 1.0.7 (código 8) — 19/10/2026
 
 AAB: `dist/guardiao-v1.0.7-8-anuncios-reais.aab`. Clareira Ancestral redesenhada (o acampamento inteiro: esteios
