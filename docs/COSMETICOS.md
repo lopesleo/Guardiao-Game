@@ -72,15 +72,45 @@ todos desde o começo (nada de "ganhar a peça por conquista"). Cada **kit pago 
 |---|---|---|---|
 | **Grátis** | **Sementes** — sementinhas pulam e caem | **Pegadas** — marcas no chão que somem · **Folhas secas** | **Luar** — aura prateada |
 | **Kit Ipê-rosa** | pétalas + flor que brota + tapete | pétalas | Despertar rosa + anel de ipês |
-| **Kit Paineira** | o fruto da barriguda estala e solta painas que sobem devagar | paina se soltando | Despertar creme + nuvem de paina |
-| **Kit Coruja-buraqueira** | uma corujinha sai voando do libertado + penas | pena caindo em pêndulo | Despertar terroso + **asas abertas** atrás do herói |
-| **Kit Festa Junina** | bandeirinhas de chita caindo | bandeirinha ao vento | Despertar de chita + varal de bandeirinhas sobre a cabeça |
+| **Kit Paineira** | o fruto da barriguda estala e solta painas que sobem devagar | paina se soltando | nuvem de algodão subindo em volta + frutos estalando em roda |
+| **Kit Coruja-buraqueira** | uma corujinha sai voando do libertado + penas | pena caindo em pêndulo | **asas abertas** atrás do herói + duas corujinhas levantam voo (sem chama) |
+| **Kit Festa Junina** | bandeirinhas de chita caindo | bandeirinha ao vento | **arraiá**: mastro e cordões de bandeirinhas em leque em volta do herói (sem chama) |
 
 Cores: só as livres do combate (rosa, creme, palha, barro, marrons, cinzas). A Festa Junina usa a chita nesses
 tons (sem vermelho/azul/verde de jogo). Cada peça paga passa pelo teste de legibilidade (matança em massa,
 Despertar, herói sempre à vista) antes de ir à loja.
 
-### Guarda-roupa (vitrine)
+### Revisão de 19/10 (Leonardo: "o Arraiá está horrível", "revise toda a qualidade e a estrutura")
+
+**Peças (no tamanho do jogo, com e sem horda):** recolorir a chama do Despertar só funciona com cor que
+BRILHA (dourado, rosa). Em marrom, barro ou cinza ela vira "chama suja" — o Arraiá e a Coruja pareciam lama, o
+Luar e o Algodão pareciam fumaça — e o pontilhado da aura vira xadrez fora do dourado. Então: Luar = chama
+prata limpa (sem pontilhado); Algodão = nuvem de bolotas subindo (desenho próprio no laço da aura; a 1ª
+versão parecia "bonecos de neve" em fila); Coruja = sem chama, as asas são o Despertar (pintas em vez de
+listras, ponta arredondada para não parecer morcego, tons claros — o marrom escuro sumia na trilha de terra à
+noite) + brilho creme constante; Arraiá = sem chama, mastro e 4 cordões de bandeirinhas em leque + luz quente.
+Três descrições foram reescritas para dizer o que a peça faz agora.
+
+**Textos (sentido, não só caber):** "Quantidade de pétalas" valia para todas as peças → "Quantidade de
+efeitos" (Pouca · Normal · Muita); EQUIPADA/EQUIPAR não concordavam com "Padrão" → EM USO/USAR; "uma folha a
+cada passo" (cai enquanto anda); "varal na cabeça" (é sobre); "Loja de teste (modo de teste)"; es "PRONTO"
+(ambíguo) → "PRÓXIMAMENTE"; zh/zht "足迹" (= pegadas) para rastro → "拖尾".
+
+### Guarda-roupa (vitrine) — estrutura revista em 19/10
+
+| Problema | Solução |
+|---|---|
+| Cada peça paga mostrava "R$ 9,90" (parecia o preço de cada uma) | preço só no **kit**; a peça diz "Vem no Kit …" com cadeado e o botão **VER KIT · R$ 9,90** |
+| Dois destaques confusos (moldura = prévia, ✓ = em uso) | moldura dourada = na prévia · selo ✓ = em uso · cadeado = falta comprar (nunca só a cor) |
+| Sem lugar para ver os kits | aba **Kits**: os 4 kits com as 3 peças; a prévia toca o kit inteiro (Rastro → Libertação → Despertar) |
+| Compra numa 2ª janela | compra direto na aba Kits (a Play Store já confirma); depois, **USAR O KIT INTEIRO** |
+| Configuração e notas no meio da vitrine | rodapé compacto, as 3 opções de quantidade à vista |
+| Não dizia o que estava em uso | linha "… · Em uso: X" sob as abas |
+| Equipar sem retorno | som, vibração curta e o selo ✓ surge com um pulo; tocar de novo na peça selecionada já usa |
+| A prévia ignorava a quantidade de efeitos | a prévia toca com a quantidade escolhida |
+| A janela mudava de altura entre as abas | altura fixa |
+
+### Guarda-roupa (vitrine) — primeira versão
 
 - Botão no **menu de cima da Clareira**; abas **Libertação · Rastro · Despertar**; cartões das peças.
 - **Prévia ao vivo** à esquerda: o guardião escolhido com a peça tocando em laço — também nas peças que o

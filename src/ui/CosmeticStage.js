@@ -3,9 +3,10 @@
 // Roda o MESMO código das peças na partida (systems/CosmeticPieces.js) num "palco" de prévia: as camadas
 // ficam num container fora da tela e são desenhadas numa RenderTexture do tamanho da moldura (ela
 // recorta o que passa da borda — no Phaser 4, setMask não recorta; ver ScrollList).
-//   Libertação: um corrompido aparece perto do herói e é libertado, a cada ~1 s
-//   Rastro:     o herói anda de um lado a outro e dá um dash de vez em quando
-//   Despertar:  o herói desperta (aura, tinta, clarão), fica desperto um tempo e descansa
+//   show(parte, peça)   uma peça em foco, repetindo o momento dela
+//   showKit(peças, cb)  o kit inteiro em sequência: Rastro → Libertação → Despertar (cb avisa a fase)
+// Momentos: Libertação = um corrompido aparece ao lado do herói e é libertado, a cada ~1 s; Rastro = o
+// herói anda de um lado a outro e dá um dash; Despertar = desperta (aura, tinta, clarão) e descansa.
 import { PAL } from "../art/Palette.js";
 import { registerAuraFX } from "../art/AuraFX.js";
 import { registerCosmeticFX } from "../art/CosmeticFX.js";
@@ -13,9 +14,10 @@ import { Cosmetics } from "../systems/Cosmetics.js";
 import { AWAKEN_GOLD } from "../entities/Player.js";
 
 const PX = 3;
+const PHASE_MS = { trail: 3000, kill: 3300, awaken: 4000 }; // duração de cada momento no modo kit
 
 export class CosmeticStage {
-  // w,h = tamanho da moldura; a RT tem origem no centro (o chamador posiciona e põe no modal)
+  // w,h = tamanho da moldura (o chamador posiciona a RT e põe no modal)
   constructor(scene, w, h, heroId) {
     this.scene = scene;
     this.w = w;
@@ -28,27 +30,34 @@ export class CosmeticStage {
     scene.events.on("update", this._tick);
   }
 
-  // Monta o palco de novo para a parte e a peça (null = o padrão do jogo)
+  // Uma peça em foco (null = o padrão do jogo)
   show(slot, pieceId) {
+    this._build(pieceId ? { [slot]: pieceId } : {}, [slot], null);
+  }
+  // O kit inteiro, momento a momento
+  showKit(eq, onPhase) {
+    this._build(eq, ["trail", "kill", "awaken"], onPhase);
+  }
+
+  _build(eq, phases, onPhase) {
     this._clear();
     const s = this.scene,
       w = this.w,
       h = this.h;
-    this.slot = slot;
     this.root = s.make.container({ x: 0, y: 0 }, false);
     const L = (n) => (this[n] = s.add.container(0, 0));
-    // ordem de desenho: chão, aura, "atrás do herói" (asas), herói, ar — igual às profundidades da partida
+    // ordem de desenho: chão, aura, "atrás do herói" (asas, arraiá), herói, ar — igual às profundidades da partida
     for (const n of ["bg", "ground", "auraL", "back", "body", "air", "over"]) this.root.add(L(n));
     this._ground(w, h);
-    // guardião + sombra + aura
     const hx = w / 2,
       hy = h * 0.6;
     this.shadow = s.add.ellipse(hx, hy + 30, 46, 14, PAL.ink, 0.35);
     this.aura = s.add.sprite(hx, hy, "fx_awaken_aura", 0).setScale(PX).setOrigin(0.5, 0.92).setAlpha(0.85).setVisible(false);
     this.heroS = s.add.sprite(hx, hy, `hero_${this.heroId}`, 0).setScale(PX);
-    if (s.anims.exists(`${this.heroId}_idle`)) this.heroS.play(`${this.heroId}_idle`);
     this.auraL.add([this.shadow, this.aura]);
     this.body.add(this.heroS);
+    this._foe = s.add.sprite(0, 0, "mon_wolf", 0).setScale(PX).setVisible(false);
+    this.body.add(this._foe);
     this.flash = s.add.rectangle(0, 0, w, h, 0xffffff, 0).setOrigin(0);
     this.over.add(this.flash);
     // herói "de mentira" com o que as peças leem do Player
@@ -76,7 +85,6 @@ export class CosmeticStage {
       isDashing: () => s.time.now < st._dashUntil,
       isAwakened: () => s.time.now < st._awakeUntil,
     };
-    this._dashUntil = this._awakeUntil = 0;
     const host = {
       scene: s,
       put: (o, layer) => (layer === "ground" ? this.ground : layer === "back" ? this.back : this.air).add(o) && o,
@@ -90,14 +98,32 @@ export class CosmeticStage {
         return s.time.now;
       },
     };
-    this.cosm = pieceId ? new Cosmetics(host, { [slot]: pieceId }, 1) : null;
+    // com a quantidade de efeitos escolhida no Guarda-roupa (a prévia mostra o que vai ver na partida)
+    this.cosm = Object.values(eq).some(Boolean) ? new Cosmetics(host, eq) : null;
     this.look = this.cosm?.awakenLook ?? AWAKEN_GOLD;
-    // demo da parte
-    this._t0 = s.time.now;
+    this.phases = phases;
+    this._onPhase = onPhase;
+    this._enter(0);
+  }
+
+  // Começa um momento: herói de volta ao meio, parado e sem tinta
+  _enter(i) {
+    const s = this.scene,
+      hero = this.heroS;
+    this._phaseI = i;
+    this.slot = this.phases[i];
+    this._phaseEnd = this.phases.length > 1 ? s.time.now + PHASE_MS[this.slot] : Infinity;
     this._next = s.time.now + 300;
+    this._dashUntil = this._awakeUntil = 0;
+    this._awakeOn = false;
     this._dir = 1;
-    this._foe = slot === "kill" ? s.add.sprite(0, 0, "mon_wolf", 0).setScale(PX).setVisible(false) : null;
-    if (this._foe) this.body.add(this._foe);
+    hero.setPosition(this.w / 2, this.h * 0.6).setFlipX(false).clearTint();
+    if (s.anims.exists(`${this.heroId}_idle`)) hero.play(`${this.heroId}_idle`);
+    this.shadow.x = hero.x;
+    this.hero.body.velocity.x = this.hero.body.velocity.y = 0;
+    this.aura.setVisible(false).stop();
+    this._foe.setVisible(false);
+    this._onPhase?.(this.slot);
   }
 
   // Chão de mata: verde escuro com tufos, no estilo do bioma (pixel de 3)
@@ -122,20 +148,23 @@ export class CosmeticStage {
     const s = this.scene,
       hero = this.heroS;
     const v = this.hero.body.velocity;
+    // modo kit: próximo momento (o Despertar termina antes de trocar)
+    if (time >= this._phaseEnd && time >= this._awakeUntil) this._enter((this._phaseI + 1) % this.phases.length);
     if (this.slot === "kill" && time >= this._next) {
-      // um corrompido aparece perto do herói e, um instante depois, é libertado
+      // um corrompido aparece de um lado ou do outro do herói (nunca em cima) e é libertado
       this._next = time + 1050;
-      // de um lado ou do outro do herói, nunca em cima dele (a prévia mostra os dois separados)
       const side = (this._side = -(this._side || 1));
       const fx = hero.x + side * (95 + Math.random() * 50),
         fy = Math.min(this.h - 34, Math.max(44, hero.y + 6 + (Math.random() - 0.5) * 90));
       const foe = this._foe.setPosition(fx, fy).setFlipX(fx > hero.x).setAlpha(1).setScale(PX).setVisible(true);
       s.tweens.add({ targets: foe, y: fy - 4, duration: 180, yoyo: true });
-      this._timers.push(s.time.delayedCall(420, () => {
-        if (!foe.active) return;
-        s.tweens.add({ targets: foe, scale: PX * 0.4, alpha: 0, duration: 120, onComplete: () => foe.setVisible(false) });
-        this.cosm?.kill(fx, fy - 6, Math.random() < 0.15);
-      }));
+      this._timers.push(
+        s.time.delayedCall(420, () => {
+          if (!foe.active) return;
+          s.tweens.add({ targets: foe, scale: PX * 0.4, alpha: 0, duration: 120, onComplete: () => foe.active && foe.setVisible(false) });
+          this.cosm?.kill(fx, fy - 6, Math.random() < 0.15);
+        }),
+      );
     } else if (this.slot === "trail") {
       // anda de um lado a outro; dash a cada ~2,4 s
       const dashing = time < this._dashUntil;
@@ -155,17 +184,19 @@ export class CosmeticStage {
       if (s.anims.exists(walk) && hero.anims.currentAnim?.key !== walk) hero.play(walk);
       this.shadow.x = hero.x;
     } else if (this.slot === "awaken" && time >= this._next) {
-      // desperta, fica desperto 2,8 s e descansa 1,4 s
-      this._next = time + 4200;
+      // desperta e fica desperto 2,8 s (peça em foco: repete a cada 4,2 s; modo kit: uma vez)
+      this._next = this.phases.length > 1 ? Infinity : time + 4200;
       this._awakeUntil = time + 2800;
-      this.aura.setVisible(true).play(this.look.aura);
+      this._awakeOn = true;
+      if (this.look.aura) this.aura.setVisible(true).play(this.look.aura); // null = forma própria (asas, arraiá)
       hero.setTint(this.look.tint);
       const [r, g, b] = this.look.flash;
       this.flash.setFillStyle((r << 16) | (g << 8) | b, 0.55);
       s.tweens.add({ targets: this.flash, fillAlpha: 0, duration: 260 });
       this.cosm?.awaken(hero.x, hero.y + hero.displayHeight * 0.42);
     }
-    if (this.slot === "awaken" && time >= this._awakeUntil && this.aura.visible) {
+    if (this._awakeOn && time >= this._awakeUntil) {
+      this._awakeOn = false;
       this.aura.setVisible(false).stop();
       hero.clearTint();
     }

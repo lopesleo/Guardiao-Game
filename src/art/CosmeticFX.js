@@ -9,18 +9,17 @@
 //   Junina  cos_flag (bandeirinha BRANCA, tingida por partícula, 2 quadros) · cos_bunting (varal, 2) · aura de chita
 import { PAL } from "./Palette.js";
 import { Pix, registerStrip } from "./PixelArt.js";
-import { registerAuraVariant } from "./AuraFX.js";
+import { registerAuraVariant, AURA_W, AURA_H } from "./AuraFX.js";
 
 // Cores da chita (bandeirinhas da Festa Junina) — só tons livres
 export const CHITA = [PAL.pink, PAL.straw3, PAL.cream, PAL.clay3, PAL.pinkHi, PAL.straw2];
 
-// Auras do Despertar por peça (mesma chama do dourado, outra paleta)
+// Auras do Despertar com a MESMA chama do dourado: só vale para cor que brilha (rosa, prata clara).
+// Recolorir a chama com marrom, barro ou cinza vira "chama suja" (visto em 19/10: coruja e arraiá pareciam
+// lama) — essas peças têm forma própria: nuvem de algodão (paineira), asas (coruja), arraiá (junina)
 export const AURAS = {
   ipe: { core: PAL.white, hi: PAL.pinkHi, mid: PAL.pink, low: PAL.pur1, fleck: PAL.cream, faint: PAL.pink },
-  luar: { core: PAL.white, hi: PAL.s4, mid: PAL.s3, low: PAL.s2, fleck: PAL.cream, faint: PAL.s3 },
-  paina: { core: PAL.white, hi: PAL.white, mid: PAL.cream, low: PAL.s4, fleck: PAL.cream, faint: PAL.s4 }, // algodão (não pode lembrar o dourado)
-  coruja: { core: PAL.cream, hi: PAL.straw3, mid: PAL.n4, low: PAL.n2, fleck: PAL.cream, faint: PAL.n3 },
-  junina: { core: PAL.white, hi: PAL.pinkHi, mid: PAL.straw3, low: PAL.clay1, fleck: PAL.pink, faint: PAL.clay3 },
+  luar: { core: PAL.white, hi: PAL.white, mid: PAL.s4, low: PAL.s3, fleck: PAL.white, faint: null }, // prata limpa, sem pontilhado
 };
 
 const anim = (scene, key, tex, frames, frameRate, repeat = -1) => {
@@ -111,6 +110,72 @@ function pod(f) {
   return p;
 }
 
+// Aura da paineira: nuvem de algodão (bolotas macias subindo em volta do herói, maiores embaixo), no
+// mesmo tamanho e laço da aura (8 quadros, 5 px por quadro num período de 40)
+function cottonCloud(f) {
+  const p = new Pix(AURA_W, AURA_H);
+  const puffs = [];
+  // 18 bolotas de tamanhos diferentes, espalhadas (não em fila: em fila pareciam bonecos de neve),
+  // subindo em volta do herói e se abrindo para fora conforme sobem
+  for (let k = 0; k < 18; k++) {
+    const left = k % 2 === 0;
+    const rise = (((k * 37) % 40) + f * 5) % 40; // 0 = no chão, 40 = no alto
+    const y = AURA_H - 5 - rise;
+    const spread = (rise / 40) * 3; // abre para fora ao subir
+    const jitter = ((k * 7) % 5) - 2;
+    const x = left ? 8 + jitter - spread : AURA_W - 9 + jitter + spread;
+    const r = (1.8 + 4 * (1 - rise / 40)) * (0.75 + ((k * 13) % 5) / 8);
+    puffs.push({ x, y, r });
+  }
+  puffs.sort((a, b) => a.y - b.y); // as de baixo por cima (mais perto)
+  for (const { x, y, r } of puffs)
+    for (let yy = Math.floor(y - r); yy <= y + r; yy++)
+      for (let xx = Math.floor(x - r); xx <= x + r; xx++) {
+        const dx = (xx - x) / r,
+          dy = (yy - y) / r;
+        const d = dx * dx + dy * dy;
+        if (d > 1 || xx < 0 || yy < 0 || xx >= AURA_W || yy >= AURA_H) continue;
+        const light = -(dx * 0.7 + dy * 0.7); // luz de cima/esquerda
+        p.set(xx, yy, d > 0.82 && light < -0.3 ? PAL.s4 : light > 0.05 ? PAL.white : PAL.cream); // algodão: quase todo branco
+      }
+  return p;
+}
+// Arraiá (66×50): mastro atrás do herói com a bandeirinha no topo e 4 cordões de bandeirinhas de chita
+// descendo em leque até o chão. Quadro 1: as bandeirinhas balançam
+function arraia(f) {
+  const W = 66,
+    H = 50;
+  const p = new Pix(W, H);
+  const top = [33, 6];
+  const anchors = [[3, 41], [13, 48], [53, 48], [63, 41]];
+  anchors.forEach(([ax, ay], s) => {
+    const cx = (top[0] + ax) / 2,
+      cy = (top[1] + ay) / 2 + 7; // o cordão cede no meio
+    const pts = [];
+    for (let i = 0; i <= 60; i++) {
+      const t = i / 60;
+      pts.push([Math.round((1 - t) * (1 - t) * top[0] + 2 * (1 - t) * t * cx + t * t * ax), Math.round((1 - t) * (1 - t) * top[1] + 2 * (1 - t) * t * cy + t * t * ay)]);
+    }
+    for (const [x, y] of pts) p.set(x, y, PAL.n2);
+    for (let i = 7, k = 0; i < pts.length - 3; i += 8, k++) {
+      const [x, y] = pts[i];
+      const col = CHITA[(k + s * 2) % CHITA.length];
+      const sway = f && k % 2 ? (s < 2 ? -1 : 1) : 0;
+      // bandeirinha pendurada: 3 → 3 → 2 → 1 px, borda direita mais escura
+      [[-1, 2], [-1, 2], [0, 1], [0, 1], [0, 0]].forEach(([a, b], r) => {
+        for (let dx = a; dx <= b; dx++) p.set(x + dx + (r > 1 ? sway : 0), y + 1 + r, dx === b && r < 2 ? PAL.clay1 : col);
+      });
+    }
+  });
+  // mastro (2 px) e a bandeirinha do topo
+  for (let y = top[1]; y < H; y++) {
+    p.set(32, y, PAL.n3);
+    p.set(33, y, PAL.n2);
+  }
+  for (const [x, y, c] of [[33, 1, PAL.pink], [34, 1, PAL.pink], [35, 1, PAL.pink], [33, 2, PAL.pink], [34, 2, PAL.pinkHi], [33, 3, PAL.straw3], [33, 4, PAL.straw3], [33, 5, PAL.n2]]) p.set(x, y, c);
+  return p;
+}
+
 // --------------------------------------------------------------------- coruja-buraqueira
 // Corujinha voando (13×11): corpo redondo (coruja não tem pescoço), sobrancelha creme, olhos amarelos;
 // asas LARGAS saindo do meio do corpo, afinando até a ponta escura, com o barrado creme. Quadros:
@@ -178,11 +243,16 @@ function wings(f) {
         const rel = (y - yL) / Math.max(1, yT - yL);
         if (t > 0.68 && i % 3 === 0 && rel > 0.25) continue; // vão entre as primárias ("dedos")
         let col;
+        // pintas (a coruja-buraqueira é pintada, não listrada: as listras viravam um "pente")
         if (y === Math.round(yL)) col = PAL.n2; // borda de ataque
-        else if (t > 0.9) col = PAL.n1; // ponta
-        else if (t < 0.3) col = (x + y) % 3 ? PAL.n4 : PAL.cream; // cobertas pintadas
-        else if (rel > 0.35 && Math.floor(t * 18) % 2 === 0) col = (x + y) % 4 ? PAL.n4 : PAL.cream; // barrado (marrom claro, pintas creme)
-        else col = rel > 0.8 ? PAL.n2 : PAL.n3;
+        else if (t > 0.88) {
+          if (rel > 0.45) continue; // ponta arredondada (pendurada até embaixo parecia asa de morcego)
+          col = PAL.n2;
+        }
+        // tons CLAROS (marrom escuro sumia na trilha de terra à noite): cobertas palha, penas marrom-claro
+        else if (t < 0.32) col = (x * 3 + y * 2) % 7 === 0 ? PAL.cream : PAL.straw2; // cobertas claras pintadas
+        else if (rel > 0.82) col = PAL.n2; // borda de fuga (contorno escuro separa do chão)
+        else col = (x * 5 + y * 3) % 11 === 0 ? PAL.cream : (x + y * 2) % 9 === 0 ? PAL.straw1 : PAL.n4;
         p.set(x, y, col);
       }
     }
@@ -232,10 +302,13 @@ export function registerCosmeticFX(scene) {
     registerStrip(scene, "cos_wings", [0, 1, 2].map((f) => wings(f)));
     registerStrip(scene, "cos_flag", [0, 1].map((f) => flag(f)));
     registerStrip(scene, "cos_bunting", [0, 1].map((f) => bunting(f)));
+    registerStrip(scene, "cos_arraia", [0, 1].map((f) => arraia(f)));
   }
   anim(scene, "cos_pod_open", "cos_pod", [0, 1, 2], 14, 0);
   anim(scene, "cos_owl_fly", "cos_owl", [0, 1, 2, 3], 16);
   anim(scene, "cos_wings_beat", "cos_wings", [0, 1, 2, 1], 6);
   anim(scene, "cos_bunting_wave", "cos_bunting", [0, 1], 4);
+  anim(scene, "cos_arraia_wave", "cos_arraia", [0, 1], 3);
   for (const [id, C] of Object.entries(AURAS)) registerAuraVariant(scene, `fx_awaken_aura_${id}`, C);
+  registerAuraVariant(scene, "fx_awaken_aura_paina", null, cottonCloud); // nuvem de algodão, não chama
 }

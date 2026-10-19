@@ -543,29 +543,29 @@ loja fica tudo desligado até `COSMETICS.ENABLED` e `COSMETICS.SHOP` (`src/confi
    | Idioma | Kit | Nome | Descrição |
    |---|---|---|---|
    | pt-BR | ipe | Kit Ipê-rosa | Pétalas de ipê ao libertar a mata, rastro de pétalas e o Despertar em rosa com um anel de ipês. Só aparência. |
-   | pt-BR | paineira | Kit Paineira | O fruto da barriguda estala e solta painas, rastro de algodão e o Despertar branco como paina. Só aparência. |
+   | pt-BR | paineira | Kit Paineira | O fruto da barriguda estala e solta painas, rastro de algodão e uma nuvem de algodão no Despertar. Só aparência. |
    | pt-BR | coruja | Kit Coruja-buraqueira | Uma corujinha voa de cada libertado, rastro de penas e asas de coruja no Despertar. Só aparência. |
-   | pt-BR | junina | Kit Festa Junina | Bandeirinhas de chita, rastro de bandeirinhas e o Despertar de arraiá com varal na cabeça. Só aparência. |
+   | pt-BR | junina | Kit Festa Junina | Bandeirinhas de chita, rastro de bandeirinhas e um arraiá em volta de você no Despertar. Só aparência. |
    | en-US | ipe | Pink Ipê Kit | Ipê petals when you free the forest, a petal trail and a pink Awakening with a ring of ipês. Looks only. |
-   | en-US | paineira | Silk Floss Tree Kit | The pod cracks open and lets out floss, a cotton trail and an Awakening white as floss. Looks only. |
+   | en-US | paineira | Silk Floss Tree Kit | The pod cracks open and lets out floss, a cotton trail and a cotton cloud when you awaken. Looks only. |
    | en-US | coruja | Burrowing Owl Kit | A little owl flies out of everyone you free, a feather trail and owl wings when you awaken. Looks only. |
-   | en-US | junina | Festa Junina Kit | Calico bunting flags, a flag trail and a June Party Awakening with flags over your head. Looks only. |
+   | en-US | junina | Festa Junina Kit | Calico bunting flags, a flag trail and a June party around you when you awaken. Looks only. |
    | es-419 | ipe | Kit Ipê rosa | Pétalos de ipê al liberar el bosque, estela de pétalos y el Despertar rosa con un anillo de ipês. Solo apariencia. |
-   | es-419 | paineira | Kit Palo borracho | El fruto se abre y suelta copos, estela de algodón y el Despertar blanco como los copos. Solo apariencia. |
+   | es-419 | paineira | Kit Palo borracho | El fruto se abre y suelta copos, estela de algodón y una nube de algodón en el Despertar. Solo apariencia. |
    | es-419 | coruja | Kit Lechucita vizcachera | Una lechucita sale volando de cada liberado, estela de plumas y alas en el Despertar. Solo apariencia. |
-   | es-419 | junina | Kit Fiesta Junina | Banderines de chita, estela de banderines y el Despertar de verbena con guirnalda. Solo apariencia. |
+   | es-419 | junina | Kit Fiesta Junina | Banderines de chita, estela de banderines y una verbena a tu alrededor en el Despertar. Solo apariencia. |
    | ja-JP | ipe | ピンクのイペーセット | 解放するとイペーの花びらが舞い、花びらの軌跡、イペーの輪が咲くピンクの覚醒。見た目だけのアイテムです。 |
-   | ja-JP | paineira | トックリキワタセット | 実がはじけて綿毛が舞い、綿毛の軌跡、綿のように白い覚醒。見た目だけのアイテムです。 |
+   | ja-JP | paineira | トックリキワタセット | 実がはじけて綿毛が舞い、綿毛の軌跡、覚醒で綿の雲が立ちのぼります。見た目だけのアイテムです。 |
    | ja-JP | coruja | アナホリフクロウセット | 解放した者から小さなフクロウが飛び立ち、羽根の軌跡、覚醒でフクロウの翼。見た目だけのアイテムです。 |
-   | ja-JP | junina | フェスタ・ジュニーナセット | 花柄の小旗、小旗の軌跡、頭の上に小旗のロープが張られる村祭りの覚醒。見た目だけのアイテムです。 |
-   | zh-CN | ipe | 粉色风铃木套装 | 解放时飘落风铃木花瓣、花瓣足迹，以及绽放一圈风铃木花的粉色觉醒。仅外观。 |
-   | zh-CN | paineira | 美丽异木棉套装 | 果实裂开飘出棉絮、棉絮足迹，以及如棉絮般洁白的觉醒。仅外观。 |
-   | zh-CN | coruja | 穴鸮套装 | 被解放者身上飞出小猫头鹰、羽毛足迹，以及觉醒时展开的猫头鹰之翼。仅外观。 |
-   | zh-CN | junina | 六月节套装 | 花布彩旗、彩旗足迹，以及头顶挂起彩旗的六月庆典觉醒。仅外观。 |
-   | zh-TW | ipe | 粉紅風鈴木套裝 | 解放時飄落風鈴木花瓣、花瓣足跡，以及綻放一圈風鈴木花的粉色覺醒。僅外觀。 |
-   | zh-TW | paineira | 美人樹套裝 | 果實裂開飄出棉絮、棉絮足跡，以及如棉絮般潔白的覺醒。僅外觀。 |
-   | zh-TW | coruja | 穴鴞套裝 | 被解放者身上飛出小貓頭鷹、羽毛足跡，以及覺醒時展開的貓頭鷹之翼。僅外觀。 |
-   | zh-TW | junina | 六月節套裝 | 花布彩旗、彩旗足跡，以及頭頂掛起彩旗的六月慶典覺醒。僅外觀。 |
+   | ja-JP | junina | フェスタ・ジュニーナセット | 花柄の小旗、小旗の軌跡、覚醒でまわりに村祭りが始まります。見た目だけのアイテムです。 |
+   | zh-CN | ipe | 粉色风铃木套装 | 解放时飘落风铃木花瓣、花瓣拖尾，以及绽放一圈风铃木花的粉色觉醒。仅外观。 |
+   | zh-CN | paineira | 美丽异木棉套装 | 果实裂开飘出棉絮、棉絮拖尾，以及觉醒时升起的棉絮之云。仅外观。 |
+   | zh-CN | coruja | 穴鸮套装 | 被解放者身上飞出小猫头鹰、羽毛拖尾，以及觉醒时展开的猫头鹰之翼。仅外观。 |
+   | zh-CN | junina | 六月节套装 | 花布彩旗、彩旗拖尾，以及觉醒时在你身边办起的六月庆典。仅外观。 |
+   | zh-TW | ipe | 粉紅風鈴木套裝 | 解放時飄落風鈴木花瓣、花瓣拖尾，以及綻放一圈風鈴木花的粉色覺醒。僅外觀。 |
+   | zh-TW | paineira | 美人樹套裝 | 果實裂開飄出棉絮、棉絮拖尾，以及覺醒時升起的棉絮之雲。僅外觀。 |
+   | zh-TW | coruja | 穴鴞套裝 | 被解放者身上飛出小貓頭鷹、羽毛拖尾，以及覺醒時展開的貓頭鷹之翼。僅外觀。 |
+   | zh-TW | junina | 六月節套裝 | 花布彩旗、彩旗拖尾，以及覺醒時在你身邊辦起的六月慶典。僅外觀。 |
 
 4. **Segurança dos dados:** nada muda (o "Histórico de compras" já declarado cobre os kits).
 5. Ligar `COSMETICS.ENABLED` e `COSMETICS.SHOP`, gerar a versão e testar no celular instalado pela loja:
