@@ -38,6 +38,7 @@ const L = {
   m: PAL.n4,
   u: PAL.wnd3, // vento
   v: PAL.wnd2,
+  i: PAL.pink,
   V: PAL.wnd1,
 };
 
@@ -184,6 +185,19 @@ const MAPS = {
     "knnnkknnNk",
     "knnnnnnnNk",
     "kkkkkkkkkk",
+  ],
+  // Guarda-roupa (cosméticos): camiseta com a listra rosa do ipê
+  wardrobe: [
+    "..kkk..kkk..",
+    ".klllkklllk.",
+    "kllllllllllk",
+    "kllllllllllk",
+    ".kkllllllkk.",
+    "..kllllllk..",
+    "..kiiiiiik..",
+    "..kllllllk..",
+    "..kllllllk..",
+    "..kkkkkkkk..",
   ],
   gear: [
     "....kkk....",
