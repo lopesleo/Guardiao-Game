@@ -69,7 +69,14 @@ se confundiria com a gema dourada e as brasas.
 - **Tapete de ipê:** a pétala que termina a queda pousa no chão e desbota em ~2–3 s (pool de 48) — marca
   onde se lutou, como o chão embaixo de um ipê florido.
 - **Rastro:** uma pétala cai atrás dos pés de vez em quando ao andar; no dash, um punhado.
-- Código: `src/systems/Cosmetics.js` + texturas em `src/art/CosmeticFX.js`. Liga só com `?debug=1&kit=ipe`.
+- **Despertar (R):** explosão de pétalas e um anel de 7 ipês florescendo em onda em volta do herói; enquanto
+  dura, pétalas sobem de um anel largo e se afastam. A aura dourada continua (é ela que mostra o estado).
+- **Personalizável — Guarda-roupa** (Clareira, botão verde de teste): cada peça (libertação, rastro,
+  Despertar) se equipa à parte, e a **quantidade de pétalas** é do jogador (discreta, normal, cheia — a
+  discreta também serve a quem quer a tela mais limpa). Guardado em `guardiao_cosmetics_v1`; vale na partida
+  seguinte.
+- Código: `src/systems/Cosmetics.js`, `src/ui/WardrobeModal.js` e texturas em `src/art/CosmeticFX.js`. Só no
+  modo de teste (`?debug=1`); `&kit=ipe` equipa tudo enquanto nada foi escolhido no Guarda-roupa.
 
 Rodadas de autocrítica (capturas de partida real, com e sem o kit):
 1. Pétala 5×4 e flor clara: viravam **pontinhos (confete)** e a flor se confundia com as florzinhas brancas
@@ -78,6 +85,11 @@ Rodadas de autocrítica (capturas de partida real, com e sem o kit):
    do baú. → **orçamento total de 14 pétalas por 120 ms** somando todas as mortes (esgotado, a morte fica só
    com o efeito do elemento) e nada fora da tela.
 3. Gemas e baú legíveis na matança; rastro e tapete aparecem; sem queda de FPS medida no navegador.
+4. Despertar: as pétalas em espiral nasciam perto e viviam muito, e com "Cheia" **cobriam o próprio herói**.
+   → emissor próprio, curto, saindo de um anel largo para fora; a quantidade não acelera essa peça; morte
+   colada no herói solta metade das pétalas e para longe dele; teto de 90 pétalas vivas.
+5. Guarda-roupa: o subtítulo da janela encostava no título em japonês com texto muito grande → a nota
+   "protótipo" foi para o pé da janela (que cresce com o texto).
 
 Falta sentir no celular (S23 e um aparelho fraco) e decidir se o Kit vale R$ 9,90 para quem joga.
 

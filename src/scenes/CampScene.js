@@ -19,6 +19,7 @@ import { VirtualJoystick, joyRight } from "../ui/VirtualJoystick.js";
 import { DEBUG } from "../systems/Platform.js";
 import { Billing } from "../systems/Billing.js";
 import { openNoAds, showStoreNotice } from "../ui/NoAdsModal.js";
+import { openWardrobe } from "../ui/WardrobeModal.js";
 import { Analytics } from "../systems/Analytics.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
@@ -437,6 +438,8 @@ export class CampScene extends Phaser.Scene {
           this._refreshAll();
         }, { size: 14, style: "green" }),
       );
+      // Protótipo dos cosméticos (docs/COSMETICOS.md): escolher as peças do Kit Ipê-rosa
+      fix(new Button(this, W - 540, 92, 150, 44, tr("GUARDA-ROUPA"), () => !this._modals.length && openWardrobe(this), { size: 14, style: "green" }));
     }
     // Aviso de interação (no mundo, sobre o alvo)
     this.prompt = this.add.container(0, 0).setDepth(D_HUD - 5).setVisible(false);

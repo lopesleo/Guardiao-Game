@@ -220,6 +220,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       fx.burst('glow', this.x, this.y, 22, -Math.PI / 2, 140, { min: 60, max: 220 });
       fx.burst('ember', this.x, fy, 14, -Math.PI / 2, 120, { min: 80, max: 200 });
       fx.light(this.x, this.y, 320, 0xffe58f, 600, 1);
+      this.scene.cosm?.awaken(this.x, fy); // cosmético (protótipo, docs/COSMETICOS.md)
     }
     this.scene.sound.play('sfx_boss_roar', { volume: 0.55, rate: 1.25 });
     return true;

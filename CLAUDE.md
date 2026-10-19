@@ -107,7 +107,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
   assistência (como ler: `docs/ARMAS_E_COMBOS.md`, "Como medir").
 
 **Decisões pendentes**
-- **Itens à venda além do "Sem anúncios"** (`docs/COSMETICOS.md`): 👤 julgar o protótipo do Kit Ipê-rosa (`?debug=1&kit=ipe` no navegador; pétalas na libertação, flor que brota, rastro). Se aprovar: sistema de cosméticos + guarda-roupa + produto; e/ou a gorjeta (consumível, rápida).
+- **Itens à venda além do "Sem anúncios"** (`docs/COSMETICOS.md`): 👤 julgar o protótipo do Kit Ipê-rosa (`?debug=1` no navegador → Clareira → GUARDA-ROUPA; libertação, rastro e Despertar com ipê, cada peça à parte, e a quantidade de pétalas). Se aprovar: sistema de cosméticos + guarda-roupa + produto; e/ou a gorjeta (consumível, rápida).
 - Descrição curta em espanhol: "leyendas de Brasil" → "del folclore brasileño"? (a captura 07 já foi refeita).
 
 **Depois de 12 testadores × 14 dias (~28/10)**
