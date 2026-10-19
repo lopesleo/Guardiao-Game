@@ -22,6 +22,8 @@ import { openNoAds, showStoreNotice } from "../ui/NoAdsModal.js";
 import { openWardrobe } from "../ui/WardrobeModal.js";
 import { cosmeticsOn, Wardrobe } from "../systems/Cosmetics.js";
 import { openShop, shopOn } from "../ui/ShopModal.js";
+import { openRanking } from "../ui/RankingModal.js";
+import { Leaderboards } from "../systems/Leaderboards.js";
 import { Analytics } from "../systems/Analytics.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
@@ -444,6 +446,12 @@ export class CampScene extends Phaser.Scene {
         if (this._modals.length || this._cutscene || this._leaving) return;
         openWardrobe(this, { from: "camp", onClose: () => this._afterStore() });
       }, { icon: "ico_wardrobe", style: "dark", iconScale: 2.5 }));
+    // Ranking (Play Games): só com o ID do Play Games e os rankings criados
+    if (Leaderboards.available())
+      this.rankBtn = fix(new Button(this, W - 484, 40, 52, 52, null, () => {
+        if (this._modals.length || this._cutscene || this._leaving) return;
+        openRanking(this, { from: "camp" });
+      }, { icon: "ico_trophy", style: "dark", iconScale: 2.5 }));
     if (DEBUG) {
       fix(
         new Button(this, W - 540, 92, 150, 44, "+500 (dev)", () => {
@@ -489,6 +497,7 @@ export class CampScene extends Phaser.Scene {
       if (this.noAdsBtn.visible) [this.noAdsBtn.x, x] = [x, x - 60];
     }
     if (this.wardrobeBtn) [this.wardrobeBtn.x, x] = [x, x - 60];
+    if (this.rankBtn) [this.rankBtn.x, x] = [x, x - 60];
     const left = x + 60; // o botão mais à esquerda (ou as Opções, se não houver nenhum)
     const maxW = left - 26 - 14 - 14; // até a borda do botão, com folga
     const pad = 16;

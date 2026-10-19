@@ -19,6 +19,8 @@ import { Telemetry } from './systems/Telemetry.js';
 import { AdMobBridge } from './systems/AdMobBridge.js';
 import { Billing } from './systems/Billing.js';
 import { News } from './systems/News.js';
+import { Leaderboards } from './systems/Leaderboards.js';
+import { MetaProgression } from './systems/MetaProgression.js';
 import { Clock } from './systems/Clock.js';
 import { CloudSave } from './systems/CloudSave.js';
 import { installCloudSaveUI } from './ui/CloudSaveUI.js';
@@ -73,4 +75,5 @@ window.addEventListener('load', () => {
   News.install(); // novidades por notificação (FCM), só para quem aceitou (só no app Android)
   installCloudSaveUI(window.game);
   CloudSave.install(window.game); // progresso na nuvem pelo Play Games (só no app Android)
+  Leaderboards.install(new MetaProgression()); // rankings do Play Games: manda o que ficou na fila (só no app)
 });

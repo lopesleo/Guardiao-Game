@@ -555,6 +555,13 @@ Nada disso trava o desenvolvimento; só o lançamento e a receita.
   descartado ao restaurar. Opções → Jogo: CONECTAR / SALVAR AGORA. Testado no navegador com Play
   Games falso (21 casos). 👤 **Falta:** criar o projeto do Play Games na Play Console e pôr o ID em
   `games-ids.xml` (passo a passo em `PLAY_STORE.md`); sem ID fica desligado
+- ✅ **Rankings (Google Play Games, 19/10/2026):** Pontuação (`(abates × 10 + 5.000 na vitória) × Perigo`) e
+  Maior Perigo vencido, cada um com semana e de sempre; só solo (o coop terá o seu). Troféu na Clareira, pontos
+  e "RECORDE!" no fim da partida, janela com os 10 primeiros, a linha do jogador e os estados sem login/sem
+  rede/vazio; fila sem rede; maior Perigo antigo sobe sozinho. `npm run play:rankings` cria os rankings pela
+  API; `npm run test:rankings` (Play Games falso). De carona: a frase da vitória não invade mais o título nem
+  passa da tela (ja/zh/es com texto grande). 👤 **Falta:** o mesmo projeto do Play Games da nuvem, depois
+  `play:rankings -- criar` e publicar o Play Games Services (`PLAY_STORE.md`, "Rankings")
 - 👤 Testes em aparelho forte e fraco + playtest com 5–10 pessoas
 - 👤 `.aab` assinado, classificação IARC, **teste fechado** exigido pelo Play Console
   - ✅ Assinatura por comando, sem Android Studio: `npm run android:chave` (cria a chave fora do projeto e o

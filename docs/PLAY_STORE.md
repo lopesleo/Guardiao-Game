@@ -659,6 +659,47 @@ Games no formulário.
 - Em "Seus direitos": "(apagar o progresso, inclusive a cópia no Play Games; redefinir o ID de
   publicidade; desativar notificações)".
 
+## Rankings (Google Play Games)
+
+Código pronto (19/10/2026; `src/systems/Leaderboards.js`, `src/ui/RankingModal.js`, `PlayGamesPlugin.java`
+`submitScore`/`loadScores`), **desligado** até existirem o ID do projeto do Play Games (o mesmo da nuvem, acima)
+e os rankings criados (`RANKING.IDS` no `src/config.js`). Sem isso nada muda no app: nem botão nem pontos.
+
+- **Dois rankings, só partidas solo** (o coop terá o seu: em dupla a pontuação sobe demais), cada um com a
+  semana e o de sempre (o Play Games mantém os períodos e zera a semana sozinho):
+  - **Pontuação** — `(abates × 10 + 5.000 se venceu) × Perigo` (×1 · 1,3 · 1,7 · 2,2 · 3); na Noite Eterna os
+    abates continuam contando. Teto de 5.000.000 (pontuação adulterada acima disso é recusada).
+  - **Maior Perigo vencido** — 1 (Aprendiz) a 5 (Pesadelo); quem já venceu antes dos rankings sobe sozinho.
+- **No jogo:** troféu na fileira de cima da Clareira e, no fim da partida, os pontos (com "RECORDE!") à direita
+  da faixa do Perigo — tocar abre o ranking. A janela mostra os 10 primeiros (troféu de ouro, prata e bronze), a
+  linha do jogador destacada (e a posição dele embaixo, se estiver fora), o total de jogadores e a conta dos
+  pontos; sem login, um botão "Entrar no Play Games"; sem rede, "Tentar de novo". Sem rede no fim da partida, a
+  pontuação espera numa fila e sobe na próxima abertura.
+- **Teste:** `npm run test:rankings` (Play Games falso; também no `npm test`). `LOC=ja-JP TS=2 SHOTS=pasta` para
+  conferir idioma e texto grande.
+
+**Para ligar (👤 + script, depois do projeto do Play Games da seção acima):**
+1. `npm run play:rankings -- criar --seco` e depois `npm run play:rankings -- criar`: cria os dois rankings
+   (nomes nos 8 idiomas em `tools/play/rankings.json`) e grava os IDs em `RANKING.IDS`. Se a API responder 403,
+   👤 dar à conta de serviço acesso ao Play Games Services do app (Play Console → Usuários e permissões); ou
+   criar à mão em Play Games Services → Rankings (Pontuação: maior é melhor, 0–5.000.000, numérico; Maior
+   Perigo vencido: 1–5) e colar os IDs no `config.js`.
+2. 👤 Os rankings nascem em rascunho: os testadores do Play Games já veem; para todos, publicar o Play Games
+   Services (Configuração → Revisar e publicar).
+3. Versão nova do app com os IDs (Teste interno primeiro).
+4. **Segurança dos dados e política** junto com a nuvem: o SDK do Play Games coleta o perfil de jogo (apelido,
+   avatar), pontuações e jogos salvos (lista do Google: <https://developer.android.com/games/pgs/data-collection>).
+   Na política, seção nova:
+
+  > ## Rankings (Google Play Games)
+  >
+  > Se você estiver conectado ao **Google Play Games**, a pontuação das suas partidas solo e o maior Perigo que
+  > você venceu vão para os rankings do jogo no Google Play Games. Outros jogadores veem o seu **apelido** e a
+  > sua **posição** conforme a visibilidade do seu perfil de jogador (configurável no app Google Play Games).
+  > Não recebemos dados pessoais: o ranking é guardado e mostrado pelo Google, conforme a
+  > [Política de Privacidade do Google](https://policies.google.com/privacy). Para não aparecer, basta não
+  > entrar no Play Games.
+
 ## Preço
 
 **Grátis**, com anúncios opcionais e a compra única **"Sem anúncios"** (perfil de pagamentos criado em

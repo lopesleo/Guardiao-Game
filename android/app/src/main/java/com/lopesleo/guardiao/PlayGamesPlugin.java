@@ -2,14 +2,19 @@ package com.lopesleo.guardiao;
 
 import android.text.TextUtils;
 
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.google.android.gms.games.LeaderboardsClient;
 import com.google.android.gms.games.PlayGames;
 import com.google.android.gms.games.PlayGamesSdk;
 import com.google.android.gms.games.SnapshotsClient;
+import com.google.android.gms.games.leaderboard.LeaderboardScore;
+import com.google.android.gms.games.leaderboard.LeaderboardScoreBuffer;
+import com.google.android.gms.games.leaderboard.LeaderboardVariant;
 import com.google.android.gms.games.snapshot.Snapshot;
 import com.google.android.gms.games.snapshot.SnapshotMetadataChange;
 import com.google.android.gms.tasks.Task;
@@ -17,7 +22,7 @@ import com.google.android.gms.tasks.Tasks;
 
 import java.nio.charset.StandardCharsets;
 
-// Progresso na nuvem pelo Google Play Games (Saved Games, API v2).
+// Progresso na nuvem pelo Google Play Games (Saved Games, API v2) e os rankings (Leaderboards).
 // O save fica na conta Google do jogador (pasta oculta do app no Drive dele), e
 // volta ao reinstalar ou trocar de celular. A DECISÃO de qual save vale (nuvem ou
 // aparelho) é do jogo (src/systems/CloudSave.js); aqui só lemos e gravamos.
@@ -112,6 +117,76 @@ public class PlayGamesPlugin extends Plugin {
                 call.resolve(r);
             })
             .addOnFailureListener(e -> call.reject("save_failed", e));
+    }
+
+    // ---- Rankings (Leaderboards, API v2; o jogo decide o que e quando enviar: src/systems/Leaderboards.js) ----
+
+    // Envia { leaderboardId, score } e espera o Play Games confirmar. Sem internet ou sem login falha, e o jogo
+    // guarda na fila. O Play Games fica só com o melhor de cada jogador em cada período (dia, semana, sempre).
+    @PluginMethod
+    public void submitScore(PluginCall call) {
+        String id = call.getString("leaderboardId");
+        Long score = call.getLong("score");
+        if (!ready(call, id)) return;
+        if (score == null || score < 0) {
+            call.reject("no_score");
+            return;
+        }
+        PlayGames.getLeaderboardsClient(getActivity()).submitScoreImmediate(id, score)
+            .addOnSuccessListener(r -> call.resolve())
+            .addOnFailureListener(e -> call.reject("submit_failed", e));
+    }
+
+    // Os primeiros { leaderboardId, span: "week" | "all", max } do ranking público. Volta { scores: [{ rank,
+    // name, score, me }], player: { rank, score } | null (a posição do jogador no período, mesmo fora da lista),
+    // total }
+    @PluginMethod
+    public void loadScores(PluginCall call) {
+        String id = call.getString("leaderboardId");
+        if (!ready(call, id)) return;
+        int span = "all".equals(call.getString("span")) ? LeaderboardVariant.TIME_SPAN_ALL_TIME : LeaderboardVariant.TIME_SPAN_WEEKLY;
+        int max = Math.max(1, Math.min(25, call.getInt("max", 10)));
+        LeaderboardsClient client = PlayGames.getLeaderboardsClient(getActivity());
+        String[] me = { null };
+        PlayGames.getPlayersClient(getActivity()).getCurrentPlayerId()
+            .continueWithTask(t -> {
+                me[0] = t.isSuccessful() ? t.getResult() : null;
+                return client.loadTopScores(id, span, LeaderboardVariant.COLLECTION_PUBLIC, max, false);
+            })
+            .addOnSuccessListener(data -> {
+                LeaderboardsClient.LeaderboardScores res = data.get();
+                try {
+                    JSArray list = new JSArray();
+                    LeaderboardScoreBuffer buf = res.getScores();
+                    for (int i = 0; i < buf.getCount(); i++) {
+                        LeaderboardScore s = buf.get(i);
+                        JSObject o = new JSObject();
+                        o.put("rank", s.getRank());
+                        o.put("name", s.getScoreHolderDisplayName());
+                        o.put("score", s.getRawScore());
+                        o.put("me", me[0] != null && s.getScoreHolder() != null && me[0].equals(s.getScoreHolder().getPlayerId()));
+                        list.put(o);
+                    }
+                    JSObject r = new JSObject();
+                    r.put("scores", list);
+                    r.put("player", JSObject.NULL);
+                    r.put("total", -1);
+                    for (LeaderboardVariant v : res.getLeaderboard().getVariants()) {
+                        if (v.getTimeSpan() != span || v.getCollection() != LeaderboardVariant.COLLECTION_PUBLIC) continue;
+                        r.put("total", v.getNumScores());
+                        if (v.hasPlayerInfo() && v.getPlayerRank() != LeaderboardVariant.PLAYER_RANK_UNKNOWN) {
+                            JSObject p = new JSObject();
+                            p.put("rank", v.getPlayerRank());
+                            p.put("score", v.getRawPlayerScore());
+                            r.put("player", p);
+                        }
+                    }
+                    call.resolve(r);
+                } finally {
+                    res.release();
+                }
+            })
+            .addOnFailureListener(e -> call.reject("load_failed", e));
     }
 
     private boolean ready(PluginCall call, String slot) {
