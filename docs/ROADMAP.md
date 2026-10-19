@@ -456,6 +456,9 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   8 idiomas) e `npm run play:produtos` (conferir · listar · enviar · ativar · desativar) pela Google Play Developer
   API, com o preço base em US$ convertido pela própria loja e o Brasil exato. Os 4 kits e os 2 pacotes do Fundador
   estão ativos no Console (19/10/2026); só o Pacote Apoiador espera 01/02/2027
+- ✅ **1.0.6 (código 7)** (19/10/2026): loja de cosméticos ligada no app (Guarda-roupa, kits, Pacote Fundador, Clareira
+  Ancestral) e joystick em toda a metade da tela (antes só o quarto de baixo); publicada no Teste interno e no
+  Alpha pelo `npm run play:versao -- subir --publicar`
 - ✅ **Joystick morria depois da 1ª carta** (19/10/2026, achado no aparelho com a 1.0.4): um `off("resume")`
   geral no `GameScene` (do conserto antigo das cartas em dobro) apagava o ouvinte que religava o joystick depois
   da pausa da acessibilidade — em todos os modos, também depois do ⏸ e do reviver. Agora o joystick religa no
