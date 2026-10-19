@@ -454,8 +454,8 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   texto "Muito grande") encolhem por inteiro em vez de cortar. Desligado na loja até criar os produtos (👤)
 - ✅ **Produtos do Play Console pelo script** (19/10/2026): catálogo em `tools/play/produtos.json` (IDs, preços,
   8 idiomas) e `npm run play:produtos` (conferir · listar · enviar · ativar · desativar) pela Google Play Developer
-  API, com o preço base em US$ convertido pela própria loja e o Brasil exato. `kit_ipe` e `kit_paineira` já estão no
-  Console (à mão); os outros 4 esperam a credencial (👤, `docs/PLAY_STORE.md`)
+  API, com o preço base em US$ convertido pela própria loja e o Brasil exato. Os 4 kits e os 2 pacotes do Fundador
+  estão ativos no Console (19/10/2026); só o Pacote Apoiador espera 01/02/2027
 - ✅ **Joystick morria depois da 1ª carta** (19/10/2026, achado no aparelho com a 1.0.4): um `off("resume")`
   geral no `GameScene` (do conserto antigo das cartas em dobro) apagava o ouvinte que religava o joystick depois
   da pausa da acessibilidade — em todos os modos, também depois do ⏸ e do reviver. Agora o joystick religa no

@@ -564,9 +564,11 @@ Quatro **produtos únicos** (não consumíveis), cada um libera 3 peças do Guar
 mexem em dano, vida, moedas nem anúncios. Código pronto (`Billing.buyKit`, `npm run test:compra`); no build da
 loja fica tudo desligado até `COSMETICS.ENABLED` e `COSMETICS.SHOP` (`src/config.js`) irem para `true`.
 
-**Estado (19/10/2026):** `kit_ipe` e `kit_paineira` criados à mão e ativos (R$ 4,90 / US$ 0,99, 8 idiomas,
-174 países, opção `compra` compatível com versões anteriores). Os outros 4 (`kit_coruja`, `kit_junina`,
-`pacote_fundador`, `pacote_fundador_kits`) saem pelo script assim que existir a credencial.
+**Estado (19/10/2026):** os 4 kits e os 2 pacotes do Fundador estão **criados e ativos** no Console (8 idiomas, 174
+países, opção `compra` compatível com versões anteriores; `kit_ipe` e `kit_paineira` à mão, os outros 4 pelo
+script). Falta só o `pacote_apoiador` (01/02/2027). Credencial da API criada no mesmo dia (conta de serviço
+`play-produtos@guardiao-da-floresta.iam.gserviceaccount.com`: ver informações, presença na loja, faixas de teste,
+produção e avaliações; sem dados financeiros nem listas de testadores).
 
 **Passo a passo à mão (👤, se não for pelo script):**
 1. **Monetizar → Produtos → Produtos únicos → Criar**, um por kit, com os IDs **exatamente** iguais aos de
