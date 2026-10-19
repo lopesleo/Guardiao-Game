@@ -1,8 +1,7 @@
 // Teste da compra "Sem anúncios" (systems/Billing.js) num navegador de verdade, com uma Play Store
 // FALSA (window.Capacitor.Plugins.NativePurchases) que dá para mandar: aprovar, deixar pendente,
-// estornar, falhar o reconhecimento, falhar a consulta. Nasceu do teste de 18/10/2026: um pagamento
-// aprovado depois (cartão de teste lento) não foi reconhecido com o jogo aberto, o Google estornou e o
-// jogo tirou o "sem anúncios" sem avisar ninguém.
+// estornar, falhar o reconhecimento, falhar a consulta. Nasceu do teste de 18/10/2026: a compra foi
+// aceita e reconhecida, depois estornada, e o jogo tirou o "sem anúncios" sem avisar o jogador.
 //
 //   npm i --no-save playwright-core        (usa o Edge instalado, headless)
 //   npm run test:compra                    (ou: node tools/test-compra.mjs)
@@ -114,7 +113,8 @@ const SCENARIOS = {
     const s = await t.state();
     check(s.calls.filter((c) => c.startsWith("ack")).length >= 2 && s.saved.acked, "tenta reconhecer de novo sozinho e consegue", s.calls.join(" "));
   },
-  // O caso de 18/10: pendente que o Google aprova com o jogo ABERTO (sem sair e voltar ao app)
+  // Pendente que o Google aprova com o jogo ABERTO (sem sair e voltar ao app): sem conferir sozinho,
+  // a compra ficaria sem reconhecer e o Google estornaria
   async pendente(t) {
     await t.set({ buy: "pending" });
     const r = await t.billing("buy");
@@ -137,6 +137,25 @@ const SCENARIOS = {
     const btn = await t.page.evaluate(() => window.game.scene.isActive("TitleScene") && !!window.game.scene.getScene("TitleScene").children.list.find((o) => o.label?.text === "SEM ANÚNCIOS"));
     check(btn, "o botão SEM ANÚNCIOS volta ao título depois do aviso");
     check(!(await t.state()).notice, "o aviso aparece uma vez só");
+  },
+  // O caso de 18/10: compra ACEITA e reconhecida; minutos depois, estorno (Pedidos no Play Console ou
+  // pedido do cliente); o jogador sai e volta ao app → o jogo tem de tirar E avisar
+  async aceitaEstornada(t) {
+    await t.billing("buy");
+    let s = await t.state();
+    check(s.noAds && s.saved.acked, "compra aceita e reconhecida");
+    await t.page.evaluate(() => (window.__store.list = []));
+    // 5 min depois (passa a carência e o intervalo da volta ao app) e a volta ao app de verdade
+    await t.page.evaluate(() => {
+      const real = Date.now;
+      Date.now = () => real() + 5 * 60000;
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    await t.page.waitForFunction(() => window.__store.calls.filter((c) => c === "query").length >= 3, null, { timeout: 15000 }).catch(() => {});
+    await t.page.waitForTimeout(500);
+    s = await t.state();
+    check(!s.noAds && !s.saved.owned, "a volta ao app percebe o estorno e tira o sem anúncios", s.calls.join(" "));
+    await t.noticeShown(/COMPRA ESTORNADA/, "aceita_estornada");
   },
   // Estorno visto na Clareira: o aviso aparece lá e a estrela da loja volta
   async clareira(t) {
