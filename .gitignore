@@ -32,3 +32,6 @@ tools/discord/estado.json
 tools/bot-lab/treino.json
 # credencial da API do Play (conta de serviço) — mora em ~/chaves-android, nunca no repo
 play-api*.json
+
+# Resultado do robô jogador (tools/bot-lab.mjs medir): sai na raiz a cada medição, não vai para o git
+bot-lab.json
