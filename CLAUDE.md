@@ -108,14 +108,14 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 
 - **⚠ A 1.0.4 tem o joystick que morre depois da 1ª carta** (achado no aparelho em 18/10; também depois do ⏸ e
   do reviver): no celular a partida fica injogável. **Gerar a 1.0.5 o quanto antes** e trocar a do Alpha.
-- **Na `main` para a próxima versão (1.0.5):** o conserto do joystick (acima); a compra que não se perde mais
-  (pendente aprovado com o jogo aberto é reconhecido; estorno e aprovação **avisam** o jogador — a compra de
-  teste de 18/10 foi estornada pelo Google sem aviso); testes automáticos `npm test` (toque + compra, agora
+- **Na `main` para a próxima versão (1.0.5):** o conserto do joystick (acima); o **estorno agora avisa** o
+  jogador ("COMPRA ESTORNADA" — no teste de 18/10 a compra aceita e reconhecida foi estornada e o item sumiu
+  calado), e de prevenção o pendente aprovado com o jogo aberto passa a ser reconhecido ("PAGAMENTO APROVADO"); testes automáticos `npm test` (toque + compra, agora
   obrigatórios na skill `versao-loja`); o quadro "Clareira do Guardião" (canto superior esquerdo)
   acompanha o texto (vazava com texto grande, visto no S23 em 16/10) e a Clareira ganhou o botão ★ da loja
   "Sem anúncios" na fileira de cima (some depois da compra e volta se ela for estornada). 👤 Com a 1.0.5 pela
-  loja: comprar com o cartão "aprova com atraso" **deixando o jogo aberto** e conferir em Pedidos, 10 min
-  depois, que não foi estornado.
+  loja: comprar, estornar em **Pedidos** e voltar ao jogo → tem de aparecer "COMPRA ESTORNADA"; e comprar com
+  o cartão "aprova com atraso" **deixando o jogo aberto** → "PAGAMENTO APROVADO" e, 10 min depois, sem estorno.
 
 **Decisões pendentes**
 - Descrição curta em espanhol: "leyendas de Brasil" → "del folclore brasileño"? (a captura 07 já foi refeita).

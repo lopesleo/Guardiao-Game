@@ -445,10 +445,12 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   `update()` (só roda com a partida andando) e os ouvintes saem pelo nome. Teste novo: **`npm run test:toque`**
   (toques simulados como os do celular, 4 jeitos de joystick × carta, fila de cartas, pausa, reviver, Jogar de
   novo, Clareira)
-- ✅ **Compra aprovada depois e estornada sem aviso** (19/10/2026, teste de licença com a 1.0.4): pendente
-  aprovado com o jogo aberto não era reconhecido (só conferia na volta ao app) e o Google estornava em minutos.
-  Agora confere a cada 20 s enquanto houver pendente, tenta o reconhecimento de novo sozinho, confere 2× antes
-  de tirar e **avisa** ("PAGAMENTO APROVADO" / "COMPRA ESTORNADA", 6 idiomas). Teste: **`npm run test:compra`**
+- ✅ **Estorno tirava a compra sem avisar** (19/10/2026, teste de licença com a 1.0.4): a compra foi aceita e
+  reconhecida, depois estornada; o jogo detectou e tirou o "sem anúncios", mas calado — o jogador só viu o item
+  sumir. Agora **avisa** ("COMPRA ESTORNADA", com botão para comprar de novo; 6 idiomas) e confere 2× antes de
+  tirar. De quebra, prevenção: pendente aprovado com o jogo aberto é conferido a cada 20 s (antes ficaria sem
+  reconhecer e seria estornado), aviso "PAGAMENTO APROVADO" e reconhecimento que tenta de novo sozinho.
+  Teste: **`npm run test:compra`**
 - ✅ **Robô jogador** (14/10/2026, `tools/bot-lab.mjs`, modelo em [`ROBO_JOGADOR.md`](ROBO_JOGADOR.md)): joga
   partidas reais sem modo deus com as prioridades de um jogador em camadas (sobreviver > vida baixa > objetivo:
   baú > item > lanterna > gemas > combate) e um treino evolutivo que só ajusta os números; partidas

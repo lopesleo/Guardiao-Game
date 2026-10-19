@@ -435,13 +435,13 @@ abertura e a cada volta ao app (no máximo a cada 30 s) o jogo pergunta à loja 
 - **Pendente** (boleto, Pix em análise, cartão de teste "aprova com atraso"): não libera até virar comprado;
   a janela mostra "Pagamento pendente" e o botão CONFERIR AGORA. O plugin não avisa quando vira pago, então
   **com o app aberto o jogo confere a loja a cada 20 s** enquanto houver pendente; quando libera, mostra o
-  aviso "PAGAMENTO APROVADO" na próxima tela de menu. (Até 18/10/2026 só conferia na volta ao app: o
-  pendente aprovado com o jogo aberto não era reconhecido, o Google estornava e o jogador perdia o item
-  sem aviso.)
+  aviso "PAGAMENTO APROVADO" na próxima tela de menu. (Até 18/10/2026 só conferia na volta ao app: um
+  pendente aprovado com o jogo aberto ficaria sem reconhecer e seria estornado.)
 - **Reinstalar ou trocar de aparelho** na mesma conta Google: volta sozinho ("Restaurar compra" força).
 - **Estorno/reembolso:** a compra some da loja → o jogo confere uma 2ª vez (e nunca nos 2 min logo depois de
   liberar), tira o "sem anúncios" (só o que veio da loja) e mostra o aviso **"COMPRA ESTORNADA"** no título
-  ou na Clareira, com o botão para comprar de novo. A estrela da loja volta na Clareira.
+  ou na Clareira, com o botão para comprar de novo. A estrela da loja volta na Clareira. (Até 18/10/2026
+  tirava calado: no teste, a compra aceita e reconhecida foi estornada e o item só sumiu, sem explicação.)
 - **Métricas (GA4):** `iap_view` (de onde abriu), `iap_start`, `iap_result` (ok, pending, cancelled,
   unavailable), `iap_grant`, `iap_revoked` (`acked`: se o jogo tinha reconhecido — `false` = estorno por falta
   de reconhecimento), `iap_ack_fail` (`try`), `iap_notice` (`approved`/`revoked`), além do `in_app_purchase`
