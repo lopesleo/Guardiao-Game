@@ -234,6 +234,47 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.10 (código 11) — 19/10/2026
+
+AAB: `dist/guardiao-v1.0.10-11-anuncios-reais.aab`. Só no Teste interno (o Alpha fica na 1.0.7 em revisão).
+Novidades por notificação (Firebase Cloud Messaging, opcional, chave e canal próprios) e o ícone do broto nas
+notificações.
+
+```
+<pt-BR>
+• Novidades por notificação (opcional): em Opções › Jogo › Novidades, receba avisos de versões novas e eventos, poucas vezes por mês. Os lembretes do baú e da colheita continuam à parte.
+• As notificações ganharam o ícone do broto do jogo.
+</pt-BR>
+<en-US>
+• News notifications (optional): turn on Options › Game › News to hear about new versions and events, a few times a month. Chest and harvest reminders stay separate.
+• Notifications now use the game's sprout icon.
+</en-US>
+<es-419>
+• Novedades por notificación (opcional): en Opciones › Juego › Novedades, recibe avisos de versiones nuevas y eventos, pocas veces al mes. Los avisos del cofre y de la cosecha siguen aparte.
+• Las notificaciones ahora usan el ícono del brote del juego.
+</es-419>
+<es-ES>
+• Novedades por notificación (opcional): en Opciones › Juego › Novedades, recibe avisos de versiones nuevas y eventos, pocas veces al mes. Los avisos del cofre y de la cosecha siguen aparte.
+• Las notificaciones ahora usan el icono del brote del juego.
+</es-ES>
+<ja-JP>
+• 最新情報の通知（任意）：オプション › ゲーム › 最新情報 をオンにすると、新しいバージョンやイベントを月に数回お知らせします。宝箱と収穫のリマインダーは別です。
+• 通知のアイコンがゲームの新芽になりました。
+</ja-JP>
+<zh-CN>
+• 最新消息通知（可选）：在 选项 › 游戏 › 最新消息 中开启，每月几次告诉你新版本和活动。宝箱和收获的提醒仍然分开。
+• 通知图标换成了游戏的嫩芽。
+</zh-CN>
+<zh-TW>
+• 最新消息通知（可選）：在 選項 › 遊戲 › 最新消息 中開啟，每月幾次告訴你新版本和活動。寶箱和收成的提醒仍然分開。
+• 通知圖示換成了遊戲的嫩芽。
+</zh-TW>
+<zh-HK>
+• 最新消息通知（可選）：在 選項 › 遊戲 › 最新消息 中開啟，每月幾次告訴你新版本和活動。寶箱和收成的提醒仍然分開。
+• 通知圖示換成了遊戲的嫩芽。
+</zh-HK>
+```
+
 ### 1.0.9 (código 10) — 19/10/2026
 
 AAB: `dist/guardiao-v1.0.9-10-anuncios-reais.aab`. Só no Teste interno (o Alpha fica na 1.0.7 em revisão). Horta da

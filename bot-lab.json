@@ -1,0 +1,106 @@
+[
+ {
+  "build": "jogador",
+  "diff": 0,
+  "seed": 11,
+  "dur": 420,
+  "start": null,
+  "errs": [],
+  "hits": {
+   "projétil": {
+    "n": 2,
+    "dmg": 15.980000000000004,
+    "pensava": {
+     "objetivo: baú": 1,
+     "objetivo: lanterna": 1
+    }
+   },
+   "elite:true": {
+    "n": 1,
+    "dmg": 6.799999999999997,
+    "pensava": {
+     "sobreviver: inimigo encostando": 1
+    }
+   },
+   "bando:brute": {
+    "n": 5,
+    "dmg": 153.30599999999998,
+    "pensava": {
+     "sobreviver: inimigo encostando": 2,
+     "sobreviver: projétil": 3
+    }
+   },
+   "golpe:minichefe": {
+    "n": 1,
+    "dmg": 20.400000000000006,
+    "pensava": {
+     "sobreviver: aviso de golpe": 1
+    }
+   },
+   "bando:wolf": {
+    "n": 1,
+    "dmg": 18.700000000000003,
+    "pensava": {
+     "sobreviver: inimigo encostando": 1
+    }
+   }
+  },
+  "minutes": [
+   {
+    "t": 60,
+    "lvl": 4,
+    "hp": 100
+   },
+   {
+    "t": 120,
+    "lvl": 7,
+    "hp": 100
+   },
+   {
+    "t": 180,
+    "lvl": 8,
+    "hp": 100
+   },
+   {
+    "t": 240,
+    "lvl": 9,
+    "hp": 100
+   },
+   {
+    "t": 300,
+    "lvl": 11,
+    "hp": 100
+   },
+   {
+    "t": 360,
+    "lvl": 12,
+    "hp": 83
+   },
+   {
+    "t": 420,
+    "lvl": 13,
+    "hp": 100
+   }
+  ],
+  "bossStart": 420024,
+  "bossEnd": 460548,
+  "end": "venceu",
+  "itens": 5,
+  "tiro": {
+   "<60px": 2
+  },
+  "t": 460.548,
+  "killer": null,
+  "bossHpLeft": 0,
+  "lvl": 13,
+  "kills": 845,
+  "lanterns": 8,
+  "chests": 21,
+  "weapons": [
+   "STAFF3",
+   "AURA5",
+   "FLAME3",
+   "LASH2"
+  ]
+ }
+]
