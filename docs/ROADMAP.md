@@ -439,6 +439,11 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
     protanopes; até na visão normal era 1,5:1); o tiro inimigo ganhou 4 pontas em X e sombra escura (para
     deuteranopes tinha a mesma cor da gema de XP); no Grito do Mapinguari, as pontas da brecha ficaram brancas
     e a saída ganhou setas para fora. Tritanopia sem problemas
+- ✅ **Cosméticos: Guarda-roupa e kits** (19/10/2026, [`COSMETICOS.md`](COSMETICOS.md)): 16 peças só de
+  aparência em 3 partes (libertação, rastro, Despertar) — 4 grátis (sementes, pegadas, folhas secas, luar) e 4
+  kits pagos de 3 peças (Ipê-rosa, Paineira, Coruja-buraqueira, Festa Junina), nas cores livres do combate e
+  com teto de partículas; vitrine com prévia ao vivo e compra do kit ali mesmo; Billing com um registro por
+  produto (pendente, reconhecimento, estorno com aviso). Desligado na loja até criar os produtos (👤)
 - ✅ **Joystick morria depois da 1ª carta** (19/10/2026, achado no aparelho com a 1.0.4): um `off("resume")`
   geral no `GameScene` (do conserto antigo das cartas em dobro) apagava o ouvinte que religava o joystick depois
   da pausa da acessibilidade — em todos os modos, também depois do ⏸ e do reviver. Agora o joystick religa no
