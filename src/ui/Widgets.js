@@ -83,8 +83,15 @@ export class Modal {
   }
   // Encolhe a janela até o fim do conteúdo (`bottom`, coordenada local já com a margem de baixo): para
   // janelas montadas de cima para baixo cuja altura depende do idioma e do tamanho do texto
+  // Não coube nem na tela inteira (celular + japonês/chinês + texto "Muito grande"): o conteúdo encolhe
+  // por inteiro a partir do topo, em vez de passar da moldura e cortar botões
   fitContent(bottom) {
     const newH = Math.max(this._minH, Math.round(bottom + this.h / 2));
+    if (newH > this.h + 2) {
+      const k = (this.h / 2 - this.top) / (bottom - this.top);
+      this.body.setScale(k).setY(this.top * (1 - k));
+      return;
+    }
     if (newH >= this.h - 4) return;
     const delta = (this.h - newH) / 2;
     this.h = newH;

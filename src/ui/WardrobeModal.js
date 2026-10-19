@@ -1,6 +1,7 @@
 // Guarda-roupa (docs/COSMETICOS.md): onde o jogador escolhe e compra os cosméticos. Abre pela camiseta
 // no menu de cima da Clareira. Estrutura (revista em 19/10/2026, regras de UX em COSMETICOS.md):
-//   abas  Libertação · Rastro · Despertar (equipar, uma parte por vez) · Kits (comprar; 1 kit = 3 peças)
+//   abas  Libertação · Rastro · Despertar (equipar, uma parte por vez) · Clareira (skin do acampamento;
+//         a Ancestral é exclusiva do Pacote Fundador) · Kits (comprar; 1 kit = 3 peças)
 //   esquerda  PRÉVIA AO VIVO do que está selecionado — também do que o jogador ainda não tem; na aba Kits
 //             o kit inteiro toca em sequência (Rastro → Libertação → Despertar)
 //   direita   cartões. Três sinais diferentes, nunca só cor: moldura dourada = o que está na prévia;
@@ -14,7 +15,8 @@ import { text, Button, vw, vh, drawFrame, haptic } from "./Theme.js";
 import { Modal, fitTo } from "./Widgets.js";
 import { cloudToast } from "./CloudSaveUI.js";
 import { CosmeticStage } from "./CosmeticStage.js";
-import { COSM_SLOTS, COSM_KITS, COSM_PIECES, COSM_AMOUNTS, Wardrobe, piecesOf, kitPieces } from "../systems/Cosmetics.js";
+import { COSM_SLOTS, COSM_KITS, COSM_PIECES, COSM_AMOUNTS, COSM_CAMP, Wardrobe, piecesOf, kitPieces } from "../systems/Cosmetics.js";
+import { openShop, shopOn } from "./ShopModal.js";
 import { registerCosmeticFX } from "../art/CosmeticFX.js";
 import { registerAuraFX } from "../art/AuraFX.js";
 import { COSMETICS } from "../config.js";
@@ -31,13 +33,15 @@ const realShop = () => COSMETICS.SHOP && Billing.available();
 // Preço do kit: o da Play Store ou o da loja simulada do modo de teste; null = sem loja ("Em breve")
 function kitPrice(kit) {
   if (realShop()) return Billing.kitPrice(kit) || null;
-  return DEBUG ? "R$ 9,90" : null;
+  return DEBUG ? "R$ 4,90" : null; // loja simulada = preço planejado do Play Console
 }
 
 // Ícone encaixado numa caixa (cada textura tem um tamanho)
 function iconInBox(scene, key, frame, maxW, maxH, tint) {
   const img = scene.add.image(0, 0, key, frame ?? 0);
-  const s = Math.max(1, Math.floor(Math.min(maxW / img.width, maxH / img.height, 9)));
+  // escala inteira (pixel nítido); só encolhe abaixo de 1 o que não cabe na caixa (a aura do Despertar)
+  const k = Math.min(maxW / img.width, maxH / img.height, 9);
+  const s = k >= 1 ? Math.floor(k) : k;
   img.setScale(s);
   if (tint != null) img.setTint(tint);
   return img;
@@ -49,7 +53,8 @@ export function openWardrobe(scene, o = {}) {
   if (!o.again) Analytics.track("wardrobe_view", { from: o.from ?? "?" });
   const tab = o.tab ?? "kill";
   const isKits = tab === "kits";
-  const inUse = isKits ? null : Wardrobe.get(tab);
+  const isCamp = tab === "camp";
+  const inUse = isKits ? null : isCamp ? Wardrobe.activeCamp() : Wardrobe.get(tab);
   const sel = isKits ? o.kit ?? Object.keys(COSM_KITS)[0] : o.sel !== undefined ? o.sel : inUse; // na prévia
   let reopening = false;
   const m = new Modal(scene, { title: tr("GUARDA-ROUPA"), w: Math.min(1180, vw(scene) - 40), h: vh(scene), onClose: () => !reopening && (stage.destroy(), o.onClose?.()) });
@@ -68,14 +73,19 @@ export function openWardrobe(scene, o = {}) {
   };
 
   // ---------------------------------------------------------- abas + "em uso"
-  const tabs = [...COSM_SLOTS.map((s) => [s.id, s.name]), ["kits", tr("Kits")]];
+  const tabs = [...COSM_SLOTS.map((s) => [s.id, s.name]), ["camp", tr("Clareira")], ["kits", tr("Kits")]];
   const tabW = Math.min(214, (m.w - 80) / tabs.length - 12);
   tabs.forEach(([id, label], i) => {
     const x = (i - (tabs.length - 1) / 2) * (tabW + 14);
     m.add(new Button(scene, x, m.top + 22, tabW, 46, label, () => id !== tab && reopen({ tab: id, sel: id === "kits" ? undefined : Wardrobe.get(id) }), { size: 17, style: id === tab ? "gold" : "dark", color: id === tab ? CSS.goldHi : CSS.muted }));
   });
   const usingName = (slot) => (Wardrobe.get(slot) ? COSM_PIECES[Wardrobe.get(slot)].name : slotOf(slot).none);
-  const subStr = isKits ? tr("Cada kit traz 3 peças, só de aparência.") : `${slotOf(tab).hint}  ·  ${tr("Em uso: {0}", usingName(tab))}`;
+  const campName = (id) => (id ? COSM_CAMP[id].name : tr("Clareira de sempre"));
+  const subStr = isKits
+    ? tr("Cada kit traz 3 peças, só de aparência.")
+    : isCamp
+      ? `${tr("O visual do acampamento")}  ·  ${tr("Em uso: {0}", campName(inUse))}`
+      : `${slotOf(tab).hint}  ·  ${tr("Em uso: {0}", usingName(tab))}`;
   const sub = m.add(text(scene, 0, m.top + 56, subStr, { size: 14, color: CSS.muted, origin: [0.5, 0] }));
   fitTo(sub, m.w - 80);
   const top = Math.max(m.top + 84, sub.y + sub.displayHeight + 14); // texto grande (ja/zh) empurra para baixo
@@ -96,7 +106,8 @@ export function openWardrobe(scene, o = {}) {
   if (isKits) {
     const eq = Object.fromEntries(kitPieces(sel).map((p) => [p.slot, p.id]));
     stage.showKit(eq, (slot) => cap.active && cap.setText(slotOf(slot).name));
-  } else stage.show(tab, sel);
+  } else if (isCamp) stage.showCamp(sel);
+  else stage.show(tab, sel);
 
   // ---------------------------------------------------------- detalhe + ação
   let y = top + SH + 16;
@@ -140,6 +151,27 @@ export function openWardrobe(scene, o = {}) {
       }, { size: 20, style: "primary", color: CSS.goldHi });
     else if (Billing.kitPending(sel)) action = new Button(scene, BX, y + 28, BW, 56, tr("PENDENTE"), () => {}, { size: 20, style: "dark", enabled: false });
     else if (price) action = new Button(scene, BX, y + 28, BW, 56, tr("COMPRAR · {0}", price), () => buyKit(scene, sel, action, () => reopen({})), { size: 22, style: "primary", color: CSS.goldHi });
+    else action = new Button(scene, BX, y + 28, BW, 56, tr("EM BREVE"), () => {}, { size: 20, style: "dark", enabled: false });
+  } else if (isCamp) {
+    const skin = sel ? COSM_CAMP[sel] : null;
+    const owned = !skin || Wardrobe.ownsCamp(sel);
+    addLine(campName(sel), 22, CSS.goldHi, 4, 0);
+    if (skin) addLine(skin.founder ? tr("Exclusiva do Pacote Fundador") : tr("Peça grátis"), 15, owned ? CSS.muted : CSS.goldHi, 6, SW, owned ? "ico_fundador" : "ico_lock");
+    addLine(skin ? skin.desc : tr("A samaúma, a mata e o céu pela hora do dia."), 16, CSS.txt, 12);
+    if (owned && sel === inUse) action = new Button(scene, BX, y + 28, BW, 56, tr("EM USO"), () => {}, { size: 20, style: "dark", color: CSS.goldHi, enabled: false });
+    else if (owned)
+      action = new Button(scene, BX, y + 28, BW, 56, tr("USAR"), () => {
+        Wardrobe.equip("camp", sel);
+        Analytics.track("cosm_equip", { slot: "camp", piece: sel ?? "none" });
+        equipFx();
+        reopen({ pop: sel ?? "none" });
+      }, { size: 22, style: "primary", color: CSS.goldHi });
+    else if (shopOn()) action = new Button(scene, BX, y + 28, BW, 56, tr("VER PACOTE FUNDADOR"), () => {
+      reopening = true;
+      stage.destroy();
+      m.close();
+      openShop(scene, { from: "wardrobe", onClose: o.onClose });
+    }, { size: 18, style: "gold", color: CSS.goldHi });
     else action = new Button(scene, BX, y + 28, BW, 56, tr("EM BREVE"), () => {}, { size: 20, style: "dark", enabled: false });
   } else {
     const piece = sel ? COSM_PIECES[sel] : null;
@@ -191,6 +223,48 @@ export function openWardrobe(scene, o = {}) {
       m.add(card);
     });
     gy = top + 2 * (CH + 14);
+    // tudo de uma vez: chamada para o pacote (a Loja), se ainda há o que comprar
+    if (shopOn() && !Wardrobe.isFounder()) {
+      m.add(new Button(scene, GX + GW / 2, gy + 22, GW, 44, tr("PACOTE FUNDADOR: TUDO DE UMA VEZ ›"), () => {
+        reopening = true;
+        stage.destroy();
+        m.close();
+        openShop(scene, { from: "wardrobe_kits", onClose: o.onClose });
+      }, { size: 16, style: "gold", color: CSS.goldHi }));
+      gy += 56;
+    }
+  } else if (isCamp) {
+    const CW = Math.floor((GW - 12) / 2),
+      CH = 170;
+    [null, ...Object.keys(COSM_CAMP)].forEach((id, i) => {
+      const skin = id ? COSM_CAMP[id] : null;
+      const cx = GX + i * (CW + 12) + CW / 2,
+        cy = top + CH / 2;
+      const mine = !skin || Wardrobe.ownsCamp(id);
+      const card = new Button(scene, cx, cy, CW, CH, null, () => {
+        if (id !== sel) return reopen({ sel: id });
+        if (mine && id !== inUse) {
+          Wardrobe.equip("camp", id);
+          equipFx();
+          reopen({ pop: id ?? "none" });
+        }
+      }, { style: id === sel ? "gold" : "dark" });
+      // de baixo para cima (o texto cresce com o idioma e o tamanho): etiqueta, nome e a árvore no que sobra;
+      // a etiqueta reserva a mesma altura nos dois cartões para os nomes ficarem alinhados
+      const tagStr = id === inUse ? tr("EM USO") : !skin ? "" : mine ? tr("COMPRADA") : tr("EXCLUSIVA");
+      const tag = text(scene, 0, CH / 2 - 10, tr("EM USO"), { size: 13, color: id === inUse || !mine ? CSS.goldHi : CSS.muted, origin: [0.5, 1] });
+      const nm = fitTo(text(scene, 0, tag.y - tag.displayHeight - 2, campName(id), { size: 15, origin: [0.5, 1] }), CW - 16);
+      tag.setText(tagStr);
+      const foot = nm.y - nm.displayHeight - 6;
+      const tree = scene.add.image(0, foot, id ? "camp_jequitiba" : "camp_kapok").setOrigin(0.5, 1);
+      tree.setScale(Math.min(id ? 0.75 : 0.85, (foot + CH / 2 - 10) / tree.height));
+      if (!mine) tree.setAlpha(0.8);
+      card.add([tree, nm, tag]);
+      const badge = id === inUse ? "ico_check" : skin && !mine ? "ico_lock" : null;
+      if (badge) card.add(scene.add.image(CW / 2 - 16, -CH / 2 + 16, badge).setScale(2));
+      m.add(card);
+    });
+    gy = top + CH + 12;
   } else {
     const cols = 3;
     const CW = Math.floor((GW - (cols - 1) * 12) / cols),
@@ -238,29 +312,32 @@ export function openWardrobe(scene, o = {}) {
     gy = top + Math.ceil(list.length / cols) * (CH + 12);
   }
 
-  // ---------------------------------------------------------- rodapé: quantidade de efeitos
+  // ---------------------------------------------------------- rodapé: quantidade de efeitos (não vale para a Clareira)
   gy += 4;
-  const amt = m.add(text(scene, GX, gy, tr("Quantidade de efeitos"), { size: 16, origin: [0, 0] }));
-  const segW = 104;
-  COSM_AMOUNTS.forEach((a, i) => {
-    const on = Wardrobe.amount === i;
-    m.add(new Button(scene, R - (COSM_AMOUNTS.length - i - 0.5) * (segW + 6), gy + amt.height / 2 + 2, segW, 40, a.name, () => {
-      if (on) return;
-      Wardrobe.setAmount(i);
-      reopen({});
-    }, { size: 15, style: on ? "gold" : "dark", color: on ? CSS.goldHi : CSS.muted }));
-  });
-  gy += Math.max(44, amt.height + 8);
-  const hint = m.add(text(scene, GX, gy, tr("Pouca deixa a tela mais limpa"), { size: 13, color: CSS.muted, origin: [0, 0], wrap: GW }));
-  gy += hint.height + 2;
-  const note = m.add(text(scene, GX, gy, tr("Vale a partir da próxima partida."), { size: 13, color: CSS.muted, origin: [0, 0], wrap: GW }));
-  gy += note.height + 2;
+  if (!isCamp) {
+    const amt = m.add(text(scene, GX, gy, tr("Quantidade de efeitos"), { size: 16, origin: [0, 0] }));
+    const segW = 104;
+    COSM_AMOUNTS.forEach((a, i) => {
+      const on = Wardrobe.amount === i;
+      m.add(new Button(scene, R - (COSM_AMOUNTS.length - i - 0.5) * (segW + 6), gy + amt.height / 2 + 2, segW, 40, a.name, () => {
+        if (on) return;
+        Wardrobe.setAmount(i);
+        reopen({});
+      }, { size: 15, style: on ? "gold" : "dark", color: on ? CSS.goldHi : CSS.muted }));
+    });
+    gy += Math.max(44, amt.height + 8);
+    const hint = m.add(text(scene, GX, gy, tr("Pouca deixa a tela mais limpa"), { size: 13, color: CSS.muted, origin: [0, 0], wrap: GW }));
+    gy += hint.height + 2;
+    const note = m.add(text(scene, GX, gy, tr("Vale a partir da próxima partida."), { size: 13, color: CSS.muted, origin: [0, 0], wrap: GW }));
+    gy += note.height + 2;
+  }
   if (isKits && DEBUG && !realShop()) {
     const t = m.add(text(scene, GX, gy, tr("Loja simulada (modo de teste): nada é cobrado."), { size: 13, color: CSS.muted, origin: [0, 0], wrap: GW }));
     gy += t.height;
   }
-  // altura igual em todas as abas (a janela "pulava" de tamanho ao trocar de aba)
-  m.fitContent(Math.max(leftBottom, gy, top + SH + 330) + 20);
+  // altura igual em todas as abas (a janela "pulava" de tamanho ao trocar de aba); esse piso nunca passa da
+  // janela — só o conteúdo de verdade, se não couber, faz o fitContent encolher tudo
+  m.fitContent(Math.max(leftBottom, gy, Math.min(top + SH + 330, m.h / 2 - 20)) + 20);
   return m;
 }
 

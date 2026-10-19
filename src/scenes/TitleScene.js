@@ -12,6 +12,7 @@ import { MetaPanels } from "../ui/MetaPanels.js";
 import { tr } from "../i18n/i18n.js";
 import { Billing } from "../systems/Billing.js";
 import { openNoAds, showStoreNotice } from "../ui/NoAdsModal.js";
+import { openShop, shopOn } from "../ui/ShopModal.js";
 
 export class TitleScene extends Phaser.Scene {
   constructor() {
@@ -288,13 +289,16 @@ export class TitleScene extends Phaser.Scene {
     this.tweens.add({ targets: this.playBtn, scale: 1.04, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
     new Button(this, cx, H * 0.56 + 92, 380, 58, tr("OPÇÕES"), () => !this._modals.length && this._showSettings(), { size: 22, icon: "ico_gear", iconScale: 2.5, style: "dark" });
     const credits = () => !this._modals.length && this._showCredits();
-    // App com loja e sem a compra: "Sem anúncios" divide a linha com os Créditos (discreto, nunca sozinho na tela)
-    if (Billing.available() && !Billing.owned) {
+    // Loja (Sem anúncios, Pacote Fundador, kits) ou, sem a loja de cosméticos, só o "Sem anúncios": divide a
+    // linha com os Créditos (discreto, nunca sozinho na tela)
+    const shop = shopOn();
+    if (shop || (Billing.available() && !Billing.owned)) {
       new Button(this, cx - 96, H * 0.56 + 160, 186, 58, tr("CRÉDITOS"), credits, { size: 20, style: "dark" });
-      new Button(this, cx + 96, H * 0.56 + 160, 186, 58, tr("SEM ANÚNCIOS"), () => {
+      new Button(this, cx + 96, H * 0.56 + 160, 186, 58, shop ? tr("LOJA") : tr("SEM ANÚNCIOS"), () => {
         if (this._modals.length) return;
-        // comprou: o botão sai (a cena recomeça sem ele)
-        openNoAds(this, { from: "title", onClose: () => Billing.owned && this.scene.restart() });
+        // comprou: o botão muda (a cena recomeça)
+        if (shop) openShop(this, { from: "title", onClose: () => this.sys.isActive() && this.scene.restart() });
+        else openNoAds(this, { from: "title", onClose: () => Billing.owned && this.scene.restart() });
       }, { size: 20, style: "dark", color: CSS.goldHi });
     } else new Button(this, cx, H * 0.56 + 160, 380, 58, tr("CRÉDITOS"), credits, { size: 22, style: "dark" });
     // Tela cheia (só navegador)

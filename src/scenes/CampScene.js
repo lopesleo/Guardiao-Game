@@ -20,7 +20,8 @@ import { DEBUG } from "../systems/Platform.js";
 import { Billing } from "../systems/Billing.js";
 import { openNoAds, showStoreNotice } from "../ui/NoAdsModal.js";
 import { openWardrobe } from "../ui/WardrobeModal.js";
-import { cosmeticsOn } from "../systems/Cosmetics.js";
+import { cosmeticsOn, Wardrobe } from "../systems/Cosmetics.js";
+import { openShop, shopOn } from "../ui/ShopModal.js";
 import { Analytics } from "../systems/Analytics.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
@@ -411,6 +412,8 @@ export class CampScene extends Phaser.Scene {
     this.hudZone.on("pointerup", () => !this._modals.length && !this._cutscene && !this._leaving && this._showDifficulty());
     this.hudTitle = fix(text(this, 30, 32, tr("CLAREIRA DO GUARDIÃO"), { size: 20, color: CSS.goldHi, origin: [0, 0], stroke: true }));
     this.hudInfo = fix(text(this, 30, 58, "", { size: 14, color: CSS.muted, origin: [0, 0] }));
+    // Insígnia de Fundador (Pacote Fundador) antes do nome da Clareira
+    this.founderIcon = cosmeticsOn() && Wardrobe.isFounder() ? fix(this.add.image(0, 0, "ico_fundador").setScale(2.5)) : null;
     // Moedas + guia + opções
     const cg = fix(this.add.graphics());
     drawFrame(cg, W - 204, 14, 186, 52, "dark");
@@ -425,18 +428,19 @@ export class CampScene extends Phaser.Scene {
     fix(new Button(this, W - 244, 40, 52, 52, "?", () => !this._modals.length && this._showGuide(), { size: 26, style: "dark" }));
     fix(new Button(this, W - 304, 40, 52, 52, null, () => !this._modals.length && this._showSettings(), { icon: "ico_gear", style: "dark", iconScale: 2.5 }));
     this._barnHudButton(W - 364, 40); // Celeiro (aparece junto com a Horta)
-    // Loja "Sem anúncios" (app com loja): discreta, na fileira de botões; some com a compra e volta se
-    // ela for estornada (_layoutHud)
-    if (Billing.available())
+    // ★ Loja (Sem anúncios, Pacote Fundador, kits) ou, sem a loja de cosméticos, só o "Sem anúncios":
+    // discreta, na fileira de botões; some quando não há mais o que comprar (_layoutHud)
+    if (Billing.available() || shopOn())
       this.noAdsBtn = fix(new Button(this, W - 364, 40, 52, 52, null, () => {
         if (this._modals.length || this._cutscene || this._leaving) return;
-        openNoAds(this, { from: "camp", onClose: () => this.sys.isActive() && this._refreshAll() });
+        if (shopOn()) openShop(this, { from: "camp", onClose: () => this._afterStore() });
+        else openNoAds(this, { from: "camp", onClose: () => this._afterStore() });
       }, { icon: "ico_star", style: "dark", iconScale: 2.5 }));
     // Guarda-roupa (cosméticos, docs/COSMETICOS.md): na fileira de cima; a loja dos kits abre lá dentro
     if (cosmeticsOn())
       this.wardrobeBtn = fix(new Button(this, W - 424, 40, 52, 52, null, () => {
         if (this._modals.length || this._cutscene || this._leaving) return;
-        openWardrobe(this, { from: "camp", onClose: () => this.sys.isActive() && this._refreshAll() });
+        openWardrobe(this, { from: "camp", onClose: () => this._afterStore() });
       }, { icon: "ico_wardrobe", style: "dark", iconScale: 2.5 }));
     if (DEBUG) {
       fix(
@@ -478,7 +482,8 @@ export class CampScene extends Phaser.Scene {
     let x = this.W - 364;
     if (this.barnBtn?.visible) x -= 60;
     if (this.noAdsBtn) {
-      this.noAdsBtn.setVisible(!Billing.owned);
+      // com a loja: some quando já tem tudo (Fundador + Sem anúncios); sem ela: quando comprou o Sem anúncios
+      this.noAdsBtn.setVisible(shopOn() ? !(Wardrobe.isFounder() && Billing.owned) : !Billing.owned);
       if (this.noAdsBtn.visible) [this.noAdsBtn.x, x] = [x, x - 60];
     }
     if (this.wardrobeBtn) [this.wardrobeBtn.x, x] = [x, x - 60];
@@ -489,13 +494,28 @@ export class CampScene extends Phaser.Scene {
       t.setScale(1);
       if (t.width + pad * 2 > maxW) t.setScale(Math.max(0.6, (maxW - pad * 2) / t.width));
     });
-    const w = Math.round(Math.min(maxW, Math.max(330, this.hudTitle.displayWidth + pad * 2, this.hudInfo.displayWidth + pad * 2)));
-    this.hudTitle.setPosition(14 + pad, 14 + 8);
+    const ico = this.founderIcon ? 34 : 0; // a insígnia empurra o título
+    const w = Math.round(Math.min(maxW, Math.max(330, ico + this.hudTitle.displayWidth + pad * 2, this.hudInfo.displayWidth + pad * 2)));
+    this.hudTitle.setPosition(14 + pad + ico, 14 + 8);
+    this.founderIcon?.setPosition(14 + pad + 12, this.hudTitle.y + this.hudTitle.displayHeight / 2);
     this.hudInfo.setPosition(14 + pad, this.hudTitle.y + this.hudTitle.displayHeight + 2);
     const h = Math.round(Math.max(62, this.hudInfo.y + this.hudInfo.displayHeight + 8 - 14));
     this.hudFrame.clear();
     drawFrame(this.hudFrame, 14, 14, w, h, "dark", { alpha: 0.92 });
     this.hudZone.setSize(w, h); // a área de toque acompanha
+  }
+
+  // Voltou da Loja/Guarda-roupa: a skin da Clareira mudou (comprou o Fundador, trocou na aba Clareira)?
+  // Recomeça a cena para trocar a samaúma pelo jequitibá (e vice-versa); senão só atualiza o quadro
+  _afterStore() {
+    if (!this.sys.isActive()) return;
+    const skin = cosmeticsOn() && Wardrobe.activeCamp() === "ancestral";
+    if (skin !== !!this._ancestral || (cosmeticsOn() && Wardrobe.isFounder()) !== !!this.founderIcon) {
+      this.cameras.main.fadeOut(220, 5, 8, 6);
+      this.cameras.main.once("camerafadeoutcomplete", () => this.scene.restart());
+      return;
+    }
+    this._refreshAll();
   }
 
   _refreshAll() {
@@ -566,7 +586,8 @@ export class CampScene extends Phaser.Scene {
     }
     const busy = this._modals.length > 0 || this._leaving || this._cutscene;
     // Aviso da loja (pagamento aprovado / compra estornada), com a Clareira livre
-    if (Billing.hasNotice && !busy && !this._fishing) showStoreNotice(this, { onClose: () => this.sys.isActive() && this._refreshAll() });
+    // (pacote estornado ou aprovado troca a skin da Clareira e a insígnia: _afterStore recomeça a cena)
+    if (Billing.hasNotice && !busy && !this._fishing) showStoreNotice(this, { onClose: () => this._afterStore() });
     // Joystick fora de cena com janela aberta, cena ou pescaria (o fixo não fica por cima delas)
     this.joystick?.setActive(!busy && !this._fishing);
     const mx = busy ? 0 : this.inputMgr.move.x,

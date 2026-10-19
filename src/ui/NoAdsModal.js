@@ -8,7 +8,9 @@ import { text, Button, haptic, vh } from "./Theme.js";
 import { Modal } from "./Widgets.js";
 import { cloudToast } from "./CloudSaveUI.js";
 import { tr } from "../i18n/i18n.js";
-import { COSM_KITS, cosmeticsOn } from "../systems/Cosmetics.js";
+import { COSM_KITS, cosmeticsOn, Wardrobe } from "../systems/Cosmetics.js";
+import { AdService } from "../systems/AdService.js";
+import { STORE } from "../config.js";
 import { openWardrobe } from "./WardrobeModal.js";
 
 // Aviso da loja (Billing.notice): pagamento pendente que o Google aprovou, ou compra estornada. Só nas
@@ -57,7 +59,7 @@ function showKitNotice(scene, o) {
   if (!n) return null;
   Billing.clearKitNotice();
   Analytics.track("iap_notice", { kind: n.kind, kit: n.kit });
-  const kitName = tr("Kit {0}", COSM_KITS[n.kit]?.name ?? n.kit);
+  const kitName = n.pack ? (STORE.PACKS[n.pack]?.founder ? tr("Pacote Fundador") : tr("Pacote Apoiador")) : tr("Kit {0}", COSM_KITS[n.kit]?.name ?? n.kit);
   const revoked = n.kind === "revoked";
   let toWardrobe = false;
   const m = new Modal(scene, { title: revoked ? tr("COMPRA ESTORNADA") : tr("PAGAMENTO APROVADO"), w: 640, h: vh(scene), onClose: () => !toWardrobe && o.onClose?.() });
@@ -66,10 +68,19 @@ function showKitNotice(scene, o) {
     const t = m.add(text(scene, 0, y, str, { size, color, origin: [0.5, 0], align: "center", wrap: m.w - 100 }));
     y += t.height + gap;
   };
+  const P = n.pack ? STORE.PACKS[n.pack] : null;
   if (revoked) {
     note(tr("A Play Store estornou a compra do {0} e devolveu o pagamento.", kitName), 20, CSS.txt, 16);
-    note(tr("As peças do kit voltam ao padrão. O seu progresso continua igual."), 18, CSS.muted, 24);
+    if (!P) note(tr("As peças do kit voltam ao padrão. O seu progresso continua igual."), 18, CSS.muted, 24);
+    else {
+      // o que o pacote levava sai junto (os anúncios só voltam se nenhuma outra compra ainda os tira)
+      note(P.founder ? tr("Os kits, a Clareira Ancestral e a insígnia de Fundador saem.") : tr("Os kits do pacote saem."), 18, CSS.muted, 6);
+      if (P.noAds && !AdService.noAds) note(tr("Os anúncios opcionais voltam."), 18, CSS.muted, 6);
+      note(tr("O seu progresso continua igual."), 18, CSS.muted, 24);
+    }
   } else {
+    // pacote do Fundador aprovado depois (pagamento pendente): a Clareira já vira a Ancestral, como na compra direta
+    if (P?.founder && cosmeticsOn()) Wardrobe.equip("camp", "ancestral");
     scene.sound.play("sfx_coin", { volume: 0.6 });
     note(tr("O Google confirmou o pagamento. O {0} já está no Guarda-roupa.", kitName), 20, CSS.goldHi, 24);
   }
