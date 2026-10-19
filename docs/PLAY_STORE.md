@@ -738,6 +738,40 @@ npm run play:versao -- subir --faixa=internal       # Teste interno (sem revisã
 Este app grava as mudanças "enviando para revisão automaticamente" (a API recusa `changesNotSentForReview`);
 o rascunho, mesmo assim, não é revisado nem chega a ninguém até ser publicado no Console.
 
+## Novidades por notificação (Firebase Cloud Messaging)
+
+Para avisar quem joga de **versão nova, evento (Dia do Saci) ou conteúdo novo**. No app (`src/systems/News.js`,
+desde a 1.0.10): só para quem aceitou notificações; chave própria em **Opções › Jogo › Novidades** e canal
+próprio no Android ("Novidades"), separados dos lembretes do baú e da colheita; o aparelho entra só no tópico
+do seu idioma (`novidades_pt`, `_en`, `_es`, `_ja`, `_zh`, `_zht`) e sem aceite nem cria o token
+(`firebase_messaging_auto_init_enabled = false`). Tocar na notificação abre o jogo e registra `news_open`.
+
+Cada aviso é um JSON em `tools/play/avisos/` (id, `validade_dias`, `titulo` e `texto` nos 6 idiomas; título até
+45 caracteres, texto até 160). O que já saiu fica em `tools/play/avisos/enviados.json` (commit junto).
+
+```
+npm run aviso -- conferir tools/play/avisos/<aviso>.json   # textos e tamanhos, sem rede
+npm run aviso -- validar  tools/play/avisos/<aviso>.json   # o Google valida as 6 mensagens sem entregar
+npm run aviso -- enviar   tools/play/avisos/<aviso>.json   # envia para os 6 tópicos e registra
+```
+
+**Regras (seguir sempre):** no máximo **1 aviso a cada 7 dias** (o script recusa; `--forcar` só com motivo);
+nunca o mesmo aviso duas vezes; só novidade de verdade — nada de "volte a jogar", contagem regressiva, culpa ou
+urgência falsa; texto revisado nos 6 idiomas como qualquer texto do jogo. Com o jogo aberto a notificação não
+aparece (nunca no meio da partida). Teste: um aparelho só com `--token=<token> --idioma=pt`; enquanto a versão
+com as novidades estiver só no Teste interno, o tópico só chega a quem está nele.
+
+**Credencial (👤 uma vez):** a conta de serviço dos scripts (`play-produtos@guardiao-da-floresta.iam.gserviceaccount.com`)
+precisa do papel **"Administrador da API Firebase Cloud Messaging"** no projeto `guardiao-da-floresta`:
+<https://console.cloud.google.com/iam-admin/iam?project=guardiao-da-floresta> → na linha da conta, lápis
+(Editar principal) → Adicionar outro papel → procurar "Firebase Cloud Messaging API Admin" → Salvar. Sem isso o
+script responde 403 (`cloudmessaging.messages.create`). A API do FCM já está ativa no projeto.
+
+**Segurança dos dados (👤 ao levar a 1.0.10 para o Alpha/produção):** em **IDs do dispositivo**, acrescentar
+as finalidades **Funcionalidade do app** e **Comunicações do desenvolvedor** (o token do FCM entrega as
+novidades). Nada mais muda (sem dado pessoal; o envio é o mesmo para todos de um idioma). A política
+(`docs/PRIVACY.md`, seção "Novidades por notificação") já explica; copiar para o site como sempre.
+
 ## Kits de cosméticos (fase 2 dos cosméticos, `docs/COSMETICOS.md`)
 
 Quatro **produtos únicos** (não consumíveis), cada um libera 3 peças do Guarda-roupa. Só aparência: não

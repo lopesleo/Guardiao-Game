@@ -16,6 +16,12 @@
         <meta-data android:name="com.google.android.gms.games.APP_ID" android:value="@string/game_services_project_id" />
         <meta-data android:name="firebase_analytics_collection_enabled" android:value="false" />
         <meta-data android:name="firebase_crashlytics_collection_enabled" android:value="false" />
+        <!-- Novidades (FCM, src/systems/News.js): sem token até o jogador aceitar; canal "novidades" criado pelo
+             jogo com o nome no idioma dele; ícone pequeno e cor das notificações (também dos lembretes) -->
+        <meta-data android:name="firebase_messaging_auto_init_enabled" android:value="false" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="novidades" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_guardiao" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/guardiao_notificacao" />
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
             android:name=".MainActivity"

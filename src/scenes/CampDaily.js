@@ -22,7 +22,7 @@ const MISSION_ICON = {
 import { Daily, dailyUnlocked, rewardText } from "../systems/Daily.js";
 import { AdService } from "../systems/AdService.js";
 import { PAL, CSS } from "../art/Palette.js";
-import { text, drawFrame, Button, haptic } from "../ui/Theme.js";
+import { text, drawFrame, Button, haptic, vh } from "../ui/Theme.js";
 import { Modal } from "../ui/Widgets.js";
 import { fmtDuration } from "../systems/Builds.js";
 import { Notify, NOTIFY_ID, tomorrowAt } from "../systems/Notify.js";
@@ -265,17 +265,25 @@ CampDaily._offerNotify = function (kind, at = null) {
   };
   if (Notify.enabled()) return plan();
   if (Notify.asked() || this._modals.length) return;
-  const m = new Modal(this, { title: tr("QUER UM AVISO?"), w: 640, h: 300 });
-  m.add(text(this, 0, -40, kind === "chest" ? tr("Posso avisar quando o baú de amanhã estiver pronto.") : tr("Posso avisar quando a colheita ficar pronta."), { size: 20, origin: 0.5, align: "center", wrap: 560 }));
-  m.add(text(this, 0, -2, tr("No máximo dois avisos. Dá para desligar em Opções."), { size: 15, color: CSS.muted, origin: 0.5 }));
-  m.add(new Button(this, -135, 80, 240, 54, tr("SIM, AVISE"), async () => {
+  // Montada de cima para baixo e encolhida no fim: com texto "Muito grande" a frase quebra em mais linhas
+  const m = new Modal(this, { title: tr("QUER UM AVISO?"), w: 640, h: vh(this) });
+  let y = m.top + 14;
+  const note = (str, size, color, gap) => {
+    const t = m.add(text(this, 0, y, str, { size, color, origin: [0.5, 0], align: "center", wrap: 560 }));
+    y += t.height + gap;
+  };
+  note(kind === "chest" ? tr("Posso avisar quando o baú de amanhã estiver pronto.") : tr("Posso avisar quando a colheita ficar pronta."), 20, CSS.txt, 10);
+  note(tr("E as novidades do jogo, poucas vezes por mês. Dá para desligar em Opções."), 15, CSS.muted, 22);
+  const by = y + 27;
+  m.add(new Button(this, -135, by, 240, 54, tr("SIM, AVISE"), async () => {
     m.close();
     if (await Notify.enable()) plan();
   }, { size: 20, style: "primary", color: CSS.goldHi }));
-  m.add(new Button(this, 135, 80, 240, 54, tr("AGORA NÃO"), () => {
+  m.add(new Button(this, 135, by, 240, 54, tr("AGORA NÃO"), () => {
     Notify.decline();
     m.close();
   }, { size: 20, style: "dark" }));
+  m.fitContent(by + 27 + 16);
 };
 
 function msToMidnight(now = Clock.date()) {

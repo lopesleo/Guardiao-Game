@@ -3,6 +3,7 @@
 // sessão (trocar fonte/tamanho reinicia a cena e reabre na mesma aba).
 import { Settings } from "../systems/Settings.js";
 import { Notify } from "../systems/Notify.js";
+import { News } from "../systems/News.js";
 import { Telemetry } from "../systems/Telemetry.js";
 import { AdMobBridge } from "../systems/AdMobBridge.js";
 import { CloudSave } from "../systems/CloudSave.js";
@@ -138,6 +139,7 @@ export function openSettings(scene, o = {}) {
     );
     if (Notify.available())
       row(tr("Avisos"), new Toggle(scene, 0, 0, Notify.enabled(), (v) => (v ? Notify.enable() : Notify.disable())), tr("Baú do dia e colheita pronta"));
+    if (News.available()) row(tr("Novidades"), new Toggle(scene, 0, 0, News.enabled(), (v) => News.setEnabled(v)), tr("Versões novas e eventos · poucas vezes por mês"));
     if (CloudSave.available() && CloudSave.state !== "off") cloudRow(scene, m, o, row);
   } else if (tab === "controles") {
     // Joystick (só no toque): modo e tamanho valem na hora; o lado move também Dash, Despertar e o

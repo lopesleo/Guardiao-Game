@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Cor das notificações: o verde das folhas da paleta (PAL.g5) -->
+    <color name="guardiao_notificacao">#6AAB4A</color>
+</resources>
