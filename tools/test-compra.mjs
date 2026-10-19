@@ -1,4 +1,4 @@
-// Teste da compra "Sem anúncios" (systems/Billing.js) num navegador de verdade, com uma Play Store
+// Teste das compras (systems/Billing.js: "Sem anúncios", kits e pacotes) num navegador de verdade, com uma Play Store
 // FALSA (window.Capacitor.Plugins.NativePurchases) que dá para mandar: aprovar, deixar pendente,
 // estornar, falhar o reconhecimento, falhar a consulta. Nasceu do teste de 18/10/2026: a compra foi
 // aceita e reconhecida, depois estornada, e o jogo tirou o "sem anúncios" sem avisar o jogador.
@@ -47,11 +47,14 @@ function fakeStore(cfg) {
       },
       NativePurchases: {
         isBillingSupported: async () => ({ isBillingSupported: true }),
-        getProduct: async () => ({ product: { identifier: "sem_anuncios", priceString: "R$ 14,90" } }),
-        // Kits de cosméticos (só os que o cenário "criou no Play Console")
+        getProduct: async () => ({ product: { identifier: "sem_anuncios", priceString: "R$ 14,90", price: 14.9, currencyCode: "BRL" } }),
+        // Kits e pacotes (só os que o cenário "criou no Play Console", em store.kits), com os preços
+        // planejados (docs/COSMETICOS.md): kit R$ 4,90, Fundador R$ 19,90, Fundador sem o Sem anúncios R$ 9,90
         getProducts: async (o) => {
           S.calls.push("products");
-          return { products: (o.productIdentifiers || []).filter((id) => (S.kits ?? []).includes(id)).map((id) => ({ identifier: id, priceString: "R$ 9,90" })) };
+          const PRICE = { pacote_fundador: 19.9, pacote_fundador_kits: 9.9, pacote_apoiador: 24.9 };
+          const brl = (v) => "R$ " + v.toFixed(2).replace(".", ",");
+          return { products: (o.productIdentifiers || []).filter((id) => (S.kits ?? []).includes(id)).map((id) => ({ identifier: id, priceString: brl(PRICE[id] ?? 4.9), price: PRICE[id] ?? 4.9, currencyCode: "BRL" })) };
         },
         getPurchases: async () => {
           S.calls.push("query");
@@ -101,6 +104,9 @@ const check = (ok, what, extra = "") => {
 const OLD = Date.now() - 86400000; // liberado ontem (fora da carência logo depois da compra)
 const OWNED = { guardiao_store_v1: { owned: true, acked: true, grantedAt: OLD }, guardiao_ads_v1: { noAds: true } };
 const PAID = { productIdentifier: "sem_anuncios", purchaseState: "1", purchaseToken: "tok-1", isAcknowledged: true };
+// Tudo "criado no Play Console" (kits e pacotes)
+const ALL = ["kit_ipe", "kit_paineira", "kit_coruja", "kit_junina", "pacote_fundador", "pacote_fundador_kits", "pacote_apoiador"];
+const PACK_OWNED = { pacote_fundador: { owned: true, acked: true, grantedAt: OLD } };
 
 const SCENARIOS = {
   // Compra normal: libera na hora e reconhece à mão (o automático do plugin pode ser cortado)
@@ -199,7 +205,7 @@ const SCENARIOS = {
   // Compra de kit: preço da loja, libera as peças do Guarda-roupa e reconhece; não mexe no "Sem anúncios"
   async kitCompra(t) {
     let s = await t.state();
-    check(s.kits.ipe.price === "R$ 9,90" && s.kits.paina.price === "", "preço do kit vem da loja (kit não criado = sem preço → Em breve)", JSON.stringify(s.kits));
+    check(s.kits.ipe.price === "R$ 4,90" && s.kits.paina.price === "", "preço do kit vem da loja (kit não criado = sem preço → Em breve)", JSON.stringify(s.kits));
     const r = await t.page.evaluate(async () => (await import("/src/systems/Billing.js")).Billing.buyKit("ipe"));
     s = await t.state();
     check(r === "ok" && s.kits.ipe.owns && s.kits.ipe.piece, "comprou o kit → as peças do kit ficam suas", `resultado=${r}`);
@@ -226,6 +232,42 @@ const SCENARIOS = {
     s = await t.state();
     check(s.kits.paina.owns, "aprovado com o app aberto → kit liberado e reconhecido em até 20 s", s.calls.join(" "));
     await t.noticeShown(/PAGAMENTO APROVADO/, "kit_aprovado");
+  },
+  // ------------------------------------------------ pacotes (Fundador = Sem anúncios + 4 kits + exclusivos)
+  // Compra do pacote: tudo de uma vez e reconhece o pacote; preço, "separado sai por" e economia da loja
+  async pacoteCompra(t) {
+    let s = await t.state();
+    check(s.pack.price === "R$ 19,90" && Math.abs((s.pack.parts?.value ?? 0) - 34.5) < 0.01 && s.pack.pct === 42, "preço do pacote, soma das partes (R$ 34,50) e economia (42%) vêm da loja", JSON.stringify(s.pack));
+    const r = await t.page.evaluate(async () => (await import("/src/systems/Billing.js")).Billing.buyPack("fundador"));
+    s = await t.state();
+    check(r === "ok" && s.noAds && s.pack.allKits && s.pack.founder, "comprou o pacote → Sem anúncios, os 4 kits e o Fundador", `resultado=${r}`);
+    check(s.calls.includes("buy:manual:pacote_fundador") && s.calls.includes("ack:tok-pacote_fundador"), "pede o pacote certo e reconhece a compra dele", s.calls.join(" "));
+    check(!s.saved.owned, "o Sem anúncios avulso continua não comprado (quem dá é o pacote)");
+    await t.billing("sync");
+    s = await t.state();
+    check(s.noAds && s.pack.founder && !s.notice && !s.kitNotice, "a conferência seguinte não tira nada (o Sem anúncios vem do pacote)");
+  },
+  // Quem já tem o Sem anúncios vê o pacote sem ele: só os kits e os exclusivos
+  async pacoteLite(t) {
+    const r = await t.page.evaluate(async () => (await import("/src/systems/Billing.js")).Billing.buyPack("fundador_lite"));
+    const s = await t.state();
+    check(r === "ok" && s.pack.allKits && s.pack.founder && !s.noAds, "pacote sem o Sem anúncios → kits e Fundador; os anúncios continuam", `resultado=${r}`);
+  },
+  // Estorno do pacote: tira tudo o que ele deu e avisa
+  async pacoteEstorno(t) {
+    await t.boot({ local: { guardiao_ads_v1: { noAds: true }, guardiao_store_v1: { kits: PACK_OWNED } }, store: { list: [], kits: ALL } });
+    await t.page.waitForFunction(() => window.__store.calls.filter((c) => c === "query").length >= 2, null, { timeout: 20000 }).catch(() => {});
+    const s = await t.state();
+    check(!s.noAds && !s.pack.founder && !s.pack.anyKit, "pacote sumiu da loja → saem o Sem anúncios, os kits e o Fundador", JSON.stringify(s.saved));
+    await t.noticeShown(/COMPRA ESTORNADA/, "pacote_estorno");
+  },
+  // Estorno do pacote de quem TAMBÉM pagou o Sem anúncios avulso: esse continua
+  async pacoteEstornoSemAnuncios(t) {
+    await t.boot({ local: { guardiao_ads_v1: { noAds: true }, guardiao_store_v1: { owned: true, acked: true, grantedAt: OLD, kits: PACK_OWNED } }, store: { list: [PAID], kits: ALL } });
+    await t.page.waitForFunction(() => window.__store.calls.filter((c) => c === "query").length >= 2, null, { timeout: 20000 }).catch(() => {});
+    const s = await t.state();
+    check(s.noAds && s.saved.owned && !s.pack.founder && !s.pack.anyKit, "só o pacote sai; o Sem anúncios pago à parte continua", JSON.stringify(s.saved));
+    await t.noticeShown(/COMPRA ESTORNADA/, "pacote_estorno_sem_anuncios");
   },
   // Logo depois de comprar, a loja pode ainda não listar a compra: carência de 2 min
   async carencia(t) {
@@ -262,7 +304,9 @@ async function run(name) {
         const { AdService } = await import("/src/systems/AdService.js");
         const { Wardrobe } = await import("/src/systems/Cosmetics.js");
         const kits = Object.fromEntries(["ipe", "paina"].map((k) => [k, { owns: Billing.ownsKit(k), pending: Billing.kitPending(k), price: Billing.kitPrice(k), piece: Wardrobe.owns(k + "_kill") }]));
-        return { noAds: AdService.noAds, saved: JSON.parse(localStorage.getItem("guardiao_store_v1") || "{}"), notice: Billing.notice, kitNotice: Billing.kitNotice, kits, calls: window.__store.calls };
+        const four = ["ipe", "paina", "coruja", "junina"].map((k) => Billing.ownsKit(k));
+        const pack = { price: Billing.packPrice("fundador"), parts: Billing.packPartsValue("fundador"), pct: Billing.packSavePct("fundador"), founder: Billing.isFounder, allKits: four.every(Boolean), anyKit: four.some(Boolean) };
+        return { noAds: AdService.noAds, saved: JSON.parse(localStorage.getItem("guardiao_store_v1") || "{}"), notice: Billing.notice, kitNotice: Billing.kitNotice, kits, pack, calls: window.__store.calls };
       }),
     // A janela de aviso abre sozinha na tela de menu; fecha e confere que fechou
     async noticeShown(re, shot, scene = "TitleScene") {
@@ -288,7 +332,9 @@ async function run(name) {
     },
   };
   try {
-    if (!["estorno", "clareira", "falsoAlarme", "semRede", "kitEstorno"].includes(name)) await t.boot(name.startsWith("kit") ? { store: { kits: ["kit_ipe", "kit_paineira"].slice(0, name === "kitCompra" ? 1 : 2) } } : {});
+    // cada cenário que não sobe o jogo sozinho começa numa conta nova
+    const kitsUp = name.startsWith("kit") ? ["kit_ipe", "kit_paineira"].slice(0, name === "kitCompra" ? 1 : 2) : name.startsWith("pacote") ? ALL : null;
+    if (!["estorno", "clareira", "falsoAlarme", "semRede", "kitEstorno", "pacoteEstorno", "pacoteEstornoSemAnuncios"].includes(name)) await t.boot(kitsUp ? { store: { kits: kitsUp } } : {});
     await SCENARIOS[name](t);
   } catch (e) {
     check(false, "o roteiro chegou ao fim", String(e.message || e).split("\n")[0]);

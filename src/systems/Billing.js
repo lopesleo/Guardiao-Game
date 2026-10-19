@@ -1,13 +1,16 @@
 // Compras pela Play Store (Play Billing): o "Sem anúncios" (libera os prêmios dos anúncios sem assistir;
-// ver AdService.noAds) e os KITS de cosméticos (cada um libera 3 peças do Guarda-roupa; ver
-// systems/Cosmetics.js). Todos são produtos únicos (não consumíveis). Só no app Android.
+// ver AdService.noAds), os KITS de cosméticos (cada um libera 3 peças do Guarda-roupa; ver
+// systems/Cosmetics.js) e os PACOTES (uma compra libera várias coisas: STORE.PACKS). Todos são produtos
+// únicos (não consumíveis). Só no app Android. O que o jogador TEM sai da soma: o "sem anúncios" vem do
+// produto dele OU de um pacote que o inclui; um estorno só tira o que nenhuma outra compra ainda dá.
 //
 //   Billing.install()      → no boot: lê os preços e confere o que a conta já comprou (reinstalar recupera)
 //   Billing.buy()          → compra o "Sem anúncios": "ok" | "pending" | "cancelled" | "unavailable"
 //   Billing.buyKit(kit)    → compra um kit (mesmos resultados)
+//   Billing.buyPack(pack)  → compra um pacote (mesmos resultados)
 //   Billing.sync()         → confere de novo na loja (botão "Restaurar compra" e a volta ao app)
 //   Billing.notice         → aviso do "Sem anúncios": "approved" | "revoked" | null
-//   Billing.kitNotice      → aviso de kit: { kind: "approved" | "revoked", kit } | null
+//   Billing.kitNotice      → aviso de kit ou pacote: { kind: "approved" | "revoked", kit | pack } | null
 //   (Título e Clareira mostram os avisos e chamam clearNotice/clearKitNotice; nunca no meio da partida)
 //
 // Sem servidor: a loja é a fonte da verdade e o jogo confere a cada abertura. Regras do Google seguidas,
@@ -47,8 +50,10 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const NO_ADS = STORE.NO_ADS;
 const KIT_IDS = Object.values(STORE.KITS);
-const PRODUCTS = [NO_ADS, ...KIT_IDS];
+const PACK_IDS = Object.values(STORE.PACKS).map((p) => p.product);
+const PRODUCTS = [NO_ADS, ...KIT_IDS, ...PACK_IDS];
 const kitOf = Object.fromEntries(Object.entries(STORE.KITS).map(([kit, id]) => [id, kit]));
+const packOf = Object.fromEntries(Object.entries(STORE.PACKS).map(([key, p]) => [p.product, { key, ...p }]));
 
 function load() {
   try {
@@ -70,9 +75,14 @@ function save() {
 const rec = (id) => (id === NO_ADS ? saved : ((saved.kits ??= {})[id] ??= {}));
 // O que o produto liga está ativo? (o "sem anúncios" também pode vir de fora da loja)
 const has = (id) => (id === NO_ADS ? AdService.noAds : !!rec(id).owned);
+const packsOwned = () => Object.values(STORE.PACKS).filter((p) => rec(p.product).owned);
+// "Sem anúncios" que a LOJA dá hoje: o produto dele ou um pacote que o inclui
+const noAdsFromStore = () => !!rec(NO_ADS).owned || packsOwned().some((p) => p.noAds);
 
 let state = { step: "idle", price: "", error: "", busy: false };
 let kitPrices = {};
+// Preço em número e moeda (para somar "separado sai por" no pacote): { produto: { value, currency } }
+let priceNums = {};
 let lastSync = 0,
   hooked = false,
   ackTries = 0,
@@ -111,10 +121,38 @@ export const Billing = {
     save();
   },
   // ---- kits de cosméticos (kit = chave de STORE.KITS: "ipe", "paina"…)
-  ownsKit: (kit) => !!STORE.KITS[kit] && has(STORE.KITS[kit]),
+  ownsKit: (kit) => !!STORE.KITS[kit] && (has(STORE.KITS[kit]) || packsOwned().some((p) => p.kits.includes(kit))),
   kitPending: (kit) => !!STORE.KITS[kit] && !!rec(STORE.KITS[kit]).pending && !has(STORE.KITS[kit]),
   // Preço que a loja devolveu ("R$ 9,90"); "" = produto ainda não criado no Play Console ou sem rede
   kitPrice: (kit) => kitPrices[STORE.KITS[kit]] ?? "",
+  // ---- pacotes (pack = chave de STORE.PACKS: "fundador", "fundador_lite", "apoiador")
+  ownsPack: (pack) => !!STORE.PACKS[pack] && has(STORE.PACKS[pack].product),
+  packPending: (pack) => !!STORE.PACKS[pack] && !!rec(STORE.PACKS[pack].product).pending && !has(STORE.PACKS[pack].product),
+  packPrice: (pack) => kitPrices[STORE.PACKS[pack]?.product] ?? "",
+  // Quanto sairia comprar SEPARADO o que o pacote traz (null = a loja não deu os números ou moedas
+  // diferentes) → { value, currency }, para a âncora de preço da Loja
+  packPartsValue(pack) {
+    const p = STORE.PACKS[pack];
+    if (!p) return null;
+    const ids = [...(p.noAds ? [NO_ADS] : []), ...p.kits.map((k) => STORE.KITS[k])];
+    const parts = ids.map((id) => priceNums[id]);
+    if (parts.some((x) => !x) || new Set(parts.map((x) => x.currency)).size !== 1) return null;
+    return { value: parts.reduce((a, x) => a + x.value, 0), currency: parts[0].currency };
+  },
+  // "Você economiza N%": quanto o pacote sai abaixo da soma das partes (arredonda para baixo: nunca exagera)
+  packSavePct(pack) {
+    const parts = this.packPartsValue(pack),
+      own = priceNums[STORE.PACKS[pack]?.product];
+    if (!parts || !own || own.currency !== parts.currency || !(parts.value > own.value)) return null;
+    return Math.floor((1 - own.value / parts.value) * 100);
+  },
+  // Fundador: comprou um pacote do Fundador (insígnia e a Clareira Ancestral)
+  get isFounder() {
+    return packsOwned().some((p) => p.founder);
+  },
+  buyPack(pack) {
+    return STORE.PACKS[pack] ? this._buy(STORE.PACKS[pack].product) : Promise.resolve("unavailable");
+  },
   get kitNotice() {
     return saved.kitNotices?.[0] ?? null;
   },
@@ -140,6 +178,7 @@ export const Billing = {
       }
       const { product } = await call(() => NP.getProduct({ productIdentifier: NO_ADS, productType: "inapp" }));
       state.price = product?.priceString ?? "";
+      if (product?.price != null) priceNums[NO_ADS] = { value: Number(product.price), currency: product.currencyCode };
       state.step = "ready";
     } catch (e) {
       // Sem rede ou produto ainda não criado no Play Console: a compra fica indisponível, mas a
@@ -162,11 +201,13 @@ export const Billing = {
     }, PENDING_POLL_MS);
   },
 
-  // Preços dos kits (falha = kits sem preço → "Em breve"; não atrapalha o "Sem anúncios")
+  // Preços dos kits e pacotes (falha = sem preço → "Em breve"; não atrapalha o "Sem anúncios"). Produto
+  // desativado no Play Console (fim da janela do Fundador) some daqui e a loja deixa de oferecer
   async _kitPrices() {
     try {
-      const { products = [] } = await call(() => plugin().getProducts({ productIdentifiers: KIT_IDS, productType: "inapp" }));
+      const { products = [] } = await call(() => plugin().getProducts({ productIdentifiers: [...KIT_IDS, ...PACK_IDS], productType: "inapp" }));
       kitPrices = Object.fromEntries(products.filter((p) => p?.identifier).map((p) => [p.identifier, p.priceString ?? ""]));
+      for (const p of products) if (p?.identifier && p.price != null) priceNums[p.identifier] = { value: Number(p.price), currency: p.currencyCode };
     } catch {
       kitPrices = {};
     }
@@ -215,7 +256,8 @@ export const Billing = {
       r.owned = false;
       r.acked = false;
       this._notify(id, "revoked");
-      if (id === NO_ADS) AdService.setNoAds(false);
+      // o "sem anúncios" só sai se NENHUMA outra compra ainda o dá (ex.: estornou o pacote, tem o produto)
+      if ((id === NO_ADS || packOf[id]?.noAds) && !noAdsFromStore()) AdService.setNoAds(false);
     }
     if (wasPending && !r.pending) Analytics.track("iap_pending_end", { product: id });
     save();
@@ -223,7 +265,7 @@ export const Billing = {
 
   _notify(id, kind) {
     if (id === NO_ADS) saved.notice = kind;
-    else (saved.kitNotices ??= []).push({ kind, kit: kitOf[id] });
+    else (saved.kitNotices ??= []).push(packOf[id] ? { kind, pack: packOf[id].key } : { kind, kit: kitOf[id] });
   },
 
   // Compras desta conta na loja (só as nossas); null = a consulta falhou
@@ -282,7 +324,7 @@ export const Billing = {
     r.pending = false;
     if (p?.isAcknowledged) r.acked = true;
     save();
-    if (id === NO_ADS) AdService.setNoAds(true);
+    if (id === NO_ADS || packOf[id]?.noAds) AdService.setNoAds(true);
     if (first) Analytics.track("iap_grant", { product: id, how });
     if (p?.isAcknowledged || !p?.purchaseToken) return;
     try {
