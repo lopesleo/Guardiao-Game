@@ -459,6 +459,9 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
 - ✅ **1.0.6 (código 7)** (19/10/2026): loja de cosméticos ligada no app (Guarda-roupa, kits, Pacote Fundador, Clareira
   Ancestral) e joystick em toda a metade da tela (antes só o quarto de baixo); publicada no Teste interno e no
   Alpha pelo `npm run play:versao -- subir --publicar`
+- ✅ **1.0.7 (código 8)** (19/10/2026): Clareira Ancestral redesenhada — o acampamento inteiro (esteios entalhados,
+  lamparinas de cabaça, bancos e rede, tucano, borboletas-azuis, cogumelos que brilham, estandarte, pólen) — e o joystick
+  religando no próprio toque da carta; publicada no interno e no Alpha
 - ✅ **Joystick morria depois da 1ª carta** (19/10/2026, achado no aparelho com a 1.0.4): um `off("resume")`
   geral no `GameScene` (do conserto antigo das cartas em dobro) apagava o ouvinte que religava o joystick depois
   da pausa da acessibilidade — em todos os modos, também depois do ⏸ e do reviver. Agora o joystick religa no

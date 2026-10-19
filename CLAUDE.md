@@ -82,13 +82,14 @@ Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um 
 marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 
 **Agora**
-- **1.0.6 (código 7) PUBLICADA no Teste interno e no Teste fechado/Alpha (19/10, `npm run play:versao -- subir
-  --publicar`):** loja de cosméticos ligada (Guarda-roupa, kits R$ 4,90, Pacote Fundador R$ 19,90, Clareira Ancestral)
-  e joystick em toda a metade da tela; inclui a correção do joystick da 1.0.5 (a 1.0.5 ficou só no interno). O Alpha
-  está na **revisão do Google** (a 1.0.4 continua valendo até aprovar). `dist/guardiao-v1.0.6-7-anuncios-reais.aab`.
+- **1.0.7 (código 8) PUBLICADA no Teste interno e no Teste fechado/Alpha (19/10, `npm run play:versao -- subir
+  --publicar`):** Clareira Ancestral redesenhada (esteios entalhados, lamparinas, tucano, borboletas, cogumelos que
+  brilham), joystick religando no próprio toque da carta e em toda a metade da tela, loja de cosméticos ligada. O Alpha
+  está na **revisão do Google** (a 1.0.4 vale até aprovar; a 1.0.5/1.0.6 nunca chegaram lá). Os testadores do Alpha
+  **pagam de verdade** se comprarem (só "Teste de compras" no Teste de licença). `dist/guardiao-v1.0.7-8-anuncios-reais.aab`.
   👤 No celular (teste interno, `https://play.google.com/apps/internaltest/4700140413216190768`): atualizar e testar
-  joystick (carta, ⏸, reviver, polegar no meio da tela), Loja (★ e LOJA), comprar o Pacote Fundador com cartão de
-  teste → Clareira Ancestral; estornar em **Pedidos** → "COMPRA ESTORNADA" diz o que saiu. Sentir o joystick fixo/canhoto.
+  joystick (carta, ⏸, reviver), Loja, Fundador com cartão de teste → Clareira Ancestral (de dia e à noite), estorno.
+- **Próximo: Clareira da Caatinga** (grátis): liberar quem vencer no Perigo máximo na Caatinga + uma conquista.
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
   ~14/10 (pedido de produção possível por volta de **28/10**). 👤 Manter os 12 ativos (ninguém sair da lista).
   Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`. Cadastrar e-mails à mão (só contas
