@@ -234,6 +234,55 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.6 (código 7) — 19/10/2026
+
+AAB: `dist/guardiao-v1.0.6-7-anuncios-reais.aab`. Liga a loja de cosméticos (`COSMETICS.ENABLED`/`SHOP`):
+Guarda-roupa, kits a R$ 4,90, Pacote Fundador e Clareira Ancestral, com os produtos já ativos no Console; e o
+joystick começa em toda a metade da tela (antes, só no quarto de baixo). Enviada pelo `npm run play:versao`.
+
+```
+<pt-BR>
+• Novo: Guarda-roupa na Clareira — efeitos de libertação, rastro e Despertar, com peças grátis e kits (Ipê-rosa, Paineira, Coruja-buraqueira, Festa Junina). Só aparência.
+• Novo: Loja com o Pacote Fundador por tempo limitado: Sem anúncios, os 4 kits e a Clareira Ancestral exclusiva.
+• Joystick: agora começa em toda a metade da tela, não só embaixo.
+</pt-BR>
+<en-US>
+• New: Wardrobe in the Clearing — freeing, trail and Awakening effects, with free pieces and kits (Pink Ipê, Silk Floss Tree, Burrowing Owl, Festa Junina). Looks only.
+• New: Shop with the limited-time Founder Pack: No Ads, all 4 kits and the exclusive Ancestral Clearing.
+• Joystick: now starts anywhere on your half of the screen, not just at the bottom.
+</en-US>
+<es-419>
+• Nuevo: Vestuario en el Claro — efectos de liberación, estela y Despertar, con piezas gratis y kits (Ipê rosa, Palo borracho, Lechucita vizcachera, Fiesta Junina). Solo apariencia.
+• Nuevo: Tienda con el Pack Fundador por tiempo limitado: Sin anuncios, los 4 kits y el Claro Ancestral exclusivo.
+• Joystick: ahora empieza en toda tu mitad de la pantalla, no solo abajo.
+</es-419>
+<es-ES>
+• Nuevo: Vestuario en el Claro — efectos de liberación, estela y Despertar, con piezas gratis y kits (Ipê rosa, Palo borracho, Lechucita vizcachera, Fiesta Junina). Solo apariencia.
+• Nuevo: Tienda con el Pack Fundador por tiempo limitado: Sin anuncios, los 4 kits y el Claro Ancestral exclusivo.
+• Joystick: ahora empieza en toda tu mitad de la pantalla, no solo abajo.
+</es-ES>
+<ja-JP>
+• 新機能：広場に衣装箱 — 解放・軌跡・覚醒のエフェクト。無料アイテムとセット（ピンクのイペー、トックリキワタ、アナホリフクロウ、フェスタ・ジュニーナ）。見た目だけのアイテムです。
+• 新機能：ショップに期間限定の創設者パック — 「広告なし」、セット4つ、限定の「いにしえの広場」。
+• ジョイスティック：画面の下だけでなく、片側半分のどこからでも操作できるように。
+</ja-JP>
+<zh-CN>
+• 新内容：空地新增衣橱——解放、拖尾和觉醒特效，含免费物品与套装（粉色风铃木、美丽异木棉、穴鸮、六月节）。仅外观。
+• 新内容：商店推出限时创始者礼包：免广告、全部 4 个套装和独家的远古空地。
+• 摇杆：现在在屏幕一侧的任意位置都能开始操作，不再只限下方。
+</zh-CN>
+<zh-TW>
+• 新內容：空地新增衣櫥——解放、拖尾和覺醒特效，含免費物品與套裝（粉紅風鈴木、美人樹、穴鴞、六月節）。僅外觀。
+• 新內容：商店推出限時創始者禮包：免廣告、全部 4 個套裝和獨家的遠古空地。
+• 搖桿：現在在螢幕一側的任意位置都能開始操作，不再只限下方。
+</zh-TW>
+<zh-HK>
+• 新內容：空地新增衣櫥——解放、拖尾和覺醒特效，含免費物品與套裝（粉紅風鈴木、美人樹、穴鴞、六月節）。僅外觀。
+• 新內容：商店推出限時創始者禮包：免廣告、全部 4 個套裝和獨家的遠古空地。
+• 搖桿：現在在螢幕一側的任意位置都能開始操作，不再只限下方。
+</zh-HK>
+```
+
 ### 1.0.5 (código 6) — 19/10/2026
 
 AAB: `dist/guardiao-v1.0.5-6-anuncios-reais.aab`. Corrige o joystick da 1.0.4 (morria depois da 1ª carta
