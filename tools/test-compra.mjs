@@ -14,6 +14,11 @@
 import { chromium } from "playwright-core";
 import fs from "node:fs";
 import { startLabServer } from "./lab-server.mjs";
+import { COSMETICS } from "../src/config.js";
+
+// Loja de cosméticos ligada no app (COSMETICS.SHOP): o botão do título vira LOJA e a ★ da Clareira só some
+// com tudo comprado (Fundador + Sem anúncios); desligada, os dois são só o "Sem anúncios"
+const LOJA = COSMETICS.ENABLED && COSMETICS.SHOP;
 
 const ONLY = process.env.ONLY ? process.env.ONLY.split(",") : null;
 const SHOTS = process.env.SHOTS || "";
@@ -148,8 +153,9 @@ const SCENARIOS = {
     check(!s.noAds && !s.saved.owned, "compra sumiu da loja → sem anúncios desligado", JSON.stringify(s.saved));
     check(s.calls.filter((c) => c === "query").length >= 2, "confere 2 vezes antes de tirar");
     await t.noticeShown(/COMPRA ESTORNADA/, "estorno");
-    const btn = await t.page.evaluate(() => window.game.scene.isActive("TitleScene") && !!window.game.scene.getScene("TitleScene").children.list.find((o) => o.label?.text === "SEM ANÚNCIOS"));
-    check(btn, "o botão SEM ANÚNCIOS volta ao título depois do aviso");
+    const rotulo = LOJA ? "LOJA" : "SEM ANÚNCIOS";
+    const btn = await t.page.evaluate((r) => window.game.scene.isActive("TitleScene") && !!window.game.scene.getScene("TitleScene").children.list.find((o) => o.label?.text === r), rotulo);
+    check(btn, `o botão ${rotulo} está no título depois do aviso`);
     check(!(await t.state()).notice, "o aviso aparece uma vez só");
   },
   // O caso de 18/10: compra ACEITA e reconhecida; minutos depois, estorno (Pedidos no Play Console ou
@@ -180,7 +186,9 @@ const SCENARIOS = {
       ts.scene.start("CampScene");
     });
     await t.page.waitForFunction(() => window.game.scene.isActive("CampScene") && window.game.scene.getScene("CampScene").player && !window.game.scene.getScene("CampScene")._cutscene, null, { timeout: 60000 });
-    check(!(await t.page.evaluate(() => window.game.scene.getScene("CampScene").noAdsBtn?.visible)), "com a compra, a estrela da loja fica escondida");
+    const estrela = await t.page.evaluate(() => window.game.scene.getScene("CampScene").noAdsBtn?.visible);
+    if (LOJA) check(estrela, "com só o Sem anúncios, a ★ continua (ainda há kits e pacotes na Loja)");
+    else check(!estrela, "com a compra, a estrela da loja fica escondida");
     await t.page.evaluate(() => (window.__store.list = []));
     await t.billing("sync");
     await t.noticeShown(/COMPRA ESTORNADA/, "clareira", "CampScene");
