@@ -234,6 +234,38 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.9 (código 10) — 19/10/2026
+
+AAB: `dist/guardiao-v1.0.9-10-anuncios-reais.aab`. Só no Teste interno (o Alpha fica na 1.0.7 em revisão). Horta da
+Clareira Ancestral: cerca entalhada, portal com lamparinas e placa ao vento, espantalho de poncho com lamparina no braço.
+
+```
+<pt-BR>
+• Horta da Clareira Ancestral (Pacote Fundador): cerca de estacas entalhadas com trançado de palha, portal com ponteiras de cobre, placa do broto e lamparinas balançando ao vento, e um espantalho novo de poncho tecido, com pena azul no chapéu e lamparina no braço.
+</pt-BR>
+<en-US>
+• Ancestral Clearing garden (Founder Pack): a fence of carved stakes woven with straw, a gate with copper finials, a sprout sign and lanterns swaying in the wind, and a new scarecrow in a woven poncho, with a blue feather in its hat and a lantern on its arm.
+</en-US>
+<es-419>
+• Huerta del Claro Ancestral (Pack Fundador): cerca de estacas talladas con trenzado de paja, portal con remates de cobre, cartel del brote y faroles que se mecen con el viento, y un espantapájaros nuevo con poncho tejido, pluma azul en el sombrero y farol en el brazo.
+</es-419>
+<es-ES>
+• Huerta del Claro Ancestral (Pack Fundador): cerca de estacas talladas con trenzado de paja, portal con remates de cobre, cartel del brote y faroles que se mecen con el viento, y un espantapájaros nuevo con poncho tejido, pluma azul en el sombrero y farol en el brazo.
+</es-ES>
+<ja-JP>
+• いにしえの広場（創設者パック）の畑：わらを編み込んだ彫刻の杭の柵、銅飾りの門、新芽の看板と風に揺れるランプ。新しいかかしは織りのポンチョ姿で、帽子に青い羽、腕にランプ。
+</ja-JP>
+<zh-CN>
+• 远古空地（创始者礼包）的菜园：编草的雕花木桩围栏、铜饰尖顶的门、嫩芽招牌和随风摇曳的灯笼；新的稻草人身穿编织斗篷，帽上插着蓝色羽毛，手臂上挂着灯笼。
+</zh-CN>
+<zh-TW>
+• 遠古空地（創始者禮包）的菜園：編草的雕花木樁圍欄、銅飾尖頂的門、嫩芽招牌和隨風搖曳的燈籠；新的稻草人身穿編織斗篷，帽上插著藍色羽毛，手臂上掛著燈籠。
+</zh-TW>
+<zh-HK>
+• 遠古空地（創始者禮包）的菜園：編草的雕花木樁圍欄、銅飾尖頂的門、嫩芽招牌和隨風搖曳的燈籠；新的稻草人身穿編織斗篷，帽上插著藍色羽毛，手臂上掛著燈籠。
+</zh-HK>
+```
+
 ### 1.0.8 (código 9) — 19/10/2026
 
 AAB: `dist/guardiao-v1.0.8-9-anuncios-reais.aab`. Só no Teste interno (o Alpha fica na 1.0.7 em revisão). Animações

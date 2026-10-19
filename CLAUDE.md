@@ -87,8 +87,10 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
   brilham), joystick religando no próprio toque da carta e em toda a metade da tela, loja de cosméticos ligada. O Alpha
   está na **revisão do Google** (a 1.0.4 vale até aprovar; a 1.0.5/1.0.6 nunca chegaram lá). Os testadores do Alpha
   **pagam de verdade** se comprarem (só "Teste de compras" no Teste de licença). `dist/guardiao-v1.0.7-8-anuncios-reais.aab`.
+  No **Teste interno** já está a **1.0.9 (código 10)** (19/10): por cima da 1.0.7, as animações da Ancestral refeitas
+  (1.0.8) e a horta da Ancestral (cerca entalhada, portal com lamparinas, espantalho de poncho).
   👤 No celular (teste interno, `https://play.google.com/apps/internaltest/4700140413216190768`): atualizar e testar
-  joystick (carta, ⏸, reviver), Loja, Fundador com cartão de teste → Clareira Ancestral (de dia e à noite), estorno.
+  joystick (carta, ⏸, reviver), Loja, Fundador com cartão de teste → Clareira Ancestral (de dia e à noite, horta), estorno.
 - **Próximo: Clareira da Caatinga** (grátis): liberar quem vencer no Perigo máximo na Caatinga + uma conquista.
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
   ~14/10 (pedido de produção possível por volta de **28/10**). 👤 Manter os 12 ativos (ninguém sair da lista).

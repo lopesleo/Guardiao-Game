@@ -65,7 +65,7 @@ O Leonardo pediu para repensar ("talvez vender algo mais barato dê mais retorno
   nos ganchos, bancos entalhados com almofada e a rede de varanda; um tucano-toco pousado num esteio, borboletas-
   azuis de dia e cogumelos flor-de-coco que brilham à noite; na horta, cerca de estacas entalhadas com trançado
   de palha, portal de esteios com ponteira de cobre, placa do broto e duas lamparinas balançando, e o espantalho
-  de poncho tecido com pena de borboleta-azul e lamparina no braço (a franja corre ao vento) — arte em
+  de poncho tecido com pena azul no chapéu e lamparina no braço (a franja corre ao vento) — arte em
   `src/art/CampAncestral.js`; na 1ª versão era só a árvore e a luz, e o Leonardo pediu mais) e a **insígnia de Fundador** (medalhão ao lado do título da Clareira). O "kit Jequitibá
   premium" saiu: o jequitibá virou a Clareira Ancestral, vista toda vez que se abre o jogo, sem competir com os
   kits. Placar no futuro: a insígnia vai junto do nome (`Wardrobe.isFounder()`).
