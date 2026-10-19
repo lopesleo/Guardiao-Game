@@ -462,6 +462,12 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
 - ✅ **1.0.7 (código 8)** (19/10/2026): Clareira Ancestral redesenhada — o acampamento inteiro (esteios entalhados,
   lamparinas de cabaça, bancos e rede, tucano, borboletas-azuis, cogumelos que brilham, estandarte, pólen) — e o joystick
   religando no próprio toque da carta; publicada no interno e no Alpha
+- ✅ **1.0.8 (código 9)** (19/10/2026): animações da Clareira Ancestral refeitas (borboleta com voo de verdade e
+  sombra, tucano que respira e vira, estandarte em onda, lamparinas no mesmo vento, cogumelos que respiram); só no
+  Teste interno
+- ✅ **1.0.9 (código 10)** (19/10/2026): horta da Clareira Ancestral — cerca de estacas entalhadas com trançado de
+  palha, portal com ponteiras de cobre, placa e lamparinas ao vento, espantalho de poncho com lamparina no braço;
+  só no Teste interno
 - ✅ **Joystick morria depois da 1ª carta** (19/10/2026, achado no aparelho com a 1.0.4): um `off("resume")`
   geral no `GameScene` (do conserto antigo das cartas em dobro) apagava o ouvinte que religava o joystick depois
   da pausa da acessibilidade — em todos os modos, também depois do ⏸ e do reviver. Agora o joystick religa no
