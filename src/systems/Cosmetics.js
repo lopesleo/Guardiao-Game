@@ -60,7 +60,7 @@ export const piecesOf = (slot) => Object.values(COSM_PIECES).filter((p) => p.slo
 export const kitPieces = (kit) => Object.values(COSM_PIECES).filter((p) => p.kit === kit);
 // Skins da Clareira (aba "Clareira" do Guarda-roupa). founder = exclusiva do Pacote Fundador, nunca vendida
 export const COSM_CAMP = {
-  ancestral: { name: tr("Clareira Ancestral"), desc: tr("Um jequitibá ancestral, luz de fim de tarde e folhas de cobre caindo."), icon: "ico_fundador", founder: true },
+  ancestral: { name: tr("Clareira Ancestral"), desc: tr("O jequitibá ancestral, lamparinas de cabaça, um tucano e borboletas-azuis na luz do fim de tarde."), icon: "ico_fundador", founder: true },
 };
 for (const [id, c] of Object.entries(COSM_CAMP)) c.id = id;
 export const COSM_AMOUNTS = [

@@ -97,20 +97,26 @@ export const CampDecor = {
   },
 
   _decor() {
+    // Clareira Ancestral (skin do Pacote Fundador, docs/COSMETICOS.md): troca a árvore, os bancos, a rede e o
+    // varal do terreiro e põe o portal de lamparinas, os bichos, os cogumelos e a luz do fim de tarde
+    this._ancestral = cosmeticsOn() && Wardrobe.activeCamp() === "ancestral";
+    this.morphos = []; // a cena é reaproveitada (trocar de skin recomeça): nada da rodada anterior
+    this._shaftDefs = null;
     this._campfireSeats();
-    // Bandeirinhas e luzinhas só na festa junina/julina (data real)
+    // Bandeirinhas e luzinhas só na festa junina/julina (data real); na Ancestral, fora da festa, os esteios
+    // entalhados do terreiro levam cordões de lamparinas de cabaça
     if ((this._seasonOverride ?? currentSeason()?.id) === "junina") this._bunting();
-    // Rede listrada perto da mata, a oeste
+    else if (this._ancestral) this._lampStrings();
+    // Rede listrada perto da mata, a oeste (na Ancestral, rede de varanda com franja)
     const hx = -600,
       hy = 90;
     this.add.image(hx, hy + 4, "px_shadow").setScale(9, 3).setAlpha(0.45).setDepth(hy - 1);
-    this.add.image(hx, hy, "camp_hammock").setOrigin(0.5, 1).setScale(S).setDepth(hy);
+    this.add.image(hx, hy, this._ancestral ? "camp_anc_hammock" : "camp_hammock").setOrigin(0.5, 1).setScale(S).setDepth(hy);
     this._solid(hx - 60, hy - 6, 14, 12);
     this._solid(hx + 60, hy - 6, 14, 12);
     // (o espantalho e o regador pertencem à horta: ver CampGarden, aparecem junto com ela)
     // Samaúma: a gigante da mata, marco da Clareira (a noroeste). Com a Clareira Ancestral (skin do
     // Pacote Fundador, docs/COSMETICOS.md) é o jequitibá ancestral no lugar, com a placa dos Fundadores
-    this._ancestral = cosmeticsOn() && Wardrobe.activeCamp() === "ancestral";
     const kx = -250,
       ky = -250;
     const big = this._ancestral;
@@ -122,6 +128,7 @@ export const CampDecor = {
       this.add.image(kx + 150, ky + 34, "px_shadow").setScale(5, 2).setAlpha(0.4).setDepth(ky + 33);
       this.add.image(kx + 150, ky + 36, "camp_plaque").setOrigin(0.5, 1).setScale(S).setDepth(ky + 36);
       this._sunShafts(kx, ky);
+      this._ancestralExtras(kx, ky);
     }
     // Vaga-lumes rondando a copa (entram no mesmo balé dos outros) — dourados e mais no jequitibá
     for (let k = 0; k < (big ? 18 : 9); k++) {
@@ -147,10 +154,142 @@ export const CampDecor = {
     this.time.addEvent({ delay: 30000, loop: true, callback: () => this._applyTimeOfDay() });
   },
 
+  // Clareira Ancestral: um cordão de lamparinas de cabaça entre os esteios de cima do terreiro (por cima da
+  // fogueira) e uma lamparina em cada gancho dos esteios de baixo — nada cruza o meio do terreiro, por onde o
+  // herói anda. Balançam, tremulam e acendem com a noite
+  _lampStrings() {
+    const { poles, H } = this._terreiroPosts();
+    const g = this.add.graphics().setDepth(D_NIGHT - 20);
+    const lampAt = (x, y, fr) => {
+      x = Math.round(x / 3) * 3;
+      y = Math.round(y / 3) * 3;
+      const lamp = this.add.sprite(x, y, "camp_anc_lamp", fr).setOrigin(0.5, 0).setScale(S).setDepth(D_NIGHT - 19);
+      this.tweens.add({ targets: lamp, angle: { from: -5, to: 5 }, duration: 1500 + Math.random() * 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: Math.random() * 1000 });
+      let f = fr;
+      this.time.addEvent({ delay: 200 + Math.random() * 180, loop: true, callback: () => lamp.setFrame((f ^= 1)) });
+      const glow = this.add.image(x, y + 30, "fx_glow").setScale(0.8).setTint(0xffc46a).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0.5).setDepth(D_NIGHT + 1);
+      this.glows.push({ g: glow, base: 0.55, ph: Math.random() * 10 });
+    };
+    // esteios de baixo: uma lamparina em cada gancho
+    for (const i of [2, 3]) {
+      const [x, y] = poles[i];
+      lampAt(x - 16, y - 126, 0);
+      lampAt(x + 16, y - 126, 1);
+    }
+    for (const [a, b, sag] of [[0, 1, 46]]) {
+      const [x1, y1] = poles[a],
+        [x2, y2] = poles[b];
+      const p1 = { x: x1 + 15, y: y1 - H },
+        p2 = { x: x2 - 15, y: y2 - H };
+      const len = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      const at = (u) => ({ x: p1.x + (p2.x - p1.x) * u, y: p1.y + (p2.y - p1.y) * u + Math.sin(u * Math.PI) * sag });
+      g.fillStyle(PAL.n1, 1);
+      for (let u = 0; u <= 1; u += 3 / len) {
+        const q = at(u);
+        g.fillRect(Math.round(q.x / 3) * 3, Math.round(q.y / 3) * 3, 3, 3);
+      }
+      const n = 7;
+      for (let i = 1; i < n; i++) {
+        const q = at(i / n);
+        lampAt(q.x, q.y, i % 2);
+      }
+    }
+  },
+
+  // Clareira Ancestral: o que fica em volta da árvore e do terreiro — tapete de folhas de cobre, cogumelos
+  // flor-de-coco (brilham à noite), o estandarte dos Fundadores ao vento, o tucano pousado num esteio e as
+  // borboletas-azuis (de dia; à noite ficam os vaga-lumes)
+  _ancestralExtras(kx, ky) {
+    for (const [x, y, fr] of [
+      [kx - 110, ky + 16, 0],
+      [kx + 50, ky + 26, 1],
+      [kx - 20, ky + 46, 2],
+      [kx + 130, ky + 74, 0],
+      [kx - 200, ky + 52, 1],
+    ])
+      if (!this.groundPaint?.onPath(x, y, 6)) this.add.image(x, y, "camp_anc_leaves", fr).setScale(S).setDepth(-9e5);
+    for (const [x, y, fr] of [
+      [kx - 150, ky + 30, 0],
+      [kx + 100, ky + 40, 1],
+      [kx - 60, ky + 64, 2],
+      [-250, 0, 1],
+      [258, 230, 0],
+      [-560, 130, 2],
+      [-180, 250, 0],
+    ]) {
+      if (this.groundPaint?.onPath(x, y, 8) || !decorFree(x, y)) continue;
+      this.add.image(x, y, "camp_anc_shrooms", fr).setOrigin(0.5, 1).setScale(S).setDepth(y);
+      this._glow(x, y - 12, 0.55, 0x9cffb0, true);
+    }
+    // estandarte dos Fundadores ao lado da placa, ao pé do jequitibá (o cantinho dos Fundadores)
+    const bx = kx + 205,
+      by = ky + 45;
+    this.add.image(bx - 12, by + 2, "px_shadow").setScale(2.5, 1.5).setAlpha(0.4).setDepth(by - 1);
+    const banner = this.add.sprite(bx, by, "camp_anc_banner", 0).setOrigin(0.5, 1).setScale(S).setDepth(by);
+    let bf = 0;
+    this.time.addEvent({ delay: 420, loop: true, callback: () => banner.setFrame([0, 1, 2, 1][(bf = (bf + 1) % 4)]) });
+    this._solid(bx - 16, by - 4, 10, 8);
+    // tucano-toco no esteio de baixo à direita (à vista de quem chega): pisca, levanta o bico, vira de lado
+    const tu = this.add.sprite(215, 58, "camp_anc_toucan", 0).setOrigin(0.61, 0.93).setScale(S).setDepth(206);
+    const mexe = () => {
+      if (!tu.active) return;
+      const r = Math.random();
+      if (r < 0.55) {
+        tu.setFrame(1);
+        this.time.delayedCall(150, () => tu.active && tu.setFrame(0));
+      } else if (r < 0.8) {
+        tu.setFrame(2);
+        this.time.delayedCall(700, () => tu.active && tu.setFrame(0));
+      } else tu.setFlipX(!tu.flipX);
+      this.time.delayedCall(1600 + Math.random() * 2200, mexe);
+    };
+    this.time.delayedCall(1200, mexe);
+    // borboletas-azuis: voo em oito em volta de um ponto, batendo as asas (o azul faísca)
+    this.morphos = [];
+    for (const [mx, my] of [
+      [-330, -80],
+      [320, 140],
+      [-150, -170],
+    ]) {
+      const m = this.add.sprite(mx, my, "camp_anc_morpho", 0).setScale(S).setDepth(D_NIGHT - 6);
+      this.morphos.push(m);
+      const ph = Math.random() * 6,
+        dur = 8000 + Math.random() * 5000;
+      this.tweens.addCounter({
+        from: 0,
+        to: Math.PI * 2,
+        duration: dur,
+        repeat: -1,
+        onUpdate: (tw) => {
+          const t = tw.getValue() + ph;
+          m.setPosition(mx + Math.sin(t) * 80, my + Math.sin(2 * t) * 30 - Math.abs(Math.sin(t * 9)) * 8);
+          m.setFlipX(Math.cos(t) < 0);
+          m.setFrame(Math.floor(this.time.now / 110) % 2);
+        },
+      });
+    }
+  },
+
+  // Pólen dourado boiando dentro dos raios de sol (de dia, na Ancestral)
+  _pollen() {
+    const sh = this._shaftDefs?.[Math.floor(Math.random() * this._shaftDefs.length)];
+    if (!sh) return;
+    const a = (24 * Math.PI) / 180;
+    const along = (0.15 + Math.random() * 0.6) * 256 * 3.4,
+      across = (Math.random() - 0.5) * 48 * sh.w * 0.45;
+    const x = sh.x + Math.sin(a) * along + Math.cos(a) * across,
+      y = sh.y + Math.cos(a) * along - Math.sin(a) * across;
+    const d = this.add.image(Math.round(x / 3) * 3, Math.round(y / 3) * 3, "px_dot1").setScale(3).setTint(0xfff0b0).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0).setDepth(D_NIGHT - 4);
+    this.tweens.add({ targets: d, alpha: 0.85, duration: 1100, yoyo: true, ease: "Sine.easeInOut" });
+    this.tweens.add({ targets: d, x: d.x + 18, y: d.y + 30, duration: 2200, onComplete: () => d.destroy() });
+  },
+
   // Clareira Ancestral: o sol de fim de tarde entra pela copa do jequitibá (raios inclinados, do oeste) e
   // doura o canto de cima da tela. Ficam sob a camada da noite: de noite quase somem, como luz do sol
   _sunShafts(kx, ky) {
+    this._shaftDefs = [];
     for (const [dx, w, a] of [[-150, 3.4, 0.5], [-10, 2.4, 0.38], [120, 3, 0.45], [300, 2, 0.3]]) {
+      this._shaftDefs.push({ x: kx + dx, y: ky - 300, w });
       const r = this.add.image(kx + dx, ky - 300, "fx_shaft").setOrigin(0.5, 0).setScale(w, 3.4).setAngle(-24).setTint(0xffcf7a).setBlendMode(Phaser.BlendModes.ADD).setAlpha(a).setDepth(D_NIGHT - 4);
       this.tweens.add({ targets: r, alpha: a * 0.5, scaleX: w * 0.85, duration: 4200 + Math.random() * 3000, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: Math.random() * 2000 });
     }
@@ -169,6 +308,7 @@ export const CampDecor = {
       sky.k = Math.max(sky.k, 0.32);
     }
     this._lightK = sky.k;
+    for (const m of this.morphos ?? []) m.setVisible(sky.k < 0.6); // borboletas de dia; à noite, vaga-lumes
     this.nightRect.setFillStyle(sky.color, 1).setVisible(sky.color !== 0xffffff);
     this.vignette?.setAlpha(0.3 + 0.28 * sky.k);
     // Luzes paradas (ADD por cima da noite): guardam o alpha original
@@ -187,26 +327,33 @@ export const CampDecor = {
       [92, -8, true],
     ]) {
       this.add.image(x, y + 4, "px_shadow").setScale(6, 2).setAlpha(0.5).setDepth(y - 1);
-      this.add.image(x, y, "camp_logseat").setOrigin(0.5, 1).setScale(S).setFlipX(flip).setDepth(y);
+      this.add.image(x, y, this._ancestral ? "camp_anc_bench" : "camp_logseat").setOrigin(0.5, 1).setScale(S).setFlipX(flip).setDepth(y);
       this._solid(x, y - 10, 72, 14);
     }
   },
 
   // Varal de bandeirinhas cruzando o terreiro (festa junina), com luzinhas.
   // Só aparece na época (SEASONS no config)
-  _bunting() {
+  // Os quatro esteios dos cantos do terreiro (varal da festa; na Clareira Ancestral, esteios entalhados).
+  // Devolve as posições e a altura do ponto onde o cordão amarra
+  _terreiroPosts() {
     const poles = [
       [-215, -30],
       [215, -30],
       [215, 205],
       [-215, 205],
     ];
-    const H = 96; // altura do topo do poste
+    const anc = this._ancestral;
     for (const [x, y] of poles) {
-      this.add.image(x, y + 3, "px_shadow").setScale(2.5, 2).setAlpha(0.5).setDepth(y - 1);
-      this.add.image(x, y, "camp_pole").setOrigin(0.5, 1).setScale(S).setDepth(y);
-      this._solid(x, y - 4, 12, 10);
+      this.add.image(x, y + 3, "px_shadow").setScale(anc ? 3.5 : 2.5, 2).setAlpha(0.5).setDepth(y - 1);
+      this.add.image(x, y, anc ? "camp_anc_post" : "camp_pole").setOrigin(0.5, 1).setScale(S).setDepth(y);
+      this._solid(x, y - 4, anc ? 18 : 12, 10);
     }
+    return { poles, H: anc ? 129 : 96 }; // esteio entalhado: gancho a 43 px de arte do pé
+  },
+
+  _bunting() {
+    const { poles, H } = this._terreiroPosts();
     const lines = [
       [0, 2, 46],
       [1, 3, 46],
@@ -282,6 +429,10 @@ export const CampDecor = {
           this.tweens.add({ targets: leaf, y: y + this.H * (0.6 + Math.random() * 0.5), x: x + drift, duration: 6000 + Math.random() * 3000, ease: "Sine.easeIn", onComplete: () => leaf.destroy() });
           this.tweens.add({ targets: leaf, angle: { from: -40, to: 40 }, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
           this.tweens.add({ targets: leaf, alpha: 0, delay: 4800, duration: 1500 });
+        }
+        if (this._ancestral && (this._lightK ?? 1) < 0.6) {
+          this._pollen();
+          this._pollen();
         }
         const forge = this.buildings.forge;
         if (forge?.shown && Math.random() < 0.8) {

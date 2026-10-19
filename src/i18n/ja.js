@@ -1067,7 +1067,7 @@ export default {
   "Uma nuvem de algodão sobe em volta de você e frutos estalam em roda.": "まわりに綿の雲が立ちのぼり、実が輪になってはじけます。",
   "LOJA": "ショップ",
   "Clareira Ancestral": "いにしえの広場",
-  "Um jequitibá ancestral, luz de fim de tarde e folhas de cobre caindo.": "いにしえのジェキチバの大樹、夕暮れの光、舞い落ちる銅色の葉。",
+  "O jequitibá ancestral, lamparinas de cabaça, um tucano e borboletas-azuis na luz do fim de tarde.": "いにしえのジェキチバ、ひょうたんのランプ、オオハシと青いモルフォチョウ。夕暮れの光の中で。",
   "Pacote Fundador": "創設者パック",
   "Pacote Apoiador": "サポーターパック",
   "JÁ É SEU": "購入済み",

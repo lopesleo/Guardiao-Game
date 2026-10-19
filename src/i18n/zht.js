@@ -1067,7 +1067,7 @@ export default {
   "Uma nuvem de algodão sobe em volta de você e frutos estalam em roda.": "棉絮之雲在你身邊升起，一圈果實接連裂開。",
   "LOJA": "商店",
   "Clareira Ancestral": "遠古空地",
-  "Um jequitibá ancestral, luz de fim de tarde e folhas de cobre caindo.": "一棵遠古巨木，黃昏的光與飄落的銅色樹葉。",
+  "O jequitibá ancestral, lamparinas de cabaça, um tucano e borboletas-azuis na luz do fim de tarde.": "遠古巨木、葫蘆燈、巨嘴鳥和藍色大閃蝶，沐浴在黃昏的光裡。",
   "Pacote Fundador": "創始者禮包",
   "Pacote Apoiador": "支持者禮包",
   "JÁ É SEU": "已擁有",
