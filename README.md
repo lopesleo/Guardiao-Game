@@ -68,6 +68,16 @@ npm run android:aab      # AAB assinado para a Play Store, anúncios de verdade 
 npm run android:open     # (opcional) abre no Android Studio
 ```
 
+## Testes
+
+```bash
+npm run check            # conteúdo e idiomas (sem navegador)
+npm i --no-save playwright-core   # 1 vez; os testes abaixo usam o Edge instalado, headless
+npm run test:toque       # joystick com toques simulados: volta depois de carta, pausa, reviver, Jogar de novo
+npm run test:compra      # compra "Sem anúncios" com loja falsa: reconhecer, pendente, estorno com aviso
+npm test                 # os dois (~5 min) — obrigatório antes de cada versão da loja
+```
+
 ## Arquitetura
 
 ```

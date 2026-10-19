@@ -79,7 +79,7 @@ público brasileiro, com potencial internacional.
 ## Pendências atuais (atualizar a cada sessão)
 
 Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um item, apagar daqui e
-marcar no `docs/ROADMAP.md`. Última revisão: **16/10/2026**.
+marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 
 **Agora**
 - **1.0.4 (código 5) gerada em 16/10, falta enviar:** `dist/guardiao-v1.0.4-5-anuncios-reais.aab` (anúncios reais,
@@ -106,9 +106,16 @@ marcar no `docs/ROADMAP.md`. Última revisão: **16/10/2026**.
   houver dados dos testadores, analisar taxa de escolha das cartas, vitória por arma/Perigo, dano e
   assistência (como ler: `docs/ARMAS_E_COMBOS.md`, "Como medir").
 
-- **Na `main` para a próxima versão (1.0.5):** o quadro "Clareira do Guardião" (canto superior esquerdo)
+- **⚠ A 1.0.4 tem o joystick que morre depois da 1ª carta** (achado no aparelho em 18/10; também depois do ⏸ e
+  do reviver): no celular a partida fica injogável. **Gerar a 1.0.5 o quanto antes** e trocar a do Alpha.
+- **Na `main` para a próxima versão (1.0.5):** o conserto do joystick (acima); a compra que não se perde mais
+  (pendente aprovado com o jogo aberto é reconhecido; estorno e aprovação **avisam** o jogador — a compra de
+  teste de 18/10 foi estornada pelo Google sem aviso); testes automáticos `npm test` (toque + compra, agora
+  obrigatórios na skill `versao-loja`); o quadro "Clareira do Guardião" (canto superior esquerdo)
   acompanha o texto (vazava com texto grande, visto no S23 em 16/10) e a Clareira ganhou o botão ★ da loja
-  "Sem anúncios" na fileira de cima (some depois da compra).
+  "Sem anúncios" na fileira de cima (some depois da compra e volta se ela for estornada). 👤 Com a 1.0.5 pela
+  loja: comprar com o cartão "aprova com atraso" **deixando o jogo aberto** e conferir em Pedidos, 10 min
+  depois, que não foi estornado.
 
 **Decisões pendentes**
 - Descrição curta em espanhol: "leyendas de Brasil" → "del folclore brasileño"? (a captura 07 já foi refeita).

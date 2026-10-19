@@ -439,6 +439,16 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
     protanopes; até na visão normal era 1,5:1); o tiro inimigo ganhou 4 pontas em X e sombra escura (para
     deuteranopes tinha a mesma cor da gema de XP); no Grito do Mapinguari, as pontas da brecha ficaram brancas
     e a saída ganhou setas para fora. Tritanopia sem problemas
+- ✅ **Joystick morria depois da 1ª carta** (19/10/2026, achado no aparelho com a 1.0.4): um `off("resume")`
+  geral no `GameScene` (do conserto antigo das cartas em dobro) apagava o ouvinte que religava o joystick depois
+  da pausa da acessibilidade — em todos os modos, também depois do ⏸ e do reviver. Agora o joystick religa no
+  `update()` (só roda com a partida andando) e os ouvintes saem pelo nome. Teste novo: **`npm run test:toque`**
+  (toques simulados como os do celular, 4 jeitos de joystick × carta, fila de cartas, pausa, reviver, Jogar de
+  novo, Clareira)
+- ✅ **Compra aprovada depois e estornada sem aviso** (19/10/2026, teste de licença com a 1.0.4): pendente
+  aprovado com o jogo aberto não era reconhecido (só conferia na volta ao app) e o Google estornava em minutos.
+  Agora confere a cada 20 s enquanto houver pendente, tenta o reconhecimento de novo sozinho, confere 2× antes
+  de tirar e **avisa** ("PAGAMENTO APROVADO" / "COMPRA ESTORNADA", 6 idiomas). Teste: **`npm run test:compra`**
 - ✅ **Robô jogador** (14/10/2026, `tools/bot-lab.mjs`, modelo em [`ROBO_JOGADOR.md`](ROBO_JOGADOR.md)): joga
   partidas reais sem modo deus com as prioridades de um jogador em camadas (sobreviver > vida baixa > objetivo:
   baú > item > lanterna > gemas > combate) e um treino evolutivo que só ajusta os números; partidas
