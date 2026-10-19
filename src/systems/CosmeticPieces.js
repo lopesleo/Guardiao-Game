@@ -137,8 +137,8 @@ function awakeRing(ctx, e, every, r = 44, tint = null) {
 }
 
 // Objeto que acompanha o herói enquanto ele está desperto (asas, varal): aparece, segue e some
-function awakeProp(ctx, tex, animKey, layer, place, size = 0.85) {
-  const o = ctx.scene.add.sprite(0, 0, tex, 0).setVisible(false);
+function awakeProp(ctx, tex, animKey, layer, place, size = 0.85, originY = 0.5) {
+  const o = ctx.scene.add.sprite(0, 0, tex, 0).setOrigin(0.5, originY).setVisible(false);
   ctx.host.put(o, layer);
   let on = false;
   return {
@@ -158,6 +158,17 @@ function awakeProp(ctx, tex, animKey, layer, place, size = 0.85) {
         ctx.scene.tweens.add({ targets: o, alpha: 0, scaleX: PX * 0.4, duration: 260, onComplete: () => o.active && o.setVisible(false).stop() });
       }
     },
+  };
+}
+
+// Brilho constante em volta do herói desperto (as formas sem chama — asas, arraiá — são maiores que a luz
+// do herói e sumiam na escuridão da noite)
+function awakeGlow(ctx, color, r = 140, power = 0.45) {
+  let at = 0;
+  return (time, p) => {
+    if (!p.isAwakened?.() || time < at) return;
+    at = time + 280;
+    ctx.host.light(p.x, p.y - p.displayHeight * 0.1, r, color, 420, power);
   };
 }
 
@@ -455,15 +466,20 @@ export const PIECE_FX = {
     const wings = awakeProp(ctx, "cos_wings", "cos_wings_beat", "back", (o, p, time) => {
       o.setPosition(p.x, p.y - p.displayHeight * 0.26 + Math.sin(time / 260) * 2).setFlipX(!!p.flipX);
     }, 1.15);
+    const glow = awakeGlow(ctx, PAL.cream, 150, 0.5);
     return {
-      look: look("coruja", PAL.straw3, [210, 170, 120], [PAL.cream, PAL.straw3, PAL.n4, PAL.n3], PAL.straw2, [PAL.cream, PAL.straw3, PAL.n4]),
+      // sem chama: marrom em chama vira "lama" (visto em 19/10) — as asas abertas são o Despertar
+      look: { ...look("coruja", PAL.cream, [210, 170, 120], [PAL.cream, PAL.straw3, PAL.n4, PAL.n3], PAL.straw2, [PAL.cream, PAL.straw3, PAL.n4]), aura: null },
       awaken(x, y) {
         wings.show();
         burst(ctx, e, x, y - 14, 18, UP, 360, { min: 60, max: 160 });
         owl(x - 10, y - 10, UP - 0.7);
         owl(x + 10, y - 10, UP + 0.7);
       },
-      update: (time, p) => wings.update(time, p),
+      update: (time, p) => {
+        wings.update(time, p);
+        glow(time, p);
+      },
     };
   },
 
@@ -477,16 +493,22 @@ export const PIECE_FX = {
   },
   junina_awaken(ctx) {
     const e = flags(ctx);
-    const varal = awakeProp(ctx, "cos_bunting", "cos_bunting_wave", "air", (o, p, time) => {
-      o.setPosition(p.x, p.y - p.displayHeight * 0.86).setAngle(Math.sin(time / 380) * 5);
-    }, 1);
+    // Arraiá: mastro atrás do herói com os cordões de bandeirinhas em leque até o chão (sem chama: a
+    // chama em chita virava barro, visto em 19/10). Balança devagar, preso nos pés
+    const arraia = awakeProp(ctx, "cos_arraia", "cos_arraia_wave", "back", (o, p, time) => {
+      o.setPosition(p.x, p.y + p.displayHeight * 0.46).setAngle(Math.sin(time / 520) * 1.5);
+    }, 0.85, 1);
+    const glow = awakeGlow(ctx, PAL.straw3, 150, 0.5); // luz quente de festa
     return {
-      look: look("junina", PAL.cream, [255, 205, 170], [PAL.white, PAL.pinkHi, PAL.straw3, PAL.clay3], PAL.straw3, CHITA.slice(0, 4)),
+      look: { ...look("junina", PAL.white, [255, 205, 170], [PAL.white, PAL.pinkHi, PAL.straw3, PAL.clay3], PAL.straw3, CHITA.slice(0, 4)), aura: null },
       awaken(x, y) {
-        varal.show();
+        arraia.show();
         burst(ctx, e, x, y - 12, 26, UP, 140, { min: 120, max: 260 }, CHITA); // chuva de bandeirinhas
       },
-      update: (time, p) => varal.update(time, p),
+      update: (time, p) => {
+        arraia.update(time, p);
+        glow(time, p);
+      },
     };
   },
 };

@@ -390,9 +390,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46);
     this.light.setPosition(this.x, this.y + this.displayHeight * 0.3);
     const awake = this.isAwakened();
-    if (awake !== this.aura.visible) {
-      this.aura.setVisible(awake);
-      if (awake) this.aura.play(this._awakenLook.aura);
+    // aura = null: o cosmético tem forma própria no lugar da chama (asas da coruja, arraiá)
+    const showAura = awake && !!this._awakenLook.aura;
+    if (showAura !== this.aura.visible) {
+      this.aura.setVisible(showAura);
+      if (showAura) this.aura.play(this._awakenLook.aura);
       else this.aura.stop();
     }
     if (awake) {

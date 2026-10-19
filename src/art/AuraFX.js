@@ -32,7 +32,7 @@ function aura(f, C = GOLD) {
       else if (I > 0.72) c = C.hi;
       else if (I > 0.5) c = C.mid;
       else if (I > 0.32) c = (x + y) % 5 ? C.low : C.fleck; // fagulhas (verdes de vaga-lume, no dourado)
-      else if (I > 0.18 && bayer(x, y) < 0.5) c = C.faint;
+      else if (C.faint != null && I > 0.18 && bayer(x, y) < 0.5) c = C.faint; // pontilhado (só brilha no dourado)
       if (c != null) p.set(x, y, c);
     }
   return p;
@@ -42,9 +42,10 @@ export function registerAuraFX(scene) {
   registerAuraVariant(scene, "fx_awaken_aura", GOLD);
 }
 
-// Mesma aura com outras cores (textura e animação com a mesma chave)
-export function registerAuraVariant(scene, key, C) {
+// Mesma aura com outras cores (textura e animação com a mesma chave). frameFn = outro desenho com o mesmo
+// tamanho e o mesmo laço de 8 quadros (a nuvem de algodão da paineira)
+export function registerAuraVariant(scene, key, C, frameFn = null) {
   if (scene.textures.exists(key)) return;
-  registerStrip(scene, key, Array.from({ length: 8 }, (_, f) => aura(f, C)));
+  registerStrip(scene, key, Array.from({ length: 8 }, (_, f) => (frameFn ? frameFn(f) : aura(f, C))));
   if (!scene.anims.exists(key)) scene.anims.create({ key, frames: scene.anims.generateFrameNumbers(key, {}), frameRate: 12, repeat: -1 });
 }
