@@ -1609,7 +1609,18 @@ export const ADS = {
 // Compras pela Play Store (ver systems/Billing.js). O id tem de ser IGUAL ao do produto criado no Play
 // Console (Monetizar → Produtos → Produtos no app), como compra única (não consumível)
 export const STORE = {
-  NO_ADS: "sem_anuncios", // "Sem anúncios": prêmios dos anúncios sem assistir; ~R$ 9,90
+  NO_ADS: "sem_anuncios", // "Sem anúncios": prêmios dos anúncios sem assistir; R$ 14,90
+  // Kits de cosméticos (docs/COSMETICOS.md): cada um é um produto único que libera as 3 peças do kit.
+  // Os ids têm de ser IGUAIS aos do Play Console (criados na fase 2; não dá para reaproveitar depois)
+  KITS: { ipe: "kit_ipe", paina: "kit_paineira", coruja: "kit_coruja", junina: "kit_junina" },
+};
+
+// Cosméticos (docs/COSMETICOS.md). Só aparência: nenhum muda dano, vida, moedas ou o que for de jogo.
+export const COSMETICS = {
+  ENABLED: false, // Guarda-roupa no build da loja (o modo de teste ?debug=1 sempre mostra)
+  SHOP: false, // kits à venda (fase 2: Billing com catálogo). Desligado = "Em breve" nas peças pagas
+  PETAL_BUDGET: 14, // partículas de libertação por janela de 120 ms, somando todas as mortes
+  AMOUNTS: [0.5, 1, 1.6], // quantidade de pétalas: discreta, normal, cheia
 };
 
 // Drops aleatórios no chão (chance por kill)
