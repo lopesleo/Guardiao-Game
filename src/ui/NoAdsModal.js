@@ -8,13 +8,15 @@ import { text, Button, haptic, vh } from "./Theme.js";
 import { Modal } from "./Widgets.js";
 import { cloudToast } from "./CloudSaveUI.js";
 import { tr } from "../i18n/i18n.js";
+import { COSM_KITS, cosmeticsOn } from "../systems/Cosmetics.js";
+import { openWardrobe } from "./WardrobeModal.js";
 
 // Aviso da loja (Billing.notice): pagamento pendente que o Google aprovou, ou compra estornada. Só nas
 // telas de menu (Título e Clareira chamam no update, sem janela aberta), nunca no meio da partida;
 // aparece uma vez. Antes o estorno tirava o "sem anúncios" calado e o jogador achava que perdeu o item.
 export function showStoreNotice(scene, o = {}) {
   const kind = Billing.notice;
-  if (!kind) return null;
+  if (!kind) return showKitNotice(scene, o);
   Billing.clearNotice();
   Analytics.track("iap_notice", { kind });
   const revoked = kind === "revoked";
@@ -45,6 +47,42 @@ export function showStoreNotice(scene, o = {}) {
     m.add(new Button(scene, 0, y + 28, 300, 56, tr("FECHAR"), () => m.close(), { size: 20, style: "primary", color: CSS.goldHi }));
     y += 56 + 16;
   }
+  m.fitContent(y + 14);
+  return m;
+}
+
+// Aviso de KIT de cosméticos (estornado ou pagamento aprovado), com atalho para o Guarda-roupa
+function showKitNotice(scene, o) {
+  const n = Billing.kitNotice;
+  if (!n) return null;
+  Billing.clearKitNotice();
+  Analytics.track("iap_notice", { kind: n.kind, kit: n.kit });
+  const kitName = tr("Kit {0}", COSM_KITS[n.kit]?.name ?? n.kit);
+  const revoked = n.kind === "revoked";
+  let toWardrobe = false;
+  const m = new Modal(scene, { title: revoked ? tr("COMPRA ESTORNADA") : tr("PAGAMENTO APROVADO"), w: 640, h: vh(scene), onClose: () => !toWardrobe && o.onClose?.() });
+  let y = m.top + 16;
+  const note = (str, size, color, gap) => {
+    const t = m.add(text(scene, 0, y, str, { size, color, origin: [0.5, 0], align: "center", wrap: m.w - 100 }));
+    y += t.height + gap;
+  };
+  if (revoked) {
+    note(tr("A Play Store estornou a compra do {0} e devolveu o pagamento.", kitName), 20, CSS.txt, 16);
+    note(tr("As peças do kit voltam ao padrão. O seu progresso continua igual."), 18, CSS.muted, 24);
+  } else {
+    scene.sound.play("sfx_coin", { volume: 0.6 });
+    note(tr("O Google confirmou o pagamento. O {0} já está no Guarda-roupa.", kitName), 20, CSS.goldHi, 24);
+  }
+  const by = y + 28;
+  if (cosmeticsOn()) {
+    m.add(new Button(scene, -140, by, 250, 56, tr("GUARDA-ROUPA"), () => {
+      toWardrobe = true;
+      m.close();
+      openWardrobe(scene, { from: "notice", onClose: o.onClose });
+    }, { size: 20, style: revoked ? "dark" : "primary", color: CSS.goldHi }));
+    m.add(new Button(scene, 140, by, 250, 56, tr("FECHAR"), () => m.close(), { size: 20 }));
+  } else m.add(new Button(scene, 0, by, 300, 56, tr("FECHAR"), () => m.close(), { size: 20 }));
+  y = by + 28 + 16;
   m.fitContent(y + 14);
   return m;
 }

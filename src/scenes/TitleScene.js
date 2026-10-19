@@ -189,7 +189,7 @@ export class TitleScene extends Phaser.Scene {
     const W = this.W,
       H = this.H;
     // Aviso da loja (pagamento aprovado / compra estornada): o botão "Sem anúncios" muda → recomeça a cena
-    if (Billing.notice && !this._modals.length && !this._leaving) showStoreNotice(this, { onClose: () => this.sys.isActive() && this.scene.restart() });
+    if (Billing.hasNotice && !this._modals.length && !this._leaving) showStoreNotice(this, { onClose: () => this.sys.isActive() && this.scene.restart() });
     for (const f of this.flies || []) {
       f.g.x += f.vx + Math.sin(time / 700 + f.ph) * 0.25;
       f.g.y += f.vy;

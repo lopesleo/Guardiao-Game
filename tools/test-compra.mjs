@@ -30,7 +30,10 @@ function fakeStore(cfg) {
   const S = (window.__store = Object.assign({ list: [], buy: "ok", ackFail: 0, queryFail: 0, emptyOnce: 0, calls: [] }, cfg.store));
   for (const [k, v] of Object.entries(cfg.local || {})) localStorage.setItem(k, JSON.stringify(v));
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-  const P = (state) => ({ productIdentifier: "sem_anuncios", purchaseState: state, purchaseToken: "tok-1", isAcknowledged: false });
+  // Cada produto tem o seu token ("Sem anúncios" = tok-1, kit_ipe = tok-kit_ipe…)
+  const tok = (id) => (id === "sem_anuncios" ? "tok-1" : "tok-" + id);
+  const P = (state, id = "sem_anuncios") => ({ productIdentifier: id, purchaseState: state, purchaseToken: tok(id), isAcknowledged: false });
+  const put = (p) => (S.list = [...S.list.filter((q) => q.productIdentifier !== p.productIdentifier), p]);
   window.Capacitor = {
     isNativePlatform: () => true,
     getPlatform: () => "android",
@@ -45,6 +48,11 @@ function fakeStore(cfg) {
       NativePurchases: {
         isBillingSupported: async () => ({ isBillingSupported: true }),
         getProduct: async () => ({ product: { identifier: "sem_anuncios", priceString: "R$ 14,90" } }),
+        // Kits de cosméticos (só os que o cenário "criou no Play Console")
+        getProducts: async (o) => {
+          S.calls.push("products");
+          return { products: (o.productIdentifiers || []).filter((id) => (S.kits ?? []).includes(id)).map((id) => ({ identifier: id, priceString: "R$ 9,90" })) };
+        },
         getPurchases: async () => {
           S.calls.push("query");
           await wait(40);
@@ -59,15 +67,15 @@ function fakeStore(cfg) {
           return { purchases: S.list.map((p) => ({ ...p })) };
         },
         purchaseProduct: async (o) => {
-          S.calls.push("buy:" + (o.autoAcknowledgePurchases === false ? "manual" : "auto"));
+          S.calls.push("buy:" + (o.autoAcknowledgePurchases === false ? "manual" : "auto") + (o.productIdentifier === "sem_anuncios" ? "" : ":" + o.productIdentifier));
           await wait(80);
           if (S.buy === "pending") {
-            S.list = [P("2")];
+            put(P("2", o.productIdentifier));
             throw new Error("Purchase is pending");
           }
           if (S.buy === "cancel") throw Object.assign(new Error("Purchase is not purchased"), { code: "USER_CANCELED" });
-          S.list = [P("1")];
-          return P("1");
+          put(P("1", o.productIdentifier));
+          return P("1", o.productIdentifier);
         },
         acknowledgePurchase: async (o) => {
           S.calls.push("ack:" + o.purchaseToken);
@@ -187,6 +195,38 @@ const SCENARIOS = {
     const s = await t.state();
     check(s.noAds && s.saved.owned && !s.notice, "consulta falhando não tira a compra");
   },
+  // ------------------------------------------------ kits de cosméticos (cada kit = um produto único)
+  // Compra de kit: preço da loja, libera as peças do Guarda-roupa e reconhece; não mexe no "Sem anúncios"
+  async kitCompra(t) {
+    let s = await t.state();
+    check(s.kits.ipe.price === "R$ 9,90" && s.kits.paina.price === "", "preço do kit vem da loja (kit não criado = sem preço → Em breve)", JSON.stringify(s.kits));
+    const r = await t.page.evaluate(async () => (await import("/src/systems/Billing.js")).Billing.buyKit("ipe"));
+    s = await t.state();
+    check(r === "ok" && s.kits.ipe.owns && s.kits.ipe.piece, "comprou o kit → as peças do kit ficam suas", `resultado=${r}`);
+    check(s.calls.includes("buy:manual:kit_ipe") && s.calls.includes("ack:tok-kit_ipe"), "pede o kit certo e reconhece a compra dele", s.calls.join(" "));
+    check(!s.noAds && !s.kits.paina.owns, "comprar um kit não libera o Sem anúncios nem outro kit");
+  },
+  // Estorno de KIT (o caso de 18/10, agora num kit): tira só o kit, avisa, e o Sem anúncios continua
+  async kitEstorno(t) {
+    await t.boot({ local: { ...OWNED, guardiao_store_v1: { owned: true, acked: true, grantedAt: OLD, kits: { kit_ipe: { owned: true, acked: true, grantedAt: OLD } } } }, store: { list: [PAID], kits: ["kit_ipe"] } });
+    await t.page.waitForFunction(() => window.__store.calls.filter((c) => c === "query").length >= 2, null, { timeout: 20000 }).catch(() => {});
+    const s = await t.state();
+    check(!s.kits.ipe.owns && !s.kits.ipe.piece, "kit sumiu da loja → as peças dele saem do Guarda-roupa", JSON.stringify(s.saved.kits));
+    check(s.noAds && s.saved.owned, "o Sem anúncios (ainda pago) continua");
+    await t.noticeShown(/COMPRA ESTORNADA/, "kit_estorno");
+  },
+  // Kit pendente aprovado com o jogo ABERTO: libera, reconhece e avisa
+  async kitPendente(t) {
+    await t.set({ buy: "pending" });
+    const r = await t.page.evaluate(async () => (await import("/src/systems/Billing.js")).Billing.buyKit("paina"));
+    let s = await t.state();
+    check(r === "pending" && s.kits.paina.pending && !s.kits.paina.owns, "kit pendente não libera nada ainda", `resultado=${r}`);
+    await t.page.evaluate(() => (window.__store.list = [{ productIdentifier: "kit_paineira", purchaseState: "1", purchaseToken: "tok-kit_paineira", isAcknowledged: false }]));
+    await t.page.waitForFunction(() => window.__store.list[0]?.isAcknowledged, null, { timeout: 30000 }).catch(() => {});
+    s = await t.state();
+    check(s.kits.paina.owns, "aprovado com o app aberto → kit liberado e reconhecido em até 20 s", s.calls.join(" "));
+    await t.noticeShown(/PAGAMENTO APROVADO/, "kit_aprovado");
+  },
   // Logo depois de comprar, a loja pode ainda não listar a compra: carência de 2 min
   async carencia(t) {
     await t.billing("buy");
@@ -220,7 +260,9 @@ async function run(name) {
       page.evaluate(async () => {
         const { Billing } = await import("/src/systems/Billing.js");
         const { AdService } = await import("/src/systems/AdService.js");
-        return { noAds: AdService.noAds, saved: JSON.parse(localStorage.getItem("guardiao_store_v1") || "{}"), notice: Billing.notice, calls: window.__store.calls };
+        const { Wardrobe } = await import("/src/systems/Cosmetics.js");
+        const kits = Object.fromEntries(["ipe", "paina"].map((k) => [k, { owns: Billing.ownsKit(k), pending: Billing.kitPending(k), price: Billing.kitPrice(k), piece: Wardrobe.owns(k + "_kill") }]));
+        return { noAds: AdService.noAds, saved: JSON.parse(localStorage.getItem("guardiao_store_v1") || "{}"), notice: Billing.notice, kitNotice: Billing.kitNotice, kits, calls: window.__store.calls };
       }),
     // A janela de aviso abre sozinha na tela de menu; fecha e confere que fechou
     async noticeShown(re, shot, scene = "TitleScene") {
@@ -246,7 +288,7 @@ async function run(name) {
     },
   };
   try {
-    if (name !== "estorno" && name !== "clareira" && name !== "falsoAlarme" && name !== "semRede") await t.boot();
+    if (!["estorno", "clareira", "falsoAlarme", "semRede", "kitEstorno"].includes(name)) await t.boot(name.startsWith("kit") ? { store: { kits: ["kit_ipe", "kit_paineira"].slice(0, name === "kitCompra" ? 1 : 2) } } : {});
     await SCENARIOS[name](t);
   } catch (e) {
     check(false, "o roteiro chegou ao fim", String(e.message || e).split("\n")[0]);
