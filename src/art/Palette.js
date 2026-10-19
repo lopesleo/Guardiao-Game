@@ -70,6 +70,7 @@ export const PAL = {
   pur2: 0xc78cff,
   pur3: 0xe8ccff,
   pink: 0xff7eb6,
+  pinkHi: 0xffc4de, // rosa-claro: brilho do rosa (Despertar do Kit Ipê-rosa, docs/COSMETICOS.md)
 
   // Vento (4º elemento): verde-água/menta — longe do laranja, do azul-gelo e do roxo
   wnd0: 0x1f5a52,
