@@ -1627,8 +1627,8 @@ export const STORE = {
 
 // Cosméticos (docs/COSMETICOS.md). Só aparência: nenhum muda dano, vida, moedas ou o que for de jogo.
 export const COSMETICS = {
-  ENABLED: false, // Guarda-roupa no build da loja (o modo de teste ?debug=1 sempre mostra)
-  SHOP: false, // kits à venda (fase 2: Billing com catálogo). Desligado = "Em breve" nas peças pagas
+  ENABLED: true, // Guarda-roupa no build da loja (o modo de teste ?debug=1 sempre mostra) — ligado na 1.0.6
+  SHOP: true, // kits e pacotes à venda pelo Play Billing (produtos ativos no Console desde 19/10/2026). Desligado = "Em breve"
   FOUNDER_UNTIL: [2027, 1, 31], // fim da janela do Pacote Fundador (só para MOSTRAR a data; quem vende é o Console)
   PETAL_BUDGET: 14, // partículas de libertação por janela de 120 ms, somando todas as mortes
   AMOUNTS: [0.5, 1, 1.6], // quantidade de pétalas: discreta, normal, cheia
