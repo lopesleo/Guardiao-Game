@@ -82,19 +82,19 @@ Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um 
 marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 
 **Agora**
-- **1.0.4 (código 5) gerada em 16/10, falta enviar:** `dist/guardiao-v1.0.4-5-anuncios-reais.aab` (anúncios reais,
-  assinada). Traz a compra **"Sem anúncios"**, o pacote de acessibilidade (clarões suaves, joystick fixo/canhoto/
-  tamanho, pesca assistida, ameaças legíveis para daltônicos), o zoom também na Clareira, a pesca um pouco mais
-  fácil e o botão das Opções que virava traço. Notas nos 8 idiomas em `docs/PLAY_STORE.md`. Os 2 avisos de sempre
-  do Console (sem desofuscação, sem símbolos nativos) podem ser ignorados. Já cadastrado no Console (16/10):
-  **Teste de licença** com a lista "Teste de compras" (só leonardolopes952@gmail.com) e **Segurança dos dados** com
-  "Histórico de compras" (coletado, não compartilhado, opcional, análise). **Enviada para revisão em 16/10**
-  (versão do Alpha + Segurança dos dados) e **produto `sem_anuncios` criado e ativo** no mesmo dia: opção de compra
-  `compra`, **R$ 14,90** no Brasil e **US$ 2,99** como base dos outros 173 países (decidido em 16/10; dá para mudar
-  depois ou testar com "Experimentos de preço"), nome e descrição nos 8 idiomas. O Console só liberou o produto
-  depois do envio para revisão (rascunho não bastou). 👤 Falta: testar no celular instalado pela loja quando a
-  revisão aprovar (comprar, pendente, reinstalar, reembolso). A
-  política nova já foi para o site e para o endereço antigo (16/10). 👤 Sentir no aparelho o joystick fixo e o canhoto (só dá para testar de verdade com o dedo).
+- **1.0.5 (código 6) gerada em 19/10, falta enviar:** `dist/guardiao-v1.0.5-6-anuncios-reais.aab` (anúncios reais,
+  assinada). **Substitui a 1.0.4 do Alpha**, que tem o joystick morrendo depois da 1ª carta (também depois do ⏸ e
+  do reviver; achado no aparelho em 18/10 — no celular a partida ficava injogável). Traz também o **aviso de
+  estorno** ("COMPRA ESTORNADA"; no teste de 18/10 a compra aceita e reconhecida foi estornada e o item sumiu
+  calado), o pendente aprovado com o jogo aberto passa a ser reconhecido ("PAGAMENTO APROVADO"), o quadro da
+  Clareira que acompanha o texto grande e o botão ★ da loja na Clareira. Passou em `npm test` (toque + compra,
+  obrigatório na skill `versao-loja`). Notas nos 8 idiomas em `docs/PLAY_STORE.md`. Os 2 avisos de sempre do
+  Console podem ser ignorados. A 1.0.4 foi enviada para revisão em 16/10 com o produto `sem_anuncios` (R$ 14,90 /
+  US$ 2,99, opção `compra`), Teste de licença ("Teste de compras", só leonardolopes952@gmail.com) e Segurança dos
+  dados com "Histórico de compras" já cadastrados. 👤 Enviar a 1.0.5 no Alpha. Depois, com ela instalada pela
+  loja: andar depois de escolher uma carta; comprar, estornar em **Pedidos** e voltar ao jogo → "COMPRA
+  ESTORNADA"; comprar com o cartão "aprova com atraso" **com o jogo aberto** → "PAGAMENTO APROVADO" e, 10 min
+  depois, sem estorno; reinstalar → volta ativo. Sentir o joystick fixo e o canhoto com o dedo.
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
   ~14/10 (pedido de produção possível por volta de **28/10**). 👤 Manter os 12 ativos (ninguém sair da lista).
   Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`. Cadastrar e-mails à mão (só contas
@@ -105,17 +105,6 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 - Analytics: as 17 dimensões e 16 métricas personalizadas levam 24–48 h para aparecer nos relatórios; quando
   houver dados dos testadores, analisar taxa de escolha das cartas, vitória por arma/Perigo, dano e
   assistência (como ler: `docs/ARMAS_E_COMBOS.md`, "Como medir").
-
-- **⚠ A 1.0.4 tem o joystick que morre depois da 1ª carta** (achado no aparelho em 18/10; também depois do ⏸ e
-  do reviver): no celular a partida fica injogável. **Gerar a 1.0.5 o quanto antes** e trocar a do Alpha.
-- **Na `main` para a próxima versão (1.0.5):** o conserto do joystick (acima); o **estorno agora avisa** o
-  jogador ("COMPRA ESTORNADA" — no teste de 18/10 a compra aceita e reconhecida foi estornada e o item sumiu
-  calado), e de prevenção o pendente aprovado com o jogo aberto passa a ser reconhecido ("PAGAMENTO APROVADO"); testes automáticos `npm test` (toque + compra, agora
-  obrigatórios na skill `versao-loja`); o quadro "Clareira do Guardião" (canto superior esquerdo)
-  acompanha o texto (vazava com texto grande, visto no S23 em 16/10) e a Clareira ganhou o botão ★ da loja
-  "Sem anúncios" na fileira de cima (some depois da compra e volta se ela for estornada). 👤 Com a 1.0.5 pela
-  loja: comprar, estornar em **Pedidos** e voltar ao jogo → tem de aparecer "COMPRA ESTORNADA"; e comprar com
-  o cartão "aprova com atraso" **deixando o jogo aberto** → "PAGAMENTO APROVADO" e, 10 min depois, sem estorno.
 
 **Decisões pendentes**
 - Descrição curta em espanhol: "leyendas de Brasil" → "del folclore brasileño"? (a captura 07 já foi refeita).
