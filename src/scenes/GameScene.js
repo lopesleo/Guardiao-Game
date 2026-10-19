@@ -77,6 +77,7 @@ import { QualityWatchdog } from "../systems/QualityWatchdog.js";
 import { LanternSystem } from "../systems/LanternSystem.js";
 import { Builds } from "../systems/Builds.js";
 import { VirtualJoystick, joyRight } from "../ui/VirtualJoystick.js";
+import { Cosmetics } from "../systems/Cosmetics.js";
 import { tr } from "../i18n/i18n.js";
 
 const BOSS_TEX = { mapinguari: "mon_boss", caboclo: "mon_caboclo" };
@@ -173,6 +174,7 @@ export class GameScene extends Phaser.Scene {
     // Sistemas
     this.elemental = new ElementalSystem(this);
     this.fx = new WeaponFX(this);
+    this.cosm = Cosmetics.forScene(this); // protótipo do Kit Ipê-rosa (só ?debug=1&kit=ipe; docs/COSMETICOS.md)
     this.hazards = new Hazards(this); // fogo no chão dos golpes de chefe
     this._bossBrains = new Set(); // cérebros de chefe vivos (luzes dos golpes)
     this.upgrades = new UpgradeSystem(this);
@@ -568,6 +570,7 @@ export class GameScene extends Phaser.Scene {
     this.joystick?.setActive(true); // partida andando = joystick ligado (a pausa desliga)
     if (this._intro) return this._updateIntro(time, dt);
     this.elapsedMs += dt;
+    this.cosm?.update(time);
 
     // Conquista "Maratonista" (10:00) — checagem explícita porque na fase de
     // boss não há kills de horda pra disparar a checagem por kill
@@ -1028,6 +1031,7 @@ export class GameScene extends Phaser.Scene {
     if (enemy.miniBoss || enemy._elite === "mimic") this.feel.bigKill(enemy.x, enemy.y);
     this._deathPoof(enemy.x, enemy.y);
     this.fx.kill(enemy.x, enemy.y - enemy.displayHeight * 0.2, enemy._lastEl, big);
+    this.cosm?.kill(enemy.x, enemy.y, big);
     // Drop XP sempre
     const g = this.xpPool.acquire();
     g.spawn(enemy.x, enemy.y);
