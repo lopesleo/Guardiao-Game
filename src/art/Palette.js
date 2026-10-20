@@ -78,6 +78,25 @@ export const PAL = {
   wnd2: 0x7fd9bd,
   wnd3: 0xd2fbe9,
 
+  // Noite (tela de título): céu do alto → névoa do horizonte, serra e mata ao longe, luar
+  night0: 0x060a12,
+  night1: 0x0b1420,
+  night2: 0x112230,
+  night3: 0x183238,
+  night4: 0x22443f,
+  ridge0: 0x142231,
+  ridge1: 0x223a4c,
+  woodsFar0: 0x0f1c22,
+  woodsFar1: 0x1c3138,
+  woodsNear0: 0x0b1514,
+  woodsNear1: 0x17302a,
+  moon0: 0xb4c2ce,
+  moon1: 0xd6dee6,
+  moon2: 0xeef3f7,
+  moonRim: 0x2c4450,
+  cloud0: 0x161f2b,
+  cloud1: 0x2b3a4a,
+
   // UI
   uiBg: 0x0f1a16,
   uiPanel: 0x16241f,
