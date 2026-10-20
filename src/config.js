@@ -1283,7 +1283,7 @@ export const ENDLESS = {
 // o coop, quando vier, terá ranking próprio (em dupla a pontuação sobe demais). Os IDs vêm do Play Games (o
 // `npm run play:rankings -- criar` preenche); vazio = ranking desligado.
 export const RANKING = {
-  IDS: { score: "", perigo: "" },
+  IDS: { score: "CgkIw9zJpO0JEAIQBQ", perigo: "CgkIw9zJpO0JEAIQBg" },
   // Pontos da partida = (abates × KILL + VICTORY se venceu) × multiplicador do Perigo (índice = Perigo). Na Noite
   // Eterna os abates continuam contando. Pontos só de jogar: nada à venda muda a conta.
   KILL: 10,

@@ -1,6 +1,6 @@
 // Teste dos rankings (systems/Leaderboards.js + ui/RankingModal.js) num navegador de verdade, com um Play Games
-// FALSO (window.Capacitor.Plugins.PlayGames) que registra os envios e devolve listas prontas. Confere: sem os
-// IDs nada aparece; com eles, o fim da partida manda a pontuação certa (e o maior Perigo), a fila segura o envio
+// FALSO (window.Capacitor.Plugins.PlayGames) que registra os envios e devolve listas prontas. Confere: sem o
+// Play Games nada aparece; com ele, o fim da partida manda a pontuação certa (e o maior Perigo), a fila segura o envio
 // sem rede e manda depois, o maior Perigo já vencido sobe uma vez, a janela mostra a lista (com a linha do
 // jogador), as abas, os estados sem login, sem rede e vazio, e o botão da Clareira não encosta no quadro.
 //
@@ -39,7 +39,10 @@ function fakeNative(cfg) {
     cfg.pg,
   ));
   for (const [k, v] of Object.entries(cfg.local || {})) localStorage.setItem(k, JSON.stringify(v));
-  const idOf = (id) => (id.includes("perigo") ? "perigo" : "score");
+  // qual ranking: os IDs de teste têm "perigo" no nome; os de verdade vêm do RANKING.IDS
+  let perigoId = null;
+  import("/src/config.js").then(({ RANKING }) => (perigoId = RANKING.IDS.perigo));
+  const idOf = (id) => (id.includes("perigo") || id === perigoId ? "perigo" : "score");
   window.Capacitor = {
     isNativePlatform: () => true,
     getPlatform: () => "android",
@@ -119,11 +122,12 @@ const pressInModal = (t, scene, label) =>
   );
 
 const SCENARIOS = {
-  // Sem os IDs (o build de hoje): nem botão na Clareira nem pontos no fim; o recorde no aparelho segue
+  // Sem o Play Games no aparelho (o plugin diz que não está configurado): nem botão na Clareira nem pontos no
+  // fim; o recorde no aparelho segue
   async desligado(t) {
-    await t.boot();
+    await t.boot({ pg: { configured: false } });
     const off = await t.page.evaluate(async () => (await import("/src/systems/Leaderboards.js")).Leaderboards.available());
-    check(off === false, "sem IDs os rankings ficam desligados");
+    check(off === false, "sem o Play Games os rankings ficam desligados");
     await toCamp(t);
     await campReady(t);
     check(!(await t.page.evaluate(() => !!window.game.scene.getScene("CampScene").rankBtn)), "sem botão de ranking na Clareira");
