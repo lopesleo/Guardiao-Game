@@ -146,8 +146,21 @@ export function openRanking(scene, o = {}) {
     // fora da lista (ou a lista pública não mostra o jogador): a linha "Você" embaixo, ou no topo se a lista
     // veio vazia
     if (me && !list.some((s) => s.me)) row(list.length ? list.length + 1 : 0, { rank: me.rank, score: me.score, me: true, name: "" }, list.length > 0);
-    totalT.setText(stuck || (data.total > 0 ? tr("{0} jogadores neste período", fmt(data.total)) : ""));
-    totalT.setColor(stuck ? CSS.muted : CSS.dim);
+    // o Play Games tem a pontuação mas não diz a posição: o perfil do jogador está privado (só ele se vê; achado
+    // no aparelho em 20/10, com "Tornar o perfil privado" ligado)
+    const hidden = me && !(me.rank > 0) && !list.some((s) => s.me);
+    const total = data.total === 1 ? tr("1 jogador neste período") : data.total > 0 ? tr("{0} jogadores neste período", fmt(data.total)) : "";
+    const hint = hidden ? tr("Só você vê sua pontuação: deixe o perfil do Play Games público para aparecer.") : "";
+    // com espaço na lista (o comum: o jogador sozinho, sem posição), o aviso vai no quadro, com quebra de linha;
+    // lista cheia, na linha de baixo
+    const used = list.length ? list.length + 2 : 1;
+    const roomy = hint && used <= N - 3;
+    if (roomy) {
+      const top = listTop + 6 + ROW * used;
+      body.add(text(scene, 0, (top + listTop + listH) / 2, hint, { size: 18, color: CSS.muted, origin: 0.5, align: "center", wrap: m.w - 140 }));
+    }
+    totalT.setText(stuck || (hint && !roomy ? hint : total));
+    totalT.setColor(stuck || (hint && !roomy) ? CSS.muted : CSS.dim);
     clip(totalT, m.w - 80);
     m.add(body);
   };

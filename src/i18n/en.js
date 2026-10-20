@@ -1000,6 +1000,8 @@ export default {
   "Ninguém pontuou nesta semana ainda. Que tal ser o primeiro?": "No one has scored this week yet. Why not be the first?",
   "Ninguém pontuou ainda. Que tal ser o primeiro?": "No one has scored yet. Why not be the first?",
   "{0} jogadores neste período": "{0} players in this period",
+  "1 jogador neste período": "1 player in this period",
+  "Só você vê sua pontuação: deixe o perfil do Play Games público para aparecer.": "Only you can see your score: make your Play Games profile public to appear.",
   "Carregando o ranking…": "Loading the leaderboard…",
   "Entre no Play Games para ver o ranking e aparecer nele.": "Sign in to Play Games to see the leaderboard and appear on it.",
   "ENTRAR NO PLAY GAMES": "SIGN IN TO PLAY GAMES",

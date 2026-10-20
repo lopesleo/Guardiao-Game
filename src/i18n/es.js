@@ -1000,6 +1000,8 @@ export default {
   "Ninguém pontuou nesta semana ainda. Que tal ser o primeiro?": "Nadie ha puntuado esta semana todavía. ¿Por qué no ser el primero?",
   "Ninguém pontuou ainda. Que tal ser o primeiro?": "Nadie ha puntuado todavía. ¿Por qué no ser el primero?",
   "{0} jogadores neste período": "{0} jugadores en este período",
+  "1 jogador neste período": "1 jugador en este período",
+  "Só você vê sua pontuação: deixe o perfil do Play Games público para aparecer.": "Solo tú ves tu puntuación: haz público tu perfil de Play Juegos para aparecer.",
   "Carregando o ranking…": "Cargando la clasificación…",
   "Entre no Play Games para ver o ranking e aparecer nele.": "Entra en Play Juegos para ver la clasificación y aparecer en ella.",
   "ENTRAR NO PLAY GAMES": "ENTRAR EN PLAY JUEGOS",

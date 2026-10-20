@@ -1000,6 +1000,8 @@ export default {
   "Ninguém pontuou nesta semana ainda. Que tal ser o primeiro?": "本周还没有人得分。来当第一个吧？",
   "Ninguém pontuou ainda. Que tal ser o primeiro?": "还没有人得分。来当第一个吧？",
   "{0} jogadores neste período": "本期共{0}名玩家",
+  "1 jogador neste período": "本期共1名玩家",
+  "Só você vê sua pontuação: deixe o perfil do Play Games público para aparecer.": "目前只有你能看到自己的得分。将 Play 游戏个人资料设为公开即可上榜。",
   "Carregando o ranking…": "正在加载排行榜…",
   "Entre no Play Games para ver o ranking e aparecer nele.": "登录 Play 游戏即可查看排行榜并上榜。",
   "ENTRAR NO PLAY GAMES": "登录 Play 游戏",
