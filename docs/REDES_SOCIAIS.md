@@ -23,7 +23,7 @@ keycombination 113 50` (Ctrl+V) no campo; o `input text` do adb não digita acen
 |---|---|
 | Tipo de conta | **Profissional → Criador de conteúdo** (grátis; libera estatísticas e categoria) |
 | Categoria | **Publisher de jogos** (exibida no perfil; "Jogo eletrônico" não existe na lista) |
-| Nome de usuário | **`guardiaodaflorestaofc`** (o `guardiaodafloresta` puro não estava livre). Usar o mesmo no TikTok e no YouTube |
+| Nome de usuário | **`guardiaodaflorestaofc`** (escolhido pelo Leonardo ao criar a conta). Usar o mesmo no TikTok e no YouTube |
 | Nome (aparece na busca) | `Guardião da Floresta · jogo` |
 | Foto | ícone do jogo, `lopesleo.github.io/public/guardiao/assets/img/icon-512.png` (o recorte redondo do Instagram não corta o Curupira) |
 | Link | `https://lopesleo.github.io/guardiao/?utm_source=instagram&utm_medium=bio` |
