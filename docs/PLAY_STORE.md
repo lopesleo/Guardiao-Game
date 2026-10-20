@@ -616,7 +616,20 @@ Refazer quando o app mudar (compra "Remover anúncios", login do Play Games, nov
 
 O código está pronto (`android/.../PlayGamesPlugin.java` + `src/systems/CloudSave.js`), mas fica
 **desligado** até existir o ID do projeto do Play Games. Sem ID, o app funciona normalmente e a
-linha "Progresso na nuvem" nem aparece em Opções. Para ligar (depende da conta da Play Console):
+linha "Progresso na nuvem" nem aparece em Opções.
+
+**Feito em 19/10/2026 (passos 1–5):** projeto do Play Games **338573815363** (ligado ao Cloud
+`guardiao-da-floresta`), ID no `games-ids.xml`. Tela de consentimento OAuth **publicada** (externo; escopos
+`games`, `games_lite`, `drive.appdata`, todos não confidenciais; sem logotipo, então sem verificação; página
+inicial e política em `lopesleo.github.io/guardiao/`). **5 credenciais Android** (clientes OAuth "Play Games – …"
+no Cloud), uma por SHA-1: assinatura do app atual `16:E5:3D…`, as duas anteriores `0D:21:05…` e `0E:4A:0C…`
+(aparelhos antigos ainda veem a chave original), upload `D6:DD:83…` e depuração `EF:B5:78…` (o
+`npm run android:install`); antipirataria desligada (senão o build de depuração não entra). Propriedades: padrão
+pt-BR, nome e descrição nos 8 idiomas (os da ficha), categoria Ação, ícone e gráfico de destaque, **Jogos salvos
+ativado** (não dá para desligar depois de publicar). Testadores do Play Games: leonardolopes952 e lobits1real.
+**Falta:** 👤 Revisar e publicar (passo 6) e o teste no aparelho (passo 7), com uma versão que tenha o ID.
+
+Passo a passo (para refazer ou conferir):
 
 1. Play Console → o app → **Play Games Services → Configuração** → criar o projeto do Play Games
    (pode usar o projeto do Google Cloud do Firebase, `guardiao-da-floresta`).
@@ -678,6 +691,13 @@ e os rankings criados (`RANKING.IDS` no `src/config.js`). Sem isso nada muda no 
 - **Teste:** `npm run test:rankings` (Play Games falso; também no `npm test`). `LOC=ja-JP TS=2 SHOTS=pasta` para
   conferir idioma e texto grande.
 
+**Criados em 19/10/2026, à mão no Console** (em rascunho; nomes nos 8 idiomas como em `tools/play/rankings.json`,
+proteção contra adulteração ligada): Pontuação `CgkIw9zJpO0JEAIQBQ` (0–5.000.000) e Maior Perigo vencido
+`CgkIw9zJpO0JEAIQBg` (1–5), já em `RANKING.IDS`. A API recusou com 401 ("The user is not authorized to call the
+configuration API", com a Play Games Services Publishing API já ativa no Cloud): a conta de serviço não tem a
+permissão do Play Games na Play Console. Para os próximos (conquistas, ícones) pela API, 👤 dar essa permissão
+em Usuários e permissões.
+
 **Para ligar (👤 + script, depois do projeto do Play Games da seção acima):**
 1. `npm run play:rankings -- criar --seco` e depois `npm run play:rankings -- criar`: cria os dois rankings
    (nomes nos 8 idiomas em `tools/play/rankings.json`) e grava os IDs em `RANKING.IDS`. Se a API responder 403,
@@ -689,7 +709,8 @@ e os rankings criados (`RANKING.IDS` no `src/config.js`). Sem isso nada muda no 
 3. Versão nova do app com os IDs (Teste interno primeiro).
 4. **Segurança dos dados e política** junto com a nuvem: o SDK do Play Games coleta o perfil de jogo (apelido,
    avatar), pontuações e jogos salvos (lista do Google: <https://developer.android.com/games/pgs/data-collection>).
-   Na política, seção nova:
+   `docs/PRIVACY.md` já tem as duas seções (19/10/2026); 👤 falta copiar para o site (pt e en) e marcar na
+   Segurança dos dados antes de a versão com o ID ir ao Alpha/produção. Na política, seção nova:
 
   > ## Rankings (Google Play Games)
   >

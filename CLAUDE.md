@@ -85,7 +85,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 - **1.0.7 (código 8) PUBLICADA no Teste interno e no Teste fechado/Alpha (19/10, `npm run play:versao -- subir
   --publicar`):** Clareira Ancestral redesenhada (esteios entalhados, lamparinas, tucano, borboletas, cogumelos que
   brilham), joystick religando no próprio toque da carta e em toda a metade da tela, loja de cosméticos ligada. O Alpha
-  está na **revisão do Google** (a 1.0.4 vale até aprovar; a 1.0.5/1.0.6 nunca chegaram lá). Os testadores do Alpha
+  **foi aprovado e publicado** (aviso do Console em 19/10; a faixa mostra a 1.0.7). Os testadores do Alpha
   **pagam de verdade** se comprarem (só "Teste de compras" no Teste de licença). `dist/guardiao-v1.0.7-8-anuncios-reais.aab`.
   No **Teste interno** já está a **1.0.9 (código 10)** (19/10): por cima da 1.0.7, as animações da Ancestral refeitas
   (1.0.8) e a horta da Ancestral (cerca entalhada, portal com lamparinas, espantalho de poncho).
@@ -101,7 +101,8 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 - **Próximo: Clareira da Caatinga** (grátis): liberar quem vencer no Perigo máximo na Caatinga + uma conquista.
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
   ~14/10 (pedido de produção possível por volta de **28/10**). 👤 Manter os 12 ativos (ninguém sair da lista).
-  Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`. Cadastrar e-mails à mão (só contas
+  A lista do Alpha ("Testadores Guardião") tem 21 e-mails; lobits1real@gmail.com entrou em 19/10 (👤 ele precisa
+  aceitar pelo convite). Convite: `https://play.google.com/apps/testing/com.lopesleo.guardiao`. Cadastrar e-mails à mão (só contas
   Google); **não trocar por Grupo do Google durante o teste**. Conta do Play Console: "Komedy Games Studio"
   (login leonardolopes952@gmail.com).
 - Dano das reações **fica fixo** (decidido em 13/10 pelo laboratório `tools/rx-lab.mjs`): conferir nos dados reais
@@ -133,10 +134,11 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 
 **Jogo (backlog do roadmap)**
 - Anúncios já pedem classificação máxima "T" no app; 👤 deixar também "T" no console do AdMob (Controles de
-  bloqueio). Salvamento na nuvem **e rankings** (Pontuação e Maior Perigo, só solo) estão na `main`,
-  **desligados** até o ID do Play Games: 👤 criar o projeto na Play Console (passo a passo em
-  `docs/PLAY_STORE.md`, "Progresso na nuvem" e "Rankings", inclusive o texto da política), pôr o ID em
-  `games-ids.xml`, rodar `npm run play:rankings -- criar`, publicar o Play Games Services e testar no aparelho.
+  bloqueio). **Play Games configurado em 19/10** (`docs/PLAY_STORE.md`, "Progresso na nuvem" e "Rankings"):
+  projeto 338573815363 no `games-ids.xml`, 5 credenciais, Jogos salvos, os 2 rankings criados (IDs em
+  `RANKING.IDS`) e a política com as seções novas em `docs/PRIVACY.md`. A próxima versão já liga nuvem e
+  rankings. 👤 Falta: publicar o Play Games Services (Configuração → Revisar e publicar), testar no aparelho
+  (Teste interno), copiar a política para o site e marcar a Segurança dos dados antes do Alpha/produção.
   Revisão nativa ja/zh; testes em aparelho fraco.
 
 **Laboratório e ferramentas**

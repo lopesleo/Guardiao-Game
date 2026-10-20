@@ -553,15 +553,17 @@ Nada disso trava o desenvolvimento; só o lançamento e a receita.
   envio carimbado, que não passa por cima do que outro celular gravou; nunca troca nada no meio da
   partida; "Apagar progresso" apaga também a nuvem; o relógio anti-trapaça do outro aparelho é
   descartado ao restaurar. Opções → Jogo: CONECTAR / SALVAR AGORA. Testado no navegador com Play
-  Games falso (21 casos). 👤 **Falta:** criar o projeto do Play Games na Play Console e pôr o ID em
-  `games-ids.xml` (passo a passo em `PLAY_STORE.md`); sem ID fica desligado
+  Games falso (21 casos). **Projeto do Play Games criado em 19/10/2026** (ID 338573815363 no `games-ids.xml`,
+  5 credenciais, Jogos salvos ativado). 👤 **Falta:** publicar o Play Games Services e testar no aparelho com
+  uma versão que tenha o ID (`PLAY_STORE.md`, "Progresso na nuvem")
 - ✅ **Rankings (Google Play Games, 19/10/2026):** Pontuação (`(abates × 10 + 5.000 na vitória) × Perigo`) e
   Maior Perigo vencido, cada um com semana e de sempre; só solo (o coop terá o seu). Troféu na Clareira, pontos
   e "RECORDE!" no fim da partida, janela com os 10 primeiros, a linha do jogador e os estados sem login/sem
   rede/vazio; fila sem rede; maior Perigo antigo sobe sozinho. `npm run play:rankings` cria os rankings pela
   API; `npm run test:rankings` (Play Games falso). De carona: a frase da vitória não invade mais o título nem
-  passa da tela (ja/zh/es com texto grande). 👤 **Falta:** o mesmo projeto do Play Games da nuvem, depois
-  `play:rankings -- criar` e publicar o Play Games Services (`PLAY_STORE.md`, "Rankings")
+  passa da tela (ja/zh/es com texto grande). **Rankings criados em 19/10/2026** (à mão no Console, em
+  rascunho; IDs em `RANKING.IDS`). 👤 **Falta:** publicar o Play Games Services, versão com os IDs, política
+  no site e Segurança dos dados (`PLAY_STORE.md`, "Rankings")
 - 👤 Testes em aparelho forte e fraco + playtest com 5–10 pessoas
 - 👤 `.aab` assinado, classificação IARC, **teste fechado** exigido pelo Play Console
   - ✅ Assinatura por comando, sem Android Studio: `npm run android:chave` (cria a chave fora do projeto e o
