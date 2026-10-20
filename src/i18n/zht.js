@@ -1004,6 +1004,8 @@ export default {
   "Entre no Play Games para ver o ranking e aparecer nele.": "登入 Play 遊戲即可查看排行榜並上榜。",
   "ENTRAR NO PLAY GAMES": "登入 Play 遊戲",
   "Sem conexão com o Play Games agora.": "現在無法連線到 Play 遊戲。",
+  "Sua última partida ainda não chegou ao Play Games (erro {0}).": "上一局還沒有上傳到 Play 遊戲（錯誤 {0}）。",
+  "Sua última partida ainda não chegou ao Play Games.": "上一局還沒有上傳到 Play 遊戲。",
   "ÁUDIO E TELA": "音訊與畫面",
   "JOGO": "遊戲",
   "CONTROLES": "操作",

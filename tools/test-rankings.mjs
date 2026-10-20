@@ -35,6 +35,7 @@ function fakeNative(cfg) {
       decline: false, // o jogador fecha a entrada do Play Games
       signInError: false, // a entrada falha (rede, credencial ainda ativando)
       submitDelay: 0, // ms até o Play Games confirmar o envio (no aparelho, a rede)
+      submitError: null, // código do Play Games: o envio falha com ele (com rede e login)
       signIns: 0,
       reads: 0, // conferências da nuvem (CloudSave)
       sent: [],
@@ -73,6 +74,7 @@ function fakeNative(cfg) {
         write: async () => ({ modified: Date.now() }),
         submitScore: async ({ leaderboardId, score }) => {
           if (!G.online || !G.signedIn) throw new Error("submit_failed");
+          if (G.submitError) throw Object.assign(new Error("submit_failed"), { code: G.submitError });
           if (G.submitDelay) await new Promise((r) => setTimeout(r, G.submitDelay));
           G.sent.push([idOf(leaderboardId), score]);
           G.log.push(["envio", idOf(leaderboardId), score]);
@@ -380,6 +382,89 @@ const SCENARIOS = {
     const q = await t.page.evaluate(() => JSON.parse(localStorage.getItem("guardiao_ranking_v1")).queue);
     check(!q?.score, "a fila ficou vazia", JSON.stringify(q));
   },
+
+  // O caso do aparelho (1.0.12): perdeu, abriu o ranking e a lista veio vazia. Se o envio falhou no Play Games, a
+  // janela diz que a partida não chegou (com o código) em vez de "ninguém pontuou"; tentar de novo manda e mostra
+  async envioFalhou(t) {
+    await t.boot({ pg: { submitError: "26507" } });
+    await enable(t);
+    await t.page.evaluate(() => (window.__pg.lists.score = { scores: [], player: null, total: 0 }));
+    const r = await t.page.evaluate(async () => (await import("/src/systems/Leaderboards.js")).Leaderboards.submitRun({ kills: 14, won: false, difficulty: 1 }));
+    await t.page.waitForTimeout(300);
+    let q = await t.page.evaluate(() => JSON.parse(localStorage.getItem("guardiao_ranking_v1")).queue);
+    check(r.score === 182 && q?.score === 182 && (await t.pg()).sent.length === 0, "o envio falhou: 182 pontos esperam na fila", JSON.stringify({ r, q }));
+    await toCamp(t);
+    await campReady(t);
+    await t.page.evaluate(() => window.game.scene.getScene("CampScene").rankBtn.onClick());
+    await t.page.waitForTimeout(900);
+    const L = await t.page.evaluate(async () => {
+      const { tr } = await import("/src/i18n/i18n.js");
+      return {
+        stuck: tr("Sua última partida ainda não chegou ao Play Games (erro {0}).", "26507"),
+        empty: tr("Ninguém pontuou nesta semana ainda. Que tal ser o primeiro?"),
+        retry: tr("TENTAR DE NOVO"),
+        me: tr("{0} (você)", "Leo"),
+      };
+    });
+    let mt = await modalTexts(t, "CampScene");
+    check(mt && mt.texts.includes(L.stuck) && !mt.texts.includes(L.empty), "a janela diz que a partida não chegou, com o código", JSON.stringify(mt?.texts.slice(0, 8)));
+    check(mt && mt.texts.includes(L.retry), "e oferece TENTAR DE NOVO");
+    if (SHOTS) await t.page.screenshot({ path: `${SHOTS}/${LOC}_${TS}_rank_falhou.png` });
+    await t.page.evaluate(() => {
+      window.__pg.submitError = null;
+      window.__pg.lists.score = { scores: [{ rank: 1, name: "Leo", score: 182, me: true }], player: { rank: 1, score: 182 }, total: 1 };
+    });
+    await pressInModal(t, "CampScene", L.retry);
+    await t.page.waitForTimeout(900);
+    const g = await t.pg();
+    mt = await modalTexts(t, "CampScene");
+    q = await t.page.evaluate(() => JSON.parse(localStorage.getItem("guardiao_ranking_v1")).queue);
+    check(g.sent.some(([b, v]) => b === "score" && v === 182) && !q?.score, "tentar de novo manda e esvazia a fila", JSON.stringify(g.sent));
+    check(mt && mt.texts.includes(L.me) && !mt.texts.includes(L.stuck), "a partida aparece na lista e o aviso some", JSON.stringify(mt?.texts.slice(0, 8)));
+  },
+
+  // Lista cheia e a partida do jogador presa na fila: o aviso vai na linha de baixo da lista e cabe nela
+  async avisoNaLista(t) {
+    await t.boot({ pg: { submitError: "26502" } });
+    await enable(t);
+    await t.page.evaluate(async () => (await import("/src/systems/Leaderboards.js")).Leaderboards.submitRun({ kills: 500, won: false, difficulty: 0 }));
+    await t.page.waitForTimeout(300);
+    await toCamp(t);
+    await campReady(t);
+    await t.page.evaluate(() => window.game.scene.getScene("CampScene").rankBtn.onClick());
+    await t.page.waitForTimeout(900);
+    const stuck = await t.page.evaluate(async () => (await import("/src/i18n/i18n.js")).tr("Sua última partida ainda não chegou ao Play Games (erro {0}).", "26502"));
+    const fit = await t.page.evaluate((stuck) => {
+      const m = window.game.scene.getScene("CampScene")._modals.at(-1);
+      const deep = (o) => (o.list ? o.list.flatMap(deep) : [o]);
+      const n = deep(m.root).find((o) => o.type === "Text" && o.text === stuck);
+      const names = deep(m.root).filter((o) => o.type === "Text" && /Iara_da_Lagoa/.test(o.text)).length;
+      return n ? { w: n.displayWidth, room: m.w - 80, names } : { names };
+    }, stuck);
+    check(fit.w > 0 && fit.w <= fit.room, "o aviso aparece embaixo da lista e cabe", JSON.stringify(fit));
+    check(fit.names > 0, "a lista continua lá");
+    if (SHOTS) await t.page.screenshot({ path: `${SHOTS}/${LOC}_${TS}_rank_aviso.png` });
+  },
+
+  // A lista pública veio vazia mas o Play Games tem a pontuação do jogador (sem posição): a linha "Você" no
+  // topo, em vez de "ninguém pontuou"
+  async soAPropria(t) {
+    await t.boot();
+    await enable(t);
+    await t.page.evaluate(() => (window.__pg.lists.score = { scores: [], player: { rank: -1, score: 182 }, total: 0 }));
+    await toCamp(t);
+    await campReady(t);
+    await t.page.evaluate(() => window.game.scene.getScene("CampScene").rankBtn.onClick());
+    await t.page.waitForTimeout(900);
+    const L = await t.page.evaluate(async () => {
+      const { tr } = await import("/src/i18n/i18n.js");
+      return { you: tr("Você"), empty: tr("Ninguém pontuou nesta semana ainda. Que tal ser o primeiro?") };
+    });
+    const mt = await modalTexts(t, "CampScene");
+    check(mt && mt.texts.includes(L.you) && mt.texts.includes("182") && mt.texts.includes("—"), "a linha do jogador aparece (posição —, 182)", JSON.stringify(mt?.texts.slice(0, 8)));
+    check(mt && !mt.texts.includes(L.empty), "não diz que ninguém pontuou");
+    if (SHOTS) await t.page.screenshot({ path: `${SHOTS}/${LOC}_${TS}_rank_so_eu.png` });
+  },
 };
 
 async function run(name) {
@@ -404,7 +489,7 @@ async function run(name) {
     async reload(cfg = {}) {
       // roda depois do fakeNative (que remonta o falso com o cfg do boot): zera os contadores e aplica este cfg
       await page.addInitScript(
-        (pg) => Object.assign(window.__pg, { signIns: 0, reads: 0, sent: [], loads: [], log: [], decline: false, signInError: false, signedIn: true }, pg),
+        (pg) => Object.assign(window.__pg, { signIns: 0, reads: 0, sent: [], loads: [], log: [], decline: false, signInError: false, submitError: null, signedIn: true }, pg),
         cfg.pg || {},
       );
       await page.reload();

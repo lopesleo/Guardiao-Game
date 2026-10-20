@@ -69,7 +69,8 @@ export function openRanking(scene, o = {}) {
   const status = (msg, button) => {
     body.removeAll(true);
     totalT?.setText("");
-    const t = text(scene, 0, listTop + listH / 2 - (button ? 30 : 0), msg, { size: 20, color: CSS.muted, origin: 0.5, align: "center", wrap: m.w - 120 });
+    // com botão, o texto cresce para cima dele (duas linhas não encostam no botão)
+    const t = text(scene, 0, listTop + listH / 2 + (button ? 2 : 0), msg, { size: 20, color: CSS.muted, origin: button ? [0.5, 1] : 0.5, align: "center", wrap: m.w - 120 });
     body.add(t);
     if (button) body.add(new Button(scene, 0, listTop + listH / 2 + 40, 340, 52, button.label, button.go, { size: 20, style: "primary", color: CSS.goldHi }));
     m.add(body); // o que nasce depois também fica preso à tela (scrollFactor 0)
@@ -94,7 +95,8 @@ export function openRanking(scene, o = {}) {
 
   const valueOf = (v) => (board === "perigo" ? perigoName(v) : fmt(v));
   // "1." (a fonte de pixel não tem o "º"); japonês e chinês: 1位 / 第1名
-  const rankOf = (r) => tr("{0}.", fmt(r));
+  // rank ≤ 0: o Play Games tem a pontuação do jogador mas não diz a posição
+  const rankOf = (r) => (r > 0 ? tr("{0}.", fmt(r)) : "—");
   // colunas: troféu, posição (largura da maior posição da lista: "37位", "第1.234名"), nome, pontos
   const ICON_X = -m.w / 2 + 58;
   let rankR = ICON_X + 40,
@@ -113,8 +115,9 @@ export function openRanking(scene, o = {}) {
       body.add(g);
     }
     // os três primeiros ganham o troféu na cor da medalha (ouro, prata, bronze)
-    if (s.rank <= 3) body.add(scene.add.image(ICON_X, ry, "ico_trophy").setScale(2).setTint(MEDAL_TINT[s.rank - 1]));
-    const color = s.me ? CSS.goldHi : s.rank <= 3 ? MEDAL[s.rank - 1] : CSS.txt;
+    const podium = s.rank >= 1 && s.rank <= 3;
+    if (podium) body.add(scene.add.image(ICON_X, ry, "ico_trophy").setScale(2).setTint(MEDAL_TINT[s.rank - 1]));
+    const color = s.me ? CSS.goldHi : podium ? MEDAL[s.rank - 1] : CSS.txt;
     const rk = text(scene, rankR, ry, rankOf(s.rank), { size: 18, color, origin: [1, 0.5] });
     const val = text(scene, m.w / 2 - 54, ry, valueOf(s.score), { size: 18, color: s.me ? CSS.goldHi : CSS.txt, origin: [1, 0.5] });
     // a linha do jogador fora da lista vem sem nome (o Play Games só dá a posição): "Você"
@@ -129,15 +132,23 @@ export function openRanking(scene, o = {}) {
     if (m._closed) return;
     body.removeAll(true);
     const list = (data?.scores || []).slice(0, RANKING.TOP);
-    if (!list.length) {
-      status(span === "week" ? tr("Ninguém pontuou nesta semana ainda. Que tal ser o primeiro?") : tr("Ninguém pontuou ainda. Que tal ser o primeiro?"));
+    const me = data?.player;
+    // a partida do jogador que não subiu (o envio falhou): o aviso diz, com o código do Play Games, em vez de
+    // a lista parecer só vazia
+    const stuck = !data?.pending ? "" : data.code ? tr("Sua última partida ainda não chegou ao Play Games (erro {0}).", data.code) : tr("Sua última partida ainda não chegou ao Play Games.");
+    if (!list.length && !me) {
+      if (stuck) status(stuck, { label: tr("TENTAR DE NOVO"), go: () => fetch(true) });
+      else status(span === "week" ? tr("Ninguém pontuou nesta semana ainda. Que tal ser o primeiro?") : tr("Ninguém pontuou ainda. Que tal ser o primeiro?"));
       return;
     }
-    const me = data.player;
     columns([...list.map((s) => s.rank), me?.rank ?? 0]);
     list.forEach((s, i) => row(i, s));
-    if (me && !list.some((s) => s.me)) row(list.length + 1, { rank: me.rank, score: me.score, me: true, name: "" }, true);
-    totalT.setText(data.total > 0 ? tr("{0} jogadores neste período", fmt(data.total)) : "");
+    // fora da lista (ou a lista pública não mostra o jogador): a linha "Você" embaixo, ou no topo se a lista
+    // veio vazia
+    if (me && !list.some((s) => s.me)) row(list.length ? list.length + 1 : 0, { rank: me.rank, score: me.score, me: true, name: "" }, list.length > 0);
+    totalT.setText(stuck || (data.total > 0 ? tr("{0} jogadores neste período", fmt(data.total)) : ""));
+    totalT.setColor(stuck ? CSS.muted : CSS.dim);
+    clip(totalT, m.w - 80);
     m.add(body);
   };
 
