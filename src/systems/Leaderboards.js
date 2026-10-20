@@ -46,6 +46,8 @@ export const Leaderboards = {
   signedIn: false,
   _cache: {},
   _flushing: null, // o envio em andamento: quem chama de novo espera o mesmo (a lista só carrega depois)
+  lastError: null, // código do Play Games no último envio que falhou (a janela mostra; some quando um envio dá certo)
+  _failTracked: false,
 
   // Há o que mostrar: app + ID do Play Games + o ranking criado
   available() {
@@ -124,15 +126,29 @@ export const Leaderboards = {
         save(d);
         delete this._cache[`${board}:week`];
         delete this._cache[`${board}:all`];
-      } catch {
-        break; // sem rede ou sem login: tenta na próxima vez
+        this.lastError = null;
+      } catch (e) {
+        // sem rede ou sem login: tenta na próxima vez. O código vai para a janela e, 1x por abertura, para o
+        // Analytics (um envio que nunca sobe some sem deixar rastro)
+        this.lastError = e?.code || null;
+        if (!this._failTracked) {
+          this._failTracked = true;
+          Analytics.track("rank_submit_fail", { board, code: String(e?.code || e?.message || "?").slice(0, 40), signed: this.signedIn });
+        }
+        break;
       }
     }
   },
 
-  // Lista do ranking: { scores: [{ rank, name, score, me }], player, total }. Falha com e.reason = "signin" (não
-  // entrou no Play Games) ou "offline"
+  // Lista do ranking: { scores: [{ rank, name, score, me }], player, total, pending, code }. pending = o valor que
+  // ainda está na fila deste ranking (0 = nada esperando), code = o erro do último envio. Falha com e.reason =
+  // "signin" (não entrou no Play Games) ou "offline"
   async scores(board, span = "week", { fresh = false } = {}) {
+    const data = await this._scores(board, span, fresh);
+    return { ...data, pending: load().queue?.[board] ?? 0, code: this.lastError };
+  },
+
+  async _scores(board, span, fresh) {
     const p = plugin();
     const key = `${board}:${span}`;
     const c = this._cache[key];

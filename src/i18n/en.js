@@ -1004,6 +1004,8 @@ export default {
   "Entre no Play Games para ver o ranking e aparecer nele.": "Sign in to Play Games to see the leaderboard and appear on it.",
   "ENTRAR NO PLAY GAMES": "SIGN IN TO PLAY GAMES",
   "Sem conexão com o Play Games agora.": "Can't reach Play Games right now.",
+  "Sua última partida ainda não chegou ao Play Games (erro {0}).": "Your last run hasn't reached Play Games yet (error {0}).",
+  "Sua última partida ainda não chegou ao Play Games.": "Your last run hasn't reached Play Games yet.",
   "ÁUDIO E TELA": "AUDIO AND DISPLAY",
   "JOGO": "GAME",
   "CONTROLES": "CONTROLS",

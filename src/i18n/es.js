@@ -1004,6 +1004,8 @@ export default {
   "Entre no Play Games para ver o ranking e aparecer nele.": "Entra en Play Juegos para ver la clasificación y aparecer en ella.",
   "ENTRAR NO PLAY GAMES": "ENTRAR EN PLAY JUEGOS",
   "Sem conexão com o Play Games agora.": "No hay conexión con Play Juegos ahora.",
+  "Sua última partida ainda não chegou ao Play Games (erro {0}).": "Tu última partida aún no llegó a Play Juegos (error {0}).",
+  "Sua última partida ainda não chegou ao Play Games.": "Tu última partida aún no llegó a Play Juegos.",
   "ÁUDIO E TELA": "AUDIO Y PANTALLA",
   "JOGO": "JUEGO",
   "CONTROLES": "CONTROLES",

@@ -1004,6 +1004,8 @@ export default {
   "Entre no Play Games para ver o ranking e aparecer nele.": "ランキングを見て参加するには、Play ゲームにログインしてください。",
   "ENTRAR NO PLAY GAMES": "Play ゲームにログイン",
   "Sem conexão com o Play Games agora.": "今は Play ゲームに接続できません。",
+  "Sua última partida ainda não chegou ao Play Games (erro {0}).": "前回のプレイは未送信です（エラー {0}）。",
+  "Sua última partida ainda não chegou ao Play Games.": "前回のプレイはまだ送信されていません。",
   "ÁUDIO E TELA": "音声と画面",
   "JOGO": "ゲーム",
   "CONTROLES": "操作",

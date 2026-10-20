@@ -8,6 +8,7 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.games.LeaderboardsClient;
 import com.google.android.gms.games.PlayGames;
 import com.google.android.gms.games.PlayGamesSdk;
@@ -141,12 +142,13 @@ public class PlayGamesPlugin extends Plugin {
         }
         PlayGames.getLeaderboardsClient(getActivity()).submitScoreImmediate(id, score)
             .addOnSuccessListener(r -> call.resolve())
-            .addOnFailureListener(e -> call.reject("submit_failed", e));
+            .addOnFailureListener(e -> call.reject("submit_failed", code(e), e));
     }
 
     // Os primeiros { leaderboardId, span: "week" | "all", max } do ranking público. Volta { scores: [{ rank,
-    // name, score, me }], player: { rank, score } | null (a posição do jogador no período, mesmo fora da lista),
-    // total }
+    // name, score, me }], player: { rank, score } | null (a posição do jogador no período, mesmo fora da lista;
+    // rank -1 quando o Play Games não diz), total }. Sempre do servidor: a cópia guardada no aparelho não vê a
+    // partida que acabou de subir (quem guarda por 1 min é o jogo)
     @PluginMethod
     public void loadScores(PluginCall call) {
         String id = call.getString("leaderboardId");
@@ -158,10 +160,12 @@ public class PlayGamesPlugin extends Plugin {
         PlayGames.getPlayersClient(getActivity()).getCurrentPlayerId()
             .continueWithTask(t -> {
                 me[0] = t.isSuccessful() ? t.getResult() : null;
-                return client.loadTopScores(id, span, LeaderboardVariant.COLLECTION_PUBLIC, max, false);
+                return client.loadTopScores(id, span, LeaderboardVariant.COLLECTION_PUBLIC, max, true);
             })
             .addOnSuccessListener(data -> {
                 LeaderboardsClient.LeaderboardScores res = data.get();
+                JSObject r = new JSObject();
+                boolean[] hasPlayer = { false };
                 try {
                     JSArray list = new JSArray();
                     LeaderboardScoreBuffer buf = res.getScores();
@@ -174,7 +178,6 @@ public class PlayGamesPlugin extends Plugin {
                         o.put("me", me[0] != null && s.getScoreHolder() != null && me[0].equals(s.getScoreHolder().getPlayerId()));
                         list.put(o);
                     }
-                    JSObject r = new JSObject();
                     r.put("scores", list);
                     r.put("player", JSObject.NULL);
                     r.put("total", -1);
@@ -186,14 +189,38 @@ public class PlayGamesPlugin extends Plugin {
                             p.put("rank", v.getPlayerRank());
                             p.put("score", v.getRawPlayerScore());
                             r.put("player", p);
+                            hasPlayer[0] = true;
                         }
                     }
-                    call.resolve(r);
                 } finally {
                     res.release();
                 }
+                if (hasPlayer[0]) {
+                    call.resolve(r);
+                    return;
+                }
+                // A lista não trouxe o jogador (fora dela sem posição, ou o perfil dele não aparece no ranking
+                // público): pergunta a pontuação dele direto, para a janela mostrar a linha "Você"
+                client.loadCurrentPlayerLeaderboardScore(id, span, LeaderboardVariant.COLLECTION_PUBLIC)
+                    .addOnCompleteListener(t -> {
+                        LeaderboardScore s = t.isSuccessful() && t.getResult() != null ? t.getResult().get() : null;
+                        if (s != null) {
+                            JSObject p = new JSObject();
+                            p.put("rank", s.getRank());
+                            p.put("score", s.getRawScore());
+                            r.put("player", p);
+                        }
+                        call.resolve(r);
+                    });
             })
-            .addOnFailureListener(e -> call.reject("load_failed", e));
+            .addOnFailureListener(e -> call.reject("load_failed", code(e), e));
+    }
+
+    // O código do Play Games (ApiException) num erro, para o jogo mostrar e o Analytics contar; null se não tiver
+    private static String code(Exception e) {
+        Throwable c = e;
+        while (c != null && !(c instanceof ApiException)) c = c.getCause();
+        return c != null ? String.valueOf(((ApiException) c).getStatusCode()) : null;
     }
 
     private boolean ready(PluginCall call, String slot) {
