@@ -485,6 +485,9 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
 - ✅ **1.0.14 (código 15)** (20/10/2026): o aviso da 1.0.13 mostrou que nenhum envio chegava ao Play Games — o
   `getLong()` do Capacitor recusava a pontuação (Integer) e o plugin respondia "no_score"; agora qualquer número
   inteiro vale (também o progresso da nuvem), com uma checagem no `test:rankings`; só no Teste interno
+- ✅ **1.0.15 (código 16)** (20/10/2026): a pontuação já subia, mas o perfil do Play Games privado deixava o jogador
+  fora da lista e sem posição — o ranking agora avisa ("Só você vê sua pontuação…") e "1 jogador" sai no singular;
+  só no Teste interno
 - ✅ **Joystick morria depois da 1ª carta** (19/10/2026, achado no aparelho com a 1.0.4): um `off("resume")`
   geral no `GameScene` (do conserto antigo das cartas em dobro) apagava o ouvinte que religava o joystick depois
   da pausa da acessibilidade — em todos os modos, também depois do ⏸ e do reviver. Agora o joystick religa no

@@ -234,6 +234,47 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.15 (código 16) — 20/10/2026
+
+AAB: `dist/guardiao-v1.0.15-16-anuncios-reais.aab`. Só no Teste interno. Com a 1.0.14 a pontuação subiu, mas o
+aparelho mostrava "— Você 182" fora da lista: o perfil do Play Games estava privado. Agora o ranking avisa nesse
+caso ("Só você vê sua pontuação: deixe o perfil do Play Games público para aparecer"), e "1 jogador" sai no singular.
+
+```
+<pt-BR>
+• Ranking: se o seu perfil do Play Games estiver privado, o jogo avisa que só você vê a sua pontuação e como aparecer para todos.
+• Pequena correção de texto no ranking.
+</pt-BR>
+<en-US>
+• Leaderboard: if your Play Games profile is private, the game tells you that only you can see your score and how to appear for everyone.
+• Small text fix on the leaderboard.
+</en-US>
+<es-419>
+• Clasificación: si tu perfil de Play Juegos es privado, el juego te avisa que solo tú ves tu puntuación y cómo aparecer para todos.
+• Pequeña corrección de texto en la clasificación.
+</es-419>
+<es-ES>
+• Clasificación: si tu perfil de Play Juegos es privado, el juego te avisa que solo tú ves tu puntuación y cómo aparecer para todos.
+• Pequeña corrección de texto en la clasificación.
+</es-ES>
+<ja-JP>
+• ランキング：Play ゲームのプロフィールが非公開のときは、スコアが自分にしか見えないことと、全員に表示する方法をお知らせします。
+• ランキングの表記を少し修正しました。
+</ja-JP>
+<zh-CN>
+• 排行榜：如果你的 Play 游戏个人资料设为不公开，游戏会提示只有你能看到自己的得分，以及如何让所有人看到。
+• 排行榜文字小修正。
+</zh-CN>
+<zh-TW>
+• 排行榜：如果你的 Play 遊戲個人資料設為不公開，遊戲會提示只有你能看到自己的得分，以及如何讓所有人看到。
+• 排行榜文字小修正。
+</zh-TW>
+<zh-HK>
+• 排行榜：如果你的 Play 遊戲個人資料設為不公開，遊戲會提示只有你能看到自己的得分，以及如何讓所有人看到。
+• 排行榜文字小修正。
+</zh-HK>
+```
+
 ### 1.0.14 (código 15) — 20/10/2026
 
 AAB: `dist/guardiao-v1.0.14-15-anuncios-reais.aab`. Só no Teste interno. O aviso novo da 1.0.13 mostrou no
