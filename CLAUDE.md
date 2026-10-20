@@ -82,27 +82,20 @@ Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um 
 marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 
 **Agora**
-- **1.0.7 (código 8) PUBLICADA no Teste interno e no Teste fechado/Alpha (19/10, `npm run play:versao -- subir
-  --publicar`):** Clareira Ancestral redesenhada (esteios entalhados, lamparinas, tucano, borboletas, cogumelos que
-  brilham), joystick religando no próprio toque da carta e em toda a metade da tela, loja de cosméticos ligada. O Alpha
-  **foi aprovado e publicado** (aviso do Console em 19/10; a faixa mostra a 1.0.7). Os testadores do Alpha
-  **pagam de verdade** se comprarem (só "Teste de compras" no Teste de licença). `dist/guardiao-v1.0.7-8-anuncios-reais.aab`.
-  No **Teste interno** já está a **1.0.15 (código 16)** (20/10, `dist/guardiao-v1.0.15-16-anuncios-reais.aab`): por
-  cima da 1.0.7, as animações da Ancestral refeitas (1.0.8), a horta da Ancestral (1.0.9), as novidades por
-  notificação (1.0.10), o **Google Play Games ligado** (rankings e progresso na nuvem, 1.0.11), o conserto do
-  login do Play Games (1.0.12: pede uma vez na abertura) e o do ranking (1.0.13: na 1.0.12 a derrota de 182 pontos
-  não aparecia — lista sempre do servidor, linha do jogador mesmo fora da lista pública, envio que falhou mostra o
-  código do Play Games e "Tentar de novo"; o código também chega ao Analytics como `rank_submit_fail`) e, na
-  1.0.14, a causa: o plugin recusava toda pontuação (o `getLong()` do Capacitor não aceita Integer), nada tinha subido.
-  Com a 1.0.14 a pontuação subiu (182, conferido no aparelho); o perfil do Play Games privado escondia da lista — a
-  1.0.15 avisa nesse caso.
-  👤 No celular (teste interno, `https://play.google.com/apps/internaltest/4700140413216190768`): atualizar e testar
-  joystick (carta, ⏸, reviver), Loja, Fundador com cartão de teste → Clareira Ancestral (de dia e à noite, horta), estorno.
+- **1.0.16 (código 17) no Teste interno e no Teste fechado/Alpha (20/10; Alpha em revisão do Google junto com a
+  Segurança dos dados).** `dist/guardiao-v1.0.16-17-anuncios-reais.aab`. O Alpha vinha da 1.0.7 (Clareira Ancestral,
+  joystick, loja de cosméticos); por cima: animações da Ancestral (1.0.8), horta da Ancestral (1.0.9), novidades por
+  notificação (1.0.10), **Google Play Games** — rankings e progresso na nuvem (1.0.11) e os consertos achados no
+  aparelho: login num lugar só (1.0.12), lista do ranking sempre do servidor e aviso com o código do erro (1.0.13), o
+  plugin que recusava toda pontuação (`getLong()` do Capacitor não aceita Integer, 1.0.14), aviso de perfil do Play
+  Games privado (1.0.15) e entrar de novo quando a entrada automática não acontece (1.0.16). No aparelho em 20/10:
+  ranking com "1. xKomedy 182", desinstalar/reinstalar trouxe o progresso de volta. Os testadores do Alpha **pagam de
+  verdade** se comprarem (só "Teste de compras" no Teste de licença). 👤 Conferir no Console quando a revisão aprovar.
 - **Novidades por notificação** (FCM, na 1.0.10; `docs/PLAY_STORE.md`, "Novidades por notificação"): app e script
   `npm run aviso` prontos. 👤 Dar à conta de serviço o papel **"Administrador da API Firebase Cloud Messaging"** no
   Google Cloud (passo a passo no documento; hoje o envio dá 403). Depois: instalar a 1.0.10 do Teste interno,
-  ligar Opções › Jogo › Novidades e mandar `tools/play/avisos/2026-10-19-teste.json`. Ao levar ao Alpha/produção:
-  "Segurança dos dados" (IDs do dispositivo + Funcionalidade do app e Comunicações do desenvolvedor). A política
+  ligar Opções › Jogo › Novidades e mandar `tools/play/avisos/2026-10-19-teste.json`. A "Segurança dos dados" já
+  declara (20/10) os IDs do dispositivo com Funcionalidade do app e Mensagens do desenvolvedor. A política
   com novidades e Play Games **já está no ar** (19/10: site `lopesleo.github.io/guardiao/privacidade/` e `/en/privacy/`,
   e a página antiga do branch `pages`).
 - **Próximo: Clareira da Caatinga** (grátis): liberar quem vencer no Perigo máximo na Caatinga + uma conquista.
@@ -143,11 +136,10 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 - Anúncios já pedem classificação máxima "T" no app; 👤 deixar também "T" no console do AdMob (Controles de
   bloqueio). **Play Games configurado em 19/10** (`docs/PLAY_STORE.md`, "Progresso na nuvem" e "Rankings"):
   projeto 338573815363 no `games-ids.xml`, 5 credenciais, Jogos salvos, os 2 rankings criados (IDs em
-  `RANKING.IDS`; o de Perigo aceita 1–10) e a política no ar. A **1.0.15** (Teste interno) liga nuvem e rankings
-  com o login, a lista e o envio consertados (ranking conferido no aparelho em 20/10: "1. xKomedy 182"). 👤 Falta: testar no aparelho (ao abrir, o Play Games entra ou pede uma vez; uma
-  partida, abrir o ranking — a partida aparece, ou o aviso com o código do erro; desinstalar e reinstalar para ver o progresso voltar); depois publicar o Play Games Services (Configuração → Revisar e
-  publicar; limites, ordem dos rankings e Jogos salvos não mudam mais) e marcar a Segurança dos dados antes de
-  levar ao Alpha/produção.
+  `RANKING.IDS`; o de Perigo aceita 1–10) e a política no ar. **Play Games Services publicado em 20/10** (as 5
+  credenciais ganharam o nome "Guardião da Floresta", exigido na publicação; limites, ordem dos rankings e Jogos
+  salvos não mudam mais) e a **Segurança dos dados atualizada** (Nome, IDs de usuário e Outras ações, opcionais;
+  login com conta de fora do app). Testado no aparelho com a 1.0.15/1.0.16: ranking, nuvem e reinstalar.
   Revisão nativa ja/zh; testes em aparelho fraco.
 
 **Laboratório e ferramentas**
