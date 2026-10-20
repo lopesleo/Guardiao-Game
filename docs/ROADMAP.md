@@ -501,6 +501,13 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Agora as chaves conferem a permissão e os canais, sem ela o aparelho sai do tópico, quem perdeu vê o pedido do baú
   de novo e, bloqueado de vez, ligar abre as configurações do jogo no Android (plugin `NotificationSettings`).
   6 cenários novos no `test:avisos`; Teste interno e Alpha (20/10)
+- ✅ **1.0.19 (código 20)** (20/10/2026): **tela de fim de partida redesenhada** no padrão da tela inicial
+  (`GameOverScene.js` + `src/art/ResultArt.js`): cena na Clareira à esquerda — vitória ao amanhecer com a lenda
+  libertada em paz e o guardião de cajado erguido; derrota com o guardião de volta à fogueira (o lugar seguro do
+  roguelite), ajoelhado e depois de pé, e a Podridão só no horizonte; recuo à noite; Noite Eterna com aurora; Caatinga
+  com mandacarus — e o resultado à direita em sequência (pular com um toque), com reações, recompensas em fichas, a
+  parte do dano de cada arma e os desbloqueios; vinhetas de vitória e derrota. **Ranking com pódio** dos 3 primeiros
+  (`RankingModal.js`). Poses novas do rig (`cheer`, `mourn`, levantar) e o Mapinguari libertado de boca fechada
 - ✅ **Joystick morria depois da 1ª carta** (19/10/2026, achado no aparelho com a 1.0.4): um `off("resume")`
   geral no `GameScene` (do conserto antigo das cartas em dobro) apagava o ouvinte que religava o joystick depois
   da pausa da acessibilidade — em todos os modos, também depois do ⏸ e do reviver. Agora o joystick religa no
