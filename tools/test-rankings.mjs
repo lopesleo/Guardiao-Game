@@ -200,17 +200,20 @@ const SCENARIOS = {
       console.log("    cenas ativas:", await t.page.evaluate(() => window.game.scene.getScenes(true).map((s) => s.scene.key).join(","), await t.page.evaluate(() => { const g = window.game.scene.getScene("GameScene"); return JSON.stringify({ over: g.gameOver, paused: g.scene.isPaused(), t: g.time.now }); })));
       throw e;
     });
-    await t.page.waitForTimeout(2600);
+    await t.page.waitForTimeout(3400); // o botão dos pontos entra depois das armas
     const g = await t.pg();
     // Aprendiz (×1): 845 × 10 + 5000
     check(g.sent.some(([b, v]) => b === "score" && v === 13450), "mandou 13.450 pontos (845 abates × 10 + 5.000, ×1)", JSON.stringify(g.sent));
     check(g.sent.some(([b, v]) => b === "perigo" && v === 1), "venceu no Aprendiz: Perigo 1", JSON.stringify(g.sent));
     const pill = await t.page.evaluate(() => {
       const s = window.game.scene.getScene("GameOverScene");
-      const b = s.children.list.find((o) => o.label && /pontos|points|puntos|点|分/.test(o.label.text));
+      // o resultado fica num painel (container): procura dentro dele também
+      const deep = (o) => (o.list ? [o, ...o.list.flatMap(deep)] : [o]);
+      const all = s.children.list.flatMap(deep);
+      const b = all.find((o) => o.label && /pontos|points|puntos|点|分/.test(o.label.text));
       if (!b) return null;
       const r = b.getBounds();
-      const head = s.children.list.find((o) => o.type === "Text" && /PERIGO|DANGER|PELIGRO|危/.test(o.text));
+      const head = all.find((o) => o.type === "Text" && /PERIGO|DANGER|PELIGRO|危/.test(o.text));
       const h = head.getBounds();
       return { label: b.label.text, alpha: b.alpha, x: r.x, right: r.x + r.width, headRight: h.x + h.width * 1 };
     });
@@ -219,7 +222,8 @@ const SCENARIOS = {
     if (SHOTS) await t.page.screenshot({ path: `${SHOTS}/${LOC}_${TS}_rank_fim.png` });
     await t.page.evaluate(() => {
       const s = window.game.scene.getScene("GameOverScene");
-      s.children.list.find((o) => o.label && /pontos|points|puntos|点|分/.test(o.label.text)).onClick();
+      const deep = (o) => (o.list ? [o, ...o.list.flatMap(deep)] : [o]);
+      s.children.list.flatMap(deep).find((o) => o.label && /pontos|points|puntos|点|分/.test(o.label.text)).onClick();
     });
     await t.page.waitForTimeout(900);
     const mt = await modalTexts(t, "GameOverScene");
