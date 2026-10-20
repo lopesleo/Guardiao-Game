@@ -229,6 +229,11 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 
 **Gráfico de destaque (1024×500):** obrigatório — use o menu (título + herói).
 
+**Na ficha desde 20/10/2026** (8 idiomas, `npm run play:imagens -- subir`): 01 = a tela de título nova (modo vitrine,
+`videos/promo/tools/vitrine.mjs`, título do próprio jogo traduzido), 02–08 = horda, elementos, evolução, chefes, mapas,
+as 7 lendas sobre a clareira noturna e a Clareira; destaque = a tela de título. A captura das cartas saiu do conjunto.
+Arquivos e como refazer: `videos/promo/store/out/LEIA-ME.txt` (fora do git); versão anterior em `out_backup_20261020/`.
+
 ## Notas da versão ("Novidades")
 
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
