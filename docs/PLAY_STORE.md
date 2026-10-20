@@ -239,6 +239,79 @@ Arquivos e como refazer: `videos/promo/store/out/LEIA-ME.txt` (fora do git); ver
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.19 (código 20) — 20/10/2026
+
+AAB: `dist/guardiao-v1.0.19-20-anuncios-reais.aab`. **Tela de fim de partida redesenhada** (`src/scenes/GameOverScene.js`,
+arte em `src/art/ResultArt.js` sobre as camadas da tela inicial): à esquerda a cena na Clareira — na vitória amanhece
+(sol nascendo atrás da serra, raios, pássaros), a mata do horizonte sara e a lenda libertada aparece em paz na borda
+da floresta (o Mapinguari de boca fechada, flores abrindo) diante do guardião de cajado erguido; na derrota o guardião
+**voltou à Clareira** (a fogueira é o lugar seguro do roguelite: decisão do Leonardo, a Podridão só lá longe, na mata
+do horizonte), ajoelha junto do fogo e se levanta (poses novas em `HeroRig.js`); recuo = noite calma; Noite Eterna =
+aurora; Caatinga com mandacarus. À direita o resultado entra em sequência (tocar fora dos botões pula): Perigo e
+pontos, tempo/abates/reações, recompensas com a conta e o anúncio, **as armas com a parte do dano** e os desbloqueios.
+Vinhetas novas de vitória e derrota (`Synth.js`). **Ranking com pódio** (`src/ui/RankingModal.js`): os 3 primeiros em
+pedestais de pedra com troféu de ouro/prata/bronze, do 4º ao 10º ao lado, pedras apagadas quando não há ninguém. As
+notas juntam a 1.0.17 e a 1.0.18 (o Alpha pode pular direto para esta).
+
+```
+<pt-BR>
+• Tela inicial nova e tela de fim de partida redesenhada, com a parte do dano de cada arma.
+• Rankings no Google Play Games com pódio dos 3 primeiros: pontuação e maior Perigo, da semana e de sempre.
+• Progresso na nuvem: entre no Play Games e o seu progresso volta ao reinstalar ou trocar de celular.
+• Novidades por notificação. Se o Android bloquear, Opções mostra e um toque libera.
+• Clareira Ancestral com animações refeitas e horta nova.
+</pt-BR>
+<en-US>
+• New title screen and a redesigned end-of-run screen showing each weapon's share of damage.
+• Leaderboards on Google Play Games with a top-3 podium: score and highest Danger, weekly and all-time.
+• Cloud progress: sign in to Play Games and your progress comes back when you reinstall or switch phones.
+• News notifications. If Android blocks them, Options shows it and one tap fixes it.
+• Ancestral Clearing with redone animations and a new garden.
+</en-US>
+<es-419>
+• Nueva pantalla de inicio y pantalla de fin de partida rediseñada, con la parte del daño de cada arma.
+• Clasificaciones en Google Play Juegos con podio: puntuación y mayor Peligro, de la semana y de siempre.
+• Progreso en la nube: entra en Play Juegos y tu progreso vuelve al reinstalar o cambiar de teléfono.
+• Novedades por notificación. Si Android las bloquea, Opciones lo muestra y un toque lo arregla.
+• Claro Ancestral con animaciones renovadas y un huerto nuevo.
+</es-419>
+<es-ES>
+• Nueva pantalla de inicio y pantalla de fin de partida rediseñada, con la parte del daño de cada arma.
+• Clasificaciones en Google Play Juegos con podio: puntuación y mayor Peligro, de la semana y de siempre.
+• Progreso en la nube: entra en Play Juegos y tu progreso vuelve al reinstalar o cambiar de móvil.
+• Novedades por notificación. Si Android las bloquea, Opciones lo muestra y un toque lo arregla.
+• Claro Ancestral con animaciones renovadas y un huerto nuevo.
+</es-ES>
+<ja-JP>
+• タイトル画面を一新し、リザルト画面も作り直し：武器ごとのダメージの割合を表示。
+• Google Play ゲームのランキングに上位3人の表彰台：スコアと最高危険度（今週・歴代）。
+• クラウドに保存：Play ゲームにログインすると、再インストールや機種変更のときに進行状況が戻ります。
+• 最新情報のお知らせ。Android でオフになっているとオプションに表示され、タップで許可できます。
+• いにしえの広場のアニメーションを作り直し、新しい畑を追加。
+</ja-JP>
+<zh-CN>
+• 全新标题画面，结算画面也全面重做：显示每件武器的伤害占比。
+• Google Play 游戏排行榜新增前三名领奖台：得分与最高危险度，分本周和总榜。
+• 云端进度：登录 Play 游戏后，重装或换手机时进度都能找回。
+• 最新消息通知。若被 Android 关闭，选项中会显示，点击即可开启。
+• 远古空地的动画全面重做，并新增菜园。
+</zh-CN>
+<zh-TW>
+• 全新標題畫面，結算畫面也全面重做：顯示每件武器的傷害占比。
+• Google Play 遊戲排行榜新增前三名頒獎台：得分與最高危險度，分本週和總榜。
+• 雲端進度：登入 Play 遊戲後，重裝或換手機時進度都能找回。
+• 最新消息通知。若被 Android 關閉，選項中會顯示，點擊即可開啟。
+• 遠古空地的動畫全面重做，並新增菜園。
+</zh-TW>
+<zh-HK>
+• 全新標題畫面，結算畫面也全面重做：顯示每件武器的傷害占比。
+• Google Play 遊戲排行榜新增前三名頒獎台：得分與最高危險度，分本週和總榜。
+• 雲端進度：登入 Play 遊戲後，重裝或換手機時進度都能找回。
+• 最新消息通知。若被 Android 關閉，選項中會顯示，點擊即可開啟。
+• 遠古空地的動畫全面重做，並新增菜園。
+</zh-HK>
+```
+
 ### 1.0.18 (código 19) — 20/10/2026
 
 AAB: `dist/guardiao-v1.0.18-19-anuncios-reais.aab`. Teste interno e **Teste fechado/Alpha** (20/10, publicada pelo
