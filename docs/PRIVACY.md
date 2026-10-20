@@ -30,7 +30,7 @@ Se você estiver conectado ao **Google Play Games**, o jogo guarda uma cópia do
 **Jogos salvos** do Google. A cópia fica no espaço do jogo na sua conta Google (uma pasta oculta, que só este
 jogo acessa), **não em servidores nossos**, e serve para recuperar o progresso ao reinstalar ou trocar de
 aparelho. As opções (volume, idioma etc.) não vão para a nuvem. O Google Play Games trata a sua conta e o seu
-perfil de jogador conforme a [Política de Privacidade do Google](https://policies.google.com/privacy). Para não
+perfil de jogador conforme a política do Google: <https://policies.google.com/privacy>. Para não
 usar a nuvem, basta não entrar no Play Games. "Apagar progresso" apaga também a cópia na nuvem, e você pode
 excluir os dados do jogo no app ou nas configurações do Google Play Games.
 
@@ -39,9 +39,8 @@ excluir os dados do jogo no app ou nas configurações do Google Play Games.
 Se você estiver conectado ao **Google Play Games**, a pontuação das suas partidas solo e o maior Perigo que você
 venceu vão para os rankings do jogo no Google Play Games. Outros jogadores veem o seu **apelido** e a sua
 **posição** conforme a visibilidade do seu perfil de jogador (configurável no app Google Play Games). Não
-recebemos dados pessoais: o ranking é guardado e mostrado pelo Google, conforme a
-[Política de Privacidade do Google](https://policies.google.com/privacy). Para não aparecer, basta não entrar
-no Play Games.
+recebemos dados pessoais: o ranking é guardado e mostrado pelo Google, conforme a política dele:
+<https://policies.google.com/privacy>. Para não aparecer, basta não entrar no Play Games.
 
 ## Anúncios (Google AdMob)
 
