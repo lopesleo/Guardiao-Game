@@ -494,7 +494,7 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   funcionalidade e mensagens do desenvolvedor; login com conta de fora do app) e a versão no Teste interno e no Alpha
 - ✅ **1.0.17 (código 18)** (20/10/2026): tela inicial redesenhada (`src/art/TitleArt.js` — clareira à noite em
   camadas, árvores enraizadas emoldurando os cantos, terreiro da fogueira, folhas e estrela cadente; o pinheiro que
-  "voava" no gramado saiu); só no Teste interno
+  "voava" no gramado saiu); Teste interno e Alpha (20/10, notas com o resumo da 1.0.16)
 - ✅ **Joystick morria depois da 1ª carta** (19/10/2026, achado no aparelho com a 1.0.4): um `off("resume")`
   geral no `GameScene` (do conserto antigo das cartas em dobro) apagava o ouvinte que religava o joystick depois
   da pausa da acessibilidade — em todos os modos, também depois do ⏸ e do reviver. Agora o joystick religa no

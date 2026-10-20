@@ -82,8 +82,8 @@ Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um 
 marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 
 **Agora**
-- **1.0.16 (código 17) no Teste interno e no Teste fechado/Alpha (20/10; Alpha em revisão do Google junto com a
-  Segurança dos dados).** `dist/guardiao-v1.0.16-17-anuncios-reais.aab`. O Alpha vinha da 1.0.7 (Clareira Ancestral,
+- **1.0.17 (código 18) no Teste interno e no Teste fechado/Alpha (20/10; a 1.0.16 foi aprovada no Alpha no mesmo dia e a
+  1.0.17, com a tela inicial nova, foi para a revisão por cima dela).** `dist/guardiao-v1.0.17-18-anuncios-reais.aab`. O Alpha vinha da 1.0.7 (Clareira Ancestral,
   joystick, loja de cosméticos); por cima: animações da Ancestral (1.0.8), horta da Ancestral (1.0.9), novidades por
   notificação (1.0.10), **Google Play Games** — rankings e progresso na nuvem (1.0.11) e os consertos achados no
   aparelho: login num lugar só (1.0.12), lista do ranking sempre do servidor e aviso com o código do erro (1.0.13), o
@@ -91,8 +91,8 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
   Games privado (1.0.15) e entrar de novo quando a entrada automática não acontece (1.0.16). No aparelho em 20/10:
   ranking com "1. xKomedy 182", desinstalar/reinstalar trouxe o progresso de volta. Os testadores do Alpha **pagam de
   verdade** se comprarem (só "Teste de compras" no Teste de licença). 👤 Conferir no Console quando a revisão aprovar.
-  No **Teste interno**: **1.0.17 (código 18)** com a tela inicial redesenhada (`dist/guardiao-v1.0.17-18-anuncios-reais.aab`);
-  levar ao Alpha depois que a 1.0.16 for aprovada.
+  Aviso por notificação dos rankings pronto (`tools/play/avisos/2026-10-20-rankings.json`); 👤 falta o papel do FCM
+  (abaixo). Enviar ~2–3 dias depois da aprovação, para os testadores já terem atualizado.
 - **Novidades por notificação** (FCM, na 1.0.10; `docs/PLAY_STORE.md`, "Novidades por notificação"): app e script
   `npm run aviso` prontos. 👤 Dar à conta de serviço o papel **"Administrador da API Firebase Cloud Messaging"** no
   Google Cloud (passo a passo no documento; hoje o envio dá 403). Depois: instalar a 1.0.10 do Teste interno,
