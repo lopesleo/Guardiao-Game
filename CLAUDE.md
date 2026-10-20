@@ -91,15 +91,13 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
   Games privado (1.0.15) e entrar de novo quando a entrada automática não acontece (1.0.16). No aparelho em 20/10:
   ranking com "1. xKomedy 182", desinstalar/reinstalar trouxe o progresso de volta. Os testadores do Alpha **pagam de
   verdade** se comprarem (só "Teste de compras" no Teste de licença). 👤 Conferir no Console quando a revisão aprovar.
-  Aviso por notificação dos rankings pronto (`tools/play/avisos/2026-10-20-rankings.json`); 👤 falta o papel do FCM
-  (abaixo). Enviar ~2–3 dias depois da aprovação, para os testadores já terem atualizado.
+  Aviso por notificação dos rankings pronto e **validado pelo Google** (`tools/play/avisos/2026-10-20-rankings.json`).
+  👤 Enviar (`npm run aviso -- enviar …`) ~2–3 dias depois da aprovação da 1.0.17 no Alpha, quando o Leonardo mandar.
 - **Novidades por notificação** (FCM, na 1.0.10; `docs/PLAY_STORE.md`, "Novidades por notificação"): app e script
-  `npm run aviso` prontos. 👤 Dar à conta de serviço o papel **"Administrador da API Firebase Cloud Messaging"** no
-  Google Cloud (passo a passo no documento; hoje o envio dá 403). Depois: instalar a 1.0.10 do Teste interno,
-  ligar Opções › Jogo › Novidades e mandar `tools/play/avisos/2026-10-19-teste.json`. A "Segurança dos dados" já
-  declara (20/10) os IDs do dispositivo com Funcionalidade do app e Mensagens do desenvolvedor. A política
-  com novidades e Play Games **já está no ar** (19/10: site `lopesleo.github.io/guardiao/privacidade/` e `/en/privacy/`,
-  e a página antiga do branch `pages`).
+  `npm run aviso` prontos; a conta de serviço **ganhou o papel "Administrador da API Firebase Cloud Messaging" em 20/10**
+  (o `validar` passa nos 6 tópicos). Teste num aparelho só (`--token=`) precisa do token FCM, que a versão da loja não
+  mostra. A "Segurança dos dados" já declara (20/10) os IDs do dispositivo com Funcionalidade do app e Mensagens do
+  desenvolvedor. A política com novidades e Play Games **já está no ar** (`komedygames.com/guardiao/privacidade/`).
 - **Próximo: Clareira da Caatinga** (grátis): liberar quem vencer no Perigo máximo na Caatinga + uma conquista.
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
   ~14/10 (pedido de produção possível por volta de **28/10**). 👤 Manter os 12 ativos (ninguém sair da lista).
