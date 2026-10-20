@@ -1121,4 +1121,8 @@ export default {
   "Kit liberado! Agora é só usar as peças.": "套装已解锁！现在就能使用了。",
   "SIM": "开",
   "NÃO": "关",
+  "Reações": "反应",
+  "RECOMPENSAS": "奖励",
+  "ARMAS  ·  PARTE DO DANO": "武器 · 伤害占比",
+  "e mais {0}": "还有{0}项",
 };

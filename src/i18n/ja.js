@@ -1121,4 +1121,8 @@ export default {
   "Kit liberado! Agora é só usar as peças.": "セットを入手！さっそく使ってみよう。",
   "SIM": "オン",
   "NÃO": "オフ",
+  "Reações": "反応",
+  "RECOMPENSAS": "報酬",
+  "ARMAS  ·  PARTE DO DANO": "武器・ダメージの割合",
+  "e mais {0}": "ほか{0}件",
 };

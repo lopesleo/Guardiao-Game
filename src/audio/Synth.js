@@ -499,6 +499,36 @@ function songMenu() {
   return { bpm: 84, beats: 64, events: ev };
 }
 
+// Vinhetas da tela de resultado (tocam uma vez; o fim tem folga para a cauda não "dar a volta" no começo)
+// Vitória — fanfarra em Dó maior: arpejo que sobe, a melodia responde e fecha no Dó lá em cima
+function songVictory() {
+  const ev = [];
+  [[72, 0.25], [76, 0.25], [79, 0.25], [84, 1.25]].reduce((b, [m, len]) => (ev.push({ beat: b, len: len * 0.92, midi: m, inst: "lead", vol: 0.16, vib: true, rel: 0.12 }), b + len), 0);
+  ev.push(...melody([[79, 0.5], [81, 0.5], [84, 1], [83, 0.5], [84, 0.5], [88, 2.5]], 2, "lead", 0.15, { rel: 0.3 }));
+  ev.push(...melody([[76, 0.5], [77, 0.5], [79, 1], [79, 0.5], [79, 0.5], [79, 2.5]], 2, "tri", 0.1, { rel: 0.3 }));
+  for (const [b, ch, len] of [[0, "C", 2], [2, "F", 2], [4, "G", 1], [5, "C", 3.5]]) {
+    CH[ch].forEach((m) => ev.push({ beat: b, len, midi: m, inst: "pad", vol: 0.07, atk: 0.05, rel: 0.6, cut: 0.1 }));
+    ev.push({ beat: b, len: len * 0.9, midi: CH[ch][0] - 24, inst: "bass", vol: 0.22, rel: 0.2 });
+  }
+  for (const b of [0, 2, 4, 5]) ev.push({ beat: b, drum: "kick", vol: 0.5 });
+  for (let i = 0; i < 4; i++) ev.push({ beat: 4 + i * 0.25, drum: "snare", vol: 0.16 + i * 0.05 });
+  ev.push({ beat: 5, drum: "tom", vol: 0.4 });
+  return { bpm: 118, beats: 11, events: ev };
+}
+
+// Derrota — Lá menor, devagar: a melodia desce… e o último acorde vira maior (a floresta caiu, por enquanto)
+function songDefeat() {
+  const ev = [];
+  ev.push(...melody([[76, 1], [74, 0.5], [72, 1], [71, 1], [69, 2]], 0, "tri", 0.2, { rel: 0.4 }));
+  ev.push(...melody([[73, 3]], 6, "lead", 0.08, { rel: 0.9 }));
+  for (const [b, ch, len] of [[0, "Am", 2.5], [2.5, "F", 3.5], [6, "A", 3.5]]) {
+    CH[ch].forEach((m) => ev.push({ beat: b, len, midi: m + (ch === "A" ? 12 : 0), inst: "pad", vol: 0.075, atk: 0.35, rel: 1, cut: 0.07 }));
+    ev.push({ beat: b, len: len * 0.95, midi: CH[ch][0] - (ch === "A" ? 12 : 24), inst: "tri", vol: 0.3, rel: 0.5 });
+  }
+  ev.push({ beat: 0, drum: "tom", vol: 0.22 }, { beat: 6, drum: "tom", vol: 0.18 });
+  return { bpm: 70, beats: 11.5, events: ev };
+}
+
 // Partida — "Horda" (Ré menor, 132 BPM): bateria, baixo pulsante, melodia;
 // segunda volta com arpejo em 16avos e melodia uma oitava acima.
 function songGame() {
@@ -652,5 +682,7 @@ export function registerAudio(game) {
   game.cache.audio.add("music_boss", toBuffer(renderSong(songBoss())));
   game.cache.audio.add("music_caatinga", toBuffer(renderSong(songCaatinga())));
   game.cache.audio.add("music_boss_caatinga", toBuffer(renderSong(songBossCaatinga())));
+  game.cache.audio.add("music_victory", toBuffer(renderSong(songVictory())));
+  game.cache.audio.add("music_defeat", toBuffer(renderSong(songDefeat())));
   return true;
 }
