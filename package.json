@@ -16,6 +16,7 @@
     "test:rankings": "node tools/test-rankings.mjs",
     "play:produtos": "node tools/play-produtos.mjs",
     "play:versao": "node tools/play-versao.mjs",
+    "play:imagens": "node tools/play-imagens.mjs",
     "aviso": "node tools/play-aviso.mjs",
     "play:rankings": "node tools/play-rankings.mjs",
     "android:sync": "npm run build && npx cap sync android",

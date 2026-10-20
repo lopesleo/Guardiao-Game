@@ -21,7 +21,11 @@ export class TitleScene extends Phaser.Scene {
     super("TitleScene");
   }
 
-  create() {
+  // data.vitrine (só as ferramentas de captura das artes da loja, videos/promo/tools/vitrine.mjs): sem botões e com
+  // as posições da cena ajustáveis — { hx, mx, my, tx, ty (frações da tela), k (escala do título), tagline, bare (só o
+  // cenário: sem guardião, fogueira nem título) }
+  create(data) {
+    this.vitrine = data?.vitrine || null;
     this.events.once("create", () => this._maybeReopenSettings?.());
     fitCamera(this);
     this.meta = new MetaProgression();
@@ -71,16 +75,28 @@ export class TitleScene extends Phaser.Scene {
   _layout() {
     const W = this.W,
       H = this.H;
-    const hx = Math.round(W * 0.3),
+    const v = this.vitrine || {};
+    const hx = Math.round(W * (v.hx ?? 0.3)),
       hy = Math.round(H * 0.8);
-    this.L = { horizon: Math.round(H * 0.6), hx, hy, fx: hx + 150, fy: hy - 6, mx: Math.round(W * 0.6), my: Math.round(H * 0.17) };
+    this.L = {
+      horizon: Math.round(H * 0.6),
+      hx,
+      hy,
+      fx: v.bare ? -9999 : hx + 150, // cena vazia (fundo de outra arte): sem fogueira nem terreiro
+      fy: hy - 6,
+      mx: Math.round(W * (v.mx ?? 0.6)),
+      my: Math.round(H * (v.my ?? 0.17)),
+      tx: Math.round(W * (v.tx ?? 0.3)), // centro do título
+      tk: v.k ?? 1,
+    };
     this.heroX = hx;
     this.heroY = hy;
   }
 
   // Camada de arte (TitleArt.js) gerada uma vez por tamanho de tela
   _layer(name, make) {
-    const key = `title_${name}_${this.W}x${this.H}`;
+    // a posição da fogueira (terreiro) e da lua (luar nas cristas) entram na chave: a vitrine muda as duas
+    const key = `title_${name}_${this.W}x${this.H}_${this.L.fx}_${this.L.mx}`;
     if (!this.textures.exists(key)) make().register(this, key);
     return key;
   }
@@ -112,7 +128,7 @@ export class TitleScene extends Phaser.Scene {
     this.add.image(L.mx, L.my, this._layer("moon", makeMoon)).setScale(S);
     // nuvens: uma fina passa na frente da lua (só à direita do título, surgindo e sumindo devagar); duas baixas
     // espiam por trás da serra (desenhada depois, cobre o pé delas)
-    const titleR = Math.round(W * 0.3 + 190);
+    const titleR = Math.round(L.tx + 190 * L.tk);
     const cloud = (i, w, h, y, v, a, x0, x1) => {
       const c = this.add.image(x0 + Math.random() * (x1 - x0), y, this._layer(`cloud${i}`, () => makeCloud(61 + i * 5, w, h))).setScale(S);
       Object.assign(c, { _v: v, _a: a, _x0: x0, _x1: x1 });
@@ -123,6 +139,8 @@ export class TitleScene extends Phaser.Scene {
       cloud(1, 92, 16, L.horizon - 146, 3, 0.7, -150, W + 150),
       cloud(2, 70, 13, L.horizon - 176, 4.2, 0.55, -150, W + 150),
     ];
+    // arte da loja: a nuvem da lua começa ao lado dela (a lua inteira na foto)
+    if (this.vitrine) this.clouds[0].x = L.mx + 200;
 
     // Serra, mata ao longe, névoa, mata de perto: cada uma cheia até embaixo (o chão cobre o pé)
     img(this._layer("ridge", () => makeRidge(lw, lh, hz - 30, 24, 7, mxl)));
@@ -162,7 +180,7 @@ export class TitleScene extends Phaser.Scene {
       placed++;
     }
     // Poça de luz quente da fogueira no chão
-    this.firePool = this.add.image(L.fx, L.fy + 4, "fx_glow").setScale(12, 3.4).setTint(PAL.org3).setAlpha(0.2).setBlendMode(Phaser.BlendModes.ADD);
+    if (!this.vitrine?.bare) this.firePool = this.add.image(L.fx, L.fy + 4, "fx_glow").setScale(12, 3.4).setTint(PAL.org3).setAlpha(0.2).setBlendMode(Phaser.BlendModes.ADD);
   }
 
   // Árvores da moldura (enraizadas fora da tela; as copas cobrem os cantos de cima), samambaias à frente,
@@ -181,7 +199,7 @@ export class TitleScene extends Phaser.Scene {
       const c = this.add.image(x, y, this._layer(`canopy${i}`, () => makeCanopy(71 + i * 7, w, h, 1 + (i % 2)))).setOrigin(0).setScale(S).setFlipX(flip);
       this.sway.push({ o: c, bx: x, by: y, ph: i * 1.7, ax: 2.4, ay: 1.2, per: 1800 + i * 260 });
     };
-    const titleL = Math.round(W * 0.3 - 175); // borda esquerda do título
+    const titleL = Math.round(this.L.tx - 175 * this.L.tk); // borda esquerda do título
     canopy(0, 90, 48, -86, -62, false);
     canopy(1, 66, 38, Math.min(70, titleL - 66 * S - 6), -58, false);
     canopy(2, 58, 34, -70, 70, false);
@@ -300,6 +318,7 @@ export class TitleScene extends Phaser.Scene {
   }
 
   _heroArea() {
+    if (this.vitrine?.bare) return;
     const L = this.L;
     const hx = L.hx,
       hy = L.hy,
@@ -351,21 +370,28 @@ export class TitleScene extends Phaser.Scene {
   }
 
   _title() {
-    const x = Math.round(this.W * 0.3);
-    const y = Math.round(96 + Math.max(0, this.H - 720) * 0.2); // tela mais alta (tablet): o título desce um pouco
-    const glow = this.add.image(x, y + 14, "fx_glow").setScale(8, 2.5).setTint(PAL.yel2).setAlpha(0.14).setBlendMode(Phaser.BlendModes.ADD);
+    if (this.vitrine?.bare) return;
+    const v = this.vitrine || {};
+    const x = this.L.tx,
+      k = this.L.tk;
+    const y = Math.round(v.ty != null ? this.H * v.ty : 96 + Math.max(0, this.H - 720) * 0.2); // tela mais alta (tablet): o título desce um pouco
+    const glow = this.add.image(x, y + 14 * k, "fx_glow").setScale(8 * k, 2.5 * k).setTint(PAL.yel2).setAlpha(0.14).setBlendMode(Phaser.BlendModes.ADD);
     this.tweens.add({ targets: glow, alpha: 0.24, duration: 1800, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
-    const t1 = text(this, x, y, tr("GUARDIÃO"), { size: 84, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 10, shadowY: 6 });
-    const t2 = text(this, x, y + 64, tr("DA FLORESTA"), { size: 34, color: hex(PAL.g6), origin: 0.5, stroke: true, strokeW: 6 });
-    const vine = this.add.image(x, y + 96, this._layer("vine", () => makeVine())).setScale(TITLE_PX);
-    const t3 = text(this, x, y + 124, tr("Sobreviva à horda. Desperte a mata."), { size: 18, color: CSS.muted, origin: 0.5 });
-    [t1, t2, vine, t3].forEach((t, i) => {
+    const t1 = text(this, x, y, tr("GUARDIÃO"), { size: Math.round(84 * k), color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: Math.round(10 * k), shadowY: Math.round(6 * k) });
+    const t2 = text(this, x, y + 64 * k, tr("DA FLORESTA"), { size: Math.round(34 * k), color: hex(PAL.g6), origin: 0.5, stroke: true, strokeW: Math.round(6 * k) });
+    const vine = this.add.image(x, y + 96 * k, this._layer("vine", () => makeVine())).setScale(Math.max(1, Math.round(TITLE_PX * k)));
+    const parts = [t1, t2, vine];
+    if (v.tagline !== false) parts.push(text(this, x, y + 124 * k, tr("Sobreviva à horda. Desperte a mata."), { size: Math.round(18 * k), color: CSS.muted, origin: 0.5 }));
+    // arte da loja em escala não inteira (8/3): o texto na resolução da tela, senão o traço do "e" some ao esticar
+    if (this.vitrine) for (const t of parts) t.setResolution?.(Math.max(2, Math.ceil(window.devicePixelRatio || 1)));
+    parts.forEach((t, i) => {
       t.setAlpha(0).y -= 20;
       this.tweens.add({ targets: t, alpha: 1, y: t.y + 20, delay: 150 + i * 120, duration: 520, ease: "Back.easeOut" });
     });
   }
 
   _buttons() {
+    if (this.vitrine) return; // arte da loja: só a cena e o título
     const W = this.W,
       H = this.H;
     const cx = Math.round(Math.max(W * 0.74, W - 250));
