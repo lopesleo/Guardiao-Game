@@ -139,6 +139,16 @@ const pressInModal = (t, scene, label) =>
   );
 
 const SCENARIOS = {
+  // O plugin de verdade (Java) não roda aqui. Uma armadilha dele, achada no aparelho (1.0.13): o call.getLong() do
+  // Capacitor só aceita Long, e a pontuação (182) chega do JavaScript como Integer — virava null e TODO envio era
+  // recusado ("no_score") antes de chegar ao Play Games. Número vindo do jogo passa pelo longOf()
+  async pluginNativo() {
+    const { readFile } = await import("node:fs/promises");
+    const java = await readFile(new globalThis.URL("../android/app/src/main/java/com/lopesleo/guardiao/PlayGamesPlugin.java", import.meta.url), "utf8");
+    check(!/\bcall\.getLong\(/.test(java), "o plugin não usa call.getLong (Integer do JavaScript virava null)");
+    check(/longOf\(call, "score"\)/.test(java), "a pontuação passa pelo longOf");
+  },
+
   // Sem o Play Games no aparelho (o plugin diz que não está configurado): nem botão na Clareira nem pontos no
   // fim; o recorde no aparelho segue
   async desligado(t) {

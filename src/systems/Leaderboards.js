@@ -130,7 +130,8 @@ export const Leaderboards = {
       } catch (e) {
         // sem rede ou sem login: tenta na próxima vez. O código vai para a janela e, 1x por abertura, para o
         // Analytics (um envio que nunca sobe some sem deixar rastro)
-        this.lastError = e?.code || null;
+        // sem código do Play Games (o plugin recusou antes de enviar): vale o motivo dele ("no_score"…)
+        this.lastError = e?.code || e?.message || null;
         if (!this._failTracked) {
           this._failTracked = true;
           Analytics.track("rank_submit_fail", { board, code: String(e?.code || e?.message || "?").slice(0, 40), signed: this.signedIn });
