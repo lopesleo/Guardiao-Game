@@ -234,6 +234,48 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.13 (código 14) — 20/10/2026
+
+AAB: `dist/guardiao-v1.0.13-14-anuncios-reais.aab`. Só no Teste interno. Achado no aparelho com a 1.0.12: perdeu
+(182 pontos, recorde), abriu o ranking e veio "Ninguém pontuou nesta semana". A lista agora vem sempre do servidor,
+a linha do jogador aparece mesmo quando a lista pública não o mostra, e um envio que falhou aparece na janela
+(com o código do Play Games e "Tentar de novo") e no Analytics (`rank_submit_fail`).
+
+```
+<pt-BR>
+• Correção: o ranking agora mostra sempre a lista atualizada, com a sua partida mais recente.
+• Se a partida não conseguir subir para o Play Games, o ranking avisa e deixa tentar de novo.
+</pt-BR>
+<en-US>
+• Fix: the leaderboard now always shows the up-to-date list, including your latest run.
+• If a run can't reach Play Games, the leaderboard tells you and lets you try again.
+</en-US>
+<es-419>
+• Corrección: la clasificación ahora muestra siempre la lista actualizada, con tu partida más reciente.
+• Si una partida no logra llegar a Play Juegos, la clasificación te avisa y te deja intentarlo de nuevo.
+</es-419>
+<es-ES>
+• Corrección: la clasificación ahora muestra siempre la lista actualizada, con tu partida más reciente.
+• Si una partida no logra llegar a Play Juegos, la clasificación te avisa y te deja intentarlo de nuevo.
+</es-ES>
+<ja-JP>
+• 修正：ランキングは常に最新のリストを表示し、直近のプレイも反映されます。
+• プレイを Play ゲームに送信できなかったときは、ランキングでお知らせし、再送信できます。
+</ja-JP>
+<zh-CN>
+• 修复：排行榜现在总是显示最新列表，包含你最近的一局。
+• 如果对局没能上传到 Play 游戏，排行榜会提示你，并可以重试。
+</zh-CN>
+<zh-TW>
+• 修正：排行榜現在總是顯示最新列表，包含你最近的一局。
+• 如果對局沒能上傳到 Play 遊戲，排行榜會提示你，並可以重試。
+</zh-TW>
+<zh-HK>
+• 修正：排行榜現在總是顯示最新列表，包含你最近的一局。
+• 如果對局沒能上傳到 Play 遊戲，排行榜會提示你，並可以重試。
+</zh-HK>
+```
+
 ### 1.0.12 (código 13) — 20/10/2026
 
 AAB: `dist/guardiao-v1.0.12-13-anuncios-reais.aab`. Só no Teste interno. Conserto do login do Play Games achado no
@@ -781,6 +823,11 @@ e os rankings criados (`RANKING.IDS` no `src/config.js`). Sem isso nada muda no 
 - **Login** (`src/systems/PlayGamesAuth.js`, desde a 1.0.12): o Play Games tenta entrar sozinho; se não conseguir, o
   jogo pede **uma vez** na abertura (recusou, não insiste; deu erro, pede na próxima). Entrou por qualquer caminho
   (pedido, Opções, ranking), a nuvem confere e a fila dos rankings sobe antes de a lista carregar.
+- **A lista** (desde a 1.0.13): sempre do servidor (`forceReload`; a cópia que o Play Games guarda no aparelho não
+  via a partida recém-enviada; o jogo guarda 1 min e limpa ao enviar). A linha do jogador vem da variante ou, se
+  faltar, de `loadCurrentPlayerLeaderboardScore` (posição "—" quando o Play Games não diz), e aparece também com a
+  lista pública vazia. Envio que falha: a janela diz "Sua última partida ainda não chegou ao Play Games (erro N)"
+  com "Tentar de novo", e o Analytics recebe `rank_submit_fail` (`board`, `code`, `signed`; 1x por abertura).
 - **Teste:** `npm run test:rankings` (Play Games falso; também no `npm test`). `LOC=ja-JP TS=2 SHOTS=pasta` para
   conferir idioma e texto grande.
 

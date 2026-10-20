@@ -477,6 +477,11 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
 - ✅ **1.0.10 (código 11)** e **1.0.11 (código 12)** (19/10/2026): novidades por notificação; depois o Google Play
   Games ligado (projeto 338573815363, rankings Pontuação e Maior Perigo, progresso na nuvem) e a política nova no
   site e no endereço antigo; só no Teste interno
+- ✅ **1.0.12 (código 13)** e **1.0.13 (código 14)** (20/10/2026, achados no aparelho): o login do Play Games num
+  lugar só (pede uma vez na abertura; a nuvem e os rankings ficam sabendo de qualquer entrada); depois o ranking
+  que dizia "Ninguém pontuou" com a derrota de 182 pontos feita — a lista vem sempre do servidor, a linha do
+  jogador aparece mesmo fora da lista pública e o envio que falhou aparece com o código e "Tentar de novo"; a
+  quebra de linha do japonês/chinês deixou de partir números e palavras latinas; só no Teste interno
 - ✅ **Joystick morria depois da 1ª carta** (19/10/2026, achado no aparelho com a 1.0.4): um `off("resume")`
   geral no `GameScene` (do conserto antigo das cartas em dobro) apagava o ouvinte que religava o joystick depois
   da pausa da acessibilidade — em todos os modos, também depois do ⏸ e do reviver. Agora o joystick religa no
