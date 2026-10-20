@@ -234,6 +234,55 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.11 (código 12) — 19/10/2026
+
+AAB: `dist/guardiao-v1.0.11-12-anuncios-reais.aab`. Só no Teste interno (o Alpha segue na 1.0.7). Liga o
+Google Play Games: rankings (Pontuação e Maior Perigo vencido) e progresso na nuvem; a frase da vitória não invade
+mais o título com texto grande.
+
+```
+<pt-BR>
+• Rankings do Google Play Games: Pontuação e Maior Perigo vencido, da semana e de sempre. Abra pelo troféu na Clareira ou tocando nos pontos no fim da partida (só partidas solo).
+• Progresso na nuvem: entrando no Play Games, seu progresso volta ao reinstalar ou trocar de celular.
+• Correção: com texto grande, a frase da vitória não invade mais o título.
+</pt-BR>
+<en-US>
+• Google Play Games leaderboards: Score and Highest Danger cleared, weekly and all time. Open them from the trophy in the Clearing or by tapping your points at the end of a run (solo runs only).
+• Cloud progress: sign in to Play Games and your progress comes back when you reinstall or switch phones.
+• Fix: with large text, the victory line no longer overlaps the title.
+</en-US>
+<es-419>
+• Clasificaciones de Google Play Games: Puntuación y Mayor Peligro vencido, de la semana y de siempre. Ábrelas desde el trofeo en el Claro o tocando tus puntos al final de la partida (solo partidas en solitario).
+• Progreso en la nube: si entras en Play Games, tu progreso vuelve al reinstalar o cambiar de teléfono.
+• Corrección: con texto grande, la frase de la victoria ya no tapa el título.
+</es-419>
+<es-ES>
+• Clasificaciones de Google Play Games: Puntuación y Mayor Peligro vencido, de la semana y de siempre. Ábrelas desde el trofeo en el Claro o tocando tus puntos al final de la partida (solo partidas en solitario).
+• Progreso en la nube: si entras en Play Games, tu progreso vuelve al reinstalar o cambiar de teléfono.
+• Corrección: con texto grande, la frase de la victoria ya no tapa el título.
+</es-ES>
+<ja-JP>
+• Google Play ゲームのランキング：スコアとクリアした最高危険度（今週・歴代）。広場のトロフィーか、プレイ終了時のスコアをタップして開けます（ソロのみ）。
+• クラウドに保存：Play ゲームにログインすると、再インストールや機種変更のときに進行状況が戻ります。
+• 修正：文字サイズが大きいとき、勝利のメッセージがタイトルに重ならなくなりました。
+</ja-JP>
+<zh-CN>
+• Google Play 游戏排行榜：得分和通关的最高危险度，分本周和总榜。在空地点奖杯，或在对局结束时点你的分数即可打开（仅限单人对局）。
+• 云端进度：登录 Play 游戏后，重装或换手机时进度会回来。
+• 修复：大字体时，胜利的文字不再盖住标题。
+</zh-CN>
+<zh-TW>
+• Google Play 遊戲排行榜：得分和通關的最高危險度，分本週和總榜。在空地點獎盃，或在對局結束時點你的分數即可開啟（僅限單人對局）。
+• 雲端進度：登入 Play 遊戲後，重新安裝或換手機時進度會回來。
+• 修正：大字體時，勝利的文字不再蓋住標題。
+</zh-TW>
+<zh-HK>
+• Google Play 遊戲排行榜：得分和通關的最高危險度，分本週和總榜。在空地點獎盃，或在對局結束時點你的分數即可開啟（僅限單人對局）。
+• 雲端進度：登入 Play 遊戲後，重新安裝或換手機時進度會回來。
+• 修正：大字體時，勝利的文字不再蓋住標題。
+</zh-HK>
+```
+
 ### 1.0.10 (código 11) — 19/10/2026
 
 AAB: `dist/guardiao-v1.0.10-11-anuncios-reais.aab`. Só no Teste interno (o Alpha fica na 1.0.7 em revisão).
