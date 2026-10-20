@@ -37,7 +37,7 @@ Legenda — **Quem:** 🤖 dá pra eu fazer · 👤 depende de você (conta, ros
 | Teste fechado | Enviado para análise. **Só 1 testador na lista.** Produção e pré-registro ficam travados até 12 testadores ficarem 14 dias seguidos |
 | Nome do desenvolvedor | "Komedy Games Studio", em análise |
 | Material pronto | 8 capturas × 6 idiomas e gráfico de destaque (`videos/promo/store/out/`), vídeo promocional 16:9 e 9:16 de 91 s (`videos/promo/entrega/`), 60 tomadas de gameplay de 4 s (`videos/promo/clips/`) |
-| Página oficial | **lopesleo.github.io/guardiao/** (feita em 09/10/2026, 6 idiomas): ver [seção 7](#7-a-página-oficial) |
+| Página oficial | **komedygames.com/guardiao/** (feita em 09/10/2026, 6 idiomas; no domínio do estúdio desde 20/10): ver [seção 7](#7-a-página-oficial) |
 | Versão web | Fora do ar. O endereço antigo `/Guardiao-Game/` leva para a página nova; a política continua no endereço antigo |
 | Orçamento | ~R$ 0 (a taxa da Steam, US$ 100, está em espera) |
 
@@ -199,9 +199,14 @@ custo por instalação passar da receita por jogador em 30 dias.
 
 ## 7. A página oficial
 
-**`https://lopesleo.github.io/guardiao/`** (português) · `/en/` · `/es/` · `/ja/` · `/zh/` · `/zh-hant/`
+**`https://komedygames.com/guardiao/`** (português) · `/en/` · `/es/` · `/ja/` · `/zh/` · `/zh-hant/` — desde 20/10/2026
+no domínio do estúdio (Komedy Games Studio, `komedygames.com`, registrado na Cloudflare). A raiz do domínio é a página do
+estúdio, um catálogo de jogos (repositório `lopesleo/komedygames`, publicado pela **Cloudflare Pages** a cada push, com
+Web Analytics ligado; `www` redireciona para a raiz). A cópia em `lopesleo.github.io/guardiao/` segue no ar com o canônico
+no domínio.
 
-- Fonte em `lopesleo.github.io/guardiao/` (gerador `build.mjs` + textos por idioma); sai em `public/guardiao/`.
+- Fonte em `lopesleo.github.io/guardiao/` (gerador `build.mjs` + textos por idioma); sai em `public/guardiao/`. Mudou?
+  Push na `dev` de lá e depois publicar de novo o `komedygames` (commit vazio + push), que copia o `public/guardiao/`.
 - **Uma linha muda a fase** (`STAGE` em `guardiao/config.mjs`): `teste` (botão "Quero testar") → `pre`
   (pré-registro) → `loja` (baixar). Também ficam lá o link do Grupo do Google de testadores e o da Play.
 - Mostra: o herói com gameplay em laço, como se joga, **as reações (interativo: escolha dois elementos)**,
