@@ -21,9 +21,13 @@ const browser = await chromium.launch({
   args: ["--enable-unsafe-swiftshader"],
 });
 
-// Roda no navegador antes do jogo: o app "nativo" com Firebase Messaging, lembretes e AdMob falsos
+// Roda no navegador antes do jogo: o app "nativo" com Firebase Messaging, lembretes e AdMob falsos.
+// A permissão do Android: perm = "granted" | "prompt" | "prompt-with-rationale" | "denied" (o pedido não aparece
+// mais); answer = o que o jogador responde no pedido; dialog: false = o Android responde na hora, sem mostrar
+// nada; off = canais desligados no sistema. NotificationSettings.open registra "open:<canal|app>"; o teste
+// "volta" ao jogo chamando os ouvintes de "resume" do App
 function fakeNative(cfg) {
-  const F = (window.__fcm = { calls: [], topics: [], token: null, channel: null, perm: cfg.perm ?? "granted", listeners: {} });
+  const F = (window.__fcm = { calls: [], topics: [], token: null, channel: null, perm: cfg.perm ?? "granted", off: cfg.off ?? [], listeners: {}, app: {} });
   for (const [k, v] of Object.entries(cfg.local || {})) localStorage.setItem(k, JSON.stringify(v));
   window.Capacitor = {
     isNativePlatform: () => true,
@@ -36,10 +40,28 @@ function fakeNative(cfg) {
         prepareRewardVideoAd: async () => {},
         showRewardVideoAd: async () => {},
       },
+      App: {
+        addListener: async (ev, fn) => {
+          (F.app[ev] ||= []).push(fn);
+          return { remove: () => (F.app[ev] = F.app[ev].filter((f) => f !== fn)) };
+        },
+        exitApp() {},
+      },
       LocalNotifications: {
-        requestPermissions: async () => ({ display: F.perm }),
+        checkPermissions: async () => ({ display: F.perm }),
+        requestPermissions: async () => {
+          F.calls.push("perm");
+          if (F.perm === "granted" || F.perm === "denied") return { display: F.perm };
+          if (cfg.dialog !== false) await new Promise((r) => setTimeout(r, 900)); // o jogador lendo o pedido
+          F.perm = (cfg.answer ?? "granted") === "granted" ? "granted" : cfg.dialog === false ? "denied" : "prompt-with-rationale";
+          return { display: F.perm };
+        },
+        listChannels: async () => ({ channels: ["default", "novidades"].map((id) => ({ id, importance: F.off.includes(id) ? 0 : 3 })) }),
         schedule: async () => F.calls.push("schedule"),
         cancel: async () => {},
+      },
+      NotificationSettings: {
+        open: async (o) => F.calls.push("open:" + (o?.channel ?? "app")),
       },
       FirebaseMessaging: {
         requestPermissions: async () => (F.calls.push("perm"), { receive: F.perm }),
@@ -62,6 +84,8 @@ const check = (ok, what, extra = "") => {
   return ok;
 };
 const SET = (o) => ({ guardiao_settings_v1: { music: 0, sfx: 0, ...o } });
+const BLOCKED = "Notificações desligadas no Android · toque para liberar";
+const BLOCKED_ASK = "As notificações do jogo estão desligadas no Android. Ao aceitar, as configurações abrem para você liberar.";
 
 const SCENARIOS = {
   // Quem aceitou os avisos (antes desta versão) passa a receber as novidades do seu idioma
@@ -115,15 +139,115 @@ const SCENARIOS = {
     check((await t.setting("news")) === false, "a escolha fica guardada");
     await t.news("setEnabled", true);
     f = await t.fcm();
-    check(f.calls.includes("perm") && f.topics.join() === "novidades_pt", "religar pede a permissão e volta ao tópico");
+    check(f.topics.join() === "novidades_pt", "religar volta ao tópico (a permissão já estava dada)", JSON.stringify(f.calls));
   },
 
-  // Recusou a permissão do sistema ao ligar em Opções: fica desligado, sem tópico
+  // Recusou o pedido do Android ao ligar em Opções: fica desligado, sem tópico, e a chave volta para NÃO
   async recusa(t) {
-    await t.boot({ perm: "denied", local: SET({}) });
-    const r = await t.news("setEnabled", true);
+    await t.boot({ perm: "prompt", answer: "denied", local: SET({}) });
+    let o = await t.options();
+    check(o.novidades === false, "Novidades começa em NÃO");
+    await t.tap("novidades");
+    await t.page.waitForTimeout(1500);
     const f = await t.fcm();
-    check(r === false && f.topics.length === 0 && (await t.setting("news")) === false, "sem permissão não se inscreve", JSON.stringify(f.calls));
+    o = await t.modal();
+    check(f.calls.includes("perm") && !f.calls.some((c) => c.startsWith("open:")), "mostrou o pedido do Android (sem abrir as configurações)", JSON.stringify(f.calls));
+    check(f.topics.length === 0 && (await t.setting("news")) === false, "sem permissão não se inscreve", JSON.stringify(f.calls));
+    check(o.novidades === false, "a chave voltou para NÃO depois da recusa", JSON.stringify(o));
+  },
+
+  // O caso do celular do Leonardo (20/10/2026): reinstalou, o backup do Android trouxe "avisos ligados" e a
+  // permissão não veio. Antes: Novidades em SIM, inscrito no tópico, e o Android jogava fora a notificação
+  async perdeuPermissao(t) {
+    await t.boot({ perm: "prompt", local: SET({ notify: true, notifyAsked: true, news: true, newsTopic: "novidades_pt" }) });
+    let f = await t.fcm();
+    check(!f.calls.some((c) => c.startsWith("sub:")) && f.topics.length === 0, "não se inscreve sem a permissão", JSON.stringify(f.calls));
+    check(f.calls.includes("unsub:novidades_pt") && f.calls.includes("deleteToken"), "sai do tópico de antes e apaga o token", JSON.stringify(f.calls));
+    check((await t.setting("notify")) === false && (await t.setting("notifyAsked")) === false, "volta a perguntar UMA vez (no baú/horta)");
+    const ev = await t.page.evaluate(async () => (await import("/src/systems/Analytics.js")).Analytics.recent().filter((e) => e.name === "notify_lost").map((e) => e.perm));
+    check(ev.join() === "prompt", "evento notify_lost para medir quantos perderam", JSON.stringify(ev));
+    const o = await t.options();
+    check(o.avisos === false && o.novidades === false, "Avisos e Novidades em NÃO", JSON.stringify(o));
+    check(!o.texts.includes(BLOCKED), "sem a dica de bloqueado (o Android ainda mostra o pedido)");
+    const p = await t.camp();
+    check(p.title === "QUER UM AVISO?" && !p.texts.includes(BLOCKED_ASK), "o pedido do baú aparece de novo, sem o aviso de bloqueado", JSON.stringify(p));
+    await t.page.evaluate(() => window.game.scene.getScene("CampScene")._modals.at(-1).body.list.find((o) => o.label?.text === "SIM, AVISE").onClick() && undefined);
+    await t.page.waitForFunction(() => window.__fcm.topics.length > 0, null, { timeout: 5000 }).catch(() => {});
+    f = await t.fcm();
+    check(f.calls.includes("perm") && f.calls.includes("schedule") && f.topics.join() === "novidades_pt", "aceitou: pedido do Android, lembrete e novidades", JSON.stringify(f.calls));
+  },
+
+  // Recusou duas vezes (o Android não mostra mais o pedido): a dica diz, ligar abre as configurações do jogo
+  // no Android e, quando o jogador volta com tudo liberado, a aba se refaz em SIM e o aparelho entra no tópico
+  async bloqueado(t) {
+    await t.boot({ perm: "denied", local: SET({ news: true }) });
+    let o = await t.options();
+    check(o.novidades === false && o.avisos === false, "as duas chaves em NÃO", JSON.stringify(o));
+    check(o.texts.filter((x) => x === BLOCKED).length === 2, "as duas linhas dizem que o Android desligou", JSON.stringify(o.texts));
+    if (SHOTS) await t.page.screenshot({ path: `${SHOTS}/avisos_bloqueado.png` });
+    await t.tap("novidades");
+    await t.page.waitForTimeout(300);
+    let f = await t.fcm();
+    check(f.calls.includes("open:app") && !f.calls.includes("perm"), "abriu a tela de notificações do jogo (sem pedido inútil)", JSON.stringify(f.calls));
+    await t.page.evaluate(() => (window.__fcm.perm = "granted")); // o jogador liberou lá
+    await t.resume();
+    await t.page.waitForFunction(() => window.__fcm.topics.length > 0, null, { timeout: 5000 }).catch(() => {});
+    await t.page.waitForTimeout(400);
+    f = await t.fcm();
+    o = await t.modal();
+    check(f.topics.join() === "novidades_pt" && (await t.setting("news")) === true, "voltou com a permissão: inscrito", JSON.stringify(f.calls));
+    check(o.novidades === true && !o.texts.includes(BLOCKED), "a aba se refez: Novidades em SIM, sem a dica de bloqueado", JSON.stringify(o));
+  },
+
+  // Desligou só o canal "Novidades" no Android: Avisos segue em SIM; Novidades em NÃO e abre a tela do canal
+  async canalDesligado(t) {
+    await t.boot({ off: ["novidades"], local: SET({ notify: true, notifyAsked: true }) });
+    let f = await t.fcm();
+    check(f.topics.length === 0, "não se inscreve com o canal desligado", JSON.stringify(f.calls));
+    check((await t.setting("notify")) === true, "os avisos continuam (o canal deles está ligado)");
+    let o = await t.options();
+    check(o.avisos === true && o.novidades === false, "Avisos SIM, Novidades NÃO", JSON.stringify(o));
+    await t.tap("novidades");
+    await t.page.waitForTimeout(300);
+    f = await t.fcm();
+    check(f.calls.includes("open:novidades"), "abriu a tela do canal Novidades", JSON.stringify(f.calls));
+    await t.page.evaluate(() => (window.__fcm.off = []));
+    await t.resume();
+    await t.page.waitForFunction(() => window.__fcm.topics.length > 0, null, { timeout: 5000 }).catch(() => {});
+    f = await t.fcm();
+    check(f.topics.join() === "novidades_pt", "religou o canal: inscrito", JSON.stringify(f.calls));
+  },
+
+  // O Android responde "negado" na hora, sem mostrar nada (bloqueado de vez, mas o estado guardado dizia que
+  // dava para pedir): em vez de um toque morto, abre as configurações
+  async respostaNaHora(t) {
+    await t.boot({ perm: "prompt", dialog: false, answer: "denied", local: SET({}) });
+    const r = t.news("setEnabled", true);
+    await t.page.waitForTimeout(400);
+    let f = await t.fcm();
+    check(f.calls.includes("perm") && f.calls.includes("open:app"), "pediu, o Android não mostrou, abriu as configurações", JSON.stringify(f.calls));
+    await t.resume(); // voltou sem liberar
+    check((await r) === false && (await t.setting("news")) === false, "voltou sem liberar: segue desligado");
+  },
+
+  // Perdeu a permissão e o Android não mostra mais o pedido: o pedido do baú avisa que o SIM abre as configurações
+  async pedidoBloqueado(t) {
+    await t.boot({ perm: "denied", local: SET({ notify: true, notifyAsked: true }) });
+    const p = await t.camp();
+    check(p.title === "QUER UM AVISO?" && p.texts.includes(BLOCKED_ASK), "o pedido aparece com o aviso de bloqueado", JSON.stringify(p.texts));
+    if (SHOTS) {
+      await t.page.waitForTimeout(500);
+      await t.page.screenshot({ path: `${SHOTS}/avisos_pedido_bloqueado.png` });
+    }
+    await t.page.evaluate(() => window.game.scene.getScene("CampScene")._modals.at(-1).body.list.find((o) => o.label?.text === "SIM, AVISE").onClick() && undefined);
+    await t.page.waitForTimeout(300);
+    let f = await t.fcm();
+    check(f.calls.includes("open:app"), "SIM abriu as configurações", JSON.stringify(f.calls));
+    await t.page.evaluate(() => (window.__fcm.perm = "granted"));
+    await t.resume();
+    await t.page.waitForFunction(() => window.__fcm.calls.includes("schedule"), null, { timeout: 5000 }).catch(() => {});
+    f = await t.fcm();
+    check(f.calls.includes("schedule") && (await t.setting("notify")) === true, "liberou: lembrete agendado", JSON.stringify(f.calls));
   },
 
   // O pedido do baú (1ª vez) conta das novidades; aceitou → lembrete agendado E inscrito
@@ -151,7 +275,7 @@ const SCENARIOS = {
       await t.page.waitForTimeout(500);
       await t.page.screenshot({ path: `${SHOTS}/avisos_pedido.png` });
     }
-    await t.page.evaluate(() => window.game.scene.getScene("CampScene")._modals.at(-1).body.list.find((o) => o.label?.text === "SIM, AVISE").onClick());
+    await t.page.evaluate(() => window.game.scene.getScene("CampScene")._modals.at(-1).body.list.find((o) => o.label?.text === "SIM, AVISE").onClick() && undefined);
     await t.page.waitForFunction(() => window.__fcm.topics.length > 0, null, { timeout: 5000 }).catch(() => {});
     const f = await t.fcm();
     check(f.calls.includes("schedule") && f.topics.join() === "novidades_pt", "aceitou: lembrete agendado e inscrito nas novidades", JSON.stringify(f.calls));
@@ -190,6 +314,45 @@ async function run(name) {
     fcm: () => page.evaluate(() => JSON.parse(JSON.stringify({ ...window.__fcm, listeners: undefined }))),
     setting: (k) => page.evaluate((k) => JSON.parse(localStorage.getItem("guardiao_settings_v1") || "{}")[k], k),
     news: (fn, ...a) => page.evaluate(async ({ fn, a }) => (await import("/src/systems/News.js")).News[fn](...a), { fn, a }),
+    // A janela de Opções do topo: as duas chaves (SIM = true) e os textos
+    modal: () =>
+      page.evaluate(() => {
+        const m = window.game.scene.getScene("TitleScene")._modals?.at(-1);
+        const L = m?.body.list ?? [];
+        const tg = (n) => L.find((o) => o.name === n)?.on_ ?? null;
+        return { avisos: tg("avisos"), novidades: tg("novidades"), texts: L.filter((o) => o.type === "Text").map((o) => o.text) };
+      }),
+    async options() {
+      await page.evaluate(async () => {
+        const s = window.game.scene.getScene("TitleScene");
+        while (s._modals?.length) s._modals.at(-1).close();
+        (await import("/src/ui/SettingsModal.js")).openSettings(s, { tab: "jogo" });
+      });
+      await page.waitForTimeout(400);
+      return t.modal();
+    },
+    tap: (name) => page.evaluate((n) => window.game.scene.getScene("TitleScene")._modals.at(-1).body.list.find((o) => o.name === n).emit("pointerup"), name),
+    // O jogador volta das configurações do Android para o jogo
+    resume: () => page.evaluate(() => (window.__fcm.app.resume ?? []).slice().forEach((fn) => fn())),
+    // Vai para a Clareira e abre o pedido do baú; devolve o título e os textos do pedido
+    async camp() {
+      await page.evaluate(() => {
+        const ti = window.game.scene.getScene("TitleScene");
+        while (ti._modals?.length) ti._modals.at(-1).close();
+        ti.meta.data.campIntroSeen = true;
+        ti.meta._save();
+        ti.scene.start("CampScene");
+      });
+      await page.waitForFunction(() => window.game.scene.getScene("CampScene")?.player && !window.game.scene.getScene("CampScene")._cutscene, null, { timeout: 60000 });
+      await page.waitForTimeout(800);
+      return page.evaluate(() => {
+        const s = window.game.scene.getScene("CampScene");
+        while (s._modals?.length) s._modals.at(-1).close();
+        s._offerNotify("chest");
+        const m = s._modals?.at(-1);
+        return { title: m?.titleText?.text, texts: (m ? m.body.list : []).filter((o) => o.type === "Text").map((o) => o.text) };
+      });
+    },
   };
   try {
     await SCENARIOS[name](t);

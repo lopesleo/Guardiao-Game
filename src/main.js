@@ -19,6 +19,7 @@ import { Telemetry } from './systems/Telemetry.js';
 import { AdMobBridge } from './systems/AdMobBridge.js';
 import { Billing } from './systems/Billing.js';
 import { News } from './systems/News.js';
+import { Notify } from './systems/Notify.js';
 import { Leaderboards } from './systems/Leaderboards.js';
 import { MetaProgression } from './systems/MetaProgression.js';
 import { Clock } from './systems/Clock.js';
@@ -72,7 +73,8 @@ window.addEventListener('load', () => {
   Telemetry.install(); // Firebase (só no app Android)
   AdMobBridge.install(); // consentimento (UMP) + anúncios premiados (só no app Android)
   Billing.install(); // compra "Sem anúncios" pela Play Store: preço e o que esta conta já comprou (só no app)
-  News.install(); // novidades por notificação (FCM), só para quem aceitou (só no app Android)
+  // Avisos e novidades por notificação (FCM), só para quem aceitou e só com o que o Android deixa mostrar
+  Notify.install().then(() => News.install());
   installCloudSaveUI(window.game);
   CloudSave.install(window.game); // progresso na nuvem pelo Play Games (só no app Android)
   Leaderboards.install(new MetaProgression()); // rankings do Play Games: manda o que ficou na fila (só no app)

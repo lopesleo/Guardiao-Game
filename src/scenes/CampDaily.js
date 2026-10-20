@@ -274,6 +274,8 @@ CampDaily._offerNotify = function (kind, at = null) {
   };
   note(kind === "chest" ? tr("Posso avisar quando o baú de amanhã estiver pronto.") : tr("Posso avisar quando a colheita ficar pronta."), 20, CSS.txt, 10);
   note(tr("E as novidades do jogo, poucas vezes por mês. Dá para desligar em Opções."), 15, CSS.muted, 22);
+  // Perdeu a permissão e o Android não mostra mais o pedido: o SIM leva às configurações (avisar antes)
+  if (Notify.blocked()) note(tr("As notificações do jogo estão desligadas no Android. Ao aceitar, as configurações abrem para você liberar."), 15, CSS.goldHi, 22);
   const by = y + 27;
   m.add(new Button(this, -135, by, 240, 54, tr("SIM, AVISE"), async () => {
     m.close();

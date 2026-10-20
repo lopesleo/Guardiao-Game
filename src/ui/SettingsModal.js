@@ -4,6 +4,7 @@
 import { Settings } from "../systems/Settings.js";
 import { Notify } from "../systems/Notify.js";
 import { News } from "../systems/News.js";
+import { NotifyAccess } from "../systems/NotifyAccess.js";
 import { Telemetry } from "../systems/Telemetry.js";
 import { AdMobBridge } from "../systems/AdMobBridge.js";
 import { CloudSave } from "../systems/CloudSave.js";
@@ -137,9 +138,43 @@ export function openSettings(scene, o = {}) {
         o.onDmgNumbers?.(v);
       }),
     );
-    if (Notify.available())
-      row(tr("Avisos"), new Toggle(scene, 0, 0, Notify.enabled(), (v) => (v ? Notify.enable() : Notify.disable())), tr("Baú do dia e colheita pronta"));
-    if (News.available()) row(tr("Novidades"), new Toggle(scene, 0, 0, News.enabled(), (v) => News.setEnabled(v)), tr("Versões novas e eventos · poucas vezes por mês"));
+    // Avisos e Novidades: SIM só com o que o Android deixa (NotifyAccess). Bloqueadas no sistema → a dica diz e
+    // ligar abre as configurações do Android; o Android mudou (o jogador voltou de lá) → a aba se refaz
+    let ta = null,
+      tn = null;
+    const paint = () => {
+      if (ta?.active) ta.setOn(Notify.enabled());
+      if (tn?.active) tn.setOn(News.enabled());
+    };
+    const built = JSON.stringify(NotifyAccess.state);
+    const rebuild = () => {
+      // (a cena pode ter recomeçado no meio: trocar a fonte refaz a tela sem fechar a janela)
+      if (m._closed || !m.root.active || NotifyAccess.busy || JSON.stringify(NotifyAccess.state) === built) return;
+      m.close();
+      openSettings(scene, { ...o, tab });
+    };
+    if (Notify.available()) {
+      ta = new Toggle(scene, 0, 0, Notify.enabled(), async (v) => {
+        await (v ? Notify.enable() : Notify.disable());
+        paint();
+        rebuild();
+      }).setName("avisos");
+      row(tr("Avisos"), ta,Notify.blocked() ? tr("Notificações desligadas no Android · toque para liberar") : tr("Baú do dia e colheita pronta"));
+    }
+    if (News.available()) {
+      tn = new Toggle(scene, 0, 0, News.enabled(), async (v) => {
+        await News.setEnabled(v);
+        paint();
+        rebuild();
+      }).setName("novidades");
+      row(tr("Novidades"), tn,News.blocked() ? tr("Notificações desligadas no Android · toque para liberar") : tr("Versões novas e eventos · poucas vezes por mês"));
+    }
+    if (ta || tn) {
+      const stop = NotifyAccess.onChange(() => !m._closed && m.root.active && scene.time?.delayedCall(60, rebuild));
+      const closed = m.onClose;
+      m.onClose = () => (stop(), closed?.());
+      scene.events.once("shutdown", stop);
+    }
     if (CloudSave.available() && CloudSave.state !== "off") cloudRow(scene, m, o, row);
   } else if (tab === "controles") {
     // Joystick (só no toque): modo e tamanho valem na hora; o lado move também Dash, Despertar e o
