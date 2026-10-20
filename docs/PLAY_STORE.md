@@ -234,6 +234,47 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.12 (código 13) — 20/10/2026
+
+AAB: `dist/guardiao-v1.0.12-13-anuncios-reais.aab`. Só no Teste interno. Conserto do login do Play Games achado no
+aparelho com a 1.0.11: o jogo pede a entrada uma vez na abertura (se o Play Games não entrar sozinho), a nuvem e os
+rankings ficam sabendo de qualquer entrada, e a partida que esperava na fila aparece no ranking ao entrar.
+
+```
+<pt-BR>
+• Play Games: se ele não entrar sozinho, o jogo pede para entrar uma vez ao abrir. Entrando por qualquer lugar, o progresso na nuvem e os rankings já valem.
+• Correção: a partida feita antes de entrar no Play Games agora aparece no ranking assim que você entra.
+</pt-BR>
+<en-US>
+• Play Games: if it doesn't sign you in automatically, the game asks once when it opens. Signing in from anywhere turns on cloud progress and leaderboards right away.
+• Fix: a run played before signing in to Play Games now shows up on the leaderboard as soon as you sign in.
+</en-US>
+<es-419>
+• Play Games: si no entra solo, el juego te lo pide una vez al abrir. Al entrar desde cualquier lugar, el progreso en la nube y las clasificaciones funcionan al instante.
+• Corrección: la partida jugada antes de entrar en Play Games ahora aparece en la clasificación en cuanto entras.
+</es-419>
+<es-ES>
+• Play Games: si no entra solo, el juego te lo pide una vez al abrir. Al entrar desde cualquier lugar, el progreso en la nube y las clasificaciones funcionan al instante.
+• Corrección: la partida jugada antes de entrar en Play Games ahora aparece en la clasificación en cuanto entras.
+</es-ES>
+<ja-JP>
+• Play ゲーム：自動でログインできなかったときは、起動時に一度だけログインを求めます。どこからログインしても、クラウドに保存とランキングがすぐ有効になります。
+• 修正：Play ゲームにログインする前のプレイも、ログインするとすぐランキングに反映されます。
+</ja-JP>
+<zh-CN>
+• Play 游戏：如果没有自动登录，游戏会在启动时请你登录一次。从任何地方登录后，云端进度和排行榜立即生效。
+• 修复：登录 Play 游戏之前完成的对局，登录后会立即出现在排行榜上。
+</zh-CN>
+<zh-TW>
+• Play 遊戲：如果沒有自動登入，遊戲會在啟動時請你登入一次。從任何地方登入後，雲端進度和排行榜立即生效。
+• 修正：登入 Play 遊戲之前完成的對局，登入後會立即出現在排行榜上。
+</zh-TW>
+<zh-HK>
+• Play 遊戲：如果沒有自動登入，遊戲會在啟動時請你登入一次。從任何地方登入後，雲端進度和排行榜立即生效。
+• 修正：登入 Play 遊戲之前完成的對局，登入後會立即出現在排行榜上。
+</zh-HK>
+```
+
 ### 1.0.11 (código 12) — 19/10/2026
 
 AAB: `dist/guardiao-v1.0.11-12-anuncios-reais.aab`. Só no Teste interno (o Alpha segue na 1.0.7). Liga o
@@ -737,6 +778,9 @@ e os rankings criados (`RANKING.IDS` no `src/config.js`). Sem isso nada muda no 
   linha do jogador destacada (e a posição dele embaixo, se estiver fora), o total de jogadores e a conta dos
   pontos; sem login, um botão "Entrar no Play Games"; sem rede, "Tentar de novo". Sem rede no fim da partida, a
   pontuação espera numa fila e sobe na próxima abertura.
+- **Login** (`src/systems/PlayGamesAuth.js`, desde a 1.0.12): o Play Games tenta entrar sozinho; se não conseguir, o
+  jogo pede **uma vez** na abertura (recusou, não insiste; deu erro, pede na próxima). Entrou por qualquer caminho
+  (pedido, Opções, ranking), a nuvem confere e a fila dos rankings sobe antes de a lista carregar.
 - **Teste:** `npm run test:rankings` (Play Games falso; também no `npm test`). `LOC=ja-JP TS=2 SHOTS=pasta` para
   conferir idioma e texto grande.
 

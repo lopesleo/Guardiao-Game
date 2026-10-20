@@ -87,9 +87,10 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
   brilham), joystick religando no próprio toque da carta e em toda a metade da tela, loja de cosméticos ligada. O Alpha
   **foi aprovado e publicado** (aviso do Console em 19/10; a faixa mostra a 1.0.7). Os testadores do Alpha
   **pagam de verdade** se comprarem (só "Teste de compras" no Teste de licença). `dist/guardiao-v1.0.7-8-anuncios-reais.aab`.
-  No **Teste interno** já está a **1.0.11 (código 12)** (19/10, `dist/guardiao-v1.0.11-12-anuncios-reais.aab`): por
+  No **Teste interno** já está a **1.0.12 (código 13)** (20/10, `dist/guardiao-v1.0.12-13-anuncios-reais.aab`): por
   cima da 1.0.7, as animações da Ancestral refeitas (1.0.8), a horta da Ancestral (1.0.9), as novidades por
-  notificação (1.0.10) e o **Google Play Games ligado** (rankings e progresso na nuvem).
+  notificação (1.0.10), o **Google Play Games ligado** (rankings e progresso na nuvem, 1.0.11) e o conserto do
+  login do Play Games (1.0.12: pede uma vez na abertura; na 1.0.11 só entrava pelo ranking e a derrota não aparecia).
   👤 No celular (teste interno, `https://play.google.com/apps/internaltest/4700140413216190768`): atualizar e testar
   joystick (carta, ⏸, reviver), Loja, Fundador com cartão de teste → Clareira Ancestral (de dia e à noite, horta), estorno.
 - **Novidades por notificação** (FCM, na 1.0.10; `docs/PLAY_STORE.md`, "Novidades por notificação"): app e script
@@ -137,9 +138,9 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 - Anúncios já pedem classificação máxima "T" no app; 👤 deixar também "T" no console do AdMob (Controles de
   bloqueio). **Play Games configurado em 19/10** (`docs/PLAY_STORE.md`, "Progresso na nuvem" e "Rankings"):
   projeto 338573815363 no `games-ids.xml`, 5 credenciais, Jogos salvos, os 2 rankings criados (IDs em
-  `RANKING.IDS`; o de Perigo aceita 1–10) e a política no ar. A **1.0.11** (Teste interno) já liga nuvem e
-  rankings. 👤 Falta: testar no aparelho (entrar no Play Games, uma partida, abrir o ranking; desinstalar e
-  reinstalar para ver o progresso voltar); depois publicar o Play Games Services (Configuração → Revisar e
+  `RANKING.IDS`; o de Perigo aceita 1–10) e a política no ar. A **1.0.12** (Teste interno) liga nuvem e rankings
+  com o login consertado. 👤 Falta: testar no aparelho (ao abrir, o Play Games entra ou pede uma vez; uma partida,
+  abrir o ranking; desinstalar e reinstalar para ver o progresso voltar); depois publicar o Play Games Services (Configuração → Revisar e
   publicar; limites, ordem dos rankings e Jogos salvos não mudam mais) e marcar a Segurança dos dados antes de
   levar ao Alpha/produção.
   Revisão nativa ja/zh; testes em aparelho fraco.
