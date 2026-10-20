@@ -91,6 +91,8 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
   Games privado (1.0.15) e entrar de novo quando a entrada automática não acontece (1.0.16). No aparelho em 20/10:
   ranking com "1. xKomedy 182", desinstalar/reinstalar trouxe o progresso de volta. Os testadores do Alpha **pagam de
   verdade** se comprarem (só "Teste de compras" no Teste de licença). 👤 Conferir no Console quando a revisão aprovar.
+  No **Teste interno**: **1.0.17 (código 18)** com a tela inicial redesenhada (`dist/guardiao-v1.0.17-18-anuncios-reais.aab`);
+  levar ao Alpha depois que a 1.0.16 for aprovada.
 - **Novidades por notificação** (FCM, na 1.0.10; `docs/PLAY_STORE.md`, "Novidades por notificação"): app e script
   `npm run aviso` prontos. 👤 Dar à conta de serviço o papel **"Administrador da API Firebase Cloud Messaging"** no
   Google Cloud (passo a passo no documento; hoje o envio dá 403). Depois: instalar a 1.0.10 do Teste interno,
