@@ -317,7 +317,7 @@ const SCENARIOS = {
   // Sem login no Play Games (o pedido da 1ª abertura já foi recusado): o ranking pede para entrar; entrando, a
   // lista aparece
   async login(t) {
-    await t.boot({ pg: { signedIn: false }, local: { guardiao_pg_asked: "1" } });
+    await t.boot({ pg: { signedIn: false }, local: { guardiao_pg_asked: "1", guardiao_pg_v2: "1" } });
     await enable(t);
     await toCamp(t);
     await campReady(t);
@@ -334,7 +334,8 @@ const SCENARIOS = {
   },
 
   // 1ª abertura sem login automático: o jogo pede uma vez; entrou, a nuvem confere e os rankings ligam. Na
-  // abertura seguinte não pede de novo
+  // abertura seguinte, de novo sem a entrada automática (o caso do aparelho em 20/10), entra sozinho — para quem
+  // já deu permissão o Play Games só mostra o logo
   async pedeUmaVez(t) {
     await t.boot({ pg: { signedIn: false } });
     await t.page.waitForTimeout(1200);
@@ -344,7 +345,30 @@ const SCENARIOS = {
     check(await t.page.evaluate(async () => (await import("/src/systems/Leaderboards.js")).Leaderboards.signedIn), "os rankings sabem do login");
     await t.reload({ pg: { signedIn: false } });
     g = await t.pg();
-    check(g.signIns === 0, "na abertura seguinte não pede de novo", JSON.stringify({ signIns: g.signIns }));
+    check(g.signIns === 1 && g.signedIn && g.reads >= 1, "na abertura seguinte sem entrada automática, entra de novo e a nuvem confere", JSON.stringify({ signIns: g.signIns, reads: g.reads }));
+  },
+
+  // A entrada automática funcionou numa abertura: o jogo marca que já entrou e, se ela falhar depois, entra de novo
+  async entradaAutomatica(t) {
+    await t.boot();
+    await t.page.waitForTimeout(1200);
+    let g = await t.pg();
+    const marked = await t.page.evaluate(() => localStorage.getItem("guardiao_pg_in"));
+    check(g.signIns === 0 && marked === "1", "entrou sozinho: não pediu nada e marcou o aparelho", JSON.stringify({ signIns: g.signIns, marked }));
+    await t.reload({ pg: { signedIn: false } });
+    g = await t.pg();
+    check(g.signIns === 1 && g.signedIn && g.reads >= 1, "sem a entrada automática na seguinte, entra de novo", JSON.stringify({ signIns: g.signIns, reads: g.reads }));
+  },
+
+  // Quem já tinha respondido antes desta regra (só a marca antiga): tenta uma vez; fechou a entrada, não insiste
+  async transicao(t) {
+    await t.boot({ pg: { signedIn: false, decline: true }, local: { guardiao_pg_asked: "1" } });
+    await t.page.waitForTimeout(1200);
+    let g = await t.pg();
+    check(g.signIns === 1, "jogador de antes: tenta entrar uma vez", JSON.stringify({ signIns: g.signIns }));
+    await t.reload({ pg: { signedIn: false, decline: true } });
+    g = await t.pg();
+    check(g.signIns === 0, "fechou a entrada: na abertura seguinte não pede", JSON.stringify({ signIns: g.signIns }));
   },
 
   // Recusou o pedido: não insiste (fica para Opções ou o ranking)
@@ -371,7 +395,7 @@ const SCENARIOS = {
   // O caso do aparelho (1.0.11): perdeu sem login, entrou pelo ranking. A partida sobe ANTES de a lista carregar,
   // e a nuvem também fica sabendo do login
   async entrouPeloRanking(t) {
-    await t.boot({ pg: { signedIn: false, submitDelay: 500 }, local: { guardiao_pg_asked: "1" } });
+    await t.boot({ pg: { signedIn: false, submitDelay: 500 }, local: { guardiao_pg_asked: "1", guardiao_pg_v2: "1" } });
     await enable(t);
     const r = await t.page.evaluate(async () => (await import("/src/systems/Leaderboards.js")).Leaderboards.submitRun({ kills: 321, won: false, difficulty: 2 }));
     await t.page.waitForTimeout(300);
