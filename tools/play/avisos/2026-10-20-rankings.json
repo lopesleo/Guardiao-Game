@@ -1,0 +1,20 @@
+{
+  "id": "2026-10-20-rankings",
+  "validade_dias": 4,
+  "titulo": {
+    "pt": "Rankings no Play Games",
+    "en": "Leaderboards are here",
+    "es": "Clasificaciones en Play Juegos",
+    "ja": "ランキングが登場",
+    "zh": "排行榜上线了",
+    "zht": "排行榜上線了"
+  },
+  "texto": {
+    "pt": "Sua pontuação agora entra no ranking da semana e no de sempre, e o progresso fica salvo na nuvem. Atualize o jogo e veja sua posição.",
+    "en": "Your score now goes on the weekly and all-time leaderboards, and your progress is saved to the cloud. Update the game to see your rank.",
+    "es": "Tu puntuación ahora entra en la clasificación semanal y en la de siempre, y tu progreso se guarda en la nube. Actualiza el juego y mira tu puesto.",
+    "ja": "スコアが今週と歴代のランキングに載るようになり、進行状況もクラウドに保存されます。ゲームを更新して順位をチェック。",
+    "zh": "你的得分现在会进入本周榜和总榜，进度也会保存到云端。更新游戏，看看你的排名。",
+    "zht": "你的得分現在會進入本週榜和總榜，進度也會儲存到雲端。更新遊戲，看看你的排名。"
+  }
+}
