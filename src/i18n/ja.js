@@ -1000,6 +1000,8 @@ export default {
   "Ninguém pontuou nesta semana ainda. Que tal ser o primeiro?": "今週はまだ誰もスコアを出していません。一番乗りを目指しませんか？",
   "Ninguém pontuou ainda. Que tal ser o primeiro?": "まだ誰もスコアを出していません。一番乗りを目指しませんか？",
   "{0} jogadores neste período": "この期間のプレイヤー {0}人",
+  "1 jogador neste período": "この期間のプレイヤー 1人",
+  "Só você vê sua pontuação: deixe o perfil do Play Games público para aparecer.": "スコアは今あなたにだけ見えています。Play ゲームのプロフィールを公開するとランキングに載ります。",
   "Carregando o ranking…": "ランキングを読み込み中…",
   "Entre no Play Games para ver o ranking e aparecer nele.": "ランキングを見て参加するには、Play ゲームにログインしてください。",
   "ENTRAR NO PLAY GAMES": "Play ゲームにログイン",

@@ -414,6 +414,7 @@ const SCENARIOS = {
         empty: tr("Ninguém pontuou nesta semana ainda. Que tal ser o primeiro?"),
         retry: tr("TENTAR DE NOVO"),
         me: tr("{0} (você)", "Leo"),
+        one: tr("1 jogador neste período"),
       };
     });
     let mt = await modalTexts(t, "CampScene");
@@ -431,6 +432,7 @@ const SCENARIOS = {
     q = await t.page.evaluate(() => JSON.parse(localStorage.getItem("guardiao_ranking_v1")).queue);
     check(g.sent.some(([b, v]) => b === "score" && v === 182) && !q?.score, "tentar de novo manda e esvazia a fila", JSON.stringify(g.sent));
     check(mt && mt.texts.includes(L.me) && !mt.texts.includes(L.stuck), "a partida aparece na lista e o aviso some", JSON.stringify(mt?.texts.slice(0, 8)));
+    check(mt && mt.texts.includes(L.one), "1 jogador no singular", JSON.stringify(mt?.texts.slice(-3)));
   },
 
   // Lista cheia e a partida do jogador presa na fila: o aviso vai na linha de baixo da lista e cabe nela
@@ -468,11 +470,23 @@ const SCENARIOS = {
     await t.page.waitForTimeout(900);
     const L = await t.page.evaluate(async () => {
       const { tr } = await import("/src/i18n/i18n.js");
-      return { you: tr("Você"), empty: tr("Ninguém pontuou nesta semana ainda. Que tal ser o primeiro?") };
+      return {
+        you: tr("Você"),
+        empty: tr("Ninguém pontuou nesta semana ainda. Que tal ser o primeiro?"),
+        hint: tr("Só você vê sua pontuação: deixe o perfil do Play Games público para aparecer."),
+      };
     });
     const mt = await modalTexts(t, "CampScene");
     check(mt && mt.texts.includes(L.you) && mt.texts.includes("182") && mt.texts.includes("—"), "a linha do jogador aparece (posição —, 182)", JSON.stringify(mt?.texts.slice(0, 8)));
     check(mt && !mt.texts.includes(L.empty), "não diz que ninguém pontuou");
+    // sem posição = perfil do Play Games privado (o caso do aparelho em 20/10): a janela diz o que fazer
+    const fit = await t.page.evaluate((hint) => {
+      const m = window.game.scene.getScene("CampScene")._modals.at(-1);
+      const deep = (o) => (o.list ? o.list.flatMap(deep) : [o]);
+      const n = deep(m.root).find((o) => o.type === "Text" && o.text === hint);
+      return n ? { w: n.displayWidth, room: m.w - 80, top: n.getBounds().top, rowBottom: deep(m.root).find((o) => o.type === "Text" && o.text === "182").getBounds().bottom } : null;
+    }, L.hint);
+    check(fit && fit.w <= fit.room && fit.top > fit.rowBottom, "avisa que o perfil privado esconde do ranking, no quadro, abaixo da linha", JSON.stringify(fit));
     if (SHOTS) await t.page.screenshot({ path: `${SHOTS}/${LOC}_${TS}_rank_so_eu.png` });
   },
 };
