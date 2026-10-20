@@ -111,7 +111,7 @@ public class PlayGamesPlugin extends Plugin {
         SnapshotsClient client = PlayGames.getSnapshotsClient(getActivity());
         SnapshotMetadataChange.Builder meta = new SnapshotMetadataChange.Builder()
             .setDescription(call.getString("description", ""));
-        Long progress = call.getLong("progress");
+        Long progress = longOf(call, "progress");
         if (progress != null) meta.setProgressValue(progress);
         open(client, slot)
             .continueWithTask(t -> {
@@ -134,7 +134,7 @@ public class PlayGamesPlugin extends Plugin {
     @PluginMethod
     public void submitScore(PluginCall call) {
         String id = call.getString("leaderboardId");
-        Long score = call.getLong("score");
+        Long score = longOf(call, "score");
         if (!ready(call, id)) return;
         if (score == null || score < 0) {
             call.reject("no_score");
@@ -214,6 +214,13 @@ public class PlayGamesPlugin extends Plugin {
                     });
             })
             .addOnFailureListener(e -> call.reject("load_failed", code(e), e));
+    }
+
+    // Número inteiro vindo do JavaScript. O getLong() do PluginCall só aceita Long, e um número pequeno (182)
+    // chega como Integer: voltava null e todo envio de pontuação era recusado aqui, sem chegar ao Play Games
+    private static Long longOf(PluginCall call, String name) {
+        Object v = call.getData().opt(name);
+        return v instanceof Number ? ((Number) v).longValue() : null;
     }
 
     // O código do Play Games (ApiException) num erro, para o jogo mostrar e o Analytics contar; null se não tiver
