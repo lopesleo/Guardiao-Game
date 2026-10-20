@@ -114,14 +114,21 @@ export function cjkWrap(text, obj) {
   const out = [];
   for (const para of String(text).split("\n")) {
     let line = "";
-    for (const ch of Array.from(para)) {
-      const next = line + ch;
-      if (line && ctx.measureText(next).width > max && !NO_START.includes(ch)) {
+    const put = (piece) => {
+      const next = line + piece;
+      if (line && ctx.measureText(next).width > max && !NO_START.includes(piece[0])) {
         out.push(line);
-        line = ch === " " ? "" : ch;
+        line = piece === " " ? "" : piece;
       } else line = next;
+    };
+    // palavra em letra latina ou número ("Play", "26507", "5,000") não se parte no meio; só se sozinha não
+    // couber na linha
+    for (const tok of para.match(LATIN_RUN) || []) {
+      if (tok.length > 1 && ctx.measureText(tok).width > max) Array.from(tok).forEach(put);
+      else put(tok);
     }
     out.push(line);
   }
   return out;
 }
+const LATIN_RUN = /[0-9A-Za-zÀ-ɏ.,:'_+\-×%#]+|[\s\S]/gu;
