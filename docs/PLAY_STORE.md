@@ -241,7 +241,8 @@ O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
 ### 1.0.18 (código 19) — 20/10/2026
 
-AAB: `dist/guardiao-v1.0.18-19-anuncios-reais.aab`. Achado no celular do Leonardo no teste das novidades (20/10): a
+AAB: `dist/guardiao-v1.0.18-19-anuncios-reais.aab`. Teste interno e **Teste fechado/Alpha** (20/10, publicada pelo
+script; o Alpha foi para a revisão por cima da 1.0.17). Achado no celular do Leonardo no teste das novidades (20/10): a
 mensagem chegava e o Android jogava fora, porque o jogo estava **sem a permissão de notificação** e a chave
 "Novidades" mostrava SIM (a escolha voltou com o backup do Android ao reinstalar; a permissão não). Agora
 `src/systems/NotifyAccess.js` confere a permissão e os canais no boot e na volta das configurações: as chaves Avisos e
