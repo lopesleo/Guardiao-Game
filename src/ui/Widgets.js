@@ -363,6 +363,12 @@ export class Toggle extends Phaser.GameObjects.Container {
     });
     this._draw();
   }
+  // Muda sem avisar o onChange (o estado real voltou diferente do toque: permissão negada, por exemplo)
+  setOn(on) {
+    this.on_ = !!on;
+    this._draw();
+    return this;
+  }
   _draw() {
     const g = this.g;
     g.clear();

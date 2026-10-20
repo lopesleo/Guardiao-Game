@@ -18,6 +18,8 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(ElapsedClockPlugin.class);
         // Plugin local: progresso na nuvem pelo Play Games
         registerPlugin(PlayGamesPlugin.class);
+        // Plugin local: abrir as configurações de notificação do jogo no Android
+        registerPlugin(NotificationSettingsPlugin.class);
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         hideSystemBars();

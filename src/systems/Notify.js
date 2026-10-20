@@ -5,33 +5,48 @@
 import { Settings } from "./Settings.js";
 import { isNative } from "./Platform.js";
 import { News } from "./News.js";
+import { NotifyAccess, CHANNEL } from "./NotifyAccess.js";
+import { Analytics } from "./Analytics.js";
 
 const plugin = () => window.Capacitor?.Plugins?.LocalNotifications;
 export const NOTIFY_ID = { chest: 1, crop: 2 };
 
 export const Notify = {
   available: () => isNative() && !!plugin(),
-  enabled: () => Settings.get("notify") === true,
+  // Ligado de verdade: o jogador aceitou E o Android deixa mostrar (NotifyAccess)
+  enabled: () => Settings.get("notify") === true && NotifyAccess.allowed(CHANNEL.reminders) !== false,
   asked: () => Settings.get("notifyAsked") === true,
+  blocked: () => NotifyAccess.blocked(CHANNEL.reminders),
 
-  // Pede a permissão do sistema; guarda que já perguntamos (não insiste)
+  // Chamar 1x no boot, antes do News.install: confere o que o Android deixa. Quem tinha aceitado e perdeu a
+  // permissão (reinstalou e o backup do Android trouxe a escolha sem ela; o Android tira de app parado há
+  // meses) volta a ver o pedido UMA vez, no próximo momento que faz sentido (baú, horta). Canal desligado no
+  // sistema foi escolha do jogador: esse não pergunta de novo.
+  async install() {
+    if (!this.available()) return;
+    await NotifyAccess.install();
+    const perm = NotifyAccess.state?.perm;
+    if (Settings.get("notify") === true && perm && perm !== "granted") {
+      Settings.set("notify", false);
+      Settings.set("notifyAsked", false);
+      Analytics.track("notify_lost", { perm });
+    }
+  },
+
+  // Pede a permissão do sistema (ou abre as configurações, se o Android não mostra mais o pedido); guarda que
+  // já perguntamos (não insiste)
   async enable() {
     Settings.set("notifyAsked", true);
-    const p = plugin();
-    if (!p) return false;
-    try {
-      const r = await p.requestPermissions();
-      const ok = r?.display === "granted";
-      Settings.set("notify", ok);
-      if (ok) News.sync(); // o pedido também conta das novidades (sem escolha própria, elas seguem os avisos)
-      return ok;
-    } catch {
-      return false;
-    }
+    if (!plugin()) return false;
+    const ok = await NotifyAccess.request(CHANNEL.reminders);
+    Settings.set("notify", ok);
+    if (ok) News.sync(); // o pedido também conta das novidades (sem escolha própria, elas seguem os avisos)
+    return ok;
   },
   disable() {
     Settings.set("notify", false);
     plugin()?.cancel?.({ notifications: Object.values(NOTIFY_ID).map((id) => ({ id })) }).catch?.(() => {});
+    return News.sync(); // sem escolha própria, as novidades seguem os avisos e desligam junto
   },
   decline() {
     Settings.set("notifyAsked", true);
