@@ -482,6 +482,9 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   que dizia "Ninguém pontuou" com a derrota de 182 pontos feita — a lista vem sempre do servidor, a linha do
   jogador aparece mesmo fora da lista pública e o envio que falhou aparece com o código e "Tentar de novo"; a
   quebra de linha do japonês/chinês deixou de partir números e palavras latinas; só no Teste interno
+- ✅ **1.0.14 (código 15)** (20/10/2026): o aviso da 1.0.13 mostrou que nenhum envio chegava ao Play Games — o
+  `getLong()` do Capacitor recusava a pontuação (Integer) e o plugin respondia "no_score"; agora qualquer número
+  inteiro vale (também o progresso da nuvem), com uma checagem no `test:rankings`; só no Teste interno
 - ✅ **Joystick morria depois da 1ª carta** (19/10/2026, achado no aparelho com a 1.0.4): um `off("resume")`
   geral no `GameScene` (do conserto antigo das cartas em dobro) apagava o ouvinte que religava o joystick depois
   da pausa da acessibilidade — em todos os modos, também depois do ⏸ e do reviver. Agora o joystick religa no

@@ -234,6 +234,41 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.14 (código 15) — 20/10/2026
+
+AAB: `dist/guardiao-v1.0.14-15-anuncios-reais.aab`. Só no Teste interno. O aviso novo da 1.0.13 mostrou no
+aparelho que o envio falhava sem código do Play Games: o plugin recusava antes de enviar. O `getLong()` do
+Capacitor só aceita `Long`, e a pontuação (182) chega do JavaScript como `Integer` → `null` → "no_score". Nenhuma
+pontuação tinha subido desde a 1.0.11 (o progresso da nuvem também ia sem o valor de progresso). A fila do aparelho
+guardou a melhor partida, e ela sobe na próxima abertura.
+
+```
+<pt-BR>
+• Correção: as pontuações agora chegam ao ranking do Play Games. A sua melhor partida que estava esperando sobe sozinha ao abrir o jogo.
+</pt-BR>
+<en-US>
+• Fix: scores now reach the Play Games leaderboard. Your best run that was waiting is sent automatically when you open the game.
+</en-US>
+<es-419>
+• Corrección: las puntuaciones ahora llegan a la clasificación de Play Juegos. Tu mejor partida que estaba esperando se envía sola al abrir el juego.
+</es-419>
+<es-ES>
+• Corrección: las puntuaciones ahora llegan a la clasificación de Play Juegos. Tu mejor partida que estaba esperando se envía sola al abrir el juego.
+</es-ES>
+<ja-JP>
+• 修正：スコアが Play ゲームのランキングに届くようになりました。送信待ちだった最高のプレイは、ゲームを開くと自動で送信されます。
+</ja-JP>
+<zh-CN>
+• 修复：得分现在会上传到 Play 游戏排行榜。之前等待上传的最佳对局会在打开游戏时自动上传。
+</zh-CN>
+<zh-TW>
+• 修正：得分現在會上傳到 Play 遊戲排行榜。之前等待上傳的最佳對局會在開啟遊戲時自動上傳。
+</zh-TW>
+<zh-HK>
+• 修正：得分現在會上傳到 Play 遊戲排行榜。之前等待上傳的最佳對局會在開啟遊戲時自動上傳。
+</zh-HK>
+```
+
 ### 1.0.13 (código 14) — 20/10/2026
 
 AAB: `dist/guardiao-v1.0.13-14-anuncios-reais.aab`. Só no Teste interno. Achado no aparelho com a 1.0.12: perdeu
@@ -828,6 +863,10 @@ e os rankings criados (`RANKING.IDS` no `src/config.js`). Sem isso nada muda no 
   faltar, de `loadCurrentPlayerLeaderboardScore` (posição "—" quando o Play Games não diz), e aparece também com a
   lista pública vazia. Envio que falha: a janela diz "Sua última partida ainda não chegou ao Play Games (erro N)"
   com "Tentar de novo", e o Analytics recebe `rank_submit_fail` (`board`, `code`, `signed`; 1x por abertura).
+  Sem código do Play Games, vale o motivo do plugin ("no_score", "not_configured"…).
+- **Números do JavaScript no plugin** (1.0.14): nunca `call.getLong()` — o Capacitor só aceita `Long`, e 182 chega
+  como `Integer` (virava `null`; nenhuma pontuação subiu da 1.0.11 à 1.0.13). Usar `longOf(call, nome)`; o
+  `npm run test:rankings` (cenário `pluginNativo`) confere no código Java.
 - **Teste:** `npm run test:rankings` (Play Games falso; também no `npm test`). `LOC=ja-JP TS=2 SHOTS=pasta` para
   conferir idioma e texto grande.
 
