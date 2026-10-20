@@ -864,6 +864,10 @@ e os rankings criados (`RANKING.IDS` no `src/config.js`). Sem isso nada muda no 
   lista pública vazia. Envio que falha: a janela diz "Sua última partida ainda não chegou ao Play Games (erro N)"
   com "Tentar de novo", e o Analytics recebe `rank_submit_fail` (`board`, `code`, `signed`; 1x por abertura).
   Sem código do Play Games, vale o motivo do plugin ("no_score", "not_configured"…).
+- **Perfil privado** (achado no aparelho em 20/10): com "Tornar o perfil privado" ligado no perfil do Play Games
+  (Play Store › Você › perfil › ⋮ › Privacidade e configurações), a pontuação sobe mas fica fora da lista pública e
+  sem posição — o jogo mostra "— Você" e o aviso "Só você vê sua pontuação: deixe o perfil do Play Games público
+  para aparecer". Desligado, o jogador entra na lista na hora.
 - **Números do JavaScript no plugin** (1.0.14): nunca `call.getLong()` — o Capacitor só aceita `Long`, e 182 chega
   como `Integer` (virava `null`; nenhuma pontuação subiu da 1.0.11 à 1.0.13). Usar `longOf(call, nome)`; o
   `npm run test:rankings` (cenário `pluginNativo`) confere no código Java.
