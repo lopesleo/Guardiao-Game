@@ -1,5 +1,5 @@
 {
-  "_doc": "Rankings do Play Games (tools/play-rankings.mjs). A chave é a de RANKING.IDS no src/config.js; os nomes aparecem no app do Play Games. Limites: os de RANKING (score) e os 5 Perigos.",
+  "_doc": "Rankings do Play Games (tools/play-rankings.mjs). A chave é a de RANKING.IDS no src/config.js; os nomes aparecem no app do Play Games. Limites: os de RANKING (score); o de Perigo aceita até 10 (hoje são 5), folga para um Perigo novo sem trocar de ranking.",
   "rankings": {
     "score": {
       "ordem": "LARGER_IS_BETTER",
@@ -18,7 +18,7 @@
     "perigo": {
       "ordem": "LARGER_IS_BETTER",
       "min": 1,
-      "max": 5,
+      "max": 10,
       "nomes": {
         "pt-BR": "Maior Perigo vencido",
         "en-US": "Highest Danger cleared",

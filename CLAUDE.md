@@ -87,17 +87,18 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
   brilham), joystick religando no próprio toque da carta e em toda a metade da tela, loja de cosméticos ligada. O Alpha
   **foi aprovado e publicado** (aviso do Console em 19/10; a faixa mostra a 1.0.7). Os testadores do Alpha
   **pagam de verdade** se comprarem (só "Teste de compras" no Teste de licença). `dist/guardiao-v1.0.7-8-anuncios-reais.aab`.
-  No **Teste interno** já está a **1.0.9 (código 10)** (19/10): por cima da 1.0.7, as animações da Ancestral refeitas
-  (1.0.8) e a horta da Ancestral (cerca entalhada, portal com lamparinas, espantalho de poncho).
+  No **Teste interno** já está a **1.0.11 (código 12)** (19/10, `dist/guardiao-v1.0.11-12-anuncios-reais.aab`): por
+  cima da 1.0.7, as animações da Ancestral refeitas (1.0.8), a horta da Ancestral (1.0.9), as novidades por
+  notificação (1.0.10) e o **Google Play Games ligado** (rankings e progresso na nuvem).
   👤 No celular (teste interno, `https://play.google.com/apps/internaltest/4700140413216190768`): atualizar e testar
   joystick (carta, ⏸, reviver), Loja, Fundador com cartão de teste → Clareira Ancestral (de dia e à noite, horta), estorno.
 - **Novidades por notificação** (FCM, na 1.0.10; `docs/PLAY_STORE.md`, "Novidades por notificação"): app e script
   `npm run aviso` prontos. 👤 Dar à conta de serviço o papel **"Administrador da API Firebase Cloud Messaging"** no
   Google Cloud (passo a passo no documento; hoje o envio dá 403). Depois: instalar a 1.0.10 do Teste interno,
   ligar Opções › Jogo › Novidades e mandar `tools/play/avisos/2026-10-19-teste.json`. Ao levar ao Alpha/produção:
-  "Segurança dos dados" (IDs do dispositivo + Funcionalidade do app e Comunicações do desenvolvedor) e copiar a
-  política nova para o site (`guardiao/privacy/pt.md` e `en.md` no `lopesleo.github.io`, e a página antiga do
-  branch `pages`).
+  "Segurança dos dados" (IDs do dispositivo + Funcionalidade do app e Comunicações do desenvolvedor). A política
+  com novidades e Play Games **já está no ar** (19/10: site `lopesleo.github.io/guardiao/privacidade/` e `/en/privacy/`,
+  e a página antiga do branch `pages`).
 - **Próximo: Clareira da Caatinga** (grátis): liberar quem vencer no Perigo máximo na Caatinga + uma conquista.
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
   ~14/10 (pedido de produção possível por volta de **28/10**). 👤 Manter os 12 ativos (ninguém sair da lista).
@@ -136,9 +137,11 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 - Anúncios já pedem classificação máxima "T" no app; 👤 deixar também "T" no console do AdMob (Controles de
   bloqueio). **Play Games configurado em 19/10** (`docs/PLAY_STORE.md`, "Progresso na nuvem" e "Rankings"):
   projeto 338573815363 no `games-ids.xml`, 5 credenciais, Jogos salvos, os 2 rankings criados (IDs em
-  `RANKING.IDS`) e a política com as seções novas em `docs/PRIVACY.md`. A próxima versão já liga nuvem e
-  rankings. 👤 Falta: publicar o Play Games Services (Configuração → Revisar e publicar), testar no aparelho
-  (Teste interno), copiar a política para o site e marcar a Segurança dos dados antes do Alpha/produção.
+  `RANKING.IDS`; o de Perigo aceita 1–10) e a política no ar. A **1.0.11** (Teste interno) já liga nuvem e
+  rankings. 👤 Falta: testar no aparelho (entrar no Play Games, uma partida, abrir o ranking; desinstalar e
+  reinstalar para ver o progresso voltar); depois publicar o Play Games Services (Configuração → Revisar e
+  publicar; limites, ordem dos rankings e Jogos salvos não mudam mais) e marcar a Segurança dos dados antes de
+  levar ao Alpha/produção.
   Revisão nativa ja/zh; testes em aparelho fraco.
 
 **Laboratório e ferramentas**
