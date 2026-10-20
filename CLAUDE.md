@@ -82,21 +82,21 @@ Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um 
 marcar no `docs/ROADMAP.md`. Última revisão: **20/10/2026**.
 
 **Agora**
-- **1.0.17 (código 18) no Teste interno e no Teste fechado/Alpha (20/10; a 1.0.16 foi aprovada no Alpha no mesmo dia e a
-  1.0.17, com a tela inicial nova, foi para a revisão por cima dela).** `dist/guardiao-v1.0.17-18-anuncios-reais.aab`. O Alpha vinha da 1.0.7 (Clareira Ancestral,
+- **1.0.18 (código 19) no Teste interno e no Teste fechado/Alpha (20/10, em revisão no Alpha por cima da 1.0.17).**
+  `dist/guardiao-v1.0.18-19-anuncios-reais.aab`. Novo nela: notificações só "ligadas" com a permissão do Android
+  (`src/systems/NotifyAccess.js`); as notas (8 idiomas, `docs/PLAY_STORE.md`) juntam a 1.0.17, a tela inicial nova.
+  O Alpha vinha da 1.0.7 (Clareira Ancestral,
   joystick, loja de cosméticos); por cima: animações da Ancestral (1.0.8), horta da Ancestral (1.0.9), novidades por
   notificação (1.0.10), **Google Play Games** — rankings e progresso na nuvem (1.0.11) e os consertos achados no
   aparelho: login num lugar só (1.0.12), lista do ranking sempre do servidor e aviso com o código do erro (1.0.13), o
   plugin que recusava toda pontuação (`getLong()` do Capacitor não aceita Integer, 1.0.14), aviso de perfil do Play
-  Games privado (1.0.15) e entrar de novo quando a entrada automática não acontece (1.0.16). No aparelho em 20/10:
+  Games privado (1.0.15), entrar de novo quando a entrada automática não acontece (1.0.16) e a tela inicial redesenhada
+  (1.0.17). No aparelho em 20/10:
   ranking com "1. xKomedy 182", desinstalar/reinstalar trouxe o progresso de volta. Os testadores do Alpha **pagam de
   verdade** se comprarem (só "Teste de compras" no Teste de licença). 👤 Conferir no Console quando a revisão aprovar.
   Aviso por notificação dos rankings pronto e **validado pelo Google** (`tools/play/avisos/2026-10-20-rankings.json`).
   👤 Enviar (`npm run aviso -- enviar …`) ~2–3 dias depois que a **1.0.18** chegar aos testadores, quando o Leonardo
   mandar (antes dela, quem perdeu a permissão não vê nada).
-- **1.0.18 (código 19) gerada em 20/10** (`dist/guardiao-v1.0.18-19-anuncios-reais.aab`): notificações só "ligadas"
-  com a permissão do Android (`src/systems/NotifyAccess.js`; notas nos 8 idiomas em `docs/PLAY_STORE.md`, juntando a
-  1.0.17). 👤 Subir para o Teste interno e o Alpha quando o Leonardo mandar (`npm run play:versao -- subir …`).
 - **Novidades por notificação** (FCM, na 1.0.10; `docs/PLAY_STORE.md`, "Novidades por notificação"): app e script
   `npm run aviso` prontos; a conta de serviço **ganhou o papel "Administrador da API Firebase Cloud Messaging" em 20/10**
   (o `validar` passa nos 6 tópicos). Teste em 20/10 no celular do Leonardo (`--topico=novidades_zht`, trocando o idioma
@@ -164,8 +164,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **20/10/2026**.
   Reinstalar com o comando de `tools/estudio/README.md`.
 
 **Repositórios**
-- `main` deste repo subiu para o `origin` em 20/10/2026, até a 1.0.17 e o modo de teste do aviso (push só quando o
-  Leonardo pedir). O Pages daqui serve a
+- `main` deste repo subiu para o `origin` em 20/10/2026, até a 1.0.18 (push só quando o Leonardo pedir). O Pages daqui serve a
   branch `pages` (jogo web fora do ar; política no endereço antigo). Página oficial: repo `lopesleo.github.io`,
   pasta `guardiao/` (deploy = push na `dev`), copiada para `komedygames.com/guardiao/` pelo repo `lopesleo/komedygames`
   (Cloudflare Pages; publicar de novo lá depois de mudar o site do Guardião).
