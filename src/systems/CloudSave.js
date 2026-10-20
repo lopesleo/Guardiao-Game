@@ -91,8 +91,10 @@ export const CloudSave = {
       st = await plugin().status();
     } catch {}
     if (!st?.configured) return this._settle("off");
-    // sem login automático: o jogo pede uma vez (PlayGamesAuth.js); recusou, fica para Opções ou o ranking
-    if (!st.authenticated && !(await PlayGamesAuth.askOnce())) return this._settle("out");
+    // sem login automático: o jogo pede (1ª vez) ou entra de novo (quem já entrou) — PlayGamesAuth.js; recusou,
+    // fica para Opções ou o ranking
+    if (st.authenticated) PlayGamesAuth.noteSignedIn();
+    else if (!(await PlayGamesAuth.atLaunch())) return this._settle("out");
     await this.sync();
   },
 
