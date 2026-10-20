@@ -234,6 +234,65 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.16 (código 17) — 20/10/2026
+
+AAB: `dist/guardiao-v1.0.16-17-anuncios-reais.aab`. Teste interno e **Teste fechado/Alpha** (o Alpha vem da 1.0.7:
+as notas resumem tudo desde ela). Achado no aparelho com a 1.0.15: quando a entrada automática do Play Games não
+acontecia, a nuvem ficava em "Conectar" a cada abertura (só o ranking, que confere o login de novo, funcionava).
+Agora quem já entrou entra de novo na abertura (para quem já deu permissão, o Play Games só mostra o logo). O teste
+de reinstalar passou no aparelho: o progresso voltou (com a escolha entre o do aparelho e o do Play Games).
+
+```
+<pt-BR>
+• Rankings no Google Play Games: pontuação e maior Perigo, da semana e de sempre.
+• Progresso na nuvem: entre no Play Games e o seu progresso volta ao reinstalar ou trocar de celular.
+• Novidades por notificação (dá para desligar em Opções).
+• Clareira Ancestral com animações refeitas e horta nova.
+</pt-BR>
+<en-US>
+• Leaderboards on Google Play Games: score and highest Danger, weekly and all-time.
+• Cloud progress: sign in to Play Games and your progress comes back when you reinstall or switch phones.
+• News notifications (you can turn them off in Options).
+• Ancestral Clearing with redone animations and a new garden.
+</en-US>
+<es-419>
+• Clasificaciones en Google Play Juegos: puntuación y mayor Peligro, de la semana y de siempre.
+• Progreso en la nube: entra en Play Juegos y tu progreso vuelve al reinstalar o cambiar de teléfono.
+• Novedades por notificación (puedes desactivarlas en Opciones).
+• Claro Ancestral con animaciones renovadas y un huerto nuevo.
+</es-419>
+<es-ES>
+• Clasificaciones en Google Play Juegos: puntuación y mayor Peligro, de la semana y de siempre.
+• Progreso en la nube: entra en Play Juegos y tu progreso vuelve al reinstalar o cambiar de móvil.
+• Novedades por notificación (puedes desactivarlas en Opciones).
+• Claro Ancestral con animaciones renovadas y un huerto nuevo.
+</es-ES>
+<ja-JP>
+• Google Play ゲームのランキング：スコアと最高危険度（今週・歴代）。
+• クラウドに保存：Play ゲームにログインすると、再インストールや機種変更のときに進行状況が戻ります。
+• 最新情報のお知らせ（オプションでオフにできます）。
+• いにしえの広場のアニメーションを作り直し、新しい畑を追加。
+</ja-JP>
+<zh-CN>
+• Google Play 游戏排行榜：得分与最高危险度，分本周和总榜。
+• 云端进度：登录 Play 游戏后，重装或换手机时进度都能找回。
+• 最新消息通知（可在选项中关闭）。
+• 远古空地的动画全面重做，并新增菜园。
+</zh-CN>
+<zh-TW>
+• Google Play 遊戲排行榜：得分與最高危險度，分本週和總榜。
+• 雲端進度：登入 Play 遊戲後，重裝或換手機時進度都能找回。
+• 最新消息通知（可在選項中關閉）。
+• 遠古空地的動畫全面重做，並新增菜園。
+</zh-TW>
+<zh-HK>
+• Google Play 遊戲排行榜：得分與最高危險度，分本週和總榜。
+• 雲端進度：登入 Play 遊戲後，重裝或換手機時進度都能找回。
+• 最新消息通知（可在選項中關閉）。
+• 遠古空地的動畫全面重做，並新增菜園。
+</zh-HK>
+```
+
 ### 1.0.15 (código 16) — 20/10/2026
 
 AAB: `dist/guardiao-v1.0.15-16-anuncios-reais.aab`. Só no Teste interno. Com a 1.0.14 a pontuação subiu, mas o
@@ -898,7 +957,10 @@ e os rankings criados (`RANKING.IDS` no `src/config.js`). Sem isso nada muda no 
   pontuação espera numa fila e sobe na próxima abertura.
 - **Login** (`src/systems/PlayGamesAuth.js`, desde a 1.0.12): o Play Games tenta entrar sozinho; se não conseguir, o
   jogo pede **uma vez** na abertura (recusou, não insiste; deu erro, pede na próxima). Entrou por qualquer caminho
-  (pedido, Opções, ranking), a nuvem confere e a fila dos rankings sobe antes de a lista carregar.
+  (pedido, Opções, ranking), a nuvem confere e a fila dos rankings sobe antes de a lista carregar. Desde a 1.0.16,
+  quem já entrou (marca `guardiao_pg_in`) e abre sem a entrada automática **entra de novo na abertura** — no
+  aparelho a entrada automática não acontecia e a nuvem ficava em "Conectar"; para quem já deu permissão o Play Games
+  só mostra o logo. Quem fechou a entrada perde a marca e não é chamado de novo.
 - **A lista** (desde a 1.0.13): sempre do servidor (`forceReload`; a cópia que o Play Games guarda no aparelho não
   via a partida recém-enviada; o jogo guarda 1 min e limpa ao enviar). A linha do jogador vem da variante ou, se
   faltar, de `loadCurrentPlayerLeaderboardScore` (posição "—" quando o Play Games não diz), e aparece também com a
