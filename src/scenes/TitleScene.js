@@ -1,11 +1,13 @@
-// Tela de título — a "vitrine" (screenshots da loja): clareira noturna, lua,
-// névoa, vaga-lumes e o guardião escolhido na fogueira. JOGAR leva à Clareira
+// Tela de título — a "vitrine" (screenshots da loja): a clareira à noite em camadas (TitleArt.js) — céu com Via
+// Láctea, lua e nuvens, serra, duas matas com luar, névoa —, árvores emoldurando os cantos, folhas caindo,
+// vaga-lumes e o guardião escolhido na fogueira. JOGAR leva à Clareira
 // do Guardião (o acampamento caminhável), de onde se parte para a floresta.
 import { CHARACTERS } from "../config.js";
 import { MetaProgression, SaveLock } from "../systems/MetaProgression.js";
 import { CloudSave } from "../systems/CloudSave.js";
 import { DEBUG, isNative } from "../systems/Platform.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
+import { TITLE_PX, makeSky, makeMoon, makeCloud, makeRidge, makeTreeline, makeGround, makeFrameTrunk, makeCanopy, makeFern, makeCampfire, makeLeaf, makeStreak, makeVine } from "../art/TitleArt.js";
 import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
 import { closeTopModal } from "../ui/Widgets.js";
 import { MetaPanels } from "../ui/MetaPanels.js";
@@ -31,8 +33,10 @@ export class TitleScene extends Phaser.Scene {
     // ser zerado aqui, senão sobra da vez anterior (ex.: herói preso andando).
     this._leaving = false;
 
+    this._layout();
     this._backdrop();
     this._heroArea();
+    this._foreground();
     this._title();
     this._buttons();
 
@@ -63,122 +67,171 @@ export class TitleScene extends Phaser.Scene {
 
   _refreshAll() {}
 
-  _backdrop() {
+  // Posições da cena (o resto se arruma em volta): horizonte, guardião e fogueira
+  _layout() {
     const W = this.W,
       H = this.H;
-    const horizon = Math.round(H * 0.56);
-    // Céu em gradiente (gerado por tamanho de tela)
-    const key = `menu_sky_${W}x${H}`;
-    if (!this.textures.exists(key)) {
-      const c = this.textures.createCanvas(key, W, H);
-      const ctx = c.getContext();
-      const g = ctx.createLinearGradient(0, 0, 0, horizon);
-      g.addColorStop(0, "#070b14");
-      g.addColorStop(0.55, "#10202a");
-      g.addColorStop(1, "#1d3a33");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
-      c.refresh();
-    }
-    this.add.image(0, 0, key).setOrigin(0);
+    const hx = Math.round(W * 0.3),
+      hy = Math.round(H * 0.8);
+    this.L = { horizon: Math.round(H * 0.6), hx, hy, fx: hx + 150, fy: hy - 6, mx: Math.round(W * 0.6), my: Math.round(H * 0.17) };
+    this.heroX = hx;
+    this.heroY = hy;
+  }
 
-    // Estrelas piscando
-    for (let i = 0; i < 60; i++) {
+  // Camada de arte (TitleArt.js) gerada uma vez por tamanho de tela
+  _layer(name, make) {
+    const key = `title_${name}_${this.W}x${this.H}`;
+    if (!this.textures.exists(key)) make().register(this, key);
+    return key;
+  }
+
+  _backdrop() {
+    const W = this.W,
+      H = this.H,
+      S = TITLE_PX,
+      L = this.L;
+    const lw = Math.ceil(W / S) + 1,
+      lh = Math.ceil(H / S) + 1;
+    const hz = Math.round(L.horizon / S),
+      mxl = L.mx / S;
+    const img = (key, x = 0, y = 0) => this.add.image(x, y, key).setOrigin(0).setScale(S);
+
+    // Céu (com a Via Láctea) e estrelas piscando
+    img(this._layer("sky", () => makeSky(lw, lh, hz)));
+    for (let i = 0; i < 70; i++) {
       const s = this.add
-        .image(Math.random() * W, Math.random() * horizon * 0.8, i % 5 ? "px_dot1" : "px_dot2")
+        .image(Math.random() * W, Math.random() * L.horizon * 0.75, i % 6 ? "px_dot1" : "px_dot2")
         .setScale(3)
-        .setAlpha(0.2 + Math.random() * 0.6)
-        .setTint(i % 7 ? 0xffffff : 0xffe58f);
-      this.tweens.add({ targets: s, alpha: 0.1, duration: 800 + Math.random() * 2000, yoyo: true, repeat: -1, delay: Math.random() * 2000 });
+        .setAlpha(0.15 + Math.random() * 0.6)
+        .setTint(i % 7 ? PAL.white : PAL.yel3);
+      this.tweens.add({ targets: s, alpha: 0.08, duration: 900 + Math.random() * 2400, yoyo: true, repeat: -1, delay: Math.random() * 2400, ease: "Sine.easeInOut" });
     }
-    // Lua
-    const mx = W * 0.62,
-      my = H * 0.17;
-    this.add.image(mx, my, "fx_glow").setScale(5).setTint(0xbfe0ff).setAlpha(0.18).setBlendMode(Phaser.BlendModes.ADD);
-    const moon = this.add.graphics();
-    const pr = 10;
-    for (let y = -pr; y <= pr; y++)
-      for (let x = -pr; x <= pr; x++) {
-        const d = x * x + y * y;
-        if (d > pr * pr) continue;
-        const shade = x + y > 6 ? 0xc9d6e0 : (x * 7 + y * 3) % 11 === 0 ? 0xd8e2ea : 0xeef4f8;
-        moon.fillStyle(shade, 1).fillRect(mx + x * 3, my + y * 3, 3, 3);
-      }
-
-    const env = this.registry.get("envKeys");
-    const trees = [...env.pines, ...env.trees.slice(0, 5)];
-    // Camadas de floresta: silhuetas escuras ao fundo → cor real na frente
-    const layer = (baseY, scale, tint, step, alpha = 1) => {
-      const imgs = [];
-      for (let x = -40; x < W + 60; x += step + Math.random() * step * 0.5) {
-        const f = trees[Math.floor(Math.random() * trees.length)];
-        const im = this.add
-          .image(x, baseY + Math.random() * 16, "env", f)
-          .setOrigin(0.5, 1)
-          .setScale(scale)
-          .setTint(tint)
-          .setAlpha(alpha);
-        imgs.push(im);
-      }
-      return imgs;
+    // Lua com halo e nuvens finas passando na frente
+    this.add.image(L.mx, L.my, "fx_glow").setScale(7).setTint(PAL.ice3).setAlpha(0.12).setBlendMode(Phaser.BlendModes.ADD);
+    this.add.image(L.mx, L.my, "fx_glow").setScale(3.2).setTint(PAL.ice3).setAlpha(0.16).setBlendMode(Phaser.BlendModes.ADD);
+    this.add.image(L.mx, L.my, this._layer("moon", makeMoon)).setScale(S);
+    // nuvens: uma fina passa na frente da lua (só à direita do título, surgindo e sumindo devagar); duas baixas
+    // espiam por trás da serra (desenhada depois, cobre o pé delas)
+    const titleR = Math.round(W * 0.3 + 190);
+    const cloud = (i, w, h, y, v, a, x0, x1) => {
+      const c = this.add.image(x0 + Math.random() * (x1 - x0), y, this._layer(`cloud${i}`, () => makeCloud(61 + i * 5, w, h))).setScale(S);
+      Object.assign(c, { _v: v, _a: a, _x0: x0, _x1: x1 });
+      return c;
     };
-    layer(horizon - 30, 2, 0x0d1c1b, 34);
-    // Névoa entre camadas
+    this.clouds = [
+      cloud(0, 54, 12, L.my + 26, 5, 0.7, titleR, W - 40),
+      cloud(1, 92, 16, L.horizon - 146, 3, 0.7, -150, W + 150),
+      cloud(2, 70, 13, L.horizon - 176, 4.2, 0.55, -150, W + 150),
+    ];
+
+    // Serra, mata ao longe, névoa, mata de perto: cada uma cheia até embaixo (o chão cobre o pé)
+    img(this._layer("ridge", () => makeRidge(lw, lh, hz - 30, 24, 7, mxl)));
+    img(this._layer("woodsFar", () => makeTreeline(lw, lh, hz - 7, { seed: 21, minH: 14, maxH: 30, jitter: 4, pines: 0.55, fill: PAL.woodsFar0, rim: PAL.woodsFar1, moonX: mxl })));
     this.fog = [];
-    for (let i = 0; i < 4; i++) {
-      const f = this.add
-        .image(W * (i / 3), horizon - 20, "fx_glow")
-        .setScale(9, 1.6)
-        .setTint(0x9fc8c0)
-        .setAlpha(0.07)
-        .setBlendMode(Phaser.BlendModes.ADD);
-      f._v = 6 + Math.random() * 8;
-      this.fog.push(f);
-    }
-    layer(horizon + 10, 3, 0x142a24, 52);
-
-    // Chão da clareira
-    this.add
-      .tileSprite(0, horizon, W, H - horizon, "env_ground")
-      .setOrigin(0)
-      .setTileScale(3)
-      .setTint(0xb8c8c0);
-    const shade = this.add.graphics();
-    shade.fillStyle(0x070b10, 0.5).fillRect(0, horizon, W, 18);
-    shade.fillStyle(0x070b10, 0.25).fillRect(0, horizon + 18, W, 18);
-
-    // Detalhes no chão
-    for (let i = 0; i < 26; i++) {
-      const list = i % 3 ? env.tufts : env.flowers;
-      this.add
-        .image(Math.random() * W, horizon + 30 + Math.random() * (H - horizon - 40), "env", list[i % list.length])
-        .setOrigin(0.5, 1)
-        .setScale(3);
-    }
-    // Árvores grandes emoldurando as bordas (cor real)
-    const frame = (x, y, f, flip) => {
-      this.add.image(x, y, "px_shadow").setScale(9, 4).setAlpha(0.6);
-      this.add.image(x, y, "env", f).setOrigin(0.5, 1).setScale(5).setFlipX(flip);
+    const fog = (y, alpha, n) => {
+      for (let i = 0; i < n; i++) {
+        const f = this.add
+          .image(W * (i / (n - 1)) + Math.random() * 80, y, "fx_glow")
+          .setScale(10, 1.5)
+          .setTint(PAL.night4)
+          .setAlpha(alpha)
+          .setBlendMode(Phaser.BlendModes.ADD);
+        f._v = 5 + Math.random() * 7;
+        this.fog.push(f);
+      }
     };
-    frame(-30, H + 40, "tree_big", false);
-    frame(W + 20, H + 30, "pine2", true);
-    frame(W * 0.08, horizon + 70, "pine1", false);
+    fog(L.horizon - 34, 0.1, 4);
+    img(this._layer("woodsNear", () => makeTreeline(lw, lh, hz + 3, { seed: 37, minH: 22, maxH: 44, jitter: 6, pines: 0.45, fill: PAL.woodsNear0, rim: PAL.woodsNear1, moonX: mxl, leafy: true })));
 
-    // Vaga-lumes
-    this.flies = [];
-    for (let i = 0; i < 18; i++) {
-      const g = this.add.image(Math.random() * W, horizon + Math.random() * (H - horizon), "fx_glow").setScale(0.3).setTint(0xfff5b8).setBlendMode(Phaser.BlendModes.ADD);
-      const c = this.add.image(g.x, g.y, "px_dot2").setScale(2).setTint(0xfff5b8);
-      this.flies.push({ g, c, ph: Math.random() * 7, vx: (Math.random() - 0.5) * 0.3, vy: -0.1 - Math.random() * 0.25 });
+    // Chão da clareira (terreiro batido em volta da fogueira) e a névoa rente ao pé da mata
+    img(this._layer("ground", () => makeGround(lw, lh - hz, L.fx / S, L.fy / S - hz)), 0, hz * S);
+    fog(L.horizon + 6, 0.14, 5);
+    // Tufos e flores no gramado, longe do terreiro e dos cantos de baixo
+    const env = this.registry.get("envKeys");
+    let placed = 0;
+    for (let tries = 0; placed < 22 && tries < 200; tries++) {
+      const x = 30 + Math.random() * (W - 60),
+        y = L.horizon + 24 + Math.random() * (H - L.horizon - 40);
+      const dx = (x - L.fx) / 300,
+        dy = (y - L.fy) / 80;
+      const btnX = Math.max(W * 0.74, W - 250);
+      if (dx * dx + dy * dy < 1 || (y > H - 110 && (x < 200 || x > W - 200)) || (Math.abs(x - btnX) < 210 && y < H * 0.56 + 200)) continue;
+      const list = placed % 3 ? env.tufts : env.flowers;
+      const near = (y - L.horizon) / (H - L.horizon);
+      this.add.image(x, y, "env", list[placed % list.length]).setOrigin(0.5, 1).setScale(3).setAlpha(0.55 + near * 0.45);
+      placed++;
     }
+    // Poça de luz quente da fogueira no chão
+    this.firePool = this.add.image(L.fx, L.fy + 4, "fx_glow").setScale(12, 3.4).setTint(PAL.org3).setAlpha(0.2).setBlendMode(Phaser.BlendModes.ADD);
+  }
+
+  // Árvores da moldura (enraizadas fora da tela; as copas cobrem os cantos de cima), samambaias à frente,
+  // folhas caindo, vaga-lumes, estrela cadente e a vinheta
+  _foreground() {
+    const W = this.W,
+      H = this.H,
+      S = TITLE_PX;
+    const lh = Math.ceil(H / S) + 1;
+    const trunk = this._layer("trunk", () => makeFrameTrunk(lh + 2, 26, 3));
+    this.add.image(-16, H + 4, trunk).setOrigin(0, 1).setScale(S);
+    this.add.image(W + 16, H + 4, trunk).setOrigin(1, 1).setScale(S).setFlipX(true);
+    // copas: cachos que balançam devagar, cada um no seu ritmo; descem pela lateral sem chegar ao título nem à lua
+    this.sway = [];
+    const canopy = (i, w, h, x, y, flip) => {
+      const c = this.add.image(x, y, this._layer(`canopy${i}`, () => makeCanopy(71 + i * 7, w, h, 1 + (i % 2)))).setOrigin(0).setScale(S).setFlipX(flip);
+      this.sway.push({ o: c, bx: x, by: y, ph: i * 1.7, ax: 2.4, ay: 1.2, per: 1800 + i * 260 });
+    };
+    const titleL = Math.round(W * 0.3 - 175); // borda esquerda do título
+    canopy(0, 90, 48, -86, -62, false);
+    canopy(1, 66, 38, Math.min(70, titleL - 66 * S - 6), -58, false);
+    canopy(2, 58, 34, -70, 70, false);
+    canopy(3, 40, 26, -46, 190, false);
+    canopy(4, 90, 48, W - 90 * S + 86, -66, true);
+    canopy(5, 66, 38, W - 66 * S - 66, -54, true);
+    canopy(6, 58, 34, W - 58 * S + 70, 64, true);
+    canopy(7, 40, 26, W - 40 * S + 46, 184, true);
+    // samambaias nos cantos de baixo
+    const fernL = this.add.image(-12, H + 8, this._layer("fernL", () => makeFern(51, 56, 34))).setOrigin(0, 1).setScale(S);
+    const fernR = this.add.image(W + 12, H + 8, this._layer("fernR", () => makeFern(57, 56, 34, true))).setOrigin(1, 1).setScale(S);
+    this.sway.push({ o: fernL, bx: fernL.x, by: fernL.y, ph: 0.4, ax: 2, ay: 0, per: 1500 }, { o: fernR, bx: fernR.x, by: fernR.y, ph: 2.1, ax: 2, ay: 0, per: 1650 });
+
+    // Folhas que se soltam das copas e caem girando
+    const leafKeys = [this._layer("leafG", () => makeLeaf(false)), this._layer("leafY", () => makeLeaf(true))];
+    this.leaves = [0, 1, 2, 3].map((i) => {
+      const o = this.add.image(-50, -50, leafKeys[i % 2]).setScale(S).setVisible(false);
+      return { o, wait: 600 + i * 1700, ph: Math.random() * 6 };
+    });
+
+    // Vaga-lumes no gramado
+    this.flies = [];
+    for (let i = 0; i < 16; i++) {
+      const g = this.add.image(Math.random() * W, this.L.horizon + Math.random() * (H - this.L.horizon), "fx_glow").setScale(0.3).setTint(PAL.yel3).setBlendMode(Phaser.BlendModes.ADD);
+      const c = this.add.image(g.x, g.y, "px_dot2").setScale(2).setTint(PAL.yel3);
+      this.flies.push({ g, c, ph: Math.random() * 7, vx: (Math.random() - 0.5) * 0.3, vy: -0.08 - Math.random() * 0.2 });
+    }
+
+    // Estrela cadente de vez em quando
+    const streak = this._layer("streak", makeStreak);
+    const shoot = () => {
+      if (!this.sys.isActive()) return;
+      const dir = Math.random() < 0.5 ? 1 : -1;
+      const x = W * (0.25 + Math.random() * 0.5),
+        y = H * (0.04 + Math.random() * 0.16);
+      const s = this.add.image(x, y, streak).setScale(S).setFlipX(dir < 0).setRotation(dir * 0.32).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
+      this.tweens.add({ targets: s, alpha: { from: 0, to: 0.9 }, duration: 160, yoyo: true, hold: 380 });
+      this.tweens.add({ targets: s, x: x + dir * 260, y: y + 86, duration: 720, ease: "Quad.easeIn", onComplete: () => s.destroy() });
+      this.time.delayedCall(7000 + Math.random() * 9000, shoot);
+    };
+    this.time.delayedCall(3000 + Math.random() * 3000, shoot);
+
     // Vinheta
     const vk = `vignette_${W}x${H}`;
     if (!this.textures.exists(vk)) {
       const c = this.textures.createCanvas(vk, W, H);
       const ctx = c.getContext();
-      const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, Math.max(W, H) * 0.72);
+      const g = ctx.createRadialGradient(W * 0.42, H * 0.62, H * 0.4, W / 2, H / 2, Math.max(W, H) * 0.72);
       g.addColorStop(0, "rgba(0,0,0,0)");
-      g.addColorStop(1, "rgba(10,6,16,0.55)");
+      g.addColorStop(1, "rgba(6,8,14,0.6)");
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, W, H);
       c.refresh();
@@ -194,7 +247,7 @@ export class TitleScene extends Phaser.Scene {
     for (const f of this.flies || []) {
       f.g.x += f.vx + Math.sin(time / 700 + f.ph) * 0.25;
       f.g.y += f.vy;
-      if (f.g.y < H * 0.5) {
+      if (f.g.y < this.L.horizon - 20) {
         f.g.y = H + 10;
         f.g.x = Math.random() * W;
       }
@@ -206,61 +259,90 @@ export class TitleScene extends Phaser.Scene {
       f.x += (f._v * dt) / 1000;
       if (f.x > W + 300) f.x = -300;
     }
-    // Fogueira: chamas pulsando
+    for (const c of this.clouds || []) {
+      c.x += (c._v * dt) / 1000;
+      if (c.x > c._x1) c.x = c._x0;
+      // some e aparece nas pontas do caminho (nunca pula na tela)
+      c.setAlpha(c._a * Math.max(0, Math.min(1, (c.x - c._x0) / 120, (c._x1 - c.x) / 120)));
+    }
+    // Copas e samambaias: balanço suave (seno), nunca parado nem aos trancos
+    for (const s of this.sway || []) {
+      const t = (time / s.per) * Math.PI * 2 + s.ph;
+      s.o.setPosition(s.bx + Math.sin(t) * s.ax, s.by + Math.sin(t * 0.7 + 1) * s.ay);
+    }
+    // Folhas: soltam de uma copa, caem balançando e virando (a largura vai e volta)
+    for (const l of this.leaves || []) {
+      if (!l.o.visible) {
+        l.wait -= dt;
+        if (l.wait > 0) continue;
+        const left = Math.random() < 0.5;
+        l.o.setPosition(left ? 40 + Math.random() * 160 : W - 40 - Math.random() * 160, 60 + Math.random() * 60).setVisible(true).setAlpha(1);
+        l.vx = (left ? 1 : -1) * (6 + Math.random() * 10);
+        continue;
+      }
+      l.ph += dt / 1000;
+      l.o.x += (l.vx + Math.sin(l.ph * 2.1) * 22) * (dt / 1000);
+      l.o.y += (26 + Math.sin(l.ph * 4.2) * 10) * (dt / 1000);
+      l.o.scaleX = TITLE_PX * Math.cos(l.ph * 3.3);
+      if (l.o.y > this.L.horizon + 40) l.o.alpha -= dt / 900;
+      if (l.o.alpha <= 0 || l.o.y > H) {
+        l.o.setVisible(false);
+        l.wait = 2500 + Math.random() * 4000;
+      }
+    }
+    // Fogueira: chamas, luz no chão e no guardião pulsando juntas
     if (this.fire) {
-      this.fire.glow.setAlpha(0.45 + Math.sin(time / 90) * 0.08 + Math.random() * 0.05);
-      this.heroLight?.setAlpha(0.16 + Math.sin(time / 90) * 0.03);
+      const k = Math.sin(time / 90) * 0.5 + Math.sin(time / 37) * 0.3 + Math.random() * 0.2;
+      this.fire.glow.setAlpha(0.42 + k * 0.08);
+      this.firePool?.setAlpha(0.2 + k * 0.04);
+      this.heroLight?.setAlpha(0.16 + k * 0.03);
     }
   }
 
   _heroArea() {
-    const W = this.W,
-      H = this.H;
-    const hx = Math.round(W * 0.3),
-      hy = Math.round(H * 0.8);
-    this.heroX = hx;
-    this.heroY = hy;
+    const L = this.L;
+    const hx = L.hx,
+      hy = L.hy,
+      fx = L.fx,
+      fy = L.fy;
 
-    // Fogueira (pedras + lenha + chamas de partículas)
-    const fx = hx + 150,
-      fy = hy - 6;
-    this.add.image(fx, fy + 6, "px_shadow").setScale(6, 3);
-    const glow = this.add.image(fx, fy - 10, "fx_glow").setScale(4.5).setTint(0xff9a4c).setAlpha(0.45).setBlendMode(Phaser.BlendModes.ADD);
-    const wood = this.add.graphics();
-    wood.fillStyle(PAL.ink, 1).fillRect(fx - 24, fy - 6, 48, 12);
-    wood.fillStyle(PAL.n2, 1).fillRect(fx - 21, fy - 3, 42, 6);
-    wood.fillStyle(PAL.n3, 1).fillRect(fx - 21, fy - 3, 42, 3);
-    for (let i = -3; i <= 3; i++) {
-      wood.fillStyle(PAL.ink, 1).fillRect(fx + i * 9 - 5, fy + 3, 10, 8);
-      wood.fillStyle(i % 2 ? PAL.s2 : PAL.s3, 1).fillRect(fx + i * 9 - 3, fy + 5, 6, 4);
-    }
+    // Fogueira: anel de pedras e toras (TitleArt.js), chamas e fumaça de partículas
+    this.add.image(fx, fy + 8, "px_shadow").setScale(7, 3).setAlpha(0.7);
+    const glow = this.add.image(fx, fy - 12, "fx_glow").setScale(4.8).setTint(PAL.org2).setAlpha(0.45).setBlendMode(Phaser.BlendModes.ADD);
+    this.add.image(fx, fy + 12, this._layer("campfire", makeCampfire)).setOrigin(0.5, 1).setScale(TITLE_PX);
     this.fire = { glow };
     this.time.addEvent({
-      delay: 70,
+      delay: 60,
       loop: true,
       callback: () => {
         const f = this.add
-          .image(fx + (Math.random() - 0.5) * 22, fy - 4, "px_puff")
-          .setScale(2.2 + Math.random())
-          .setTint([0xffe58f, 0xffb36b, 0xff7a3c][Math.floor(Math.random() * 3)])
+          .image(fx + (Math.random() - 0.5) * 24, fy - 2, "px_puff")
+          .setScale(2.4 + Math.random())
+          .setTint([PAL.yel3, PAL.org3, PAL.org2][Math.floor(Math.random() * 3)])
           .setBlendMode(Phaser.BlendModes.ADD);
         this.tweens.add({
           targets: f,
-          y: fy - 40 - Math.random() * 30,
+          y: fy - 44 - Math.random() * 30,
           x: f.x + (Math.random() - 0.5) * 14,
           scale: 0.4,
           alpha: 0,
           duration: 520 + Math.random() * 260,
           onComplete: () => f.destroy(),
         });
-        if (Math.random() < 0.25) {
-          const e = this.add.image(fx, fy - 20, "px_dot1").setScale(3).setTint(0xffe58f);
-          this.tweens.add({ targets: e, y: fy - 120 - Math.random() * 60, x: fx + (Math.random() - 0.5) * 60, alpha: 0, duration: 1400, onComplete: () => e.destroy() });
+        if (Math.random() < 0.22) {
+          const e = this.add.image(fx, fy - 20, "px_dot1").setScale(3).setTint(PAL.yel3);
+          this.tweens.add({ targets: e, y: fy - 130 - Math.random() * 60, x: fx + (Math.random() - 0.5) * 70, alpha: 0, duration: 1500, ease: "Sine.easeOut", onComplete: () => e.destroy() });
+        }
+        // fumaça: sobe devagar, cresce e some para o lado do vento
+        if (Math.random() < 0.1) {
+          const s = this.add.image(fx + (Math.random() - 0.5) * 10, fy - 44, "fx_glow").setScale(0.5).setTint(PAL.s3).setAlpha(0);
+          this.tweens.add({ targets: s, alpha: { from: 0, to: 0.09 }, duration: 700, yoyo: true, hold: 1600 });
+          this.tweens.add({ targets: s, y: fy - 200 - Math.random() * 40, x: s.x + 50 + Math.random() * 40, scale: 2.4, duration: 3000, ease: "Sine.easeOut", onComplete: () => s.destroy() });
         }
       },
     });
 
-    this.heroLight = this.add.image(hx, hy - 20, "fx_glow").setScale(4, 3).setTint(0xffc07a).setAlpha(0.16).setBlendMode(Phaser.BlendModes.ADD);
+    this.heroLight = this.add.image(hx + 30, hy - 26, "fx_glow").setScale(4, 3).setTint(PAL.org3).setAlpha(0.16).setBlendMode(Phaser.BlendModes.ADD);
     this.add.image(hx, hy + 4, "px_shadow").setScale(6, 4);
     this.hero = this.add.sprite(hx, hy + 6, "hero_guardian", 0).setOrigin(0.5, 1).setScale(6);
 
@@ -270,14 +352,16 @@ export class TitleScene extends Phaser.Scene {
 
   _title() {
     const x = Math.round(this.W * 0.3);
-    const glow = this.add.image(x, 110, "fx_glow").setScale(8, 2.5).setTint(0xf2c14e).setAlpha(0.14).setBlendMode(Phaser.BlendModes.ADD);
-    this.tweens.add({ targets: glow, alpha: 0.24, duration: 1800, yoyo: true, repeat: -1 });
-    const t1 = text(this, x, 96, tr("GUARDIÃO"), { size: 84, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 10, shadowY: 6 });
-    const t2 = text(this, x, 160, tr("DA FLORESTA"), { size: 34, color: hex(PAL.g6), origin: 0.5, stroke: true, strokeW: 6 });
-    text(this, x, 202, tr("Sobreviva à horda. Desperte a mata."), { size: 18, color: CSS.muted, origin: 0.5 });
-    [t1, t2].forEach((t, i) => {
+    const y = Math.round(96 + Math.max(0, this.H - 720) * 0.2); // tela mais alta (tablet): o título desce um pouco
+    const glow = this.add.image(x, y + 14, "fx_glow").setScale(8, 2.5).setTint(PAL.yel2).setAlpha(0.14).setBlendMode(Phaser.BlendModes.ADD);
+    this.tweens.add({ targets: glow, alpha: 0.24, duration: 1800, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    const t1 = text(this, x, y, tr("GUARDIÃO"), { size: 84, color: CSS.goldHi, origin: 0.5, stroke: true, strokeW: 10, shadowY: 6 });
+    const t2 = text(this, x, y + 64, tr("DA FLORESTA"), { size: 34, color: hex(PAL.g6), origin: 0.5, stroke: true, strokeW: 6 });
+    const vine = this.add.image(x, y + 96, this._layer("vine", () => makeVine())).setScale(TITLE_PX);
+    const t3 = text(this, x, y + 124, tr("Sobreviva à horda. Desperte a mata."), { size: 18, color: CSS.muted, origin: 0.5 });
+    [t1, t2, vine, t3].forEach((t, i) => {
       t.setAlpha(0).y -= 20;
-      this.tweens.add({ targets: t, alpha: 1, y: t.y + 20, delay: 150 + i * 120, duration: 500, ease: "Back.easeOut" });
+      this.tweens.add({ targets: t, alpha: 1, y: t.y + 20, delay: 150 + i * 120, duration: 520, ease: "Back.easeOut" });
     });
   }
 
