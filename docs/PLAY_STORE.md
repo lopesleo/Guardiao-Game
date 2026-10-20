@@ -234,6 +234,41 @@ Jogue no navegador com a janela em 1920×1080 e use a captura do sistema.
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.17 (código 18) — 20/10/2026
+
+AAB: `dist/guardiao-v1.0.17-18-anuncios-reais.aab`. Só no Teste interno (o Alpha segue com a 1.0.16, em revisão).
+Tela inicial redesenhada (`src/art/TitleArt.js`): a clareira à noite em camadas — céu com Via Láctea, lua com
+crateras, nuvens com luar, serra, duas matas com a borda acesa pela lua e névoa —, árvores enraizadas emoldurando os
+cantos (copas que balançam, cipós), samambaias, terreiro batido em volta da fogueira de pedras, fumaça, folhas caindo
+e estrela cadente. Pedido do Leonardo: o pinheiro do canto "voava" no meio do gramado.
+
+```
+<pt-BR>
+• Tela inicial nova: a clareira à noite, com lua, serra e mata, árvores emoldurando a cena e a fogueira acesa.
+</pt-BR>
+<en-US>
+• New title screen: the clearing at night, with the moon, hills and forest, framing trees and a crackling campfire.
+</en-US>
+<es-419>
+• Nueva pantalla de inicio: el claro de noche, con luna, sierra y bosque, árboles que enmarcan la escena y la fogata encendida.
+</es-419>
+<es-ES>
+• Nueva pantalla de inicio: el claro de noche, con luna, sierra y bosque, árboles que enmarcan la escena y la hoguera encendida.
+</es-ES>
+<ja-JP>
+• タイトル画面を一新：月と山並み、森に囲まれた夜の広場と、燃えるたき火。
+</ja-JP>
+<zh-CN>
+• 全新标题画面：月光下的山峦与森林、环绕画面的大树，以及燃烧的篝火。
+</zh-CN>
+<zh-TW>
+• 全新標題畫面：月光下的山巒與森林、環繞畫面的大樹，以及燃燒的篝火。
+</zh-TW>
+<zh-HK>
+• 全新標題畫面：月光下的山巒與森林、環繞畫面的大樹，以及燃燒的篝火。
+</zh-HK>
+```
+
 ### 1.0.16 (código 17) — 20/10/2026
 
 AAB: `dist/guardiao-v1.0.16-17-anuncios-reais.aab`. Teste interno e **Teste fechado/Alpha** (o Alpha vem da 1.0.7:
