@@ -742,7 +742,8 @@ e os rankings criados (`RANKING.IDS` no `src/config.js`). Sem isso nada muda no 
 
 **Criados em 19/10/2026, à mão no Console** (em rascunho; nomes nos 8 idiomas como em `tools/play/rankings.json`,
 proteção contra adulteração ligada): Pontuação `CgkIw9zJpO0JEAIQBQ` (0–5.000.000) e Maior Perigo vencido
-`CgkIw9zJpO0JEAIQBg` (1–5), já em `RANKING.IDS`. A API recusou com 401 ("The user is not authorized to call the
+`CgkIw9zJpO0JEAIQBg` (aceita 1–10: hoje são 5 Perigos, a folga evita trocar de ranking se vier um novo; limite
+e ordem não mudam depois de publicar), já em `RANKING.IDS`. A API recusou com 401 ("The user is not authorized to call the
 configuration API", com a Play Games Services Publishing API já ativa no Cloud): a conta de serviço não tem a
 permissão do Play Games na Play Console. Para os próximos (conquistas, ícones) pela API, 👤 dar essa permissão
 em Usuários e permissões.

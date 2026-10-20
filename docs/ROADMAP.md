@@ -474,6 +474,9 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
 - ✅ **1.0.9 (código 10)** (19/10/2026): horta da Clareira Ancestral — cerca de estacas entalhadas com trançado de
   palha, portal com ponteiras de cobre, placa e lamparinas ao vento, espantalho de poncho com lamparina no braço;
   só no Teste interno
+- ✅ **1.0.10 (código 11)** e **1.0.11 (código 12)** (19/10/2026): novidades por notificação; depois o Google Play
+  Games ligado (projeto 338573815363, rankings Pontuação e Maior Perigo, progresso na nuvem) e a política nova no
+  site e no endereço antigo; só no Teste interno
 - ✅ **Joystick morria depois da 1ª carta** (19/10/2026, achado no aparelho com a 1.0.4): um `off("resume")`
   geral no `GameScene` (do conserto antigo das cartas em dobro) apagava o ouvinte que religava o joystick depois
   da pausa da acessibilidade — em todos os modos, também depois do ⏸ e do reviver. Agora o joystick religa no
