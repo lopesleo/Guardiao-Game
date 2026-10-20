@@ -79,7 +79,7 @@ público brasileiro, com potencial internacional.
 ## Pendências atuais (atualizar a cada sessão)
 
 Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um item, apagar daqui e
-marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
+marcar no `docs/ROADMAP.md`. Última revisão: **20/10/2026**.
 
 **Agora**
 - **1.0.17 (código 18) no Teste interno e no Teste fechado/Alpha (20/10; a 1.0.16 foi aprovada no Alpha no mesmo dia e a
@@ -92,14 +92,18 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
   ranking com "1. xKomedy 182", desinstalar/reinstalar trouxe o progresso de volta. Os testadores do Alpha **pagam de
   verdade** se comprarem (só "Teste de compras" no Teste de licença). 👤 Conferir no Console quando a revisão aprovar.
   Aviso por notificação dos rankings pronto e **validado pelo Google** (`tools/play/avisos/2026-10-20-rankings.json`).
-  👤 Enviar (`npm run aviso -- enviar …`) ~2–3 dias depois da aprovação da 1.0.17 no Alpha, quando o Leonardo mandar.
+  👤 Enviar (`npm run aviso -- enviar …`) ~2–3 dias depois que a **1.0.18** chegar aos testadores, quando o Leonardo
+  mandar (antes dela, quem perdeu a permissão não vê nada).
+- **1.0.18 (código 19) gerada em 20/10** (`dist/guardiao-v1.0.18-19-anuncios-reais.aab`): notificações só "ligadas"
+  com a permissão do Android (`src/systems/NotifyAccess.js`; notas nos 8 idiomas em `docs/PLAY_STORE.md`, juntando a
+  1.0.17). 👤 Subir para o Teste interno e o Alpha quando o Leonardo mandar (`npm run play:versao -- subir …`).
 - **Novidades por notificação** (FCM, na 1.0.10; `docs/PLAY_STORE.md`, "Novidades por notificação"): app e script
   `npm run aviso` prontos; a conta de serviço **ganhou o papel "Administrador da API Firebase Cloud Messaging" em 20/10**
   (o `validar` passa nos 6 tópicos). Teste em 20/10 no celular do Leonardo (`--topico=novidades_zht`, trocando o idioma
   do jogo para chinês tradicional e voltando): a mensagem **chegou e o app a montou**, mas o Android não mostrou porque
-  o jogo está **sem a permissão de notificação** no aparelho (POST_NOTIFICATIONS negada; a chave "Novidades" mostra SIM
-  sem a permissão do sistema). 👤 Liberar em Configurações › Apps › Guardião da Floresta › Notificações e testar de novo.
-  Consertar no jogo: a chave só deve ficar ligada com a permissão dada (e pedir de novo quando faltar). A "Segurança dos dados" já declara (20/10) os IDs do dispositivo com Funcionalidade do app e Mensagens do
+  o jogo está **sem a permissão de notificação** no aparelho (POST_NOTIFICATIONS negada; a chave "Novidades" mostrava SIM
+  sem a permissão do sistema). **Consertado na 1.0.18.** 👤 Liberar em Configurações › Apps › Guardião da Floresta ›
+  Notificações (ou, com a 1.0.18, pela chave em Opções) e testar de novo. A "Segurança dos dados" já declara (20/10) os IDs do dispositivo com Funcionalidade do app e Mensagens do
   desenvolvedor. A política com novidades e Play Games **já está no ar** (`komedygames.com/guardiao/privacidade/`).
 - **Próximo: Clareira da Caatinga** (grátis): liberar quem vencer no Perigo máximo na Caatinga + uma conquista.
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
@@ -160,7 +164,8 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
   Reinstalar com o comando de `tools/estudio/README.md`.
 
 **Repositórios**
-- `main` deste repo subiu para o `origin` em 15/10/2026 (push só quando o Leonardo pedir). O Pages daqui serve a
+- `main` deste repo subiu para o `origin` em 20/10/2026, até a 1.0.17 e o modo de teste do aviso (push só quando o
+  Leonardo pedir). O Pages daqui serve a
   branch `pages` (jogo web fora do ar; política no endereço antigo). Página oficial: repo `lopesleo.github.io`,
   pasta `guardiao/` (deploy = push na `dev`), copiada para `komedygames.com/guardiao/` pelo repo `lopesleo/komedygames`
   (Cloudflare Pages; publicar de novo lá depois de mudar o site do Guardião).

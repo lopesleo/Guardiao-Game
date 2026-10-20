@@ -239,6 +239,76 @@ Arquivos e como refazer: `videos/promo/store/out/LEIA-ME.txt` (fora do git); ver
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.18 (código 19) — 20/10/2026
+
+AAB: `dist/guardiao-v1.0.18-19-anuncios-reais.aab`. Achado no celular do Leonardo no teste das novidades (20/10): a
+mensagem chegava e o Android jogava fora, porque o jogo estava **sem a permissão de notificação** e a chave
+"Novidades" mostrava SIM (a escolha voltou com o backup do Android ao reinstalar; a permissão não). Agora
+`src/systems/NotifyAccess.js` confere a permissão e os canais no boot e na volta das configurações: as chaves Avisos e
+Novidades só ficam SIM com o Android deixando, sem permissão o aparelho sai do tópico, quem perdeu a permissão vê o
+pedido do baú de novo (uma vez) e, bloqueado de vez, ligar abre a tela de notificações do jogo no Android (plugin
+local `NotificationSettings`). Evento `notify_lost {perm}` para medir quantos perderam. As notas juntam a 1.0.17 (o
+Alpha pode pular dela direto para esta).
+
+```
+<pt-BR>
+• Tela inicial nova: a clareira à noite, com lua, serra e mata, e a fogueira acesa.
+• Rankings no Google Play Games: pontuação e maior Perigo, da semana e de sempre.
+• Progresso na nuvem: entre no Play Games e o seu progresso volta ao reinstalar ou trocar de celular.
+• Novidades por notificação. Se o Android bloquear, Opções mostra e um toque libera.
+• Clareira Ancestral com animações refeitas e horta nova.
+</pt-BR>
+<en-US>
+• New title screen: the clearing at night, with the moon, hills and forest, and a crackling campfire.
+• Leaderboards on Google Play Games: score and highest Danger, weekly and all-time.
+• Cloud progress: sign in to Play Games and your progress comes back when you reinstall or switch phones.
+• News notifications. If Android blocks them, Options shows it and one tap fixes it.
+• Ancestral Clearing with redone animations and a new garden.
+</en-US>
+<es-419>
+• Nueva pantalla de inicio: el claro de noche, con luna, sierra y bosque, y la fogata encendida.
+• Clasificaciones en Google Play Juegos: puntuación y mayor Peligro, de la semana y de siempre.
+• Progreso en la nube: entra en Play Juegos y tu progreso vuelve al reinstalar o cambiar de teléfono.
+• Novedades por notificación. Si Android las bloquea, Opciones lo muestra y un toque lo arregla.
+• Claro Ancestral con animaciones renovadas y un huerto nuevo.
+</es-419>
+<es-ES>
+• Nueva pantalla de inicio: el claro de noche, con luna, sierra y bosque, y la hoguera encendida.
+• Clasificaciones en Google Play Juegos: puntuación y mayor Peligro, de la semana y de siempre.
+• Progreso en la nube: entra en Play Juegos y tu progreso vuelve al reinstalar o cambiar de móvil.
+• Novedades por notificación. Si Android las bloquea, Opciones lo muestra y un toque lo arregla.
+• Claro Ancestral con animaciones renovadas y un huerto nuevo.
+</es-ES>
+<ja-JP>
+• タイトル画面を一新：月と山並み、森に囲まれた夜の広場と、燃えるたき火。
+• Google Play ゲームのランキング：スコアと最高危険度（今週・歴代）。
+• クラウドに保存：Play ゲームにログインすると、再インストールや機種変更のときに進行状況が戻ります。
+• 最新情報のお知らせ。Android でオフになっているとオプションに表示され、タップで許可できます。
+• いにしえの広場のアニメーションを作り直し、新しい畑を追加。
+</ja-JP>
+<zh-CN>
+• 全新标题画面：月光下的山峦与森林，以及燃烧的篝火。
+• Google Play 游戏排行榜：得分与最高危险度，分本周和总榜。
+• 云端进度：登录 Play 游戏后，重装或换手机时进度都能找回。
+• 最新消息通知。若被 Android 关闭，选项中会显示，点击即可开启。
+• 远古空地的动画全面重做，并新增菜园。
+</zh-CN>
+<zh-TW>
+• 全新標題畫面：月光下的山巒與森林，以及燃燒的篝火。
+• Google Play 遊戲排行榜：得分與最高危險度，分本週和總榜。
+• 雲端進度：登入 Play 遊戲後，重裝或換手機時進度都能找回。
+• 最新消息通知。若被 Android 關閉，選項中會顯示，點擊即可開啟。
+• 遠古空地的動畫全面重做，並新增菜園。
+</zh-TW>
+<zh-HK>
+• 全新標題畫面：月光下的山巒與森林，以及燃燒的篝火。
+• Google Play 遊戲排行榜：得分與最高危險度，分本週和總榜。
+• 雲端進度：登入 Play 遊戲後，重裝或換手機時進度都能找回。
+• 最新消息通知。若被 Android 關閉，選項中會顯示，點擊即可開啟。
+• 遠古空地的動畫全面重做，並新增菜園。
+</zh-HK>
+```
+
 ### 1.0.17 (código 18) — 20/10/2026
 
 AAB: `dist/guardiao-v1.0.17-18-anuncios-reais.aab`. Teste interno e **Teste fechado/Alpha** (20/10: substitui a 1.0.16,
@@ -1224,7 +1294,17 @@ npm run aviso -- enviar   tools/play/avisos/<aviso>.json   # envia para os 6 tó
 nunca o mesmo aviso duas vezes; só novidade de verdade — nada de "volte a jogar", contagem regressiva, culpa ou
 urgência falsa; texto revisado nos 6 idiomas como qualquer texto do jogo. Com o jogo aberto a notificação não
 aparece (nunca no meio da partida). Teste: um aparelho só com `--token=<token> --idioma=pt`; enquanto a versão
-com as novidades estiver só no Teste interno, o tópico só chega a quem está nele.
+com as novidades estiver só no Teste interno, o tópico só chega a quem está nele. Sem o token (a versão da loja não
+mostra): trocar o idioma do jogo no celular para um que ninguém usa (o aparelho passa para `novidades_<idioma>`),
+`--topico=novidades_zht --idioma=pt` e voltar o idioma (feito em 20/10).
+
+**Permissão do Android (desde a 1.0.18, `src/systems/NotifyAccess.js`):** a mensagem chega mesmo sem a permissão de
+notificação, e o Android joga fora sem mostrar; por isso as chaves Avisos e Novidades só ficam SIM com a permissão
+dada e o canal ligado, e sem isso o aparelho sai do tópico. A escolha guardada volta com o backup do Android ao
+reinstalar e a permissão não (o Android também a tira de app parado há meses): quem perdeu vê o pedido do baú de
+novo, uma vez. Bloqueado de vez (recusou duas vezes, ou desligou o canal), ligar a chave abre a tela de
+notificações do jogo no Android e confere na volta. Para conferir no aparelho: `adb shell dumpsys package
+com.lopesleo.guardiao | grep POST_NOTIFICATIONS` e `adb shell dumpsys notification | grep -A3 guardiao`.
 
 **Credencial (👤 uma vez):** a conta de serviço dos scripts (`play-produtos@guardiao-da-floresta.iam.gserviceaccount.com`)
 precisa do papel **"Administrador da API Firebase Cloud Messaging"** no projeto `guardiao-da-floresta`:
