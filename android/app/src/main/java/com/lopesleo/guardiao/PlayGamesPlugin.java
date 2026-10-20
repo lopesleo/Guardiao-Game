@@ -56,7 +56,8 @@ public class PlayGamesPlugin extends Plugin {
             .addOnCompleteListener(t -> resolveAuth(call, t.isSuccessful() && t.getResult().isAuthenticated()));
     }
 
-    // Entrada manual (botão em Opções), quando a automática não aconteceu
+    // Entrada manual (Opções, ranking ou o pedido da 1ª abertura), quando a automática não aconteceu.
+    // error=true: a entrada falhou (rede, credencial ainda ativando), não foi o jogador que recusou
     @PluginMethod
     public void signIn(PluginCall call) {
         if (!configured) {
@@ -64,7 +65,13 @@ public class PlayGamesPlugin extends Plugin {
             return;
         }
         PlayGames.getGamesSignInClient(getActivity()).signIn()
-            .addOnCompleteListener(t -> resolveAuth(call, t.isSuccessful() && t.getResult().isAuthenticated()));
+            .addOnCompleteListener(t -> {
+                JSObject r = new JSObject();
+                r.put("configured", true);
+                r.put("authenticated", t.isSuccessful() && t.getResult().isAuthenticated());
+                r.put("error", !t.isSuccessful());
+                call.resolve(r);
+            });
     }
 
     // { data: texto do save ou null se o espaço ainda está vazio, modified: ms }

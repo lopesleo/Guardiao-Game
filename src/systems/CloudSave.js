@@ -19,6 +19,7 @@ import { isNative } from "./Platform.js";
 import { Analytics } from "./Analytics.js";
 import { Clock } from "./Clock.js";
 import { signSave, serializeSave, addSaveHook, SaveLock } from "./MetaProgression.js";
+import { PlayGamesAuth } from "./PlayGamesAuth.js";
 
 const SLOT = "guardiao_progresso";
 const KEY = "guardiao_cloud_v1"; // { stamp, at } — último carimbo visto na nuvem e quando
@@ -90,22 +91,17 @@ export const CloudSave = {
       st = await plugin().status();
     } catch {}
     if (!st?.configured) return this._settle("off");
-    if (!st.authenticated) return this._settle("out");
+    // sem login automático: o jogo pede uma vez (PlayGamesAuth.js); recusou, fica para Opções ou o ranking
+    if (!st.authenticated && !(await PlayGamesAuth.askOnce())) return this._settle("out");
     await this.sync();
   },
 
-  // Entrar na conta pelo botão em Opções
+  // Entrar na conta pelo botão em Opções (a conferência vem do aviso de login, no fim do arquivo)
   async signIn() {
     if (!plugin()) return false;
-    try {
-      const r = await plugin().signIn();
-      if (!r?.authenticated) return false;
-    } catch {
-      return false;
-    }
-    Analytics.track("cloud_signin", {});
-    await this.sync();
-    return true;
+    const ok = await PlayGamesAuth.signIn();
+    if (ok) Analytics.track("cloud_signin", {});
+    return ok;
   },
 
   // Promessa que resolve quando a 1ª conferência terminar (ou o tempo esgotar).
@@ -309,3 +305,7 @@ export const CloudSave = {
     return !!sm && (sm.isActive("GameScene") || sm.isActive("FirstDefeatScene"));
   },
 };
+
+// Entrou no Play Games por qualquer caminho (Opções, ranking): confere a nuvem na hora. Durante a 1ª abertura
+// (estado "off") quem confere é o install, logo depois do pedido.
+PlayGamesAuth.onSignIn(() => (CloudSave.state === "out" || CloudSave.state === "error" ? CloudSave.sync() : null));

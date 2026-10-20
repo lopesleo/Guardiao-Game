@@ -32,8 +32,14 @@ function fakeNative(cfg) {
       configured: true,
       signedIn: true,
       online: true,
+      decline: false, // o jogador fecha a entrada do Play Games
+      signInError: false, // a entrada falha (rede, credencial ainda ativando)
+      submitDelay: 0, // ms até o Play Games confirmar o envio (no aparelho, a rede)
+      signIns: 0,
+      reads: 0, // conferências da nuvem (CloudSave)
       sent: [],
       loads: [],
+      log: [], // envios e listas na ordem em que aconteceram
       lists: { score: { scores: top(10), player: { rank: 37, score: 13450 }, total: 512 }, perigo: { scores: top(10).map((s, i) => ({ ...s, score: 5 - (i >> 2) })), player: null, total: 120 } },
     },
     cfg.pg,
@@ -56,15 +62,24 @@ function fakeNative(cfg) {
       },
       PlayGames: {
         status: async () => ({ configured: G.configured, authenticated: G.configured && G.signedIn }),
-        signIn: async () => ((G.signedIn = true), { configured: G.configured, authenticated: true }),
-        read: async () => ({ data: null, modified: 0 }),
+        signIn: async () => {
+          G.signIns++;
+          if (G.signInError) return { configured: G.configured, authenticated: false, error: true };
+          if (G.decline) return { configured: G.configured, authenticated: false, error: false };
+          G.signedIn = true;
+          return { configured: G.configured, authenticated: true, error: false };
+        },
+        read: async () => (G.reads++, { data: null, modified: 0 }),
         write: async () => ({ modified: Date.now() }),
         submitScore: async ({ leaderboardId, score }) => {
           if (!G.online || !G.signedIn) throw new Error("submit_failed");
+          if (G.submitDelay) await new Promise((r) => setTimeout(r, G.submitDelay));
           G.sent.push([idOf(leaderboardId), score]);
+          G.log.push(["envio", idOf(leaderboardId), score]);
         },
         loadScores: async ({ leaderboardId, span, max }) => {
           G.loads.push([idOf(leaderboardId), span, max]);
+          G.log.push(["lista", idOf(leaderboardId), span]);
           if (!G.online) throw new Error("load_failed");
           return JSON.parse(JSON.stringify(G.lists[idOf(leaderboardId)]));
         },
@@ -287,9 +302,10 @@ const SCENARIOS = {
     check(mt && !mt.texts.includes(retry), "tentar de novo carrega a lista");
   },
 
-  // Sem login no Play Games: pede para entrar; entrando, a lista aparece
+  // Sem login no Play Games (o pedido da 1ª abertura já foi recusado): o ranking pede para entrar; entrando, a
+  // lista aparece
   async login(t) {
-    await t.boot({ pg: { signedIn: false } });
+    await t.boot({ pg: { signedIn: false }, local: { guardiao_pg_asked: "1" } });
     await enable(t);
     await toCamp(t);
     await campReady(t);
@@ -303,6 +319,66 @@ const SCENARIOS = {
     await t.page.waitForTimeout(900);
     mt = await modalTexts(t, "CampScene");
     check(mt && mt.texts.some((x) => /Iara_da_Lagoa/.test(x)), "entrou: a lista aparece");
+  },
+
+  // 1ª abertura sem login automático: o jogo pede uma vez; entrou, a nuvem confere e os rankings ligam. Na
+  // abertura seguinte não pede de novo
+  async pedeUmaVez(t) {
+    await t.boot({ pg: { signedIn: false } });
+    await t.page.waitForTimeout(1200);
+    let g = await t.pg();
+    check(g.signIns === 1 && g.signedIn, "pediu a entrada uma vez e entrou", JSON.stringify({ signIns: g.signIns }));
+    check(g.reads >= 1, "entrou: a nuvem conferiu o progresso", `leituras: ${g.reads}`);
+    check(await t.page.evaluate(async () => (await import("/src/systems/Leaderboards.js")).Leaderboards.signedIn), "os rankings sabem do login");
+    await t.reload({ pg: { signedIn: false } });
+    g = await t.pg();
+    check(g.signIns === 0, "na abertura seguinte não pede de novo", JSON.stringify({ signIns: g.signIns }));
+  },
+
+  // Recusou o pedido: não insiste (fica para Opções ou o ranking)
+  async recusou(t) {
+    await t.boot({ pg: { signedIn: false, decline: true } });
+    await t.page.waitForTimeout(1200);
+    let g = await t.pg();
+    check(g.signIns === 1 && !g.signedIn && g.reads === 0, "pediu uma vez; recusou, nada da nuvem", JSON.stringify({ signIns: g.signIns, reads: g.reads }));
+    await t.reload({ pg: { signedIn: false, decline: true } });
+    g = await t.pg();
+    check(g.signIns === 0, "recusou: não pede de novo na abertura seguinte", JSON.stringify({ signIns: g.signIns }));
+  },
+
+  // A entrada falhou por erro (credencial ainda ativando, sem rede): pede de novo na próxima abertura
+  async erroNoLogin(t) {
+    await t.boot({ pg: { signedIn: false, signInError: true } });
+    await t.page.waitForTimeout(1200);
+    check((await t.pg()).signIns === 1, "pediu a entrada");
+    await t.reload({ pg: { signedIn: false } });
+    const g = await t.pg();
+    check(g.signIns === 1 && g.signedIn, "deu erro: pede de novo na abertura seguinte e entra", JSON.stringify({ signIns: g.signIns }));
+  },
+
+  // O caso do aparelho (1.0.11): perdeu sem login, entrou pelo ranking. A partida sobe ANTES de a lista carregar,
+  // e a nuvem também fica sabendo do login
+  async entrouPeloRanking(t) {
+    await t.boot({ pg: { signedIn: false, submitDelay: 500 }, local: { guardiao_pg_asked: "1" } });
+    await enable(t);
+    const r = await t.page.evaluate(async () => (await import("/src/systems/Leaderboards.js")).Leaderboards.submitRun({ kills: 321, won: false, difficulty: 2 }));
+    await t.page.waitForTimeout(300);
+    check((await t.pg()).sent.length === 0, "sem login a derrota espera na fila", JSON.stringify(r));
+    await toCamp(t);
+    await campReady(t);
+    await t.page.evaluate(() => window.game.scene.getScene("CampScene").rankBtn.onClick());
+    await t.page.waitForTimeout(800);
+    const label = await t.page.evaluate(async () => (await import("/src/i18n/i18n.js")).tr("ENTRAR NO PLAY GAMES"));
+    await pressInModal(t, "CampScene", label);
+    await t.page.waitForTimeout(1200);
+    const g = await t.pg();
+    const iSent = g.log.findIndex(([k, b, v]) => k === "envio" && b === "score" && v === r.score);
+    const iList = g.log.findIndex(([k, b], i) => k === "lista" && b === "score" && i > 0);
+    check(iSent >= 0, `a derrota subiu ao entrar (${r.score} pontos)`, JSON.stringify(g.log));
+    check(iSent >= 0 && iList > iSent, "a lista carregou depois do envio (a partida aparece)", JSON.stringify(g.log));
+    check(g.reads >= 1, "a nuvem conferiu depois do login pelo ranking", `leituras: ${g.reads}`);
+    const q = await t.page.evaluate(() => JSON.parse(localStorage.getItem("guardiao_ranking_v1")).queue);
+    check(!q?.score, "a fila ficou vazia", JSON.stringify(q));
   },
 };
 
@@ -323,6 +399,17 @@ async function run(name) {
       await page.goto(URL);
       await page.waitForFunction(() => window.game?.scene?.isActive("TitleScene"), null, { timeout: 120000 });
       await page.waitForTimeout(800);
+    },
+    // reabre o app no mesmo aparelho (o localStorage fica; o Play Games falso nasce de novo com cfg)
+    async reload(cfg = {}) {
+      // roda depois do fakeNative (que remonta o falso com o cfg do boot): zera os contadores e aplica este cfg
+      await page.addInitScript(
+        (pg) => Object.assign(window.__pg, { signIns: 0, reads: 0, sent: [], loads: [], log: [], decline: false, signInError: false, signedIn: true }, pg),
+        cfg.pg || {},
+      );
+      await page.reload();
+      await page.waitForFunction(() => window.game?.scene?.isActive("TitleScene"), null, { timeout: 120000 });
+      await page.waitForTimeout(1200);
     },
     pg: () => page.evaluate(() => JSON.parse(JSON.stringify(window.__pg))),
   };

@@ -3,11 +3,13 @@
 // Games mantém os períodos sozinho):
 //  · score  — a pontuação da partida (runScore, conta em RANKING no config.js);
 //  · perigo — o maior Perigo vencido (1 = Aprendiz … 5 = Pesadelo).
-// Sem internet ou sem login, o envio espera numa fila (no aparelho) e sai na próxima abertura; o recorde de
+// Sem internet ou sem login, o envio espera numa fila (no aparelho) e sai quando o jogador entra no Play Games ou na
+// próxima abertura; o recorde de
 // pontuação também fica guardado no aparelho, para a tela do fim mostrar "novo recorde" mesmo sem rede.
 import { RANKING, DIFFICULTY } from "../config.js";
 import { isNative } from "./Platform.js";
 import { Analytics } from "./Analytics.js";
+import { PlayGamesAuth } from "./PlayGamesAuth.js";
 
 const KEY = "guardiao_ranking_v1"; // { best, queue: { [board]: valor }, perigoSent }
 const CACHE_MS = 60000; // a lista aberta de novo em menos de 1 min não recarrega
@@ -43,7 +45,7 @@ export const Leaderboards = {
   configured: false, // o plugin respondeu que há ID do Play Games
   signedIn: false,
   _cache: {},
-  _busy: false,
+  _flushing: null, // o envio em andamento: quem chama de novo espera o mesmo (a lista só carrega depois)
 
   // Há o que mostrar: app + ID do Play Games + o ranking criado
   available() {
@@ -98,27 +100,33 @@ export const Leaderboards = {
     save(d);
   },
 
-  async flush() {
+  // Resolve quando a fila subiu. Um envio já em andamento pode ter lido a fila antes de um valor novo: o
+  // próximo vai na sequência dele, e quem espera (a lista do ranking) espera os dois
+  flush() {
     const p = plugin();
-    if (!p || !this.available() || this._busy) return;
-    this._busy = true;
-    try {
-      const q = { ...(load().queue || {}) };
-      for (const [board, value] of Object.entries(q)) {
-        try {
-          await p.submitScore({ leaderboardId: RANKING.IDS[board], score: value });
-          const d = load();
-          if (d.queue?.[board] === value) delete d.queue[board]; // um valor maior pode ter chegado no meio
-          if (board === "perigo") d.perigoSent = Math.max(d.perigoSent ?? 0, value);
-          save(d);
-          delete this._cache[`${board}:week`];
-          delete this._cache[`${board}:all`];
-        } catch {
-          break; // sem rede ou sem login: tenta na próxima vez
-        }
+    if (!p || !this.available()) return Promise.resolve();
+    const mine = (this._flushing || Promise.resolve())
+      .then(() => this._send(p))
+      .finally(() => {
+        if (this._flushing === mine) this._flushing = null;
+      });
+    return (this._flushing = mine);
+  },
+
+  async _send(p) {
+    const q = { ...(load().queue || {}) };
+    for (const [board, value] of Object.entries(q)) {
+      try {
+        await p.submitScore({ leaderboardId: RANKING.IDS[board], score: value });
+        const d = load();
+        if (d.queue?.[board] === value) delete d.queue[board]; // um valor maior pode ter chegado no meio
+        if (board === "perigo") d.perigoSent = Math.max(d.perigoSent ?? 0, value);
+        save(d);
+        delete this._cache[`${board}:week`];
+        delete this._cache[`${board}:all`];
+      } catch {
+        break; // sem rede ou sem login: tenta na próxima vez
       }
-    } finally {
-      this._busy = false;
     }
   },
 
@@ -145,17 +153,15 @@ export const Leaderboards = {
     }
   },
 
-  // Entrada manual no Play Games (quando a automática não aconteceu)
+  // Entrada manual no Play Games (quando a automática não aconteceu). Resolve depois de a fila subir (aviso de
+  // login, no fim do arquivo): a lista que abre em seguida já tem a partida que estava esperando
   async signIn() {
-    const p = plugin();
-    if (!p) return false;
-    try {
-      const s = await p.signIn();
-      this.signedIn = !!s.authenticated;
-    } catch {
-      this.signedIn = false;
-    }
-    if (this.signedIn) this.flush();
-    return this.signedIn;
+    return PlayGamesAuth.signIn();
   },
 };
+
+// Entrou no Play Games por qualquer caminho (Opções, ranking, pedido da 1ª abertura): manda a fila na hora
+PlayGamesAuth.onSignIn(() => {
+  Leaderboards.signedIn = true;
+  return Leaderboards.flush();
+});
