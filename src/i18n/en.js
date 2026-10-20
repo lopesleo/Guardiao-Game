@@ -1121,4 +1121,8 @@ export default {
   "Kit liberado! Agora é só usar as peças.": "Kit unlocked! Now just use the pieces.",
   "SIM": "YES",
   "NÃO": "NO",
+  "Reações": "Reactions",
+  "RECOMPENSAS": "REWARDS",
+  "ARMAS  ·  PARTE DO DANO": "WEAPONS  ·  SHARE OF DAMAGE",
+  "e mais {0}": "and {0} more",
 };

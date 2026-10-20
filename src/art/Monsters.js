@@ -738,6 +738,18 @@ function mapinguari(f, fury, freed = false, pose = null, swing = [0, 0]) {
     const ray = fury ? PAL.red3 : PAL.yel3;
     px(p, [[25, 4], [20, 10], [30, 10], [21, 6], [29, 6], [21, 14], [29, 14]], ray);
   }
+  // Em paz (libertado, tela de resultado): a boca da barriga fechada num sorriso, as presas aparecendo nas pontas
+  if (pose === "calm") {
+    for (let x = 18; x <= 32; x++) {
+      const u = (x - 25) / 7;
+      const y = 32 + Math.round(1.6 * (1 - u * u));
+      p.set(x, y, PAL.ink);
+      p.set(x, y + 1, PAL.red1);
+    }
+    px(p, [[19, 33], [31, 33]], PAL.cream);
+    p.outline(PAL.ink);
+    return p;
+  }
   // BOCA NA BARRIGA (a marca da lenda): grande, aberta, gengiva e dentes
   const my = pose === "maw" ? 31 : 32,
     mrx = pose === "maw" ? 12 : pose === "scream" ? 8.5 : 9.5,
@@ -779,6 +791,9 @@ function mapinguari(f, fury, freed = false, pose = null, swing = [0, 0]) {
   p.outline(PAL.ink);
   return p;
 }
+
+// O Mapinguari libertado e em paz (tela de resultado: a vitória mostra a lenda na borda da mata)
+export const makeFreedMapinguari = () => mapinguari(0, false, true, "calm");
 
 // ---------------------------------------------------------------------------
 // BOLA DE FOGO do Cajado (18×11, 3 quadros de chama tremulando)

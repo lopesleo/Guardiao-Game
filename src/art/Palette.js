@@ -97,6 +97,25 @@ export const PAL = {
   cloud0: 0x161f2b,
   cloud1: 0x2b3a4a,
 
+  // Amanhecer (tela de vitória): céu do alto → horizonte dourado, serra e matas com a borda acesa pelo sol,
+  // nuvens com a barriga rosada e o sol nascendo
+  dawn0: 0x141a3a,
+  dawn1: 0x2a2552,
+  dawn2: 0x553262,
+  dawn3: 0x9c4a68,
+  dawn4: 0xdc805c,
+  dawn5: 0xffbf72,
+  dawnRidge0: 0x34284a,
+  dawnRidge1: 0xc8735e,
+  dawnFar0: 0x221f36,
+  dawnFar1: 0x8a5258,
+  dawnNear0: 0x111820,
+  dawnNear1: 0x4e4436,
+  dawnCloud0: 0x3e2a52,
+  dawnCloud1: 0xee9a6a,
+  sun0: 0xffd88a,
+  sun1: 0xfff3cc,
+
   // UI
   uiBg: 0x0f1a16,
   uiPanel: 0x16241f,

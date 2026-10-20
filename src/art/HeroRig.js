@@ -381,6 +381,13 @@ const DEER_POSES = {
   sit2: { drop: 0.55, fore: 0, hind: 1, head: 0.6, eyes: "open" },
   knee: { drop: 0.25, fore: 0, hind: 0.5, head: 0.4, eyes: "open" },
   rise: { drop: 0, fore: 0, hind: 0, head: 0.3, eyes: "open" },
+  // tela de resultado: vitória (empinado de cabeça erguida) e derrota (deitado, cabeça baixa, recuperando)
+  cheer: { drop: 0, fore: 0, hind: 0, head: 1, rear: 0.14, eyes: "open" },
+  cheer2: { drop: 0, fore: 0, hind: 0, head: 0.92, rear: 0.1, eyes: "open" },
+  mourn: { drop: 0.55, fore: 0.9, hind: 1, head: -0.35, eyes: "half" },
+  mourn2: { drop: 0.5, fore: 0.9, hind: 1, head: -0.3, eyes: "half" },
+  kneeUp: { drop: 0.25, fore: 0, hind: 0.5, head: 0.4, eyes: "open" },
+  riseUp: { drop: 0, fore: 0, hind: 0, head: 0.3, eyes: "open" },
 };
 function renderDeer(poseKey, t) {
   const st = DEER_POSES[poseKey] ?? DEER_POSES.idle;
@@ -561,13 +568,39 @@ export const RIG_POSES = {
   rise: P({ hip: [X, 22.6], torso: 6, head: 0, armF: [44, 70], armB: [-18, -6], legF: [14, 4], legB: [-12, 2], eyes: "open", ...LAND }),
 };
 
+// Tela de resultado (GameOverScene): só na tira alta de registerResultRig — o cajado erguido passa do quadro de 32
+const RESULT_POSES = {
+  idle: RIG_POSES.idle,
+  idle2: P({ hip: [X, 21.6], armF: [38, 76], propAngle: 7 }),
+  // vitória: cajado erguido para a lenda libertada, cabeça para cima (2 tempos de respiração)
+  cheer: P({ hip: [X, 21.5], torso: -4, head: -18, armF: [152, 174], armB: [-30, -44], legF: [10, -2], legB: [-10, 2], mouth: "open", propAngle: 12 }),
+  cheer2: P({ hip: [X, 21.6], torso: -3, head: -15, armF: [156, 178], armB: [-28, -40], legF: [10, -2], legB: [-10, 2], mouth: "open", propAngle: 9 }),
+  // derrota: de volta à Clareira, ajoelhado junto do fogo com o cajado fincado, cabeça baixa, recuperando
+  mourn: P({ hip: [X, 24.4], torso: 20, head: 34, armF: [62, 26], armB: [-16, -6], legF: [80, -62], legB: [62, 72], eyes: "closed", propAngle: -2 }),
+  mourn2: P({ hip: [X, 24.6], torso: 23, head: 38, armF: [64, 28], armB: [-14, -4], legF: [80, -62], legB: [62, 72], eyes: "closed", propAngle: -2 }),
+  // levantando com o cajado na mão (a derrota termina de pé: "tenta de novo")
+  kneeUp: P({ hip: [X, 24.4], torso: 10, head: 4, armF: [60, 30], armB: [-26, -16], legF: [80, -62], legB: [62, 72], propAngle: -2 }),
+  riseUp: P({ hip: [X, 22.6], torso: 5, head: -2, armF: [46, 62], armB: [-18, -6], legF: [14, 4], legB: [-12, 2], propAngle: 4 }),
+};
+const RESULT_PAD = 12; // linhas a mais no alto da tira do resultado
+export const RESULT_KEYS = Object.keys(RESULT_POSES);
+export const RESULT_H = RIG_H + RESULT_PAD;
+
 export const RIG_KEYS = Object.keys(RIG_POSES);
 
-// Quadro de uma pose para um herói. t = tempo (chamas tremulam).
-export function renderPose(charId, poseKey, t = 0) {
-  if (charId === "anhanga") return renderDeer(poseKey, t);
-  const pose = RIG_POSES[poseKey];
-  const p = new Pix(RIG_W, RIG_H);
+// Quadro de uma pose para um herói. t = tempo (chamas tremulam). pad = linhas a mais no alto do quadro (o corpo
+// desce junto): a tira alta da tela de resultado, onde o cajado erguido não cabe nos 32 de altura
+export function renderPose(charId, poseKey, t = 0, pad = 0) {
+  if (charId === "anhanga") {
+    const d = renderDeer(poseKey, t);
+    if (!pad) return d;
+    const q = new Pix(RIG_W, RIG_H + pad);
+    q.blit(d, 0, pad);
+    return q;
+  }
+  const base = RIG_POSES[poseKey] ?? RESULT_POSES[poseKey];
+  const pose = pad ? { ...base, hip: [base.hip[0], base.hip[1] + pad], ...(base.propPos ? { propPos: [base.propPos[0], base.propPos[1] + pad] } : {}) } : base;
+  const p = new Pix(RIG_W, RIG_H + pad);
   const k = solve(pose);
   const hand = STYLE[charId](p, pose, k, t);
   prop(p, charId, pose, hand, t);
@@ -598,4 +631,24 @@ export function registerHeroRig(scene) {
       });
     }
   }
+}
+
+// Tira alta da tela de resultado (heroresult_<id>, RESULT_KEYS) e as animações dela, só do herói da partida (na
+// hora, e uma vez por herói): cajado erguido na vitória; na derrota, ajoelhado junto do fogo e depois de pé
+const RESULT_SEQ = {
+  idle: [["idle", 620], ["idle2", 620]],
+  cheer: [["cheer", 540], ["cheer2", 540]],
+  mourn: [["mourn", 760], ["mourn2", 860]],
+  rally: [["mourn", 240], ["kneeUp", 360], ["riseUp", 300], ["idle", 120]],
+};
+export function registerResultRig(scene, id) {
+  if (!RIG_IDS.includes(id)) id = "guardian";
+  const tex = `heroresult_${id}`;
+  if (!scene.textures.exists(tex)) registerStrip(scene, tex, RESULT_KEYS.map((k, i) => renderPose(id, k, i, RESULT_PAD)));
+  for (const [name, steps] of Object.entries(RESULT_SEQ)) {
+    const anim = `${tex}_${name}`;
+    if (scene.anims.exists(anim)) continue;
+    scene.anims.create({ key: anim, frames: steps.map(([pk, ms]) => ({ key: tex, frame: RESULT_KEYS.indexOf(pk), duration: ms })), repeat: name === "rally" ? 0 : -1 });
+  }
+  return tex;
 }

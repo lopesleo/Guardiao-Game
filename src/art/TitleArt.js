@@ -30,16 +30,18 @@ function mixRamp(colors, t) {
 // Ruído suave de valor (soma de senos) para manchas grandes
 const blot = (x, y, k, ph) => 0.5 + 0.25 * Math.sin(x * 0.07 * k + ph) * Math.cos(y * 0.11 * k - ph * 0.7) + 0.25 * Math.sin((x + y * 1.7) * 0.031 * k + ph * 1.3);
 
-// Céu: rampa do alto à névoa do horizonte e uma faixa leve da Via Láctea na diagonal
-export function makeSky(w, h, horizon, seed = 11) {
+// Céu: rampa do alto à névoa do horizonte e uma faixa leve da Via Láctea na diagonal. o.tones troca a rampa (o
+// amanhecer da vitória, ResultArt.js) e o.milky: false tira a Via Láctea
+export function makeSky(w, h, horizon, seed = 11, o = {}) {
   const r = rng(seed);
   const p = new Pix(w, h);
   // degradê liso entre os tons da noite (uma cor por linha de arte): pontilhado aqui virava listras
-  const tones = [PAL.night0, PAL.night1, PAL.night2, PAL.night3, PAL.night4];
+  const tones = o.tones ?? [PAL.night0, PAL.night1, PAL.night2, PAL.night3, PAL.night4];
   for (let y = 0; y < h; y++) {
-    const c = mixRamp(tones, Math.pow(Math.min(1, y / horizon), 1.35));
+    const c = mixRamp(tones, Math.pow(Math.min(1, y / horizon), o.curve ?? 1.35));
     for (let x = 0; x < w; x++) p.set(x, y, c);
   }
+  if (o.milky === false) return p;
   // Via Láctea: faixa diagonal com poeira de estrelas bem fraca
   for (let y = 0; y < horizon * 0.8; y++)
     for (let x = 0; x < w; x++) {
@@ -75,39 +77,42 @@ export function makeMoon() {
   return p;
 }
 
-// Nuvem comprida e fina: corpo escuro, luar na borda de cima, fiapos embaixo
-export function makeCloud(seed, w, h) {
+// Nuvem comprida e fina: corpo escuro, luar na borda de cima, fiapos embaixo. o.colors = [corpo, borda];
+// o.under: a luz vem de baixo (sol no horizonte, ResultArt.js) e acende a barriga em vez do topo
+export function makeCloud(seed, w, h, o = {}) {
   const r = rng(seed);
   const p = new Pix(w, h);
+  const [body, lit] = o.colors ?? [PAL.cloud0, PAL.cloud1];
   // base achatada e comprida; por cima, gomos redondos — mais altos no meio, menores nas pontas
-  p.ellipse(w / 2, h * 0.72, w * 0.46, h * 0.22, PAL.cloud0);
+  p.ellipse(w / 2, h * 0.72, w * 0.46, h * 0.22, body);
   const n = 5 + Math.floor(r() * 3);
   for (let i = 0; i < n; i++) {
     const u = i / (n - 1);
     const mid = Math.sin(u * Math.PI); // 0 nas pontas, 1 no meio
     const rr = h * (0.18 + mid * 0.3 + r() * 0.08);
-    p.ellipse(w * (0.12 + u * 0.76) + (r() - 0.5) * 4, h * 0.72 - rr * 0.55, rr * (1.3 + r() * 0.4), rr, PAL.cloud0);
+    p.ellipse(w * (0.12 + u * 0.76) + (r() - 0.5) * 4, h * 0.72 - rr * 0.55, rr * (1.3 + r() * 0.4), rr, body);
   }
+  const dy = o.under ? 1 : -1;
   for (let x = 0; x < w; x++)
     for (let y = 0; y < h; y++) {
       if (!p.get(x, y)) continue;
-      if (!p.get(x, y - 1)) p.set(x, y, PAL.cloud1); // luar na borda de cima
-      else if (!p.get(x, y - 2) && !p.get(x - 1, y - 1)) p.set(x, y, PAL.cloud1);
+      if (!p.get(x, y + dy)) p.set(x, y, lit); // luar (ou sol) na borda
+      else if (!p.get(x, y + 2 * dy) && !p.get(x - 1, y + dy)) p.set(x, y, lit);
     }
   return p;
 }
 
-// Serra ao fundo: linha de cumes suave, luar na crista (mais forte perto da lua)
-export function makeRidge(w, h, base, amp, seed, moonX) {
+// Serra ao fundo: linha de cumes suave, luar na crista (mais forte perto da lua). colors = [serra, crista]
+export function makeRidge(w, h, base, amp, seed, moonX, colors = [PAL.ridge0, PAL.ridge1]) {
   const r = rng(seed);
   const p = new Pix(w, h);
   const ph = [r() * 7, r() * 7, r() * 7];
   for (let x = 0; x < w; x++) {
     const n = 0.5 * Math.sin(x * 0.011 + ph[0]) + 0.3 * Math.sin(x * 0.029 + ph[1]) + 0.2 * Math.sin(x * 0.071 + ph[2]);
     const top = Math.round(base - amp * (0.55 + 0.45 * n));
-    for (let y = Math.max(0, top); y < h; y++) p.set(x, y, PAL.ridge0);
+    for (let y = Math.max(0, top); y < h; y++) p.set(x, y, colors[0]);
     const near = 1 - Math.min(1, Math.abs(x - moonX) / (w * 0.45));
-    if (top >= 0 && near > 0.15) p.set(x, top, PAL.ridge1); // crista contínua, só do lado da lua
+    if (top >= 0 && near > 0.15) p.set(x, top, colors[1]); // crista contínua, só do lado da lua
   }
   return p;
 }
@@ -163,11 +168,13 @@ export function makeTreeline(w, h, base, o) {
   return p;
 }
 
-// Chão da clareira: escuro e enevoado longe, mais verde perto, com o terreiro batido em volta da fogueira
-export function makeGround(w, h, fx, fy, seed = 5) {
+// Chão da clareira: escuro e enevoado longe, mais verde perto, com o terreiro batido em volta da fogueira.
+// o.tones = rampa do gramado e o.blades = [folha, folha perto, ponta] (o chão seco do sertão, ResultArt)
+export function makeGround(w, h, fx, fy, seed = 5, o = {}) {
   const r = rng(seed);
   const p = new Pix(w, h);
-  const tones = [PAL.woodsNear0, PAL.g0, PAL.g1, PAL.g2];
+  const tones = o.tones ?? [PAL.woodsNear0, PAL.g0, PAL.g1, PAL.g2];
+  const [bl0, bl1, bl2] = o.blades ?? [PAL.g2, PAL.g3, PAL.g4];
   const ph = r() * 6;
   const clear = (x, y) => {
     const dx = (x - fx) / (h * 0.95),
@@ -194,7 +201,7 @@ export function makeGround(w, h, fx, fy, seed = 5) {
     const hgt = 1 + Math.round(near * 2);
     for (let b = 0; b < blades; b++) {
       const bx = x + b - (blades >> 1);
-      for (let k = 0; k <= hgt - (b % 2); k++) p.set(bx, y - k, k === hgt - (b % 2) ? (near > 0.55 ? PAL.g4 : PAL.g3) : near > 0.5 ? PAL.g3 : PAL.g2);
+      for (let k = 0; k <= hgt - (b % 2); k++) p.set(bx, y - k, k === hgt - (b % 2) ? (near > 0.55 ? bl2 : bl1) : near > 0.5 ? bl1 : bl0);
     }
   }
   // pedrinhas no terreiro

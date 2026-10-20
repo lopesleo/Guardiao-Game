@@ -1144,6 +1144,14 @@ export class GameScene extends Phaser.Scene {
     return Object.values(this._dmgBy || {}).reduce((s, n) => s + n, 0);
   }
 
+  // % de TODO o dano da partida por arma (a evolução conta na linha da arma de origem, como no _trackBuild):
+  // a fileira de armas da tela de resultado
+  _dmgShare() {
+    const by = this._dmgBy || {};
+    const total = this._dmgTotal();
+    return Object.fromEntries(this.player.weapons.map((w) => [w.key, total > 0 ? Math.round((1000 * (by[WEAPONS[w.key]?.evolvesFrom || w.key] || 0)) / total) / 10 : 0]));
+  }
+
   // "Desviou de tudo": nenhum golpe especial acertou o herói nesta luta
   _flawlessBonus(x, y, wood, log) {
     this.meta.recordStat("flawless"); // feitos: Miragem / Anhangá
@@ -1758,6 +1766,10 @@ export class GameScene extends Phaser.Scene {
         newUnlocks: this._newUnlocksThisRun,
         difficulty: this.diff,
         biome: this.biome,
+        biomeId: this.biomeId,
+        character: this.character.id, // a tela de resultado mostra o guardião da partida
+        reactions,
+        dmgShare: this._dmgShare(),
         endlessS,
         endlessRecord,
         unlockedNextDifficulty: unlockedNewDifficulty
