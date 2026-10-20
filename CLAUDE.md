@@ -124,8 +124,9 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 - Lançamento planejado: **quinta, 03/12/2026** (calendário completo em `docs/MARKETING.md`).
 
 **Marketing e loja** (`docs/MARKETING.md`)
-- Redes (`docs/REDES_SOCIAIS.md`): 👤 criar o Instagram `@guardiaodafloresta` e postar os 4 reels + carrossel
-  (`videos/promo/entrega/`). Discord no ar (https://discord.gg/TTYnNtQAes), configurado por `tools/discord/`;
+- Redes (`docs/REDES_SOCIAIS.md`): Instagram **`@guardiaodaflorestaofc`** no ar (20/10: conta profissional, categoria
+  Publisher de jogos, nome, bio e link para o site; 1º vídeo postado pelo Leonardo). 👤 Postar os 4 reels + carrossel
+  (`videos/promo/entrega/`); legenda do vídeo promocional no documento. Discord no ar (https://discord.gg/TTYnNtQAes), configurado por `tools/discord/`;
   👤 falta o Guia do servidor e a proteção contra raids (à mão) e subir o cargo do bot ao topo para o script
   renomear "Guardião" → "Equipe" e ordenar os cargos.
 - 31/10 Dia do Saci (vídeo do Saci + chamada de testadores); vídeos curtos 3×/semana; formulário de feedback.

@@ -14,11 +14,16 @@ os posts, sempre pedindo o OK antes de publicar.
 
 ### Perfil
 
+**No ar desde 20/10/2026: `@guardiaodaflorestaofc`** (conta criada pelo Leonardo; nome, bio, link, conta profissional e
+categoria configurados pelo Claude via adb no celular, com os textos abaixo). Para colar texto com acento/emoji no
+celular por adb: uma página local com botões "copiar" aberta no Chrome do celular (`adb reverse`) e `input
+keycombination 113 50` (Ctrl+V) no campo; o `input text` do adb não digita acentos.
+
 | Campo | Valor |
 |---|---|
 | Tipo de conta | **Profissional → Criador de conteúdo** (grátis; libera estatísticas e categoria) |
-| Categoria | Jogo eletrônico (ou "Desenvolvedor de videogames") |
-| Nome de usuário | **`guardiaodafloresta`** (o mesmo em Instagram, TikTok, YouTube e Discord). Se estiver ocupado: `guardiaodaflorestajogo` → `guardiao.dafloresta` |
+| Categoria | **Publisher de jogos** (exibida no perfil; "Jogo eletrônico" não existe na lista) |
+| Nome de usuário | **`guardiaodaflorestaofc`** (o `guardiaodafloresta` puro não estava livre). Usar o mesmo no TikTok e no YouTube |
 | Nome (aparece na busca) | `Guardião da Floresta · jogo` |
 | Foto | ícone do jogo, `lopesleo.github.io/public/guardiao/assets/img/icon-512.png` (o recorte redondo do Instagram não corta o Curupira) |
 | Link | `https://lopesleo.github.io/guardiao/?utm_source=instagram&utm_medium=bio` |
@@ -55,6 +60,33 @@ Estamos em teste fechado: link na bio para entrar.
 
 #jogobrasileiro #indiegame #folclorebrasileiro #roguelite #pixelart #gamedev #jogosmobile
 ```
+
+### Vídeo promocional (91 s, `guardiao_da_floresta_promo_9x16_1080p.mp4`)
+
+Capa: o título sobre a horda (~0:10), `guardiao_promo_capa.jpg`. Áudio original, compartilhar também no feed.
+
+```
+A Podridão tomou a mata. As lendas despertaram. 🌳🔥
+
+Guardião da Floresta é um roguelite brasileiro para Android: você só se move, as armas atacam sozinhas e cada nível traz uma escolha de carta.
+
+🌿 7 lendas do folclore: Curupira, Caipora, Iara, Saci, Comadre Fulozinha, Mãe-do-Ouro e Anhangá
+🔥 4 elementos e 6 reações (Fogo + Gelo = Vapor)
+⚔️ 18 armas e 18 evoluções
+👹 Chefes da Amazônia à Caatinga, e todo golpe avisa antes
+🏡 Entre as partidas, a Clareira: plantar, pescar e cozinhar
+
+Grátis de verdade: sem energia, sem gacha, anúncio só se você quiser.
+Em breve na Google Play. Quer jogar antes? O teste fechado está aberto, link na bio.
+
+Qual lenda você escolheria? 👇
+
+#jogobrasileiro #folclorebrasileiro #indiegame #roguelite #pixelart
+```
+
+No TikTok, trocar a linha de hashtags por
+`#jogobrasileiro #folclorebrasileiro #indiegame #roguelite #pixelart #gamedev #jogosmobile #curupira`.
+Comentário para fixar: "Quer testar antes de todo mundo? O link está na bio: é grátis e leva 2 minutos."
 
 ### Os 4 primeiros reels
 
