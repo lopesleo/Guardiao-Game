@@ -130,10 +130,13 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
   👤 falta o Guia do servidor e a proteção contra raids (à mão) e subir o cargo do bot ao topo para o script
   renomear "Guardião" → "Equipe" e ordenar os cargos.
 - 31/10 Dia do Saci (vídeo do Saci + chamada de testadores); vídeos curtos 3×/semana; formulário de feedback.
-- Imprensa e criadores a partir de 10/11 (kit em `lopesleo.github.io/guardiao/#press`).
+- Imprensa e criadores a partir de 10/11 (kit em `komedygames.com/guardiao/#press`).
 - Inscrição no BIG Festival 2027 (deve abrir entre nov./2026 e jan./2027).
-- 👤 Opcional: trocar a URL da política no Play Console e no AdMob para `lopesleo.github.io/guardiao/privacidade/`;
-  trocar o "Site" do desenvolvedor para `/guardiao/`; subir o promo no YouTube para o vídeo da ficha.
+- **Domínio do estúdio no ar (20/10): `komedygames.com`** (Cloudflare: registro, DNS e Pages; repositório
+  `lopesleo/komedygames`; Web Analytics ligado). Página do estúdio = catálogo de jogos; o Guardião em `/guardiao/`.
+  Já trocados: site do desenvolvedor na ficha (API), URL da política no Play Console (em revisão) e no AdMob, link da
+  bio do Instagram. 👤 Opcional: restringir o app "Cloudflare Workers and Pages" no GitHub só ao repositório
+  `komedygames` (foi instalado com acesso a todos); subir o promo no YouTube para o vídeo da ficha.
 
 **Jogo (backlog do roadmap)**
 - Anúncios já pedem classificação máxima "T" no app; 👤 deixar também "T" no console do AdMob (Controles de
@@ -158,7 +161,8 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 **Repositórios**
 - `main` deste repo subiu para o `origin` em 15/10/2026 (push só quando o Leonardo pedir). O Pages daqui serve a
   branch `pages` (jogo web fora do ar; política no endereço antigo). Página oficial: repo `lopesleo.github.io`,
-  pasta `guardiao/` (deploy = push na `dev`).
+  pasta `guardiao/` (deploy = push na `dev`), copiada para `komedygames.com/guardiao/` pelo repo `lopesleo/komedygames`
+  (Cloudflare Pages; publicar de novo lá depois de mudar o site do Guardião).
 
 ## Onde está cada coisa
 
@@ -169,7 +173,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
 | Plano antes de publicar (anúncios, retenção, loja) | `docs/PRE_LANCAMENTO.md` |
 | **Marketing, distribuição e calendário de lançamento** | `docs/MARKETING.md` |
 | Instagram, reels e servidor do Discord (`tools/discord/`) | `docs/REDES_SOCIAIS.md` |
-| Página oficial (`lopesleo.github.io/guardiao/`) | repositório `lopesleo.github.io`, pasta `guardiao/` |
+| Página oficial (`komedygames.com/guardiao/`) e site do estúdio | repositório `lopesleo.github.io`, pasta `guardiao/`; estúdio em `lopesleo/komedygames` |
 | Publicação na Play Store, privacidade | `docs/PLAY_STORE.md`, `docs/PRIVACY.md` |
 | Clareira (acampamento, obras, bichos, fases) | `docs/CLAREIRA.md` |
 | Horta, pesca e cozinha em detalhe | `docs/VIDA_NA_CLAREIRA.md` |
