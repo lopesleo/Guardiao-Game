@@ -6,6 +6,10 @@
 //   npm run aviso -- validar  <aviso.json>               o Google valida as 6 mensagens sem entregar nada
 //   npm run aviso -- enviar   <aviso.json> [--forcar]    envia de verdade para os 6 tópicos
 //   npm run aviso -- enviar   <aviso.json> --token=… [--idioma=pt]   só para um aparelho (teste; não registra)
+//   npm run aviso -- enviar   <aviso.json> --topico=novidades_zht [--idioma=pt]   só para um tópico (teste; não
+//        registra). Sem o token do aparelho (a versão da loja não mostra): troque o idioma do jogo no celular para um
+//        que ninguém usa (o aparelho passa para novidades_<idioma>), mande o teste para esse tópico com o texto em
+//        --idioma e volte o idioma.
 //
 // Regras (docs/PLAY_STORE.md, "Novidades por notificação"): no máximo 1 aviso a cada 7 dias, nunca o mesmo
 // aviso duas vezes (--forcar passa por cima, só com motivo), e só novidade de verdade (versão, evento,
@@ -58,7 +62,13 @@ if (cmd === "conferir") process.exit(0);
 
 const enviados = fs.existsSync(LOG) ? JSON.parse(fs.readFileSync(LOG, "utf8")) : [];
 const token = flag("token");
-if (cmd === "enviar" && !token && !flag("forcar")) {
+const topico = flag("topico");
+if (topico && !/^novidades_[a-z]+$/.test(topico)) {
+  console.error(`--topico precisa ser um tópico de novidades (novidades_<idioma>), veio "${topico}"`);
+  process.exit(2);
+}
+const teste = !!(token || topico); // teste: fora do intervalo e do registro
+if (cmd === "enviar" && !teste && !flag("forcar")) {
   if (enviados.some((e) => e.id === aviso.id)) {
     console.error(`O aviso "${aviso.id}" já saiu (${enviados.find((e) => e.id === aviso.id).em}). --forcar só com motivo.`);
     process.exit(1);
@@ -94,7 +104,11 @@ async function send(l, target, validate) {
 }
 
 const validate = cmd === "validar";
-const alvos = token ? [[flag("idioma") || "pt", { token }]] : LANGS.map((l) => [l, { topic: `novidades_${l}` }]);
+const alvos = token
+  ? [[flag("idioma") || "pt", { token }]]
+  : topico
+    ? [[flag("idioma") || "pt", { topic: topico }]]
+    : LANGS.map((l) => [l, { topic: `novidades_${l}` }]);
 const sent = [];
 let falha = null;
 for (const [l, target] of alvos) {
@@ -108,7 +122,7 @@ for (const [l, target] of alvos) {
   }
 }
 // O que saiu fica registrado mesmo se um idioma falhou no meio (o intervalo vale a partir daí)
-if (cmd === "enviar" && !token && sent.length) {
+if (cmd === "enviar" && !teste && sent.length) {
   enviados.push({ id: aviso.id, em: new Date().toISOString(), topicos: sent, ...(falha ? { incompleto: true } : {}) });
   fs.writeFileSync(LOG, JSON.stringify(enviados, null, 2) + "\n");
   console.log(`\nRegistrado em ${path.relative(process.cwd(), LOG)} (faça o commit).`);

@@ -95,8 +95,11 @@ marcar no `docs/ROADMAP.md`. Última revisão: **19/10/2026**.
   👤 Enviar (`npm run aviso -- enviar …`) ~2–3 dias depois da aprovação da 1.0.17 no Alpha, quando o Leonardo mandar.
 - **Novidades por notificação** (FCM, na 1.0.10; `docs/PLAY_STORE.md`, "Novidades por notificação"): app e script
   `npm run aviso` prontos; a conta de serviço **ganhou o papel "Administrador da API Firebase Cloud Messaging" em 20/10**
-  (o `validar` passa nos 6 tópicos). Teste num aparelho só (`--token=`) precisa do token FCM, que a versão da loja não
-  mostra. A "Segurança dos dados" já declara (20/10) os IDs do dispositivo com Funcionalidade do app e Mensagens do
+  (o `validar` passa nos 6 tópicos). Teste em 20/10 no celular do Leonardo (`--topico=novidades_zht`, trocando o idioma
+  do jogo para chinês tradicional e voltando): a mensagem **chegou e o app a montou**, mas o Android não mostrou porque
+  o jogo está **sem a permissão de notificação** no aparelho (POST_NOTIFICATIONS negada; a chave "Novidades" mostra SIM
+  sem a permissão do sistema). 👤 Liberar em Configurações › Apps › Guardião da Floresta › Notificações e testar de novo.
+  Consertar no jogo: a chave só deve ficar ligada com a permissão dada (e pedir de novo quando faltar). A "Segurança dos dados" já declara (20/10) os IDs do dispositivo com Funcionalidade do app e Mensagens do
   desenvolvedor. A política com novidades e Play Games **já está no ar** (`komedygames.com/guardiao/privacidade/`).
 - **Próximo: Clareira da Caatinga** (grátis): liberar quem vencer no Perigo máximo na Caatinga + uma conquista.
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
