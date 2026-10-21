@@ -148,6 +148,9 @@ export class GameScene extends Phaser.Scene {
     this.projectilePool = new Pool(() => new Projectile(this), 30);
     this.boomerPool = new Pool(() => new BoomerangProj(this), 8);
     this.enemyProjPool = new Pool(() => new EnemyProjectile(this), 12);
+    // Brilhos dos tiros moram fora dos containers (src/entities/Halo.js): seguem os tiros depois da
+    // física, quando eles já estão na posição do quadro
+    this.events.on(Phaser.Scenes.Events.POST_UPDATE, this._syncHalos, this);
     this.xpPool = new Pool(() => new XPGem(this), 50);
     this.coinPool = new Pool(() => new CoinPickup(this), 20);
     this.woodPool = new Pool(() => new WoodPickup(this), 12);
@@ -1791,5 +1794,12 @@ export class GameScene extends Phaser.Scene {
   shutdown() {
     this.bgMusic?.stop();
     this.bgMusic = null;
+    this.events.off(Phaser.Scenes.Events.POST_UPDATE, this._syncHalos, this);
+  }
+
+  _syncHalos() {
+    for (const p of this.projectilePool.inUse) p.syncHalo();
+    for (const p of this.boomerPool.inUse) p.syncHalo();
+    for (const p of this.enemyProjPool.inUse) p.syncHalo();
   }
 }

@@ -3,6 +3,7 @@
 import { ENEMY, GAME, ELITE, MIMIC, BOSS_FIGHT } from "../config.js";
 import { MulaBrain, SecoBrain } from "./Bosses.js";
 import { tr } from "../i18n/i18n.js";
+import { makeHalo, setHaloScale, syncHalo } from "./Halo.js";
 
 // O chefe (Mapinguari) mora em Bosses.js junto com os golpes dos minichefes
 export { BossEnt } from "./Bosses.js";
@@ -479,18 +480,15 @@ export class EnemyProjectile extends Phaser.GameObjects.Container {
   constructor(scene) {
     super(scene, -9999, -9999);
     scene.add.existing(this);
-    // Tiro inimigo: esfera vermelha pixelada com halo — sempre "cor de perigo"
-    this.glow = scene.add
-      .image(0, 0, "fx_glow")
-      .setScale(0.6)
-      .setTint(0xff3040)
-      .setAlpha(0.6)
-      .setBlendMode(Phaser.BlendModes.ADD);
+    // Tiro inimigo: esfera vermelha pixelada com halo — sempre "cor de perigo".
+    // Sombra e halo ficam FORA do container (Halo.js), na mesma ordem de antes (sombra, halo, núcleo):
+    // as sombras de todos os tiros saem num lote, os halos aditivos em outro
+    this.glow = makeHalo(scene, "fx_glow", 0.6, 0.6, 0.01).setTint(0xff3040).setBlendMode(Phaser.BlendModes.ADD);
     this.core = scene.add.image(0, 0, "px_eshot").setScale(GAME.PIXEL_SCALE);
     // Sombra escura (blend normal) sob o halo: recorta o tiro do chão claro da Caatinga, onde o halo
     // aditivo virava só um brilho creme sobre a areia
-    this.shade = scene.add.image(0, 0, "fx_glow").setScale(0.34).setTint(0x1a1420).setAlpha(0.45);
-    this.add([this.shade, this.glow, this.core]);
+    this.shade = makeHalo(scene, "fx_glow", 0.34, 0.45, 0.02).setTint(0x1a1420);
+    this.add([this.core]);
     scene.physics.add.existing(this);
     this.body.setCircle(7, -7, -7);
     this.setActive(false).setVisible(false);
@@ -506,14 +504,23 @@ export class EnemyProjectile extends Phaser.GameObjects.Container {
     this.dmg = dmg;
     this.lifeUntil = this.scene.time.now + 3000;
     this.core.setScale(GAME.PIXEL_SCALE * scale).setTint(color === 0xff5a6e ? 0xffffff : color);
-    this.glow.setScale(0.6 * scale).setTint(color === 0xff5a6e ? 0xff3040 : color);
-    this.shade.setScale(0.34 * scale);
+    setHaloScale(this.glow, 0.6 * scale);
+    this.glow.setTint(color === 0xff5a6e ? 0xff3040 : color);
+    setHaloScale(this.shade, 0.34 * scale);
     this.setDepth(60);
+    this.syncHalo();
+  }
+  // Sombra e halo seguem o tiro (a cena chama depois da física)
+  syncHalo() {
+    syncHalo(this, this.shade);
+    syncHalo(this, this.glow);
   }
   kill() {
     this.setActive(false).setVisible(false);
     this.body.enable = false;
     this.body.setVelocity(0, 0);
+    this.shade.setVisible(false);
+    this.glow.setVisible(false);
   }
   update(time) {
     if (!this.active) return;

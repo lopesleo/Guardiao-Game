@@ -5,6 +5,7 @@ import { WEAPONS, COLORS, GAME, ELEMENT, BOSS_FIGHT } from "../config.js";
 import { Pix } from "../art/PixelArt.js";
 import { frostRimTexture, frostDiskTexture, ICE_PX } from "../art/IceFX.js";
 import { PAL } from "../art/Palette.js";
+import { makeHalo, setHaloScale, syncHalo } from "./Halo.js";
 
 // Anel do campo gélido como TEXTURA (uma por raio, em cache): um Graphics
 // redesenhado todo quadro com centenas de retângulos sumia no Phaser 4 (WebGL).
@@ -28,17 +29,13 @@ export class Projectile extends Phaser.GameObjects.Container {
   constructor(scene) {
     super(scene, -9999, -9999);
     scene.add.existing(this);
-    // Brilho aditivo (luz) + núcleo pixelado; fogo usa a bola de fogo animada
-    this.glow = scene.add
-      .image(0, 0, "fx_glow")
-      .setScale(0.8)
-      .setTint(COLORS.FIRE)
-      .setAlpha(0.55)
-      .setBlendMode(Phaser.BlendModes.ADD);
+    // Brilho aditivo (luz) + núcleo pixelado; fogo usa a bola de fogo animada.
+    // O brilho fica FORA do container (Halo.js): todos os brilhos num lote de desenho só
+    this.glow = makeHalo(scene, "fx_glow", 0.8, 0.55).setTint(COLORS.FIRE).setBlendMode(Phaser.BlendModes.ADD);
     this.core = scene.add.image(0, 0, "px_puff").setScale(2.4);
     // Bola de fogo própria (cabeça à direita do quadro → origem no núcleo)
     this.fball = scene.add.sprite(0, 0, "px_fireball").setScale(2.6).setOrigin(0.72, 0.5).play("fireball_fly");
-    this.add([this.glow, this.core, this.fball]);
+    this.add([this.core, this.fball]);
     scene.physics.add.existing(this);
     this.body.setCircle(10, -10, -10);
     this.setActive(false).setVisible(false);
@@ -92,12 +89,19 @@ export class Projectile extends Phaser.GameObjects.Container {
       this.glow.setTint(color);
       this.core.setTint(0xffe6b8);
     }
+    this.syncHalo();
+  }
+
+  // Brilho segue o tiro (a cena chama depois da física)
+  syncHalo() {
+    syncHalo(this, this.glow);
   }
 
   kill() {
     this.setActive(false).setVisible(false);
     this.body.enable = false;
     this.body.setVelocity(0, 0);
+    this.glow.setVisible(false);
   }
 
   update(time) {
@@ -113,7 +117,7 @@ export class Projectile extends Phaser.GameObjects.Container {
         Math.atan2(this.body.velocity.y, this.body.velocity.x),
       );
     }
-    this.glow.setScale(0.8 + Math.sin(time / 60) * 0.08);
+    setHaloScale(this.glow, 0.8 + Math.sin(time / 60) * 0.08);
   }
 }
 
@@ -126,16 +130,11 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
   constructor(scene) {
     super(scene, -9999, -9999);
     scene.add.existing(this);
-    // Vara Encantada da Caipora girando (pixel-art) + brilho quente da brasa
-    this.glow = scene.add
-      .image(0, 0, "fx_glow")
-      .setScale(0.7)
-      .setTint(COLORS.FIRE)
-      .setAlpha(0.45)
-      .setBlendMode(Phaser.BlendModes.ADD);
+    // Vara Encantada da Caipora girando (pixel-art) + brilho quente da brasa (fora do container: Halo.js)
+    this.glow = makeHalo(scene, "fx_glow", 0.7, 0.45).setTint(COLORS.FIRE).setBlendMode(Phaser.BlendModes.ADD);
     // giro DESENHADO em 8 quadros (px_vara_spin) — girar o sprite serrilhava o pixel
     this.spr = scene.add.sprite(0, 0, "px_vara_spin", 0).setScale(GAME.PIXEL_SCALE).play("vara_spin");
-    this.add([this.glow, this.spr]);
+    this.add([this.spr]);
 
     scene.physics.add.existing(this);
     this.body.setCircle(12, -12, -12);
@@ -203,12 +202,19 @@ export class BoomerangProj extends Phaser.GameObjects.Container {
     this.deadline = this.scene.time.now + 3800;
     this.body.setVelocity(dirX * sp, dirY * sp);
     this.lastHit.clear();
+    this.syncHalo();
+  }
+
+  // Brilho segue a vara/cobra, inclusive a profundidade (a cobra sobe acima do mapa de luz)
+  syncHalo() {
+    syncHalo(this, this.glow);
   }
 
   kill() {
     this.setActive(false).setVisible(false);
     this.body.enable = false;
     this.body.setVelocity(0, 0);
+    this.glow.setVisible(false);
     for (const g of this.segs) g.setVisible(false); // corpo do Boitatá some junto
   }
 
