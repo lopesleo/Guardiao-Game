@@ -182,9 +182,13 @@ export class Lighting {
     const add = (x, y, r, c, a) => this._light(x, y, r, c, a);
     s.hazards?.lights(add);
     if (s._bossBrains) for (const b of s._bossBrains) b.lights(add);
-    // Brilho fraco da corrupção em cada inimigo: legibilidade no escuro
+    // Brilho fraco da corrupção em cada inimigo: legibilidade no escuro. Com status, a luz é a do elemento
+    // e mais forte — à noite e no chefe, quem queima acende o chão de laranja (STATUS_LOOK.glow)
     s.enemyPool?.forEachActive((e) => {
-      if (e.active) this._light(e.x, e.y - e.displayHeight * 0.15, e.miniBoss ? 150 : 58, e.miniBoss ? 0xf2c14e : 0xb0308a, e.miniBoss ? 0.6 : 0.4);
+      if (!e.active) return;
+      const g = !e.miniBoss && s.elemental?.glowOf(e);
+      if (g) this._light(e.x, e.y - e.displayHeight * 0.15, g.r, g.color, g.a);
+      else this._light(e.x, e.y - e.displayHeight * 0.15, e.miniBoss ? 150 : 58, e.miniBoss ? 0xf2c14e : 0xb0308a, e.miniBoss ? 0.6 : 0.4);
     });
     let gems = 0;
     s.xpPool?.forEachActive((g) => {

@@ -2,10 +2,39 @@
 // 4 status: fire, ice, bolt, wind. Quando 2+ coexistem no mesmo inimigo, dispara reação.
 // Pares: fogo+gelo Vapor · gelo+raio Cristal · fogo+raio Sobrecarga ·
 //        fogo+vento Labareda · gelo+vento Geada · raio+vento Temporal.
-import { STATUS, REACTION, COLORS, PLAYER, ELEMENT } from "../config.js";
+import { STATUS, STATUS_LOOK, REACTION, COLORS, PLAYER, ELEMENT } from "../config.js";
 import { text } from "../ui/Theme.js";
 import { hex, PAL } from "../art/Palette.js";
 import { tr } from "../i18n/i18n.js";
+
+// STATUS_LOOK (chaves da paleta) → { mode, tint, tint2, ramp } prontos para o Phaser; resolvido uma vez
+const _looks = {};
+const dim = (c, k) => (Math.round(((c >> 16) & 255) * k) << 16) | (Math.round(((c >> 8) & 255) * k) << 8) | Math.round((c & 255) * k);
+const mixC = (a, b, t) => {
+  const ch = (c, s) => (c >> s) & 255;
+  const m = (s) => Math.round(ch(a, s) + (ch(b, s) - ch(a, s)) * t);
+  return (m(16) << 16) | (m(8) << 8) | m(0);
+};
+const PULSE_STEPS = 16;
+function statusLook(key) {
+  if (!_looks[key]) {
+    const L = STATUS_LOOK[key];
+    const tint = dim(PAL[L.tint], L.k ?? 1);
+    _looks[key] = {
+      mode: Phaser.TintModes[L.mode],
+      tint,
+      tint2: L.dark ? PAL[L.dark] : 0,
+      // vibração (raio): cores da tinta ao longo do pulso, pré-calculadas
+      ramp: L.pulse ? Array.from({ length: PULSE_STEPS + 1 }, (_, i) => mixC(tint, PAL[L.pulse], (i / PULSE_STEPS) * (L.pulseK ?? 1))) : null,
+    };
+  }
+  return _looks[key];
+}
+// Status que manda na cor (congelado > fogo > gelo > raio > vento) — também decide a cor da luz do inimigo
+export function dominantStatus(enemy) {
+  const st = enemy.statuses;
+  return enemy._frozenVisual ? "frozen" : st.fire ? "fire" : st.ice ? "ice" : st.bolt ? "bolt" : st.wind ? "wind" : null;
+}
 
 // Reações por COEXISTÊNCIA de status — as três funcionam do mesmo jeito: dois
 // elementos no mesmo inimigo. CRISTAL antes exigia o inimigo CONGELADO (na prática
@@ -31,6 +60,8 @@ export class ElementalSystem {
     this.scene = scene;
     this.lastTickAt = 0;
     this.tickInterval = 100;
+    this._pulsing = new Set(); // inimigos com tinta que vibra (raio)
+    this._glow = { r: STATUS_LOOK.GLOW_R, a: STATUS_LOOK.GLOW_A, color: 0 }; // reaproveitado (sem lixo por quadro)
     // Cooldown global por tipo de reação (evita spam visual quando muitas armas)
     this.lastReactionAt = { VAPOR: 0, CRYSTAL: 0, OVERLOAD: 0, LABAREDA: 0, GEADA: 0, TEMPORAL: 0 };
     this.reactionCdMs = 350; // 1 reação do mesmo tipo a cada 350ms
@@ -71,12 +102,42 @@ export class ElementalSystem {
     this._checkReaction(enemy, element);
   }
 
+  // Cor de repouso do inimigo: congelado > fogo > gelo > raio > vento (STATUS_LOOK no config). Chamado ao
+  // pegar/perder status, ao congelar/descongelar e no fim do pisca-branco de dano (que usa FILL)
   _updateTint(enemy) {
-    // Phaser 4: o flash de dano usa tintMode FILL; os tints de status são MULTIPLY
-    const st = enemy.statuses;
-    const c = st.fire ? 0xff9966 : st.ice ? 0x9ad4ff : st.bolt ? 0xd8a8ff : st.wind ? 0xb8f0dc : null;
-    if (c !== null) enemy.setTint(c).setTintMode(Phaser.TintModes.MULTIPLY);
+    const key = dominantStatus(enemy);
+    const look = key && statusLook(key);
+    if (look) enemy.setTint(look.tint).setTint2(look.tint2).setTintMode(look.mode);
     else enemy.clearTint();
+    if (look?.ramp) {
+      enemy._pulsePh ??= Math.random() * Math.PI * 2; // cada um vibra no seu tempo
+      this._pulsing.add(enemy);
+    } else this._pulsing.delete(enemy);
+  }
+
+  // Luz do inimigo com status no mapa de luz (Lighting): cor do elemento; null = a luz da corrupção
+  glowOf(enemy) {
+    const key = dominantStatus(enemy);
+    if (!key) return null;
+    this._glow.color = STATUS_LOOK[key].glow;
+    return this._glow;
+  }
+
+  // A cada quadro: só os que vibram (raio) — poucos, e a tinta é por vértice (sem custo de desenho)
+  _pulse(time) {
+    if (!this._pulsing.size) return;
+    const w = (Math.PI * 2) / STATUS_LOOK.PULSE_MS;
+    for (const e of this._pulsing) {
+      const key = e.active && dominantStatus(e);
+      const look = key && statusLook(key);
+      if (!look?.ramp) {
+        this._pulsing.delete(e);
+        continue;
+      }
+      if (e.tintMode !== look.mode) continue; // pisca-branco de dano (FILL) em curso: ele devolve a cor
+      const s = 0.5 - 0.5 * Math.cos(time * w + e._pulsePh);
+      e.setTint(look.ramp[Math.round(s * s * PULSE_STEPS)]); // pico curto e descida longa: estalo, não respiração
+    }
   }
 
   // Fôlego por inimigo (REACTION.LOCK_MS): logo depois de reagir, os status ainda
@@ -539,6 +600,7 @@ export class ElementalSystem {
 
   // Tick periódico — processa expiração + DoT de fire/bolt
   tick(time) {
+    this._pulse(time);
     if (time - this.lastTickAt < this.tickInterval) return;
     this.lastTickAt = time;
     const scene = this.scene;

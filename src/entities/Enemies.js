@@ -335,8 +335,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.setVelocity(0, 0);
       this.setDepth(this.y + this.displayHeight * 0.45 + 10000);
       if (!this._frozenVisual) {
-        this.setTint(0x8fe3ff);
-        this._frozenVisual = true;
+        this._frozenVisual = true; // a cor de congelado vem do STATUS_LOOK (ElementalSystem._updateTint)
+        this.scene.elemental?._updateTint(this);
         this.anims.pause();
       }
       if (this.rimColor) this._syncRim(time);

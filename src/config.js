@@ -169,6 +169,31 @@ export const STATUS = {
   WIND: { duration: 2200, slowFactor: 0.85, drift: 38 },
 };
 
+// Como cada status aparece no inimigo (ElementalSystem._updateTint): um modo de tinta do Phaser 4 e uma cor da
+// PALETA (chave de PAL; k escurece a cor). O modo vai por vértice: custo zero. Antes era tudo MULTIPLY, que só
+// escurece — o status sumia em bicho escuro, à noite e no chefe. Medido nos 15 monstros × 6 ambientes (início,
+// noite e chefe dos dois biomas; 21/10/2026): diferença de cor (ΔE) contra o bicho sem status de 5,5 para 27, e
+// entre dois status de 1,8 para 13,6.
+//  - ADD: soma a cor e guarda o sombreado — o bicho "acende" no elemento sem apagar o desenho (fogo e gelo; no
+//    fogo o ponto fraco do chefe continua à vista, o SCREEN laranja o apagava)
+//  - SCREEN: clareia em direção à cor sem passar do branco (vento; congelado: quase branco-gelo, uma estátua)
+//  - o raio PULSA entre tint e pulse (PULSE_MS): para quem confunde azul e roxo (protanopia/deuteranopia), raio,
+//    gelo e congelado se separam pelo movimento — o gelo é parado e mais escuro, o congelado é claro e imóvel (a
+//    animação para), o raio vibra
+// (MULTIPLY_TWO e HARD_LIGHT não desenham neste Phaser 4.2.1: o shader compara o modo com == e 6/7 chegam com
+// erro de arredondamento — o bicho sai sem tinta. Ficar nos modos 0–5.)
+// glow: cor da luz do inimigo no mapa de luz (Lighting) — à noite e no chefe, o status também ilumina o chão
+export const STATUS_LOOK = {
+  fire: { mode: "ADD", tint: "org1", k: 0.85, glow: 0xff8a3c },
+  ice: { mode: "ADD", tint: "ice1", k: 0.75, glow: 0x5cc8ff },
+  bolt: { mode: "SCREEN", tint: "pur1", pulse: "pur2", pulseK: 0.7, glow: 0xc78cff }, // pulseK: até onde vai (o ponto fraco do chefe não some)
+  wind: { mode: "SCREEN", tint: "wnd1", glow: 0x7fd9bd },
+  frozen: { mode: "SCREEN", tint: "ice2", glow: 0x9fe8ff },
+  PULSE_MS: 420, // período da vibração do raio (≈2,4 Hz: abaixo de 3 Hz, sem risco de fotossensibilidade)
+  GLOW_R: 70, // raio da luz do inimigo com status (sem status: 58, a corrupção)
+  GLOW_A: 0.55, // força dessa luz (a corrupção: 0,4)
+};
+
 // Dano das reações FIXO (só × Prisma), por decisão medida em 13/10/2026: elas já fazem 25–60% do
 // dano na horda em qualquer minuto e Perigo. Ver docs/BALANCING.md antes de escalar ou cortar.
 export const REACTION = {
