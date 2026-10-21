@@ -295,7 +295,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     // FLASH: branco normal, DOURADO se crit ou no ponto fraco. Volta à cor do status no update
     // (um delayedCall por golpe enchia o relógio da cena: remover cada um é uma busca linear)
     this.setTint(crit || amp > 1 ? 0xffd96b : 0xffffff).setTintMode(Phaser.TintModes.FILL);
-    this._flashUntil = this.scene.time.now + (crit ? 110 : 60);
+    // Golpes seguidos: vale a volta mais cedo, como os delayedCalls de antes (o 1º a vencer devolvia a cor)
+    const now = this.scene.time.now,
+      until = now + (crit ? 110 : 60);
+    this._flashUntil = this._flashUntil > now ? Math.min(this._flashUntil, until) : until;
 
     if (crit) {
       // KNOCKBACK
