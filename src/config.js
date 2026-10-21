@@ -13,6 +13,10 @@ export const GAME = {
   // A duração real vem do Perigo (DIFFICULTY[].durationS); o jogo "estica" a curva por
   // pace = RUN_DURATION_S / durationS, então 10 min = a mesma jornada, mais devagar.
   RUN_DURATION_S: 420,
+  // Teto de quadros por segundo. Telas de 90/120 Hz (o S23 rodava a partida a 120) gastam o dobro de
+  // CPU, GPU e bateria para um jogo de pixel-art que não ganha nada com isso; esquenta e o aparelho
+  // baixa o clock. 0 = sem teto. O tempo de jogo não muda (src/systems/FrameLimit.js).
+  FPS_LIMIT: 60,
 };
 
 // Níveis de dificuldade ("Perigo") — ver docs/META_LOOP.md (Fase 1).
