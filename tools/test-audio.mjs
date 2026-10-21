@@ -1,7 +1,9 @@
 // Teste do SOM (src/audio/Mixer.js) num navegador de verdade: no Edge headless o AudioContext roda de
 // verdade, e tudo que sai dele passa por um "grampo" (ScriptProcessor) que mede pico, volume e agudo de
 // cada bloco. Os nós de áudio criados são contados até serem desligados. Confere:
-//   · Música 0 + Efeitos 0 = silêncio em tudo (partida, chefe e a cena da 1ª queda, que furava a opção);
+//   · Música 0 + Efeitos 0 = silêncio em tudo (partida, chefe, a cena da 1ª queda, que furava a opção, e a
+//     tela de fim de partida na vitória e na derrota);
+//   · na tela de fim, a vinheta toca no canal da música e a fogueira no dos efeitos, e saindo os dois somem;
 //   · mexer no volume vale na hora; 60 abates no mesmo quadro não estouram (e criam no máximo 4 vozes);
 //   · Pausa, cartas de nível e Reviver abafam a partida e ela volta ao retomar;
 //   · vida baixa bate o coração (com intervalo) e desliga ao curar;
@@ -157,6 +159,18 @@ try {
     await T.waitAudio(14); // a fogueira e a música da Clareira entram por fade
     const m = await T.meter(t0, await T.now());
     check(m.pk === 0, "título, partida, chefe e a cena da 1ª queda ficam mudos", dB(m.pk));
+    // Tela de fim de partida: derrota (a 2ª queda é a curta e vai para os resultados) e vitória
+    await T.page.evaluate(() => void window.game.scene.getScene("FirstDefeatScene")._finish(true));
+    await T.until(() => !window.game.scene.isActive("FirstDefeatScene"), null, 20000);
+    for (const won of [false, true]) {
+      await T.startRun();
+      const a = await T.now();
+      await T.page.evaluate((won) => void window.game.scene.getScene("GameScene")._onGameOver(won, false, true), won);
+      await T.until(() => window.game.scene.isActive("GameOverScene"), null, 30000);
+      await T.waitAudio(6); // vinheta, fogueira, fichas das recompensas
+      const r = await T.meter(a, await T.now());
+      check(r.pk === 0, `fim de partida (${won ? "vitória" : "derrota"}) fica mudo`, dB(r.pk));
+    }
     check(!T.errs.length, "sem erro no console", T.errs.slice(0, 3).join(" | "));
     await T.ctx.close();
   }
@@ -371,6 +385,31 @@ try {
     tail = Math.max(...samples.slice(-third).map((s) => s.live));
   const plays = await page.evaluate(() => Object.values(window.__aud.plays).reduce((a, b) => a + b, 0));
   check(tail <= head * 1.5 + 40, `partida de ${SOAK_S} s: os nós de áudio vivos não crescem sem parar`, `${samples.map((s) => s.live).join(" ")} (sons ${samples.at(-1).sounds}, ${plays} toques)`);
+
+  // Tela de fim de partida: a vinheta toca no canal da música, a fogueira (derrota) no dos efeitos, e saindo
+  // antes do fim os dois somem com o escurecer e são destruídos
+  const END = ["music_victory", "music_defeat", "sfx_fire_loop"];
+  for (const won of [true, false]) {
+    if (!won) await T.startRun();
+    await page.evaluate((won) => {
+      const lu = window.game.scene.getScene("LevelUpScene");
+      if (window.game.scene.isActive("LevelUpScene")) lu.scene.stop();
+      const g = window.game.scene.getScene("GameScene");
+      if (window.game.scene.isPaused("GameScene")) g.scene.resume();
+      g._onGameOver(won, false, true);
+    }, won);
+    await until(() => window.game.scene.isActive("GameOverScene"), null, 30000);
+    const a = await now();
+    await waitAudio(2.5);
+    const r = await meter(a, await now());
+    const on = await page.evaluate((END) => window.game.sound.sounds.filter((s) => END.includes(s.key) && s.isPlaying).map((s) => `${s.key}:${s._channel}`), END);
+    const want = won ? ["music_victory:music"] : ["music_defeat:music", "sfx_fire_loop:sfx"];
+    check(want.every((w) => on.includes(w)) && r.pk > 0, `fim de partida (${won ? "vitória" : "derrota"}): vinheta${won ? "" : " e fogueira"} no canal certo`, `${on.join(" ")} · ${dB(r.pk)}`);
+    await page.evaluate(() => void window.game.scene.getScene("GameOverScene")._go("CampScene"));
+    await until(() => window.game.scene.isActive("CampScene"), null, 30000);
+    const left = await page.evaluate((END) => window.game.sound.sounds.filter((s) => END.includes(s.key)).length, END);
+    check(left === 0, "saindo da tela de fim, vinheta e fogueira são destruídas", `${left} sobrando`);
+  }
   check(!T.errs.length, "sem erro no console", T.errs.slice(0, 3).join(" | "));
 } catch (e) {
   failures++;
