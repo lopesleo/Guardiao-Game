@@ -1262,7 +1262,7 @@ export class GameScene extends Phaser.Scene {
     this.hud.setBossActive(this.boss, this.biome.bossName.toUpperCase());
     this.sound.play("sfx_boss_roar", { volume: 0.8 });
     // Trilha do chefe entra no lugar da música da partida
-    this.bgMusic?.stop();
+    this.bgMusic?.destroy();
     this.bgMusic = this.sound.add(this.biome.bossMusic ?? "music_boss", { loop: true, volume: 0.4 });
     this.bgMusic.play();
     this.cameras.main.shake(500, 0.015);
@@ -1391,7 +1391,7 @@ export class GameScene extends Phaser.Scene {
     this.endless = true;
     this._endlessStartMs = this.elapsedMs;
     this.boss = null;
-    this.bgMusic?.stop();
+    this.bgMusic?.destroy();
     this.bgMusic = this.sound.add("music_gameplay", { loop: true, volume: 0.35, rate: 0.92 });
     this.bgMusic.play();
     this.hud.showBossBanner(tr("A NOITE ETERNA COMEÇA"), "#e8ccff");
@@ -1745,7 +1745,7 @@ export class GameScene extends Phaser.Scene {
     this.time.delayedCall(quit ? 300 : 900, () => {
       this.physics.world.timeScale = 1;
       this.tweens.timeScale = 1;
-      this.bgMusic?.stop();
+      this.bgMusic?.destroy(); // só parar deixava a voz (e os nós de áudio) no gerenciador a cada partida
       this.bgMusic = null;
       const results = {
         won,
@@ -1789,7 +1789,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   shutdown() {
-    this.bgMusic?.stop();
+    this.bgMusic?.destroy();
     this.bgMusic = null;
   }
 }

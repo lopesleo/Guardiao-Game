@@ -125,10 +125,14 @@ export class FirstDefeatScene extends Phaser.Scene {
   _sfx(key, volume = 0.5, rate = 1) {
     this.sound.play(key, { volume, rate });
   }
+  // destroy, não só stop: parado, o som ficava no gerenciador com os seus nós de áudio
   _stopSounds() {
-    this.fireSnd?.stop();
-    this.music?.stop();
-    this.tinSnd?.stop();
+    for (const k of ["fireSnd", "music", "tinSnd"]) {
+      if (!this[k]) continue;
+      this.tweens.killTweensOf(this[k]); // o fade de saída não pode mexer num som já destruído
+      this[k].destroy();
+      this[k] = null;
+    }
   }
 
   // Efeitos de pós-processamento (só WebGL; o resto da cena funciona sem eles)
