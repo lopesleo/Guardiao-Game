@@ -366,6 +366,13 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   o número mostra o dano real (cinza quando a couraça segura; dourado no ponto fraco), anel e lascas da
   Podridão e uma dica que ensina o ponto fraco; KEEP 0,25 → 0,45 (300 dano/s: ~35 s → ~17 s; build
   fraca não muda). 👤 sentir no aparelho
+- ✅ **Legibilidade** (21/10/2026): o zoom de acessibilidade escurecia os avisos de golpe dos chefes (o mapa
+  de luz ia para a câmera da interface) — consertado. **Status elementais** com tinta OVERLAY (`STATUS_LOOK`):
+  legíveis em todo monstro, de dia, à noite e no chefe, sem perder o contorno; o raio vibra a 2,4 Hz para não
+  se confundir com o gelo no daltonismo; luz no chão com teto de 8 por quadro. **Libertação do chefe** em três
+  tempos (silhueta da Podridão → luz → esporos que viram vida; `LIBERATION`). **Céu da Clareira e vinhetas**
+  com o Gradient do Phaser 4 (quente perto da fogueira, sem faixas; o céu antigo deixava uma faixa de dia ao
+  girar a tela). 👤 ver no aparelho (vento no bruxo e no cogumelo fica fraco)
 
 ### M5 — Monetização e medição reais 👤
 - ✅ AdMob: app Android criado e **7 blocos premiados** em uso (revive, extra_card, build_speed,
