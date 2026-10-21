@@ -1279,6 +1279,34 @@ export const ENDLESS = {
   EVENT_EVERY_S: 45, // um evento (enxame/cerco/minichefe) a cada 45 s
 };
 
+// A Podridão na borda da tela (src/world/Podridao.js): avança com o relógio da partida, fecha
+// quando o chefe nasce e recua quando ele é libertado. A vida baixa é um pulso desta MESMA camada
+// (uma vinheta só, um ritmo só).
+export const PODRIDAO = {
+  RES: 3, // 1 pixel da textura = 1 pixel de arte (3 px de tela): a Podridão é pixel art como o resto
+  HZ: 10, // redesenho da textura (a borda anda devagar)
+  HZ_PULSE: 30, // durante o pulso da vida baixa (o avanço precisa ser liso)
+  START: 0.06, // quanto já há de Podridão no começo da partida (0..1)
+  CURVE: 1.35, // avanço ao longo da partida (> 1 = acelera perto do chefe)
+  // distância da frente até a borda, em fração da ALTURA da tela (a mesma em todas as bordas):
+  // nível 0 → nível 1 (chefe). Com 0,105 o forte (alfa ≥ 0,5) fica nos ~8–10% de fora; só a
+  // ponta dos tentáculos, fina e translúcida, entra mais
+  FRONT: [0.012, 0.105],
+  FREED: -0.2, // chefe libertado: a frente recua para além da borda (some de vez)
+  ENDLESS_S: 240, // Noite Eterna: a Podridão volta e fecha de novo em 4 min
+  EASE_MS: 900, // suavização ao mudar de alvo (chefe nasce / é libertado: ~2–3 s até assentar)
+  // ruído: quanto empurra a frente (tentáculos), em fração do alcance; < a frente da rampa (0,5),
+  // senão nasceriam ilhas de Podridão no meio da tela
+  NOISE: 0.45,
+  NOISE_MEAN: 0.35, // média do ruído depois da potência (o alcance compensa)
+  NOISE_POW: 1.6, // > 1: picos mais raros = tentáculos compridos aqui e ali, não ondas iguais
+  NOISE_PX: 90, // tamanho de uma célula do ruído em px de tela
+  NOISE_FLOW: 0.3, // velocidade com que os tentáculos mudam de forma
+  LOW_HP: 0.3, // abaixo disso a Podridão pulsa
+  BEAT_MS: [1050, 700], // período do pulso: 30% → 0% de vida
+  BOSS_AMB_MS: 1600, // a luz ambiente do chefe entra (e sai) em ~1,6 s, sem salto
+};
+
 // Rankings do Google Play Games (src/systems/Leaderboards.js; docs/PLAY_STORE.md, "Rankings"). Só partidas SOLO:
 // o coop, quando vier, terá ranking próprio (em dupla a pontuação sobe demais). Os IDs vêm do Play Games (o
 // `npm run play:rankings -- criar` preenche); vazio = ranking desligado.

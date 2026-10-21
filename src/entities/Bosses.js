@@ -10,7 +10,7 @@ import { GAME, BOSS, BOSS_FIGHT, ARENA } from "../config.js";
 import { PAL } from "../art/Palette.js";
 import { ROT } from "../art/Monsters.js";
 import {
-  ZoneTele, ConeTele, LaneTele, SweepTele, drawGapRing, drawSafeArc,
+  ZoneTele, ConeTele, LaneTele, SweepTele, ScreamTele, drawGapRing, drawSafeArc,
   shockwave, rootsBurst, summonPulse, pixelLine, D_TELE,
 } from "../art/Telegraph.js";
 import { Timeline, FightLog, WeakSpot, distTo, inLane, angDiff } from "../systems/BossKit.js";
@@ -796,6 +796,8 @@ export class MapiBrain extends Brain {
   constructor(owner) {
     super(owner, BOSS_FIGHT.MAPI, 13);
     this.gap = 1600;
+    // o shader dos anéis do Grito compila agora (no rugido), não no meio do 1º grito
+    ScreamTele.get(this.s)?.prewarm(owner.x, owner.y);
     this.r1 = ["maw", "slam", "summon", "roots", "scream"];
     this.r2 = ["scream", "lunge", "gaze", "maw", "fan", "roots", "slam"];
     this.ri = 0;
@@ -1113,7 +1115,8 @@ export class MapiBrain extends Brain {
             // a 1ª brecha nunca fica em cima do herói: ficar parado não salva
             const a0 = this.angTo() + side * (half + 0.15 + Math.random() * 0.2);
             gaps.push(a0); // as próximas brechas nascem um anel adiantado (ver emissão)
-            g = s.add.graphics().setDepth(D_TELE);
+            // anéis num shader (custo quase zero em qualquer raio); sem WebGL, o Graphics de antes
+            g = ScreamTele.get(s)?.clear() ?? s.add.graphics().setDepth(D_TELE);
             bag.push(g);
             this.threat = { gap: { x: o.x, y: o.y, ang: gaps[0], half } };
             this.sfx("sfx_inhale", { volume: 0.35, rate: 1.5 });

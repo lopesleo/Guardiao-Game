@@ -1,11 +1,13 @@
 // Mundo da floresta: chão, decalques, decoração, muralha de árvores na borda,
-// atmosfera (vaga-lumes, folhas, feixes de luz, poeira, vinheta). Extraído da
-// GameScene pra ela cuidar só de gameplay. O BIOMA (BIOMES em config.js) escolhe
-// o atlas do cenário, o chão, a cor de fundo e a atmosfera.
+// atmosfera (vaga-lumes, folhas, feixes de luz, poeira; a vinheta e a Podridão da
+// borda da tela moram em Podridao.js). Extraído da GameScene pra ela cuidar só de
+// gameplay. O BIOMA (BIOMES em config.js) escolhe o atlas do cenário, o chão, a cor
+// de fundo e a atmosfera.
 import { GAME, BIOMES } from "../config.js";
 import { PAL } from "../art/Palette.js";
 import { rng } from "../art/PixelArt.js";
 import { vw, vh } from "../ui/Theme.js";
+import { PodridaoEdge } from "./Podridao.js";
 
 const S = GAME.PIXEL_SCALE;
 const D_PATCH = -90;
@@ -211,20 +213,8 @@ export class ForestWorld {
       this.ambient.push(p);
     }
 
-    // Vinheta (cantos) + camada vermelha pra HP baixo
-    const key = `vignette_${W}x${H}`;
-    if (!sc.textures.exists(key)) {
-      const c = sc.textures.createCanvas(key, W, H);
-      const ctx = c.getContext();
-      const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, Math.max(W, H) * 0.72);
-      g.addColorStop(0, "rgba(0,0,0,0)");
-      g.addColorStop(1, "rgba(10,6,16,0.55)");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
-      c.refresh();
-    }
-    sc.add.image(0, 0, key).setOrigin(0).setScrollFactor(0).setDepth(49000);
-    this.lowHp = sc.add.image(0, 0, key).setOrigin(0).setScrollFactor(0).setDepth(49001).setTint(0xff2038).setAlpha(0);
+    // Vinheta + Podridão avançando pelas bordas + pulso da vida baixa: UMA camada (ver Podridao.js)
+    this.podridao = new PodridaoEdge(sc);
   }
 
   _respawn(p, anywhere = false) {
@@ -296,9 +286,6 @@ export class ForestWorld {
         this._respawn(p);
     }
 
-    if (player && this.lowHp) {
-      const pct = player.hp / player.maxHp;
-      this.lowHp.setAlpha(pct < 0.3 ? ((0.3 - pct) / 0.3) * (0.7 + Math.sin(time / 180) * 0.3) : 0);
-    }
+    this.podridao?.update(time, dt, player);
   }
 }

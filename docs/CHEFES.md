@@ -124,6 +124,14 @@ luta. Uma dica (uma vez por save) explica as carrancas quando a luta começa.
 
 ## Como foi verificado
 
+**Grito em shader (21/10/2026):** os anéis do Grito eram ~9 mil retângulos por quadro na
+fase 1 e ~16 mil na fúria (+15 ms por quadro com CPU 4×). Agora um quad com shader
+(`ScreamTele`, em `Telegraph.js`) refaz a mesma arte (grade de 3 px, contorno de tinta,
+brecha, miolo branco, arco guia) e o Graphics fica com ~200 retângulos; o custo do golpe caiu
+para ~0. Comparação pixel a pixel com o desenho antigo: 98% iguais (a diferença são as
+"emendas" do traço antigo). Acerto intocado: robô justo **0 acertos em 12 casos** (2
+sementes × 2 fases × 3 distâncias), parado **todos os anéis acertam** — igual à `main`.
+
 **Caboclo d'Água (out/2026):** robô justo, 3 distâncias × 2 fases × 5 golpes, **sem as
 carrancas** (o pior caso): **0 acertos**; parado: todos os golpes acertam. Rodada final
 com os quatro chefes: **0 acertos em 101 casos**. O robô ganhou duas regras mais
