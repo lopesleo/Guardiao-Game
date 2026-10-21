@@ -1232,28 +1232,63 @@ export class GameScene extends Phaser.Scene {
 
   // Empurra inimigos sobrepostos pra longe uns dos outros (separação tipo flocking).
   // Congelados não se movem, mas ainda empurram quem encosta.
+  // Varredura por x: a lista (a mesma de um quadro para o outro, sem alocar) fica ordenada por x —
+  // quase ordenada de um quadro para o outro, a ordenação por inserção custa ~n — e cada inimigo só
+  // testa os da direita até a maior distância de contato. Raio e congelamento: 1 leitura por inimigo
+  // por quadro (o raio acompanha o "soco" do golpe, como antes). Antes: todos os pares (n²), lista
+  // nova por quadro e displayWidth/isFrozen lidos em cada par.
   _separateEnemies(now) {
-    const list = [];
-    this.enemyPool.forEachActive((e) => {
-      if (e.active) list.push(e);
-    });
-    const n = list.length;
+    const list = (this._sepList ||= []);
+    const stamp = (this._sepStamp = (this._sepStamp || 0) + 1);
+    let n = 0;
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      if (e.active && e._pool_active) {
+        e._sepAt = stamp;
+        list[n++] = e;
+      }
+    }
+    list.length = n;
+    for (const e of this.enemyPool.inUse) {
+      if (e.active && e._sepAt !== stamp) {
+        e._sepAt = stamp;
+        list.push(e);
+      }
+    }
+    n = list.length;
+    let maxR = 0;
+    for (let i = 0; i < n; i++) {
+      const e = list[i];
+      // ordena por x (inserção)
+      let j = i - 1;
+      const x = e.x;
+      while (j >= 0 && list[j].x > x) {
+        list[j + 1] = list[j];
+        j--;
+      }
+      list[j + 1] = e;
+      e._sepR = e.displayWidth * 0.32;
+      e._sepF = e.isFrozen(now);
+      if (e._sepR > maxR) maxR = e._sepR;
+    }
     for (let i = 0; i < n; i++) {
       const a = list[i];
-      const ra = a.displayWidth * 0.32;
-      const aF = a.isFrozen(now);
+      const ra = a._sepR;
+      const reach = ra + maxR;
+      const aF = a._sepF;
       for (let j = i + 1; j < n; j++) {
         const b = list[j];
-        const dx = b.x - a.x,
-          dy = b.y - a.y;
-        const minD = ra + b.displayWidth * 0.32;
+        const dx = b.x - a.x;
+        if (dx >= reach) break; // os seguintes estão ainda mais à direita
+        const dy = b.y - a.y;
+        const minD = ra + b._sepR;
         const d2 = dx * dx + dy * dy;
         if (d2 >= minD * minD || d2 === 0) continue;
         const d = Math.sqrt(d2);
         const overlap = minD - d;
         const ux = dx / d,
           uy = dy / d;
-        const bF = b.isFrozen(now);
+        const bF = b._sepF;
         if (aF && bF) continue;
         if (aF) {
           // só b se afasta

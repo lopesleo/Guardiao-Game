@@ -154,11 +154,17 @@ export class Lighting {
       this._light(p.x, p.y, awake ? 430 : 330, awake ? 0xffd070 : 0xffe2b8, 1);
       this._light(p.x, p.y, 120, 0xffffff, 0.35); // miolo
     }
-    this.flashes = this.flashes.filter((f) => time - f.t0 < f.ms);
-    for (const f of this.flashes) {
+    // tira os clarões vencidos no próprio array (o filter criava um array novo a cada desenho)
+    const fl = this.flashes;
+    let live = 0;
+    for (let i = 0; i < fl.length; i++) {
+      const f = fl[i];
+      if (time - f.t0 >= f.ms) continue;
+      fl[live++] = f;
       const k = 1 - (time - f.t0) / f.ms;
       this._light(f.x, f.y, f.r * (0.8 + 0.2 * k), f.color, k * f.power);
     }
+    fl.length = live;
     if (s.boss?.active) {
       const fury = s.boss.phase === 2;
       this._light(s.boss.x, s.boss.y - 30, fury ? 280 : 240, fury ? 0xff6a2a : 0xb03aa0, 0.75);
@@ -201,7 +207,12 @@ export class Lighting {
       bossAmb = L?.boss ?? AMB_BOSS;
     const amb = s.boss?.active ? mix(night, bossAmb, 1) : mix(dusk, night, Math.pow(tRun, 1.3));
     this.rt.fill(amb);
-    if (this._n) this.rt.draw(this.stamps.slice(0, this._n));
+    if (this._n) {
+      const list = (this._drawList ||= []);
+      list.length = 0;
+      for (let i = 0; i < this._n; i++) list.push(this.stamps[i]);
+      this.rt.draw(list);
+    }
     // Phaser 4: no modo padrão a RenderTexture só EXIBE o que já tem; sem render()
     // o fill/draw acima ficava na fila e o mapa de luz nunca aparecia (desde a migração)
     this.rt.render();
@@ -212,12 +223,15 @@ export class Lighting {
     let used = 0;
     if (p?.active && this.world) {
       const R = 460;
-      for (const t of this.world.trees) {
+      const trees = this.world.trees;
+      for (let i = 0, n = trees.length; i < n; i++) {
+        const t = trees[i];
         if (!t.visible) continue;
         const dx = t.x - p.x,
           dy = t.y - p.y;
-        const d = Math.hypot(dx, dy);
-        if (d > R || d < 20) continue;
+        const d2 = dx * dx + dy * dy;
+        if (d2 > R * R || d2 < 400) continue; // fora de 20..R px
+        const d = Math.sqrt(d2);
         let sh = this.shadowPool[used];
         if (!sh) {
           sh = this.scene.add.image(0, 0, "fx_castshadow").setOrigin(0, 0.5).setDepth(D_TREE_SHADOW);
