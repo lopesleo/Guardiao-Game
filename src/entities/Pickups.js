@@ -2,8 +2,9 @@
 // Nascem com um "pulinho" (arco) e são puxados por ímã ao chegar perto.
 // Sem corpo Arcade: a coleta é por distância (GameScene) e o corpo só servia para andar com a
 // velocidade do ímã. Na horda eram centenas de corpos no mundo da física (pré/pós-passo de cada um
-// a cada quadro); o movimento agora é integrado no update, no mesmo relógio da física (o hit-stop e a
-// câmera lenta da morte, physics.world.timeScale, seguram as gemas como antes).
+// a cada quadro). O passo agora é move(), chamado pela cena depois do update (POST_UPDATE, onde a
+// física aplicava o passo) com a velocidade do quadro anterior e o timeScale da física (o hit-stop e
+// a câmera lenta da morte seguram as gemas como antes): mesmo voo, mesmos quadros de coleta.
 import { ENEMY, GAME } from "../config.js";
 
 const S = GAME.PIXEL_SCALE;
@@ -15,6 +16,8 @@ class Pickup extends Phaser.GameObjects.Sprite {
     this.setScale(S);
     this.vx = 0; // velocidade do ímã (px/s)
     this.vy = 0;
+    this._mvx = 0; // a que vale no passo deste quadro (a do quadro anterior, como no Arcade)
+    this._mvy = 0;
     this.magnetSpeed = o.magnet ?? 340;
     this.magnetMult = o.magnetMult ?? 4;
     this.anim = o.anim ?? null;
@@ -35,7 +38,7 @@ class Pickup extends Phaser.GameObjects.Sprite {
   spawn(x, y) {
     this.setPosition(x, y);
     this.setActive(true).setVisible(true);
-    this.vx = this.vy = 0;
+    this.vx = this.vy = this._mvx = this._mvy = 0;
     this.setDepth(y + 9000);
     this._pulled = false;
     if (this.anim) {
@@ -62,18 +65,14 @@ class Pickup extends Phaser.GameObjects.Sprite {
     this._hop?.stop();
     this.stop();
     this.setActive(false).setVisible(false);
-    this.vx = this.vy = 0;
+    this.vx = this.vy = this._mvx = this._mvy = 0;
     this.glow?.setVisible(false);
   }
 
   update(time, dt, player) {
     if (!this.active) return;
-    // Anda com a velocidade do quadro anterior — o passo da física vinha antes do update da cena
-    if (this.vx || this.vy) {
-      const k = dt / 1000 / (this.scene.physics.world.timeScale || 1);
-      this.x += this.vx * k;
-      this.y += this.vy * k;
-    }
+    this._mvx = this.vx; // o passo deste quadro usa a velocidade do anterior (move)
+    this._mvy = this.vy;
     if (this.glow) {
       this.glow.setPosition(this.x, this.y);
       this.glow.setAlpha(0.35 + Math.sin(time / 220 + this.x) * 0.15);
@@ -91,6 +90,14 @@ class Pickup extends Phaser.GameObjects.Sprite {
       this.vx = (dx / (d || 1)) * sp;
       this.vy = (dy / (d || 1)) * sp;
     } else this.vx = this.vy = 0;
+  }
+
+  // Passo do movimento (a cena chama depois do update de tudo, onde a física aplicava o dela)
+  move(dt) {
+    if (!this._mvx && !this._mvy) return;
+    const k = dt / 1000 / (this.scene.physics.world.timeScale || 1);
+    this.x += this._mvx * k;
+    this.y += this._mvy * k;
   }
 }
 
