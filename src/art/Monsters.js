@@ -5,8 +5,8 @@
 import { PAL } from "./Palette.js";
 import { Pix, registerStrip, bayer } from "./PixelArt.js";
 
-// Corrupção (brilho mágico dos inimigos)
-export const ROT = { dark: 0x2a1030, mid: 0x5a1a5e, hot: 0xb0308a, glow: 0xff5ec8 };
+// Corrupção (brilho mágico dos inimigos): as cores da Podridão na paleta
+export const ROT = { dark: PAL.rot0, mid: PAL.rot1, hot: PAL.rot2, glow: PAL.rot3 };
 
 const FUR = [0x262130, 0x3a3550, 0x5c5676, 0x847ea2]; // lobo (claro o bastante p/ ler no chão escuro)
 const FUR_ALPHA = [0x140c10, 0x2a1a1c, 0x4a2c26, 0x6e4430]; // lobo alfa (castanho)

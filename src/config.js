@@ -194,6 +194,21 @@ export const STATUS_LOOK = {
   GLOW_A: 0.55, // força dessa luz (a corrupção: 0,4)
 };
 
+// Libertação do chefe (GameScene._freeBoss), o clímax de toda vitória. Tempos em ms, um depois do outro; a soma
+// é quando a escolha da Noite Eterna abre
+export const LIBERATION = {
+  GRIP_MS: 220, // a Podridão toma o corpo inteiro (silhueta chapada na cor dela) e ele inspira
+  HEAT_MS: 520, // a silhueta esquenta da Podridão até virar luz
+  REVEAL_MS: 980, // estalo: a luz se apaga (passando pelo verde-vida) e revela a lenda na cor natural
+  STAY_MS: 330, // a lenda livre respira
+  LEAVE_MS: 550, // e volta para a mata (sobe e some)
+  SEEP_MS: 30, // um esporo escapa a cada tanto enquanto a Podridão esquenta
+  BURST: 96, // revoada de esporos no estalo
+  LIFE: [1100, 1900], // vida de cada esporo
+  PUSH: 0.5, // força do GravityWell NEGATIVO no peito do chefe: empurra os esporos para fora (cai com o
+  // quadrado da distância: forte no corpo, quase nada a dois palmos)
+};
+
 // Dano das reações FIXO (só × Prisma), por decisão medida em 13/10/2026: elas já fazem 25–60% do
 // dano na horda em qualquer minuto e Perigo. Ver docs/BALANCING.md antes de escalar ou cortar.
 export const REACTION = {

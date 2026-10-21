@@ -23,6 +23,7 @@ import {
   GARDEN,
   BOSS_FIGHT,
   BIOMES,
+  LIBERATION,
 } from "../config.js";
 import { randomRareSeed } from "../systems/Garden.js";
 import { recipe, mealMods, bonusText } from "../systems/Kitchen.js";
@@ -39,7 +40,7 @@ import "../entities/WeaponsVento.js"; // registra as armas de vento
 import "../entities/BossCaboclo.js"; // registra o chefe da Caatinga (registerBoss)
 import { DustDevils } from "../world/DustDevils.js";
 import { ElementalSystem } from "../systems/ElementalSystem.js";
-import { WeaponFX } from "../systems/WeaponFX.js";
+import { WeaponFX, D_FX } from "../systems/WeaponFX.js";
 import { UpgradeSystem } from "../systems/UpgradeSystem.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
 import { Leaderboards } from "../systems/Leaderboards.js";
@@ -82,6 +83,17 @@ import { Cosmetics } from "../systems/Cosmetics.js";
 import { tr } from "../i18n/i18n.js";
 
 const BOSS_TEX = { mapinguari: "mon_boss", caboclo: "mon_caboclo" };
+// Cor ao longo de uma rampa de cores da paleta (t de 0 a 1)
+function rampColor(cols, t) {
+  const f = Math.min(0.9999, Math.max(0, t)) * (cols.length - 1),
+    i = Math.floor(f),
+    k = f - i;
+  const a = cols[i],
+    b = cols[i + 1];
+  const ch = (c, sh) => (c >> sh) & 255;
+  const m = (sh) => Math.round(ch(a, sh) + (ch(b, sh) - ch(a, sh)) * k);
+  return (m(16) << 16) | (m(8) << 8) | m(0);
+}
 
 export class GameScene extends Phaser.Scene {
   constructor() {
@@ -1310,7 +1322,7 @@ export class GameScene extends Phaser.Scene {
     this.boss.setActive(false).setVisible(false);
     this.hud.clearBoss();
     this._scatter(); // liberto o chefe, a horda que ele trazia se desfaz
-    this._freeBoss(bx, by, bs);
+    this._freeBoss(bx, by, bs, this.boss.flipX);
     // Recompensa
     this._coinsGainedThisRun += META.COIN_BOSS_WIN;
     this.hud.addCoin(META.COIN_BOSS_WIN);
@@ -1326,8 +1338,8 @@ export class GameScene extends Phaser.Scene {
       }
     this.cameras.main.shake(600, 0.02);
     // Vitória: escolher entre encerrar ou seguir na Noite Eterna
-    // Depois da cena de libertação (~2,4 s), a escolha da Noite Eterna
-    this.time.delayedCall(2600, () => this._offerEndless());
+    // Depois da cena de libertação (LIBERATION, ~2,6 s), a escolha da Noite Eterna
+    this.time.delayedCall(LIBERATION.GRIP_MS + LIBERATION.HEAT_MS + LIBERATION.REVEAL_MS + LIBERATION.STAY_MS + LIBERATION.LEAVE_MS, () => this._offerEndless());
   }
 
   // Espera cartas de nível/pausa fecharem antes de abrir a escolha
@@ -1341,38 +1353,135 @@ export class GameScene extends Phaser.Scene {
     this.scene.launch("EndlessChoiceScene");
   }
 
-  // Vencer = LIBERTAR: a Podridão sai do chefe (fumaça magenta subindo), ele
-  // volta à cor natural e some (lenda: guardião, não vilão). Quadro 4 = libertado.
-  _freeBoss(x, y, scale) {
+  // Vencer = LIBERTAR, o clímax de toda vitória: a lenda é guardiã, o vilão é a Podridão. Três tempos
+  // (LIBERATION no config):
+  //  1) a Podridão toma o corpo inteiro — silhueta chapada (FILL) que esquenta da cor dela até virar luz, e os
+  //     primeiros esporos escapam;
+  //  2) estalo: a luz se apaga (SCREEN branco → verde-vida → preto = a cor natural) e revela a lenda livre,
+  //     enquanto a Podridão sai do corpo numa revoada de esporos que nascem NO corpo (emitZone nos pixels do
+  //     quadro), são empurrados para fora (GravityWell negativo) e esfriam de magenta a quente a verde;
+  //  3) a lenda respira um instante e volta para a mata. Quadro 4 = libertado.
+  // Dois emissores e cinco tweens (antes: 40 imagens com 40 tweens).
+  _freeBoss(x, y, scale, flip = false) {
+    const L = LIBERATION;
+    const TM = Phaser.TintModes;
     const tex = BOSS_TEX[this.biome.boss] ?? "mon_boss";
-    const m = this.add.sprite(x, y, tex, 4).setScale(scale).setDepth(y + 10000).setTint(0xc060c0);
+    const m = this.add.sprite(x, y, tex, 4).setScale(scale).setFlipX(flip).setDepth(y + 10000);
+    m.setTint(PAL.rot1).setTintMode(TM.FILL);
+    const heatAt = L.GRIP_MS,
+      revealAt = heatAt + L.HEAT_MS,
+      leaveAt = revealAt + L.REVEAL_MS + L.STAY_MS;
+    const spores = this._liberationSpores(m, tex, scale, flip);
+
+    // 1) a Podridão aperta (inspira) e esquenta até virar luz
+    this.tweens.add({ targets: m, scaleX: scale * 1.06, scaleY: scale * 0.97, duration: revealAt, ease: "Sine.easeIn" });
+    const heat = [PAL.rot1, PAL.rot2, PAL.rot3, PAL.org3, PAL.white];
     this.tweens.addCounter({
       from: 0,
       to: 1,
-      duration: 1400,
-      onUpdate: (tw) => {
-        const c = Phaser.Display.Color.Interpolate.ColorWithColor(
-          Phaser.Display.Color.ValueToColor(0xc060c0),
-          Phaser.Display.Color.ValueToColor(0xffffff),
-          100,
-          tw.getValue() * 100,
-        );
-        m.setTint(Phaser.Display.Color.GetColor(c.r, c.g, c.b));
-      },
+      delay: heatAt,
+      duration: L.HEAT_MS,
+      ease: "Quad.easeIn",
+      onUpdate: (tw) => m.setTint(rampColor(heat, tw.getValue())),
     });
-    for (let i = 0; i < 40; i++) {
-      const p = this.add.image(x + (Math.random() - 0.5) * 120, y - Math.random() * 140, "px_puff").setScale(2 + Math.random() * 2).setTint(i % 3 ? 0x8a3fa0 : 0xff5ec8).setAlpha(0.8).setDepth(y + 10100);
-      this.tweens.add({ targets: p, y: p.y - 120 - Math.random() * 80, alpha: 0, scale: 0.5, duration: 1400 + Math.random() * 800, delay: Math.random() * 500, onComplete: () => p.destroy() });
-    }
-    this.lighting?.flash(x, y - 60, 420, 0x9ccf62, 1400, 1.2);
-    this._toast(tr("O {0} ESTÁ LIVRE!", this.biome.bossName.toUpperCase()), 2600, "#9ccf62");
-    // o Caboclo volta para o rio: afunda numa poça
-    if (this.biome.boss === "caboclo")
-      for (let i = 0; i < 18; i++) {
-        const d = this.add.image(x + (Math.random() - 0.5) * 80, y + 50, "px_dot2").setScale(3).setTint(i % 2 ? 0x86d0d4 : 0x4aa2b0).setDepth(y + 10100);
-        this.tweens.add({ targets: d, y: d.y - 30 - Math.random() * 40, alpha: 0, delay: 1400 + Math.random() * 600, duration: 600, onComplete: () => d.destroy() });
-      }
-    this.tweens.add({ targets: m, alpha: 0, y: y - 30, delay: 1500, duration: 900, onComplete: () => m.destroy() });
+    spores.seep.flow(L.SEEP_MS, 1);
+    this.lighting?.flash(x, y - m.displayHeight * 0.2, 300, PAL.rot2, revealAt, 0.8);
+
+    // 2) estalo: SCREEN branco é a mesma silhueta branca do FILL; daí apaga até o preto (= sem tinta)
+    this.time.delayedCall(revealAt, () => {
+      if (!m.active) return;
+      m.setTint(PAL.white).setTintMode(TM.SCREEN);
+      this.tweens.add({ targets: m, scaleX: scale, scaleY: scale, duration: 420, ease: "Back.easeOut" });
+      const fade = [PAL.white, PAL.g6, PAL.g4, 0x000000];
+      this.tweens.addCounter({
+        from: 0,
+        to: 1,
+        duration: L.REVEAL_MS,
+        ease: "Cubic.easeOut",
+        onUpdate: (tw) => m.setTint(rampColor(fade, tw.getValue())),
+        onComplete: () => m.clearTint(),
+      });
+      spores.seep.stop();
+      // jorro: a maior parte de uma vez, o resto escorrendo por um quarto de segundo
+      spores.burst.explode(Math.round(L.BURST * 0.6));
+      spores.burst.flow(25, 3, Math.round(L.BURST * 0.4));
+      this.fx?.ring(x, y - m.displayHeight * 0.15, PAL.g6, m.displayWidth * 0.25, m.displayWidth * 0.95, 520, 0.62, 0.9);
+      this.lighting?.flash(x, y - 60, 440, PAL.g6, L.REVEAL_MS + L.STAY_MS, 1.2);
+      this._toast(tr("O {0} ESTÁ LIVRE!", this.biome.bossName.toUpperCase()), 2600, "#9ccf62");
+    });
+
+    // 3) a lenda volta para a mata (o Caboclo volta para o rio: afunda numa poça)
+    this.time.delayedCall(leaveAt, () => {
+      if (this.biome.boss === "caboclo")
+        for (let i = 0; i < 18; i++) {
+          const d = this.add.image(x + (Math.random() - 0.5) * 80, y + 50, "px_dot2").setScale(3).setTint(i % 2 ? 0x86d0d4 : 0x4aa2b0).setDepth(y + 10100);
+          this.tweens.add({ targets: d, y: d.y - 30 - Math.random() * 40, alpha: 0, delay: Math.random() * 300, duration: 600, onComplete: () => d.destroy() });
+        }
+    });
+    this.tweens.add({ targets: m, alpha: 0, y: y - 30, delay: leaveAt, duration: L.LEAVE_MS, ease: "Sine.easeIn", onComplete: () => m.destroy() });
+    this.time.delayedCall(leaveAt + L.LIFE[1] + 200, () => {
+      spores.seep.destroy();
+      spores.burst.destroy();
+    });
+  }
+
+  // Esporos da Podridão saindo do corpo: nascem nos pixels do quadro (não num círculo), sobem, são empurrados
+  // para fora e esfriam da cor da Podridão a quente a verde-vida. Acima do mapa de luz: brilham na noite do chefe
+  _liberationSpores(m, tex, scale, flip) {
+    const L = LIBERATION;
+    const fr = this.textures.getFrame(tex, 4);
+    const pts = [];
+    try {
+      const data = fr.source.image.getContext("2d").getImageData(fr.cutX, fr.cutY, fr.cutWidth, fr.cutHeight).data;
+      for (let py = 0; py < fr.cutHeight; py++)
+        for (let px = 0; px < fr.cutWidth; px++)
+          if (data[(py * fr.cutWidth + px) * 4 + 3] > 128) pts.push(((flip ? fr.cutWidth - 1 - px : px) + 0.5 - fr.cutWidth / 2) * scale, (py + 0.5 - fr.cutHeight / 2) * scale);
+    } catch {}
+    if (!pts.length) pts.push(0, 0);
+    const n = pts.length / 2;
+    const body = {
+      getRandomPoint: (p) => {
+        const i = Math.floor(Math.random() * n) * 2;
+        p.x = pts[i];
+        p.y = pts[i + 1];
+        return p;
+      },
+    };
+    const common = {
+      emitting: false,
+      emitZone: { type: "random", source: body },
+      blendMode: Phaser.BlendModes.ADD,
+      gravityY: -38, // esporo é leve: sobe
+    };
+    // Escapando: poucos, ainda da cor da Podridão
+    const seep = this.add
+      .particles(m.x, m.y, "px_dot2", {
+        ...common,
+        lifespan: { min: 600, max: 950 },
+        speed: { min: 8, max: 30 },
+        scale: { start: 4.5, end: 1.5 },
+        alpha: { start: 0.9, end: 0 },
+        color: [PAL.rot3, PAL.rot2, PAL.rot1],
+      })
+      .setDepth(D_FX + 1);
+    // A revoada do estalo: Podridão → quente → vida
+    const burst = this.add
+      .particles(m.x, m.y, "px_dot2", {
+        ...common,
+        lifespan: { min: L.LIFE[0], max: L.LIFE[1] },
+        speed: { min: 10, max: 48 },
+        scale: { start: 6, end: 1.5, ease: "Quad.easeIn" },
+        alpha: { start: 1, end: 0, ease: "Cubic.easeIn" },
+        // a Podridão queima rápido (1/5 da vida), esquenta e passa a maior parte do voo já verde-vida
+        color: [PAL.rot3, PAL.org2, PAL.yel3, PAL.g6, PAL.g6, PAL.g5],
+        maxAliveParticles: L.BURST,
+      })
+      .setDepth(D_FX + 1);
+    // Força da vida no peito do chefe: empurra para fora (negativo) — os de perto saem mais rápido
+    const chest = { x: 0, y: -fr.cutHeight * scale * 0.12, power: -L.PUSH, epsilon: 60, gravity: 50 };
+    seep.createGravityWell(chest);
+    burst.createGravityWell(chest);
+    return { seep, burst };
   }
 
   // Segundos sobrevividos na Noite Eterna

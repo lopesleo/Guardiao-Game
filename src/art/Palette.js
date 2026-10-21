@@ -72,6 +72,12 @@ export const PAL = {
   pink: 0xff7eb6,
   pinkHi: 0xffc4de, // rosa-claro: brilho do rosa (Despertar do Kit Ipê-rosa, docs/COSMETICOS.md)
 
+  // Podridão (a corrupção: olhos e rachaduras dos inimigos, cipós, esporos) — escuro → brilho
+  rot0: 0x2a1030,
+  rot1: 0x5a1a5e,
+  rot2: 0xb0308a,
+  rot3: 0xff5ec8,
+
   // Vento (4º elemento): verde-água/menta — longe do laranja, do azul-gelo e do roxo
   wnd0: 0x1f5a52,
   wnd1: 0x3f9c86,
