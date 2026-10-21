@@ -286,8 +286,14 @@ try {
 
   // Vida baixa: coração com intervalo; curar desliga
   const beats0 = await page.evaluate(() => window.__aud.plays.sfx_heartbeat_run || 0);
+  // sem cura durante a medição: um coração que cai de um inimigo (ou a regeneração) passaria dos 36% e
+  // o teste acusaria a histerese, que está certa
   await page.evaluate(() => {
     const p = window.game.scene.getScene("GameScene").player;
+    p.__heal = p.healHp;
+    p.__regen = p.regenPerSec;
+    p.healHp = () => {};
+    p.regenPerSec = 0;
     p.hp = p.maxHp * 0.2;
   });
   await waitAudio(4);
@@ -300,9 +306,15 @@ try {
     p.hp = p.maxHp * 0.33; // entre os limites: continua ligado (histerese)
   });
   await waitAudio(0.6);
-  check((await mix()).danger, "33% de vida: continua em perigo (histerese, não pisca)");
+  const hp33 = await page.evaluate(() => {
+    const p = window.game.scene.getScene("GameScene").player;
+    return Math.round((100 * p.hp) / p.maxHp);
+  });
+  check((await mix()).danger, "33% de vida: continua em perigo (histerese, não pisca)", `vida ${hp33}%`);
   await page.evaluate(() => {
     const p = window.game.scene.getScene("GameScene").player;
+    p.healHp = p.__heal;
+    p.regenPerSec = p.__regen;
     p.hp = p.maxHp * 0.6;
   });
   await waitAudio(2);
