@@ -25,7 +25,7 @@ function statusLook(key) {
       tint,
       tint2: L.dark ? PAL[L.dark] : 0,
       // vibração (raio): cores da tinta ao longo do pulso, pré-calculadas
-      ramp: L.pulse ? Array.from({ length: PULSE_STEPS + 1 }, (_, i) => mixC(tint, PAL[L.pulse], (i / PULSE_STEPS) * (L.pulseK ?? 1))) : null,
+      ramp: L.pulse ? Array.from({ length: PULSE_STEPS + 1 }, (_, i) => mixC(tint, dim(PAL[L.pulse], L.pulseK ?? 1), i / PULSE_STEPS)) : null,
     };
   }
   return _looks[key];

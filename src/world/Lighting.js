@@ -7,7 +7,7 @@
 //  2) SOMBRAS DINÂMICAS: árvores perto do herói projetam sombras alongadas na
 //     direção OPOSTA à luz dele — giram e esticam enquanto você anda.
 // HUD, números de dano e avisos ficam acima (profundidade maior) e não escurecem.
-import { GAME } from "../config.js";
+import { GAME, STATUS_LOOK } from "../config.js";
 import { Settings } from "../systems/Settings.js";
 import { vw, vh } from "../ui/Theme.js";
 
@@ -182,13 +182,16 @@ export class Lighting {
     const add = (x, y, r, c, a) => this._light(x, y, r, c, a);
     s.hazards?.lights(add);
     if (s._bossBrains) for (const b of s._bossBrains) b.lights(add);
-    // Brilho fraco da corrupção em cada inimigo: legibilidade no escuro. Com status, a luz é a do elemento
-    // e mais forte — à noite e no chefe, quem queima acende o chão de laranja (STATUS_LOOK.glow)
+    // Brilho fraco da corrupção em cada inimigo: legibilidade no escuro. Com status, a luz é a do elemento (à
+    // noite e no chefe, quem queima acende o chão de laranja), com teto por quadro (STATUS_LOOK.GLOW_MAX)
+    let stGlow = STATUS_LOOK.GLOW_MAX;
     s.enemyPool?.forEachActive((e) => {
       if (!e.active) return;
-      const g = !e.miniBoss && s.elemental?.glowOf(e);
-      if (g) this._light(e.x, e.y - e.displayHeight * 0.15, g.r, g.color, g.a);
-      else this._light(e.x, e.y - e.displayHeight * 0.15, e.miniBoss ? 150 : 58, e.miniBoss ? 0xf2c14e : 0xb0308a, e.miniBoss ? 0.6 : 0.4);
+      const g = !e.miniBoss && stGlow > 0 && s.elemental?.glowOf(e);
+      if (g) {
+        stGlow--;
+        this._light(e.x, e.y - e.displayHeight * 0.15, g.r, g.color, g.a);
+      } else this._light(e.x, e.y - e.displayHeight * 0.15, e.miniBoss ? 150 : 58, e.miniBoss ? 0xf2c14e : 0xb0308a, e.miniBoss ? 0.6 : 0.4);
     });
     let gems = 0;
     s.xpPool?.forEachActive((g) => {
