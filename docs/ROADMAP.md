@@ -366,6 +366,12 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   o número mostra o dano real (cinza quando a couraça segura; dourado no ponto fraco), anel e lascas da
   Podridão e uma dica que ensina o ponto fraco; KEEP 0,25 → 0,45 (300 dano/s: ~35 s → ~17 s; build
   fraca não muda). 👤 sentir no aparelho
+- ✅ **A Podridão na borda da tela** (21/10/2026, `src/world/Podridao.js`, `PODRIDAO` no config): degradê e
+  ruído do Phaser 4 numa textura pequena (10 Hz) nas cores da Podridão; avança com o relógio, fecha às 7:00 e
+  recua quando o chefe é libertado. A vida baixa virou o pulso dessa mesma borda (eram duas vinhetas vermelhas
+  em ritmos diferentes); a luz do chefe entra em ~1,6 s (era num quadro). Aparelho fraco: só o degradê.
+  **Grito do Mapinguari por shader**: 16 mil retângulos por quadro na fúria → 223, mesma arte e mesmo acerto
+  (robô que só anda: 0 acertos). 👤 ver no aparelho (borda não pode esconder inimigo entrando)
 
 ### M5 — Monetização e medição reais 👤
 - ✅ AdMob: app Android criado e **7 blocos premiados** em uso (revive, extra_card, build_speed,
