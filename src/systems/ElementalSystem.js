@@ -115,7 +115,7 @@ export class ElementalSystem {
 
     // Conquistas (Fase 3): conta TODA reação mecânica, mesmo com visual em CD
     scene.meta?.recordReaction(reactionKey);
-    scene._checkAchievements?.();
+    scene._checkAchievementsSoon?.(); // no máx. 1×/s (GameScene)
 
     // Anti-spam: cooldown por TIPO de reação (não mostra texto se foi disparado <350ms atrás)
     const now = scene.time.now;
@@ -354,18 +354,37 @@ export class ElementalSystem {
   }
 
   // Rótulo de reação ("VAPOR!") — pixel font, cor da reação, "pop" de escala
+  // Reaproveitados por rótulo+cor: um texto novo era um canvas e uma textura novos a cada reação
   _label(x, y, str, color) {
     const scene = this.scene;
-    const t = text(scene, x, y - 26, str, {
-      size: 22,
-      color: hex(color),
-      origin: 0.5,
-      stroke: true,
-      strokeW: 5,
-    }).setDepth(60000);
+    const key = `${str}|${color}`;
+    const pool = (this._labels ||= new Map());
+    let free = pool.get(key);
+    if (!free) pool.set(key, (free = []));
+    let t = free.pop();
+    if (t) t.setPosition(Math.round(x), Math.round(y - 26)).setAlpha(1).setVisible(true);
+    else {
+      t = text(scene, x, y - 26, str, {
+        size: 22,
+        color: hex(color),
+        origin: 0.5,
+        stroke: true,
+        strokeW: 5,
+      }).setDepth(60000);
+    }
     t.setScale(0.4);
     scene.tweens.add({ targets: t, scale: 1, duration: 140, ease: "Back.easeOut" });
-    scene.tweens.add({ targets: t, y: y - 70, alpha: 0, delay: 350, duration: 600, onComplete: () => t.destroy() });
+    scene.tweens.add({
+      targets: t,
+      y: y - 70,
+      alpha: 0,
+      delay: 350,
+      duration: 600,
+      onComplete: () => {
+        t.setVisible(false);
+        free.push(t);
+      },
+    });
   }
 
   // CRISTAL = o inimigo CONGELADO leva raio e ESTILHAÇA: lascas curtas em todas as
@@ -375,7 +394,7 @@ export class ElementalSystem {
     const now = scene.time.now;
     // Conquistas (Fase 3): Cristal não passa por _trigger, conta aqui
     scene.meta?.recordReaction("CRYSTAL");
-    scene._checkAchievements?.();
+    scene._checkAchievementsSoon?.(); // no máx. 1×/s (GameScene)
     // Anti-spam por TIPO
     if (now - this.lastReactionAt.CRYSTAL < this.reactionCdMs) {
       // ainda aplica mecânica, sem texto/shake

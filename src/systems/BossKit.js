@@ -107,8 +107,7 @@ export class FightLog {
     this._lastDodge = now;
     this.dodges++;
     p.addAwakenMeter(BOSS_FIGHT.DODGE_AWAKEN);
-    const n = s.dmgNumberPool?.acquire();
-    n?.show(p.x, p.y - 44, viaDash ? tr("ESQUIVOU!") : tr("DESVIOU!"), "#c8f08c", false);
+    s.dmgNumberPool?.show(p.x, p.y - 44, viaDash ? tr("ESQUIVOU!") : tr("DESVIOU!"), "#c8f08c", false);
     s.sound.play("sfx_dodge", { volume: 0.45 });
     s.fx?.ring?.(p.x, p.y, PAL.g6, 10, 46, 260, 1, 0.8);
   }
@@ -215,8 +214,7 @@ export class WeakSpot {
     o._exposedMult = mult;
     o._exposedMs = ms;
     s.sound.play("sfx_weak", { volume: 0.5 });
-    const n = s.dmgNumberPool?.acquire();
-    n?.show(o.x, o.y - o.displayHeight * 0.6, label, "#ffe58f", true);
+    s.dmgNumberPool?.show(o.x, o.y - o.displayHeight * 0.6, label, "#ffe58f", true);
   }
 
   close() {

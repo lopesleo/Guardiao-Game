@@ -19,6 +19,17 @@ export const GAME = {
   FPS_LIMIT: 60,
 };
 
+// Desempenho em aparelho fraco: tetos e ritmos que não mudam o jogo, só o custo dele
+export const PERF = {
+  // Números de dano: objetos criados de saída por estilo [cor, crítico, quantos] e teto total
+  // (passou do teto, reaproveita um de outro estilo trocando o estilo — 3 redesenhos em vez de 1)
+  DMG_NUMBER_PREWARM: [["#ffffff", false, 8], ["#ff9966", false, 6], ["#9ad4ff", false, 4], ["#d8a8ff", false, 4], ["#b8f0dc", false, 2], ["#ffd96b", true, 6]],
+  DMG_NUMBER_CAP: 120,
+  // Conquistas: abates e reações pedem a checagem; ela roda no máximo 1 vez por este intervalo
+  // (a que ficar pendente sai no fim do intervalo, na pausa ou no fim da partida)
+  ACHIEVEMENT_CHECK_MS: 1000,
+};
+
 // Níveis de dificuldade ("Perigo") — ver docs/META_LOOP.md (Fase 1).
 // Multiplicadores GLOBAIS aplicados sobre as fórmulas paramétricas (D16):
 //   HP/dano de inimigo, taxa de spawn e recompensa em moedas.

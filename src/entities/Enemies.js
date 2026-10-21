@@ -292,12 +292,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.y += (dy / len) * 3;
     }
 
-    // FLASH: branco normal, DOURADO se crit ou no ponto fraco
+    // FLASH: branco normal, DOURADO se crit ou no ponto fraco. Volta à cor do status no update
+    // (um delayedCall por golpe enchia o relógio da cena: remover cada um é uma busca linear)
     this.setTint(crit || amp > 1 ? 0xffd96b : 0xffffff).setTintMode(Phaser.TintModes.FILL);
-    this.scene.time.delayedCall(crit ? 110 : 60, () => {
-      if (!this.active) return;
-      this.scene.elemental?._updateTint(this);
-    });
+    this._flashUntil = this.scene.time.now + (crit ? 110 : 60);
 
     if (crit) {
       // KNOCKBACK
@@ -320,6 +318,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   update(time, dt, target) {
     if (!this.active || !target?.active) return;
+    if (this._flashUntil && time >= this._flashUntil) {
+      this._flashUntil = 0;
+      this.scene.elemental?._updateTint(this);
+    }
     this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46);
     // Soco do golpe: segura durante o hit-stop (relógio dos tweens) e volta
     if (this._punch > 0) {

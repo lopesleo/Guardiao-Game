@@ -23,6 +23,7 @@ import {
   GARDEN,
   BOSS_FIGHT,
   BIOMES,
+  PERF,
 } from "../config.js";
 import { randomRareSeed } from "../systems/Garden.js";
 import { recipe, mealMods, bonusText } from "../systems/Kitchen.js";
@@ -30,6 +31,7 @@ import { Daily, dailyUnlocked } from "../systems/Daily.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
 import { GameFeel } from "../systems/GameFeel.js";
+import { Puffs } from "../systems/Puffs.js";
 import { ShrineSystem } from "../systems/ShrineSystem.js";
 import { SpawnDirector } from "../systems/SpawnDirector.js";
 import { RunEvents } from "../systems/RunEvents.js";
@@ -63,7 +65,7 @@ import {
   AwakenOrb,
 } from "../entities/Pickups.js";
 import { Chest } from "../entities/Chest.js";
-import { DamageNumber } from "../entities/DamageNumber.js";
+import { DamageNumberPool } from "../entities/DamageNumber.js";
 import { HUD } from "../ui/HUD.js";
 import { ForestWorld } from "../world/ForestWorld.js";
 import { Lighting } from "../world/Lighting.js";
@@ -104,10 +106,20 @@ export class GameScene extends Phaser.Scene {
     // (a cena é reaproveitada: os ouvintes saem no shutdown, pelo nome, senão acumulam a cada partida)
     const joyOff = () => this.joystick?.setActive(false);
     this.events.on("pause", joyOff);
+    // Conquista pendente (checagem de 1×/s) sai antes de pausar: dá para sair da partida pelo menu
+    this._achPending = false;
+    this._achNextAt = 0;
+    this.events.on("pause", this._flushAchievements, this);
     // O Phaser não chama shutdown() sozinho: sem isto, cada partida deixava uma
     // camada de toque (joystick) e a música anteriores para trás
     this.events.once("shutdown", () => {
       this.events.off("pause", joyOff);
+      this.events.off("pause", this._flushAchievements, this);
+      // saiu sem passar pelo fim da partida: a pendente vale, sem aviso (a cena está saindo)
+      if (this._achPending && !this.gameOver) {
+        this._achPending = false;
+        this._checkAchievements(false, true);
+      }
       this.events.off("player:levelup", this._onLevelUp, this);
       this.events.off("resume", this._onResume, this);
       this.joystick?.destroy();
@@ -173,7 +185,7 @@ export class GameScene extends Phaser.Scene {
     this._seedsOn = (this.meta.data.revealed || []).includes("garden");
     this.heartPool = new Pool(() => new HeartPickup(this), 10);
     this.awakenOrbPool = new Pool(() => new AwakenOrb(this), 10);
-    this.dmgNumberPool = new Pool(() => new DamageNumber(this), 30);
+    this.dmgNumberPool = new DamageNumberPool(this); // por estilo: reaproveitar só troca o texto
 
     // Sistemas
     this.elemental = new ElementalSystem(this);
@@ -229,6 +241,7 @@ export class GameScene extends Phaser.Scene {
     // Spawner
     this.spawnDirector = new SpawnDirector(this, this.enemyPool, this.player);
     this.lighting = new Lighting(this, this.world);
+    this.puffs = new Puffs(this); // pó da morte e faíscas (imagens reaproveitadas)
     this.feel = new GameFeel(this);
     // Aparelho fraco: desliga a iluminação na 1ª partida (uma vez só)
     this.quality = new QualityWatchdog(this, () => {
@@ -265,8 +278,6 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.setBounds(-GAME.WORLD_RADIUS, -GAME.WORLD_RADIUS, WS, WS);
     this._zoom = null; // a cena é reaproveitada em "Jogar de novo"
     applyZoom(this); // acessibilidade: mundo maior, interface do mesmo tamanho
-
-    this._poofCount = 0;
 
     // HUD
     this.hud = new HUD(this, this.player);
@@ -476,32 +487,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   // Burst de "poeira" na morte de inimigo. Cap de partículas simultâneas pra
-  // aguentar limpezas em massa (Sobrecarga/Vapor) sem afogar o tween manager.
+  // aguentar limpezas em massa (Sobrecarga/Vapor). Imagens reaproveitadas (Puffs.js):
+  // criar e destruir 3 imagens por abate era o pico das matanças.
   _deathPoof(x, y) {
-    if (this._poofCount > 60) return;
+    if (this.puffs.count.poof > 60) return;
     for (let i = 0; i < 3; i++) {
-      this._poofCount++;
       const ang = Math.random() * Math.PI * 2;
       const d = 14 + Math.random() * 16;
-      const p = this.add
-        .image(x, y, "px_puff")
-        .setScale(1.2 + Math.random() * 1.2)
-        .setTint(i % 2 ? 0xf4ecd6 : 0x9fb4a4)
-        .setAlpha(0.9)
-        .setDepth(y + 10001);
-      this.tweens.add({
-        targets: p,
-        x: x + Math.cos(ang) * d,
-        y: y + Math.sin(ang) * d - 8,
-        alpha: 0,
-        scale: 0.4,
-        duration: 260 + Math.random() * 120,
-        ease: "Cubic.easeOut",
-        onComplete: () => {
-          p.destroy();
-          this._poofCount--;
-        },
-      });
+      const s0 = 1.2 + Math.random() * 1.2;
+      const ms = 260 + Math.random() * 120;
+      this.puffs.spawn("poof", "px_puff", x, y, x + Math.cos(ang) * d, y + Math.sin(ang) * d - 8, s0, 0.4, 0.9, i % 2 ? 0xf4ecd6 : 0x9fb4a4, y + 10001, ms);
     }
   }
 
@@ -570,7 +565,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(time, dt) {
-    if (this.gameOver) return;
+    if (this.gameOver) {
+      // inimigos param, mas o pisca do último golpe ainda volta à cor (era um delayedCall)
+      this.enemyPool.forEachActive((e) => {
+        if (e._flashUntil && time >= e._flashUntil) {
+          e._flashUntil = 0;
+          this.elemental?._updateTint(e);
+        }
+      });
+      return;
+    }
     this.joystick?.setActive(true); // partida andando = joystick ligado (a pausa desliga)
     if (this._intro) return this._updateIntro(time, dt);
     this.elapsedMs += dt;
@@ -582,6 +586,7 @@ export class GameScene extends Phaser.Scene {
       this._survive10Checked = true;
       this._checkAchievements();
     }
+    if (this._achPending && time >= this._achNextAt) this._flushAchievements();
 
     // Aviso de boss 30 s antes
     if (
@@ -966,6 +971,24 @@ export class GameScene extends Phaser.Scene {
     };
   }
 
+  // Abates e reações pedem a checagem a toda hora (numa matança, dezenas por quadro): roda na hora
+  // se a última foi há mais de PERF.ACHIEVEMENT_CHECK_MS; senão fica pendente e sai no fim do
+  // intervalo (update), na pausa ou no fim da partida (_onGameOver checa tudo de novo). Nada se perde.
+  _checkAchievementsSoon() {
+    const now = this.time.now;
+    if (now >= (this._achNextAt ?? 0)) {
+      this._achNextAt = now + PERF.ACHIEVEMENT_CHECK_MS;
+      this._achPending = false;
+      this._checkAchievements();
+    } else this._achPending = true;
+  }
+  _flushAchievements() {
+    if (!this._achPending || this.gameOver) return;
+    this._achPending = false;
+    this._achNextAt = this.time.now + PERF.ACHIEVEMENT_CHECK_MS;
+    this._checkAchievements();
+  }
+
   // Checa conquistas pendentes; mostra toast pra cada recém-desbloqueada.
   // silent=true no game over (a tela final já exibe no painel de desbloqueios).
   _checkAchievements(won = false, silent = false) {
@@ -998,7 +1021,6 @@ export class GameScene extends Phaser.Scene {
       else if (m.resisted) (resisted = true), (crit = false); // cinza e pequeno: a couraça segurou
     }
     if (element !== "heal" && !this._showDmgNumbers) return;
-    const n = this.dmgNumberPool.acquire();
     let color;
     if (resisted) color = hex(PAL.s4);
     else if (crit) color = "#ffd96b";
@@ -1010,14 +1032,14 @@ export class GameScene extends Phaser.Scene {
     else color = "#ffffff";
     const text =
       element === "heal" ? `+${dmg}` : crit ? `${Math.ceil(dmg)}!` : dmg;
-    n.show(x, y, text, color, crit);
+    this.dmgNumberPool.show(x, y, text, color, crit);
   }
 
   _onEnemyDeath(enemy) {
     if (!enemy.active) return;
     this.hud.addKill();
     this.meta.recordKill();
-    this._checkAchievements();
+    this._checkAchievementsSoon();
     this.player.addAwakenMeter(PLAYER.AWAKEN_GAIN_KILL);
     this._killsSinceLastChest = (this._killsSinceLastChest || 0) + 1;
     if (this._killsSinceLastChest >= CHEST.KILL_DROP_EVERY) {

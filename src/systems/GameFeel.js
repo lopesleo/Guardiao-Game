@@ -16,7 +16,6 @@ export class GameFeel {
     this.scene = scene;
     this._lastHitSfx = 0;
     this._hitStopUntil = 0;
-    this._sparks = 0;
     this._gemCombo = 0;
     this._lastGemAt = 0;
     this._hurtA = 0; // 0..1, decai sozinho
@@ -88,28 +87,14 @@ export class GameFeel {
     }
   }
 
-  // Faíscas curtas (3 pontinhos) — o mesmo "px_puff" da poeira de morte.
+  // Faíscas curtas (3 pontinhos) — o mesmo "px_puff" da poeira de morte (imagens reaproveitadas: Puffs.js)
   spark(x, y, tint) {
     const s = this.scene;
-    if (this._sparks > SPARK_CAP) return;
+    if (!s.puffs || s.puffs.count.spark > SPARK_CAP) return;
     for (let i = 0; i < 3; i++) {
-      this._sparks++;
       const a = Math.random() * Math.PI * 2;
       const d = 16 + Math.random() * 14;
-      const p = s.add.image(x, y - 6, "px_puff").setScale(0.9).setTint(tint).setDepth(y + 10002);
-      s.tweens.add({
-        targets: p,
-        x: x + Math.cos(a) * d,
-        y: y - 6 + Math.sin(a) * d,
-        alpha: 0,
-        scale: 0.3,
-        duration: 200,
-        ease: "Cubic.easeOut",
-        onComplete: () => {
-          p.destroy();
-          this._sparks--;
-        },
-      });
+      s.puffs.spawn("spark", "px_puff", x, y - 6, x + Math.cos(a) * d, y - 6 + Math.sin(a) * d, 0.9, 0.3, 1, tint, y + 10002, 200);
     }
   }
 
