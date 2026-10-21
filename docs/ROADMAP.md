@@ -366,6 +366,15 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   o número mostra o dano real (cinza quando a couraça segura; dourado no ponto fraco), anel e lascas da
   Podridão e uma dica que ensina o ponto fraco; KEEP 0,25 → 0,45 (300 dano/s: ~35 s → ~17 s; build
   fraca não muda). 👤 sentir no aparelho
+- ✅ **Mixagem do som** (21/10/2026, `src/audio/Mixer.js`, `AUDIO` no config, `npm run test:audio`):
+  barramentos de música, efeitos e interface com o volume do jogador (vale na hora; a cena da 1ª queda
+  tocava com "Música 0") e um limitador na saída; barra de volume em dB (o save antigo é convertido sem
+  mudar o volume). **Limite de vozes**: 60 abates no mesmo quadro iam a +10,8 dBFS (estouro); agora
+  4 vozes e −11,5 dBFS. Três tomadas do som de abate e variação de tom nos efeitos repetidos; avisos de
+  chefe ficam de fora. **Momentos**: pausa, cartas, Reviver e Noite Eterna abafam a partida; o chefe
+  troca a trilha no compasso (a velha afunda sob o rugido, a nova entra no tempo forte); a morte para a
+  fita; vida abaixo de 30% bate o coração. Consertos: o fade de entrada da fogueira e da música da 1ª
+  queda começava no volume cheio; músicas paradas não eram destruídas. 👤 ouvir no aparelho
 
 ### M5 — Monetização e medição reais 👤
 - ✅ AdMob: app Android criado e **7 blocos premiados** em uso (revive, extra_card, build_speed,
