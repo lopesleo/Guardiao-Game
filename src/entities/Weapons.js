@@ -1166,10 +1166,13 @@ export class Inferno extends Flamethrower {
     this.baseKey = this.def.evolvesFrom;
   }
   _afterBurst(px, py, dir, R) {
+    // O _firePatch da Fênix roda com este objeto no lugar do `this`: tudo o que ele usa tem de estar
+    // aqui (sem o _src, o livro de dano lançava erro no 1º acerto do fogo e o laço do jogo parava)
+    const self = { scene: this.scene, def: { trail: this.def.trail, element: this.def.element }, dmgMult: this.dmgMult, owner: this.owner, _src: () => this._src() };
     for (let i = 1; i <= 3; i++) {
       const d = (R * i) / 3.2;
       Phoenix.prototype._firePatch.call(
-        { scene: this.scene, def: { trail: this.def.trail, element: this.def.element }, dmgMult: this.dmgMult, owner: this.owner },
+        self,
         px + Math.cos(dir) * d,
         py + Math.sin(dir) * d,
       );
