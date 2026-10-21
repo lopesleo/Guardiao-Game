@@ -52,6 +52,9 @@ export const Settings = {
           linearVolumes = true;
         }
       }
+      // sem a marca até converter: se algo gravar antes (o i18n grava o idioma no carregamento), o
+      // save continua dizendo "barra antiga" e a conversão não se perde
+      if (linearVolumes) delete cache.volCurve;
     } catch {}
     return cache;
   },
