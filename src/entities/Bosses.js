@@ -73,8 +73,9 @@ export class Brain {
   caption(text) {
     this.s.hud?.bossMove?.(text);
   }
+  // Golpe de chefe tem voz própria e é AVISO: fica fora do limite de vozes e da variação de tom
   sfx(key, cfg = {}) {
-    this.s.sound.play(key, cfg);
+    this.s.sound.play(key, { ...cfg, alert: true });
   }
 
   // Persegue o herói entre um golpe e outro
@@ -1506,7 +1507,7 @@ export class BossEnt extends Phaser.Physics.Arcade.Sprite {
     this._displayFill = 0;
     this.setVelocity(0, 0);
     scene.cameras.main.shake(500, 0.014);
-    scene.sound.play("sfx_boss_roar", { volume: 0.85 });
+    scene.sound.play("sfx_boss_roar", { volume: 0.85, alert: true });
     scene.hud?.showBossBanner(tr("FÚRIA!"));
     const base = this._bossScale;
     this.play(this.def.fury);

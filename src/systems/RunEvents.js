@@ -67,7 +67,7 @@ export class RunEvents {
     const p = s.player;
     const mini = ev.type === "miniboss" ? s.biome?.minis?.[ev.kind] : null; // minichefe próprio do bioma
     s.hud.showBossBanner(mini ? (ev.again ? mini.again : mini.msg) : ev.msg, ev.type === "miniboss" ? CSS.goldHi : CSS.redHi);
-    s.sound.play("sfx_boss_roar", { volume: 0.4, rate: ev.type === "miniboss" ? 0.8 : 1.3 });
+    s.sound.play("sfx_boss_roar", { volume: 0.4, rate: ev.type === "miniboss" ? 0.8 : 1.3, alert: true });
     const cam = s.cameras.main;
     const R = Math.max(cam.width, cam.height) * 0.55;
 

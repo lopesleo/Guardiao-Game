@@ -13,6 +13,7 @@
 // Sem WebAudio (HTML5Audio/NoAudio) tudo segue no esquema antigo: volume multiplicado na criação.
 import { AUDIO } from "../config.js";
 import { Settings } from "../systems/Settings.js";
+import { VoiceGate } from "./Voices.js";
 
 export const dbToGain = (db) => Math.pow(10, db / 20);
 // Barra 0..1 → ganho: escala em dB (cada pedaço da barra muda o volume na mesma proporção); 0 = mudo
@@ -181,24 +182,62 @@ export function installMixer(g) {
         return snd;
       };
     }
-    // play(key, {volume}) cria o som por add(key) e só depois aplica o config
+    // play(key, {volume}) cria o som por add(key) e só depois aplica o config. Efeito comum (não
+    // música, não interface, não aviso de chefe) passa pelo limite de vozes, sorteia a tomada e o tom
     if (Object.prototype.hasOwnProperty.call(proto, "play")) {
       const play = proto.play;
       proto.play = function (key, extra) {
-        const cfg = extra && typeof extra === "object" && !extra.name ? extra : null;
-        if (!usesBuses(this)) {
-          if (cfg) extra = { ...cfg, volume: (cfg.volume ?? 1) * sliderGain(settingOf(channelOf(key, cfg))) };
-          return play.call(this, key, extra);
+        if (extra?.name) return play.call(this, key, extra); // marcador de áudio: como o Phaser faz
+        let cfg = extra && typeof extra === "object" ? extra : null;
+        const ch = channelOf(key, cfg);
+        const fx = ch === "sfx" && !cfg?.alert;
+        const frame = game?.loop?.frame ?? 0;
+        if (fx && !gate.admit(key, performance.now())) {
+          const m = gate.merge(key, frame);
+          if (m) setVoiceVolume(m.voice, m.gain);
+          return false;
         }
-        pendingChannel = channelOf(key, cfg);
+        const k = ch === "music" ? key : variantOf(key);
+        if (cfg || fx) {
+          cfg = { ...cfg };
+          delete cfg.alert;
+          delete cfg.bus;
+          const j = fx ? AUDIO.JITTER[key] : 0;
+          if (j) cfg.rate = (cfg.rate ?? 1) * (1 + (Math.random() * 2 - 1) * j);
+          if (!usesBuses(this)) cfg.volume = (cfg.volume ?? 1) * sliderGain(settingOf(ch));
+          extra = cfg;
+        }
+        pendingChannel = usesBuses(this) ? ch : null;
+        let r;
         try {
-          return play.call(this, key, extra);
+          r = play.call(this, k, extra);
         } finally {
           pendingChannel = null;
         }
+        if (fx) gate.started(key, this.sounds?.[this.sounds.length - 1], cfg?.volume ?? 1, frame);
+        return r;
       };
     }
   }
+}
+
+const gate = new VoiceGate(AUDIO.VOICES, AUDIO.MERGE_MAX);
+const lastVariant = {};
+// Tomada do som: sorteia entre as variações (AUDIO.VARIANTS) sem repetir a da vez anterior
+function variantOf(key) {
+  const list = AUDIO.VARIANTS[key];
+  if (!list || !game?.cache?.audio) return key;
+  const ok = list.filter((k) => k !== lastVariant[key] && game.cache.audio.exists(k));
+  if (!ok.length) return key;
+  return (lastVariant[key] = ok[Math.floor(Math.random() * ok.length)]);
+}
+// Engrossa uma voz que acabou de começar (o excesso do quadro): rampa curtinha, sem estalo
+function setVoiceVolume(voice, v) {
+  if (!voice || voice.pendingRemove) return;
+  const p = voice.volumeNode?.gain;
+  if (!p || !ctx) return voice.setVolume?.(v);
+  if (voice.currentConfig) voice.currentConfig.volume = v;
+  p.setTargetAtTime(v, ctx.currentTime, 0.004);
 }
 
 // Para testes e depuração: estado dos barramentos

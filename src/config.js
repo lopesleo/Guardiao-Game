@@ -1899,6 +1899,28 @@ export const AUDIO = {
   BUS_DB: { music: 0, sfx: 0, ui: 0 },
   // Limitador na saída: rede de segurança contra estouro (não é o mixer)
   LIMITER: { THRESHOLD_DB: -6, KNEE_DB: 0, RATIO: 20, ATTACK_S: 0.003, RELEASE_S: 0.15 },
+  // Vozes: no máximo `max` cópias do mesmo efeito começando a cada `ms` (src/audio/Voices.js). O excesso
+  // não toca e engrossa a última voz do quadro (volume × √n, até MERGE_MAX). DEFAULT vale para os
+  // efeitos sem linha própria. Fora do limite: música, interface e os AVISOS dos chefes ({ alert: true }
+  // em sound.play), que nunca podem sumir (docs/CHEFES.md: dá para desviar de ouvido)
+  VOICES: {
+    DEFAULT: { max: 6, ms: 40 },
+    sfx_death: { max: 4, ms: 40 },
+    sfx_pickup: { max: 3, ms: 40 },
+    sfx_coin: { max: 3, ms: 40 },
+  },
+  MERGE_MAX: 1.6,
+  // Tomadas diferentes do mesmo som (Synth.js): sorteia uma, sem repetir a anterior
+  VARIANTS: { sfx_death: ["sfx_death", "sfx_death_2", "sfx_death_3"] },
+  // Variação de tom (± fração do rate, sorteada a cada toque) dos efeitos que soavam sempre iguais.
+  // Ruído e batida aguentam ±5%; som com nota (sino, moeda) varia menos para não desafinar. De fora:
+  // o que já varia ou cuja altura é informação (gemas em sequência sobem de tom, fanfarras)
+  JITTER: {
+    sfx_death: 0.05, sfx_player_hit: 0.04, sfx_dash: 0.04, sfx_whoosh: 0.05, sfx_fire_attack: 0.05,
+    sfx_bolt_attack: 0.03, sfx_ice_attack: 0.02, sfx_folhas: 0.05, sfx_catavento: 0.05, sfx_bolas: 0.03,
+    sfx_mirage: 0.015, sfx_coin: 0.015, sfx_react_vapor: 0.05, sfx_react_overload: 0.04,
+    sfx_react_labareda: 0.05, sfx_react_temporal: 0.05, sfx_react_geada: 0.02, sfx_react_crystal: 0.02,
+  },
 };
 
 export const COLORS = {

@@ -1260,7 +1260,7 @@ export class GameScene extends Phaser.Scene {
     this.boss.activate(BOSS.HP * this.diff.hpMult);
     this.boss.dmg *= this.diff.dmgMult; // escala dano do boss pela dificuldade
     this.hud.setBossActive(this.boss, this.biome.bossName.toUpperCase());
-    this.sound.play("sfx_boss_roar", { volume: 0.8 });
+    this.sound.play("sfx_boss_roar", { volume: 0.8, alert: true });
     // Trilha do chefe entra no lugar da música da partida
     this.bgMusic?.destroy();
     this.bgMusic = this.sound.add(this.biome.bossMusic ?? "music_boss", { loop: true, volume: 0.4 });
