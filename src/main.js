@@ -45,7 +45,11 @@ const config = {
   },
   physics: {
     default: 'arcade',
-    arcade: { debug: false, gravity: { x: 0, y: 0 } },
+    // useTree: false — com a árvore espacial ligada o Arcade refaz a RTree de TODOS os corpos a cada
+    // passo (500+ na horda, inclusive os desligados do pool), e o jogo só a usaria em colisões de
+    // corpo contra grupo dinâmico, que não existem (a parede da partida é corpo contra corpo; os
+    // sólidos da Clareira são staticGroup, que sempre usa a árvore estática, montada à parte).
+    arcade: { debug: false, gravity: { x: 0, y: 0 }, useTree: false },
   },
   input: { activePointers: 3 },
   scene: [
