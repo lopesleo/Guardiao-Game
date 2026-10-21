@@ -10,6 +10,7 @@ import { formatTime } from "../utils.js";
 import { PAL, CSS, hex, ELEMENT_COLOR } from "../art/Palette.js";
 import { WEAPON_ICON } from "../art/Icons.js";
 import { ROT, makeFreedMapinguari } from "../art/Monsters.js";
+import { ScreenVignette } from "../art/Gradients.js";
 import { TITLE_PX, makeSky, makeMoon, makeCloud, makeRidge, makeTreeline, makeGround, makeFrameTrunk, makeCanopy, makeFern, makeCampfire, makeLeaf, makeVine } from "../art/TitleArt.js";
 import { makeSun, makeRay, makeBird, makeAurora, makeCactusline } from "../art/ResultArt.js";
 import { registerResultRig, RIG_W, RESULT_H, GROUND } from "../art/HeroRig.js";
@@ -431,18 +432,8 @@ export class GameOverScene extends Phaser.Scene {
       }
     }
 
-    const vk = `go_vignette_${W}x${H}_${L.cx}`;
-    if (!this.textures.exists(vk)) {
-      const c = this.textures.createCanvas(vk, W, H);
-      const ctx = c.getContext();
-      const g = ctx.createRadialGradient(L.cx, H * 0.62, H * 0.32, L.cx, H * 0.55, Math.max(W, H) * 0.7);
-      g.addColorStop(0, "rgba(0,0,0,0)");
-      g.addColorStop(1, "rgba(6,8,14,0.62)");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
-      c.refresh();
-    }
-    this.add.image(0, 0, vk).setOrigin(0);
+    // Vinheta (Gradient: sem degraus nos escuros e sem textura do tamanho da tela), centrada na coluna da cena
+    new ScreenVignette(this, { geom: (w, h) => ({ cx: this.L.cx, cy: h * 0.58, r0: h * 0.32, r1: Math.max(w, h) * 0.7 }), color: PAL.night0, alpha: 0.62 });
   }
 
   update(time, dt) {

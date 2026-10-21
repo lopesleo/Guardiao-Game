@@ -5,6 +5,7 @@
 // Mixin da CampScene (Object.assign).
 import { GAME, SEASONS } from "../config.js";
 import { PAL } from "../art/Palette.js";
+import { ScreenVignette, mixColor } from "../art/Gradients.js";
 import { paintGround, FLAG_COUNT } from "../art/CampDecor.js";
 import { morphoFlight } from "../art/CampAncestral.js";
 import { Clock } from "../systems/Clock.js";
@@ -147,8 +148,8 @@ export const CampDecor = {
     }
     this._grassSway();
     this._ambientLife();
-    // Vinheta: foca o olhar no meio da tela
-    this.vignette = this.add.image(0, 0, "fx_vignette").setOrigin(0).setScrollFactor(0).setDisplaySize(this.W, this.H).setAlpha(0.55).setDepth(D_NIGHT + 3);
+    // Vinheta: foca o olhar no meio da tela (elipse no formato da tela; a força segue a hora)
+    this.vignette = new ScreenVignette(this, { geom: () => ({ r0: 0.55, r1: 1.42 }), ellipse: true, color: PAL.night0, alpha: 0.55, depth: D_NIGHT + 3 });
     // Céu pela hora real (dia, entardecer, noite, amanhecer)
     this.time.delayedCall(0, () => this._applyTimeOfDay());
     this.time.addEvent({ delay: 30000, loop: true, callback: () => this._applyTimeOfDay() });
@@ -351,7 +352,10 @@ export const CampDecor = {
     }
     this._lightK = sky.k;
     for (const m of this.morphos ?? []) m.setVisible(sky.k < 0.6); // borboletas de dia; à noite, vaga-lumes
-    this.nightRect.setFillStyle(sky.color, 1).setVisible(sky.color !== 0xffffff);
+    // Céu em volta da fogueira: o fogo esquenta o terreiro e a borda da mata esfria (mais à noite: sky.k)
+    const warm = mixColor(sky.color, PAL.yel3, 0.4 * sky.k),
+      cold = mixColor(sky.color, PAL.night1, 0.42 * sky.k);
+    this.sky.setColors(warm, sky.color, cold).setVisible(sky.color !== 0xffffff);
     this.vignette?.setAlpha(0.3 + 0.28 * sky.k);
     // Luzes paradas (ADD por cima da noite): guardam o alpha original
     for (const o of this.children.list) {

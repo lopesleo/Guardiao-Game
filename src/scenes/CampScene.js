@@ -26,6 +26,7 @@ import { openRanking } from "../ui/RankingModal.js";
 import { Leaderboards } from "../systems/Leaderboards.js";
 import { Analytics } from "../systems/Analytics.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
+import { SkyGlow } from "../art/Gradients.js";
 import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
 import { Modal, closeTopModal } from "../ui/Widgets.js";
 import { MetaPanels } from "../ui/MetaPanels.js";
@@ -356,14 +357,12 @@ export class CampScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.solids);
   }
 
-  // Noite: escurece tudo (multiply) e as luzes somam por cima (add)
+  // Noite: escurece tudo (multiply) e as luzes somam por cima (add). O céu é um Gradient radial no MUNDO, com
+  // centro na fogueira (quente perto do fogo, frio na borda da mata): um quad que cobre a Clareira toda, então
+  // segue a câmera, o zoom e qualquer tamanho de tela sem nada a refazer. A cor vem de skyAt(hora)
   _night() {
-    this.nightRect = this.add
-      .rectangle(0, 0, this.W, this.H, 0x5a6a9a, 1)
-      .setOrigin(0)
-      .setScrollFactor(0)
-      .setBlendMode(Phaser.BlendModes.MULTIPLY)
-      .setDepth(D_NIGHT);
+    const fire = this.buildings.fire ?? { x: 0, y: 70 };
+    this.sky = new SkyGlow(this, { x: fire.x, y: fire.y, R: 1400, depth: D_NIGHT }).setVisible(false);
     // Vaga-lumes (a lista é zerada no create: a samaúma também põe os seus)
     for (let i = 0; i < 26; i++) {
       const x = Phaser.Math.Between(-CAMP_W / 2, CAMP_W / 2),

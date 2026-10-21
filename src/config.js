@@ -169,6 +169,48 @@ export const STATUS = {
   WIND: { duration: 2200, slowFactor: 0.85, drift: 38 },
 };
 
+// Como cada status aparece no inimigo (ElementalSystem._updateTint): tinta OVERLAY numa cor da PALETA (chave de PAL;
+// k escurece a cor). O modo vai por vértice: custo zero. O OVERLAY recolore o bicho inteiro no elemento e guarda o
+// desenho: nos tons escuros multiplica por 2×cor (o contorno de tinta continua escuro, só puxa para o elemento) e nos
+// claros clareia na mesma proporção — o sombreado e o olho ficam. Medido nos 15 monstros × 6 ambientes (início,
+// noite e chefe dos dois biomas; 21/10/2026), contra o bicho sem status:
+//  - presença (ΔE médio por pixel): 17–25 em média (era 5–13 com MULTIPLY, que só escurecia e sumia no escuro);
+//  - contorno (L* do corpo − L* do contorno) ≥ 100% do original e sombreado (variação de cor no corpo) ≥ 88%, no
+//    pior caso. ADD forte estoura e SCREEN comprime o contraste: os dois viravam um borrão pastel.
+// O raio PULSA entre tint e pulse×pulseK (PULSE_MS): para quem confunde azul e roxo (protanopia/deuteranopia), raio,
+// gelo e congelado se separam pelo movimento e pela luz — o gelo é azul e parado, o congelado é claro e imóvel (a
+// animação para), o raio vibra.
+// (MULTIPLY_TWO e HARD_LIGHT não desenham neste Phaser 4.2.1: o shader compara o modo com == e 6/7 chegam com
+// erro de arredondamento — o bicho sai sem tinta. OVERLAY (5) desenha. Ficar nos modos 0–5.)
+// glow: cor da luz do inimigo no mapa de luz (Lighting), no lugar da luz da corrupção e mais fraca que ela; no
+// máximo GLOW_MAX por quadro (numa horda em chamas o resto fica com a luz de sempre: ilumina sem pintar o cenário)
+export const STATUS_LOOK = {
+  fire: { mode: "OVERLAY", tint: "org2", glow: 0xff8a3c },
+  ice: { mode: "OVERLAY", tint: "ice2", glow: 0x5cc8ff },
+  bolt: { mode: "OVERLAY", tint: "pur2", pulse: "pur3", glow: 0xc78cff },
+  wind: { mode: "OVERLAY", tint: "wnd2", glow: 0x7fd9bd },
+  frozen: { mode: "OVERLAY", tint: "white", glow: 0x9fe8ff },
+  PULSE_MS: 420, // período da vibração do raio (≈2,4 Hz: abaixo de 3 Hz, sem risco de fotossensibilidade)
+  GLOW_R: 56, // raio da luz do inimigo com status (a da corrupção: 58)
+  GLOW_A: 0.34, // força dessa luz (a da corrupção: 0,4)
+  GLOW_MAX: 8, // teto de luzes de status por quadro
+};
+
+// Libertação do chefe (GameScene._freeBoss), o clímax de toda vitória. Tempos em ms, um depois do outro; a soma
+// é quando a escolha da Noite Eterna abre
+export const LIBERATION = {
+  GRIP_MS: 220, // a Podridão toma o corpo inteiro (silhueta chapada na cor dela) e ele inspira
+  HEAT_MS: 520, // a silhueta esquenta da Podridão até virar luz
+  REVEAL_MS: 980, // estalo: a luz se apaga (passando pelo verde-vida) e revela a lenda na cor natural
+  STAY_MS: 330, // a lenda livre respira
+  LEAVE_MS: 550, // e volta para a mata (sobe e some)
+  SEEP_MS: 30, // um esporo escapa a cada tanto enquanto a Podridão esquenta
+  BURST: 96, // revoada de esporos no estalo
+  LIFE: [1100, 1900], // vida de cada esporo
+  PUSH: 0.5, // força do GravityWell NEGATIVO no peito do chefe: empurra os esporos para fora (cai com o
+  // quadrado da distância: forte no corpo, quase nada a dois palmos)
+};
+
 // Dano das reações FIXO (só × Prisma), por decisão medida em 13/10/2026: elas já fazem 25–60% do
 // dano na horda em qualquer minuto e Perigo. Ver docs/BALANCING.md antes de escalar ou cortar.
 export const REACTION = {
