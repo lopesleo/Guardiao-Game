@@ -3,12 +3,14 @@
 //   · botão VOLTAR do Android: cada cena pode definir onBack() → true se tratou
 //   · debug só com ?debug=1 na URL (nunca no build da loja)
 import { installSettingsHooks } from "./Settings.js";
+import { installMixer } from "../audio/Mixer.js";
 
 export const isNative = () => !!window.Capacitor?.isNativePlatform?.();
 export const DEBUG = /[?&]debug=1\b/.test(location.search);
 
 export function setupPlatform(game) {
   installSettingsHooks(game);
+  installMixer(game); // som: barramentos por canal, limitador e o volume do jogador
 
   const pauseRun = () => {
     const gs = game.scene.getScene("GameScene");

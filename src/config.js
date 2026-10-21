@@ -1889,6 +1889,18 @@ export const ACHIEVEMENTS = [
   { id: "mono_wind", name: "Filho do Vento", desc: "Vença com 2+ armas, todas de vento", check: monoWin(ELEMENT.WIND) },
 ];
 
+// Áudio: mixagem por barramentos (src/audio/Mixer.js). O volume de cada som fica onde ele toca;
+// aqui fica o que vale para GRUPOS de sons. Tudo em dB (o ouvido é logarítmico).
+export const AUDIO = {
+  // Barra de volume das Opções: vai de −SLIDER_DB dB (começo) a 0 dB (fim); só o zero é mudo.
+  // A barra antiga era linear (0,7 = −3 dB): Settings converte o valor salvo uma vez, sem mudar o volume
+  SLIDER_DB: 40,
+  // Ganho fixo de cada barramento (dB), antes do volume do jogador
+  BUS_DB: { music: 0, sfx: 0, ui: 0 },
+  // Limitador na saída: rede de segurança contra estouro (não é o mixer)
+  LIMITER: { THRESHOLD_DB: -6, KNEE_DB: 0, RATIO: 20, ATTACK_S: 0.003, RELEASE_S: 0.15 },
+};
+
 export const COLORS = {
   FIRE: 0xff7a3c,
   ICE: 0x5cc8ff,

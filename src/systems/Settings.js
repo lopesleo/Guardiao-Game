@@ -1,10 +1,15 @@
 // Configurações do jogador (persistidas). Aplicadas por GANCHOS globais
 // instalados 1x no boot — assim nenhum dos ~80 pontos que tocam som ou
-// tremem a câmera precisa saber das opções.
+// tremem a câmera precisa saber das opções (o som fica em src/audio/Mixer.js).
+// Este módulo não importa nada: o i18n o lê já no carregamento (import circular quebraria).
 const KEY = "guardiao_settings_v1";
+// Barras de volume em dB (AUDIO.SLIDER_DB = 40 em config.js). Os padrões dão o mesmo volume da
+// barra linear antiga (música 0,7 → −3 dB; efeitos 0,8 → −2 dB). volCurve marca o save convertido
+const VOL_CURVE = 1;
 const DEFAULTS = {
-  music: 0.7,
-  sfx: 0.8,
+  music: 0.92,
+  sfx: 0.95,
+  volCurve: VOL_CURVE,
   haptics: true,
   shake: true,
   softFlash: false, // clarões suaves (fotossensibilidade): flash de tela e luzes passageiras bem mais fracos
@@ -27,18 +32,41 @@ const DEFAULTS = {
 };
 
 let cache = null;
+let linearVolumes = false; // music/sfx ainda na barra linear antiga (o Mixer converte no boot)
+const listeners = [];
 
 export const Settings = {
   all() {
     if (cache) return cache;
     cache = { ...DEFAULTS };
     try {
-      Object.assign(cache, JSON.parse(localStorage.getItem(KEY) || "{}"));
-      // Migra o volume único antigo (slider do menu) pros dois canais
-      const old = parseFloat(localStorage.getItem("guardiao_volume_v1"));
-      if (!localStorage.getItem(KEY) && !isNaN(old)) cache.music = cache.sfx = old;
+      const saved = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (saved) {
+        Object.assign(cache, saved);
+        linearVolumes = saved.volCurve !== VOL_CURVE;
+      } else {
+        // Migra o volume único antigo (slider do menu) pros dois canais
+        const old = parseFloat(localStorage.getItem("guardiao_volume_v1"));
+        if (!isNaN(old)) {
+          cache.music = cache.sfx = old;
+          linearVolumes = true;
+        }
+      }
     } catch {}
     return cache;
+  },
+  // Barra linear antiga → barra em dB com o MESMO volume (fromLinear vem do Mixer). Uma vez só
+  migrateVolumes(fromLinear) {
+    this.all();
+    if (!linearVolumes) return false;
+    linearVolumes = false;
+    for (const k of ["music", "sfx"]) if (typeof cache[k] === "number") cache[k] = fromLinear(cache[k]);
+    this.set("volCurve", VOL_CURVE);
+    return true;
+  },
+  // Avisa quem precisa reagir na hora (o Mixer muda o volume dos barramentos)
+  onChange(fn) {
+    if (!listeners.includes(fn)) listeners.push(fn);
   },
   get(k) {
     return this.all()[k];
@@ -49,51 +77,12 @@ export const Settings = {
       localStorage.setItem(KEY, JSON.stringify(cache));
       if (k === "haptics") localStorage.setItem("guardiao_haptics", v ? "1" : "0");
     } catch {}
-    if (k === "music") refreshMusic();
+    for (const fn of listeners) fn(k, v);
   },
 };
 
-let game = null;
-const isMusic = (key) => typeof key === "string" && key.startsWith("music");
-
-// Reaplica o volume de música às faixas que já estão tocando
-function refreshMusic() {
-  if (!game) return;
-  for (const s of game.sound.sounds) {
-    if (isMusic(s.key)) s.setVolume((s._baseVol ?? 1) * Settings.get("music"));
-  }
-}
-
-export function installSettingsHooks(g) {
-  game = g;
-  const managers = [Phaser.Sound.WebAudioSoundManager, Phaser.Sound.HTML5AudioSoundManager, Phaser.Sound.BaseSoundManager]
-    .filter(Boolean)
-    .map((c) => c.prototype);
-  for (const proto of managers) {
-    if (proto.__guardiaoHooked) continue;
-    proto.__guardiaoHooked = true;
-    if (Object.prototype.hasOwnProperty.call(proto, "add")) {
-      const add = proto.add;
-      proto.add = function (key, config = {}) {
-        const base = config.volume ?? 1;
-        const mult = isMusic(key) ? Settings.get("music") : Settings.get("sfx");
-        const snd = add.call(this, key, { ...config, volume: base * mult });
-        if (snd) snd._baseVol = base;
-        return snd;
-      };
-    }
-    // play(key, {volume}) sobrescreve o volume do add → multiplica aqui também
-    if (Object.prototype.hasOwnProperty.call(proto, "play")) {
-      const play = proto.play;
-      proto.play = function (key, extra) {
-        if (extra && typeof extra === "object" && !extra.name) {
-          const mult = isMusic(key) ? Settings.get("music") : Settings.get("sfx");
-          extra = { ...extra, volume: (extra.volume ?? 1) * mult };
-        }
-        return play.call(this, key, extra);
-      };
-    }
-  }
+// Ganchos de câmera (o som é instalado por installMixer, em src/audio/Mixer.js)
+export function installSettingsHooks() {
   // Tremor de câmera desligável (acessibilidade / enjoo)
   const cam = Phaser.Cameras.Scene2D.Camera.prototype;
   if (!cam.__guardiaoHooked) {
