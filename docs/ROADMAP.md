@@ -366,6 +366,13 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   o número mostra o dano real (cinza quando a couraça segura; dourado no ponto fraco), anel e lascas da
   Podridão e uma dica que ensina o ponto fraco; KEEP 0,25 → 0,45 (300 dano/s: ~35 s → ~17 s; build
   fraca não muda). 👤 sentir no aparelho
+- ✅ **Desempenho da partida** (21/10/2026; teste de carga no Pesadelo, 90 s): quadro 4,95 → 4,12 ms (p95
+  8,05 → 6,80; quadro com 40 abates 37 → 25 ms), chamadas de desenho 128 → 90, lixo 53 → 44 MB/s. HUD só
+  redesenha o que muda; Arcade sem árvore espacial; **teto de 60 fps** (`GAME.FPS_LIMIT`; `src/systems/FrameLimit.js`
+  corrige o `fps.limit` do Phaser 4.2.1, que acelerava o tempo de jogo); brilho dos tiros fora dos containers
+  (um lote só); pó, faíscas, números e rótulos reaproveitados; conquistas conferidas 1×/s; separação dos
+  inimigos sem alocar; **teto de 150 gemas** no chão com fusão (XP somado) e pickups sem corpo Arcade.
+  👤 ver no S23 se a partida fica a 60 sem tranco; aquecimento e bateria num celular fraco
 
 ### M5 — Monetização e medição reais 👤
 - ✅ AdMob: app Android criado e **7 blocos premiados** em uso (revive, extra_card, build_speed,
