@@ -1,16 +1,23 @@
 // Pickups em pixel-art: gema de XP, moeda, coração e orbe de Despertar.
 // Nascem com um "pulinho" (arco) e são puxados por ímã ao chegar perto.
+// Sem corpo Arcade: a coleta é por distância (GameScene) e o corpo só servia para andar com a
+// velocidade do ímã. Na horda eram centenas de corpos no mundo da física (pré/pós-passo de cada um
+// a cada quadro). O passo agora é move(), chamado pela cena depois do update (POST_UPDATE, onde a
+// física aplicava o passo) com a velocidade do quadro anterior e o timeScale da física (o hit-stop e
+// a câmera lenta da morte seguram as gemas como antes): mesmo voo, mesmos quadros de coleta.
 import { ENEMY, GAME } from "../config.js";
 
 const S = GAME.PIXEL_SCALE;
 
-class Pickup extends Phaser.Physics.Arcade.Sprite {
+class Pickup extends Phaser.GameObjects.Sprite {
   constructor(scene, texture, o = {}) {
     super(scene, -9999, -9999, texture, 0);
     scene.add.existing(this);
-    scene.physics.add.existing(this);
     this.setScale(S);
-    this.body.setCircle(4, this.width / 2 - 4, this.height / 2 - 4);
+    this.vx = 0; // velocidade do ímã (px/s)
+    this.vy = 0;
+    this._mvx = 0; // a que vale no passo deste quadro (a do quadro anterior, como no Arcade)
+    this._mvy = 0;
     this.magnetSpeed = o.magnet ?? 340;
     this.magnetMult = o.magnetMult ?? 4;
     this.anim = o.anim ?? null;
@@ -25,15 +32,13 @@ class Pickup extends Phaser.Physics.Arcade.Sprite {
         .setVisible(false);
     }
     this.setActive(false).setVisible(false);
-    this.body.enable = false;
     this._hop = null;
   }
 
   spawn(x, y) {
     this.setPosition(x, y);
     this.setActive(true).setVisible(true);
-    this.body.enable = true;
-    this.body.setVelocity(0, 0);
+    this.vx = this.vy = this._mvx = this._mvy = 0;
     this.setDepth(y + 9000);
     this._pulled = false;
     if (this.anim) {
@@ -60,12 +65,14 @@ class Pickup extends Phaser.Physics.Arcade.Sprite {
     this._hop?.stop();
     this.stop();
     this.setActive(false).setVisible(false);
-    this.body.enable = false;
+    this.vx = this.vy = this._mvx = this._mvy = 0;
     this.glow?.setVisible(false);
   }
 
   update(time, dt, player) {
     if (!this.active) return;
+    this._mvx = this.vx; // o passo deste quadro usa a velocidade do anterior (move)
+    this._mvy = this.vy;
     if (this.glow) {
       this.glow.setPosition(this.x, this.y);
       this.glow.setAlpha(0.35 + Math.sin(time / 220 + this.x) * 0.15);
@@ -80,27 +87,54 @@ class Pickup extends Phaser.Physics.Arcade.Sprite {
       this._pulled = true;
       this._hop?.stop();
       const sp = this.magnetSpeed + Math.max(0, 260 - d) * 1.5;
-      this.body.setVelocity((dx / (d || 1)) * sp, (dy / (d || 1)) * sp);
-    } else this.body.setVelocity(0, 0);
+      this.vx = (dx / (d || 1)) * sp;
+      this.vy = (dy / (d || 1)) * sp;
+    } else this.vx = this.vy = 0;
+  }
+
+  // Passo do movimento (a cena chama depois do update de tudo, onde a física aplicava o dela)
+  move(dt) {
+    if (!this._mvx && !this._mvy) return;
+    const k = dt / 1000 / (this.scene.physics.world.timeScale || 1);
+    this.x += this._mvx * k;
+    this.y += this._mvy * k;
   }
 }
+
+// tier: 0 verde (normal), 1 azul (×5), 2 dourada (×20) — usado por baús e pela fusão de gemas
+const GEM_TIERS = [
+  ["px_gem", "gem_shine", 1],
+  ["px_gem_blue", "gem_blue_shine", 5],
+  ["px_gem_gold", "gem_gold_shine", 20],
+];
 
 export class XPGem extends Pickup {
   constructor(scene) {
     super(scene, "px_gem", { anim: "gem_shine", magnet: 360 });
     this.xpValue = ENEMY.XP_VALUE;
   }
-  // tier: 0 verde (normal), 1 azul (×5), 2 dourada (×20) — usado por baús
   spawn(x, y, tier = 0) {
-    const T = [
-      ["px_gem", "gem_shine", 1],
-      ["px_gem_blue", "gem_blue_shine", 5],
-      ["px_gem_gold", "gem_gold_shine", 20],
-    ][tier] ?? ["px_gem", "gem_shine", 1];
+    const T = GEM_TIERS[tier] ?? GEM_TIERS[0];
     this.setTexture(T[0]);
     this.anim = T[1];
     this.xpValue = ENEMY.XP_VALUE * T[2];
     super.spawn(x, y);
+  }
+  // Fusão (teto de gemas no chão, PERF.GEM_CAP): esta gema fica com o XP da outra, somado, e vai
+  // para o centro de massa do XP das duas (o XP não "anda" para perto do herói). A cor acompanha
+  // o valor, na escala das gemas de baú (azul a partir de ×5, dourada de ×20).
+  absorb(other) {
+    const total = this.xpValue + other.xpValue;
+    const k = other.xpValue / total;
+    this.setPosition(this.x + (other.x - this.x) * k, this.y + (other.y - this.y) * k);
+    this.xpValue = total;
+    const mult = this.xpValue / ENEMY.XP_VALUE;
+    const T = GEM_TIERS[mult >= 20 ? 2 : mult >= 5 ? 1 : 0];
+    if (this.anim !== T[1]) {
+      this.setTexture(T[0]);
+      this.anim = T[1];
+      this.play({ key: T[1], startFrame: Math.floor(Math.random() * (this.scene.anims.get(T[1])?.frames.length ?? 1)) });
+    }
   }
 }
 

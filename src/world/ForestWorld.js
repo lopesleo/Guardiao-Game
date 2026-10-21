@@ -233,7 +233,10 @@ export class ForestWorld {
       x1 = v.right + M,
       y0 = v.y - M,
       y1 = v.bottom + M + 200; // árvores têm origem no pé: copa fica acima
-    for (const o of this.statics) {
+    // laço por índice: ~5 mil objetos a cada 150 ms, sem iterador
+    const st = this.statics;
+    for (let i = 0, n = st.length; i < n; i++) {
+      const o = st[i];
       const on = o.x > x0 && o.x < x1 && o.y > y0 && o.y < y1;
       if (o.visible !== on) o.setVisible(on);
     }
@@ -250,7 +253,9 @@ export class ForestWorld {
 
     // Árvores na frente do player ficam translúcidas (não esconder o herói)
     if (player) {
-      for (const t of this.trees) {
+      const trees = this.trees;
+      for (let i = 0, n = trees.length; i < n; i++) {
+        const t = trees[i];
         if (!t.visible) continue;
         const dx = Math.abs(t.x - player.x);
         if (dx > t.displayWidth * 0.5) {

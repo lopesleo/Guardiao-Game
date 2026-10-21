@@ -494,7 +494,8 @@ export class GameOverScene extends Phaser.Scene {
       b.ph += dt / 1000;
       b.o.x += (b.v * dt) / 1000;
       b.o.y = b.y0 + Math.sin(b.ph * 1.7) * 6;
-      b.o.setTexture(b.keys[Math.floor(b.ph * 5.5) % 2]);
+      const key = b.keys[Math.floor(b.ph * 5.5) % 2]; // bate a asa: só troca quando muda o quadro
+      if (b.o.texture.key !== key) b.o.setTexture(key);
       if (b.o.x > L.px + 40) {
         b.o.x = -30;
         b.y0 = H * (0.1 + Math.random() * 0.2);

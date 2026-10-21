@@ -25,14 +25,21 @@ import { MetaProgression } from './systems/MetaProgression.js';
 import { Clock } from './systems/Clock.js';
 import { CloudSave } from './systems/CloudSave.js';
 import { installCloudSaveUI } from './ui/CloudSaveUI.js';
+import { installFrameLimitFix } from './systems/FrameLimit.js';
+
+// Antes de criar o jogo: o teto de quadros do Phaser 4.2.1 aceleraria o tempo de jogo (FrameLimit.js)
+installFrameLimitFix();
 
 const config = {
   type: Phaser.AUTO,
   parent: 'game',
   backgroundColor: COLORS.BG,
   pixelArt: true,
+  // Teto de quadros (telas de 90/120 Hz): metade do trabalho de CPU e GPU, menos calor e bateria
+  fps: { limit: GAME.FPS_LIMIT },
   // Phaser 4: o lote padrão (16384 quads) faz o upload de buffers enormes por quadro e derruba
-  // o FPS em GPUs mobile (S23: 14 FPS no título). 2048 → ~75 FPS no título, 120 na partida.
+  // o FPS em GPUs mobile (S23: 14 FPS no título). 2048 → ~75 FPS no título, 120 na partida
+  // (hoje limitada a GAME.FPS_LIMIT, ver fps abaixo).
   render: { batchSize: 2048 },
   roundPixels: true,
   // EXPAND: altura lógica fixa (720) e largura acompanha a proporção da tela
@@ -45,7 +52,11 @@ const config = {
   },
   physics: {
     default: 'arcade',
-    arcade: { debug: false, gravity: { x: 0, y: 0 } },
+    // useTree: false — com a árvore espacial ligada o Arcade refaz a RTree de TODOS os corpos a cada
+    // passo (500+ na horda, inclusive os desligados do pool), e o jogo só a usaria em colisões de
+    // corpo contra grupo dinâmico, que não existem (a parede da partida é corpo contra corpo; os
+    // sólidos da Clareira são staticGroup, que sempre usa a árvore estática, montada à parte).
+    arcade: { debug: false, gravity: { x: 0, y: 0 }, useTree: false },
   },
   input: { activePointers: 3 },
   scene: [

@@ -3,6 +3,7 @@
 import { ENEMY, GAME, ELITE, MIMIC, BOSS_FIGHT } from "../config.js";
 import { MulaBrain, SecoBrain } from "./Bosses.js";
 import { tr } from "../i18n/i18n.js";
+import { makeHalo, setHaloScale, syncHalo } from "./Halo.js";
 
 // O chefe (Mapinguari) mora em Bosses.js junto com os golpes dos minichefes
 export { BossEnt } from "./Bosses.js";
@@ -291,12 +292,13 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       this.y += (dy / len) * 3;
     }
 
-    // FLASH: branco normal, DOURADO se crit ou no ponto fraco
+    // FLASH: branco normal, DOURADO se crit ou no ponto fraco. Volta à cor do status no update
+    // (um delayedCall por golpe enchia o relógio da cena: remover cada um é uma busca linear)
     this.setTint(crit || amp > 1 ? 0xffd96b : 0xffffff).setTintMode(Phaser.TintModes.FILL);
-    this.scene.time.delayedCall(crit ? 110 : 60, () => {
-      if (!this.active) return;
-      this.scene.elemental?._updateTint(this);
-    });
+    // Golpes seguidos: vale a volta mais cedo, como os delayedCalls de antes (o 1º a vencer devolvia a cor)
+    const now = this.scene.time.now,
+      until = now + (crit ? 110 : 60);
+    this._flashUntil = this._flashUntil > now ? Math.min(this._flashUntil, until) : until;
 
     if (crit) {
       // KNOCKBACK
@@ -319,6 +321,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
   update(time, dt, target) {
     if (!this.active || !target?.active) return;
+    if (this._flashUntil && time >= this._flashUntil) {
+      this._flashUntil = 0;
+      this.scene.elemental?._updateTint(this);
+    }
     this.shadow.setPosition(this.x, this.y + this.displayHeight * 0.46);
     // Soco do golpe: segura durante o hit-stop (relógio dos tweens) e volta
     if (this._punch > 0) {
@@ -479,18 +485,15 @@ export class EnemyProjectile extends Phaser.GameObjects.Container {
   constructor(scene) {
     super(scene, -9999, -9999);
     scene.add.existing(this);
-    // Tiro inimigo: esfera vermelha pixelada com halo — sempre "cor de perigo"
-    this.glow = scene.add
-      .image(0, 0, "fx_glow")
-      .setScale(0.6)
-      .setTint(0xff3040)
-      .setAlpha(0.6)
-      .setBlendMode(Phaser.BlendModes.ADD);
+    // Tiro inimigo: esfera vermelha pixelada com halo — sempre "cor de perigo".
+    // Sombra e halo ficam FORA do container (Halo.js), na mesma ordem de antes (sombra, halo, núcleo):
+    // as sombras de todos os tiros saem num lote, os halos aditivos em outro
+    this.glow = makeHalo(scene, "fx_glow", 0.6, 0.6, 0.01).setTint(0xff3040).setBlendMode(Phaser.BlendModes.ADD);
     this.core = scene.add.image(0, 0, "px_eshot").setScale(GAME.PIXEL_SCALE);
     // Sombra escura (blend normal) sob o halo: recorta o tiro do chão claro da Caatinga, onde o halo
     // aditivo virava só um brilho creme sobre a areia
-    this.shade = scene.add.image(0, 0, "fx_glow").setScale(0.34).setTint(0x1a1420).setAlpha(0.45);
-    this.add([this.shade, this.glow, this.core]);
+    this.shade = makeHalo(scene, "fx_glow", 0.34, 0.45, 0.02).setTint(0x1a1420);
+    this.add([this.core]);
     scene.physics.add.existing(this);
     this.body.setCircle(7, -7, -7);
     this.setActive(false).setVisible(false);
@@ -506,14 +509,23 @@ export class EnemyProjectile extends Phaser.GameObjects.Container {
     this.dmg = dmg;
     this.lifeUntil = this.scene.time.now + 3000;
     this.core.setScale(GAME.PIXEL_SCALE * scale).setTint(color === 0xff5a6e ? 0xffffff : color);
-    this.glow.setScale(0.6 * scale).setTint(color === 0xff5a6e ? 0xff3040 : color);
-    this.shade.setScale(0.34 * scale);
+    setHaloScale(this.glow, 0.6 * scale);
+    this.glow.setTint(color === 0xff5a6e ? 0xff3040 : color);
+    setHaloScale(this.shade, 0.34 * scale);
     this.setDepth(60);
+    this.syncHalo();
+  }
+  // Sombra e halo seguem o tiro (a cena chama depois da física)
+  syncHalo() {
+    syncHalo(this, this.shade);
+    syncHalo(this, this.glow);
   }
   kill() {
     this.setActive(false).setVisible(false);
     this.body.enable = false;
     this.body.setVelocity(0, 0);
+    this.shade.setVisible(false);
+    this.glow.setVisible(false);
   }
   update(time) {
     if (!this.active) return;

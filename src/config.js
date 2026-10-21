@@ -13,6 +13,25 @@ export const GAME = {
   // A duração real vem do Perigo (DIFFICULTY[].durationS); o jogo "estica" a curva por
   // pace = RUN_DURATION_S / durationS, então 10 min = a mesma jornada, mais devagar.
   RUN_DURATION_S: 420,
+  // Teto de quadros por segundo. Telas de 90/120 Hz (o S23 rodava a partida a 120) gastam o dobro de
+  // CPU, GPU e bateria para um jogo de pixel-art que não ganha nada com isso; esquenta e o aparelho
+  // baixa o clock. 0 = sem teto. O tempo de jogo não muda (src/systems/FrameLimit.js).
+  FPS_LIMIT: 60,
+};
+
+// Desempenho em aparelho fraco: tetos e ritmos que não mudam o jogo, só o custo dele
+export const PERF = {
+  // Números de dano: objetos criados de saída por estilo [cor, crítico, quantos] e teto total
+  // (passou do teto, reaproveita um de outro estilo trocando o estilo — 3 redesenhos em vez de 1)
+  DMG_NUMBER_PREWARM: [["#ffffff", false, 8], ["#ff9966", false, 6], ["#9ad4ff", false, 4], ["#d8a8ff", false, 4], ["#b8f0dc", false, 2], ["#ffd96b", true, 6]],
+  DMG_NUMBER_CAP: 120,
+  // Conquistas: abates e reações pedem a checagem; ela roda no máximo 1 vez por este intervalo
+  // (a que ficar pendente sai no fim do intervalo, na pausa ou no fim da partida)
+  ACHIEVEMENT_CHECK_MS: 1000,
+  // Gemas de XP no chão: acima do teto, as mais longe do herói se fundem na vizinha mais próxima
+  // (mais perto do herói) com o XP SOMADO — nada se perde. Conferido a cada GEM_CAP_CHECK_MS.
+  GEM_CAP: 150,
+  GEM_CAP_CHECK_MS: 250,
 };
 
 // Níveis de dificuldade ("Perigo") — ver docs/META_LOOP.md (Fase 1).

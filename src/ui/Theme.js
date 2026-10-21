@@ -89,6 +89,14 @@ export function text(scene, x, y, str, o = {}) {
   return t;
 }
 
+// Texto que muda a cada quadro (HUD, setas): só mexe no que mudou. O setText do Phaser já
+// ignora o mesmo texto, mas o setColor SEMPRE redesenha o canvas e reenvia a textura à GPU.
+export function setLabel(t, str, color) {
+  t.setText(str);
+  if (color != null && t.style.color !== color) t.setColor(color);
+  return t;
+}
+
 // ---------------------------------------------------------------------------
 // Molduras (Graphics) — cantos chanfrados, borda dupla, luz em cima/sombra embaixo
 // ---------------------------------------------------------------------------
@@ -327,15 +335,20 @@ export class Bar {
   _draw() {
     const { g, x, y, w, h } = this;
     const p = P;
+    const iw = w - 2 * p;
+    const gw = Math.round((iw * this.ghost) / p) * p;
+    const fw = Math.round((iw * this.value) / p) * p;
+    // A HUD chama set() todo quadro: só refaz o desenho quando algum pixel muda
+    if (gw === this._gw && fw === this._fw && this.color === this._c) return;
+    this._gw = gw;
+    this._fw = fw;
+    this._c = this.color;
     g.clear();
     g.fillStyle(PAL.ink, 1);
     g.fillRect(x + p, y, w - 2 * p, h);
     g.fillRect(x, y + p, w, h - 2 * p);
     g.fillStyle(0x0b100e, 1);
     g.fillRect(x + p, y + p, w - 2 * p, h - 2 * p);
-    const iw = w - 2 * p;
-    const gw = Math.round((iw * this.ghost) / p) * p;
-    const fw = Math.round((iw * this.value) / p) * p;
     if (gw > fw) {
       g.fillStyle(this.ghostColor, 0.85);
       g.fillRect(x + p, y + p, gw, h - 2 * p);

@@ -24,6 +24,7 @@ import {
   BOSS_FIGHT,
   BIOMES,
   LIBERATION,
+  PERF,
 } from "../config.js";
 import { randomRareSeed } from "../systems/Garden.js";
 import { recipe, mealMods, bonusText } from "../systems/Kitchen.js";
@@ -31,6 +32,7 @@ import { Daily, dailyUnlocked } from "../systems/Daily.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
 import { GameFeel } from "../systems/GameFeel.js";
+import { Puffs } from "../systems/Puffs.js";
 import { ShrineSystem } from "../systems/ShrineSystem.js";
 import { SpawnDirector } from "../systems/SpawnDirector.js";
 import { RunEvents } from "../systems/RunEvents.js";
@@ -64,7 +66,7 @@ import {
   AwakenOrb,
 } from "../entities/Pickups.js";
 import { Chest } from "../entities/Chest.js";
-import { DamageNumber } from "../entities/DamageNumber.js";
+import { DamageNumberPool } from "../entities/DamageNumber.js";
 import { HUD } from "../ui/HUD.js";
 import { ForestWorld } from "../world/ForestWorld.js";
 import { Lighting } from "../world/Lighting.js";
@@ -116,10 +118,20 @@ export class GameScene extends Phaser.Scene {
     // (a cena é reaproveitada: os ouvintes saem no shutdown, pelo nome, senão acumulam a cada partida)
     const joyOff = () => this.joystick?.setActive(false);
     this.events.on("pause", joyOff);
+    // Conquista pendente (checagem de 1×/s) sai antes de pausar: dá para sair da partida pelo menu
+    this._achPending = false;
+    this._achNextAt = 0;
+    this.events.on("pause", this._flushAchievements, this);
     // O Phaser não chama shutdown() sozinho: sem isto, cada partida deixava uma
     // camada de toque (joystick) e a música anteriores para trás
     this.events.once("shutdown", () => {
       this.events.off("pause", joyOff);
+      this.events.off("pause", this._flushAchievements, this);
+      // saiu sem passar pelo fim da partida: a pendente vale, sem aviso (a cena está saindo)
+      if (this._achPending && !this.gameOver) {
+        this._achPending = false;
+        this._checkAchievements(false, true);
+      }
       this.events.off("player:levelup", this._onLevelUp, this);
       this.events.off("resume", this._onResume, this);
       this.joystick?.destroy();
@@ -160,6 +172,9 @@ export class GameScene extends Phaser.Scene {
     this.projectilePool = new Pool(() => new Projectile(this), 30);
     this.boomerPool = new Pool(() => new BoomerangProj(this), 8);
     this.enemyProjPool = new Pool(() => new EnemyProjectile(this), 12);
+    // Depois da física: brilhos dos tiros seguem os tiros (src/entities/Halo.js) e os pickups, que
+    // não têm corpo Arcade, dão o passo deles (Pickups.js)
+    this.events.on(Phaser.Scenes.Events.POST_UPDATE, this._postUpdate, this);
     this.xpPool = new Pool(() => new XPGem(this), 50);
     this.coinPool = new Pool(() => new CoinPickup(this), 20);
     this.woodPool = new Pool(() => new WoodPickup(this), 12);
@@ -182,7 +197,8 @@ export class GameScene extends Phaser.Scene {
     this._seedsOn = (this.meta.data.revealed || []).includes("garden");
     this.heartPool = new Pool(() => new HeartPickup(this), 10);
     this.awakenOrbPool = new Pool(() => new AwakenOrb(this), 10);
-    this.dmgNumberPool = new Pool(() => new DamageNumber(this), 30);
+    this._pickupPools = [this.xpPool, this.coinPool, this.woodPool, this.seedPool, this.heartPool, this.awakenOrbPool];
+    this.dmgNumberPool = new DamageNumberPool(this); // por estilo: reaproveitar só troca o texto
 
     // Sistemas
     this.elemental = new ElementalSystem(this);
@@ -238,6 +254,7 @@ export class GameScene extends Phaser.Scene {
     // Spawner
     this.spawnDirector = new SpawnDirector(this, this.enemyPool, this.player);
     this.lighting = new Lighting(this, this.world);
+    this.puffs = new Puffs(this); // pó da morte e faíscas (imagens reaproveitadas)
     this.feel = new GameFeel(this);
     // Aparelho fraco: desliga a iluminação na 1ª partida (uma vez só)
     this.quality = new QualityWatchdog(this, () => {
@@ -274,8 +291,6 @@ export class GameScene extends Phaser.Scene {
     this.cameras.main.setBounds(-GAME.WORLD_RADIUS, -GAME.WORLD_RADIUS, WS, WS);
     this._zoom = null; // a cena é reaproveitada em "Jogar de novo"
     applyZoom(this); // acessibilidade: mundo maior, interface do mesmo tamanho
-
-    this._poofCount = 0;
 
     // HUD
     this.hud = new HUD(this, this.player);
@@ -485,32 +500,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   // Burst de "poeira" na morte de inimigo. Cap de partículas simultâneas pra
-  // aguentar limpezas em massa (Sobrecarga/Vapor) sem afogar o tween manager.
+  // aguentar limpezas em massa (Sobrecarga/Vapor). Imagens reaproveitadas (Puffs.js):
+  // criar e destruir 3 imagens por abate era o pico das matanças.
   _deathPoof(x, y) {
-    if (this._poofCount > 60) return;
+    if (this.puffs.count.poof > 60) return;
     for (let i = 0; i < 3; i++) {
-      this._poofCount++;
       const ang = Math.random() * Math.PI * 2;
       const d = 14 + Math.random() * 16;
-      const p = this.add
-        .image(x, y, "px_puff")
-        .setScale(1.2 + Math.random() * 1.2)
-        .setTint(i % 2 ? 0xf4ecd6 : 0x9fb4a4)
-        .setAlpha(0.9)
-        .setDepth(y + 10001);
-      this.tweens.add({
-        targets: p,
-        x: x + Math.cos(ang) * d,
-        y: y + Math.sin(ang) * d - 8,
-        alpha: 0,
-        scale: 0.4,
-        duration: 260 + Math.random() * 120,
-        ease: "Cubic.easeOut",
-        onComplete: () => {
-          p.destroy();
-          this._poofCount--;
-        },
-      });
+      const s0 = 1.2 + Math.random() * 1.2;
+      const ms = 260 + Math.random() * 120;
+      this.puffs.spawn("poof", "px_puff", x, y, x + Math.cos(ang) * d, y + Math.sin(ang) * d - 8, s0, 0.4, 0.9, i % 2 ? 0xf4ecd6 : 0x9fb4a4, y + 10001, ms);
     }
   }
 
@@ -579,7 +578,16 @@ export class GameScene extends Phaser.Scene {
   }
 
   update(time, dt) {
-    if (this.gameOver) return;
+    if (this.gameOver) {
+      // inimigos param, mas o pisca do último golpe ainda volta à cor (era um delayedCall)
+      this.enemyPool.forEachActive((e) => {
+        if (e._flashUntil && time >= e._flashUntil) {
+          e._flashUntil = 0;
+          this.elemental?._updateTint(e);
+        }
+      });
+      return;
+    }
     this.joystick?.setActive(true); // partida andando = joystick ligado (a pausa desliga)
     if (this._intro) return this._updateIntro(time, dt);
     this.elapsedMs += dt;
@@ -591,6 +599,7 @@ export class GameScene extends Phaser.Scene {
       this._survive10Checked = true;
       this._checkAchievements();
     }
+    if (this._achPending && time >= this._achNextAt) this._flushAchievements();
 
     // Aviso de boss 30 s antes
     if (
@@ -775,7 +784,11 @@ export class GameScene extends Phaser.Scene {
       }
     });
 
-    // Gemas + moedas
+    // Gemas + moedas (acima do teto, as gemas mais longe se fundem: _capGems)
+    if (time >= (this._gemCapAt ?? 0)) {
+      this._gemCapAt = time + PERF.GEM_CAP_CHECK_MS;
+      this._capGems();
+    }
     this.xpPool.forEachActive((g) => {
       g.update(time, dt, this.player);
       const dx = g.x - this.player.x,
@@ -975,6 +988,24 @@ export class GameScene extends Phaser.Scene {
     };
   }
 
+  // Abates e reações pedem a checagem a toda hora (numa matança, dezenas por quadro): roda na hora
+  // se a última foi há mais de PERF.ACHIEVEMENT_CHECK_MS; senão fica pendente e sai no fim do
+  // intervalo (update), na pausa ou no fim da partida (_onGameOver checa tudo de novo). Nada se perde.
+  _checkAchievementsSoon() {
+    const now = this.time.now;
+    if (now >= (this._achNextAt ?? 0)) {
+      this._achNextAt = now + PERF.ACHIEVEMENT_CHECK_MS;
+      this._achPending = false;
+      this._checkAchievements();
+    } else this._achPending = true;
+  }
+  _flushAchievements() {
+    if (!this._achPending || this.gameOver) return;
+    this._achPending = false;
+    this._achNextAt = this.time.now + PERF.ACHIEVEMENT_CHECK_MS;
+    this._checkAchievements();
+  }
+
   // Checa conquistas pendentes; mostra toast pra cada recém-desbloqueada.
   // silent=true no game over (a tela final já exibe no painel de desbloqueios).
   _checkAchievements(won = false, silent = false) {
@@ -1007,7 +1038,6 @@ export class GameScene extends Phaser.Scene {
       else if (m.resisted) (resisted = true), (crit = false); // cinza e pequeno: a couraça segurou
     }
     if (element !== "heal" && !this._showDmgNumbers) return;
-    const n = this.dmgNumberPool.acquire();
     let color;
     if (resisted) color = hex(PAL.s4);
     else if (crit) color = "#ffd96b";
@@ -1019,14 +1049,14 @@ export class GameScene extends Phaser.Scene {
     else color = "#ffffff";
     const text =
       element === "heal" ? `+${dmg}` : crit ? `${Math.ceil(dmg)}!` : dmg;
-    n.show(x, y, text, color, crit);
+    this.dmgNumberPool.show(x, y, text, color, crit);
   }
 
   _onEnemyDeath(enemy) {
     if (!enemy.active) return;
     this.hud.addKill();
     this.meta.recordKill();
-    this._checkAchievements();
+    this._checkAchievementsSoon();
     this.player.addAwakenMeter(PLAYER.AWAKEN_GAIN_KILL);
     this._killsSinceLastChest = (this._killsSinceLastChest || 0) + 1;
     if (this._killsSinceLastChest >= CHEST.KILL_DROP_EVERY) {
@@ -1217,30 +1247,104 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  // Teto de gemas no chão (PERF.GEM_CAP). Numa partida longa elas passavam de 250 — cada uma com
+  // sprite, corpo e update por quadro. Acima do teto, a gema parada mais longe do herói (quase sempre
+  // fora da tela) se funde na vizinha mais próxima: o XP vai somado e a gema fica no centro de massa
+  // do XP das duas (XPGem.absorb). Gemas puxadas pelo ímã ou ainda no pulinho de saída não entram.
+  _capGems() {
+    const pool = this.xpPool;
+    let excess = pool.size - PERF.GEM_CAP;
+    if (excess <= 0) return;
+    const list = (this._gemList ||= []);
+    list.length = 0;
+    const px = this.player.x,
+      py = this.player.y;
+    for (const g of pool.inUse) {
+      if (!g.active || g._pulled || g._hop?.isPlaying()) continue;
+      g._capD2 = (g.x - px) ** 2 + (g.y - py) ** 2;
+      list.push(g);
+    }
+    list.sort((a, b) => b._capD2 - a._capD2); // mais longe primeiro
+    for (let i = 0; i < list.length - 1 && excess > 0; i++) {
+      const g = list[i];
+      let best = null,
+        bd = Infinity;
+      for (let j = i + 1; j < list.length; j++) {
+        const h = list[j];
+        const d = (h.x - g.x) ** 2 + (h.y - g.y) ** 2;
+        if (d < bd) {
+          bd = d;
+          best = h;
+        }
+      }
+      if (!best) break;
+      best.absorb(g);
+      g.pickup();
+      pool.release(g);
+      excess--;
+    }
+    list.length = 0;
+  }
+
   // Empurra inimigos sobrepostos pra longe uns dos outros (separação tipo flocking).
   // Congelados não se movem, mas ainda empurram quem encosta.
+  // Varredura por x: a lista (a mesma de um quadro para o outro, sem alocar) fica ordenada por x —
+  // quase ordenada de um quadro para o outro, a ordenação por inserção custa ~n — e cada inimigo só
+  // testa os da direita até a maior distância de contato. Raio e congelamento: 1 leitura por inimigo
+  // por quadro (o raio acompanha o "soco" do golpe, como antes). Antes: todos os pares (n²), lista
+  // nova por quadro e displayWidth/isFrozen lidos em cada par.
   _separateEnemies(now) {
-    const list = [];
-    this.enemyPool.forEachActive((e) => {
-      if (e.active) list.push(e);
-    });
-    const n = list.length;
+    const list = (this._sepList ||= []);
+    const stamp = (this._sepStamp = (this._sepStamp || 0) + 1);
+    let n = 0;
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      if (e.active && e._pool_active) {
+        e._sepAt = stamp;
+        list[n++] = e;
+      }
+    }
+    list.length = n;
+    for (const e of this.enemyPool.inUse) {
+      if (e.active && e._sepAt !== stamp) {
+        e._sepAt = stamp;
+        list.push(e);
+      }
+    }
+    n = list.length;
+    let maxR = 0;
+    for (let i = 0; i < n; i++) {
+      const e = list[i];
+      // ordena por x (inserção)
+      let j = i - 1;
+      const x = e.x;
+      while (j >= 0 && list[j].x > x) {
+        list[j + 1] = list[j];
+        j--;
+      }
+      list[j + 1] = e;
+      e._sepR = e.displayWidth * 0.32;
+      e._sepF = e.isFrozen(now);
+      if (e._sepR > maxR) maxR = e._sepR;
+    }
     for (let i = 0; i < n; i++) {
       const a = list[i];
-      const ra = a.displayWidth * 0.32;
-      const aF = a.isFrozen(now);
+      const ra = a._sepR;
+      const reach = ra + maxR;
+      const aF = a._sepF;
       for (let j = i + 1; j < n; j++) {
         const b = list[j];
-        const dx = b.x - a.x,
-          dy = b.y - a.y;
-        const minD = ra + b.displayWidth * 0.32;
+        const dx = b.x - a.x;
+        if (dx >= reach) break; // os seguintes estão ainda mais à direita
+        const dy = b.y - a.y;
+        const minD = ra + b._sepR;
         const d2 = dx * dx + dy * dy;
         if (d2 >= minD * minD || d2 === 0) continue;
         const d = Math.sqrt(d2);
         const overlap = minD - d;
         const ux = dx / d,
           uy = dy / d;
-        const bF = b.isFrozen(now);
+        const bF = b._sepF;
         if (aF && bF) continue;
         if (aF) {
           // só b se afasta
@@ -1900,5 +2004,15 @@ export class GameScene extends Phaser.Scene {
   shutdown() {
     this.bgMusic?.stop();
     this.bgMusic = null;
+    this.events.off(Phaser.Scenes.Events.POST_UPDATE, this._postUpdate, this);
+  }
+
+  _postUpdate(time, dt) {
+    for (const pool of this._pickupPools) {
+      for (const p of pool.inUse) if (p.active) p.move(dt);
+    }
+    for (const p of this.projectilePool.inUse) p.syncHalo();
+    for (const p of this.boomerPool.inUse) p.syncHalo();
+    for (const p of this.enemyProjPool.inUse) p.syncHalo();
   }
 }
