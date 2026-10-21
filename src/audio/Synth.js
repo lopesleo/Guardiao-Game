@@ -83,6 +83,18 @@ const SFX = {
     const f = 38 + 55 * Math.exp(-(t >= 0.3 ? t - 0.3 : t) * 16);
     return Math.sin(TAU * osc(s, "ph", f)) * (a1 + a2) + lp(s, noise(), 0.05) * (a1 + a2) * 0.6;
   }],
+  sfx_heartbeat_run: [0.6, (t, s) => {
+    // vida baixa na partida: o mesmo "lub-dub", mais curto e com corpo que o alto-falante do
+    // celular toca (o de cima é quase só subgrave: perde ~24 dB no celular). A saturação cria
+    // harmônicos de 150–600 Hz e o ouvido "completa" o grave; o estalo seco marca a batida
+    const T2 = 0.22;
+    const u = t >= T2 ? t - T2 : t;
+    const a = t < T2 ? env(t, 0.003, 0.06) : env(u, 0.003, 0.075) * 0.75;
+    const f = 46 + 70 * Math.exp(-u * 20);
+    const body = Math.tanh(Math.sin(TAU * osc(s, "ph", f)) * 4);
+    const knock = lp(s, noise(), 0.25) * Math.exp(-u * 60);
+    return (body * 0.8 + knock * 0.5) * a;
+  }],
   sfx_strike: [0.55, (t, s) => {
     // golpe seco: estalo agudo + estrondo grave
     const crack = noise() * Math.exp(-t * 90) * 0.9;
@@ -671,6 +683,9 @@ function songBossCaatinga() {
 // ---------------------------------------------------------------------------
 // Registro no cache de áudio do Phaser (só WebAudio — todo Android moderno)
 // ---------------------------------------------------------------------------
+// Andamento de cada trilha (o Mixer troca de música no compasso: src/audio/Mixer.js)
+export const MUSIC_INFO = {};
+
 export function registerAudio(game) {
   const ctx = game.sound.context;
   if (!ctx || !game.cache?.audio) return false;
@@ -683,12 +698,20 @@ export function registerAudio(game) {
     seed = key.length * 7919; // ruído determinístico por som
     game.cache.audio.add(key, toBuffer(renderSfx(dur, gen)));
   }
-  game.cache.audio.add("music_menu", toBuffer(renderSong(songMenu())));
-  game.cache.audio.add("music_gameplay", toBuffer(renderSong(songGame())));
-  game.cache.audio.add("music_boss", toBuffer(renderSong(songBoss())));
-  game.cache.audio.add("music_caatinga", toBuffer(renderSong(songCaatinga())));
-  game.cache.audio.add("music_boss_caatinga", toBuffer(renderSong(songBossCaatinga())));
-  game.cache.audio.add("music_victory", toBuffer(renderSong(songVictory())));
-  game.cache.audio.add("music_defeat", toBuffer(renderSong(songDefeat())));
+  // chaves entre aspas: o npm run check procura "music_…" aqui para conferir as músicas dos biomas
+  const songs = {
+    "music_menu": songMenu,
+    "music_gameplay": songGame,
+    "music_boss": songBoss,
+    "music_caatinga": songCaatinga,
+    "music_boss_caatinga": songBossCaatinga,
+    "music_victory": songVictory,
+    "music_defeat": songDefeat,
+  };
+  for (const [key, make] of Object.entries(songs)) {
+    const song = make();
+    MUSIC_INFO[key] = { bpm: song.bpm, beats: song.beats };
+    game.cache.audio.add(key, toBuffer(renderSong(song)));
+  }
   return true;
 }

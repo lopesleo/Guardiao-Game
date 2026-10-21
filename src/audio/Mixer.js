@@ -14,6 +14,7 @@
 import { AUDIO } from "../config.js";
 import { Settings } from "../systems/Settings.js";
 import { VoiceGate } from "./Voices.js";
+import { MUSIC_INFO } from "./Synth.js";
 
 export const dbToGain = (db) => Math.pow(10, db / 20);
 // Barra 0..1 → ganho: escala em dB (cada pedaço da barra muda o volume na mesma proporção); 0 = mudo
@@ -240,6 +241,141 @@ function setVoiceVolume(voice, v) {
   p.setTargetAtTime(v, ctx.currentTime, 0.004);
 }
 
+// ---------------------------------------------------------------------------
+// MOMENTOS: o mesmo grupo de sons muda de cor conforme a situação da partida
+// ---------------------------------------------------------------------------
+const state = { moment: "normal", danger: false };
+const fading = new Set(); // trilhas saindo (troca no compasso): somem sozinhas ou no reset()
+
+// Desliza um AudioParam até o valor em `dur` s, em escala exponencial (frequência e ganho em dB
+// soam lineares assim), partindo de onde ele estiver agora (mesmo no meio de outra rampa)
+function glide(p, v, t, dur) {
+  if (p.cancelAndHoldAtTime) p.cancelAndHoldAtTime(t);
+  else {
+    p.cancelScheduledValues(t);
+    p.setValueAtTime(p.value, t);
+  }
+  if (dur <= 0) return p.setValueAtTime(v, t);
+  if (v > 0 && p.value > 0) p.exponentialRampToValueAtTime(v, t + dur);
+  else p.linearRampToValueAtTime(v, t + dur);
+}
+
+// Recalcula para onde os barramentos vão (momento + perigo) e desliza até lá
+function retarget(dur) {
+  if (!bus) return;
+  const t = ctx.currentTime;
+  const open = bus.open;
+  const M = state.moment;
+  const MU = AUDIO.MUFFLE,
+    D = AUDIO.DANGER,
+    X = AUDIO.DEATH;
+  let mLP = open,
+    mDB = 0,
+    sLP = open,
+    sDB = 0;
+  if (M === "muffle") {
+    mLP = sLP = MU.LP_HZ;
+    mDB = sDB = MU.DB;
+  } else if (M === "death") {
+    mLP = X.LP_HZ; // o volume da música cai na própria voz (fita parando)
+    sLP = X.SFX_LP_HZ;
+    sDB = X.SFX_DB;
+  }
+  if (state.danger && M !== "death") {
+    mLP = Math.min(mLP, D.MUSIC_LP_HZ);
+    mDB += D.MUSIC_DB;
+  }
+  glide(bus.music.lp.frequency, mLP, t, dur);
+  glide(bus.music.duck.gain, dbToGain(mDB), t, dur);
+  glide(bus.sfx.lp.frequency, sLP, t, dur);
+  glide(bus.sfx.duck.gain, dbToGain(sDB), t, dur);
+}
+
+// "normal" | "muffle" (pausa, cartas, Reviver) | "death" (use tapeStop). Repetir não reinicia a rampa
+export function setMoment(m) {
+  if (state.moment === m) return;
+  const was = state.moment;
+  state.moment = m;
+  const MU = AUDIO.MUFFLE;
+  retarget(m === "muffle" ? MU.IN_S : m === "death" ? AUDIO.DEATH.S : was === "muffle" ? MU.OUT_S : 0.2);
+}
+
+// Vida baixa (GameFeel cuida da histerese e do batimento)
+export function setDanger(on) {
+  on = !!on;
+  if (state.danger === on) return;
+  state.danger = on;
+  if (state.moment !== "death") retarget(on ? AUDIO.DANGER.IN_S : AUDIO.DANGER.OUT_S); // a fita parando manda
+}
+
+// Tudo de volta ao normal NA HORA (partida nova, troca de cena) e as trilhas que saíam somem
+export function resetMix() {
+  state.moment = "normal";
+  state.danger = false;
+  retarget(0);
+  for (const s of fading) if (!s.pendingRemove) s.destroy();
+  fading.clear();
+}
+
+// Morte: a fita para. A trilha desacelera (rate 1 → DEATH.RATE), fecha no passa-baixa e some;
+// os efeitos abafam junto. Quem chamou para/destrói a trilha depois (a câmera lenta dura 0,9 s)
+export function tapeStop(snd) {
+  setMoment("death");
+  if (!bus || !snd?.source || !snd.volumeNode) return;
+  const X = AUDIO.DEATH;
+  const t = ctx.currentTime;
+  for (const src of [snd.source, snd.loopSource]) {
+    if (!src) continue;
+    const p = src.playbackRate;
+    glide(p, p.value * X.RATE, t, X.S);
+  }
+  const g = snd.volumeNode.gain;
+  const v = snd.volume;
+  if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(t);
+  else g.cancelScheduledValues(t);
+  g.setValueAtTime(v, t);
+  g.setValueAtTime(v, t + X.S * 0.4);
+  g.exponentialRampToValueAtTime(Math.max(1e-4, v * 1e-3), t + X.S);
+  g.setValueAtTime(0, t + X.S);
+}
+
+// Troca de trilha NO COMPASSO. A atual afunda na hora (o rugido do chefe fica sozinho) e some até a
+// próxima barra; a nova entra num tempo forte da mesma grade, depois de enterAfterS. Devolve a nova.
+// Sem WebAudio (ou sem saber o andamento): o corte de antes, só que sem deixar a velha no gerenciador
+export function switchTrack(sound, old, key, cfg = {}, { enterAfterS = 0 } = {}) {
+  const next = sound.add(key, cfg);
+  const info = old && MUSIC_INFO[old.key];
+  if (!bus || !info || !old.isPlaying || !old.volumeNode) {
+    if (old && !old.pendingRemove) old.destroy();
+    next.play();
+    return next;
+  }
+  const S = AUDIO.SWITCH;
+  const t = ctx.currentTime;
+  const spb = 60 / (info.bpm * (old.totalRate || 1)); // segundos reais por tempo
+  const beats = ((old.seek || 0) * info.bpm) / 60; // onde a trilha está, em tempos (seek = tempo do buffer)
+  let toBar = (4 - (beats % 4)) * spb;
+  if (toBar < S.MIN_FADE_BEATS * spb) toBar += 4 * spb;
+  const end = t + toBar;
+  const grid = S.GRID_BEATS * spb;
+  const enter = end + Math.ceil(Math.max(0, t + enterAfterS - end) / grid - 1e-6) * grid;
+  const g = old.volumeNode.gain;
+  const v = old.volume;
+  if (g.cancelAndHoldAtTime) g.cancelAndHoldAtTime(t);
+  else g.cancelScheduledValues(t);
+  g.setValueAtTime(v, t);
+  g.linearRampToValueAtTime(v * dbToGain(S.DIP_DB), t + Math.min(S.DIP_S, toBar * 0.5));
+  g.exponentialRampToValueAtTime(Math.max(1e-4, v * 1e-3), end);
+  g.setValueAtTime(0, end);
+  fading.add(old);
+  setTimeout(() => {
+    fading.delete(old);
+    if (!old.pendingRemove) old.destroy();
+  }, (end - t) * 1000 + 80);
+  next.play({ delay: enter - t });
+  return next;
+}
+
 // Para testes e depuração: estado dos barramentos
 export const Mixer = {
   get active() {
@@ -250,5 +386,8 @@ export const Mixer = {
   },
   get context() {
     return ctx;
+  },
+  get state() {
+    return { ...state, fading: fading.size };
   },
 };

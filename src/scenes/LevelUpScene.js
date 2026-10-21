@@ -140,7 +140,7 @@ export class LevelUpScene extends Phaser.Scene {
     const last = this._cardObjs[3];
     last.setScale(0.6).setAlpha(0);
     this.tweens.add({ targets: last, scale: 1, alpha: 1, duration: 320, ease: "Back.easeOut" });
-    this.sound.play("sfx_chest_jackpot", { volume: 0.5 });
+    this.sound.play("sfx_chest_jackpot", { volume: 0.5, bus: "ui" }); // a partida atrás está abafada; a mesa, não
   }
 
   // Botão de trocar: saldo da PARTIDA (upgrades.rerollsLeft) ou, sem trocas, "TROCAR +1"
@@ -244,7 +244,7 @@ export class LevelUpScene extends Phaser.Scene {
     Analytics.track("card_banish", { id: up.cardId(card), level: this.player.level });
     this._banishMode = false;
     this._wobble(false);
-    this.sound.play("sfx_death", { volume: 0.4, rate: 0.8 });
+    this.sound.play("sfx_death", { volume: 0.4, rate: 0.8, bus: "ui" });
     const fresh = up.replacement(this.player, this.cards);
     if (!fresh) {
       // nada para repor: tira a carta e reorganiza a mesa (que nunca fica vazia)

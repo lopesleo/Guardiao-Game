@@ -1921,6 +1921,20 @@ export const AUDIO = {
     sfx_mirage: 0.015, sfx_coin: 0.015, sfx_react_vapor: 0.05, sfx_react_overload: 0.04,
     sfx_react_labareda: 0.05, sfx_react_temporal: 0.05, sfx_react_geada: 0.02, sfx_react_crystal: 0.02,
   },
+  // Momentos (Mixer.setMoment). Pausa, cartas de nível, Reviver e a escolha da Noite Eterna abafam a
+  // música e os efeitos da partida (passa-baixa + queda) e voltam ao retomar; a interface nunca abafa
+  MUFFLE: { LP_HZ: 800, DB: -6, IN_S: 0.25, OUT_S: 0.3 },
+  // Vida baixa: o coração bate (sfx_heartbeat_run, mais rápido perto do fim) e a música escurece um
+  // pouco e FICA assim (nada de "respirar" a cada golpe ou reação). Entra abaixo de HP e só sai acima
+  // de HP_OUT (histerese: curar 1 ponto e tomar 1 golpe não liga e desliga)
+  DANGER: { HP: 0.3, HP_OUT: 0.36, BEAT_MS: [1250, 800], BEAT_VOL: 0.42, MUSIC_LP_HZ: 3000, MUSIC_DB: -2, IN_S: 0.8, OUT_S: 1.5 },
+  // Troca de trilha (chegada do chefe, Noite Eterna): a atual afunda DIP_DB na hora (o rugido fica
+  // sozinho) e some até a próxima barra de compasso (pelo menos MIN_FADE_BEATS tempos); a nova entra
+  // num tempo forte (múltiplo de GRID_BEATS) da mesma grade, depois de ENTER_AFTER_S (o rugido)
+  SWITCH: { DIP_DB: -12, DIP_S: 0.15, MIN_FADE_BEATS: 1, GRID_BEATS: 2, ROAR_S: 0.95 },
+  // Morte: a fita para (rate 1 → RATE) com a música fechando no passa-baixa e sumindo em S segundos
+  // (dentro da câmera lenta de 0,9 s); os efeitos abafam um pouco junto
+  DEATH: { RATE: 0.5, LP_HZ: 450, SFX_LP_HZ: 1500, SFX_DB: -4, S: 0.85 },
 };
 
 export const COLORS = {
