@@ -8,7 +8,7 @@ import { RANKING } from "../config.js";
 import { Leaderboards, perigoName } from "../systems/Leaderboards.js";
 import { Analytics } from "../systems/Analytics.js";
 import { makePedestal } from "../art/ResultArt.js";
-import { text, drawFrame, Button, vw, vh, textPx, PAL, CSS, hex } from "./Theme.js";
+import { text, setLabel, drawFrame, Button, vw, vh, textPx, PAL, CSS, hex } from "./Theme.js";
 import { Modal } from "./Widgets.js";
 import { tr, fmt } from "../i18n/i18n.js";
 
@@ -286,8 +286,7 @@ export function openRanking(scene, o = {}) {
       body.add(ht);
       enter([ht], 500, { dy: 6 });
     }
-    totalT.setText(stuck || (hint && !roomy ? hint : total));
-    totalT.setColor(stuck || (hint && !roomy) ? CSS.muted : CSS.dim);
+    setLabel(totalT, stuck || (hint && !roomy ? hint : total), stuck || (hint && !roomy) ? CSS.muted : CSS.dim);
     clip(totalT, m.w - 80);
     m.add(body);
     return meRow;
