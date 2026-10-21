@@ -7,6 +7,7 @@ import { MetaProgression, SaveLock } from "../systems/MetaProgression.js";
 import { CloudSave } from "../systems/CloudSave.js";
 import { DEBUG, isNative } from "../systems/Platform.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
+import { ScreenVignette } from "../art/Gradients.js";
 import { TITLE_PX, makeSky, makeMoon, makeCloud, makeRidge, makeTreeline, makeGround, makeFrameTrunk, makeCanopy, makeFern, makeCampfire, makeLeaf, makeStreak, makeVine } from "../art/TitleArt.js";
 import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
 import { closeTopModal } from "../ui/Widgets.js";
@@ -242,19 +243,9 @@ export class TitleScene extends Phaser.Scene {
     };
     this.time.delayedCall(3000 + Math.random() * 3000, shoot);
 
-    // Vinheta
-    const vk = `vignette_${W}x${H}`;
-    if (!this.textures.exists(vk)) {
-      const c = this.textures.createCanvas(vk, W, H);
-      const ctx = c.getContext();
-      const g = ctx.createRadialGradient(W * 0.42, H * 0.62, H * 0.4, W / 2, H / 2, Math.max(W, H) * 0.72);
-      g.addColorStop(0, "rgba(0,0,0,0)");
-      g.addColorStop(1, "rgba(6,8,14,0.6)");
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, W, H);
-      c.refresh();
-    }
-    this.add.image(0, 0, vk).setOrigin(0).setDepth(900);
+    // Vinheta (Gradient: sem degraus nos escuros e sem textura do tamanho da tela). O foco fica embaixo à
+    // esquerda, na fogueira e no guardião
+    new ScreenVignette(this, { geom: (w, h) => ({ cx: w * 0.45, cy: h * 0.58, r0: h * 0.4, r1: Math.max(w, h) * 0.7 }), color: PAL.night0, alpha: 0.6, depth: 900 });
   }
 
   update(time, dt) {

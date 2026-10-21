@@ -543,19 +543,6 @@ function makeRocks() {
   return p.outline(K);
 }
 
-// Vinheta: escurece as bordas da tela (textura grande, esticada)
-function makeVignette(scene) {
-  if (scene.textures.exists("fx_vignette")) return;
-  const c = scene.textures.createCanvas("fx_vignette", 256, 256);
-  const ctx = c.getContext();
-  const g = ctx.createRadialGradient(128, 128, 70, 128, 128, 182);
-  g.addColorStop(0, "rgba(6,10,16,0)");
-  g.addColorStop(1, "rgba(6,10,16,1)");
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, 256, 256);
-  c.refresh();
-}
-
 // Raio de sol (Clareira Ancestral): faixa vertical suave, some nas bordas e no pé (NÃO-pixel, só para luz
 // aditiva, como o fx_glow)
 function makeShaft(scene) {
@@ -595,7 +582,6 @@ export function registerCampDecor(scene) {
   makeHeliconia(true).register(scene, "camp_heliconia0");
   makeHeliconia(false).register(scene, "camp_heliconia1");
   makeRocks().register(scene, "camp_rocks");
-  makeVignette(scene);
   makeShaft(scene);
 }
 
