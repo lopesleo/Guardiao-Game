@@ -366,6 +366,8 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   o número mostra o dano real (cinza quando a couraça segura; dourado no ponto fraco), anel e lascas da
   Podridão e uma dica que ensina o ponto fraco; KEEP 0,25 → 0,45 (300 dano/s: ~35 s → ~17 s; build
   fraca não muda). 👤 sentir no aparelho
+- ✅ **INFERNO travava o jogo** (21/10/2026, conserto): desde o livro de dano (09/10) o fogo que a evolução
+  deixa no chão lançava erro no 1º acerto e o laço do jogo parava (tela congelada). Estava na 1.0.19.
 
 ### M5 — Monetização e medição reais 👤
 - ✅ AdMob: app Android criado e **7 blocos premiados** em uso (revive, extra_card, build_speed,
