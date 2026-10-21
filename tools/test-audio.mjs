@@ -122,10 +122,16 @@ async function open(settings) {
     const t = await now();
     await until((t) => window.game.sound.context.currentTime >= t, t + s, s * 1000 + 30000);
   };
-  const startRun = async () => {
+  // Herói imune. calm = sem XP (as cartas abrem só quando o teste pede: uma carta no meio da medição
+  // do coração abafaria tudo e o teste acusaria o que é certo)
+  const startRun = async (calm = true) => {
     await page.evaluate(() => void window.game.scene.getScenes(true)[0].scene.start("GameScene"));
     await until(() => window.game.scene.getScene("GameScene")?.player && !window.game.scene.getScene("GameScene")._intro && window.game.scene.isActive("GameScene"));
-    await page.evaluate(() => (window.game.scene.getScene("GameScene")._god = true));
+    await page.evaluate((calm) => {
+      const g = window.game.scene.getScene("GameScene");
+      g._god = true;
+      if (calm) g.player.gainXp = () => {};
+    }, calm);
   };
   const mix = () =>
     page.evaluate(async () => {
@@ -183,6 +189,30 @@ try {
     const { Settings } = await import("/src/systems/Settings.js");
     Settings.set("music", 0.92);
     Settings.set("sfx", 0.95);
+  });
+  await waitAudio(0.5);
+
+  // Mudo geral (tecla M no PC) e segundo plano (o app vai para o fundo: o áudio inteiro suspende)
+  await page.evaluate(() => (window.game.sound.mute = true));
+  await waitAudio(0.2);
+  t = await now();
+  await waitAudio(0.8);
+  check((await meter(t, await now())).pk === 0, "mudo geral cala tudo");
+  await page.evaluate(() => (window.game.sound.mute = false));
+  const bg = async (hidden) => {
+    await page.evaluate((h) => {
+      Object.defineProperty(document, "hidden", { configurable: true, get: () => h });
+      document.dispatchEvent(new Event("visibilitychange"));
+    }, hidden);
+    await page.waitForTimeout(400);
+    return page.evaluate(() => window.game.sound.context.state);
+  };
+  const off = await bg(true);
+  const on = await bg(false);
+  check(off === "suspended" && on === "running", "segundo plano suspende o áudio e a volta retoma", `${off} → ${on}`);
+  await page.evaluate(() => {
+    window.game.scene.stop("PauseScene"); // a ida para o fundo pausa a partida
+    window.game.scene.getScene("GameScene").scene.resume();
   });
   await waitAudio(0.5);
 
@@ -250,7 +280,7 @@ try {
   m = await mix();
   const beats = (await page.evaluate(() => window.__aud.plays.sfx_heartbeat_run || 0)) - beats0;
   check(beats >= 2 && beats <= 6, "vida baixa: o coração bate com intervalo", `${beats} batidas em 4 s`);
-  check(m.danger && m.mLP < 4000 && m.sLP > m.open * 0.9, "vida baixa: só a música escurece (os avisos ficam limpos)", `música ${m.mLP.toFixed(0)} Hz, efeitos ${m.sLP.toFixed(0)} Hz`);
+  check(m.danger && m.mLP < 4000 && m.sLP > m.open * 0.9, "vida baixa: só a música escurece (os avisos ficam limpos)", `${m.moment}: música ${m.mLP.toFixed(0)} Hz, efeitos ${m.sLP.toFixed(0)} Hz`);
   await page.evaluate(() => {
     const p = window.game.scene.getScene("GameScene").player;
     p.hp = p.maxHp * 0.33; // entre os limites: continua ligado (histerese)
@@ -324,7 +354,7 @@ try {
   // Partida longa: os nós de áudio não crescem sem parar
   await page.evaluate(() => void window.game.scene.getScene("FirstDefeatScene")._finish(true));
   await until(() => !window.game.scene.isActive("FirstDefeatScene"), null, 20000);
-  await T.startRun();
+  await T.startRun(false); // com XP: as cartas abrem e fecham sozinhas
   const samples = [];
   const t1 = Date.now();
   while (Date.now() - t1 < SOAK_S * 1000) {
