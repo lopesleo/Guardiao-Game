@@ -51,7 +51,8 @@ npm run balance      # invariantes de balanceamento
    (`_flame(tipo, teto, …)`) — nada de círculo/fatia vetorial, nada de criar e destruir
    imagem por golpe, nada de girar sprite de pixel (rodopio se desenha em quadros).
    Graphics redesenhado todo quadro: no máximo algumas centenas de retângulos (milhares
-   somem no Phaser 4). Revisar a arte: `node tools/monster-sheet.mjs saida.png fx_<nome> 6`.
+   somem no Phaser 4); forma grande que cresce (anel de raio 900) vai para um shader, como
+   o `ScreamTele` do Grito (`Telegraph.js`). Revisar a arte: `node tools/monster-sheet.mjs saida.png fx_<nome> 6`.
 4. **Som**: um efeito em `src/audio/Synth.js` (`sfx_<nome>`).
 5. **Luz** (opcional): método `lights(add)` na classe — o mapa de luz chama sozinho.
 6. **Laços**: se a arma tem um momento interessante ("bateu", "fez a volta",
