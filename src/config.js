@@ -28,6 +28,10 @@ export const PERF = {
   // Conquistas: abates e reações pedem a checagem; ela roda no máximo 1 vez por este intervalo
   // (a que ficar pendente sai no fim do intervalo, na pausa ou no fim da partida)
   ACHIEVEMENT_CHECK_MS: 1000,
+  // Gemas de XP no chão: acima do teto, as mais longe do herói se fundem na vizinha mais próxima
+  // (mais perto do herói) com o XP SOMADO — nada se perde. Conferido a cada GEM_CAP_CHECK_MS.
+  GEM_CAP: 150,
+  GEM_CAP_CHECK_MS: 250,
 };
 
 // Níveis de dificuldade ("Perigo") — ver docs/META_LOOP.md (Fase 1).

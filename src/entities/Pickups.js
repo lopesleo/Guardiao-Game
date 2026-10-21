@@ -85,22 +85,40 @@ class Pickup extends Phaser.Physics.Arcade.Sprite {
   }
 }
 
+// tier: 0 verde (normal), 1 azul (×5), 2 dourada (×20) — usado por baús e pela fusão de gemas
+const GEM_TIERS = [
+  ["px_gem", "gem_shine", 1],
+  ["px_gem_blue", "gem_blue_shine", 5],
+  ["px_gem_gold", "gem_gold_shine", 20],
+];
+
 export class XPGem extends Pickup {
   constructor(scene) {
     super(scene, "px_gem", { anim: "gem_shine", magnet: 360 });
     this.xpValue = ENEMY.XP_VALUE;
   }
-  // tier: 0 verde (normal), 1 azul (×5), 2 dourada (×20) — usado por baús
   spawn(x, y, tier = 0) {
-    const T = [
-      ["px_gem", "gem_shine", 1],
-      ["px_gem_blue", "gem_blue_shine", 5],
-      ["px_gem_gold", "gem_gold_shine", 20],
-    ][tier] ?? ["px_gem", "gem_shine", 1];
+    const T = GEM_TIERS[tier] ?? GEM_TIERS[0];
     this.setTexture(T[0]);
     this.anim = T[1];
     this.xpValue = ENEMY.XP_VALUE * T[2];
     super.spawn(x, y);
+  }
+  // Fusão (teto de gemas no chão, PERF.GEM_CAP): esta gema fica com o XP da outra, somado, e vai
+  // para o centro de massa do XP das duas (o XP não "anda" para perto do herói). A cor acompanha
+  // o valor, na escala das gemas de baú (azul a partir de ×5, dourada de ×20).
+  absorb(other) {
+    const total = this.xpValue + other.xpValue;
+    const k = other.xpValue / total;
+    this.setPosition(this.x + (other.x - this.x) * k, this.y + (other.y - this.y) * k);
+    this.xpValue = total;
+    const mult = this.xpValue / ENEMY.XP_VALUE;
+    const T = GEM_TIERS[mult >= 20 ? 2 : mult >= 5 ? 1 : 0];
+    if (this.anim !== T[1]) {
+      this.setTexture(T[0]);
+      this.anim = T[1];
+      this.play({ key: T[1], startFrame: Math.floor(Math.random() * (this.scene.anims.get(T[1])?.frames.length ?? 1)) });
+    }
   }
 }
 

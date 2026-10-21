@@ -771,7 +771,11 @@ export class GameScene extends Phaser.Scene {
       }
     });
 
-    // Gemas + moedas
+    // Gemas + moedas (acima do teto, as gemas mais longe se fundem: _capGems)
+    if (time >= (this._gemCapAt ?? 0)) {
+      this._gemCapAt = time + PERF.GEM_CAP_CHECK_MS;
+      this._capGems();
+    }
     this.xpPool.forEachActive((g) => {
       g.update(time, dt, this.player);
       const dx = g.x - this.player.x,
@@ -1228,6 +1232,45 @@ export class GameScene extends Phaser.Scene {
         if (p.isDead()) this._onGameOver(false);
       }
     }
+  }
+
+  // Teto de gemas no chão (PERF.GEM_CAP). Numa partida longa elas passavam de 250 — cada uma com
+  // sprite, corpo e update por quadro. Acima do teto, a gema parada mais longe do herói (quase sempre
+  // fora da tela) se funde na vizinha mais próxima: o XP vai somado e a gema fica no centro de massa
+  // do XP das duas (XPGem.absorb). Gemas puxadas pelo ímã ou ainda no pulinho de saída não entram.
+  _capGems() {
+    const pool = this.xpPool;
+    let excess = pool.size - PERF.GEM_CAP;
+    if (excess <= 0) return;
+    const list = (this._gemList ||= []);
+    list.length = 0;
+    const px = this.player.x,
+      py = this.player.y;
+    for (const g of pool.inUse) {
+      if (!g.active || g._pulled || g._hop?.isPlaying()) continue;
+      g._capD2 = (g.x - px) ** 2 + (g.y - py) ** 2;
+      list.push(g);
+    }
+    list.sort((a, b) => b._capD2 - a._capD2); // mais longe primeiro
+    for (let i = 0; i < list.length - 1 && excess > 0; i++) {
+      const g = list[i];
+      let best = null,
+        bd = Infinity;
+      for (let j = i + 1; j < list.length; j++) {
+        const h = list[j];
+        const d = (h.x - g.x) ** 2 + (h.y - g.y) ** 2;
+        if (d < bd) {
+          bd = d;
+          best = h;
+        }
+      }
+      if (!best) break;
+      best.absorb(g);
+      g.pickup();
+      pool.release(g);
+      excess--;
+    }
+    list.length = 0;
   }
 
   // Empurra inimigos sobrepostos pra longe uns dos outros (separação tipo flocking).
