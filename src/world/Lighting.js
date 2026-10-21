@@ -7,7 +7,7 @@
 //  2) SOMBRAS DINÂMICAS: árvores perto do herói projetam sombras alongadas na
 //     direção OPOSTA à luz dele — giram e esticam enquanto você anda.
 // HUD, números de dano e avisos ficam acima (profundidade maior) e não escurecem.
-import { GAME } from "../config.js";
+import { GAME, PODRIDAO } from "../config.js";
 import { Settings } from "../systems/Settings.js";
 import { vw, vh } from "../ui/Theme.js";
 
@@ -25,6 +25,7 @@ const AMB_BOSS = [0x3e, 0x34, 0x5e];
 
 const lerp = (a, b, t) => a + (b - a) * t;
 const mix = (c1, c2, t) => (Math.round(lerp(c1[0], c2[0], t)) << 16) | (Math.round(lerp(c1[1], c2[1], t)) << 8) | Math.round(lerp(c1[2], c2[2], t));
+const mixArr = (c1, c2, t) => [lerp(c1[0], c2[0], t), lerp(c1[1], c2[1], t), lerp(c1[2], c2[2], t)];
 
 function ensureTextures(scene) {
   if (!scene.textures.exists("fx_light")) {
@@ -199,7 +200,15 @@ export class Lighting {
     const dusk = L?.dusk ?? AMB_DUSK,
       night = L?.night ?? AMB_NIGHT,
       bossAmb = L?.boss ?? AMB_BOSS;
-    const amb = s.boss?.active ? mix(night, bossAmb, 1) : mix(dusk, night, Math.pow(tRun, 1.3));
+    // Luz do chefe entra (e sai, na libertação) em ~1,6 s junto com a Podridão da borda — antes
+    // pulava de uma cor para a outra num quadro só
+    const bossOn = s.boss?.active ? 1 : 0;
+    const step = this._ambT == null ? 1 : (time - this._ambT) / PODRIDAO.BOSS_AMB_MS;
+    this._ambT = time;
+    this._bossK = this._bossK == null ? bossOn : this._bossK + Math.max(-step, Math.min(step, bossOn - this._bossK));
+    const kB = this._bossK * this._bossK * (3 - 2 * this._bossK); // suave nas duas pontas
+    const base = Math.pow(tRun, 1.3);
+    const amb = kB > 0 ? mix(mixArr(dusk, night, base), bossAmb, kB) : mix(dusk, night, base);
     this.rt.fill(amb);
     if (this._n) this.rt.draw(this.stamps.slice(0, this._n));
     // Phaser 4: no modo padrão a RenderTexture só EXIBE o que já tem; sem render()

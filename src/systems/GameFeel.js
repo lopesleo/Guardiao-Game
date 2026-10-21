@@ -143,16 +143,11 @@ export class GameFeel {
     haptic(40);
   }
 
-  // Vinheta: pisca no dano e fica pulsando fraco com a vida baixa.
+  // Vinheta: pisca no dano e some. A vida baixa NÃO pulsa aqui: é a própria Podridão da borda
+  // que pulsa (world/Podridao.js) — duas vinhetas em ritmos diferentes brigavam na tela.
   update(time, dt) {
-    const p = this.scene.player;
     this._hurtA = Math.max(0, this._hurtA - dt / 380);
-    let low = 0;
-    if (p && p.maxHp > 0 && !this.scene.gameOver) {
-      const f = p.hp / p.maxHp;
-      if (f < 0.3) low = (0.16 + 0.1 * Math.sin(time / 260)) * (1 - f / 0.3 * 0.5);
-    }
-    const a = Math.max(this._hurtA * 0.7, low);
+    const a = this._hurtA * 0.7;
     if (a !== this._lastA) this.vignette.setAlpha(a);
     this._lastA = a;
   }
