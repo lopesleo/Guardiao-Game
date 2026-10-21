@@ -8,7 +8,7 @@ import { formatTime } from "../utils.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { Pix } from "../art/PixelArt.js";
 import { WEAPON_ICON } from "../art/Icons.js";
-import { vw, vh, text, drawFrame, Bar, P, haptic } from "./Theme.js";
+import { vw, vh, text, setLabel, drawFrame, Bar, P, haptic } from "./Theme.js";
 import { tr, dec } from "../i18n/i18n.js";
 import { joyRight } from "./VirtualJoystick.js";
 
@@ -226,6 +226,10 @@ export class HUD {
   // Fatia de recarga sobre o botão redondo (0 = pronto, 1 = recém-usado)
   _cooldown(btn, frac, readyGlow, time) {
     const g = btn.cd;
+    // Pronto e sem brilho (o comum): nada muda de um quadro para o outro
+    const idle = frac <= 0.001 && !readyGlow;
+    if (idle && btn._idle) return;
+    btn._idle = idle;
     g.clear();
     if (frac > 0.001) {
       g.fillStyle(PAL.ink, 0.6);
@@ -394,7 +398,7 @@ export class HUD {
       awReady = false;
     if (!p.awakenUnlocked) {
       this.awBar.set(0, true);
-      this.awHint.setText(tr("bloqueado")).setColor(CSS.dim);
+      setLabel(this.awHint, tr("bloqueado"), CSS.dim);
       this.awIcon.setTint(0x555555);
     } else {
       this.awIcon.clearTint();
@@ -404,12 +408,12 @@ export class HUD {
         const remain = Math.max(0, p.awakenedUntil - now);
         this.awBar.setColor(PAL.yel3);
         this.awBar.set(remain / PLAYER.AWAKEN_DURATION_MS, true);
-        this.awHint.setText(`${(remain / 1000).toFixed(1)}s`).setColor(CSS.goldHi);
+        setLabel(this.awHint, `${(remain / 1000).toFixed(1)}s`, CSS.goldHi);
         awFrac = 0;
       } else if (p.awakenReady()) {
         this.awBar.setColor(PAL.yel3);
         this.awBar.set(1);
-        this.awHint.setText(this.isTouch ? tr("PRONTO!") : tr("PRONTO! [R]")).setColor(CSS.goldHi);
+        setLabel(this.awHint, this.isTouch ? tr("PRONTO!") : tr("PRONTO! [R]"), CSS.goldHi);
         this.awHint.setAlpha(0.6 + Math.sin(time / 120) * 0.4);
         awReady = true;
         this.scene._hint?.("awaken", this.isTouch ? tr("Despertar pronto! Toque na estrela\npara disparar tudo mais rápido.") : tr("Despertar pronto! Aperte R\npara disparar tudo mais rápido."));
@@ -429,9 +433,9 @@ export class HUD {
       this.btnAwaken.lock.setVisible(!p.awakenUnlocked);
       this._cooldown(this.btnAwaken, p.awakenUnlocked ? awFrac : 1, awReady, time);
     } else if (this.dashHint) {
-      if (!p.dashUnlocked) this.dashHint.setText("").setColor(CSS.dim);
-      else if (p.dashReady()) this.dashHint.setText(tr("DASH [SHIFT]")).setColor(CSS.goldHi);
-      else this.dashHint.setText(tr("DASH {0}s", dec(Math.max(0, p.dashCdUntil - now) / 1000))).setColor(CSS.muted);
+      if (!p.dashUnlocked) setLabel(this.dashHint, "", CSS.dim);
+      else if (p.dashReady()) setLabel(this.dashHint, tr("DASH [SHIFT]"), CSS.goldHi);
+      else setLabel(this.dashHint, tr("DASH {0}s", dec(Math.max(0, p.dashCdUntil - now) / 1000)), CSS.muted);
     }
   }
 }

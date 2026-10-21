@@ -26,7 +26,7 @@ import { openRanking } from "../ui/RankingModal.js";
 import { Leaderboards } from "../systems/Leaderboards.js";
 import { Analytics } from "../systems/Analytics.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
-import { text, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
+import { text, setLabel, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
 import { Modal, closeTopModal } from "../ui/Widgets.js";
 import { MetaPanels } from "../ui/MetaPanels.js";
 import { applyZoom } from "../ui/Zoom.js";
@@ -743,8 +743,7 @@ export class CampScene extends Phaser.Scene {
     const job = this.builds.job;
     if (job && this.buildTimer) {
       const free = this.builds.canFinishFree();
-      this.buildTimer.setText(free ? tr("PRONTA!") : fmtDuration(this.builds.remainingMs()));
-      this.buildTimer.setColor(free ? CSS.green : CSS.goldHi);
+      setLabel(this.buildTimer, free ? tr("PRONTA!") : fmtDuration(this.builds.remainingMs()), free ? CSS.green : CSS.goldHi);
     }
   }
 

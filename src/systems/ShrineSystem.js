@@ -7,7 +7,7 @@
 import { SHRINE, GAME, ARENA, INTRO } from "../config.js";
 import { Analytics } from "./Analytics.js";
 import { Chest } from "../entities/Chest.js";
-import { text, vw, vh } from "../ui/Theme.js";
+import { text, setLabel, vw, vh } from "../ui/Theme.js";
 import { CSS } from "../art/Palette.js";
 import { tr } from "../i18n/i18n.js";
 
@@ -236,7 +236,7 @@ export class ShrineSystem {
       ax + Math.cos(ang + 2.5) * 12, ay + Math.sin(ang + 2.5) * 12,
       ax + Math.cos(ang - 2.5) * 12, ay + Math.sin(ang - 2.5) * 12,
     );
-    this.arrowLabel.setVisible(true).setText(`${best.def.short} ${bd >= 1000 ? (bd / 1000).toFixed(1) + "k" : Math.round(bd / 10) * 10}`).setColor(best.def.css);
+    setLabel(this.arrowLabel.setVisible(true), `${best.def.short} ${bd >= 1000 ? (bd / 1000).toFixed(1) + "k" : Math.round(bd / 10) * 10}`, best.def.css);
     this.arrowLabel.setPosition(ax - dx * 34, ay - dy * 34);
   }
 
