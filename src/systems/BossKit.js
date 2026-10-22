@@ -108,7 +108,7 @@ export class FightLog {
     this.dodges++;
     p.addAwakenMeter(BOSS_FIGHT.DODGE_AWAKEN);
     s.dmgNumberPool?.show(p.x, p.y - 44, viaDash ? tr("ESQUIVOU!") : tr("DESVIOU!"), "#c8f08c", false);
-    s.sound.play("sfx_dodge", { volume: 0.45 });
+    s.sound.play("sfx_dodge", { volume: 0.45, alert: true });
     s.fx?.ring?.(p.x, p.y, PAL.g6, 10, 46, 260, 1, 0.8);
   }
 
@@ -213,7 +213,7 @@ export class WeakSpot {
     o._exposedUntil = s.time.now + ms;
     o._exposedMult = mult;
     o._exposedMs = ms;
-    s.sound.play("sfx_weak", { volume: 0.5 });
+    s.sound.play("sfx_weak", { volume: 0.5, alert: true }); // aviso: nunca entra no limite de vozes
     s.dmgNumberPool?.show(o.x, o.y - o.displayHeight * 0.6, label, "#ffe58f", true);
   }
 

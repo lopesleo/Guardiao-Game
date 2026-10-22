@@ -43,16 +43,22 @@ function normalize(buf, peak) {
 const osc = (st, key, f) => (st[key] += f / SR);
 const lp = (st, x, a, key = "lp") => (st[key] += a * (x - st[key]));
 const env = (t, a, d) => (t < a ? t / a : Math.exp(-(t - a) / d));
+// Abate: f0 = tom do baque, air = abertura do sopro, dec = queda do corpo
+const death = (f0, air, dec) => (t, s) => {
+  const f = f0 * Math.exp(-t * 9) + 40;
+  return Math.sin(TAU * osc(s, "ph", f)) * env(t, 0.003, dec) * 0.8 + lp(s, noise(), air * Math.exp(-t * 8) + 0.05) * env(t, 0.002, 0.08);
+};
 
 const SFX = {
   sfx_hit: [0.09, (t, s) => {
     const f = 180 * Math.exp(-t * 25) + 70;
     return sq(osc(s, "ph", f), 0.4) * env(t, 0.002, 0.03) * 0.6 + lp(s, noise(), 0.35) * env(t, 0.001, 0.02);
   }],
-  sfx_death: [0.26, (t, s) => {
-    const f = 140 * Math.exp(-t * 9) + 40;
-    return Math.sin(TAU * osc(s, "ph", f)) * env(t, 0.003, 0.09) * 0.8 + lp(s, noise(), 0.5 * Math.exp(-t * 8) + 0.05) * env(t, 0.002, 0.08);
-  }],
+  // abate: baque que cai + sopro. Três tomadas (tom e sopro diferentes, ruído de outra semente)
+  // para a horda caindo não soar como uma metralhadora do mesmo som (ver AUDIO.VARIANTS)
+  sfx_death: [0.26, death(140, 0.5, 0.09)],
+  sfx_death_2: [0.26, death(122, 0.42, 0.1)],
+  sfx_death_3: [0.24, death(163, 0.6, 0.08)],
   sfx_pickup: [0.07, (t, s) => sq(osc(s, "ph", 880 + t * 7000), 0.25) * env(t, 0.002, 0.03)],
   sfx_levelup: [0.62, (t, s) => {
     const notes = [72, 76, 79, 84, 88];
@@ -76,6 +82,18 @@ const SFX = {
     const a1 = env(t, 0.004, 0.07), a2 = t >= 0.3 ? env(t - 0.3, 0.004, 0.09) * 0.7 : 0;
     const f = 38 + 55 * Math.exp(-(t >= 0.3 ? t - 0.3 : t) * 16);
     return Math.sin(TAU * osc(s, "ph", f)) * (a1 + a2) + lp(s, noise(), 0.05) * (a1 + a2) * 0.6;
+  }],
+  sfx_heartbeat_run: [0.6, (t, s) => {
+    // vida baixa na partida: o mesmo "lub-dub", mais curto e com corpo que o alto-falante do
+    // celular toca (o de cima é quase só subgrave: perde ~24 dB no celular). A saturação cria
+    // harmônicos de 150–600 Hz e o ouvido "completa" o grave; o estalo seco marca a batida
+    const T2 = 0.22;
+    const u = t >= T2 ? t - T2 : t;
+    const a = t < T2 ? env(t, 0.003, 0.06) : env(u, 0.003, 0.075) * 0.75;
+    const f = 46 + 70 * Math.exp(-u * 20);
+    const body = Math.tanh(Math.sin(TAU * osc(s, "ph", f)) * 4);
+    const knock = lp(s, noise(), 0.25) * Math.exp(-u * 60);
+    return (body * 0.8 + knock * 0.5) * a;
   }],
   sfx_strike: [0.55, (t, s) => {
     // golpe seco: estalo agudo + estrondo grave
@@ -665,6 +683,9 @@ function songBossCaatinga() {
 // ---------------------------------------------------------------------------
 // Registro no cache de áudio do Phaser (só WebAudio — todo Android moderno)
 // ---------------------------------------------------------------------------
+// Andamento de cada trilha (o Mixer troca de música no compasso: src/audio/Mixer.js)
+export const MUSIC_INFO = {};
+
 export function registerAudio(game) {
   const ctx = game.sound.context;
   if (!ctx || !game.cache?.audio) return false;
@@ -677,12 +698,20 @@ export function registerAudio(game) {
     seed = key.length * 7919; // ruído determinístico por som
     game.cache.audio.add(key, toBuffer(renderSfx(dur, gen)));
   }
-  game.cache.audio.add("music_menu", toBuffer(renderSong(songMenu())));
-  game.cache.audio.add("music_gameplay", toBuffer(renderSong(songGame())));
-  game.cache.audio.add("music_boss", toBuffer(renderSong(songBoss())));
-  game.cache.audio.add("music_caatinga", toBuffer(renderSong(songCaatinga())));
-  game.cache.audio.add("music_boss_caatinga", toBuffer(renderSong(songBossCaatinga())));
-  game.cache.audio.add("music_victory", toBuffer(renderSong(songVictory())));
-  game.cache.audio.add("music_defeat", toBuffer(renderSong(songDefeat())));
+  // chaves entre aspas: o npm run check procura "music_…" aqui para conferir as músicas dos biomas
+  const songs = {
+    "music_menu": songMenu,
+    "music_gameplay": songGame,
+    "music_boss": songBoss,
+    "music_caatinga": songCaatinga,
+    "music_boss_caatinga": songBossCaatinga,
+    "music_victory": songVictory,
+    "music_defeat": songDefeat,
+  };
+  for (const [key, make] of Object.entries(songs)) {
+    const song = make();
+    MUSIC_INFO[key] = { bpm: song.bpm, beats: song.beats };
+    game.cache.audio.add(key, toBuffer(renderSong(song)));
+  }
   return true;
 }

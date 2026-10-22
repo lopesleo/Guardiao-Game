@@ -1,10 +1,11 @@
 // "Game feel" da partida: o que faz um golpe parecer golpe. Tudo barato (sem sistema de
 // partículas novo) e sob controle do jogador: hit-stop e vinheta seguem a opção de
 // "Tremor de tela"; a vibração segue "Vibração" (ver Settings / Theme.haptic).
-import { GAME } from "../config.js";
+import { GAME, AUDIO } from "../config.js";
 import { PAL } from "../art/Palette.js";
 import { haptic, vw, vh } from "../ui/Theme.js";
 import { Settings } from "./Settings.js";
+import { setDanger } from "../audio/Mixer.js";
 
 const HIT_SFX_GAP_MS = 55; // acertos em rajada não viram um chiado só
 const HIT_STOP_COOLDOWN_MS = 140; // evita "congelar" em sequência de críticos
@@ -131,10 +132,29 @@ export class GameFeel {
   // Vinheta: pisca no dano e some. A vida baixa NÃO pulsa aqui: é a própria Podridão da borda
   // que pulsa (world/Podridao.js) — duas vinhetas em ritmos diferentes brigavam na tela.
   update(time, dt) {
+    const p = this.scene.player;
     this._hurtA = Math.max(0, this._hurtA - dt / 380);
+    if (p && p.maxHp > 0 && !this.scene.gameOver) this._heart(time, p.hp / p.maxHp);
     const a = this._hurtA * 0.7;
     if (a !== this._lastA) this.vignette.setAlpha(a);
     this._lastA = a;
+  }
+
+  // Vida baixa: o coração bate, mais rápido quanto mais perto do fim. Um som com intervalo, e a
+  // música escurece de leve e fica assim (AUDIO.DANGER): nada "respira" a cada golpe. Histerese:
+  // liga abaixo de HP e só desliga acima de HP_OUT. Só roda com a partida andando (pausa = sem batida)
+  _heart(time, f) {
+    const D = AUDIO.DANGER;
+    const on = this._danger ? f < D.HP_OUT : f < D.HP;
+    if (on !== !!this._danger) {
+      this._danger = on;
+      setDanger(on);
+      if (on) this._nextBeat = time;
+    }
+    if (!on || time < this._nextBeat) return;
+    const k = Math.max(0, Math.min(1, f / D.HP)); // 1 = começando a apertar, 0 = por um fio
+    this._nextBeat = time + D.BEAT_MS[1] + (D.BEAT_MS[0] - D.BEAT_MS[1]) * k;
+    this.scene.sound.play("sfx_heartbeat_run", { volume: D.BEAT_VOL });
   }
 
   destroy() {

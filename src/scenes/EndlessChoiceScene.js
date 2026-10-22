@@ -74,7 +74,7 @@ export class EndlessChoiceScene extends Phaser.Scene {
     this.tweens.add({ targets: t, scale: k, alpha: 1, duration: 420, ease: "Back.easeOut" });
     this.input.keyboard.on("keydown-ENTER", () => this._choose(false));
     this.input.keyboard.on("keydown-ESC", () => this._choose(false));
-    this.sound.play("sfx_chest_jackpot", { volume: 0.7 });
+    this.sound.play("sfx_chest_jackpot", { volume: 0.7, bus: "ui" }); // a partida atrás está abafada; a escolha, não
     haptic(80);
   }
 

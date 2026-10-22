@@ -86,6 +86,7 @@ export class GameOverScene extends Phaser.Scene {
     if (this._leaving) return;
     this._leaving = true;
     this.cameras.main.fadeOut(250, 5, 8, 6);
+    this._fadeSound(240);
     // Voltando à Clareira, o guardião chega pela trilha (vindo da floresta)
     this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start(key, key === "CampScene" ? { fromRun: true } : undefined));
   }
@@ -957,19 +958,36 @@ export class GameOverScene extends Phaser.Scene {
     this.time.delayedCall(2600, () => this.tweens.add({ targets: again, scale: 1.04, duration: 800, yoyo: true, repeat: -1, ease: "Sine.easeInOut" }));
   }
 
-  // Vinheta de vitória/derrota; depois só a fogueira estalando (derrota e recuo)
+  // Vinheta de vitória/derrota (canal da música: segue a barra Música); depois só a fogueira estalando
+  // (derrota e recuo, canal dos efeitos). Saindo antes do fim, os dois somem com o escurecer (_fadeSound) e
+  // são destruídos: parado com stop(), o som ficava no gerenciador com os seus nós de áudio
   _sound() {
     const key = this.d.won ? "music_victory" : this.d.quit ? null : "music_defeat";
-    if (key && this.cache.audio.exists(key)) this.sound.play(key, { volume: 0.55 });
+    this.vignette = null;
+    if (key && this.cache.audio.exists(key)) {
+      const v = (this.vignette = this.sound.add(key, { volume: 0.55 }));
+      v.once("complete", () => {
+        if (this.vignette === v) this.vignette = null;
+        v.destroy();
+      });
+      v.play();
+    }
     if (this.look.fire && this.cache.audio.exists("sfx_fire_loop")) {
       this.fireLoop = this.sound.add("sfx_fire_loop", { loop: true, volume: 0.22 });
       this.fireLoop.play();
     }
     this.events.once("shutdown", () => {
-      this.fireLoop?.stop();
-      this.fireLoop?.destroy();
-      this.fireLoop = null;
-      if (key) this.sound.stopByKey(key);
+      for (const k of ["fireLoop", "vignette"]) {
+        if (!this[k]) continue;
+        this.tweens.killTweensOf(this[k]);
+        this[k].destroy();
+        this[k] = null;
+      }
     });
+  }
+
+  // O som sai junto com a imagem (sem corte seco no fim do escurecer). Tween de volume é relativo ao canal
+  _fadeSound(ms) {
+    for (const s of [this.fireLoop, this.vignette]) if (s && !s.pendingRemove) this.tweens.add({ targets: s, volume: 0, duration: ms });
   }
 }

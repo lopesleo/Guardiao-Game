@@ -1978,6 +1978,54 @@ export const ACHIEVEMENTS = [
   { id: "mono_wind", name: "Filho do Vento", desc: "Vença com 2+ armas, todas de vento", check: monoWin(ELEMENT.WIND) },
 ];
 
+// Áudio: mixagem por barramentos (src/audio/Mixer.js). O volume de cada som fica onde ele toca;
+// aqui fica o que vale para GRUPOS de sons. Tudo em dB (o ouvido é logarítmico).
+export const AUDIO = {
+  // Barra de volume das Opções: vai de −SLIDER_DB dB (começo) a 0 dB (fim); só o zero é mudo.
+  // A barra antiga era linear (0,7 = −3 dB): Settings converte o valor salvo uma vez, sem mudar o volume
+  SLIDER_DB: 40,
+  // Ganho fixo de cada barramento (dB), antes do volume do jogador
+  BUS_DB: { music: 0, sfx: 0, ui: 0 },
+  // Limitador na saída: rede de segurança contra estouro (não é o mixer)
+  LIMITER: { THRESHOLD_DB: -6, KNEE_DB: 0, RATIO: 20, ATTACK_S: 0.003, RELEASE_S: 0.15 },
+  // Vozes: no máximo `max` cópias do mesmo efeito começando a cada `ms` (src/audio/Voices.js). O excesso
+  // não toca e engrossa a última voz do quadro (volume × √n, até MERGE_MAX). DEFAULT vale para os
+  // efeitos sem linha própria. Fora do limite: música, interface e os AVISOS dos chefes ({ alert: true }
+  // em sound.play), que nunca podem sumir (docs/CHEFES.md: dá para desviar de ouvido)
+  VOICES: {
+    DEFAULT: { max: 6, ms: 40 },
+    sfx_death: { max: 4, ms: 40 },
+    sfx_pickup: { max: 3, ms: 40 },
+    sfx_coin: { max: 3, ms: 40 },
+  },
+  MERGE_MAX: 1.6,
+  // Tomadas diferentes do mesmo som (Synth.js): sorteia uma, sem repetir a anterior
+  VARIANTS: { sfx_death: ["sfx_death", "sfx_death_2", "sfx_death_3"] },
+  // Variação de tom (± fração do rate, sorteada a cada toque) dos efeitos que soavam sempre iguais.
+  // Ruído e batida aguentam ±5%; som com nota (sino, moeda) varia menos para não desafinar. De fora:
+  // o que já varia ou cuja altura é informação (gemas em sequência sobem de tom, fanfarras)
+  JITTER: {
+    sfx_death: 0.05, sfx_player_hit: 0.04, sfx_dash: 0.04, sfx_whoosh: 0.05, sfx_fire_attack: 0.05,
+    sfx_bolt_attack: 0.03, sfx_ice_attack: 0.02, sfx_folhas: 0.05, sfx_catavento: 0.05, sfx_bolas: 0.03,
+    sfx_mirage: 0.015, sfx_coin: 0.015, sfx_react_vapor: 0.05, sfx_react_overload: 0.04,
+    sfx_react_labareda: 0.05, sfx_react_temporal: 0.05, sfx_react_geada: 0.02, sfx_react_crystal: 0.02,
+  },
+  // Momentos (Mixer.setMoment). Pausa, cartas de nível, Reviver e a escolha da Noite Eterna abafam a
+  // música e os efeitos da partida (passa-baixa + queda) e voltam ao retomar; a interface nunca abafa
+  MUFFLE: { LP_HZ: 800, DB: -6, IN_S: 0.25, OUT_S: 0.3 },
+  // Vida baixa: o coração bate (sfx_heartbeat_run, mais rápido perto do fim) e a música escurece um
+  // pouco e FICA assim (nada de "respirar" a cada golpe ou reação). Entra abaixo de HP e só sai acima
+  // de HP_OUT (histerese: curar 1 ponto e tomar 1 golpe não liga e desliga)
+  DANGER: { HP: 0.3, HP_OUT: 0.36, BEAT_MS: [1250, 800], BEAT_VOL: 0.42, MUSIC_LP_HZ: 3000, MUSIC_DB: -2, IN_S: 0.8, OUT_S: 1.5 },
+  // Troca de trilha (chegada do chefe, Noite Eterna): a atual afunda DIP_DB na hora (o rugido fica
+  // sozinho) e some até a próxima barra de compasso (pelo menos MIN_FADE_BEATS tempos); a nova entra
+  // num tempo forte (múltiplo de GRID_BEATS) da mesma grade, depois de ENTER_AFTER_S (o rugido)
+  SWITCH: { DIP_DB: -12, DIP_S: 0.15, MIN_FADE_BEATS: 1, GRID_BEATS: 2, ROAR_S: 0.95 },
+  // Morte: a fita para (rate 1 → RATE) com a música fechando no passa-baixa e sumindo em S segundos
+  // (dentro da câmera lenta de 0,9 s); os efeitos abafam um pouco junto
+  DEATH: { RATE: 0.5, LP_HZ: 450, SFX_LP_HZ: 1500, SFX_DB: -4, S: 0.85 },
+};
+
 export const COLORS = {
   FIRE: 0xff7a3c,
   ICE: 0x5cc8ff,

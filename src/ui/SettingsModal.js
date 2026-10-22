@@ -103,7 +103,7 @@ export function openSettings(scene, o = {}) {
         Settings.set("sfx", v);
         if (!scene._sfxPreview || scene.time.now - scene._sfxPreview > 150) {
           scene._sfxPreview = scene.time.now;
-          scene.sound.play("sfx_coin", { volume: 0.5 });
+          scene.sound.play("sfx_coin", { volume: 0.5, bus: "ui" }); // prévia limpa mesmo na Pausa (abafada)
         }
       }),
     );

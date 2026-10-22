@@ -25,7 +25,9 @@ import {
   BIOMES,
   LIBERATION,
   PERF,
+  AUDIO,
 } from "../config.js";
+import { setMoment, resetMix, tapeStop, switchTrack } from "../audio/Mixer.js";
 import { randomRareSeed } from "../systems/Garden.js";
 import { recipe, mealMods, bonusText } from "../systems/Kitchen.js";
 import { Daily, dailyUnlocked } from "../systems/Daily.js";
@@ -122,6 +124,13 @@ export class GameScene extends Phaser.Scene {
     this._achPending = false;
     this._achNextAt = 0;
     this.events.on("pause", this._flushAchievements, this);
+    // Som: partida pausada por cima (cartas, Pausa, Reviver, Noite Eterna) = música e efeitos abafados;
+    // volta ao retomar (ver AUDIO.MUFFLE). A morte é outro momento (tapeStop em _onGameOver)
+    resetMix();
+    const muffle = () => setMoment("muffle");
+    const unmuffle = () => !this.gameOver && setMoment("normal");
+    this.events.on("pause", muffle);
+    this.events.on("resume", unmuffle);
     // O Phaser não chama shutdown() sozinho: sem isto, cada partida deixava uma
     // camada de toque (joystick) e a música anteriores para trás
     this.events.once("shutdown", () => {
@@ -132,6 +141,8 @@ export class GameScene extends Phaser.Scene {
         this._achPending = false;
         this._checkAchievements(false, true);
       }
+      this.events.off("pause", muffle);
+      this.events.off("resume", unmuffle);
       this.events.off("player:levelup", this._onLevelUp, this);
       this.events.off("resume", this._onResume, this);
       this.joystick?.destroy();
@@ -1376,11 +1387,10 @@ export class GameScene extends Phaser.Scene {
     this.boss.activate(BOSS.HP * this.diff.hpMult);
     this.boss.dmg *= this.diff.dmgMult; // escala dano do boss pela dificuldade
     this.hud.setBossActive(this.boss, this.biome.bossName.toUpperCase());
-    this.sound.play("sfx_boss_roar", { volume: 0.8 });
-    // Trilha do chefe entra no lugar da música da partida
-    this.bgMusic?.stop();
-    this.bgMusic = this.sound.add(this.biome.bossMusic ?? "music_boss", { loop: true, volume: 0.4 });
-    this.bgMusic.play();
+    this.sound.play("sfx_boss_roar", { volume: 0.8, alert: true });
+    // Trilha do chefe no lugar da música da partida, no compasso: a da partida afunda sob o rugido e
+    // some até a barra; a do chefe entra num tempo forte depois do rugido (AUDIO.SWITCH)
+    this.bgMusic = switchTrack(this.sound, this.bgMusic, this.biome.bossMusic ?? "music_boss", { loop: true, volume: 0.4 }, { enterAfterS: AUDIO.SWITCH.ROAR_S });
     this.cameras.main.shake(500, 0.015);
     // O chefe espanta os de tiro (tiro + avisos dos golpes deixaria de ser justo), os do
     // lugar onde ele chega e o excesso; os mais perto do herói ficam (ver BOSS_FIGHT.ADDS)
@@ -1604,9 +1614,8 @@ export class GameScene extends Phaser.Scene {
     this.endless = true;
     this._endlessStartMs = this.elapsedMs;
     this.boss = null;
-    this.bgMusic?.stop();
-    this.bgMusic = this.sound.add("music_gameplay", { loop: true, volume: 0.35, rate: 0.92 });
-    this.bgMusic.play();
+    // a trilha do chefe some até a barra e a da noite (mais lenta) entra no tempo forte
+    this.bgMusic = switchTrack(this.sound, this.bgMusic, "music_gameplay", { loop: true, volume: 0.35, rate: 0.92 });
     this.hud.showBossBanner(tr("A NOITE ETERNA COMEÇA"), "#e8ccff");
     this.cameras.main.flash(400, 60, 30, 90);
     Analytics.track("endless_start", { level: this.player.level, t: Math.floor(this.elapsedMs / 1000) });
@@ -1953,12 +1962,13 @@ export class GameScene extends Phaser.Scene {
       this.physics.world.timeScale = 3;
       this.tweens.timeScale = 0.35;
       this.cameras.main.zoomTo(this.cameras.main.zoom * 1.25, 700);
+      tapeStop(this.bgMusic); // a música desacelera junto, como uma fita parando (AUDIO.DEATH)
     }
     this.cameras.main.fade(quit ? 250 : 800, 0, 0, 0);
     this.time.delayedCall(quit ? 300 : 900, () => {
       this.physics.world.timeScale = 1;
       this.tweens.timeScale = 1;
-      this.bgMusic?.stop();
+      this.bgMusic?.destroy(); // só parar deixava a voz (e os nós de áudio) no gerenciador a cada partida
       this.bgMusic = null;
       const results = {
         won,
@@ -2002,8 +2012,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   shutdown() {
-    this.bgMusic?.stop();
+    this.bgMusic?.destroy();
     this.bgMusic = null;
+    resetMix(); // a próxima cena começa com o som limpo (sem abafar, sem trilha saindo)
     this.events.off(Phaser.Scenes.Events.POST_UPDATE, this._postUpdate, this);
   }
 

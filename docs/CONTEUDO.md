@@ -53,7 +53,11 @@ npm run balance      # invariantes de balanceamento
    Graphics redesenhado todo quadro: no máximo algumas centenas de retângulos (milhares
    somem no Phaser 4); forma grande que cresce (anel de raio 900) vai para um shader, como
    o `ScreamTele` do Grito (`Telegraph.js`). Revisar a arte: `node tools/monster-sheet.mjs saida.png fx_<nome> 6`.
-4. **Som**: um efeito em `src/audio/Synth.js` (`sfx_<nome>`).
+4. **Som**: um efeito em `src/audio/Synth.js` (`sfx_<nome>`). Toca pelo barramento de efeitos
+   (`src/audio/Mixer.js`): som que sai em rajada ganha linha em `AUDIO.VOICES` (limite de vozes) e,
+   se soa sempre igual, em `AUDIO.JITTER` (variação de tom) ou `AUDIO.VARIANTS` (tomadas). Golpe ou
+   aviso de chefe vai com `{ alert: true }` (nunca entra no limite: dá para desviar de ouvido); som de
+   tela por cima da partida (cartas, escolhas) vai com `{ bus: "ui" }` (não é abafado na pausa).
 5. **Luz** (opcional): método `lights(add)` na classe — o mapa de luz chama sozinho.
 6. **Laços**: se a arma tem um momento interessante ("bateu", "fez a volta",
    "acertou"), emita um evento: `this._emit("drum:pulse", { weapon: this, ... })` e
