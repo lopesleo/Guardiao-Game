@@ -5,8 +5,10 @@
 // no período, só o pódio no meio. A área tem altura fixa para não pular quando os dados chegam; trocar de aba
 // reabre a janela, e a lista vem do cache por 1 min.
 import { RANKING } from "../config.js";
-import { Leaderboards, perigoName } from "../systems/Leaderboards.js";
+import { Leaderboards, perigoName, bestPerigo } from "../systems/Leaderboards.js";
 import { Analytics } from "../systems/Analytics.js";
+import { inviteFriend } from "./InviteUI.js";
+import { MetaProgression } from "../systems/MetaProgression.js";
 import { makePedestal } from "../art/ResultArt.js";
 import { text, setLabel, drawFrame, Button, vw, vh, textPx, PAL, CSS, hex } from "./Theme.js";
 import { Modal } from "./Widgets.js";
@@ -66,17 +68,25 @@ export function openRanking(scene, o = {}) {
   const L = -m.w / 2 + 28,
     R = m.w / 2 - 28; // bordas de dentro
 
-  // Abas: o ranking à esquerda, o período à direita
+  // Abas: o ranking e o período; na ponta direita, DESAFIAR UM AMIGO (Invite.js) — leva o feito do jogador no texto
   const boards = BOARDS.filter(([id]) => Leaderboards.has(id));
-  const bw = Math.min(190, (m.w - 70) / (boards.length + SPANS.length) - 10);
+  const IW = 250; // largura do botão do convite
+  const bw = Math.min(190, (m.w - 70 - IW - 26) / (boards.length + SPANS.length) - 10);
   const tab = (x, label, on, go) =>
     m.add(new Button(scene, x, y + 22, bw, 44, label, () => !on && (m.close(), openRanking(scene, { ...o, ...go })), { size: 16, style: on ? "gold" : "dark", color: on ? CSS.goldHi : CSS.muted }));
   const all = [...boards.map(([id, l]) => [l(), id === board, { board: id }]), ...SPANS.map(([id, l]) => [l(), id === span, { span: id }])];
   const totalW = all.length * bw + (all.length - 1) * 10 + 26;
+  const rowL = -(totalW + 26 + IW) / 2; // abas + convite, centrados juntos
   all.forEach(([label, on, go], i) => {
     const gap = i >= boards.length ? 26 : 0; // separa os dois grupos
-    tab(-totalW / 2 + bw / 2 + i * (bw + 10) + gap, label, on, go);
+    tab(rowL + bw / 2 + i * (bw + 10) + gap, label, on, go);
   });
+  const brag = () => {
+    // a tela do fim não guarda o save: lê na hora (só no toque)
+    if (board === "perigo") return { perigo: perigoName(bestPerigo((scene.meta ?? new MetaProgression()).data)) };
+    return { score: Leaderboards.best() };
+  };
+  m.add(new Button(scene, rowL + totalW + 26 + IW / 2, y + 22, IW, 44, tr("DESAFIAR UM AMIGO"), () => inviteFriend(scene, "ranking", brag()), { size: 16, icon: "ico_invite", iconScale: 2, style: "green", color: CSS.txt }));
   y += 58;
 
   // Área do pódio e da lista (altura fixa): 7 linhas (4º ao 10º) + "· · ·" + a do jogador, ou o pódio inteiro

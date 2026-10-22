@@ -148,6 +148,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
 
 **Decisões pendentes**
 - **Cosméticos e Loja** (`docs/COSMETICOS.md`, "Estratégia de preços", com pesquisa): prontos no código (19/10), desligados no build da loja (`COSMETICS.ENABLED`/`SHOP` em `config.js`). 16 peças (4 grátis + 4 kits de 3 peças), Guarda-roupa com prévia ao vivo e a **Loja** (★ da Clareira e LOJA do título) em três degraus: kit **R$ 4,90** (era 9,90) · Sem anúncios R$ 14,90 · **Pacote Fundador R$ 19,90** em destaque (Sem anúncios + 4 kits, 42% de economia, + exclusivos **Clareira Ancestral** e **insígnia de Fundador**; versão sem o Sem anúncios a R$ 9,90; janela até 31/01/2027, depois Pacote Apoiador R$ 24,90). 16 cenários no `test:compra`. Produtos no Play Console: os 4 kits e os 2 pacotes do Fundador **criados e ativos** (19/10; `npm run play:produtos`, catálogo em `tools/play/produtos.json`, credencial em `~/chaves-android/play-api.json`). **Ligado no app na 1.0.6** (`COSMETICS.ENABLED`/`SHOP`). Versões sobem por `npm run play:versao` (rascunho; `--publicar` só quando o Leonardo pedir). 👤 Em 31/01/2027: desativar os 2 do Fundador e ativar `pacote_apoiador`.
+- **Desafio do dia** (`docs/DESAFIO_DO_DIA.md`, 22/10): projeto sem código. Recomendação: não fazer o diário agora; depois do lançamento, testar um "Desafio da semana" (custo P) e decidir o diário pelos números (§7 do documento). 👤 Decidir.
 - Descrição curta em espanhol: "leyendas de Brasil" → "del folclore brasileño"? (a captura 07 já foi refeita).
 
 **Depois de 12 testadores × 14 dias (~28/10)**
@@ -216,6 +217,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
 | Pesquisa de mercado e ideias de retenção/tema | `docs/IDEIAS_RETENCAO.md` |
 | **Tema folclore: decisão, papéis e cuidados** | `docs/TEMA_FOLCLORE.md` |
 | Meta-progressão atual (Perigo, Bênçãos, conquistas) | `docs/META_LOOP.md` |
+| Desafio do dia/da semana: projeto e recomendação (não implementado) | `docs/DESAFIO_DO_DIA.md` |
 | **Cosméticos e itens à venda** (catálogo, Guarda-roupa, kits, legibilidade, pacote do apoiador) | `docs/COSMETICOS.md` |
 | Armas, evoluções e próximos combos | `docs/ARMAS_E_COMBOS.md` |
 | **Chefes: golpes especiais e regras de justiça** | `docs/CHEFES.md` |

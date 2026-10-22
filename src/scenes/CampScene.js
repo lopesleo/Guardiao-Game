@@ -25,6 +25,8 @@ import { cosmeticsOn, Wardrobe } from "../systems/Cosmetics.js";
 import { openShop, shopOn } from "../ui/ShopModal.js";
 import { openRanking } from "../ui/RankingModal.js";
 import { Leaderboards } from "../systems/Leaderboards.js";
+import { Invite } from "../systems/Invite.js";
+import { inviteFriend } from "../ui/InviteUI.js";
 import { Analytics } from "../systems/Analytics.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { SkyGlow } from "../art/Gradients.js";
@@ -472,6 +474,12 @@ export class CampScene extends Phaser.Scene {
         if (this._modals.length || this._cutscene || this._leaving) return;
         openRanking(this, { from: "camp" });
       }, { icon: "ico_trophy", style: "dark", iconScale: 2.5 }));
+    // Chame um amigo (Invite.js): na ponta da fileira, sem chamar atenção; só para quem já conhece o jogo
+    if (Invite.shown(this.meta.data))
+      this.inviteBtn = fix(new Button(this, W - 544, 40, 52, 52, null, () => {
+        if (this._modals.length || this._cutscene || this._leaving) return;
+        inviteFriend(this, "clareira");
+      }, { icon: "ico_invite", style: "dark", iconScale: 2.2 }));
     if (DEBUG) {
       fix(
         new Button(this, W - 540, 92, 150, 44, "+500 (dev)", () => {
@@ -518,6 +526,7 @@ export class CampScene extends Phaser.Scene {
     }
     if (this.wardrobeBtn) [this.wardrobeBtn.x, x] = [x, x - 60];
     if (this.rankBtn) [this.rankBtn.x, x] = [x, x - 60];
+    if (this.inviteBtn) [this.inviteBtn.x, x] = [x, x - 60];
     const left = x + 60; // o botão mais à esquerda (ou as Opções, se não houver nenhum)
     const maxW = left - 26 - 14 - 14; // até a borda do botão, com folga
     const pad = 16;

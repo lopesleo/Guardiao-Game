@@ -699,6 +699,22 @@ const MAPS = {
     "kNk.kyk....",
     "kk...kk....",
   ],
+  // Chamar um amigo (convite): alguém com o "+" verde do broto no ombro
+  invite: [
+    "....kkk.........",
+    "...klllk........",
+    "..kwllllk.......",
+    "..klllllk.......",
+    "..kllllak.......",
+    "...kllak........",
+    "....kkk....kkk..",
+    "..kkkkkkk..kek..",
+    ".klllllllkkkekkk",
+    "kllllllllkeeeeek",
+    "kllllllllkkkekkk",
+    "kaaaaaaaaakkek..",
+    "kkkkkkkkkkkkkk..",
+  ],
 };
 
 // Recolorações (mesmo desenho, outra "tinta") — evoluções e passivas

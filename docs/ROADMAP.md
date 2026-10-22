@@ -657,6 +657,23 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Desempenho: pronto em ~0,15 s (0,3–1,1 s com a CPU 4× mais lenta), maior quadro ~45 ms (≤ 90 ms a 4×), +4–8 MB
   de heap; PNG de ~730 KB. `npm run test:cartao` (no `npm test`). 👤 Testar a folha de compartilhar no S23 (WhatsApp,
   Instagram feed e stories) e ver o cartão no celular de quem recebe
+- ✅ **Chame um amigo (22/10/2026; `src/systems/Invite.js`, `src/ui/InviteUI.js`, `INVITE` no config):** convite
+  com o link da **página oficial no idioma do jogo** (`komedygames.com/guardiao/`, `/en/`, `/es/`, `/ja/`, `/zh/`,
+  `/zh-hant/`: ela mostra a fase do momento — teste, pré-registro ou loja — e a prévia do link no WhatsApp sai com a
+  imagem dela) e a origem em UTM: `utm_source=convite`, `utm_medium=amigo`, `utm_campaign` = de onde saiu
+  (`clareira`, `creditos`, `ranking`) e `utm_content` = qual texto foi (`geral`, `pontos`, `perigo`). Vai pela folha
+  de compartilhar do Android (a ponte `Share.text` do `Share.js`, a mesma do cartão); no navegador,
+  `navigator.share` ou o link copiado com aviso ("Link copiado!"). Três lugares, nenhum que interrompe: um botão
+  (alguém com o "+" verde) na ponta da fileira da Clareira, depois de 3 partidas (`INVITE.MIN_RUNS`); **CHAMAR UM
+  AMIGO** nos Créditos, ao lado de "Avaliar"; **DESAFIAR UM AMIGO** no ranking, com o feito do jogador no texto
+  ("Fiz 13.450 pontos… Duvido você passar!" / "Zerei… no Perigo Veterano"). Sem prêmio por convite (a Play
+  desaconselha instalação incentivada; sem servidor não dá para saber quem chamou). Analytics `invite` (`from`,
+  `result`: `shared`/`cancel`/`copied`/`fail`, `msg`, `via`: `native`/`web`/`copy`, `app`: o app escolhido no
+  Android, como `com.whatsapp`). Junto: botão com ícone agora encolhe o rótulo para caber (antes vazava da
+  moldura com texto grande). `npm run test:convite` (no `npm test`). Como ver os convites: [`MARKETING.md`](MARKETING.md)
+  §3. 👤 A página repassa à Play só `utm_source`, `utm_medium` e `utm_campaign`: acrescentar `utm_content` no
+  `guardiao.js` do repositório `lopesleo.github.io` (MARKETING §9). 👤 Conferir no S23: a folha, a prévia do link no
+  WhatsApp e o aviso de obrigado na volta
 - ⬜ Ao ligar a compra "Remover anúncios" ou o salvamento do Play Games: rever Segurança dos dados
   (login com conta externa) — a classificação já declara compras no jogo
 
@@ -726,7 +743,7 @@ Nada disso trava o desenvolvimento; só o lançamento e a receita.
 |---|---|
 | 1 | **Bichos** (resgate, ajuda nas atividades, tigela de presentes, companheiro na partida) |
 | 2 | Bestiário + Árvore Sagrada + skins |
-| 3 | **Desafio Diário** com placar (Play Games) + desafios com modificadores |
+| 3 | **Desafio com regra especial** — projeto e recomendação em [`DESAFIO_DO_DIA.md`](DESAFIO_DO_DIA.md) (22/10/2026): começar por um **Desafio da semana** (P) e só passar ao diário se os números mandarem |
 | 4 | Santuários da Floresta no mapa + missões que desbloqueiam |
 | 5 | **Bioma 2** com chefe próprio |
 | 6 | Mutações/híbridos na horta, novos pontos de pesca, estações Cheia/Vazante |

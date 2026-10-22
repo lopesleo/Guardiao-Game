@@ -87,6 +87,29 @@ vê um post / matéria / a loja  →  abre a página ou a ficha  →  instala  �
 (`&referrer=utm_source%3D…`). Use um por canal: `?utm_source=tiktok`, `instagram`, `youtube`, `reddit`,
 `discord`, `imprensa`, `linkedin`, `qr` (cartaz/evento). Sem isso não dá para saber o que funcionou.
 
+**Convites de dentro do jogo ("Chame um amigo", `src/systems/Invite.js`).** O link é
+`komedygames.com/guardiao/<idioma>/?utm_source=convite&utm_medium=amigo&utm_campaign=<lugar>&utm_content=<texto>`
+(lugar: `clareira`, `creditos`, `ranking`; texto: `geral`, `pontos`, `perigo`). O funil inteiro, em 4 lugares:
+
+1. **Quantos mandaram** — Firebase (GA4 → Relatórios → Engajamento → Eventos → `invite`): `from` (lugar), `result`
+   (`shared` = escolheu um app; `cancel` = fechou a folha; `copied` = copiou o link; `fail`), `msg`, `via` e `app`
+   (o pacote escolhido no Android: `com.whatsapp`, `org.telegram.messenger`…). Para ver por lugar e por app no
+   relatório, registrar `from`, `result` e `app` como dimensões personalizadas (`from` e `result` são novas).
+2. **Quantos abriram o link** — PostHog da página: `guardiao_viewed` com `utm_source = convite` (e
+   `utm_campaign` = lugar). É o que mede o convite **enquanto o jogo está no teste fechado**, quando ainda não há
+   instalação pela loja.
+3. **Quantos instalaram** (com a fase `pre`/`loja` da página, que leva o `referrer` ao botão da Play) — Play
+   Console → Crescimento → Desempenho na loja → **Análise de conversão**, filtrando por **origem e campanha UTM**
+   (`convite` / `clareira`…); o que tem pouco volume entra em "Outros".
+4. **Quem chegou por convite e ficou** — Firebase (GA4 → Aquisição → Aquisição de usuários): o `first_open` leva a
+   origem do `referrer` da Play ("Origem / mídia do primeiro usuário" = `convite / amigo`, "Campanha do primeiro
+   usuário" = o lugar); dá para cruzar com a retenção. Instalação pela Play às vezes aparece como `google-play` no
+   GA4: o número oficial de instalações é o do Play Console.
+
+A página hoje repassa à Play `utm_source`, `utm_medium` e `utm_campaign` (lidos da visita no `guardiao.js`), mas
+**não** o `utm_content`: 👤 acrescentar `"utm_content"` na lista de parâmetros e no `ref` dos links `a[data-play]`
+(e no PostHog) no repositório `lopesleo.github.io` para saber qual texto converte mais.
+
 ---
 
 ## 4. Distribuição
@@ -239,7 +262,7 @@ no domínio.
 |---|---|---|
 | ✅ **Pedido de avaliação** (API In-App Review da Play) na volta de uma vitória (22/10/2026, `Review.js`) | Nota e número de avaliações pesam na conversão da ficha | P 🤖 |
 | ✅ **Cartão de partida para compartilhar** (imagem 4:5 com guardião, desfecho, tempo, reações e arsenal; 22/10/2026, `ShareCard.js`, link com `utm_source=share`) | Cada jogador vira um post | M 🤖 |
-| **Link de convite com UTM** no menu ("Chame um amigo") | Mede o boca a boca | P 🤖 |
+| ✅ **Link de convite com UTM** ("Chame um amigo"; 22/10/2026, `Invite.js`): botão na Clareira, linha nos Créditos e DESAFIAR UM AMIGO no ranking; `utm_source=convite`, `utm_medium=amigo`, `utm_campaign` = lugar, `utm_content` = texto. 👤 No `guardiao.js` da página, repassar também o `utm_content` (hoje vão só source, medium e campaign) e mandá-lo ao PostHog | Mede o boca a boca | P 🤖 |
 | **Evento do Dia do Saci** (Saci em destaque na Clareira) e do Dia do Folclore | Dá assunto nas datas | P 🤖 |
 | **Conquistas do Play Games** (os ids já existem) | Aparece no perfil do jogador e no Play Games | M 🤖 |
 
