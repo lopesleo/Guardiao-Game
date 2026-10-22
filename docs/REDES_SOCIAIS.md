@@ -122,7 +122,7 @@ Roguelite brasileiro com as lendas do folclore, para Android. Jogue antes do lan
 ```
 Curupira, Caipora, Iara, Saci, Comadre Fulozinha, Mãe-do-Ouro e Anhangá.
 
-Aqui as lendas não são monstros: são as guardiãs da mata. O vilão é a Podridão.
+Aqui as lendas são as guardiãs da mata, e o vilão é a Podridão.
 Qual delas você escolheria?
 
 Guardião da Floresta · Android · peça seu convite pelo link na bio.
@@ -135,7 +135,7 @@ Guardião da Floresta · Android · peça seu convite pelo link na bio.
 Todo golpe avisa antes. Dá pra desviar andando ou com o dash.
 
 Mula sem Cabeça, Caboclo d'Água e o Mapinguari, tomados pela Podridão.
-Vencer não é matar: é libertar a lenda.
+Vencer a luta liberta a lenda.
 
 Guardião da Floresta · Android · link na bio.
 

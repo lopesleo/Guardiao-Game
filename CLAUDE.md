@@ -207,7 +207,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
 | Plano antes de publicar (anúncios, retenção, loja) | `docs/PRE_LANCAMENTO.md` |
 | **Marketing, distribuição e calendário de lançamento** | `docs/MARKETING.md` |
 | Instagram, reels e servidor do Discord (`tools/discord/`) | `docs/REDES_SOCIAIS.md` |
-| **O que postar, quando e como** (X, Instagram, TikTok, Reddit…; textos prontos) | `docs/PLANO_DE_CONTEUDO.md` |
+| **O que postar, quando e como** (X, Instagram, TikTok, Reddit…; textos prontos) | `docs/PLANO_DE_CONTEUDO.md`; na hora de postar, `npm run redes` (página local com textos, imagens e vídeos) |
 | Página oficial (`komedygames.com/guardiao/`) e site do estúdio | repositório `lopesleo.github.io`, pasta `guardiao/`; estúdio em `lopesleo/komedygames` |
 | Publicação na Play Store, privacidade | `docs/PLAY_STORE.md`, `docs/PRIVACY.md` |
 | Clareira (acampamento, obras, bichos, fases) | `docs/CLAREIRA.md` |
