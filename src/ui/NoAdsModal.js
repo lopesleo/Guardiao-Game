@@ -1,5 +1,5 @@
 // Janela "Sem anúncios" (compra única pela Play Store, ver systems/Billing.js). Abre do título e das
-// Opções — nunca no meio da partida e nunca sozinha. Diz com honestidade o que a compra faz: os prêmios
+// Opções — nunca no meio da partida; sozinha, só a oferta curta da volta à Clareira (maybeNoAdsNudge). Diz com honestidade o que a compra faz: os prêmios
 // dos anúncios saem na hora, com os mesmos limites; não compra poder nem moedas.
 import { Billing } from "../systems/Billing.js";
 import { Analytics } from "../systems/Analytics.js";
@@ -11,6 +11,7 @@ import { tr } from "../i18n/i18n.js";
 import { COSM_KITS, cosmeticsOn, Wardrobe } from "../systems/Cosmetics.js";
 import { AdService } from "../systems/AdService.js";
 import { STORE } from "../config.js";
+import { DEBUG } from "../systems/Platform.js";
 import { openWardrobe } from "./WardrobeModal.js";
 
 // Aviso da loja (Billing.notice): pagamento pendente que o Google aprovou, ou compra estornada. Só nas
@@ -95,6 +96,48 @@ function showKitNotice(scene, o) {
   } else m.add(new Button(scene, 0, by, 300, 56, tr("FECHAR"), () => m.close(), { size: 20 }));
   y = by + 28 + 16;
   m.fitContent(y + 14);
+  return m;
+}
+
+// Oferta curta do "Sem anúncios" no momento em que ela vale: o jogador voltou de uma partida e já assistiu a
+// vários anúncios (ADS.NUDGE_AT). Uma vez em cada marca, no máximo duas, e só quando dá para comprar de fato.
+// Quem chama garante a Clareira livre (sem outra janela, cena ou fala). o.open(from) abre a Loja ou o
+// "Sem anúncios", conforme a loja de cosméticos
+export function maybeNoAdsNudge(scene, o = {}) {
+  if (!AdService.enabled || !AdService.nudgeDue() || Billing.owned) return null;
+  if (!(Billing.available() ? Billing.ready && !Billing.pending : DEBUG)) return null;
+  const watched = AdService.watched;
+  AdService.nudgeShown();
+  Analytics.track("noads_nudge", { action: "show", watched });
+  let toStore = false;
+  const m = new Modal(scene, {
+    title: tr("SEM ANÚNCIOS"),
+    w: 640,
+    h: vh(scene),
+    onClose: () => {
+      if (toStore) return;
+      Analytics.track("noads_nudge", { action: "later", watched });
+      o.onClose?.();
+    },
+  });
+  let y = m.top + 14;
+  m.add(scene.add.image(0, y + 26, "ico_star").setScale(5));
+  y += 66;
+  const note = (str, size, color, gap) => {
+    const t = m.add(text(scene, 0, y, str, { size, color, origin: [0.5, 0], align: "center", wrap: m.w - 100 }));
+    y += t.height + gap;
+  };
+  note(tr("Você já assistiu a {0} anúncios. Obrigado por apoiar o jogo!", watched), 20, CSS.txt, 10);
+  note(tr("Os prêmios dos anúncios saem na hora, sem assistir nada."), 18, CSS.muted, 24);
+  const by = y + 28;
+  m.add(new Button(scene, -140, by, 250, 56, tr("CONHECER"), () => {
+    toStore = true;
+    Analytics.track("noads_nudge", { action: "open", watched });
+    m.close();
+    o.open?.("nudge");
+  }, { size: 20, style: "primary", color: CSS.goldHi }));
+  m.add(new Button(scene, 140, by, 250, 56, tr("AGORA NÃO"), () => m.close(), { size: 20, style: "dark" }));
+  m.fitContent(by + 28 + 16);
   return m;
 }
 

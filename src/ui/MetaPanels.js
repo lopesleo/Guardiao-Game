@@ -5,6 +5,7 @@
 import { META, BLESSINGS, MAX_BLESSING_RANK, ACHIEVEMENTS, CHARACTERS, WEAPONS, BUILD, BUILDINGS, LEGENDS } from "../config.js";
 import { fmtDuration } from "../systems/Builds.js";
 import { AdService } from "../systems/AdService.js";
+import { Analytics } from "../systems/Analytics.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { WEAPON_ICON } from "../art/Icons.js";
 import { WEAPON_DESC } from "../systems/UpgradeSystem.js";
@@ -87,6 +88,11 @@ export const MetaPanels = {
     list.addRow(this._shopRow(o));
     // Anúncio opcional: adiantar a obra em andamento (desligado com ADS.ENABLED)
     if (job && job.id === id && !b.canFinishFree() && AdService.canShow("build_speed")) {
+      // uma vez por obra a cada visita (o painel se refaz a cada toque)
+      if (this._buildAdSeen !== job) {
+        this._buildAdSeen = job;
+        Analytics.track("ad_offer_show", { placement: "build_speed" });
+      }
       list.addRow(
         this._shopRow({
           h: 56,

@@ -21,6 +21,7 @@ const MISSION_ICON = {
 };
 import { Daily, dailyUnlocked, rewardText } from "../systems/Daily.js";
 import { AdService } from "../systems/AdService.js";
+import { Analytics } from "../systems/Analytics.js";
 import { PAL, CSS } from "../art/Palette.js";
 import { text, drawFrame, Button, haptic, vh } from "../ui/Theme.js";
 import { Modal } from "../ui/Widgets.js";
@@ -56,7 +57,8 @@ export const CampDaily = {
     const glow = this._glow(CHEST_X, CHEST_Y - 20, 1.3, 0xffe58f, true).setVisible(shown);
     this._solid(CHEST_X, CHEST_Y - 8, 44, 16);
     this.buildings.chest = { img, shadow, glow, x: CHEST_X, y: CHEST_Y, shown, dot: this._notifyDot(CHEST_X + 26, CHEST_Y - 60).setDepth(this.D_HUD - 10).setVisible(false) };
-    this._addInteract({ x: CHEST_X, y: CHEST_Y, top: CHEST_Y - 50, r: 70, name: tr("BAÚ DO DIA"), verb: tr("ABRIR"), hiddenUntil: "chest", action: () => this._openDailyChest() });
+    this._chestAdSeen = false; // a cena é reaproveitada: a oferta conta de novo a cada visita
+    this._addInteract({ x: CHEST_X, y: CHEST_Y, top: CHEST_Y - 50, r: 70, chest: true, name: tr("BAÚ DO DIA"), verb: tr("ABRIR"), verbOf: () => this._chestVerb(), hiddenUntil: "chest", action: () => this._openDailyChest() });
     // Brilhinho subindo enquanto há presente
     this.time.addEvent({
       delay: 420,
@@ -79,6 +81,17 @@ export const CampDaily = {
     b.img.setFrame(ready ? 0 : 2);
     b.glow.setVisible(ready);
     b.dot.setVisible(ready);
+  },
+
+  // Rótulo do botão do baú: depois do grátis, o segundo é com anúncio, e o botão diz isso antes do toque
+  _chestVerb() {
+    const d = this._daily();
+    if (!d || d.chestReady("free") || !d.chestReady("ad") || !AdService.canShow("daily_chest")) return tr("ABRIR");
+    if (!this._chestAdSeen) {
+      this._chestAdSeen = true;
+      Analytics.track("ad_offer_show", { placement: "daily_chest" });
+    }
+    return AdService.noAds ? tr("ABRIR MAIS UM") : tr("MAIS UM · ANÚNCIO");
   },
 
   _openDailyChest() {
@@ -112,6 +125,7 @@ export const CampDaily = {
     this._toast(tr("Baú do dia: {0}", rewardText(r)));
     this._refreshDailyChest();
     this._refreshAll();
+    if (this._target?.chest) this._setTarget(this._target, true); // o botão passa a dizer o que vem agora
   },
 
   // ---------------------------------------------------------------------------
@@ -136,6 +150,7 @@ export const CampDaily = {
   },
 
   _showStreak(d, day) {
+    this._visitPopup = true;
     const m = new Modal(this, { title: tr("PRESENTE DO DIA {0}", day), subtitle: tr("Volte todo dia: o 7º dia é o maior presente"), w: 900, h: 420, closable: false });
     const n = DAILY.STREAK.length;
     const bw = 108,

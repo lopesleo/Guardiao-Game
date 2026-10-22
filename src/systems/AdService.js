@@ -76,6 +76,21 @@ export const AdService = {
   setProvider(p) {
     provider = p;
   },
+  // Anúncios assistidos de verdade até o fim (todas as partidas e dias). Prêmio liberado pelo "Sem
+  // anúncios" ou de graça no navegador não conta
+  get watched() {
+    return state.watched || 0;
+  },
+  // Oferta do "Sem anúncios" na Clareira (ADS.NUDGE_AT): a vez dela chegou? No máximo uma por marca
+  nudgeDue() {
+    const n = state.nudges || 0;
+    return !state.noAds && n < ADS.NUDGE_AT.length && this.watched >= ADS.NUDGE_AT[n];
+  },
+  // Mostrou: pula todas as marcas já passadas (quem passou das duas de uma vez vê uma oferta só)
+  nudgeShown() {
+    state.nudges = ADS.NUDGE_AT.filter((at) => this.watched >= at).length;
+    save();
+  },
   // Chamar no início de cada partida (zera os limites por partida)
   newRun() {
     runCounts = {};
@@ -98,7 +113,8 @@ export const AdService = {
     }
     Analytics.track("ad_offer_accept", { placement });
     let result = "ok";
-    if (!state.noAds && (provider || DEBUG)) {
+    const shown = !state.noAds && (provider || DEBUG);
+    if (shown) {
       AdFeedback.loading(true);
       try {
         result = provider ? await provider.show(placement) : await simulate();
@@ -116,6 +132,7 @@ export const AdService = {
     }
     runCounts[placement] = (runCounts[placement] || 0) + 1;
     state.daily[placement] = (state.daily[placement] || 0) + 1;
+    if (shown) state.watched = (state.watched || 0) + 1;
     save();
     Analytics.track("ad_reward", { placement, noAds: !!state.noAds, provider: provider ? "admob" : "web" });
     return true;

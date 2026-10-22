@@ -1708,6 +1708,9 @@ export const ADS = {
   REVIVE_INVULN_MS: 3000,
   REVIVE_CLEAR_RADIUS: 280, // onda que empurra/fere quem está em volta
   REVIVE_OFFER_S: 8, // tempo para decidir antes de encerrar a partida
+  // Oferta do "Sem anúncios" ao voltar de uma partida para a Clareira, depois de N anúncios assistidos até o
+  // fim (no total). Uma vez em cada marca, no máximo duas; nunca na partida nem junto de outra janela
+  NUDGE_AT: [8, 25],
 };
 
 // Compras pela Play Store (ver systems/Billing.js). O id tem de ser IGUAL ao do produto criado no Play
