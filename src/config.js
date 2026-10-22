@@ -2036,7 +2036,7 @@ export const FEEL = {
   // Tremor por camadas (Shake.js): cada pedido sustenta e decai nos últimos DECAY_MS como (1 − p)^POW;
   // vale a maior camada viva (um tremor fraco em curso não engole um forte); deslocamento em duas
   // senoides (HZ), não sorteio por quadro. PEAK compensa o decaimento na força do primeiro instante
-  SHAKE: { PEAK: 1.3, DECAY_MS: 260, POW: 1.5, HZ: [13, 21], LAYERS: 4 },
+  SHAKE: { PEAK: 1.2, DECAY_MS: 260, POW: 1.5, HZ: [13, 21], LAYERS: 4 },
   // Crítico em inimigo comum: faísca, empurrão, achatamento e som. Tremor e pausa de impacto só em alvo
   // forte (elite, mímico, minichefe). Medido antes: 3 críticos/s no fim da partida = 1,6 pausas/s
   CRIT_TOUGH_ONLY: true,

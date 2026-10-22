@@ -36,7 +36,7 @@ import { recipe, mealMods, bonusText } from "../systems/Kitchen.js";
 import { Daily, dailyUnlocked } from "../systems/Daily.js";
 import { InputManager } from "../systems/InputManager.js";
 import { Pool } from "../systems/Pool.js";
-import { GameFeel } from "../systems/GameFeel.js";
+import { GameFeel, softFlash } from "../systems/GameFeel.js";
 import { Puffs } from "../systems/Puffs.js";
 import { ShrineSystem } from "../systems/ShrineSystem.js";
 import { SpawnDirector } from "../systems/SpawnDirector.js";
@@ -220,6 +220,7 @@ export class GameScene extends Phaser.Scene {
     this.cosm = Cosmetics.forScene(this); // protótipo do Kit Ipê-rosa (só ?debug=1&kit=ipe; docs/COSMETICOS.md)
     this.hazards = new Hazards(this); // fogo no chão dos golpes de chefe
     this._bossBrains = new Set(); // cérebros de chefe vivos (luzes dos golpes)
+    this._teleLive = 0; // avisos de golpe à mostra (Telegraph.js): sem pausa de impacto enquanto houver
     this.upgrades = new UpgradeSystem(this);
 
     // Personagem escolhido no menu (sprite, arma inicial, viés de stats)
@@ -1133,7 +1134,10 @@ export class GameScene extends Phaser.Scene {
     const x = e.x,
       y = e.y;
     this.cameras.main.shake(400, 0.016);
-    this.cameras.main.flash(200, 242, 193, 78);
+    // Clarão dourado FRACO (o de tela cheia escondia tudo por 3 quadros) e a lenda libertada: a silhueta
+    // dourada dela sobe e se apaga, com anel e raios — a mesma ideia da libertação do chefe, em pequeno
+    softFlash(this.cameras.main, 220, 242, 193, 78, 0.35);
+    this._freeSpirit(e);
     this.sound.play("sfx_chest_jackpot", { volume: 0.6 });
     this._toast(tr("{0} DERROTADO!", e.miniBoss), 2200, "#ffe58f");
     const chest = new Chest(this, x, y);
@@ -1149,6 +1153,28 @@ export class GameScene extends Phaser.Scene {
     this.meta.recordStat("miniBosses"); // feitos: Açoite / Comadre Fulozinha
     if (e._brain?.log.flawless) this._flawlessBonus(x, y, BOSS_FIGHT.FLAWLESS_WOOD.MINIBOSS, e._brain.log);
     if (this.hud.boss === e) this.hud.clearBoss();
+  }
+
+  // Minichefe vencido: a silhueta dourada da lenda (o quadro em que ela estava) sobe e se apaga, com anel,
+  // raios e fagulhas. Acima do mapa de luz; sem esconder nada (some em < 1 s, translúcida)
+  _freeSpirit(e) {
+    const x = e.x,
+      y = e.y;
+    const g = this.add
+      .sprite(x, y, e.texture.key, e.frame.name)
+      .setScale(e.scaleX, e.scaleY)
+      .setFlipX(e.flipX)
+      .setTint(PAL.yel3)
+      .setTintMode(Phaser.TintModes.FILL)
+      .setAlpha(0.8)
+      .setDepth(D_FX - 5);
+    this.tweens.add({ targets: g, y: y - 46, scaleX: e.scaleX * 0.9, scaleY: e.scaleY * 1.08, alpha: 0, duration: 900, ease: "Sine.easeOut", onComplete: () => g.destroy() });
+    const fy = y + e.displayHeight * 0.4;
+    this.fx?.ring(x, fy, PAL.yel3, 16, e.displayWidth * 1.1, 420, 0.6, 0.9);
+    this.fx?.burst("glow", x, y, 18, -Math.PI / 2, 140, { min: 60, max: 200 });
+    this.fx?.burst("streak", x, y - 10, 10, null, 360, { min: 180, max: 340 }, [PAL.white, PAL.yel3, PAL.yel2]);
+    this.fx?.star(x, y - 10, PAL.yel3, 1, 4, 220, Math.PI / 4);
+    this.lighting?.flash(x, y, 320, 0xffe58f, 700, 1.2);
   }
 
   _recordDmg(src, n, assist = null) {

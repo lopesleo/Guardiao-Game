@@ -70,10 +70,14 @@ export class GameFeel {
     s.events.once("shutdown", () => s.scale.off("resize", fit));
   }
 
-  // Algum chefe/minichefe está AVISANDO um golpe? (forma no chão à mostra: o jogador está lendo)
+  // Algum chefe/minichefe está AVISANDO um golpe? (forma à mostra: o jogador está lendo para onde fugir).
+  // Conta os avisos desenhados (Telegraph.js) e o grito em anel (a brecha anda até o herói). O golpe em si,
+  // depois do aviso, pode pesar: a pancada do chefe no herói é o momento de uma pausa
   _telegraphing() {
-    const b = this.scene._bossBrains;
-    if (b) for (const brain of b) if (brain.threat) return true;
+    const s = this.scene;
+    if (s._teleLive > 0) return true;
+    const b = s._bossBrains;
+    if (b) for (const brain of b) if (brain.threat?.gap) return true;
     return false;
   }
 
