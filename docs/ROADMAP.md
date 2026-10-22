@@ -743,7 +743,7 @@ Nada disso trava o desenvolvimento; só o lançamento e a receita.
 |---|---|
 | 1 | **Bichos** (resgate, ajuda nas atividades, tigela de presentes, companheiro na partida) |
 | 2 | Bestiário + Árvore Sagrada + skins |
-| 3 | **Desafio Diário** com placar (Play Games) + desafios com modificadores |
+| 3 | **Desafio com regra especial** — projeto e recomendação em [`DESAFIO_DO_DIA.md`](DESAFIO_DO_DIA.md) (22/10/2026): começar por um **Desafio da semana** (P) e só passar ao diário se os números mandarem |
 | 4 | Santuários da Floresta no mapa + missões que desbloqueiam |
 | 5 | **Bioma 2** com chefe próprio |
 | 6 | Mutações/híbridos na horta, novos pontos de pesca, estações Cheia/Vazante |
