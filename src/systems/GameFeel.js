@@ -165,6 +165,14 @@ export class GameFeel {
     return 1 + this._gemCombo * 0.06;
   }
 
+  // Abate de elite/minichefe: peso extra.
+  bigKill(x, y) {
+    this.spark(x, y, 0xfff0a0);
+    this.scene.cameras.main.shake(160, 0.007);
+    this.hitStop(70);
+    haptic(40);
+  }
+
   // Subiu de nível: a barra de XP fica cheia e dourada atrás da mesa de cartas (HUD.levelFull)
   levelUp() {
     haptic(35);
