@@ -19,6 +19,7 @@ import { VirtualJoystick, joyRight } from "../ui/VirtualJoystick.js";
 import { DEBUG } from "../systems/Platform.js";
 import { Billing } from "../systems/Billing.js";
 import { openNoAds, showStoreNotice, maybeNoAdsNudge } from "../ui/NoAdsModal.js";
+import { Review } from "../systems/Review.js";
 import { openWardrobe } from "../ui/WardrobeModal.js";
 import { cosmeticsOn, Wardrobe } from "../systems/Cosmetics.js";
 import { openShop, shopOn } from "../ui/ShopModal.js";
@@ -156,14 +157,17 @@ export class CampScene extends Phaser.Scene {
     Analytics.track("camp_enter", {});
     this.time.delayedCall(700, () => this._introSequence());
     this.time.delayedCall(1300, () => this._maybeStreak());
-    this.time.delayedCall(2600, () => this._maybeNudge());
+    this.time.delayedCall(2600, () => this._arrivalOffer());
   }
 
-  // Oferta do "Sem anúncios" (ADS.NUDGE_AT): só na volta de uma partida e com a chegada calma — sem
-  // revelação, presente do dia, aviso da loja, fala da Anciã nem janela aberta. Ocupada, fica para a próxima
-  _maybeNudge() {
+  // Uma coisa só pedida ao jogador na volta de uma partida, e só com a chegada calma — sem revelação,
+  // presente do dia, aviso da loja, fala da Anciã nem janela aberta (ocupada, fica para a próxima):
+  // 1º o pedido de avaliação da Google Play, se a partida foi uma vitória (Review.js); senão, a oferta do
+  // "Sem anúncios" (ADS.NUDGE_AT). Nunca os dois na mesma chegada
+  _arrivalOffer() {
     if (!this.sys.isActive() || !this.scene.settings.data?.fromRun || !this._quietVisit || this._visitPopup) return;
     if (Billing.hasNotice || this._modals.length || this._cutscene || this._leaving || this._fishing || this.sayBox?.scene) return;
+    if (Review.due(this.meta)) return void Review.ask(this.meta);
     maybeNoAdsNudge(this, { open: (from) => this._openStore(from) });
   }
 

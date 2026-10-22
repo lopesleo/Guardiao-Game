@@ -954,6 +954,8 @@ export default {
   "Compostos e sintetizados por código para este jogo": "Compuestos y sintetizados por código para este juego",
   "Motor": "Motor",
   "Phaser 4 (MIT) · nipplejs (MIT)": "Phaser 4 (MIT) · nipplejs (MIT)",
+  "AVALIAR NO GOOGLE PLAY": "VALORAR EN GOOGLE PLAY",
+  "Sua nota ajuda o jogo a chegar a mais gente.": "Tu valoración ayuda a que el juego llegue a más gente.",
   "Quem vai proteger a floresta hoje?": "¿Quién protegerá el bosque hoy?",
   "Começa com {0}. {1}": "Empieza con {0}. {1}",
   "\nFeito: {0} ({1}/{2})": "\nHazaña: {0} ({1}/{2})",

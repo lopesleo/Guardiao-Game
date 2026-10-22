@@ -50,6 +50,10 @@ function fakeStore(cfg) {
         prepareRewardVideoAd: async () => {},
         showRewardVideoAd: async () => {},
       },
+      // Avaliação da Google Play (Review.js): só conta os pedidos
+      InAppReview: {
+        requestReview: async () => void S.calls.push("review"),
+      },
       NativePurchases: {
         isBillingSupported: async () => ({ isBillingSupported: true }),
         getProduct: async () => ({ product: { identifier: "sem_anuncios", priceString: "R$ 14,90", price: 14.9, currencyCode: "BRL" } }),
@@ -379,6 +383,49 @@ const SCENARIOS = {
     check(r.depois[0] === "MAIS UM · ANÚNCIO", "depois dele: o botão avisa que é com anúncio", r.depois[0]);
     check(r.shows === 1, "a oferta do baú conta uma vez por visita", `shows=${r.shows}`);
   },
+  // ------------------------------------------------ pedido de avaliação da Google Play (REVIEW)
+  // Volta de uma vitória: pede a avaliação e NÃO mostra a oferta do Sem anúncios na mesma chegada; na volta
+  // seguinte (sem vitória nova) a oferta aparece; vitória nova antes de 60 dias: não pede de novo
+  async avaliacao(t) {
+    await t.boot({ local: { guardiao_review_v1: { lastWon: true }, guardiao_ads_v1: { watched: 8 } } });
+    let tit = await camp(t, { fromRun: true });
+    let s = await t.state();
+    const ask = await t.page.evaluate(() => window.guardiaoAnalytics.recent().find((e) => e.name === "review_ask"));
+    check(s.calls.includes("review") && ask?.n === 1, "volta de uma vitória → pede a avaliação da Google Play", s.calls.filter((c) => c === "review").join() || "(não pediu)");
+    check(tit == null, "e a oferta do Sem anúncios espera (uma coisa por chegada)", tit ?? "");
+    tit = await camp(t, { fromRun: true });
+    s = await t.state();
+    check(s.calls.filter((c) => c === "review").length === 1 && tit === "SEM ANÚNCIOS", "na volta seguinte sem vitória: não pede de novo; a oferta aparece", `${s.calls.filter((c) => c === "review").length} pedidos · ${tit ?? "(sem oferta)"}`);
+    await t.page.evaluate(async () => (await import("/src/systems/Review.js")).Review.noteRun(true));
+    await camp(t, { fromRun: true });
+    s = await t.state();
+    check(s.calls.filter((c) => c === "review").length === 1, "vitória nova antes de 60 dias: não pede de novo");
+  },
+  // Volta de uma derrota, ou com poucas partidas jogadas: nunca pede
+  async avaliacaoDerrota(t) {
+    await t.boot({ local: { guardiao_review_v1: { lastWon: false } } });
+    await camp(t, { fromRun: true });
+    check(!(await t.state()).calls.includes("review"), "volta de uma derrota: não pede a avaliação");
+    await t.page.evaluate(async () => (await import("/src/systems/Review.js")).Review.noteRun(true));
+    await camp(t, { fromRun: false });
+    check(!(await t.state()).calls.includes("review"), "entrando pelo título (sem partida): não pede");
+  },
+  // Créditos: o atalho "Avaliar no Google Play" abre a página do jogo na loja
+  async avaliacaoCreditos(t) {
+    await t.page.evaluate(() => void window.game.scene.getScene("TitleScene")._showCredits());
+    await t.page.waitForTimeout(500);
+    const has = await t.page.evaluate(() => {
+      const deep = (o) => [o, ...(o.list ?? []).flatMap(deep)];
+      const m = window.game.scene.getScene("TitleScene")._modals.at(-1);
+      return [m.root, m.list?.content].filter(Boolean).flatMap(deep).some((o) => o.text === "AVALIAR NO GOOGLE PLAY"); // as linhas moram na lista
+    });
+    check(has, "Créditos têm o atalho AVALIAR NO GOOGLE PLAY");
+    // a página da loja é de fora: o teste só vê o pedido sair (e corta, para a página do jogo ficar)
+    await t.page.route(/play\.google\.com/, (r) => r.abort());
+    const req = t.page.waitForRequest(/play\.google\.com\/store\/apps\/details\?id=com\.lopesleo\.guardiao/, { timeout: 8000 }).catch(() => null);
+    await t.page.evaluate(async () => (await import("/src/systems/Review.js")).Review.openStore("credits"));
+    check(!!(await req), "o atalho abre a página do jogo na Google Play");
+  },
   // Logo depois de comprar, a loja pode ainda não listar a compra: carência de 2 min
   async carencia(t) {
     await t.billing("buy");
@@ -444,7 +491,7 @@ async function run(name) {
   try {
     // cada cenário que não sobe o jogo sozinho começa numa conta nova
     const kitsUp = name.startsWith("kit") ? ["kit_ipe", "kit_paineira"].slice(0, name === "kitCompra" ? 1 : 2) : name.startsWith("pacote") ? ALL : null;
-    const ownBoot = ["estorno", "clareira", "falsoAlarme", "semRede", "kitEstorno", "pacoteEstorno", "pacoteEstornoSemAnuncios", "oferta", "ofertaRegras", "ofertaComprado", "bauAnuncio"];
+    const ownBoot = ["estorno", "clareira", "falsoAlarme", "semRede", "kitEstorno", "pacoteEstorno", "pacoteEstornoSemAnuncios", "oferta", "ofertaRegras", "ofertaComprado", "bauAnuncio", "avaliacao", "avaliacaoDerrota"];
     if (!ownBoot.includes(name)) await t.boot(kitsUp ? { store: { kits: kitsUp } } : {});
     await SCENARIOS[name](t);
   } catch (e) {

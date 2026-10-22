@@ -1735,6 +1735,15 @@ export const ADS = {
   NUDGE_AT: [8, 25],
 };
 
+// Pedido de avaliação da Google Play (systems/Review.js): o cartão nativo na volta à Clareira depois de uma
+// vitória. O Google limita quantas vezes o cartão aparece; o jogo pede pouco e espaçado
+export const REVIEW = {
+  MIN_RUNS: 3, // só quem já conhece o jogo
+  MAX_ASKS: 3, // pedidos na vida toda
+  GAP_DAYS: 60, // entre um pedido e outro
+  STORE_URL: "https://play.google.com/store/apps/details?id=com.lopesleo.guardiao",
+};
+
 // Compras pela Play Store (ver systems/Billing.js). O id tem de ser IGUAL ao do produto criado no Play
 // Console (Monetizar → Produtos → Produtos no app), como compra única (não consumível)
 export const STORE = {

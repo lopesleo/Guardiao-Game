@@ -6,6 +6,7 @@ import { META, BLESSINGS, MAX_BLESSING_RANK, ACHIEVEMENTS, CHARACTERS, WEAPONS, 
 import { fmtDuration } from "../systems/Builds.js";
 import { AdService } from "../systems/AdService.js";
 import { Analytics } from "../systems/Analytics.js";
+import { Review } from "../systems/Review.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { WEAPON_ICON } from "../art/Icons.js";
 import { WEAPON_DESC } from "../systems/UpgradeSystem.js";
@@ -550,6 +551,9 @@ export const MetaPanels = {
       [tr("Música e efeitos sonoros"), tr("Compostos e sintetizados por código para este jogo")],
       [tr("Motor"), tr("Phaser 4 (MIT) · nipplejs (MIT)")],
     ];
+    // Avaliar quando quiser: abre a página do jogo na Google Play (só no app; o pedido automático é Review.js)
+    if (Review.available())
+      list.addRow(this._shopRow({ icon: "ico_star", name: tr("AVALIAR NO GOOGLE PLAY"), desc: tr("Sua nota ajuda o jogo a chegar a mais gente."), style: "gold", nameColor: CSS.goldHi, onTap: () => Review.openStore("credits") }));
     for (const [a, b] of lines) {
       list.addRow({
         h: 70,
