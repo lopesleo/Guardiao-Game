@@ -91,7 +91,13 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
   carga, `main` × 1.0.19: quadro −9% com tudo junto, a Podridão gasta parte do ganho; update −22%; desenhos 129 → 92;
   teto de 60 fps; teto de 150 gemas com fusão). E a monetização (22/10): oferta do "Sem anúncios" na volta à Clareira
   depois de 8 e de 25 anúncios assistidos (`ADS.NUDGE_AT`, evento `noads_nudge`) e o botão do baú do dia que avisa
-  que o segundo é com anúncio. 👤 Conferir no celular: o jogo a 60 fps sem
+  que o segundo é com anúncio. E a sensação de jogo (22/10, bloco `FEEL` no `config.js`): tremor por camadas (nada
+  engole nada), horda sem tremor por abate/crítico comum, sem pausa de impacto com aviso de chefe, barra de XP que
+  enche, cartas que saem do herói e voltam, evolução com tempo próprio, chefe que sobe de uma poça da Podridão
+  (a luta começa ~1,6 s depois do 7:00), baú que chacoalha, minichefe sem clarão amarelo de tela cheia, golpe fatal
+  que congela. 👤 Sentir no S23: o tremor novo, a vibração na evolução e na chegada do chefe, o clarão do
+  Despertar (agora com metade da força) e se faz falta o tremor no crítico comum (`FEEL.CRIT_TOUGH_ONLY`).
+  👤 Conferir no celular: o jogo a 60 fps sem
   tranco no S23 (antes rodava a 120), a borda da Podridão não esconder inimigo, o som (cartas, chefe, morte, vida
   baixa), o vento no bruxo/cogumelo (fraco) e o zoom 1,3 no chefe.
 - **Próximos de qualidade/desempenho** (estudo de 21/10 com as skills do Phaser 4, `audio-design` e
