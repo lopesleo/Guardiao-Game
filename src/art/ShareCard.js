@@ -372,7 +372,8 @@ async function paintScene(scene, info, L) {
       : { tones: [PAL.woodsNear0, PAL.n0, PAL.n1, PAL.clay0], blades: [PAL.n2, PAL.straw0, PAL.straw1] };
   // o terreiro em volta da fogueira tem o tamanho da faixa de chão à vista (o resto fica sob o painel)
   put(a, makeGround(AW, AH - HZ, -9999, 0, 5, groundO), 0, HZ);
-  put(a, makeGround(AW, 74, look.fire ? L.fx : -9999, FEET - 2 - HZ, 5, groundO), 0, HZ);
+  await yieldNow(); // o chão é o passo mais caro (2 camadas): uma pausa no meio
+  put(a, makeGround(AW, 62, look.fire ? L.fx : -9999, FEET - 2 - HZ, 5, groundO), 0, HZ);
   for (let i = 0; i < 5; i++) glow(a, (AW * i) / 4, HZ + 3, 100, 14, dawn ? PAL.dawn5 : PAL.night4, dawn ? 0.12 : 0.14);
   if (dawn) glow(a, L.sx, HZ + 14, 150, 40, PAL.sun0, 0.12); // a luz da manhã no gramado
 
@@ -489,6 +490,8 @@ async function paintScene(scene, info, L) {
     const x = 14 + r() * (AW - 28),
       y = HZ + 6 + r() * (FEET - HZ + 6);
     const al = dawn ? 0.35 : 0.55 + r() * 0.45;
+    // nunca por cima do guardião nem da lenda (um ponto de luz no rosto parece defeito)
+    if ((Math.abs(x - L.hx) < 18 && y > FEET - 66) || (look.legend && Math.abs(x - L.lx) < 28 && y > L.ly - 60)) continue;
     glow(a, x, y, 4, 4, PAL.yel3, 0.4 * al);
     dot(a, x, y, PAL.yel3, al);
   }

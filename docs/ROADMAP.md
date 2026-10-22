@@ -638,6 +638,25 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   `review_fail`, `review_store`. `npm run test:compra`: cenários `avaliacao*`. Plugins de compartilhar e
   arquivos (`@capacitor/share`, `@capacitor/filesystem`) instalados junto, para o cartão da partida.
   👤 Conferir no S23 (o cartão só aparece em app instalado pela Google Play; o Teste interno serve para conferir)
+- ✅ **Cartão da partida para compartilhar (22/10/2026; `src/art/ShareCard.js`, `src/ui/ShareCardModal.js`,
+  `src/systems/Share.js`, `SHARE` no config):** imagem **1080×1350 (4:5**, o maior retrato do feed do Instagram,
+  do X e do WhatsApp; nos stories o Instagram completa o fundo) feita só com a arte do jogo, na hora do toque. A
+  cena em pixel de arte (1 px = 5 px do cartão): o céu do desfecho (amanhecer na vitória, noite com a Podridão no
+  horizonte na derrota, noite calma no recuo, aurora na Noite Eterna), a mata ou o sertão do bioma, a lenda
+  libertada (Mapinguari ou Caboclo d'Água) com motas de vida, a fogueira, o guardião da partida (os 7) e o
+  Despertar/rastro/libertação do Guarda-roupa. Por cima, na mesma grade e com as molduras do jogo: a manchete
+  (VITÓRIA!, DERROTA "Caiu aos 5:32", RECUO, NOITE ETERNA com o tempo na escuridão), a plaquinha com o nome do
+  guardião (e a insígnia de **Fundador**), Perigo e bioma, pontos (com a luz do **RECORDE**), tempo/abates/nível,
+  as reações que mais saíram (par de selos, nome na cor da reação), a arma que mais causou dano e o resto do
+  arsenal, e a marca (título do jogo e `komedygames.com/guardiao`). Japonês e chinês com a Fusion Pixel em
+  múltiplos de 12 px e os números na Jersey 15. Na tela do resultado, **COMPARTILHAR** na linha dos botões, na
+  coluna da cena: a janela mostra o **verso** do cartão respirando enquanto a frente é desenhada, o cartão **vira**,
+  um brilho passa e faíscas saem das bordas. App: PNG na pasta de cache (`@capacitor/filesystem`) e a folha do
+  Android (`@capacitor/share`) com o texto e o link `?utm_source=share`; navegador: `navigator.share` com o
+  arquivo, ou **BAIXAR IMAGEM**. Analytics `share_card` (`open`, `shared`, `cancel`, `fail`; modo, bioma, via).
+  Desempenho: pronto em ~0,15 s (0,3–1,1 s com a CPU 4× mais lenta), maior quadro ~45 ms (≤ 90 ms a 4×), +4–8 MB
+  de heap; PNG de ~730 KB. `npm run test:cartao` (no `npm test`). 👤 Testar a folha de compartilhar no S23 (WhatsApp,
+  Instagram feed e stories) e ver o cartão no celular de quem recebe
 - ⬜ Ao ligar a compra "Remover anúncios" ou o salvamento do Play Games: rever Segurança dos dados
   (login com conta externa) — a classificação já declara compras no jogo
 

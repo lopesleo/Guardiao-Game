@@ -235,7 +235,7 @@ no domínio.
 | Item | Por quê | Esforço |
 |---|---|---|
 | ✅ **Pedido de avaliação** (API In-App Review da Play) na volta de uma vitória (22/10/2026, `Review.js`) | Nota e número de avaliações pesam na conversão da ficha | P 🤖 |
-| **Cartão de partida para compartilhar** (imagem com guardião, tempo, reações disparadas) | Cada jogador vira um post | M 🤖 |
+| ✅ **Cartão de partida para compartilhar** (imagem 4:5 com guardião, desfecho, tempo, reações e arsenal; 22/10/2026, `ShareCard.js`, link com `utm_source=share`) | Cada jogador vira um post | M 🤖 |
 | **Link de convite com UTM** no menu ("Chame um amigo") | Mede o boca a boca | P 🤖 |
 | **Evento do Dia do Saci** (Saci em destaque na Clareira) e do Dia do Folclore | Dá assunto nas datas | P 🤖 |
 | **Conquistas do Play Games** (os ids já existem) | Aparece no perfil do jogador e no Play Games | M 🤖 |
