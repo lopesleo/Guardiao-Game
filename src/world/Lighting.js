@@ -15,7 +15,7 @@ import { PAL } from "../art/Palette.js";
 import { rng } from "../art/PixelArt.js";
 import { Settings } from "../systems/Settings.js";
 import { vw, vh } from "../ui/Theme.js";
-import { groundGPU } from "./ForestWorld.js";
+import { groundGPU, guardGPULayer } from "./ForestWorld.js";
 
 const D_LIGHTMAP = 48500;
 const RES = 4; // mapa de luz em 1/4 da resolução (luz é suave) → 16× menos pixels
@@ -240,12 +240,15 @@ export class Lighting {
       // Cogumelos que cintilam: acendem com o anoitecer (e inteiros com o chefe). Vem logo depois dos
       // carimbos de propósito: o contexto do mapa já está em ADD, e a captura com câmera própria herda
       // esse modo (num modo diferente o Phaser trocaria o contexto e perderia a câmera)
+      // A camada nasce (e o shader dela compila) já no 1º desenho da partida, invisível: compilar na 1ª
+      // noite dava um tranco no meio do jogo (~230 ms no teste, por shader novo)
       const G = GROUND.GLOW;
       const nightK = Math.max(clamp01((base - G.NIGHT[0]) / (G.NIGHT[1] - G.NIGHT[0])), kB);
-      const glow = nightK > 0.01 ? this._glowLayer() : null;
-      if (glow) {
-        glow.alpha = nightK * nightK * (3 - 2 * nightK);
+      const glow = this._glowLayer();
+      if (glow && (nightK > 0.01 || !this._glowWarm)) {
+        glow.alpha = Math.max(1e-4, nightK * nightK * (3 - 2 * nightK));
         this.rt.capture(glow, { camera: this._glowCamera() });
+        this._glowWarm = true;
       }
     }
     // Phaser 4: no modo padrão a RenderTexture só EXIBE o que já tem; sem render()
@@ -256,14 +259,21 @@ export class Lighting {
   // Camada das luzes dos cogumelos (montada uma vez, na 1ª noite). Fora da lista de exibição: só existe
   // dentro do mapa de luz. null = não há cogumelo que brilhe aqui ou a camada de GPU não serve (plano B)
   _glowLayer() {
+    if (this._glowDead) {
+      // falhou no desenho (ver guardGPULayer): sai de cena fora do desenho, e não volta
+      this._glow?.destroy();
+      this._glow = null;
+      this._glowDead = false;
+    }
     if (this._glow !== undefined) return this._glow;
     this._glow = null;
     const spots = this.world?.glowSpots;
-    if (!GROUND.GLOW.ON || !spots?.length || !groundGPU(this.scene)) return null;
+    if (!GROUND.GLOW.ON || !spots?.length || this.world._gpuDead || !groundGPU(this.scene)) return null;
     const G = GROUND.GLOW;
     const sc = this.scene;
+    let L = null;
     try {
-      const L = new Phaser.GameObjects.SpriteGPULayer(sc, "fx_light", spots.length).setBlendMode(Phaser.BlendModes.ADD);
+      L = new Phaser.GameObjects.SpriteGPULayer(sc, "fx_light", spots.length).setBlendMode(Phaser.BlendModes.ADD);
       const k = G.R / 64; // fx_light: 128 px de lado (raio 64)
       const ease = "Sine.easeInOut";
       for (const s of spots) {
@@ -285,11 +295,18 @@ export class Lighting {
           tintBlend: 1,
         });
       }
+      guardGPULayer(L, (e) => {
+        if (this._glowDead) return;
+        console.warn("cogumelos que brilham falharam:", e?.message ?? e);
+        this._glowDead = true;
+        L.setVisible(false);
+      });
       sc.sys.updateList.add(L); // o relógio das animações anda com a cena (e para junto na pausa)
       sc.events.once("shutdown", () => L.destroy());
       this._glow = L;
     } catch (e) {
       console.warn("cogumelos que brilham indisponíveis:", e?.message ?? e);
+      L?.destroy();
     }
     return this._glow;
   }

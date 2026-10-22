@@ -11,8 +11,9 @@
 // (instanciado), com os dados num buffer estático enviado uma vez: nada por quadro na CPU, nem o
 // culling. O que precisa de ordem por y (árvores, arbustos, pedras, tocos) continua imagem.
 // Plano B: sem WebGL, sem textura no vertex shader (a camada lê os quadros de uma textura de dados
-// lá; Mali-400 e afins não têm), com GROUND.GPU desligado ou com ?debug=1&chao=img, as mesmas
-// coisas viram as imagens de antes — o mesmo desenho.
+// lá; WebGL 1 permite GPU sem isso, como celulares bem antigos), com GROUND.GPU desligado ou com
+// ?debug=1&chao=img, as mesmas coisas viram as imagens de antes — o mesmo desenho. E se o desenho da
+// camada der erro no aparelho, ela vira essas imagens na hora (guardGPULayer; teste: ?debug=1&chao=falha).
 import { GAME, BIOMES, GROUND } from "../config.js";
 import { PAL } from "../art/Palette.js";
 import { rng } from "../art/PixelArt.js";
@@ -27,16 +28,36 @@ const D_FLAT = -50; // flores/tufos (sempre embaixo de tudo)
 const Y_SORT = 10000; // mesmo offset do player/inimigos
 const SHADOW_RESERVE = 32; // sombras que nascem depois do mundo pronto (árvores da trilha de entrada)
 
-// A camada de GPU funciona neste aparelho? (o resto do jogo já exige WebGL com instâncias e VAO)
+// A camada de GPU funciona neste aparelho? (o resto do jogo já exige WebGL com instâncias e VAO; a
+// camada ainda lê uma textura no vertex shader e usa 15 atributos por vértice)
 export function groundGPU(scene) {
   if (!GROUND.GPU || (DEBUG && /[?&]chao=img\b/.test(location.search))) return false;
   const r = scene.sys.game.renderer;
   if (r?.type !== Phaser.WEBGL || !Phaser.GameObjects.SpriteGPULayer) return false;
   try {
-    return r.gl.getParameter(r.gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) > 0;
+    const gl = r.gl;
+    return gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) > 0 && gl.getParameter(gl.MAX_VERTEX_ATTRIBS) >= 16;
   } catch {
     return false;
   }
+}
+
+// Teste do plano B no navegador: ?debug=1&chao=falha faz a camada "falhar" no 1º desenho
+const FAIL_TEST = DEBUG && /[?&]chao=falha\b/.test(location.search);
+
+// Se o desenho de uma camada de GPU der erro no aparelho (shader que não compila, por ex.), o erro não
+// pode escapar: dentro do laço de desenho ele congelaria o jogo. Chama onFail e segue o quadro
+export function guardGPULayer(layer, onFail) {
+  const sub = layer.submitterNode;
+  const run = sub.run;
+  sub.run = function (ctx) {
+    try {
+      if (FAIL_TEST) throw new Error("teste do plano B (?chao=falha)");
+      return run.call(this, ctx);
+    } catch (e) {
+      onFail(e);
+    }
+  };
 }
 
 export class ForestWorld {
@@ -135,6 +156,7 @@ export class ForestWorld {
         for (const [kind, tex, depth, list, reserve] of kinds) {
           const L = this.scene.add.spriteGPULayer(tex, list.length + reserve).setDepth(depth);
           for (let i = 0; i < list.length; i++) L.addMember(list[i]);
+          guardGPULayer(L, (e) => this._gpuFail(e));
           this.layers.push(L);
           this._layerOf[kind] = L;
         }
@@ -148,6 +170,29 @@ export class ForestWorld {
     }
     if (this.layers.length) return;
     for (const [kind, , , list] of kinds) for (let i = 0; i < list.length; i++) this._flatPut(kind, list[i]);
+  }
+
+  // A camada falhou no desenho: some neste mesmo quadro e, no próximo update (fora do desenho), vira as
+  // imagens de antes, lidas de volta da própria camada
+  _gpuFail(e) {
+    if (this._gpuDead) return;
+    this._gpuDead = true;
+    console.warn("chão na GPU falhou; voltando às imagens:", e?.message ?? e);
+    for (const L of this.layers) L.setVisible(false);
+  }
+
+  _gpuToImages() {
+    const layers = Object.entries(this._layerOf);
+    this._layerOf = {};
+    for (const [kind, L] of layers) {
+      for (let i = 0; i < L.memberCount; i++) {
+        const m = L.getMember(i);
+        this._flatPut(kind, { x: m.x, y: m.y, frame: m.frame, originX: m.originX, originY: m.originY, scaleX: m.scaleX, scaleY: m.scaleY, alpha: m.alpha });
+      }
+      L.destroy();
+    }
+    this.layers.length = 0;
+    this._cullAt = 0;
   }
 
   // Um membro a mais depois de montado: na camada (se couber) ou como imagem
@@ -341,6 +386,7 @@ export class ForestWorld {
 
   update(time, dt, player) {
     const cam = this.scene.cameras.main;
+    if (this._gpuDead && this.layers.length) this._gpuToImages();
     if (time >= this._cullAt) {
       this._cullAt = time + 150;
       this._cull();
