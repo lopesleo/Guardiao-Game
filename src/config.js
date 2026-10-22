@@ -213,6 +213,7 @@ export const STATUS_LOOK = {
   GLOW_R: 56, // raio da luz do inimigo com status (a da corrupção: 58)
   GLOW_A: 0.34, // força dessa luz (a da corrupção: 0,4)
   GLOW_MAX: 8, // teto de luzes de status por quadro
+  BOSS_K: 0.5, // força da tinta no chefe (1 = a dos outros): ele passa a luta inteira com status
 };
 
 // Libertação do chefe (GameScene._freeBoss), o clímax de toda vitória. Tempos em ms, um depois do outro; a soma
