@@ -1,7 +1,8 @@
 # Redes sociais: Instagram e Discord
 
 Kit pronto para abrir o Instagram e o Discord do jogo (10/10/2026). Estratégia geral e calendário em
-`docs/MARKETING.md` (seção 6). Os vídeos ficam em `videos/promo/entrega/reels/` (fora do git) e são
+`docs/MARKETING.md` (seção 6); a rotina semanal de posts de todas as redes, com textos prontos, em
+`docs/PLANO_DE_CONTEUDO.md`. Os vídeos ficam em `videos/promo/entrega/reels/` (fora do git) e são
 gerados por `videos/promo/build/reels.py` (render: `tools/render.sh reel-<nome>`).
 
 **Quem faz o quê:** criar as contas e entrar nelas é com o Leonardo (o Claude não cria contas nem
@@ -26,7 +27,7 @@ keycombination 113 50` (Ctrl+V) no campo; o `input text` do adb não digita acen
 | Nome de usuário | **`guardiaodaflorestaofc`** (escolhido pelo Leonardo ao criar a conta). Usar o mesmo no TikTok e no YouTube |
 | Nome (aparece na busca) | `Guardião da Floresta · jogo` |
 | Foto | ícone do jogo, `lopesleo.github.io/public/guardiao/assets/img/icon-512.png` (o recorte redondo do Instagram não corta o Curupira) |
-| Link | `https://lopesleo.github.io/guardiao/?utm_source=instagram&utm_medium=bio` |
+| Link | `https://komedygames.com/guardiao/?utm_source=instagram&utm_medium=bio` (era o `lopesleo.github.io`; trocado em 20/10/2026) |
 
 **Bio** (cabe nos 150 caracteres):
 

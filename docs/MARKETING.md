@@ -138,6 +138,9 @@ Dia do Saci fica como **campanha de aquecimento**.
 
 ## 6. Canais (custo zero primeiro)
 
+**A rotina de posts (o que postar em cada rede, em que dia e hora, e textos prontos) está em
+[`PLANO_DE_CONTEUDO.md`](PLANO_DE_CONTEUDO.md).**
+
 ### 6.1 Vídeo curto (TikTok, Reels, Shorts)
 O mesmo vídeo vertical vai para os três. Legenda em português e texto na tela (a maioria assiste sem som).
 Os 60 clipes de 4 s e o promo 9:16 já dão material para ~2 meses.
