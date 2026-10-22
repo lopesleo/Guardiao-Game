@@ -1461,7 +1461,8 @@ export class GameScene extends Phaser.Scene {
       bot = wv.bottom - 70 / z,
       left = wv.x + 130 / z,
       right = wv.right - 130 / z;
-    const inside = (x, y) => x > left && x < right && y > top && y < bot && x > ARENA.minX + 120 && x < ARENA.maxX - 120 && y > ARENA.minY + 160 && y < ARENA.maxY - 90;
+    // longe da muralha da borda também (as copas dela invadem a arena na tela)
+    const inside = (x, y) => x > left && x < right && y > top && y < bot && x > ARENA.minX + 170 && x < ARENA.maxX - 170 && y > ARENA.minY + 200 && y < ARENA.maxY - 200;
     // nenhuma copa de árvore por cima do lugar (a chegada tem de ser vista inteira)
     const trees = this.world.trees ?? [];
     const clearOfTrees = (x, y) => {
@@ -1485,7 +1486,8 @@ export class GameScene extends Phaser.Scene {
     }
     if (fallback) return fallback;
     // sem espaço (herói num canto): o mais perto disso que couber
-    return { x: Phaser.Math.Clamp(p.x + E.MIN_DIST, Math.max(left, ARENA.minX + 120), Math.min(right, ARENA.maxX - 120)), y: Phaser.Math.Clamp(p.y, Math.max(top, ARENA.minY + 160), Math.min(bot, ARENA.maxY - 90)) };
+    const sx = p.x < (ARENA.minX + ARENA.maxX) / 2 ? 1 : -1; // para o lado de dentro da arena
+    return { x: Phaser.Math.Clamp(p.x + sx * E.MIN_DIST, ARENA.minX + 170, ARENA.maxX - 170), y: Phaser.Math.Clamp(p.y - 60, ARENA.minY + 200, ARENA.maxY - 200) };
   }
 
   // 1) A Podridão borbulha no chão onde o chefe vai nascer: poça que cresce, bolhas e esporos subindo, o chão
