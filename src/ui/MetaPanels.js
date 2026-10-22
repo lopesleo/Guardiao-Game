@@ -7,6 +7,7 @@ import { fmtDuration } from "../systems/Builds.js";
 import { AdService } from "../systems/AdService.js";
 import { Analytics } from "../systems/Analytics.js";
 import { Review } from "../systems/Review.js";
+import { inviteFriend } from "./InviteUI.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { WEAPON_ICON } from "../art/Icons.js";
 import { WEAPON_DESC } from "../systems/UpgradeSystem.js";
@@ -554,6 +555,8 @@ export const MetaPanels = {
     // Avaliar quando quiser: abre a página do jogo na Google Play (só no app; o pedido automático é Review.js)
     if (Review.available())
       list.addRow(this._shopRow({ icon: "ico_star", name: tr("AVALIAR NO GOOGLE PLAY"), desc: tr("Sua nota ajuda o jogo a chegar a mais gente."), style: "gold", nameColor: CSS.goldHi, onTap: () => Review.openStore("credits") }));
+    // Chame um amigo (Invite.js): a folha de compartilhar com o link da página oficial (no navegador, copia o link)
+    list.addRow(this._shopRow({ icon: "ico_invite", iconScale: 2.4, name: tr("CHAMAR UM AMIGO"), desc: tr("Mande o jogo para quem vai gostar dele."), style: "button", onTap: () => inviteFriend(this, "creditos") }));
     for (const [a, b] of lines) {
       list.addRow({
         h: 70,

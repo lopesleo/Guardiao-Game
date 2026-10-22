@@ -272,10 +272,21 @@ export class Button extends Phaser.GameObjects.Container {
   // Rótulo nunca vaza da moldura: com a fonte Legível ou texto grande, encolhe para caber
   _fitLabel() {
     const t = this.label;
-    if (!t || this.ico) return;
+    if (!t) return;
     t.setScale(1);
     const room = this.bw - 8 * P;
-    if (t.width > room) t.setScale(room / t.width);
+    if (!this.ico) {
+      if (t.width > room) t.setScale(room / t.width);
+      return;
+    }
+    // com ícone, o conjunto (ícone + espaço + rótulo) é que cabe: o rótulo encolhe e os dois voltam ao centro
+    const iw = this.ico.displayWidth,
+      gap = 10;
+    if (iw + gap + t.width <= room) return;
+    t.setScale(Math.max(0.5, (room - iw - gap) / t.width));
+    const total = iw + gap + t.displayWidth;
+    this.ico.x = -total / 2 + iw / 2;
+    t.x = -total / 2 + iw + gap + t.displayWidth / 2;
   }
 }
 
