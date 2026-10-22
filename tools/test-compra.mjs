@@ -113,6 +113,46 @@ const PAID = { productIdentifier: "sem_anuncios", purchaseState: "1", purchaseTo
 const ALL = ["kit_ipe", "kit_paineira", "kit_coruja", "kit_junina", "pacote_fundador", "pacote_fundador_kits", "pacote_apoiador"];
 const PACK_OWNED = { pacote_fundador: { owned: true, acked: true, grantedAt: OLD } };
 
+// Volta à Clareira (o.fromRun = como depois de uma partida) com a chegada calma: sem revelação, fala de abertura
+// (o.say liga a fala) nem presente do dia. Espera passar a hora da oferta do Sem anúncios (2,6 s do relógio do
+// jogo) e devolve o título da janela aberta, ou null
+async function camp(t, o = {}) {
+  await t.page.evaluate(async (o) => {
+    const { MetaProgression } = await import("/src/systems/MetaProgression.js");
+    const { pendingReveals } = await import("/src/systems/Reveal.js");
+    const { dayKey } = await import("/src/systems/Daily.js");
+    const m = new MetaProgression();
+    const d = m.data;
+    d.runsPlayed = Math.max(d.runsPlayed || 0, 3);
+    d.campIntroSeen = !o.say;
+    for (const r of pendingReveals(d)) d.revealed.push(r.id);
+    for (const id of o.reveal || []) if (!d.revealed.includes(id)) d.revealed.push(id);
+    d.streak = { last: dayKey(), count: 1 };
+    m._save();
+    const g = window.game;
+    for (const s of g.scene.getScenes(true)) g.scene.stop(s.scene.key);
+    // a instância da cena é reaproveitada: conta o tempo DESTA visita (o "create" sobrevive ao stop). Soma os
+    // passos do jogo, não o relógio: no navegador lento cada passo é cortado em 200 ms e os timers atrasam
+    const c = g.scene.getScene("CampScene");
+    c.__el = null;
+    c.events.once("create", () => {
+      c.__el = 0;
+      const tick = (_, dt) => (c.__el += dt);
+      c.events.on("update", tick);
+      c.events.once("shutdown", () => c.events.off("update", tick));
+    });
+    g.scene.start("CampScene", { fromRun: !!o.fromRun });
+  }, o);
+  await t.page.waitForFunction(() => {
+    const c = window.game.scene.getScene("CampScene");
+    return c.__el != null && c.sys.isActive() && c.__el > 3000;
+  }, null, { timeout: 120000, polling: 200 });
+  return t.page.evaluate(() => window.game.scene.getScene("CampScene")._modals.at(-1)?.titleText?.text ?? null);
+}
+const adsState = (t) => t.page.evaluate(() => JSON.parse(localStorage.getItem("guardiao_ads_v1") || "{}"));
+const nudgeEvents = (t) => t.page.evaluate(() => window.guardiaoAnalytics.recent().filter((e) => e.name === "noads_nudge").map((e) => e.action));
+const tapModal = (t, label) => t.page.evaluate((label) => void window.game.scene.getScene("CampScene")._modals.at(-1).body.list.find((o) => o.label?.text === label).onClick(), label);
+
 const SCENARIOS = {
   // Compra normal: libera na hora e reconhece à mão (o automático do plugin pode ser cortado)
   async compra(t) {
@@ -277,6 +317,68 @@ const SCENARIOS = {
     check(s.noAds && s.saved.owned && !s.pack.founder && !s.pack.anyKit, "só o pacote sai; o Sem anúncios pago à parte continua", JSON.stringify(s.saved));
     await t.noticeShown(/COMPRA ESTORNADA/, "pacote_estorno_sem_anuncios");
   },
+  // ------------------------------------------------ oferta do "Sem anúncios" na volta à Clareira (ADS.NUDGE_AT)
+  // 8 anúncios assistidos → aparece; CONHECER abre a Loja; na marca de 25 de novo; depois nunca mais
+  async oferta(t) {
+    await t.boot({ local: { guardiao_ads_v1: { watched: 8 } } });
+    let tit = await camp(t, { fromRun: true });
+    check(tit === "SEM ANÚNCIOS", "8 anúncios assistidos → a oferta aparece na volta de uma partida", tit ?? "(não apareceu)");
+    if (SHOTS && tit) await t.page.screenshot({ path: `${SHOTS}/compra_oferta.png` });
+    await tapModal(t, "CONHECER");
+    await t.page.waitForTimeout(600);
+    const loja = await t.page.evaluate(() => window.game.scene.getScene("CampScene")._modals.at(-1)?.titleText?.text ?? null);
+    check(loja === (LOJA ? "LOJA" : "SEM ANÚNCIOS"), `CONHECER abre ${LOJA ? "a Loja" : "o Sem anúncios"}`, loja ?? "(nada)");
+    const from = await t.page.evaluate(() => window.guardiaoAnalytics.recent().find((e) => e.name === "shop_view" || e.name === "iap_view")?.from);
+    check((await nudgeEvents(t)).join() === "show,open" && from === "nudge", "registra mostrar → abrir, e a loja sabe que veio da oferta", `${(await nudgeEvents(t)).join()} · from=${from}`);
+    tit = await camp(t, { fromRun: true });
+    check(tit == null, "na volta seguinte, antes da marca de 25: não repete", tit ?? "");
+    const st = await adsState(t);
+    await t.page.close();
+    await t.boot({ local: { guardiao_ads_v1: { ...st, watched: 25 } } });
+    tit = await camp(t, { fromRun: true });
+    check(tit === "SEM ANÚNCIOS", "25 anúncios → a segunda (e última) oferta", tit ?? "(não apareceu)");
+    if (tit) await tapModal(t, "AGORA NÃO");
+    await t.page.waitForTimeout(500);
+    check((await nudgeEvents(t)).join() === "show,later", "AGORA NÃO fica registrado", (await nudgeEvents(t)).join());
+    const st2 = await adsState(t);
+    await t.page.close();
+    await t.boot({ local: { guardiao_ads_v1: { ...st2, watched: 80 } } });
+    tit = await camp(t, { fromRun: true });
+    check(tit == null && st2.nudges === 2, "depois das duas, nunca mais", `${tit ?? ""} nudges=${st2.nudges}`);
+  },
+  // Só na chegada calma de uma partida; passou das duas marcas de uma vez → uma oferta só
+  async ofertaRegras(t) {
+    await t.boot({ local: { guardiao_ads_v1: { watched: 30 } } });
+    let tit = await camp(t, { fromRun: false });
+    check(tit == null, "entrando pelo título (sem partida): nada");
+    tit = await camp(t, { fromRun: true, say: true });
+    check(tit == null, "com a fala da Anciã na tela: espera a próxima volta");
+    tit = await camp(t, { fromRun: true });
+    const st = await adsState(t);
+    check(tit === "SEM ANÚNCIOS" && st.nudges === 2, "passou das duas marcas de uma vez → uma oferta só", `${tit ?? "(não apareceu)"} nudges=${st.nudges}`);
+  },
+  // Quem já tem o Sem anúncios nunca vê a oferta
+  async ofertaComprado(t) {
+    await t.boot({ local: { ...OWNED, guardiao_ads_v1: { noAds: true, watched: 30 } }, store: { list: [PAID] } });
+    const tit = await camp(t, { fromRun: true });
+    check(tit == null, "com o Sem anúncios: nenhuma oferta", tit ?? "");
+  },
+  // Baú do dia: depois do grátis, o botão diz que o segundo é com anúncio (e a oferta conta uma vez por visita)
+  async bauAnuncio(t) {
+    await t.boot();
+    await camp(t, { reveal: ["board", "chest"] });
+    const r = await t.page.evaluate(() => {
+      const c = window.game.scene.getScene("CampScene");
+      const antes = c._chestVerb();
+      c._openDailyChest();
+      const depois = [c._chestVerb(), c._chestVerb()];
+      const shows = window.guardiaoAnalytics.recent().filter((e) => e.name === "ad_offer_show" && e.placement === "daily_chest").length;
+      return { antes, depois, shows };
+    });
+    check(r.antes === "ABRIR", "com o baú grátis: ABRIR", r.antes);
+    check(r.depois[0] === "MAIS UM · ANÚNCIO", "depois dele: o botão avisa que é com anúncio", r.depois[0]);
+    check(r.shows === 1, "a oferta do baú conta uma vez por visita", `shows=${r.shows}`);
+  },
   // Logo depois de comprar, a loja pode ainda não listar a compra: carência de 2 min
   async carencia(t) {
     await t.billing("buy");
@@ -342,7 +444,8 @@ async function run(name) {
   try {
     // cada cenário que não sobe o jogo sozinho começa numa conta nova
     const kitsUp = name.startsWith("kit") ? ["kit_ipe", "kit_paineira"].slice(0, name === "kitCompra" ? 1 : 2) : name.startsWith("pacote") ? ALL : null;
-    if (!["estorno", "clareira", "falsoAlarme", "semRede", "kitEstorno", "pacoteEstorno", "pacoteEstornoSemAnuncios"].includes(name)) await t.boot(kitsUp ? { store: { kits: kitsUp } } : {});
+    const ownBoot = ["estorno", "clareira", "falsoAlarme", "semRede", "kitEstorno", "pacoteEstorno", "pacoteEstornoSemAnuncios", "oferta", "ofertaRegras", "ofertaComprado", "bauAnuncio"];
+    if (!ownBoot.includes(name)) await t.boot(kitsUp ? { store: { kits: kitsUp } } : {});
     await SCENARIOS[name](t);
   } catch (e) {
     check(false, "o roteiro chegou ao fim", String(e.message || e).split("\n")[0]);
