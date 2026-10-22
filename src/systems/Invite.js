@@ -1,18 +1,13 @@
 // Chame um amigo: o convite com o link da página oficial (INVITE no config.js) e a origem em UTM, mandado pela
-// folha de compartilhar do aparelho. A página repassa a origem à Play no botão de instalar, então o Play Console
-// (aquisição por campanha) e o Firebase (first_open) mostram quantas instalações vieram de convite.
-//   · app Android: @capacitor/share (Intent do Android). Fechar a folha sem escolher = "cancel";
-//   · navegador: navigator.share (celular, Edge/Chrome no Windows);
-//   · sem nenhum dos dois (ou a folha falhou): o texto com o link vai para a área de transferência.
+// folha de compartilhar do aparelho (Share.text: @capacitor/share no app, navigator.share no navegador). A página
+// repassa a origem à Play no botão de instalar, então o Play Console (aquisição por campanha) e o Firebase
+// (first_open) mostram quantas instalações vieram de convite. Sem folha (computador) ou se ela falhar, o texto com
+// o link vai para a área de transferência. Fechar a folha sem escolher = "cancel".
 // Sem prêmio por convite: a Play desaconselha instalação incentivada, e sem servidor não dá para saber quem chamou.
 import { INVITE } from "../config.js";
 import { Analytics } from "./Analytics.js";
-import { isNative } from "./Platform.js";
+import { Share } from "./Share.js";
 import { tr, fmt, lang } from "../i18n/i18n.js";
-
-const plugin = () => (isNative() ? window.Capacitor?.Plugins?.Share ?? null : null);
-// O Capacitor rejeita com "Share canceled" quando a folha fecha sem escolha; o navegador, com AbortError
-const isCancel = (e) => e?.name === "AbortError" || /cancel/i.test(String(e?.message ?? e ?? ""));
 
 // Link com a origem: from = de onde no jogo saiu (clareira, creditos, ranking); msg = qual texto foi junto
 export function inviteUrl(from, msg = "geral", l = lang) {
@@ -28,34 +23,11 @@ export function inviteText({ score = 0, perigo = "" } = {}) {
   return { msg: "geral", text: tr("Estou protegendo a mata no Guardião da Floresta: o Curupira, a Iara e o Saci contra a Podridão. Vem jogar também, é grátis!") };
 }
 
-// Área de transferência: a API nova e, se ela recusar (WebView antiga, sem foco), o jeito antigo
-async function copy(s) {
-  try {
-    await navigator.clipboard.writeText(s);
-    return true;
-  } catch {}
-  try {
-    const ta = document.createElement("textarea");
-    ta.value = s;
-    ta.setAttribute("readonly", "");
-    ta.style.cssText = "position:fixed;left:-9999px;opacity:0";
-    document.body.appendChild(ta);
-    ta.select();
-    const ok = document.execCommand("copy");
-    ta.remove();
-    return ok;
-  } catch {
-    return false;
-  }
-}
-
 let busy = false; // a folha já está aberta: o 2º toque não abre outra (o Android recusaria)
 
 export const Invite = {
   // O botão da Clareira: só para quem já conhece o jogo
   shown: (data) => (data?.runsPlayed ?? 0) >= INVITE.MIN_RUNS,
-  // Como este aparelho manda: "native" (folha do Android), "web" (folha do sistema) ou "copy"
-  mode: () => (plugin() ? "native" : typeof navigator !== "undefined" && navigator.share ? "web" : "copy"),
 
   // Abre a folha de compartilhar ou copia o link. Devolve "shared" | "cancel" | "copied" | "fail" | "busy"
   async send(from, brag = {}) {
@@ -63,29 +35,17 @@ export const Invite = {
     busy = true;
     const { msg, text } = inviteText(brag);
     const url = inviteUrl(from, msg);
-    const title = tr("Guardião da Floresta");
-    const via = this.mode();
+    const via = Share.textMode();
     let result = "fail",
       app = "";
     try {
-      if (via === "native") {
-        try {
-          const r = await plugin().share({ title, text, url, dialogTitle: tr("Chamar um amigo") });
-          result = "shared";
-          app = String(r?.activityType ?? "").slice(0, 60); // o app escolhido (com.whatsapp…), quando o Android diz
-        } catch (e) {
-          result = isCancel(e) ? "cancel" : "fail";
-        }
-      } else if (via === "web") {
-        try {
-          await navigator.share({ title, text, url });
-          result = "shared";
-        } catch (e) {
-          result = isCancel(e) ? "cancel" : "fail";
-        }
-      }
+      if (via !== "copy") ({ result, app } = await Share.text({ title: tr("Guardião da Floresta"), text, url, dialogTitle: tr("Chamar um amigo") }));
+    } catch {
+      result = "fail";
+    }
+    try {
       // computador sem folha de compartilhar, ou a folha deu erro: o convite vai para a área de transferência
-      if (result === "fail") result = (await copy(`${text} ${url}`)) ? "copied" : "fail";
+      if (result === "fail") result = (await Share.copy(`${text} ${url}`)) ? "copied" : "fail";
     } finally {
       busy = false;
     }
