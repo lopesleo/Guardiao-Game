@@ -7,7 +7,7 @@ export default {
   "{0} libertado": "已解放{0}",
   "Recuou aos {0}": "在{0}時撤退",
   "Caiu aos {0}": "在{0}時倒下",
-  "Libertei o {0} e aguentei +{1} na Noite Eterna do Guardião da Floresta! {2}": "我在《森林守護者》中解放了{0}，還在永夜中多堅持了{1}！{2}",
+  "Libertei o {0} e aguentei mais {1} na Noite Eterna do Guardião da Floresta! {2}": "我在《森林守護者》中解放了{0}，還在永夜中多堅持了{1}！{2}",
   "Libertei o {0} da Podridão no Guardião da Floresta! {1}": "我在《森林守護者》中把{0}從腐朽中解放了！{1}",
   "Enfrentei a Podridão por {0} no Guardião da Floresta. {1}": "我在《森林守護者》中與腐朽對抗了{0}。{1}",
   "Resisti {0} contra a Podridão no Guardião da Floresta. Você aguenta mais? {1}": "我在《森林守護者》中頂住腐朽{0}。你能堅持更久嗎？{1}",

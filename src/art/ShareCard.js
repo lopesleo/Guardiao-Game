@@ -185,7 +185,7 @@ export function cardTexts(info) {
 export function shareMessage(info) {
   const url = SHARE.URL;
   const t = clock(info.elapsedMs);
-  if (info.mode === "eterna") return tr("Libertei o {0} e aguentei +{1} na Noite Eterna do Guardião da Floresta! {2}", info.bossName, clock(info.endlessS * 1000), url);
+  if (info.mode === "eterna") return tr("Libertei o {0} e aguentei mais {1} na Noite Eterna do Guardião da Floresta! {2}", info.bossName, clock(info.endlessS * 1000), url);
   if (info.mode === "vitoria") return tr("Libertei o {0} da Podridão no Guardião da Floresta! {1}", info.bossName, url);
   if (info.mode === "recuo") return tr("Enfrentei a Podridão por {0} no Guardião da Floresta. {1}", t, url);
   return tr("Resisti {0} contra a Podridão no Guardião da Floresta. Você aguenta mais? {1}", t, url);

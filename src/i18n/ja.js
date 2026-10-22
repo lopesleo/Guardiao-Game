@@ -7,7 +7,7 @@ export default {
   "{0} libertado": "{0}を解放",
   "Recuou aos {0}": "{0}で撤退",
   "Caiu aos {0}": "{0}で力尽きた",
-  "Libertei o {0} e aguentei +{1} na Noite Eterna do Guardião da Floresta! {2}": "『森の守護者』で{0}を解放し、永遠の夜を+{1}耐え抜いた！ {2}",
+  "Libertei o {0} e aguentei mais {1} na Noite Eterna do Guardião da Floresta! {2}": "『森の守護者』で{0}を解放し、永遠の夜をさらに{1}耐え抜いた！ {2}",
   "Libertei o {0} da Podridão no Guardião da Floresta! {1}": "『森の守護者』で{0}を腐敗から解放した！ {1}",
   "Enfrentei a Podridão por {0} no Guardião da Floresta. {1}": "『森の守護者』で{0}のあいだ腐敗に立ち向かった。 {1}",
   "Resisti {0} contra a Podridão no Guardião da Floresta. Você aguenta mais? {1}": "『森の守護者』で腐敗に{0}耐えた。きみはもっと耐えられる？ {1}",
