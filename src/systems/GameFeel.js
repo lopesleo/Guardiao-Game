@@ -116,6 +116,15 @@ export class GameFeel {
     }
   }
 
+  // Tremor das reações elementais: no máximo um a cada FEEL.REACT_SHAKE_GAP_MS (a reação continua com
+  // rótulo, luz, som e efeito; numa build de reações eram 2+ tremores/s, a câmera tremia 1/5 do tempo)
+  reactShake(ms, k) {
+    const now = this.scene.time.now;
+    if (now - (this._reactShakeAt ?? -1e9) < FEEL.REACT_SHAKE_GAP_MS) return;
+    this._reactShakeAt = now;
+    this.scene.cameras.main.shake(ms, k);
+  }
+
   // Faíscas curtas (3 pontinhos) — o mesmo "px_puff" da poeira de morte (imagens reaproveitadas: Puffs.js)
   spark(x, y, tint) {
     const s = this.scene;

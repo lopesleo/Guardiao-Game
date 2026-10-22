@@ -2040,6 +2040,8 @@ export const FEEL = {
   // Crítico em inimigo comum: faísca, empurrão, achatamento e som. Tremor e pausa de impacto só em alvo
   // forte (elite, mímico, minichefe). Medido antes: 3 críticos/s no fim da partida = 1,6 pausas/s
   CRIT_TOUGH_ONLY: true,
+  // Reações elementais tremem a câmera no máximo uma vez a cada isto (o resto: rótulo, luz, som, efeito)
+  REACT_SHAKE_GAP_MS: 650,
   // Gema coletada: um brilho pequeno no peito do herói (no máximo um a cada GLINT_MS)
   GEM_GLINT_MS: 45,
   // Barra de XP: o que acabou de entrar aparece claro e "assenta" em FILL_MS; perto de encher, brilha

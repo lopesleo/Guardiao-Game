@@ -214,7 +214,7 @@ export class ElementalSystem {
     scene._hint?.("reaction", tr("REAÇÃO! Dois elementos no mesmo inimigo\ncausam efeitos extras. Combine armas!"));
 
     // Screenshake leve
-    scene.cameras.main.shake(120, 0.005);
+    scene.feel ? scene.feel.reactShake(120, 0.005) : scene.cameras.main.shake(120, 0.005);
 
     // Alimenta o medidor de Despertar
     scene.player?.addAwakenMeter(PLAYER.AWAKEN_GAIN_REACTION);
@@ -329,7 +329,7 @@ export class ElementalSystem {
         this._hurt(e, def.dmg, e.x, e.y - 30, "rx_temporal", by);
       });
     });
-    if (fx) scene.cameras.main.shake(140, 0.005);
+    if (fx) scene.feel ? scene.feel.reactShake(140, 0.005) : scene.cameras.main.shake(140, 0.005);
   }
 
   // VAPOR = nuvem ESCALDANTE: dano contínuo (DoT) na área. Não causa mais slow.
@@ -526,7 +526,7 @@ export class ElementalSystem {
     if (!showFx) return;
     scene.lighting?.flash(cx, cy, 260, 0x9fe8ff, 350, 1);
     scene.sound.play("sfx_react_crystal", { volume: 0.55 }); // estilhaço de gelo
-    scene.cameras.main.shake(90, 0.004);
+    scene.feel ? scene.feel.reactShake(90, 0.004) : scene.cameras.main.shake(90, 0.004);
     scene.player?.addAwakenMeter(PLAYER.AWAKEN_GAIN_REACTION);
     this._label(cx, cy, def.label, def.color);
   }
