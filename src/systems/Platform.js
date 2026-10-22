@@ -4,12 +4,14 @@
 //   · debug só com ?debug=1 na URL (nunca no build da loja)
 import { installSettingsHooks } from "./Settings.js";
 import { installMixer } from "../audio/Mixer.js";
+import { installShake } from "./Shake.js";
 
 export const isNative = () => !!window.Capacitor?.isNativePlatform?.();
 export const DEBUG = /[?&]debug=1\b/.test(location.search);
 
 export function setupPlatform(game) {
   installSettingsHooks(game);
+  installShake(); // tremor por camadas (pancada que decai, nada engole nada): src/systems/Shake.js
   installMixer(game); // som: barramentos por canal, limitador e o volume do jogador
 
   const pauseRun = () => {
