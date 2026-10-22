@@ -1166,9 +1166,9 @@ export class GameScene extends Phaser.Scene {
       .setFlipX(e.flipX)
       .setTint(PAL.yel3)
       .setTintMode(Phaser.TintModes.FILL)
-      .setAlpha(0.8)
+      .setAlpha(0.6)
       .setDepth(D_FX - 5);
-    this.tweens.add({ targets: g, y: y - 46, scaleX: e.scaleX * 0.9, scaleY: e.scaleY * 1.08, alpha: 0, duration: 900, ease: "Sine.easeOut", onComplete: () => g.destroy() });
+    this.tweens.add({ targets: g, y: y - 46, scaleX: e.scaleX * 0.9, scaleY: e.scaleY * 1.08, alpha: 0, duration: 750, ease: "Sine.easeOut", onComplete: () => g.destroy() });
     const fy = y + e.displayHeight * 0.4;
     this.fx?.ring(x, fy, PAL.yel3, 16, e.displayWidth * 1.1, 420, 0.6, 0.9);
     this.fx?.burst("glow", x, y, 18, -Math.PI / 2, 140, { min: 60, max: 200 });
@@ -1515,6 +1515,8 @@ export class GameScene extends Phaser.Scene {
     const k = (E.POOL_R * 2) / (44 * S); // largura final da poça = 2 × POOL_R
     const img = this.add.image(x, y, "fx_rot_pool").setDepth(-48).setScale(S * k * 0.12).setAlpha(0.95);
     this.tweens.add({ targets: img, scale: S * k, duration: E.ERUPT_MS * 0.8, ease: "Cubic.easeOut" });
+    // logo antes de ele subir, a poça incha e murcha, cada vez mais depressa (algo empurra de baixo)
+    this.tweens.add({ targets: img, scaleX: S * k * 1.1, scaleY: S * k * 1.16, delay: E.ERUPT_MS * 0.72, duration: 95, yoyo: true, repeat: 1, ease: "Sine.easeInOut" });
     // a poça fica até o chefe subir e então se fecha (encolhe e some)
     this.tweens.add({ targets: img, scale: S * k * 0.3, alpha: 0, delay: E.ERUPT_MS + E.RISE_MS, duration: 700, ease: "Cubic.easeIn", onComplete: () => img.destroy() });
     // esporos subindo da poça (um emissor só, destruído depois)

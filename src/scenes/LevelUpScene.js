@@ -118,7 +118,14 @@ export class LevelUpScene extends Phaser.Scene {
   _makeCard(i) {
     const L = this._layout(this.cards.length);
     // acima do rastro dos voos (profundidade 1)
-    return createCard(this, L.x(i), L.y, L.cw, L.ch, this.cards[i], (card, cont) => this._choose(card, cont), i, !this.isTouch).setDepth(2);
+    const c = createCard(this, L.x(i), L.y, L.cw, L.ch, this.cards[i], (card, cont) => this._choose(card, cont), i, !this.isTouch).setDepth(2);
+    // Evolução é rara: um halo roxo respira atrás da carta (antecipa o momento antes da escolha)
+    if (this.cards[i].type === "evolution") {
+      const halo = this.add.image(0, 0, "fx_glow").setTint(PAL.pur2).setBlendMode(Phaser.BlendModes.ADD).setScale((L.cw / 64) * 1.7, (L.ch / 64) * 1.25).setAlpha(0.35);
+      c.addAt(halo, 0);
+      this.tweens.add({ targets: halo, alpha: 0.7, scaleX: halo.scaleX * 1.06, duration: 760, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    }
+    return c;
   }
 
   // animate: "hero" = as cartas voam do herói (abertura da mesa); true = sobem do pé (troca, banir)

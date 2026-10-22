@@ -237,6 +237,7 @@ export class GameFeel {
       if (o.scrollFactorX === 0 && o.depth >= 50000 && o.visible && o !== this.vignette && o.alpha > 0) s.tweens.add({ targets: o, alpha: 0, duration: D.HUD_OUT_MS });
     }
     if (!Settings.get("shake") || !p) return then();
+    p._fatal = true;
     p.setTint(PAL.white).setTintMode(Phaser.TintModes.FILL);
     s.physics.world.timeScale = 40;
     s.tweens.timeScale = 0.03;

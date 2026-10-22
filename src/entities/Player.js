@@ -178,7 +178,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.scene.sound.play('sfx_player_hit', { volume: 0.7 });
     this.setTint(0xff5a6e);
     this.scene.time.delayedCall(120, () => {
-      if (this.scene.gameOver) return; // o golpe fatal pinta o herói (GameFeel.fatal)
+      if (this._fatal) return; // o golpe fatal pinta o herói (GameFeel.fatal)
       if (this.isAwakened()) this.setTint(this._awakenLook.tint);
       else this.clearTint();
     });
