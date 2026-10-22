@@ -79,9 +79,24 @@ público brasileiro, com potencial internacional.
 ## Pendências atuais (atualizar a cada sessão)
 
 Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um item, apagar daqui e
-marcar no `docs/ROADMAP.md`. Última revisão: **20/10/2026**.
+marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
 
 **Agora**
+- **Na `main`, ainda sem versão (21–22/10): qualidade gráfica, som e desempenho** (detalhes no ROADMAP, fim do M4.5).
+  **A 1.0.19 tem um bug que congela o jogo** quando a evolução INFERNO queima o chão (desde 09/10, consertado na
+  `main`) → 👤 gerar a **1.0.20** logo (`/versao-loja`). Entrou também: mixagem do som (barramentos, limitador, limite
+  de vozes, abafar na pausa/cartas, troca de trilha do chefe no compasso, fita na morte, coração com vida baixa);
+  Podridão na borda da tela; Grito do Mapinguari por shader; status elementais legíveis (OVERLAY; no chefe, metade);
+  zoom que escurecia os avisos dos chefes; libertação do chefe nova; céu da Clareira em degradê; desempenho (teste de
+  carga, `main` × 1.0.19: quadro −9% com tudo junto, a Podridão gasta parte do ganho; update −22%; desenhos 129 → 92;
+  teto de 60 fps; teto de 150 gemas com fusão). 👤 Conferir no celular: o jogo a 60 fps sem
+  tranco no S23 (antes rodava a 120), a borda da Podridão não esconder inimigo, o som (cartas, chefe, morte, vida
+  baixa), o vento no bruxo/cogumelo (fraco) e o zoom 1,3 no chefe.
+- **Próximos de qualidade/desempenho** (estudo de 21/10 com as skills do Phaser 4, `audio-design` e
+  `performance-optimization`): chão num `SpriteGPULayer` (ordenação −43%, cogumelos que cintilam à noite); música da
+  partida em camadas pela intensidade; ambiência da Clareira pela hora; gerar o áudio num Worker (1,4 s de carga
+  travada no PC); qualidade automática contínua; evento `perf_run` no Analytics (conferir a Segurança dos dados) e
+  medir num celular fraco de verdade.
 - **1.0.19 (código 20) no Teste interno e no Teste fechado/Alpha (20/10, em revisão no Alpha por cima da 1.0.18).**
   `dist/guardiao-v1.0.19-20-anuncios-reais.aab`. Nova nela: a **tela de fim de partida redesenhada** (cena na Clareira:
   amanhecer com a lenda libertada na vitória; na derrota o guardião volta à fogueira e se levanta, a Podridão só no
