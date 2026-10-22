@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Guardião nas Redes</title>
+<link rel="icon" href="/midia/social/perfil_1080.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Página local do plano de posts (npm run redes). Os textos espelham docs/PLANO_DE_CONTEUDO.md §9 e
+   docs/REDES_SOCIAIS.md; as mídias vêm de videos/promo/entrega/ pelo servidor (tools/redes/servidor.mjs).
+   Layout: uma coluna de leitura (máx. 900px), faixa "Hoje" no topo, navegação fixa por âncoras; visual da
+   interface do jogo (verde-escuro, dourado, Jersey 15). Tema único, escuro, de propósito. */
+@font-face { font-family: "Jersey 15"; src: url("/fontes/Jersey15.woff2") format("woff2"); font-display: swap; }
+@font-face { font-family: "Atkinson Local"; src: url("/fontes/AtkinsonHyperlegible-Bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+:root {
+  --bg: #0f1a16;
+  --panel: #16241f;
+  --panel2: #1f3329;
+  --line: #2b463a;
+  --txt: #f4ecd6;
+  --muted: #a9bdae;
+  --gold: #e0b458;
+  --goldhi: #f6dd8c;
+  --rot: #ff5ec8;
+  --pink: #ff7eb6;
+  --font-display: "Jersey 15", "Courier New", monospace;
+  --font-body: "Atkinson Hyperlegible", "Atkinson Local", "Segoe UI", system-ui, sans-serif;
+  --step--1: 0.875rem;
+  --step-0: 1rem;
+  --step-1: 1.25rem;
+  --step-2: 1.6rem;
+  --step-3: 2.3rem;
+  --radius: 6px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: 64px; }
+body { margin: 0; background: var(--bg); color: var(--txt); font-family: var(--font-body); font-size: var(--step-0); line-height: 1.55; }
+img, video { max-width: 100%; }
+[hidden] { display: none !important; }
+.wrap {
+  max-width: 900px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 64px;
+  display: grid; gap: 28px;
+}
+h1, h2, h3 { font-family: var(--font-display); font-weight: 400; line-height: 1.05; text-wrap: balance; margin: 0; }
+h1 { font-size: var(--step-3); color: var(--goldhi); }
+h2 { font-size: var(--step-2); color: var(--goldhi); }
+h3 { font-size: var(--step-1); color: var(--txt); }
+p { margin: 0; }
+a { color: var(--goldhi); }
+code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 0.86em; }
+.eyebrow { font-size: var(--step--1); color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.muted { color: var(--muted); }
+.note { font-size: var(--step--1); color: var(--muted); }
+.warn { color: var(--pink); font-size: var(--step--1); font-weight: 700; }
+
+header.top { display: grid; gap: 10px; }
+header.top > p { color: var(--muted); max-width: 64ch; }
+.phase { border: 1px solid var(--pink); border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 4px; background: color-mix(in srgb, var(--pink) 8%, var(--bg)); }
+.phase .eyebrow { color: var(--pink); }
+.phase b { color: var(--goldhi); }
+.server-off { border: 1px solid var(--rot); border-radius: var(--radius); padding: 12px 14px; color: var(--txt); background: color-mix(in srgb, var(--rot) 10%, var(--bg)); }
+
+nav.sec {
+  position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line);
+  margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+  padding: 10px max(16px, env(safe-area-inset-left, 0px));
+  overflow-x: auto; white-space: nowrap;
+}
+nav.sec a { display: inline-block; margin-right: 6px; padding: 5px 10px; border-radius: 999px; text-decoration: none; color: var(--muted); border: 1px solid var(--line); font-size: var(--step--1); }
+nav.sec a:hover, nav.sec a:focus-visible { color: var(--goldhi); border-color: var(--gold); outline: none; }
+
+section { display: grid; gap: 14px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: grid; gap: 10px; min-width: 0; }
+
+.today { background: var(--panel2); border: 2px solid var(--gold); border-radius: var(--radius); padding: 18px; display: grid; gap: 14px; }
+.today-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: baseline; }
+.today-head h2 { font-size: var(--step-3); }
+.milestone { font-family: var(--font-display); font-size: var(--step-1); }
+.milestone b { color: var(--goldhi); font-weight: 400; }
+.tasks { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.tasks li { display: grid; grid-template-columns: 74px 1fr; gap: 10px; align-items: baseline; }
+.tasks .when { font-family: var(--font-display); font-size: var(--step-1); color: var(--goldhi); font-variant-numeric: tabular-nums; }
+.special { border-left: 3px solid var(--pink); padding-left: 10px; }
+
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: var(--step--1); }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.78rem; }
+td:first-child { font-weight: 700; white-space: nowrap; }
+tr.is-today td { background: color-mix(in srgb, var(--gold) 12%, transparent); }
+
+.timeline { display: grid; margin: 0; padding: 0; list-style: none; }
+.timeline li { display: grid; grid-template-columns: 112px 1fr; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.timeline li:last-child { border-bottom: 0; }
+.timeline .d { font-family: var(--font-display); font-size: var(--step-1); color: var(--goldhi); font-variant-numeric: tabular-nums; }
+.timeline .t { font-weight: 700; }
+.timeline li.now .d::after { content: " ← agora"; color: var(--pink); font-size: var(--step--1); font-family: var(--font-body); }
+
+/* posts */
+.filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: var(--step--1); cursor: pointer; background: transparent; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; }
+.chip[aria-pressed="true"] { color: var(--bg); background: var(--gold); border-color: var(--gold); }
+button:focus-visible, a:focus-visible { outline: 2px solid var(--goldhi); outline-offset: 2px; }
+.posts { display: grid; gap: 14px; }
+.post-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.tag { font-size: 0.74rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--bg); background: var(--muted); border-radius: 3px; padding: 2px 6px; font-weight: 700; }
+.tag.x { background: var(--txt); }
+.tag.ig { background: var(--pink); }
+.tag.rd { background: var(--gold); }
+.post .meta { color: var(--muted); font-size: var(--step--1); }
+.block { display: grid; gap: 6px; }
+.block-label { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: var(--step--1); color: var(--muted); }
+pre.copytext { margin: 0; white-space: pre-wrap; word-break: break-word; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; font-family: var(--font-body); font-size: var(--step--1); line-height: 1.5; color: var(--txt); }
+.btn { font: inherit; font-size: var(--step--1); font-weight: 700; cursor: pointer; background: var(--panel2); color: var(--goldhi); border: 1px solid var(--gold); border-radius: var(--radius); padding: 4px 12px; text-decoration: none; display: inline-block; }
+.btn:hover { background: color-mix(in srgb, var(--gold) 18%, var(--panel2)); }
+.btn.done { color: var(--bg); background: var(--goldhi); }
+.btn.quiet { border-color: var(--line); color: var(--muted); }
+
+/* mídia */
+.media { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+.media.wide { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.m { display: grid; gap: 8px; align-content: start; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px; min-width: 0; }
+.m video, .m img { width: 100%; border-radius: 4px; background: #000; display: block; }
+.m video.v916, .m img.v916 { aspect-ratio: 9 / 16; object-fit: contain; max-height: min(70vh, 560px); width: auto; margin-inline: auto; }
+/* post com vídeo: o vídeo à esquerda e os textos à direita (em tela larga) */
+.post-body { display: grid; gap: 14px; }
+.post-body.split { grid-template-columns: minmax(0, 300px) minmax(0, 1fr); align-items: start; }
+.post-body .texts { display: grid; gap: 10px; min-width: 0; }
+.post-body.split .media.wide { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 720px) { .post-body.split { grid-template-columns: minmax(0, 1fr); } }
+.m img.v45 { aspect-ratio: 4 / 5; object-fit: cover; }
+.m .mname { font-size: 0.78rem; color: var(--muted); overflow-wrap: anywhere; }
+.m .mlabel { font-weight: 700; font-size: var(--step--1); }
+.m .mlabel.now { color: var(--goldhi); }
+.m .mlabel.later { color: var(--muted); }
+.m .acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.missing { font-size: var(--step--1); color: var(--muted); border: 1px dashed var(--line); border-radius: var(--radius); padding: 10px; }
+
+.links { display: grid; gap: 8px; }
+.link-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.link-row code { overflow-wrap: anywhere; }
+
+.check { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.check label { display: grid; grid-template-columns: 22px 1fr; gap: 10px; cursor: pointer; }
+.check input { width: 18px; height: 18px; accent-color: var(--gold); margin-top: 3px; }
+.dont { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.dont li { padding-left: 14px; border-left: 3px solid var(--rot); }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--goldhi); color: var(--bg); font-weight: 700; padding: 8px 16px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity 0.18s ease; max-width: calc(100% - 32px); text-align: center; }
+.toast.show { opacity: 1; }
+
+@media (max-width: 620px) {
+  table.week thead { display: none; }
+  table.week, table.week tbody, table.week tr, table.week td { display: block; width: 100%; }
+  table.week tr { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  table.week td { border: 0; padding: 2px 0; white-space: normal; }
+  table.week td:first-child { font-family: var(--font-display); font-size: var(--step-1); color: var(--goldhi); font-weight: 400; }
+  table.week td[data-label]::before { content: attr(data-label); display: block; color: var(--muted); font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; }
+  table.week td.empty { display: none; }
+  table.week tr.is-today { background: color-mix(in srgb, var(--gold) 12%, transparent); padding-inline: 8px; }
+  table.week tr.is-today td { background: none; }
+}
+@media (max-width: 520px) {
+  .tasks li { grid-template-columns: 62px 1fr; }
+  .timeline li { grid-template-columns: 1fr; gap: 2px; }
+  .link-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .link-row .lname { grid-column: 1 / -1; }
+  .media { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="eyebrow">Guardião da Floresta · marketing sem anúncio pago</span>
+    <h1>Guardião nas Redes</h1>
+    <p>O que postar em cada rede, em que dia e hora, com os textos, as imagens e os vídeos prontos. ~4 horas por semana: 1h30 no domingo para preparar e 15–20 minutos por dia para postar e responder.</p>
+    <div class="phase">
+      <span class="eyebrow">Fase agora</span>
+      <p><b>Convite.</b> O jogo ainda não está na Google Play: quem quer jogar pede o convite pela página oficial e é cadastrado na lista. Toda chamada diz <b>"Jogue antes do lançamento: peça seu convite"</b>. Nada de "baixe", "disponível" ou data até a Google liberar a produção e o pré-registro entrar no ar.</p>
+    </div>
+    <p class="server-off" id="server-off" hidden>Os vídeos e imagens aparecem quando a página é aberta pelo servidor: no terminal do projeto, rode <code>npm run redes</code>.</p>
+    <p class="note" id="where"></p>
+  </header>
+
+  <div class="today" id="hoje">
+    <div class="today-head">
+      <h2 id="today-title">Hoje</h2>
+      <p class="milestone" id="milestone"></p>
+    </div>
+    <ul class="tasks" id="today-tasks"></ul>
+    <p class="special" id="today-special" hidden></p>
+    <p class="note">Regra de ouro: fique por perto na primeira hora depois de postar e responda todo comentário.</p>
+  </div>
+
+  <nav class="sec" aria-label="Seções">
+    <a href="#posts">Posts prontos</a><a href="#midia">Todos os arquivos</a><a href="#semana">Semana</a><a href="#calendario">Calendário</a><a href="#redes">Cada rede</a><a href="#lancamento">Lançamento</a><a href="#links">Links</a><a href="#domingo">Domingo</a><a href="#naofazer">Não fazer</a>
+  </nav>
+
+  <section id="posts">
+    <h2>Posts prontos</h2>
+    <p class="muted">Texto, imagem e vídeo de cada post. Imagem: <b>Copiar imagem</b> e cole no X ou no Discord. Vídeo: <b>Baixar</b> ou <b>Copiar caminho</b> e cole na janela de envio do navegador. No celular, abra esta página pelo endereço do <code>npm run redes -- --celular</code> e salve o vídeo.</p>
+    <div class="filters" role="group" aria-label="Filtrar por rede" id="filters"></div>
+    <div class="posts" id="post-list"></div>
+  </section>
+
+  <section id="midia">
+    <h2>Todos os arquivos</h2>
+    <p class="muted" id="midia-pasta">Tudo o que está na pasta de entrega dos vídeos e imagens.</p>
+    <h3>Vídeos</h3>
+    <div class="media wide" id="all-videos"></div>
+    <h3>Imagens</h3>
+    <div class="media" id="all-images"></div>
+  </section>
+
+  <section id="semana">
+    <h2>A semana-modelo</h2>
+    <p class="muted">Horários de Brasília, como ponto de partida: ajuste pelos números de domingo.</p>
+    <div class="panel scroll">
+      <table class="week">
+        <thead><tr><th>Dia</th><th>Instagram · TikTok · Shorts</th><th>X</th><th>Reddit e outros</th></tr></thead>
+        <tbody id="week-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="calendario">
+    <h2>Até o lançamento e depois</h2>
+    <div class="panel"><ul class="timeline" id="timeline"></ul></div>
+  </section>
+
+  <section id="redes">
+    <h2>Cada rede: como postar</h2>
+    <div class="panel scroll">
+      <table>
+        <thead><tr><th>Rede</th><th>Quanto</th><th>Hora</th><th>Como</th></tr></thead>
+        <tbody id="nets"></tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h3>Comunidades do Reddit</h3>
+      <p class="warn">Antes de qualquer post: leia as regras e as flairs da comunidade e participe por 2 semanas (conta sem karma é barrada).</p>
+      <div class="scroll"><table><thead><tr><th>Comunidade</th><th>Língua</th><th>O que cabe</th></tr></thead><tbody id="subs"></tbody></table></div>
+    </div>
+  </section>
+
+  <section id="lancamento">
+    <h2>O dia do lançamento · 03/12, planejado</h2>
+    <p class="warn">Só vale com a produção liberada pela Google e a data confirmada no pré-registro.</p>
+    <div class="panel"><ul class="timeline" id="launch"></ul></div>
+  </section>
+
+  <section id="links">
+    <h2>Links com origem</h2>
+    <p class="muted">Cole sempre o link da rede certa: é assim que o Play Console e o site mostram de onde veio cada pessoa.</p>
+    <div class="panel links" id="link-list"></div>
+  </section>
+
+  <section id="domingo">
+    <h2>Os números de domingo · 20 min</h2>
+    <div class="panel"><ul class="check" id="checklist"></ul><p class="note">As marcações ficam neste navegador e recomeçam a cada semana.</p></div>
+    <p class="note">Agendar sem pagar: Meta Business Suite (Instagram e Facebook); TikTok e YouTube Studio pelo navegador; X e Bluesky pelo agendador do X ou pelo plano grátis do Buffer. Mesmo agendando, esteja por perto na primeira hora.</p>
+  </section>
+
+  <section id="naofazer">
+    <h2>O que não fazer</h2>
+    <div class="panel">
+      <ul class="dont">
+        <li>Postar o mesmo link em várias comunidades do Reddit no mesmo dia: vira spam e derruba a conta.</li>
+        <li>Comprar seguidores ou trocar "sigo de volta": o algoritmo passa a mostrar seus posts para quem não se importa.</li>
+        <li>Sorteio com prêmio sem ler as regras de promoção de cada rede.</li>
+        <li>Prometer data, recurso ou plataforma que ainda não existe. Antes da produção liberada: nada de "baixe" nem a data.</li>
+        <li>Escrever "teste fechado aberto" ou outro jargão de loja. Para quem joga: "jogue antes do lançamento, peça seu convite".</li>
+      </ul>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status">Copiado</div>
+
+<script>
+const BASE = "https://komedygames.com/guardiao/";
+const CONVITE_X = "Quer jogar antes do lançamento? Peça seu convite (Android, grátis): " + BASE + "?utm_source=x&utm_medium=social";
+
+// ---------------------------------------------------------------- dados (espelham docs/PLANO_DE_CONTEUDO.md)
+const WEEK = [
+  { d: 1, name: "Seg.", ig: "19h: reel do assunto jogo", x: "12h: o mesmo vídeo com outro texto", rd: "" },
+  { d: 2, name: "Ter.", ig: "Stories: bastidor", x: "12h: bastidor (fio de 3–5 posts ou 1 imagem)", rd: "Bluesky: o bastidor em inglês" },
+  { d: 3, name: "Qua.", ig: "19h: reel do assunto folclore", x: "12h: a lenda do dia", rd: "" },
+  { d: 4, name: "Qui.", ig: "Stories: enquete", x: "19h: enquete ou pergunta", rd: "11h–13h: o post da semana no Reddit" },
+  { d: 5, name: "Sex.", ig: "19h: reel de chefes ou bastidores", x: "12h: clipe curto", rd: "LinkedIn: o post da semana" },
+  { d: 6, name: "Sáb.", ig: "", x: "10h–12h: #ScreenshotSaturday (em inglês)", rd: "r/gamedev: comentário no tópico Screenshot Saturday" },
+  { d: 0, name: "Dom.", ig: "", x: "", rd: "1h30: preparar a semana e ver os números" },
+];
+const TODAY = {
+  1: [["12h", "X: o vídeo do reel de hoje, com outro texto (convite na 1ª resposta)"], ["19h", "Reel do assunto jogo no Instagram"], ["20h", "O mesmo vídeo no TikTok e no Shorts"]],
+  2: [["12h", "X: bastidor (fio de 3–5 posts ou 1 imagem)"], ["—", "Stories: um bastidor da semana"], ["—", "Bluesky: o bastidor em inglês (opcional)"]],
+  3: [["12h", "X: a lenda do dia"], ["19h", "Reel do assunto folclore no Instagram"], ["20h", "O mesmo vídeo no TikTok e no Shorts"]],
+  4: [["11h", "Reddit: o post da semana (uma comunidade, leia as regras)"], ["19h", "X: enquete ou pergunta"], ["—", "Stories: enquete"]],
+  5: [["12h", "X: clipe curto"], ["19h", "Reel de chefes ou bastidores no Instagram"], ["20h", "O mesmo vídeo no TikTok e no Shorts"], ["—", "LinkedIn: o post da semana"]],
+  6: [["10h", "#ScreenshotSaturday em inglês no X (e no Bluesky)"], ["—", "r/gamedev: comentário no tópico Screenshot Saturday"]],
+  0: [["—", "1h30: preparar os vídeos e textos da semana"], ["—", "20 min: os números de domingo"]],
+};
+const MILESTONES = [
+  { date: "2026-10-31", label: "Dia do Saci" },
+  { date: "2026-12-03", label: "Lançamento planejado (espera a Google)" },
+];
+const SPECIAL = {
+  "2026-10-31": "Hoje é Dia do Saci: reel 5 às 11h no Instagram, post no X e o convite para jogar antes do lançamento.",
+  "2026-12-03": "Lançamento planejado para hoje: só siga o roteiro se a Google já tiver liberado a produção.",
+};
+const TIMELINE = [
+  { from: "2026-10-23", to: "2026-11-01", d: "23/10–01/11", t: "Convites e aquecimento", x: "Sáb. 31/10: Dia do Saci (reel 5, post no X e no Instagram, convite). Começar a participar no Reddit para ganhar karma." },
+  { from: "2026-11-02", to: "2026-11-08", d: "02/11–08/11", t: "Bastidores, ou o pré-registro", x: "Quando a Google liberar a produção: trocar a bio e o fixado por \"Pré-registre-se\", reel de anúncio (versões _prereg), aviso no Discord. Sem a liberação, a semana fica com os bastidores e o convite continua." },
+  { from: "2026-11-09", to: "2026-11-15", d: "09/11–15/11", t: "Chefes", x: "Reels dos chefes avisando o golpe. Imprensa só depois da produção liberada, com a data confirmada." },
+  { from: "2026-11-16", to: "2026-11-22", d: "16/11–22/11", t: "Lendas", x: "Carrossel \"As lendas e de onde vêm\"; r/IndieDev com o bastidor do código." },
+  { from: "2026-11-23", to: "2026-11-29", d: "23/11–29/11", t: "Clareira", x: "Reels da Clareira; r/roguelites. Contagem regressiva nos stories só com a data confirmada." },
+  { from: "2026-11-30", to: "2026-12-02", d: "30/11–02/12", t: "Véspera (se a data estiver confirmada)", x: "\"Faltam 3\", \"faltam 2\", \"amanhã\" nos stories; e-mail lembrando a imprensa." },
+  { from: "2026-12-03", to: "2026-12-03", d: "03/12 (plano)", t: "Lançamento", x: "Roteiro hora a hora na seção Lançamento, se a produção estiver liberada." },
+  { from: "2026-12-04", to: "2027-01-31", d: "Depois → 31/01", t: "Férias escolares", x: "Cartões de partida dos jogadores, recordes do ranking, a 1ª atualização (~2 semanas depois) e o kit de Natal." },
+  { from: "2027-02-01", to: "2027-12-31", d: "2027", t: "Datas do ano", x: "28/04 Dia da Caatinga · 22/08 Dia do Folclore · 05/09 Dia da Amazônia · 31/10 Dia do Saci." },
+];
+const NETS = [
+  ["Instagram", "3 reels por semana (seg., qua., sex.), 1 carrossel a cada 2 semanas, stories 2–4 vezes", "Reels 19h (dias de semana), 11h (fim de semana)", "9:16, 8–20 s; gancho no 1º segundo; legenda gravada no vídeo; música original do jogo; 3–5 hashtags; link só na bio ou no adesivo dos stories"],
+  ["TikTok e Shorts", "Os 3 vídeos da semana", "20h (1 hora depois do reel)", "No TikTok o texto do vídeo conta; no Shorts o título é buscável (\"Jogo brasileiro de folclore para Android\")"],
+  ["X", "1 post por dia, mais respostas; nunca 2 na mesma hora", "12h ou 19h; sábado de manhã o #ScreenshotSaturday", "1ª frase com o assunto; vídeo acima de ~8 s; link só na 1ª resposta; 1–2 hashtags; 30 min respondendo"],
+  ["Reddit", "1 post por semana no total, uma comunidade por vez", "Fora: 11h–13h; brasileiras: 19h–21h", "Ler regras e flair; participar antes; história ou processo; responder tudo nas primeiras horas"],
+  ["Bluesky", "Os bastidores do X em inglês (opcional)", "Terça e sábado", "#screenshotsaturday #indiedev"],
+  ["Discord e LinkedIn", "1 aviso e 1 post por semana", "Sexta", "Discord: o que mudou; LinkedIn: em primeira pessoa, sobre fazer um jogo em código"],
+];
+const SUBS = [
+  ["r/IndieDev", "EN", "Devlog, processo, antes e depois"], ["r/indiegames", "EN", "Mostrar o jogo com vídeo curto"],
+  ["r/roguelites", "EN", "O jogo e o que ele tem de diferente; pedir opinião"], ["r/AndroidGaming", "EN", "Lançamento (confira a regra para devs e a flair)"],
+  ["r/playmygame", "EN", "Convite pedindo opinião"], ["r/gamedev", "EN", "Só no tópico semanal de Screenshot Saturday"],
+  ["r/pixelart", "EN", "Só a arte, sem chamada"], ["r/jogatina", "PT", "A história de quem fez, o lançamento"], ["r/gamedevbrasil", "PT", "Bastidores, lições, pedir feedback"],
+];
+const LAUNCH = [
+  ["9h", "Conferir a ficha na Google Play. Trocar o botão da página para \"Baixar na Google Play\"."],
+  ["11h", "X: fio de lançamento (vídeo de 20 s + 3 posts). Link na 1ª resposta. Fixar."],
+  ["12h", "Instagram: reel \"Chegou\" + stories com o adesivo de link. Trocar a bio."],
+  ["13h", "TikTok e Shorts: o mesmo vídeo. Reddit, 1ª comunidade, conforme as regras."],
+  ["18h", "Discord (aviso para todos) e LinkedIn."],
+  ["19h–22h", "Responder tudo: comentários, avaliações na Play, mensagens."],
+  ["Dias seguintes", "r/jogatina (dia seguinte, 19h) e r/indiegames. Imprensa que ainda não publicou."],
+];
+const LINKS = [
+  ["Bio do Instagram", "?utm_source=instagram&utm_medium=bio"], ["Stories (adesivo)", "?utm_source=instagram&utm_medium=story"],
+  ["X (1ª resposta)", "?utm_source=x&utm_medium=social"], ["TikTok (bio)", "?utm_source=tiktok&utm_medium=bio"],
+  ["YouTube (descrição)", "?utm_source=youtube&utm_medium=shorts"], ["Reddit", "?utm_source=reddit&utm_medium=social&utm_campaign=NOME-DA-COMUNIDADE"],
+  ["Bluesky", "?utm_source=bluesky&utm_medium=social"], ["Discord", "?utm_source=discord&utm_medium=social"], ["LinkedIn", "?utm_source=linkedin&utm_medium=social"],
+];
+const CHECKS = [
+  "Os 3 posts mais compartilhados ou salvos da semana (não os de mais curtidas), e por quê.",
+  "Os 3 piores: o gancho demorou? o assunto não estava claro?",
+  "Visitas à página por origem (site) e instalações por origem (Play Console → Aquisição).",
+  "Seguidores novos em cada rede.",
+  "Uma mudança para testar na semana que vem (horário, gancho ou duração), anotada.",
+];
+
+// media: { video: prefixo } → vídeos que começam com o prefixo (variantes _teste/_prereg) e a capa;
+//        { imagens: prefixo } → todas as imagens que começam com o prefixo, em ordem
+const POSTS = [
+  { net: "ig", t: "Reel 1 · Reações", m: "O 1º reel. Cartão final antigo (\"teste grátis\"): serve, mas o novo convite é melhor.", media: { video: "reel_01_reacoes" }, blocks: [
+    ["Legenda", "Fogo + Gelo = ? 🔥❄️\n\nNo Guardião da Floresta você só se move: as armas atacam sozinhas e os elementos se misturam.\nSão 6 reações para descobrir. Qual você testa primeiro?\n\nRoguelite brasileiro com as lendas do folclore, para Android. Jogue antes do lançamento: peça seu convite pelo link na bio.\n\n#jogobrasileiro #indiegame #gamedev #roguelite #folclorebrasileiro #jogosmobile #pixelart"] ] },
+  { net: "ig", t: "Reel 2 · Lendas", m: "As 7 lendas lado a lado.", media: { video: "reel_02_lendas" }, blocks: [
+    ["Legenda", "Curupira, Caipora, Iara, Saci, Comadre Fulozinha, Mãe-do-Ouro e Anhangá.\n\nAqui as lendas são as guardiãs da mata, e o vilão é a Podridão.\nQual delas você escolheria?\n\nGuardião da Floresta · Android · peça seu convite pelo link na bio.\n\n#folclorebrasileiro #curupira #saci #iara #jogobrasileiro #indiegame #pixelart"] ] },
+  { net: "ig", t: "Reel 3 · Chefes", m: "O grito do Mapinguari e os golpes avisados.", media: { video: "reel_03_chefes" }, blocks: [
+    ["Legenda", "Todo golpe avisa antes. Dá pra desviar andando ou com o dash.\n\nMula sem Cabeça, Caboclo d'Água e o Mapinguari, tomados pela Podridão. Vencer a luta liberta a lenda.\n\nGuardião da Floresta · Android · peça seu convite pelo link na bio.\n\n#mapinguari #mulasemcabeca #jogobrasileiro #roguelite #indiegame #gamedev"] ] },
+  { net: "ig", t: "Reel 4 · Clareira", m: "A Clareira vista de cima.", media: { video: "reel_04_clareira" }, blocks: [
+    ["Legenda", "Entre uma batalha e outra: plantar, pescar e cozinhar.\nA comida que você faz vira bônus na próxima partida.\n\nSem energia, sem gacha, anúncio só se você quiser.\nGuardião da Floresta · Android · peça seu convite pelo link na bio.\n\n#jogobrasileiro #cozygames #indiegame #pixelart #jogosmobile #gamedev"] ] },
+  { net: "ig", t: "Reel 5 · Dia do Saci", m: "Sáb. 31/10, 11h. Use a versão de agora (convite).", media: { video: "reel_05_saci" }, blocks: [
+    ["Legenda", "Hoje é Dia do Saci. No Guardião da Floresta ele é guardião: o redemoinho dele persegue o bando e puxa todo mundo para o centro.\n\nRoguelite brasileiro com as lendas do folclore. Jogue antes do lançamento: peça seu convite pelo link na bio.\n\n#diadosaci #folclorebrasileiro #jogobrasileiro #indiegame #pixelart"] ] },
+  { net: "ig", t: "Reel 6 · Desvie andando", m: "O chão avisa o golpe do chefe e o herói passa ileso.", media: { video: "reel_06_desvie" }, blocks: [
+    ["Legenda", "O chão mostra onde o golpe vai cair. Dá pra sair andando.\n\nNo Guardião da Floresta todo ataque de chefe avisa antes. Quem morre aprende o desenho do golpe na próxima.\n\nRoguelite brasileiro com as lendas do folclore. Jogue antes do lançamento: peça seu convite pelo link na bio.\n\n#jogobrasileiro #roguelite #indiegame #folclorebrasileiro #pixelart"] ] },
+  { net: "ig", t: "Reel 7 · A evolução", m: "Arma evoluindo e limpando a tela.", media: { video: "reel_07_evolucao" }, blocks: [
+    ["Legenda", "Juntando as cartas certas, a arma evolui e o bando vira cinza.\nQual arma você evoluiria primeiro?\n\nGuardião da Floresta · Android · peça seu convite pelo link na bio.\n\n#jogobrasileiro #roguelite #indiegame #jogosmobile #pixelart"] ] },
+  { net: "ig", t: "Reel 8 · Do código à tela", m: "Bastidor: o Curupira sendo desenhado pixel por pixel.", media: { video: "reel_08_codigo" }, blocks: [
+    ["Legenda", "Esse Curupira foi desenhado por código, pixel por pixel. A floresta, os monstros e a música também.\n\nUm jogo brasileiro inteiro feito assim, sem banco de imagens nem música comprada.\n\n#gamedev #indiedev #jogobrasileiro #pixelart #folclorebrasileiro"] ] },
+  { net: "ig", t: "Carrossel · Apresentação", m: "O 1º post do perfil (fixar no topo). 7 imagens 1080×1350, na ordem.", media: { imagens: "post_0" }, blocks: [
+    ["Legenda", "Guardião da Floresta é um roguelite brasileiro para Android 🌳\n\nVocê só se move. As armas atacam sozinhas. Fogo + Gelo = Vapor.\nAs lendas do folclore são as heroínas, e o vilão é a Podridão.\n\nGrátis de verdade: sem energia, sem gacha, anúncio só se você quiser.\nAinda não está na loja. Quer jogar antes do lançamento? Peça seu convite pelo link na bio.\n\n#jogobrasileiro #folclorebrasileiro #indiegame #roguelite #pixelart #gamedev #jogosmobile #curupira"],
+    ["Comentário para fixar", "Quer jogar antes de todo mundo? Peça seu convite pelo link na bio. É grátis."] ] },
+  { net: "ig", t: "Carrossel · As lendas e de onde vêm", m: "Capa, uma imagem por guardiã e a imagem final com o convite.", media: { imagens: "lendas_" }, blocks: [
+    ["Legenda", "Folclore brasileiro em 7 lendas, com a origem de cada uma. Salve para mostrar para alguém.\n\nNo Guardião da Floresta todas são guardiãs. Jogue antes do lançamento: convite no link da bio.\n\n#folclorebrasileiro #curupira #saci #iara #jogobrasileiro"] ] },
+  { net: "ig", t: "Foto de perfil", m: "Também serve de ícone no Discord, no X e no TikTok.", media: { imagens: "perfil" }, blocks: [] },
+  { net: "x", t: "Fixado no perfil", m: "Com o vídeo das reações. Fixar no topo do perfil.", media: { video: "reel_01_reacoes" }, blocks: [
+    ["Post", "Fogo + Gelo vira Vapor. Gelo + Raio vira Cristal. Fogo + Raio vira Sobrecarga.\n\nGuardião da Floresta é um roguelite brasileiro: você só se move, as armas atacam sozinhas e as lendas do folclore lutam do seu lado contra a Podridão.\n\nEm breve na Google Play. Grátis, sem energia e sem gacha."],
+    ["1ª resposta (com o link)", CONVITE_X] ] },
+  { net: "x", t: "Bastidor", m: "Com o reel 8 (o herói sendo desenhado).", media: { video: "reel_08_codigo" }, blocks: [
+    ["Post", "Toda a arte do Guardião da Floresta sai de código: heróis, criaturas, cenário, ícones e efeitos. Nenhuma imagem foi desenhada à mão nem comprada.\n\nA música também: cada trilha é composta e sintetizada por código dentro do próprio jogo."] ] },
+  { net: "x", t: "Lenda do dia: Mapinguari", m: "Com o reel 6 (o chefe avisando o golpe).", media: { video: "reel_06_desvie" }, blocks: [
+    ["Post", "O Mapinguari, das histórias da Amazônia, tem um olho só e uma boca na barriga.\n\nNo Guardião da Floresta ele é o chefe final, tomado pela Podridão. Antes de cada golpe ele grita e o chão mostra onde vai acertar. Ao vencer, a lenda fica livre."] ] },
+  { net: "x", t: "Enquete", m: "Opções: Curupira · Saci · Iara · Caipora", blocks: [["Pergunta", "Qual lenda você levaria para a floresta?"]] },
+  { net: "x", t: "#ScreenshotSaturday (inglês)", m: "Sábado, 10h–12h.", media: { video: "reel_06_desvie" }, blocks: [
+    ["Post", "Every boss attack in Guardião da Floresta is telegraphed on the ground first, so you can dodge just by walking.\n\nA Brazilian folklore roguelite coming to Android, with all the pixel art and music generated in code.\n\n#screenshotsaturday #indiedev"] ] },
+  { net: "x", t: "Dia do Saci · sáb. 31/10", m: "Com o reel 5.", media: { video: "reel_05_saci" }, blocks: [
+    ["Post", "Hoje é Dia do Saci. No Guardião da Floresta ele é guardião: o redemoinho dele persegue o bando e puxa todo mundo para o centro.\n\nViva o folclore brasileiro."],
+    ["1ª resposta (com o link)", CONVITE_X] ] },
+  { net: "rd", t: "r/IndieDev · bastidor (inglês, qualquer fase)", m: "Flair: Devlog ou equivalente. Preencha os trechos entre colchetes.", warn: true, media: { video: "reel_08_codigo" }, blocks: [
+    ["Título", "I generated every sprite, sound and song of my Brazilian folklore roguelite in code. Here's the hero being drawn"],
+    ["Texto", "Hi! I've been making Guardião da Floresta, a survivor-like for Android where the heroes are Brazilian folklore legends (Curupira, Saci, Iara…) fighting a rot that corrupts the forest.\n\nAll the art is generated by code: each hero, enemy and tile is drawn pixel by pixel from functions, with a single shared palette. The music and sound effects are synthesized in code too, inside the game.\n\nThe video shows [what the video shows].\n\nWhat I learned: [1–2 real lessons].\n\nHappy to answer how any part works. If you've done procedural pixel art, what tripped you up?"] ] },
+  { net: "rd", t: "r/roguelites · antes da loja (inglês)", m: "Link no texto ou num comentário, conforme a regra. No lançamento, troque o título por: Guardião da Floresta, a free survivor-like with Brazilian folklore legends, is out on Android", warn: true, media: { video: "reel_01_reacoes" }, blocks: [
+    ["Título", "I'm making a survivor-like with Brazilian folklore legends as the heroes. Looking for players before launch"],
+    ["Texto", "It plays like a survivor-like: you only move, weapons fire on their own, and every level-up is a card choice. A few things I tried to do differently:\n\n- Elemental reactions: fire + ice makes steam, ice + lightning makes crystal, fire + lightning makes overload.\n- Bosses telegraph every attack on the ground, so a good run is about reading and walking.\n- Free with optional ads only (never during a run), no energy, no gacha.\n\nIt's Brazilian folklore: the legends are the heroes and a rot is the villain.\n\nIt isn't on the Play Store yet. If you have an Android phone and want to play before launch, you can ask for an invite on the game's page. I'd love feedback from people who play a lot of these: what makes a run feel fair to you?"] ] },
+  { net: "rd", t: "r/jogatina · só depois do lançamento", m: "No dia seguinte ao lançamento, 19h.", warn: true, blocks: [
+    ["Título", "Fiz um roguelite com as lendas do folclore brasileiro e ele saiu na Play Store"],
+    ["Texto", "Oi, gente! Sou o Leonardo, de Nova Friburgo, e passei os últimos meses fazendo o Guardião da Floresta.\n\nÉ um roguelite em que você só anda e as armas atacam sozinhas. Curupira, Saci, Iara, Caipora e outras lendas são os heróis, e o vilão é a Podridão que toma a mata. Fogo + Gelo vira Vapor, e os chefes (Mapinguari, Mula sem Cabeça, Caboclo d'Água) avisam cada golpe antes.\n\nÉ grátis de verdade: sem energia, sem gacha, e anúncio só se você quiser, nunca no meio da partida.\n\nSe jogar, me conta o que achou, inclusive o que não gostou. Respondo todo mundo aqui."] ] },
+];
+
+// ---------------------------------------------------------------- utilidades
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const now = new Date();
+const today = ymd(now);
+const atNoon = (s) => new Date(s + "T12:00:00");
+const mb = (b) => (b / 1048576).toFixed(b > 10485760 ? 0 : 1).replace(".", ",") + " MB";
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+let toastT = 0;
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 1800); }
+function flash(b, txt = "Copiado") { const old = b.textContent; b.textContent = txt; b.classList.add("done"); setTimeout(() => { b.textContent = old; b.classList.remove("done"); }, 1600); }
+
+// Copiar texto: área de transferência quando dá (localhost); no celular pela rede (http) o navegador não deixa,
+// então vai pelo caminho antigo (textarea + execCommand), que funciona fora de contexto seguro
+function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+  return new Promise((ok, fail) => {
+    const ta = el("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.append(ta); ta.select();
+    try { document.execCommand("copy") ? ok() : fail(new Error("copy")); } catch (e) { fail(e); } finally { ta.remove(); }
+  });
+}
+function textButton(getText) {
+  const b = el("button", "btn", "Copiar"); b.type = "button";
+  b.addEventListener("click", () => copyText(getText()).then(() => { flash(b); toast("Copiado"); }, () => toast("Não deu para copiar: selecione o texto e use Ctrl+C")));
+  return b;
+}
+// Copiar imagem: a área de transferência só aceita PNG; JPG vira PNG num canvas (mesmo servidor, sem bloqueio)
+async function pngBlob(url) {
+  const blob = await (await fetch(url)).blob();
+  if (blob.type === "image/png") return blob;
+  const bmp = await createImageBitmap(blob);
+  const c = document.createElement("canvas"); c.width = bmp.width; c.height = bmp.height;
+  c.getContext("2d").drawImage(bmp, 0, 0);
+  return new Promise((r) => c.toBlob(r, "image/png"));
+}
+function imageButton(url) {
+  const b = el("button", "btn", "Copiar imagem"); b.type = "button";
+  b.addEventListener("click", () => {
+    if (!window.ClipboardItem || !navigator.clipboard?.write || !window.isSecureContext) {
+      toast("Este navegador não copia imagem: use Baixar"); return;
+    }
+    navigator.clipboard.write([new ClipboardItem({ "image/png": pngBlob(url) })]).then(() => { flash(b, "Copiada"); toast("Imagem copiada: cole com Ctrl+V"); }, () => toast("Não deu para copiar a imagem: use Baixar"));
+  });
+  return b;
+}
+function fileButtons(item) {
+  const acts = el("div", "acts");
+  if (item.tipo === "imagem") acts.append(imageButton(item.url));
+  const dl = el("a", "btn quiet", "Baixar"); dl.href = item.url + "?baixar=1"; dl.setAttribute("download", item.nome); acts.append(dl);
+  if (item.caminho) {
+    const cp = el("button", "btn quiet", "Copiar caminho"); cp.type = "button";
+    cp.title = "Cole na janela de envio do navegador (campo Nome do arquivo)";
+    cp.addEventListener("click", () => copyText(item.caminho).then(() => { flash(cp); toast("Caminho copiado: cole no campo Nome do arquivo da janela de envio"); }));
+    const op = el("button", "btn quiet", "Mostrar na pasta"); op.type = "button";
+    op.addEventListener("click", () => fetch("/api/abrir?arquivo=" + encodeURIComponent(item.arquivo), { method: "POST" }).then((r) => toast(r.ok ? "Abrindo a pasta" : "Não deu para abrir a pasta")));
+    acts.append(cp, op);
+  }
+  return acts;
+}
+
+// ---------------------------------------------------------------- mídia
+let MIDIA = [];
+const videosOf = (prefix) => MIDIA.filter((i) => i.tipo === "video" && i.nome.startsWith(prefix));
+const capaOf = (prefix) => MIDIA.find((i) => i.tipo === "imagem" && i.nome.startsWith(prefix) && /capa/i.test(i.nome));
+const imagesOf = (prefix) => MIDIA.filter((i) => i.tipo === "imagem" && i.nome.startsWith(prefix) && !/capa/i.test(i.nome));
+function variantLabel(nome) {
+  if (/_prereg/i.test(nome)) return ["Pré-registro: só depois que a Google liberar", "later"];
+  if (/_teste/i.test(nome)) return ["Agora: convite", "now"];
+  if (/^reel_0[1-4]_/.test(nome)) return ["Cartão final antigo (\"teste grátis\")", "later"];
+  return ["Vídeo", "now"];
+}
+function videoTile(item, poster) {
+  const box = el("div", "m");
+  const [label, cls] = variantLabel(item.nome);
+  box.append(el("div", "mlabel " + cls, label));
+  const v = el("video", /9x16|reel_/i.test(item.nome) ? "v916" : ""); v.controls = true; v.preload = "metadata"; v.playsInline = true; v.src = item.url;
+  if (poster) v.poster = poster.url;
+  box.append(v, el("div", "mname", item.nome + " · " + mb(item.bytes)), fileButtons(item));
+  if (poster) { const pc = el("div", "acts"); pc.append(el("span", "mname", "Capa:"), imageButton(poster.url)); box.append(pc); }
+  return box;
+}
+function imageTile(item) {
+  const box = el("div", "m");
+  const img = el("img", /post_|lendas_/.test(item.nome) ? "v45" : ""); img.src = item.url; img.alt = item.nome; img.loading = "lazy";
+  box.append(img, el("div", "mname", item.nome), fileButtons(item));
+  return box;
+}
+function mediaBlock(media) {
+  const wrap = el("div", "block");
+  if (media.video) {
+    const vids = videosOf(media.video);
+    if (!vids.length) { wrap.append(el("p", "missing", "Vídeo ainda não gerado (" + media.video + "). Aparece aqui sozinho quando cair na pasta.")); return wrap; }
+    const grid = el("div", "media wide");
+    const poster = capaOf(media.video);
+    for (const v of vids.sort((a, b) => (/_teste/.test(a.nome) ? -1 : /_teste/.test(b.nome) ? 1 : 0))) grid.append(videoTile(v, poster));
+    wrap.append(grid);
+  } else if (media.imagens) {
+    const imgs = imagesOf(media.imagens);
+    if (!imgs.length) { wrap.append(el("p", "missing", "Imagens ainda não geradas (" + media.imagens + "…). Aparecem aqui sozinhas quando caírem na pasta.")); return wrap; }
+    const grid = el("div", "media");
+    for (const i of imgs) grid.append(imageTile(i));
+    wrap.append(grid);
+  }
+  return wrap;
+}
+
+// ---------------------------------------------------------------- posts
+const NETNAME = { x: "X", ig: "Instagram", rd: "Reddit" };
+let filter = store.get("gr_filter", "all");
+function renderFilters() {
+  const box = $("filters"); box.innerHTML = "";
+  for (const [k, label] of [["all", "Todos"], ["ig", "Instagram"], ["x", "X"], ["rd", "Reddit"]]) {
+    const b = el("button", "chip", label); b.type = "button"; b.setAttribute("aria-pressed", String(filter === k));
+    b.addEventListener("click", () => { filter = k; store.set("gr_filter", k); renderFilters(); renderPosts(); });
+    box.append(b);
+  }
+}
+function renderPosts() {
+  const box = $("post-list"); box.innerHTML = "";
+  for (const p of POSTS) {
+    if (filter !== "all" && p.net !== filter) continue;
+    const card = el("article", "panel post");
+    const head = el("div", "post-head");
+    head.append(el("span", "tag " + p.net, NETNAME[p.net]), el("h3", null, p.t));
+    card.append(head, el("p", "meta", p.m));
+    if (p.warn) card.append(el("p", "warn", "Verifique as regras e a flair da comunidade antes de postar."));
+    // vídeo ao lado dos textos; carrossel (várias imagens) em cima, com a largura toda
+    const body = el("div", "post-body" + (p.media?.video && p.blocks.length ? " split" : ""));
+    if (p.media) body.append(mediaBlock(p.media));
+    const texts = el("div", "texts");
+    for (const [label, text] of p.blocks) {
+      const blk = el("div", "block"); const lab = el("div", "block-label");
+      lab.append(el("span", null, label), textButton(() => text));
+      blk.append(lab, el("pre", "copytext", text)); texts.append(blk);
+    }
+    if (p.blocks.length) body.append(texts);
+    card.append(body);
+    box.append(card);
+  }
+}
+function renderAllMedia() {
+  const vb = $("all-videos"), ib = $("all-images"); vb.innerHTML = ""; ib.innerHTML = "";
+  const vids = MIDIA.filter((i) => i.tipo === "video");
+  const imgs = MIDIA.filter((i) => i.tipo === "imagem");
+  if (!vids.length) vb.append(el("p", "missing", "Nenhum vídeo na pasta."));
+  for (const v of vids) vb.append(videoTile(v, capaOf(v.nome.replace(/(_teste|_prereg)?\.mp4$/i, ""))));
+  if (!imgs.length) ib.append(el("p", "missing", "Nenhuma imagem na pasta."));
+  for (const i of imgs) ib.append(imageTile(i));
+}
+
+// ---------------------------------------------------------------- resto da página
+(function renderToday() {
+  const wd = now.getDay();
+  const names = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+  $("today-title").textContent = "Hoje, " + names[wd] + " " + now.getDate() + "/" + String(now.getMonth() + 1).padStart(2, "0");
+  for (const [w, what] of TODAY[wd]) { const li = el("li"); li.append(el("span", "when", w), el("span", null, what)); $("today-tasks").append(li); }
+  if (SPECIAL[today]) { $("today-special").textContent = SPECIAL[today]; $("today-special").hidden = false; }
+  const next = MILESTONES.find((m) => m.date >= today);
+  const ms = $("milestone");
+  if (next) {
+    const days = Math.round((atNoon(next.date) - atNoon(today)) / 86400000);
+    ms.append(document.createTextNode(next.label + ": "), el("b", null, days === 0 ? "hoje" : days === 1 ? "amanhã" : "faltam " + days + " dias"));
+  }
+})();
+(function renderWeek() {
+  const wd = now.getDay();
+  for (const r of WEEK) {
+    const tr = el("tr", r.d === wd ? "is-today" : "");
+    const cell = (label, v) => { const td = el("td", v ? "" : "empty", v || "—"); if (v) td.dataset.label = label; return td; };
+    tr.append(el("td", null, r.name), cell("Instagram · TikTok · Shorts", r.ig), cell("X", r.x), cell("Reddit e outros", r.rd));
+    $("week-body").append(tr);
+  }
+})();
+(function renderTimeline() {
+  for (const r of TIMELINE) {
+    const li = el("li", today >= r.from && today <= r.to ? "now" : "");
+    const right = el("div"); right.append(el("p", "t", r.t), el("p", "muted", r.x));
+    li.append(el("span", "d", r.d), right); $("timeline").append(li);
+  }
+  for (const [h, x] of LAUNCH) { const li = el("li"); li.append(el("span", "d", h), el("p", null, x)); $("launch").append(li); }
+})();
+(function renderNets() {
+  for (const r of NETS) { const tr = el("tr"); for (const c of r) tr.append(el("td", null, c)); $("nets").append(tr); }
+  for (const r of SUBS) { const tr = el("tr"); for (const c of r) tr.append(el("td", null, c)); $("subs").append(tr); }
+})();
+(function renderLinks() {
+  for (const [name, q] of LINKS) {
+    const url = BASE + q; const row = el("div", "link-row");
+    row.append(el("span", "lname", name), el("code", null, url), textButton(() => url)); $("link-list").append(row);
+  }
+})();
+(function renderChecks() {
+  const d = new Date(now); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - d.getDay());
+  const key = "gr_check_" + ymd(d);
+  let saved = {}; try { saved = JSON.parse(store.get(key, "{}")); } catch {}
+  CHECKS.forEach((txt, i) => {
+    const li = el("li"); const lab = el("label");
+    const cb = el("input"); cb.type = "checkbox"; cb.id = "chk" + i; cb.checked = !!saved[i];
+    cb.addEventListener("change", () => { saved[i] = cb.checked; store.set(key, JSON.stringify(saved)); });
+    lab.htmlFor = cb.id; lab.append(cb, el("span", null, txt)); li.append(lab); $("checklist").append(li);
+  });
+})();
+
+renderFilters();
+renderPosts();
+fetch("/api/midia", { cache: "no-store" })
+  .then((r) => r.json())
+  .then((d) => {
+    MIDIA = d.itens || [];
+    if (d.pasta) $("midia-pasta").textContent = "Tudo o que está em " + d.pasta + " (vídeos novos aparecem ao recarregar a página).";
+    $("where").textContent = d.local ? "Aberta neste PC. Para o celular: npm run redes -- --celular" : "Aberta pela rede: salve o vídeo no celular e poste pelo app.";
+    renderPosts();
+    renderAllMedia();
+  })
+  .catch(() => { $("server-off").hidden = false; renderAllMedia(); });
+</script>
+</body>
+</html>

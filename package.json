@@ -21,6 +21,7 @@
     "play:imagens": "node tools/play-imagens.mjs",
     "aviso": "node tools/play-aviso.mjs",
     "play:rankings": "node tools/play-rankings.mjs",
+    "redes": "node tools/redes/servidor.mjs",
     "android:sync": "npm run build && npx cap sync android",
     "android:open": "npx cap open android",
     "android:install": "node tools/android-install.mjs",
