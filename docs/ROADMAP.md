@@ -377,7 +377,8 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
 - ✅ **Legibilidade** (21/10/2026): o zoom de acessibilidade escurecia os avisos de golpe dos chefes (o mapa
   de luz ia para a câmera da interface) — consertado. **Status elementais** com tinta OVERLAY (`STATUS_LOOK`):
   legíveis em todo monstro, de dia, à noite e no chefe, sem perder o contorno; o raio vibra a 2,4 Hz para não
-  se confundir com o gelo no daltonismo; luz no chão com teto de 8 por quadro. **Libertação do chefe** em três
+  se confundir com o gelo no daltonismo; no chefe, metade da força (`BOSS_K`: em chamas o Mapinguari virava
+  um bloco laranja); luz no chão com teto de 8 por quadro. **Libertação do chefe** em três
   tempos (silhueta da Podridão → luz → esporos que viram vida; `LIBERATION`). **Céu da Clareira e vinhetas**
   com o Gradient do Phaser 4 (quente perto da fogueira, sem faixas; o céu antigo deixava uma faixa de dia ao
   girar a tela). 👤 ver no aparelho (vento no bruxo e no cogumelo fica fraco)

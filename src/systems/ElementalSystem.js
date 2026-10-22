@@ -30,6 +30,19 @@ function statusLook(key) {
   }
   return _looks[key];
 }
+// Chefe: a mesma tinta, mais fraca (STATUS_LOOK.BOSS_K). Ele leva status a luta inteira (o Curupira
+// começa com fogo) e, na força cheia, o Mapinguari em chamas virava um bloco laranja sem ameaça.
+// Na OVERLAY o cinza médio não muda nada: puxar a cor para ele é baixar a força
+const _bossLooks = {};
+const NEUTRAL = 0x808080;
+function bossLook(key) {
+  if (!_bossLooks[key]) {
+    const L = statusLook(key);
+    const k = STATUS_LOOK.BOSS_K;
+    _bossLooks[key] = { ...L, tint: mixC(NEUTRAL, L.tint, k), ramp: L.ramp?.map((c) => mixC(NEUTRAL, c, k)) ?? null };
+  }
+  return _bossLooks[key];
+}
 // Status que manda na cor (congelado > fogo > gelo > raio > vento) — também decide a cor da luz do inimigo
 export function dominantStatus(enemy) {
   const st = enemy.statuses;
@@ -106,13 +119,17 @@ export class ElementalSystem {
   // pegar/perder status, ao congelar/descongelar e no fim do pisca-branco de dano (que usa FILL)
   _updateTint(enemy) {
     const key = dominantStatus(enemy);
-    const look = key && statusLook(key);
+    const look = key && this._look(enemy, key);
     if (look) enemy.setTint(look.tint).setTint2(look.tint2).setTintMode(look.mode);
     else enemy.clearTint();
     if (look?.ramp) {
       enemy._pulsePh ??= Math.random() * Math.PI * 2; // cada um vibra no seu tempo
       this._pulsing.add(enemy);
     } else this._pulsing.delete(enemy);
+  }
+
+  _look(enemy, key) {
+    return enemy === this.scene.boss ? bossLook(key) : statusLook(key);
   }
 
   // Luz do inimigo com status no mapa de luz (Lighting): cor do elemento; null = a luz da corrupção
@@ -129,7 +146,7 @@ export class ElementalSystem {
     const w = (Math.PI * 2) / STATUS_LOOK.PULSE_MS;
     for (const e of this._pulsing) {
       const key = e.active && dominantStatus(e);
-      const look = key && statusLook(key);
+      const look = key && this._look(e, key);
       if (!look?.ramp) {
         this._pulsing.delete(e);
         continue;
