@@ -78,7 +78,8 @@ O Leonardo pediu para repensar ("talvez vender algo mais barato dê mais retorno
   anúncios só voltam se nenhuma outra compra ainda os tira). `npm run test:compra`: cenários `pacote*`.
 - **Onde se compra:** ★ da Clareira e botão LOJA do título (com a loja de cosméticos desligada, os dois
   continuam sendo só o "Sem anúncios"); atalhos no Guarda-roupa (aba Kits e aba Clareira). Nunca na partida.
-- **Medir:** `shop_view` → `pack_buy_ui` e `iap_result` por produto. Se o Fundador não converter, testar o
+- **Medir:** `shop_view` → `pack_buy_ui` e `iap_result` por produto (`shop_view` com `from: "nudge"` = veio da
+  oferta do "Sem anúncios" na volta à Clareira, evento `noads_nudge`). Se o Fundador não converter, testar o
   preço com "Experimentos de preço" do Play Console antes de mexer no conteúdo.
 
 [f1]: https://www.ideals.illinois.edu/items/114139/bitstreams/374302/data.pdf
