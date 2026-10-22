@@ -61,14 +61,22 @@ export function openShareCard(scene, d) {
   let closed = false;
   let blob = null;
   let busy = false;
+  // as texturas da prévia saem com a janela (a imagem grande já foi solta quando o PNG ficou pronto); a cena
+  // saindo com a janela aberta também solta tudo (e a frente que ainda estava sendo desenhada não entra)
+  const drop = () => Object.values(keys).forEach((k) => scene.textures.exists(k) && scene.textures.remove(k));
+  const onShutdown = () => {
+    closed = true;
+    setTimeout(drop, 0); // depois que a cena destruiu as imagens que usavam as texturas
+  };
+  scene.events.once("shutdown", onShutdown);
   const m = new Modal(scene, {
     title: tr("CARTÃO DA PARTIDA"),
     w: mw,
     h: mh,
     onClose: () => {
       closed = true;
-      // as texturas da prévia saem com a janela (a imagem grande já foi solta quando o PNG ficou pronto)
-      scene.time.delayedCall(0, () => Object.values(keys).forEach((k) => scene.textures.exists(k) && scene.textures.remove(k)));
+      scene.events.off("shutdown", onShutdown);
+      scene.time.delayedCall(0, drop);
     },
   });
 
