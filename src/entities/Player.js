@@ -5,6 +5,7 @@ import { PLAYER, GAME, COLORS, RESONANCE } from '../config.js';
 import { HERO_STEPS } from '../art/Hero.js';
 import { PAL } from '../art/Palette.js';
 import { registerAuraFX, AURA_H } from '../art/AuraFX.js';
+import { softFlash } from '../systems/GameFeel.js';
 
 import { tr } from "../i18n/i18n.js";
 
@@ -217,7 +218,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const look = this._awakenLook;
     this.setTint(look.tint);
     this.scene.cameras.main.shake(300, 0.012);
-    this.scene.cameras.main.flash(180, ...look.flash);
+    softFlash(this.scene.cameras.main, 180, ...look.flash, 0.5); // meia força: no meio da luta o clarão cheio escondia tiros
     // O despertar: onda dourada de trovão saindo do herói, anel, vaga-lumes subindo
     const fx = this.scene.fx;
     if (fx) {

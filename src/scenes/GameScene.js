@@ -1944,7 +1944,7 @@ export class GameScene extends Phaser.Scene {
         this.sound.play("sfx_chest_trap", { volume: 1.0, rate: 0.6 });
         this.sound.play("sfx_boss_roar", { volume: 0.7, rate: 0.85 });
         this.cameras.main.shake(450, 0.025);
-        this.cameras.main.flash(150, 200, 40, 40);
+        softFlash(this.cameras.main, 150, 200, 40, 40, 0.55);
       });
       this._toast(tr("MÍMICO!"), 1800, "#ff8a8a");
       const wave = this.waveIndex();
