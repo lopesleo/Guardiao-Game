@@ -280,10 +280,10 @@ export class Button extends Phaser.GameObjects.Container {
       return;
     }
     // com ícone, o conjunto (ícone + espaço + rótulo) é que cabe: o rótulo encolhe e os dois voltam ao centro
+    // (também quando o rótulo muda depois, pelo setLabel)
     const iw = this.ico.displayWidth,
       gap = 10;
-    if (iw + gap + t.width <= room) return;
-    t.setScale(Math.max(0.5, (room - iw - gap) / t.width));
+    if (iw + gap + t.width > room) t.setScale(Math.max(0.5, (room - iw - gap) / t.width));
     const total = iw + gap + t.displayWidth;
     this.ico.x = -total / 2 + iw / 2;
     t.x = -total / 2 + iw + gap + t.displayWidth / 2;
