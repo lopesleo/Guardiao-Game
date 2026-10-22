@@ -1744,6 +1744,16 @@ export const REVIEW = {
   STORE_URL: "https://play.google.com/store/apps/details?id=com.lopesleo.guardiao",
 };
 
+// Cartão da partida para compartilhar (art/ShareCard.js, ui/ShareCardModal.js): a imagem 4:5 do feed (Instagram,
+// X, WhatsApp) e o link que vai no texto da postagem (utm_source mede o boca a boca)
+export const SHARE = {
+  W: 1080,
+  H: 1350,
+  URL: "https://komedygames.com/guardiao/?utm_source=share",
+  SITE: "komedygames.com/guardiao", // escrito no cartão
+  FILE: "guardiao-da-floresta.png",
+};
+
 // Compras pela Play Store (ver systems/Billing.js). O id tem de ser IGUAL ao do produto criado no Play
 // Console (Monetizar → Produtos → Produtos no app), como compra única (não consumível)
 export const STORE = {

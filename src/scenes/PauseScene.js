@@ -149,7 +149,7 @@ export class PauseScene extends Phaser.Scene {
       const alpha = n > 0 || can ? 1 : 0.35;
       this.add.image(x0 + 34, y, ELEMENT_SEAL[a]).setScale(2).setAlpha(alpha);
       this.add.image(x0 + 58, y, ELEMENT_SEAL[b]).setScale(2).setAlpha(alpha);
-      const name = String(REACTION[k].label).replace(/[!！]+$/, "");
+      const name = String(REACTION[k].label).replace(/^[¡]+|[!！]+$/g, ""); // "¡VAPOR!" (es) → "VAPOR"
       const col = n > 0 ? "#" + REACTION[k].color.toString(16).padStart(6, "0") : can ? CSS.txt : CSS.dim;
       const t = text(this, x0 + 80, y, name, { size: 17, color: col, origin: [0, 0.5] }).setAlpha(n > 0 || can ? 1 : 0.6);
       const cnt = text(this, x0 + w - 22, y, n > 0 ? `×${n}` : "—", { size: 17, color: n > 0 ? CSS.goldHi : CSS.dim, origin: [1, 0.5] }).setAlpha(alpha);

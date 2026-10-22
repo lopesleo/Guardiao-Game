@@ -21,6 +21,7 @@ import { Analytics } from "../systems/Analytics.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
 import { Leaderboards } from "../systems/Leaderboards.js";
 import { openRanking } from "../ui/RankingModal.js";
+import { openShareCard } from "../ui/ShareCardModal.js";
 import { tr, fmt, dec } from "../i18n/i18n.js";
 
 const S = TITLE_PX;
@@ -956,6 +957,18 @@ export class GameOverScene extends Phaser.Scene {
     for (const b of [again, camp]) if (b.label) fitTo(b.label, bw - 24);
     this._enter(380, [again, camp], { dy: 16, dur: 360 });
     this.time.delayedCall(2600, () => this.tweens.add({ targets: again, scale: 1.04, duration: 800, yoyo: true, repeat: -1, ease: "Sine.easeInOut" }));
+    // COMPARTILHAR: na mesma linha, mas na coluna da cena (encostado no painel, sem apertar os outros dois). O
+    // cartão só é desenhado quando o jogador toca (ui/ShareCardModal.js)
+    const sw = Math.min(270, Math.round(L.colW * 0.4));
+    const share = new Button(this, L.px - 14 - sw / 2, by + 4, sw, 58, tr("COMPARTILHAR"), () => !this._leaving && !this._modals.length && openShareCard(this, this.d), {
+      size: 20,
+      color: CSS.goldHi,
+      icon: "ico_share",
+      iconScale: 2.5,
+    }).setDepth(1000);
+    if (share.label) fitTo(share.label, sw - 70);
+    this.shareBtn = share;
+    this._enter(1500, [share], { pop: true, dy: 0, dur: 360 });
   }
 
   // Vinheta de vitória/derrota (canal da música: segue a barra Música); depois só a fogueira estalando
