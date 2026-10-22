@@ -139,7 +139,8 @@ async function runCombo(mode, side) {
   // Partida previsível: herói imune e sem subir de nível sozinho (as armas automáticas matam, e as gemas
   // podiam abrir cartas no meio de um arrasto — o joystick sai de cena com as cartas, como deve; o teste
   // é que ficava instável, 19/10/2026). As cartas do teste vêm só de _openNextLevelUp/player:levelup
-  const calm = () => page.evaluate(() => { const g = window.game.scene.getScene("GameScene"); g._god = true; g.player.gainXp = () => {}; });
+  // sem dano, sem XP e sem baú: o baú dourado dá uma carta extra (e andando ~1000 px às vezes o herói passa num)
+  const calm = () => page.evaluate(() => { const g = window.game.scene.getScene("GameScene"); g._god = true; g.player.gainXp = () => {}; g._openChest = () => {}; });
   const listeners = () => page.evaluate(() => { const e = window.game.scene.getScene("GameScene").events; return ["pause", "resume", "player:levelup", "shutdown"].map((k) => `${k}:${e.listenerCount(k)}`).join(" "); });
 
   try {
