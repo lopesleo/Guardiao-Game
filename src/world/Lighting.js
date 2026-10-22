@@ -215,7 +215,7 @@ export class Lighting {
       bossAmb = L?.boss ?? AMB_BOSS;
     // Luz do chefe entra (e sai, na libertação) em ~1,6 s junto com a Podridão da borda — antes
     // pulava de uma cor para a outra num quadro só
-    const bossOn = s.boss?.active ? 1 : 0;
+    const bossOn = s.boss?.active || s.boss?._emerging ? 1 : 0; // a noite do chefe cai enquanto ele nasce
     const step = this._ambT == null ? 1 : (time - this._ambT) / PODRIDAO.BOSS_AMB_MS;
     this._ambT = time;
     this._bossK = this._bossK == null ? bossOn : this._bossK + Math.max(-step, Math.min(step, bossOn - this._bossK));

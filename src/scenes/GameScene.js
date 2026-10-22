@@ -26,7 +26,10 @@ import {
   LIBERATION,
   PERF,
   AUDIO,
+  FEEL,
 } from "../config.js";
+import { Pix, bayer, rng } from "../art/PixelArt.js";
+import { shockwave } from "../art/Telegraph.js";
 import { setMoment, resetMix, tapeStop, switchTrack } from "../audio/Mixer.js";
 import { randomRareSeed } from "../systems/Garden.js";
 import { recipe, mealMods, bonusText } from "../systems/Kitchen.js";
@@ -72,7 +75,7 @@ import { DamageNumberPool } from "../entities/DamageNumber.js";
 import { HUD } from "../ui/HUD.js";
 import { ForestWorld } from "../world/ForestWorld.js";
 import { Lighting } from "../world/Lighting.js";
-import { vw, vh, text, drawFrame, fitCamera, Button } from "../ui/Theme.js";
+import { vw, vh, text, drawFrame, fitCamera, Button, haptic } from "../ui/Theme.js";
 import { applyZoom } from "../ui/Zoom.js";
 import { CSS, PAL, hex } from "../art/Palette.js";
 import { DEBUG } from "../systems/Platform.js";
@@ -809,7 +812,7 @@ export class GameScene extends Phaser.Scene {
         this.player.pickupRadius * this.player.pickupRadius
       ) {
         this.player.gainXp(g.xpValue);
-        this.sound.play("sfx_pickup", { volume: 0.18, rate: this.feel.gem() });
+        this.sound.play("sfx_pickup", { volume: 0.18, rate: this.feel.gem(g) });
         g.pickup();
         this.xpPool.release(g);
       }
@@ -921,6 +924,7 @@ export class GameScene extends Phaser.Scene {
     this.quality.reset();
     this._levelUpOpen = false;
     this.hud.refreshWeapons();
+    this.hud.levelSettle?.(); // a barra cheia e dourada esvazia até o XP que sobrou; o selo do nível pula
     this._checkAchievements();
     if (this._pendingLevelUps > 0) this.time.delayedCall(120, () => this._openNextLevelUp());
   }
@@ -930,6 +934,8 @@ export class GameScene extends Phaser.Scene {
     // pause()/launch() do Phaser são enfileirados pro próximo frame: a flag
     // evita abrir 2× no mesmo tick
     if (this._levelUpOpen) return;
+    // a mesa anterior ainda está saindo (a carta escolhida voando para o herói): espera ela fechar
+    if (this.scene.isActive("LevelUpScene")) return void this.time.delayedCall(60, () => this._openNextLevelUp());
     this._levelUpOpen = true;
     this._pendingLevelUps--;
     const cards = this.upgrades.generateCards(this.player);
@@ -938,7 +944,17 @@ export class GameScene extends Phaser.Scene {
       cards,
       player: this.player,
       gameScene: this,
+      from: this.heroOnScreen(), // as cartas saem do herói (FEEL.LEVEL)
     });
+  }
+
+  // Onde o herói (o peito dele) aparece na tela, em px da tela (com o zoom de acessibilidade): as cenas por
+  // cima (cartas) partem daqui
+  heroOnScreen() {
+    const cam = this.cameras.main,
+      p = this.player;
+    const wv = cam.worldView;
+    return { x: (p.x - wv.x) * cam.zoom + cam.x, y: (p.y - p.displayHeight * 0.1 - wv.y) * cam.zoom + cam.y };
   }
 
   // Botão VOLTAR do Android → pausa (ver systems/Platform.js)
@@ -1080,7 +1096,8 @@ export class GameScene extends Phaser.Scene {
     // Mini-chefe: baú dourado garantido + gema grande + moedas
     if (enemy.miniBoss) this._miniBossReward(enemy);
     this.sound.play("sfx_death", { volume: 0.15 });
-    this.cameras.main.shake(40, 0.002);
+    // Sem tremor por abate comum: no fim da partida eram 6 abates/s e a câmera tremia 1/3 do tempo (e o
+    // tremor fraco em curso engolia os fortes). O abate pesa no estalo, na matéria e no som (FEEL)
     const big = !!(enemy.miniBoss || enemy._elite);
     if (enemy.miniBoss || enemy._elite === "mimic") this.feel.bigKill(enemy.x, enemy.y);
     this._deathPoof(enemy.x, enemy.y);
@@ -1377,21 +1394,23 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  // CHEGADA DO CHEFE (FEEL.BOSS_ENTRY): 1) a Podridão borbulha no chão num ponto À VISTA, perto do herói
+  // (a música da partida afunda, o chão ronca, esporos sobem) — o jogador lê de onde ele vem; 2) o chefe
+  // SOBE da poça como silhueta da Podridão que ganha cor, com rugido, estouro e tremor, e a barra dele
+  // enche; 3) só então luta. Enquanto nasce: sem dano dele, sem dano nele, cérebro parado.
   _spawnBoss() {
     this.meta.markLegend(this.biome.boss);
-    const ang = Math.random() * Math.PI * 2;
-    const r = 320;
-    const bx = this.player.x + Math.cos(ang) * r;
-    const by = this.player.y + Math.sin(ang) * r;
+    const E = FEEL.BOSS_ENTRY;
+    const { x: bx, y: by } = this._bossSpot();
     this.boss = new BossEnt(this, bx, by, this.biome.boss);
-    this.boss.activate(BOSS.HP * this.diff.hpMult);
-    this.boss.dmg *= this.diff.dmgMult; // escala dano do boss pela dificuldade
-    this.hud.setBossActive(this.boss, this.biome.bossName.toUpperCase());
-    this.sound.play("sfx_boss_roar", { volume: 0.8, alert: true });
-    // Trilha do chefe no lugar da música da partida, no compasso: a da partida afunda sob o rugido e
-    // some até a barra; a do chefe entra num tempo forte depois do rugido (AUDIO.SWITCH)
-    this.bgMusic = switchTrack(this.sound, this.bgMusic, this.biome.bossMusic ?? "music_boss", { loop: true, volume: 0.4 }, { enterAfterS: AUDIO.SWITCH.ROAR_S });
-    this.cameras.main.shake(500, 0.015);
+    this.boss.setActive(false).setVisible(false);
+    this.boss.body.enable = false;
+    this.boss._emerging = true; // a Podridão da borda e a luz do chefe já fecham (Podridao.js, Lighting.js)
+    // Trilha do chefe no lugar da música da partida, no compasso: a da partida afunda já (o chão ronca
+    // sozinho) e some até a barra; a do chefe entra num tempo forte depois do rugido (AUDIO.SWITCH)
+    this.bgMusic = switchTrack(this.sound, this.bgMusic, this.biome.bossMusic ?? "music_boss", { loop: true, volume: 0.4 }, { enterAfterS: E.ERUPT_MS / 1000 + AUDIO.SWITCH.ROAR_S });
+    this._bossEruption(bx, by + this.boss.displayHeight * 0.44); // a poça fica sob os PÉS dele
+    this.time.delayedCall(E.ERUPT_MS, () => this._bossRise());
     // O chefe espanta os de tiro (tiro + avisos dos golpes deixaria de ser justo), os do
     // lugar onde ele chega e o excesso; os mais perto do herói ficam (ver BOSS_FIGHT.ADDS)
     const A = BOSS_FIGHT.ADDS;
@@ -1402,6 +1421,167 @@ export class GameScene extends Phaser.Scene {
     const d2 = (e) => (e.x - this.player.x) ** 2 + (e.y - this.player.y) ** 2;
     const keep = new Set(rest.sort((a, b) => d2(a) - d2(b)).slice(0, A.MAX_ALIVE));
     this._scatter((e) => !keep.has(e));
+  }
+
+  // Onde o chefe nasce: a MIN_DIST–MAX_DIST do herói, dentro da tela (abaixo da faixa da HUD e da barra
+  // dele, longe das bordas) e dentro da arena. Antes: 320 px num ângulo qualquer, muitas vezes fora da tela
+  _bossSpot() {
+    const E = FEEL.BOSS_ENTRY;
+    const cam = this.cameras.main,
+      wv = cam.worldView,
+      p = this.player;
+    const z = cam.zoom || 1;
+    const top = wv.y + 250 / z, // faixa da HUD + barra do chefe + a cabeça dele (o ponto é o pé)
+      bot = wv.bottom - 70 / z,
+      left = wv.x + 130 / z,
+      right = wv.right - 130 / z;
+    const inside = (x, y) => x > left && x < right && y > top && y < bot && x > ARENA.minX + 120 && x < ARENA.maxX - 120 && y > ARENA.minY + 160 && y < ARENA.maxY - 90;
+    // nenhuma copa de árvore por cima do lugar (a chegada tem de ser vista inteira)
+    const trees = this.world.trees ?? [];
+    const clearOfTrees = (x, y) => {
+      for (const t of trees) {
+        const tl = t.x - t.displayWidth * t.originX,
+          tt = t.y - t.displayHeight * t.originY;
+        if (tl < x + 90 && tl + t.displayWidth > x - 90 && tt < y + 95 && tt + t.displayHeight > y - 95) return false;
+      }
+      return true;
+    };
+    const a0 = Math.random() * Math.PI * 2;
+    let fallback = null;
+    for (let i = 0; i < 32; i++) {
+      const a = a0 + i * 2.4;
+      const d = E.MIN_DIST + ((i * 37) % 10) * ((E.MAX_DIST - E.MIN_DIST) / 9);
+      const x = p.x + Math.cos(a) * d,
+        y = p.y + Math.sin(a) * d * 0.62; // a tela é mais larga que alta
+      if (!inside(x, y)) continue;
+      if (clearOfTrees(x, y)) return { x, y };
+      fallback ??= { x, y };
+    }
+    if (fallback) return fallback;
+    // sem espaço (herói num canto): o mais perto disso que couber
+    return { x: Phaser.Math.Clamp(p.x + E.MIN_DIST, Math.max(left, ARENA.minX + 120), Math.min(right, ARENA.maxX - 120)), y: Phaser.Math.Clamp(p.y, Math.max(top, ARENA.minY + 160), Math.min(bot, ARENA.maxY - 90)) };
+  }
+
+  // 1) A Podridão borbulha no chão onde o chefe vai nascer: poça que cresce, bolhas e esporos subindo, o chão
+  // ronca e a luz dela pulsa. Nada disso fere: é aviso de lugar, não golpe. (x, y) = onde ficam os pés dele
+  _bossEruption(x, y) {
+    const E = FEEL.BOSS_ENTRY;
+    if (!this.textures.exists("fx_rot_pool")) {
+      // poça da Podridão em pixel de arte (desenhada na escala 3): miolo escuro, borda acesa e pontilhada
+      const W = 44,
+        H = 24,
+        rnd = rng(77);
+      const pool = new Pix(W, H);
+      for (let yy = 0; yy < H; yy++)
+        for (let xx = 0; xx < W; xx++) {
+          const u = (xx + 0.5 - W / 2) / (W / 2),
+            v = (yy + 0.5 - H / 2) / (H / 2);
+          const d = Math.sqrt(u * u + v * v) + (rnd() - 0.5) * 0.16;
+          if (d > 1) continue;
+          if (d > 0.84) pool.set(xx, yy, bayer(xx, yy) < 0.6 ? PAL.rot2 : PAL.rot1);
+          else if (d > 0.62) pool.set(xx, yy, bayer(xx, yy) < (d - 0.62) * 3.2 ? PAL.rot1 : PAL.rot0);
+          else pool.set(xx, yy, PAL.rot0);
+        }
+      for (let i = 0; i < 10; i++) pool.over(5 + rnd() * (W - 10), 3 + rnd() * (H - 6), i % 3 ? PAL.rot2 : PAL.rot3);
+      pool.register(this, "fx_rot_pool");
+    }
+    const S = GAME.PIXEL_SCALE;
+    const k = (E.POOL_R * 2) / (44 * S); // largura final da poça = 2 × POOL_R
+    const img = this.add.image(x, y, "fx_rot_pool").setDepth(-48).setScale(S * k * 0.12).setAlpha(0.95);
+    this.tweens.add({ targets: img, scale: S * k, duration: E.ERUPT_MS * 0.8, ease: "Cubic.easeOut" });
+    // a poça fica até o chefe subir e então se fecha (encolhe e some)
+    this.tweens.add({ targets: img, scale: S * k * 0.3, alpha: 0, delay: E.ERUPT_MS + E.RISE_MS, duration: 700, ease: "Cubic.easeIn", onComplete: () => img.destroy() });
+    // esporos subindo da poça (um emissor só, destruído depois)
+    const zone = new Phaser.Geom.Ellipse(0, 0, E.POOL_R * 1.4, E.POOL_R * 0.7);
+    const spores = this.add
+      .particles(x, y - 4, "px_dot2", {
+        emitZone: { type: "random", source: zone },
+        frequency: 45,
+        lifespan: { min: 600, max: 1000 },
+        speed: { min: 6, max: 26 },
+        gravityY: -60,
+        scale: { start: 3.6, end: 1 },
+        alpha: { start: 0.9, end: 0 },
+        color: [PAL.rot3, PAL.rot2, PAL.rot1],
+        blendMode: Phaser.BlendModes.ADD,
+        maxAliveParticles: 40,
+      })
+      .setDepth(D_FX + 1);
+    this.time.delayedCall(E.ERUPT_MS + E.RISE_MS * 0.6, () => spores.stop());
+    this.time.delayedCall(E.ERUPT_MS + E.RISE_MS + 1100, () => spores.destroy());
+    // bolhas estourando na poça, cada vez mais (imagens reaproveitadas)
+    for (let i = 0; i < 14; i++) {
+      const at = E.ERUPT_MS * (0.15 + 0.85 * Math.sqrt(i / 14));
+      this.time.delayedCall(at, () => {
+        if (this.gameOver || this.puffs.count.bubble > 10) return;
+        const bx = x + (Math.random() - 0.5) * E.POOL_R * 1.1,
+          by = y + (Math.random() - 0.5) * E.POOL_R * 0.45;
+        this.puffs.spawn("bubble", "px_dot2", bx, by, bx, by - 14, 3.6, 1.2, 1, i % 3 ? PAL.rot2 : PAL.rot3, -47, 380);
+      });
+    }
+    // o chão ronca (cresce) e a luz da Podridão pulsa sobre a poça
+    this.sound.play("sfx_rumble", { volume: 0.7, alert: true });
+    this.cameras.main.shake(E.ERUPT_MS, 0.0018);
+    this.time.delayedCall(E.ERUPT_MS * 0.55, () => this.cameras.main.shake(E.ERUPT_MS * 0.45, 0.0035));
+    this.lighting?.flash(x, y - 30, 260, PAL.rot2, E.ERUPT_MS * 0.6, 0.9);
+    this.time.delayedCall(E.ERUPT_MS * 0.5, () => this.lighting?.flash(x, y - 30, 300, PAL.rot3, E.ERUPT_MS * 0.6, 1));
+  }
+
+  // 2) O chefe SOBE da poça: nasce como silhueta acesa da Podridão (tinta SCREEN), cresce do chão para
+  // cima com um passo além do tamanho e assenta, enquanto a cor dele aparece; estouro, rugido, tremor e
+  // a barra dele enchendo. 3) No fim: corpo, dano e cérebro ligados (o primeiro encostão só depois do fôlego)
+  _bossRise() {
+    const b = this.boss;
+    if (!b || this.gameOver || !b._emerging) return;
+    const E = FEEL.BOSS_ENTRY;
+    b.activate(BOSS.HP * this.diff.hpMult);
+    b.dmg *= this.diff.dmgMult; // escala dano do boss pela dificuldade
+    // visível, mas fora do jogo enquanto sobe: nada mira nele, ele não encosta, o cérebro não anda
+    b.setActive(false);
+    b.body.enable = false;
+    b._emerging = true;
+    b._displayFill = 0;
+    this.hud.setBossActive(b, this.biome.bossName.toUpperCase());
+    this.tweens.add({ targets: b, _displayFill: 1, duration: E.RISE_MS, ease: "Sine.easeInOut" });
+    const S = b._bossScale;
+    const feet = b.y + b.displayHeight / 2;
+    const shadowS = b.shadow.scaleX;
+    b.setOrigin(0.5, 1).setY(feet).setScale(S * 0.82, S * 0.08);
+    b.setTint(PAL.rot3).setTintMode(Phaser.TintModes.SCREEN);
+    b.shadow.setScale(shadowS * 0.5).setPosition(b.x, feet - 6);
+    this.tweens.add({ targets: b.shadow, scaleX: shadowS, scaleY: shadowS, duration: E.RISE_MS, ease: "Cubic.easeOut" });
+    // no fim da subida (no relógio dos tweens: um hit-stop no meio segura os dois juntos)
+    const done = () => {
+      if (this.boss !== b || !b._emerging || this.gameOver) return;
+      b.setScale(S).setOrigin(0.5, 0.5).setY(feet - b.displayHeight / 2);
+      b._emerging = false;
+      b._displayFill = 1;
+      b.setActive(true);
+      b.body.enable = true;
+      b.body.reset(b.x, b.y);
+      b.lastTouchAt = this.time.now; // fôlego: o 1º encostão só depois de contactCooldownMs
+    };
+    this.tweens.add({ targets: b, scaleX: S, scaleY: S, duration: E.RISE_MS, ease: "Back.easeOut", onComplete: done });
+    // acende no pico (o quadro do estalo) e apaga depressa até o roxo escuro; a cor natural chega devagar
+    const ramp = [PAL.rot3, PAL.rot2, PAL.rot1, PAL.rot0, 0x000000];
+    this.tweens.addCounter({
+      from: 0,
+      to: 1,
+      duration: E.RISE_MS + 160,
+      ease: "Cubic.easeOut",
+      onUpdate: (tw) => this.boss === b && b.visible && b.setTint(rampColor(ramp, tw.getValue())),
+      onComplete: () => this.boss === b && b.visible && this.elemental?._updateTint(b),
+    });
+    // estouro da terra: anel de choque, poeira, esporos, luz
+    shockwave(this, b.x, feet - 6, 230, PAL.rot2);
+    this.fx?.burst("smoke", b.x, feet - 10, 10, -Math.PI / 2, 140, { min: 40, max: 140 });
+    this.fx?.burst("leaf", b.x, feet - 20, 8, -Math.PI / 2, 160, { min: 80, max: 220 });
+    this.fx?.burst("spark", b.x, feet - 30, 14, -Math.PI / 2, 120, { min: 120, max: 300 }, [PAL.rot3, PAL.rot2, PAL.white]);
+    this.lighting?.flash(b.x, feet - 60, 420, PAL.rot3, 700, 1.3);
+    this.sound.play("sfx_erupt", { volume: 0.7, alert: true });
+    this.sound.play("sfx_boss_roar", { volume: 0.8, alert: true });
+    this.cameras.main.shake(500, 0.015);
+    haptic(70);
   }
 
   // Inimigos que a Podridão larga: somem numa fumacinha (sem abate, sem gema)
@@ -1650,17 +1830,26 @@ export class GameScene extends Phaser.Scene {
     // Som de abertura imediato
     this.sound.play("sfx_chest_open", { volume: 0.7 });
 
-    // CAÇA-NÍQUEL: "reels" — 3 ticks de ficha ascendentes (suspense)
+    // CAÇA-NÍQUEL: "reels" — 3 ticks de ficha ascendentes (suspense). O baú chacoalha junto, cada vez mais
+    // forte (FEEL.CHEST) — o mímico não: ele já está mordendo
     const reelRates = [1.0, 1.15, 1.3];
+    const C = FEEL.CHEST;
     reelRates.forEach((rate, i) => {
       this.time.delayedCall(150 + i * 130, () => {
         this.sound.play("sfx_chest_reel", { volume: 0.7, rate });
+        if (kind === "mimic" || !chest.sprite?.active) return;
+        const d = C.RATTLE_DEG[0] + ((C.RATTLE_DEG[1] - C.RATTLE_DEG[0]) * i) / (reelRates.length - 1);
+        this.tweens.add({ targets: chest.sprite, angle: { from: -d, to: d }, duration: 32, yoyo: true, repeat: 1, onComplete: () => chest.sprite.setAngle(0) });
+        this.tweens.add({ targets: chest.sprite, y: { from: 0, to: -2 - i * 2 }, duration: 60, yoyo: true, ease: "Quad.easeOut" });
       });
     });
 
-    // Burst de partículas + reveal SFX
+    // Burst de partículas + reveal SFX (+ feixe de luz subindo do baú aberto)
     const burstDelay = 150 + reelRates.length * 130;
-    this.time.delayedCall(burstDelay, () => this._chestBurst(x, y, kind));
+    this.time.delayedCall(burstDelay, () => {
+      this._chestBurst(x, y, kind);
+      if (kind !== "mimic") this._chestBeam(x, y, kind);
+    });
 
     // Loot spawnado DEPOIS dos reels (caça-níquel revela)
     this.time.delayedCall(burstDelay + 50, () => {
@@ -1806,6 +1995,22 @@ export class GameScene extends Phaser.Scene {
     for (let i = 0; i < ncoins; i++) this.coinPool.acquire().spawn(...around(8, 22));
     if (Math.random() < CHEST.HEART_CHANCE_OPEN) this.heartPool.acquire().spawn(x - 22, y);
     if (Math.random() < CHEST.AWAKEN_CHANCE_OPEN) this.awakenOrbPool.acquire().spawn(x + 22, y);
+  }
+
+  // Feixe de luz que sobe do baú aberto na revelação (dourado; vermelho na armadilha) e se apaga
+  _chestBeam(x, y, kind) {
+    const C = FEEL.CHEST;
+    const col = kind === "trap" ? PAL.red3 : PAL.yel3;
+    const big = kind === "golden" ? 1.35 : 1;
+    const beam = this.add
+      .image(x, y + 6, "fx_glow")
+      .setOrigin(0.5, 0.92)
+      .setTint(col)
+      .setDepth(y + 10400)
+      .setScale(0.55 * big, 0.4)
+      .setAlpha(0.7); // sem blend aditivo: na grama o dourado viraria lima
+    this.tweens.add({ targets: beam, scaleY: 4.2 * big, duration: 200, ease: "Cubic.easeOut" });
+    this.tweens.add({ targets: beam, alpha: 0, scaleX: 0.2 * big, delay: 160, duration: C.BEAM_MS, ease: "Quad.easeIn", onComplete: () => beam.destroy() });
   }
 
   _chestBurst(x, y, kind) {
@@ -1957,12 +2162,16 @@ export class GameScene extends Phaser.Scene {
       dmg_total: Math.round(this._dmgTotal()),
     });
     this._trackBuild(won, quit, byType);
-    // Morte: câmera lenta dramática antes do fade
+    // Morte: o golpe fatal congela um instante (herói em branco, a HUD sai: FEEL.DEATH) e então vem a
+    // câmera lenta dramática antes do fade
     if (!won && !quit) {
-      this.physics.world.timeScale = 3;
-      this.tweens.timeScale = 0.35;
-      this.cameras.main.zoomTo(this.cameras.main.zoom * 1.25, 700);
       tapeStop(this.bgMusic); // a música desacelera junto, como uma fita parando (AUDIO.DEATH)
+      this.feel.fatal(() => {
+        this.physics.world.timeScale = 3;
+        this.tweens.timeScale = 0.35;
+        this.fx?.setTimeScale(0.35);
+        this.cameras.main.zoomTo(this.cameras.main.zoom * 1.25, 700);
+      });
     }
     this.cameras.main.fade(quit ? 250 : 800, 0, 0, 0);
     this.time.delayedCall(quit ? 300 : 900, () => {

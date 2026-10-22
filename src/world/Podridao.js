@@ -240,7 +240,7 @@ export class PodridaoEdge {
     const s = this.scene;
     if (s.endless) return Math.min(1, (s.endlessSeconds ?? 0) / P.ENDLESS_S);
     // vivo: fechada; libertado: recua para além da borda (some de vez: a floresta respira)
-    if (s.boss) return s.boss.active ? 1 : P.FREED;
+    if (s.boss) return s.boss.active || s.boss._emerging ? 1 : P.FREED; // nascendo da poça já conta como vivo
     const T = (s.runDurationS ?? 420) * 1000;
     const t = clamp01((s.elapsedMs ?? 0) / T);
     return P.START + (1 - P.START) * Math.pow(t, P.CURVE);
