@@ -34,6 +34,14 @@ export const PERF = {
   GEM_CAP_CHECK_MS: 250,
 };
 
+// Chão da partida (src/world/ForestWorld.js)
+export const GROUND = {
+  // Manchas, sombras no pé das árvores e tufos/flores/cogumelos numa SpriteGPULayer por tipo (3 objetos
+  // em vez de ~3.100 imagens; a ordenação de todo quadro fica bem mais leve). false = as imagens de
+  // sempre — o plano B, que também entra sozinho sem WebGL/textura no vertex shader ou com ?debug=1&chao=img
+  GPU: true,
+};
+
 // Níveis de dificuldade ("Perigo") — ver docs/META_LOOP.md (Fase 1).
 // Multiplicadores GLOBAIS aplicados sobre as fórmulas paramétricas (D16):
 //   HP/dano de inimigo, taxa de spawn e recompensa em moedas.
