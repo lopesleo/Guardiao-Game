@@ -10,7 +10,7 @@ export class Puffs {
     this.scene = scene;
     this.free = [];
     this.live = [];
-    this.count = { poof: 0, spark: 0 }; // vivos por tipo (os tetos ficam com quem chama)
+    this.count = { poof: 0, spark: 0, glint: 0, bubble: 0 }; // vivos por tipo (os tetos ficam com quem chama)
     this._onUpdate = (time, delta) => this.update(delta);
     scene.events.on(Phaser.Scenes.Events.UPDATE, this._onUpdate);
     scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => scene.events.off(Phaser.Scenes.Events.UPDATE, this._onUpdate));
