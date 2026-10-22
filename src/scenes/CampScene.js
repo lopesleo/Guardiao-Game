@@ -18,7 +18,7 @@ import { InputManager } from "../systems/InputManager.js";
 import { VirtualJoystick, joyRight } from "../ui/VirtualJoystick.js";
 import { DEBUG } from "../systems/Platform.js";
 import { Billing } from "../systems/Billing.js";
-import { openNoAds, showStoreNotice } from "../ui/NoAdsModal.js";
+import { openNoAds, showStoreNotice, maybeNoAdsNudge } from "../ui/NoAdsModal.js";
 import { openWardrobe } from "../ui/WardrobeModal.js";
 import { cosmeticsOn, Wardrobe } from "../systems/Cosmetics.js";
 import { openShop, shopOn } from "../ui/ShopModal.js";
@@ -75,6 +75,8 @@ export class CampScene extends Phaser.Scene {
     this.D_HUD = D_HUD;
     // Revelações: pendentes viram cena (1 por visita); o resto aparece normal
     this._pending = pendingReveals(this.meta.data);
+    this._quietVisit = !this._pending.length; // sem revelação nesta visita (a oferta do Sem anúncios espera)
+    this._visitPopup = false; // já abriu uma janela sozinha nesta chegada (presente do dia)
     this.meta._save();
     this.W = vw(this);
     this.H = vh(this);
@@ -154,6 +156,22 @@ export class CampScene extends Phaser.Scene {
     Analytics.track("camp_enter", {});
     this.time.delayedCall(700, () => this._introSequence());
     this.time.delayedCall(1300, () => this._maybeStreak());
+    this.time.delayedCall(2600, () => this._maybeNudge());
+  }
+
+  // Oferta do "Sem anúncios" (ADS.NUDGE_AT): só na volta de uma partida e com a chegada calma — sem
+  // revelação, presente do dia, aviso da loja, fala da Anciã nem janela aberta. Ocupada, fica para a próxima
+  _maybeNudge() {
+    if (!this.sys.isActive() || !this.scene.settings.data?.fromRun || !this._quietVisit || this._visitPopup) return;
+    if (Billing.hasNotice || this._modals.length || this._cutscene || this._leaving || this._fishing || this.sayBox?.scene) return;
+    maybeNoAdsNudge(this, { open: (from) => this._openStore(from) });
+  }
+
+  // Loja (com os cosméticos à venda) ou só o "Sem anúncios"
+  _openStore(from) {
+    const onClose = () => this._afterStore();
+    if (shopOn()) openShop(this, { from, onClose });
+    else openNoAds(this, { from, onClose });
   }
 
   // VOLTAR do Android: fecha o painel aberto; sem painel, volta ao título
@@ -436,8 +454,7 @@ export class CampScene extends Phaser.Scene {
     if (Billing.available() || shopOn())
       this.noAdsBtn = fix(new Button(this, W - 364, 40, 52, 52, null, () => {
         if (this._modals.length || this._cutscene || this._leaving) return;
-        if (shopOn()) openShop(this, { from: "camp", onClose: () => this._afterStore() });
-        else openNoAds(this, { from: "camp", onClose: () => this._afterStore() });
+        this._openStore("camp");
       }, { icon: "ico_star", style: "dark", iconScale: 2.5 }));
     // Guarda-roupa (cosméticos, docs/COSMETICOS.md): na fileira de cima; a loja dos kits abre lá dentro
     if (cosmeticsOn())
@@ -886,7 +903,7 @@ export class CampScene extends Phaser.Scene {
     drawFrame(this.promptG, -w / 2, -17, w, 34, "gold", { noRivets: true, alpha: 0.95 });
     this.prompt.setPosition(it.x, it.top - 24).setVisible(true).setScale(0.8);
     this.tweens.add({ targets: this.prompt, scale: 1, duration: 140, ease: "Back.easeOut" });
-    if (this.actionBtn) this.actionBtn.setLabel(plot ? plot.verb : ruin ? tr("EXAMINAR") : it.verb).setVisible(true);
+    if (this.actionBtn) this.actionBtn.setLabel(plot ? plot.verb : ruin ? tr("EXAMINAR") : (it.verbOf?.() ?? it.verb)).setVisible(true);
   }
 
   _interact() {

@@ -89,7 +89,9 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
   Podridão na borda da tela; Grito do Mapinguari por shader; status elementais legíveis (OVERLAY; no chefe, metade);
   zoom que escurecia os avisos dos chefes; libertação do chefe nova; céu da Clareira em degradê; desempenho (teste de
   carga, `main` × 1.0.19: quadro −9% com tudo junto, a Podridão gasta parte do ganho; update −22%; desenhos 129 → 92;
-  teto de 60 fps; teto de 150 gemas com fusão). 👤 Conferir no celular: o jogo a 60 fps sem
+  teto de 60 fps; teto de 150 gemas com fusão). E a monetização (22/10): oferta do "Sem anúncios" na volta à Clareira
+  depois de 8 e de 25 anúncios assistidos (`ADS.NUDGE_AT`, evento `noads_nudge`) e o botão do baú do dia que avisa
+  que o segundo é com anúncio. 👤 Conferir no celular: o jogo a 60 fps sem
   tranco no S23 (antes rodava a 120), a borda da Podridão não esconder inimigo, o som (cartas, chefe, morte, vida
   baixa), o vento no bruxo/cogumelo (fraco) e o zoom 1,3 no chefe.
 - **Próximos de qualidade/desempenho** (estudo de 21/10 com as skills do Phaser 4, `audio-design` e

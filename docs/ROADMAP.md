@@ -584,6 +584,19 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   leva à página nova, service worker que apaga a cópia offline e a política no endereço antigo)
 - ✅ **Estratégia de marketing e distribuição** em [`MARKETING.md`](MARKETING.md): lançamento planejado para
   03/12/2026, testadores agora, Dia do Saci como aquecimento
+- ✅ **Oferta do "Sem anúncios" na hora certa (22/10/2026):** na volta de uma partida para a Clareira, depois de
+  8 e de 25 anúncios assistidos até o fim (`ADS.NUDGE_AT`), uma janela curta agradece ("Você já assistiu a 8
+  anúncios…"), diz o que a compra faz e oferece CONHECER (abre a Loja, ou o "Sem anúncios" sem a loja de
+  cosméticos) e AGORA NÃO. No máximo duas vezes (passou das duas marcas de uma vez = uma só), só na chegada calma
+  (sem revelação, presente do dia, fala da Anciã nem aviso da loja) e só quando dá para comprar. Evento
+  `noads_nudge` (`action`: `show`/`open`/`later`, com `watched`); a Loja registra `from: "nudge"`. Quem só ganha o
+  prêmio (Sem anúncios, navegador) não conta como anúncio assistido
+- ✅ **Baú do dia avisa o anúncio (22/10/2026):** depois do baú grátis o botão dizia "ABRIR" e o toque já começava
+  um anúncio; agora diz "MAIS UM · ANÚNCIO" ("ABRIR MAIS UM" com o Sem anúncios). Medição completa:
+  `ad_offer_show` também no baú do dia e no "adiantar obra" (antes só dava para contar quem aceitou, não de
+  quantos que viram). Conserto junto: a Clareira aberta pelo título herdava o `fromRun` da última partida
+  (o Phaser mantém os dados da cena quando `start` vem sem eles). `npm run test:compra`: cenários `oferta`,
+  `ofertaRegras`, `ofertaComprado` e `bauAnuncio`
 - ⬜ Ao ligar a compra "Remover anúncios" ou o salvamento do Play Games: rever Segurança dos dados
   (login com conta externa) — a classificação já declara compras no jogo
 

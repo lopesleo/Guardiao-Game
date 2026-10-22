@@ -425,7 +425,8 @@ export class TitleScene extends Phaser.Scene {
       wait.destroy();
     }
     this.cameras.main.fadeOut(300, 5, 8, 6);
-    this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start(firstTime ? "GameScene" : "CampScene"));
+    // a Clareira recebe os dados de novo: sem eles, o Phaser mantém os da última visita (o fromRun de uma partida)
+    this.cameras.main.once("camerafadeoutcomplete", () => (firstTime ? this.scene.start("GameScene") : this.scene.start("CampScene", { fromRun: false })));
   }
 }
 
