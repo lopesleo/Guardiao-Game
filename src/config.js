@@ -1405,6 +1405,19 @@ export const RANKING = {
   TOP: 10, // quantos aparecem na lista (mais a linha do jogador, se estiver fora)
 };
 
+// Chame um amigo (systems/Invite.js): o link da página oficial no idioma do jogador, com a origem em UTM. A página
+// repassa utm_source, utm_medium e utm_campaign à Play no "referrer" do botão de instalar (aquisição por campanha
+// no Play Console; first_open no Firebase). utm_campaign = de onde no jogo saiu o convite; utm_content = qual texto
+// foi junto. Sem prêmio por convite (a Play desaconselha instalação incentivada; e sem servidor não dá para saber
+// quem convidou)
+export const INVITE = {
+  URL: "https://komedygames.com/guardiao/",
+  PAGE: { pt: "", en: "en/", es: "es/", ja: "ja/", zh: "zh/", zht: "zh-hant/" }, // a página no idioma do jogo
+  SOURCE: "convite",
+  MEDIUM: "amigo",
+  MIN_RUNS: 3, // o botão da Clareira aparece para quem já conhece o jogo (nos Créditos e no ranking, sempre)
+};
+
 // Bestiário das LENDAS (aba do Mural). Cada ficha: quem é no jogo + a ORIGEM
 // da lenda (cuidado de representação: citar a origem — ver TEMA_FOLCLORE.md).
 // char = liberada junto com o guardião; as outras, ao encontrá-las na mata.
