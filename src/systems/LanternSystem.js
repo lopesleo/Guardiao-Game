@@ -5,6 +5,7 @@
 // Dá motivo para andar pelo mapa e momentos de alívio no meio da horda.
 import { LANTERN, GAME, ARENA } from "../config.js";
 import { Analytics } from "./Analytics.js";
+import { softFlash } from "./GameFeel.js";
 import { tr } from "../i18n/i18n.js";
 
 const S = GAME.PIXEL_SCALE;
@@ -189,7 +190,7 @@ export class LanternSystem {
       this.timeStopUntil = now + LANTERN.CLOCK_MS;
       this._lastFreezeSweep = 0;
       s.enemyPool.forEachActive((e) => e.active && e.freeze(now, LANTERN.CLOCK_MS, 0));
-      s.cameras.main.flash(300, 150, 210, 255);
+      softFlash(s.cameras.main, 300, 150, 210, 255, 0.5);
       s.sound.play("sfx_ice_attack", { volume: 0.7, rate: 0.6 });
     } else if (it.id === "breath") {
       const view = s.cameras.main.worldView;

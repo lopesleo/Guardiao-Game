@@ -3,7 +3,7 @@
 //   cronômetro no centro; abates/moedas + pausa à direita; armas abaixo do HP.
 //   baixo-direita (touch): botões redondos de Dash e Despertar com recarga.
 // Tudo ancorado em vw(scene) (modo EXPAND: a largura varia).
-import { GAME, PLAYER, WEAPONS, MAX_WEAPON_LEVEL } from "../config.js";
+import { GAME, PLAYER, WEAPONS, MAX_WEAPON_LEVEL, FEEL } from "../config.js";
 import { formatTime } from "../utils.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { Pix } from "../art/PixelArt.js";
@@ -41,7 +41,8 @@ export class HUD {
     const fix = (o, d = 0) => o.setScrollFactor(0).setDepth(D + d);
 
     // ===== XP (topo, ponta a ponta) + selo de nível =====
-    this.xpBar = new Bar(scene, 0, 0, W, 5 * P, PAL.g5, { depth: D, ghost: PAL.g6 });
+    // A barra ENCHE: o XP que acabou de entrar aparece claro e assenta; quase cheia, um brilho corre (FEEL.XP_BAR)
+    this.xpBar = new Bar(scene, 0, 0, W, 5 * P, PAL.g5, { depth: D, ghost: PAL.g6, gain: PAL.yel3, fillMs: FEEL.XP_BAR.FILL_MS, shine: FEEL.XP_BAR.NEAR_FULL });
     this.xpBar.set(0, true);
     const lvG = fix(scene.add.graphics(), 1);
     drawFrame(lvG, 10, 2, 28 * P, 11 * P, "gold");
@@ -317,6 +318,7 @@ export class HUD {
     const s = this.scene;
     this.weaponPanel.removeAll(true);
     const size = 14 * P;
+    this._slots = {};
     this.player.weapons.forEach((w, i) => {
       const def = WEAPONS[w.key];
       const evolved = !!def?.evolvesFrom;
@@ -324,6 +326,7 @@ export class HUD {
       const g = s.add.graphics();
       drawFrame(g, x, 0, size, size, evolved ? "purple" : "dark", { alpha: 0.9 });
       const ico = s.add.image(x + size / 2, size / 2 - 2, WEAPON_ICON[w.key] ?? "ico_staff").setScale(2.5);
+      this._slots[w.key] = { ico, x, size };
       this.weaponPanel.add([g, ico]);
       if (evolved) {
         this.weaponPanel.add(s.add.image(x + size - 8, 8, "ico_star").setScale(1.2));
@@ -335,6 +338,54 @@ export class HUD {
         }
       }
     });
+  }
+
+  // Subiu de nível (a cena vai pausar para as cartas): a barra fica CHEIA e dourada, com o nível novo no selo —
+  // é o que se vê atrás da mesa escurecida
+  levelFull() {
+    this.xpBar.full = PAL.yel2;
+    this.xpBar.set(1, true);
+    this.lvlText.setText(tr("NV {0}", this.player.level));
+    this._leveled = true;
+  }
+
+  // A partida voltou depois das cartas: a barra dourada escorre até o XP que sobrou e o selo do nível pula
+  levelSettle() {
+    if (!this._leveled) return;
+    this._leveled = false;
+    const b = this.xpBar;
+    b.full = null;
+    b.ghost = 1;
+    b.ghostColor = PAL.yel2;
+    b.ghostRate = 1 / FEEL.XP_BAR.LEVEL_DRAIN_MS;
+    const p = this.player;
+    b.set(p.xp / PLAYER.XP_PER_LEVEL(p.level), false);
+    b.lag = b.value; // o resto que sobrou não "entra" de novo
+    this.scene.time.delayedCall(FEEL.XP_BAR.LEVEL_DRAIN_MS + 60, () => {
+      b.ghostColor = PAL.g6;
+      b.ghostRate = 0.0006;
+    });
+    const t = this.lvlText;
+    this.scene.tweens.killTweensOf(t);
+    t.setScale(1.7);
+    this.scene.tweens.add({ targets: t, scale: 1, duration: 420, ease: "Back.easeOut" });
+  }
+
+  // Evolução: o espaço da arma na HUD pulsa (ícone grande que assenta + moldura acesa que apaga)
+  popWeapon(key) {
+    const sl = this._slots?.[key];
+    if (!sl) return;
+    const s = this.scene;
+    s.tweens.killTweensOf(sl.ico);
+    sl.ico.setScale(2.5 * FEEL.EVOLVE.HUD_POP);
+    s.tweens.add({ targets: sl.ico, scale: 2.5, duration: 520, ease: "Back.easeOut" });
+    // moldura acesa ATRÁS do ícone (o ícone pulando continua à vista) que apaga depressa
+    const g = s.add.graphics();
+    drawFrame(g, sl.x - P, -P, sl.size + 2 * P, sl.size + 2 * P, { border: PAL.white, body: PAL.pur2, hi: PAL.pur3, lo: PAL.pur1 }, { noRivets: true });
+    this.weaponPanel.add(g);
+    this.weaponPanel.bringToTop(sl.ico);
+    g.setAlpha(0.95);
+    s.tweens.add({ targets: g, alpha: 0, duration: 380, ease: "Cubic.easeOut", onComplete: () => g.destroy() });
   }
 
   // Vida na tela agora. instant: sem a "sombra" do dano drenando (a cena vai pausar —
@@ -378,16 +429,17 @@ export class HUD {
         this.bossBar.set(Math.max(0, this.boss.hp / this.boss.maxHp));
         this.bossBar.tick(dt);
       }
-    } else if (this.boss && this.boss.active) {
+    } else if (this.boss && (this.boss.active || this.boss._emerging)) {
       const frac = Math.max(0, this.boss.hp / this.boss.maxHp);
       // Duas barras (fases): Fase 1 = 100%→50%, Fase 2 = 50%→0%. Na virada
-      // (êxtase) a barra recarrega animada pelo boss (_displayFill).
+      // (êxtase) e enquanto ele sobe da poça (chegada) a barra enche animada pelo boss (_displayFill).
       const phase2 = this.boss.phase === 2;
+      const anim = this.boss._transitioning || this.boss._emerging;
       let shown;
-      if (this.boss._transitioning) shown = this.boss._displayFill ?? 0;
+      if (anim) shown = this.boss._displayFill ?? 0;
       else shown = phase2 ? frac / 0.5 : (frac - 0.5) / 0.5;
       this.bossBar.setColor(phase2 ? PAL.org2 : PAL.red2);
-      this.bossBar.set(shown, this.boss._transitioning);
+      this.bossBar.set(shown, anim);
       this.bossBar.tick(dt);
       this.bossLabel.setText(phase2 ? tr("{0} · FÚRIA", this.bossName) : this.bossName);
     }

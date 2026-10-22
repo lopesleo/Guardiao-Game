@@ -198,14 +198,17 @@ function fillSector(g, cx, cy, r0, r1, a0, a1, color, alpha) {
 
 const blinkA = (scene, lo = 0.55) => (Math.floor(scene.time.now / 90) % 2 ? 1 : lo);
 
-// Base: um Graphics que o golpe redesenha com draw(t)
+// Base: um Graphics que o golpe redesenha com draw(t). scene._teleLive conta os avisos à mostra: enquanto
+// houver um, nada de pausa de impacto (GameFeel.hitStop) — o jogador está lendo a forma para fugir
 class Tele {
   constructor(scene, color) {
     this.scene = scene;
     this.color = color;
     this.g = scene.add.graphics().setDepth(D_TELE);
+    scene._teleLive = (scene._teleLive || 0) + 1;
   }
   destroy() {
+    if (this.g) this.scene._teleLive = Math.max(0, (this.scene._teleLive || 0) - 1);
     this.g?.destroy();
     this.g = null;
   }

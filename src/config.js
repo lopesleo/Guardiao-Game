@@ -2030,6 +2030,44 @@ export const AUDIO = {
   DEATH: { RATE: 0.5, LP_HZ: 450, SFX_LP_HZ: 1500, SFX_DB: -4, S: 0.85 },
 };
 
+// Sensação de jogo: o que faz cada momento "pesar" (src/systems/GameFeel.js, Shake.js, ui/HUD.js,
+// scenes/LevelUpScene.js, a chegada do chefe em GameScene). Regra do gênero: com a tela cheia de
+// inimigos, nada treme nem congela por abate ou crítico comum — o forte fica para os momentos raros
+// (nível, evolução, baú, minichefe, chefe, morte). Tudo obedece às Opções: "Tremor de tela" (desliga
+// também as pausas de impacto), "Clarões suaves" e "Vibração".
+export const FEEL = {
+  // Tremor por camadas (Shake.js): cada pedido sustenta e decai nos últimos DECAY_MS como (1 − p)^POW;
+  // vale a maior camada viva (um tremor fraco em curso não engole um forte); deslocamento em duas
+  // senoides (HZ), não sorteio por quadro. PEAK compensa o decaimento na força do primeiro instante
+  SHAKE: { PEAK: 1.2, DECAY_MS: 260, POW: 1.5, HZ: [13, 21], LAYERS: 4 },
+  // Crítico em inimigo comum: faísca, empurrão, achatamento e som. Tremor e pausa de impacto só em alvo
+  // forte (elite, mímico, minichefe). Medido antes: 3 críticos/s no fim da partida = 1,6 pausas/s
+  CRIT_TOUGH_ONLY: true,
+  // Reações elementais tremem a câmera no máximo uma vez a cada isto (o resto: rótulo, luz, som, efeito)
+  REACT_SHAKE_GAP_MS: 650,
+  // Gema coletada: um brilho pequeno no peito do herói (no máximo um a cada GLINT_MS)
+  GEM_GLINT_MS: 45,
+  // Barra de XP: o que acabou de entrar aparece claro e "assenta" em FILL_MS; perto de encher, brilha
+  XP_BAR: { FILL_MS: 240, NEAR_FULL: 0.85, LEVEL_DRAIN_MS: 420 },
+  // Subir de nível: as cartas saem do herói (estouro de luz) e a escolhida volta para ele
+  LEVEL: {
+    BURST_MS: 420, // anel e raios no herói, por cima da mesa escurecida
+    FLY_MS: 380, // voo de cada carta do herói até o lugar dela
+    STAGGER_MS: 75, // uma carta depois da outra
+    BACK_MS: 230, // a escolhida encolhe e volta para o herói
+    RING_R: 150, // raio do anel do estouro
+  },
+  // Evolução: um tempo só dela quando a partida volta (anel duplo, raios, fagulhas, o espaço da arma na HUD)
+  EVOLVE: { RING_R: 210, LIGHT_R: 380, HUD_POP: 1.6, SPARKS: 26 },
+  // Baú: chacoalha cada vez mais forte durante as fichas (suspense) e solta um feixe de luz na revelação
+  CHEST: { RATTLE_DEG: [3, 9], BEAM_MS: 700 },
+  // Chegada do chefe: a Podridão borbulha no chão onde ele vai nascer (ERUPT_MS, o jogador lê de onde
+  // vem), ele SOBE dela (RISE_MS) e só então luta. Enquanto isso: sem dano dele, sem dano nele
+  BOSS_ENTRY: { ERUPT_MS: 1150, RISE_MS: 460, POOL_R: 92, MIN_DIST: 260, MAX_DIST: 340 },
+  // Golpe fatal: o mundo congela um instante (com o herói em branco), a HUD sai e só então vem a câmera lenta
+  DEATH: { FREEZE_MS: 130, HAPTIC: 90, HUD_OUT_MS: 260 },
+};
+
 export const COLORS = {
   FIRE: 0xff7a3c,
   ICE: 0x5cc8ff,

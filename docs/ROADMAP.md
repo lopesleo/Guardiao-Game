@@ -398,6 +398,24 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   troca a trilha no compasso (a velha afunda sob o rugido, a nova entra no tempo forte); a morte para a
   fita; vida abaixo de 30% bate o coração. Consertos: o fade de entrada da fogueira e da música da 1ª
   queda começava no volume cheio; músicas paradas não eram destruídas. 👤 ouvir no aparelho
+- ✅ **Sensação de jogo** (22/10/2026, `FEEL` no config; `src/systems/Shake.js`, `GameFeel.js`): auditoria dos
+  momentos da partida em sequências de quadros. **Tremor por camadas**: o do Phaser sorteava um deslocamento por
+  quadro com força constante e ignorava um tremor novo enquanto outro rodava (o tremorzinho de abate engolia o
+  golpe no herói); agora cada pedido decai, começa no pico e nada engole nada. **Horda limpa**: sem tremor por
+  abate, crítico comum sem tremor nem pausa (só em elite e minichefe), reação treme no máximo a cada 650 ms e
+  nenhuma pausa de impacto com aviso de golpe de chefe à mostra — fim de partida (40 s): tremores 11,6/s → 0,9/s,
+  câmera tremendo 33% → 11% dos quadros, pausas 1,6/s → 0. **Subir de nível**: a barra de XP enche (o que entra
+  aparece claro e assenta; quase cheia, brilha), fica dourada atrás das cartas e escorre na volta; a mesa nasce
+  de um estouro de luz no herói, as cartas voam dali e a escolhida volta para ele (anel na cor da carta).
+  **Evolução** com tempo próprio (onda roxa, som novo, a arma pulsa na HUD) no lugar do clarão roxo de tela
+  cheia. **Chegada do chefe**: a Podridão borbulha num ponto à vista (fora das copas), o chão ronca, a música
+  afunda e ele sobe da poça como silhueta acesa que ganha cor — sem dano dele nem nele até terminar. **Baú**
+  chacoalha com as fichas e solta um feixe de luz; **minichefe** vencido solta a silhueta dourada (o clarão
+  de tela cheia escondia tudo por 3 quadros); **golpe fatal** congela 130 ms com o herói em branco e a HUD
+  sai antes da câmera lenta. Clarões de tela cheia no meio da luta (Despertar, mímico, relógio) com meia
+  força. Sons novos por código: carta pousando, carta absorvida, evolução. Teste de carga (Pesadelo, 60 s,
+  `main` × branch): quadro 4,77 → 4,62 ms, p99 9,8 → 9,0 (dentro do ruído; nada piorou).
+  👤 ver e sentir no aparelho (tremor mais limpo, vibração na evolução e na chegada do chefe)
 
 ### M5 — Monetização e medição reais 👤
 - ✅ AdMob: app Android criado e **7 blocos premiados** em uso (revive, extra_card, build_speed,

@@ -276,8 +276,12 @@ export class UpgradeSystem {
         old.dispose();
         player.weapons[idx] = evo;
         player.recomputeResonance();
-        this.scene.sound.play("sfx_levelup", { volume: 0.7, rate: 0.8 });
-        this.scene.cameras.main.flash(220, 216, 140, 255); // flash roxo de evolução
+        // O tempo da evolução (onda roxa no herói, som próprio, a arma pulsando na HUD) vem quando a
+        // carta chega ao herói (GameFeel._evolveBeat). Sem a cena das cartas (teste), vem já
+        if (this.scene.feel) {
+          this.scene.feel.markEvolve(card.weaponKey);
+          if (!this.scene.scene.isActive("LevelUpScene")) this.scene.feel.cardLanded("evolution");
+        }
         this.scene._toast?.(tr("EVOLUÇÃO: {0}!", def.name), 2600, "#e8ccff");
         this.scene.hud?.refreshWeapons();
         this.scene._checkAchievements?.(); // "Metamorfose"
