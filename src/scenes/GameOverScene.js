@@ -962,7 +962,6 @@ export class GameOverScene extends Phaser.Scene {
     const sw = Math.min(270, Math.round(L.colW * 0.4));
     const share = new Button(this, L.px - 14 - sw / 2, by + 4, sw, 58, tr("COMPARTILHAR"), () => !this._leaving && !this._modals.length && openShareCard(this, this.d), {
       size: 20,
-      style: "dark",
       color: CSS.goldHi,
       icon: "ico_share",
       iconScale: 2.5,

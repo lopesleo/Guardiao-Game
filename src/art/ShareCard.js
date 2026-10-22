@@ -735,6 +735,11 @@ function panel(scene, c, info, L) {
   let used = 0;
   if (info.score > 0) {
     const score = info.scoreRecord ? tr("RECORDE! {0} pontos", fmt(info.score)) : tr("{0} pontos", fmt(info.score));
+    if (info.scoreRecord) {
+      // recorde: uma luz dourada por trás dos pontos
+      const sw0 = Math.min(inner * 0.5, measure(c, score, 48));
+      glow(c, X + P + inner - sw0 / 2, y, sw0 * 0.75, 46, PAL.yel2, 0.28);
+    }
     const w = write(c, score, X + P + inner, y, { size: 48, color: info.scoreRecord ? CSS.goldHi : CSS.txt, align: "right", max: inner * 0.5, strokeW: 7 });
     putFrame(c, frameOf(scene, "ico_trophy", 0), X + P + inner - w - 38, y, { k: 4 });
     used = w + 80;

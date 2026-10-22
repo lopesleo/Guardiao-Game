@@ -8,6 +8,7 @@ import { Share, toBlob } from "../systems/Share.js";
 import { Analytics } from "../systems/Analytics.js";
 import { cosmeticsOn, Wardrobe } from "../systems/Cosmetics.js";
 import { PAL, CSS } from "../art/Palette.js";
+import { makeVine } from "../art/TitleArt.js";
 import { text, Button, drawFrame, vw, vh, haptic } from "./Theme.js";
 import { Modal, fitTo } from "./Widgets.js";
 import { tr } from "../i18n/i18n.js";
@@ -94,14 +95,20 @@ export function openShareCard(scene, d) {
   const breathe = scene.tweens.add({ targets: card, scaleX: 1.012, scaleY: 1.012, duration: 950, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
   const haloPulse = scene.tweens.add({ targets: halo, alpha: 0.2, duration: 950, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
 
-  // Coluna das ações: o recado (muda com o estado), COMPARTILHAR (ou BAIXAR IMAGEM) e FECHAR
+  // Coluna das ações: a chamada (pelo desfecho), o cipó, o recado (muda com o estado), COMPARTILHAR (ou BAIXAR
+  // IMAGEM), FECHAR e a nota de que a imagem leva o link do jogo
   const how = Share.mode();
-  const say = m.add(text(scene, colX, cy - 120, tr("Preparando o cartão…"), { size: 20, color: CSS.muted, origin: 0.5, align: "center", wrap: colW }));
+  const call = info.mode === "vitoria" || info.mode === "eterna" ? tr("Mostre a sua vitória!") : info.mode === "derrota" ? tr("Desafie os amigos a ir mais longe!") : tr("Mostre a sua partida para os amigos!");
+  const head = m.add(text(scene, colX, cy - 205, call, { size: 28, color: CSS.goldHi, origin: 0.5, align: "center", wrap: colW, stroke: true }));
+  if (head.height > 96) head.setScale(96 / head.height);
+  if (!scene.textures.exists("sharecard_vine")) makeVine(71).register(scene, "sharecard_vine");
+  m.add(scene.add.image(colX, cy - 148, "sharecard_vine").setScale(3));
+  const say = m.add(text(scene, colX, cy - 98, tr("Preparando o cartão…"), { size: 18, color: CSS.muted, origin: 0.5, align: "center", wrap: colW }));
   const waiting = scene.tweens.add({ targets: say, alpha: 0.45, duration: 700, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
   const setSay = (str, color = CSS.muted) => {
     waiting.stop();
     say.setAlpha(1).setScale(1).setText(str).setColor(color);
-    if (say.height > 130) say.setScale(130 / say.height);
+    if (say.height > 76) say.setScale(76 / say.height);
   };
   const shareLabel = how === "download" ? tr("BAIXAR IMAGEM") : tr("COMPARTILHAR");
   const shareBtn = m.add(new Button(scene, colX, cy - 10, colW, 78, shareLabel, () => doShare(), { size: 26, style: "primary", color: CSS.goldHi, icon: "ico_share", iconScale: 3 }));
@@ -109,6 +116,8 @@ export function openShareCard(scene, d) {
   shareBtn.setEnabled(false);
   const closeBtn = m.add(new Button(scene, colX, cy + 82, colW, 60, tr("FECHAR"), () => m.close(), { size: 22, style: "dark" }));
   if (closeBtn.label) fitTo(closeBtn.label, colW - 40);
+  const note = m.add(text(scene, colX, cy + 150, tr("A imagem vai com o link do jogo."), { size: 16, color: CSS.dim, origin: [0.5, 0], align: "center", wrap: colW }));
+  if (note.height > 60) note.setScale(60 / note.height);
 
   // Gera a frente (no próximo quadro: a janela aparece antes) e vira o cartão quando ela fica pronta
   const opened = scene.time.now;
@@ -188,7 +197,7 @@ export function openShareCard(scene, d) {
       const r = 30 + Math.random() * 60;
       scene.tweens.add({ targets: s, x: sx + dx * r, y: sy + dy * r - 20 - Math.random() * 30, alpha: 0, scale: 0.6, duration: 700 + Math.random() * 600, delay: Math.random() * 180, ease: "Cubic.easeOut", onComplete: () => s.destroy() });
     }
-    setSay(how === "download" ? tr("Salve a imagem e poste onde quiser.") : tr("Mostre a sua partida para os amigos!"), CSS.txt);
+    setSay(how === "download" ? tr("Salve a imagem e poste onde quiser.") : tr("Poste no grupo, no status ou nos stories."), CSS.txt);
     shareBtn.setEnabled(true);
     scene.tweens.add({ targets: shareBtn, scale: { from: 1.08, to: 1 }, duration: 320, ease: "Back.easeOut" });
   }
