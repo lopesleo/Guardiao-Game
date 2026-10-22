@@ -291,6 +291,8 @@ function measure(scene, str, size) {
 // com faixa de brilho e "fantasma" de dano que escorre.
 // ---------------------------------------------------------------------------
 export class Bar {
+  // o.gain: cor do que ACABOU de entrar (a barra "enche": o trecho novo aparece claro e assenta na cor da
+  // barra em o.fillMs). o.shine: daí para cima um brilho corre pela barra (quase cheia)
   constructor(scene, x, y, w, h, color, o = {}) {
     this.scene = scene;
     this.x = Math.round(x);
@@ -299,8 +301,15 @@ export class Bar {
     this.h = h;
     this.color = color;
     this.ghostColor = o.ghost ?? PAL.cream;
+    this.ghostRate = 0.0006; // fração da barra por ms que o fantasma de dano escorre
     this.value = 1;
     this.ghost = 1;
+    this.gainColor = o.gain ?? null;
+    this.lag = 1; // até onde o que entrou já assentou (≤ value)
+    this.fillTau = (o.fillMs ?? 240) / 3;
+    this.shine = o.shine ?? null;
+    this._shineT = 0;
+    this.full = null; // cor da barra cheia em destaque (nível novo), ou null
     this.segments = o.segments ?? 0;
     this.g = scene.add.graphics().setScrollFactor(0);
     if (o.depth != null) this.g.setDepth(o.depth);
@@ -309,12 +318,22 @@ export class Bar {
   set(v, instant = false) {
     v = Phaser.Math.Clamp(v, 0, 1);
     if (v > this.value || instant) this.ghost = v;
+    if (instant || v < this.lag) this.lag = v;
     this.value = v;
     this._draw();
   }
   tick(dt) {
     if (this.ghost > this.value) {
-      this.ghost = Math.max(this.value, this.ghost - dt * 0.0006);
+      this.ghost = Math.max(this.value, this.ghost - dt * this.ghostRate);
+      this._draw();
+    }
+    if (this.gainColor != null && this.lag < this.value) {
+      this.lag += (this.value - this.lag) * (1 - Math.exp(-dt / this.fillTau));
+      if (this.value - this.lag < 0.004) this.lag = this.value;
+      this._draw();
+    }
+    if (this.shine != null && this.value >= this.shine && !this.full) {
+      this._shineT += dt;
       this._draw();
     }
   }
@@ -337,12 +356,19 @@ export class Bar {
     const p = P;
     const iw = w - 2 * p;
     const gw = Math.round((iw * this.ghost) / p) * p;
-    const fw = Math.round((iw * this.value) / p) * p;
+    const fw = this.full != null ? iw : Math.round((iw * this.value) / p) * p;
+    const lw = this.gainColor != null && this.full == null ? Math.min(fw, Math.round((iw * this.lag) / p) * p) : fw;
+    // brilho que corre pela barra quase cheia: faixa de 2 px de arte, uma volta a cada 0,9 s
+    const sx = this.shine != null && this.value >= this.shine && this.full == null ? Math.round((((this._shineT % 900) / 900) * (fw + 8 * p) - 4 * p) / p) * p : null;
     // A HUD chama set() todo quadro: só refaz o desenho quando algum pixel muda
-    if (gw === this._gw && fw === this._fw && this.color === this._c) return;
+    if (gw === this._gw && fw === this._fw && lw === this._lw && sx === this._sx && this.color === this._c && this.full === this._full && this.ghostColor === this._gc) return;
     this._gw = gw;
     this._fw = fw;
+    this._lw = lw;
+    this._sx = sx;
     this._c = this.color;
+    this._full = this.full;
+    this._gc = this.ghostColor;
     g.clear();
     g.fillStyle(PAL.ink, 1);
     g.fillRect(x + p, y, w - 2 * p, h);
@@ -354,9 +380,22 @@ export class Bar {
       g.fillRect(x + p, y + p, gw, h - 2 * p);
     }
     if (fw > 0) {
-      g.fillStyle(this.color, 1);
-      g.fillRect(x + p, y + p, fw, h - 2 * p);
-      g.fillStyle(0xffffff, 0.28);
+      g.fillStyle(this.full ?? this.color, 1);
+      g.fillRect(x + p, y + p, lw, h - 2 * p);
+      if (fw > lw) {
+        // o que acabou de entrar: claro, e assenta na cor da barra
+        g.fillStyle(this.gainColor, 1);
+        g.fillRect(x + p + lw, y + p, fw - lw, h - 2 * p);
+      }
+      if (sx != null) {
+        const a = Math.max(0, sx),
+          b = Math.min(fw, sx + 2 * p);
+        if (b > a) {
+          g.fillStyle(0xffffff, 0.45);
+          g.fillRect(x + p + a, y + p, b - a, h - 2 * p);
+        }
+      }
+      g.fillStyle(0xffffff, this.full != null ? 0.55 : 0.28);
       g.fillRect(x + p, y + p, fw, p);
       g.fillStyle(0x000000, 0.22);
       g.fillRect(x + p, y + h - 2 * p, fw, p);
