@@ -419,7 +419,9 @@ try {
     check(want.every((w) => on.includes(w)) && r.pk > 0, `fim de partida (${won ? "vitória" : "derrota"}): vinheta${won ? "" : " e fogueira"} no canal certo`, `${on.join(" ")} · ${dB(r.pk)}`);
     await page.evaluate(() => void window.game.scene.getScene("GameOverScene")._go("CampScene"));
     await until(() => window.game.scene.isActive("CampScene"), null, 30000);
-    const left = await page.evaluate((END) => window.game.sound.sounds.filter((s) => END.includes(s.key)).length, END);
+    // destruído = pendingRemove: o gerenciador só o tira da lista no próximo quadro que ele rodar (com o
+    // teto de fps, o quadro seguinte pode demorar); o que importa é não sobrar som vivo
+    const left = await page.evaluate((END) => window.game.sound.sounds.filter((s) => END.includes(s.key) && !s.pendingRemove).length, END);
     check(left === 0, "saindo da tela de fim, vinheta e fogueira são destruídas", `${left} sobrando`);
   }
   check(!T.errs.length, "sem erro no console", T.errs.slice(0, 3).join(" | "));
