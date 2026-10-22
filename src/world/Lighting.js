@@ -85,6 +85,12 @@ export class Lighting {
     this._nextDraw = 0;
     this.rt = null;
     this.setEnabled(Settings.get("lighting") !== false);
+    // a camada dos cogumelos (fora da lista de exibição) sai junto com a cena. Ouvinte posto AQUI, e não
+    // quando a camada nasce: a contagem de ouvintes da cena fica a mesma em toda partida (npm test)
+    scene.events.once("shutdown", () => {
+      this._glow?.destroy();
+      this._glow = undefined;
+    });
   }
 
   // Liga/desliga na hora (opção em Pausa/Opções), sem reiniciar a partida
@@ -302,7 +308,6 @@ export class Lighting {
         L.setVisible(false);
       });
       sc.sys.updateList.add(L); // o relógio das animações anda com a cena (e para junto na pausa)
-      sc.events.once("shutdown", () => L.destroy());
       this._glow = L;
     } catch (e) {
       console.warn("cogumelos que brilham indisponíveis:", e?.message ?? e);
