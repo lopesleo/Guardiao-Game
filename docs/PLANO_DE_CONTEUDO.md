@@ -6,6 +6,13 @@ Montado em 22/10/2026 com as skills `social` (coreyhaines31/marketingskills) e `
 Discord, em [`REDES_SOCIAIS.md`](REDES_SOCIAIS.md). Este documento é a rotina: o que sai em cada rede, em que dia
 e hora, e como escrever.
 
+**Na hora de postar: `npm run redes`.** Abre no navegador a página local com cada post pronto: o texto com
+botão de copiar, a imagem com "Copiar imagem" (cola direto no X ou no Discord) e o vídeo com "Baixar", "Copiar
+caminho" (para colar na janela de envio) e "Mostrar na pasta". Lê os arquivos de `videos/promo/entrega/`, então
+vídeo novo aparece sozinho. `npm run redes -- --celular` abre a mesma página no celular, na mesma rede Wi-Fi, para
+salvar o vídeo e postar pelo app. Os textos da página (`tools/redes/pagina.html`) espelham a seção 9: mudou aqui,
+mude lá.
+
 **Quem faz o quê:** o Leonardo posta e responde (as contas são dele). O Claude prepara os vídeos, as imagens e os
 textos da semana, e nunca publica sem o OK.
 
