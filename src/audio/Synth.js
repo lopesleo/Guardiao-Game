@@ -154,6 +154,34 @@ const SFX = {
     return sq(osc(s, "ph", mtof(84 + ((k * 5) % 12))), 0.5) * env(tt, 0.002, 0.025) * 0.5;
   }],
   sfx_ui_click: [0.04, (t, s) => sq(osc(s, "ph", 620 - t * 3000), 0.5) * env(t, 0.001, 0.012)],
+  // carta pousando na mesa: tapa de papel abafado + um "tic" curto
+  sfx_ui_card: [0.1, (t, s) => lp(s, noise(), 0.3) * env(t, 0.001, 0.022) * 0.9 + sq(osc(s, "ph", 980 - t * 5000), 0.5) * env(t, 0.001, 0.008) * 0.3],
+  // a carta escolhida entra no herói: três notas subindo depressa e um brilho que se apaga
+  sfx_absorb: [0.4, (t, s) => {
+    const notes = [76, 81, 88];
+    const k = Math.min(2, Math.floor(t / 0.05));
+    const f = mtof(notes[k]);
+    const tt = t - k * 0.05;
+    const tone = (tri(osc(s, "ph", f)) * 0.55 + Math.sin(TAU * osc(s, "ph2", f * 2)) * 0.25) * env(tt, 0.003, k === 2 ? 0.13 : 0.035);
+    return tone + lp(s, noise(), 0.5) * env(t, 0.002, 0.05) * 0.15;
+  }],
+  // EVOLUÇÃO: baque grave que abre num arpejo subindo e termina num brilho que vibra
+  sfx_evolve: [1.25, (t, s) => {
+    if (s.sh == null) s.sh = 0;
+    const boom = Math.sin(TAU * osc(s, "ph3", 92 * Math.exp(-t * 7) + 34)) * env(t, 0.002, 0.2) * 0.9 + lp(s, noise(), 0.2) * env(t, 0.001, 0.06) * 0.6;
+    const notes = [60, 64, 67, 72, 76, 79, 84];
+    const t0 = t - 0.07;
+    let arp = 0;
+    if (t0 > 0) {
+      const k = Math.min(notes.length - 1, Math.floor(t0 / 0.065));
+      const tt = t0 - k * 0.065;
+      const f = mtof(notes[k]);
+      const last = k === notes.length - 1;
+      arp = (sq(osc(s, "ph", f), 0.25) * 0.45 + tri(osc(s, "ph2", f * 2)) * 0.25) * env(tt, 0.003, last ? 0.42 : 0.06);
+      if (last) arp += Math.sin(TAU * osc(s, "sh", 2093 + Math.sin(t * 38) * 22)) * env(tt, 0.05, 0.4) * 0.18;
+    }
+    return boom + arp;
+  }],
   sfx_ui_hover: [0.03, (t, s) => Math.sin(TAU * osc(s, "ph", 1400)) * env(t, 0.001, 0.01) * 0.5],
   sfx_dash: [0.22, (t, s) => {
     const a = 0.08 + t * 1.6; // "abre" o filtro: whoosh subindo

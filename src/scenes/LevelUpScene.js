@@ -2,12 +2,49 @@
 // Troca de cartas (R) 1× por level-up. D24: ESC desabilitado aqui.
 // "Mais uma carta" (anúncio premiado, 1× por partida) revela uma 4ª opção.
 // Banir: 1 grátis por partida; acabou, o botão oferece +1 por anúncio (1× por partida).
+// A mesa NASCE do herói: um estouro de luz no lugar dele (por cima da partida escurecida) e as cartas voam
+// dali até os lugares delas; a escolhida volta voando para o herói e a partida acende um anel nele
+// (GameFeel.cardLanded). Antecipação → impacto → continuação, ligando o mundo à escolha (FEEL.LEVEL).
 import { createCard } from "../ui/Cards.js";
 import { text, dim, Button, vw, vh, fitCamera, drawFrame } from "../ui/Theme.js";
-import { CSS } from "../art/Palette.js";
+import { CSS, PAL } from "../art/Palette.js";
+import { Pix, bayer } from "../art/PixelArt.js";
+import { FEEL } from "../config.js";
 import { AdService } from "../systems/AdService.js";
 import { Analytics } from "../systems/Analytics.js";
 import { tr } from "../i18n/i18n.js";
+
+const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+const easeOutBack = (t) => 1 + 2.2 * Math.pow(t - 1, 3) + 1.2 * Math.pow(t - 1, 2);
+const TRAIL_N = 24; // brilhos do rastro das cartas (reaproveitados)
+
+// Texturas do estouro (geradas uma vez, em pixel de arte: desenhadas na escala 3 do jogo)
+function levelTextures(scene) {
+  if (scene.textures.exists("fx_lvl_ring")) return;
+  // Anel fino de raio 50 com brilho pontilhado por dentro
+  const R = 50,
+    S = R * 2 + 3,
+    c = S / 2;
+  const rg = new Pix(S, S);
+  for (let y = 0; y < S; y++)
+    for (let x = 0; x < S; x++) {
+      const d = Math.hypot(x + 0.5 - c, y + 0.5 - c);
+      if (d <= R + 0.5 && d >= R - 0.6) rg.set(x, y, PAL.white);
+      else if (d < R - 0.6 && d >= R - 3 && bayer(x, y) < 0.55 - (R - 0.6 - d) * 0.18) rg.set(x, y, 0xd8d8d8);
+    }
+  rg.register(scene, "fx_lvl_ring");
+  // Raios de luz: 8 traços finos (longos e curtos alternados) saindo de um miolo
+  const RS = 41,
+    rc = (RS - 1) / 2;
+  const ry = new Pix(RS, RS);
+  for (let k = 0; k < 8; k++) {
+    const a = (k / 8) * Math.PI * 2,
+      len = k % 2 ? 11 : 19;
+    for (let r = 3; r <= len; r += 0.5) ry.set(rc + Math.cos(a) * r, rc + Math.sin(a) * r, r > len - 4 ? 0xd8d8d8 : PAL.white);
+  }
+  ry.disc(rc + 0.5, rc + 0.5, 2.6, PAL.white);
+  ry.register(scene, "fx_lvl_rays");
+}
 
 export class LevelUpScene extends Phaser.Scene {
   constructor() {
@@ -38,6 +75,11 @@ export class LevelUpScene extends Phaser.Scene {
 
     const bg = dim(this, 0.0);
     this.tweens.add({ targets: bg, fillAlpha: 0.72, duration: 200 });
+    // De onde a mesa nasce: o herói (sem ele, o pé da tela)
+    this.from = data.from ?? { x: W / 2, y: H * 0.8 };
+    levelTextures(this);
+    this._trail = [];
+    this._burst(this.from.x, this.from.y);
 
     // Placa do título: fundo próprio sobre o HUD congelado (relógio/chefe atrás)
     const plaque = this.add.graphics();
@@ -52,7 +94,7 @@ export class LevelUpScene extends Phaser.Scene {
     this.tweens.add({ targets: title, scale: 1, duration: 260, ease: "Back.easeOut" });
     text(this, W / 2, 102, tr("Escolha uma bênção da floresta"), { size: 18, color: CSS.muted, origin: 0.5 });
 
-    this._renderCards(true);
+    this._renderCards("hero");
     this._buildReroll();
 
     this.input.keyboard.on("keydown-ONE", () => this._pick(0));
@@ -75,21 +117,96 @@ export class LevelUpScene extends Phaser.Scene {
 
   _makeCard(i) {
     const L = this._layout(this.cards.length);
-    return createCard(this, L.x(i), L.y, L.cw, L.ch, this.cards[i], (card, cont) => this._choose(card, cont), i, !this.isTouch);
+    // acima do rastro dos voos (profundidade 1)
+    return createCard(this, L.x(i), L.y, L.cw, L.ch, this.cards[i], (card, cont) => this._choose(card, cont), i, !this.isTouch).setDepth(2);
   }
 
+  // animate: "hero" = as cartas voam do herói (abertura da mesa); true = sobem do pé (troca, banir)
   _renderCards(animate) {
     this._cardObjs.forEach((c) => c.destroy());
     this._cardObjs = [];
     const { y } = this._layout(this.cards.length);
-    for (let i = 0; i < this.cards.length; i++) {
+    const n = this.cards.length;
+    for (let i = 0; i < n; i++) {
       const obj = this._makeCard(i);
-      if (animate) {
+      if (animate === "hero") this._flyIn(obj, i, n);
+      else if (animate) {
         obj.y = y + 60;
         obj.setAlpha(0);
         this.tweens.add({ targets: obj, y, alpha: 1, delay: 80 + i * 90, duration: 280, ease: "Back.easeOut" });
       }
       this._cardObjs.push(obj);
+    }
+  }
+
+  // Voo de uma carta do herói até o lugar dela: posição em ease-out, escala com um leve passar do ponto, giro
+  // que se desfaz e um rastro dourado; ao pousar, um toque de som (canal da interface: a partida está abafada)
+  _flyIn(obj, i, n) {
+    const L = FEEL.LEVEL;
+    const x1 = obj.x,
+      y1 = obj.y,
+      x0 = this.from.x,
+      y0 = this.from.y;
+    const a0 = (i - (n - 1) / 2) * -16;
+    obj.setPosition(x0, y0).setScale(0.12).setAngle(a0).setAlpha(0);
+    let lastTrail = 0;
+    this.tweens.addCounter({
+      from: 0,
+      to: 1,
+      delay: 70 + i * L.STAGGER_MS,
+      duration: L.FLY_MS,
+      onUpdate: (tw) => {
+        if (!obj.active || this._locked) return; // escolheu no meio do voo: a escolha manda
+        const u = tw.getValue();
+        const e = easeOutCubic(u);
+        obj.setPosition(x0 + (x1 - x0) * e, y0 + (y1 - y0) * e);
+        obj.setScale(0.12 + 0.88 * easeOutBack(u));
+        obj.setAngle(a0 * (1 - e));
+        obj.setAlpha(Math.min(1, u / 0.25));
+        if (u < 0.8 && tw.elapsed - lastTrail > 28) {
+          lastTrail = tw.elapsed;
+          this._spark(obj.x, obj.y + (Math.random() - 0.5) * 40 * obj.scaleY);
+        }
+      },
+      onComplete: () => {
+        if (!obj.active || this._locked) return;
+        obj.setPosition(x1, y1).setScale(1).setAngle(0).setAlpha(1);
+        this.sound.play("sfx_ui_card", { volume: 0.35, rate: 1 + i * 0.07 });
+      },
+    });
+  }
+
+  // Brilho do rastro (imagens reaproveitadas, por cima da mesa e por baixo das cartas)
+  _spark(x, y) {
+    let s = this._trail.find((o) => !o.visible);
+    if (!s) {
+      if (this._trail.length >= TRAIL_N) return;
+      s = this.add.image(0, 0, "px_dot2").setBlendMode(Phaser.BlendModes.ADD).setDepth(1);
+      this._trail.push(s);
+    }
+    s.setPosition(x, y).setScale(3).setAlpha(0.9).setTint(Math.random() < 0.5 ? PAL.yel3 : PAL.white).setVisible(true);
+    this.tweens.add({ targets: s, scale: 1, alpha: 0, y: y - 10, duration: 260, ease: "Quad.easeOut", onComplete: () => s.setVisible(false) });
+  }
+
+  // Estouro de luz no herói, por cima da partida escurecida: clarão, raios girando, anel que abre e
+  // fagulhas. Dura FEEL.LEVEL.BURST_MS e some sozinho
+  _burst(x, y) {
+    const L = FEEL.LEVEL;
+    const ms = L.BURST_MS;
+    const ADD = Phaser.BlendModes.ADD;
+    const glow = this.add.image(x, y, "fx_glow").setTint(PAL.yel3).setBlendMode(ADD).setScale(0.6).setAlpha(0.95);
+    this.tweens.add({ targets: glow, scale: 3.4, alpha: 0, duration: ms, ease: "Cubic.easeOut", onComplete: () => glow.destroy() });
+    const disc = this.add.image(x, y, "fx_disc").setTint(PAL.white).setScale(1.4);
+    this.tweens.add({ targets: disc, scale: 4.5, alpha: 0, duration: 150, ease: "Quad.easeOut", onComplete: () => disc.destroy() });
+    const rays = this.add.image(x, y, "fx_lvl_rays").setTint(PAL.yel3).setScale(1.5).setAlpha(1);
+    this.tweens.add({ targets: rays, scale: 5.5, rotation: 0.55, alpha: 0, duration: ms * 0.9, ease: "Cubic.easeOut", onComplete: () => rays.destroy() });
+    const ring = this.add.image(x, y, "fx_lvl_ring").setTint(PAL.yel2).setScale(0.5).setAlpha(1);
+    this.tweens.add({ targets: ring, scale: (L.RING_R / 50) * 1, alpha: 0, duration: ms, ease: "Cubic.easeOut", onComplete: () => ring.destroy() });
+    for (let k = 0; k < 14; k++) {
+      const a = (k / 14) * Math.PI * 2 + Math.random() * 0.3;
+      const d = 70 + Math.random() * 90;
+      const p = this.add.image(x, y, "px_dot2").setBlendMode(ADD).setTint(k % 3 ? PAL.yel3 : PAL.white).setScale(3.4);
+      this.tweens.add({ targets: p, x: x + Math.cos(a) * d, y: y + Math.sin(a) * d * 0.8, scale: 0.8, alpha: 0, duration: ms + Math.random() * 160, ease: "Cubic.easeOut", onComplete: () => p.destroy() });
     }
   }
 
@@ -310,12 +427,31 @@ export class LevelUpScene extends Phaser.Scene {
     this.gameScene.upgrades.apply(card, this.player);
     this.gameScene.joystick?.setActive(true);
     this.scene.resume("GameScene");
+    // A escolhida dá um pulinho e volta voando para o herói (acelerando: é absorvida); ao chegar, a partida
+    // acende o anel nele (GameFeel.cardLanded). As outras caem e somem
+    const L = FEEL.LEVEL;
+    const to = this.gameScene.heroOnScreen?.() ?? this.from;
+    this.tweens.killTweensOf(cont);
     this._cardObjs.forEach((c) => {
-      if (c === cont) this.tweens.add({ targets: c, scale: 1.08, duration: 120, yoyo: true });
-      else this.tweens.add({ targets: c, alpha: 0, y: c.y + 30, duration: 160 });
+      if (c !== cont) this.tweens.add({ targets: c, alpha: 0, y: c.y + 30, duration: 160 });
     });
-    // a mesa (fundo escuro, placa, botões e a carta escolhida) some por cima da partida já andando
-    this.tweens.add({ targets: this.children.list.filter((o) => !this._cardObjs.includes(o) || o === cont), alpha: 0, delay: 60, duration: 160 });
-    this.time.delayedCall(240, () => this.scene.stop());
+    this.tweens.add({ targets: cont, scale: 1.06, duration: 70, ease: "Quad.easeOut" });
+    this.tweens.add({
+      targets: cont,
+      x: to.x,
+      y: to.y,
+      scale: 0.08,
+      angle: cont.x < to.x ? 14 : -14,
+      delay: 60,
+      duration: L.BACK_MS,
+      ease: "Quad.easeIn",
+      onComplete: () => {
+        cont.setVisible(false);
+        this.gameScene.feel?.cardLanded(card.type);
+      },
+    });
+    // a mesa (fundo escuro, placa, botões) some por cima da partida já andando
+    this.tweens.add({ targets: this.children.list.filter((o) => !this._cardObjs.includes(o)), alpha: 0, delay: 60, duration: 160 });
+    this.time.delayedCall(70 + L.BACK_MS + 40, () => this.scene.stop());
   }
 }
