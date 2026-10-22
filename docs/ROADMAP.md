@@ -629,6 +629,15 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   quantos que viram). Conserto junto: a Clareira aberta pelo título herdava o `fromRun` da última partida
   (o Phaser mantém os dados da cena quando `start` vem sem eles). `npm run test:compra`: cenários `oferta`,
   `ofertaRegras`, `ofertaComprado` e `bauAnuncio`
+- ✅ **Pedido de avaliação da Google Play (22/10/2026, `src/systems/Review.js`, `REVIEW` no config):** o cartão
+  nativo (In-App Review, `@capacitor-community/in-app-review`) na volta à Clareira logo depois de uma
+  **vitória**, com a chegada calma: 3+ partidas jogadas, no máximo 3 pedidos na vida, 60 dias entre eles, e o
+  Google decide se mostra (cota). Sem pergunta antes nem prêmio pela nota (regras do Google). Nunca na mesma
+  chegada da oferta do "Sem anúncios" (a avaliação vem primeiro; `CampScene._arrivalOffer`). Nos Créditos,
+  **AVALIAR NO GOOGLE PLAY** abre a página do jogo na loja quando o jogador quiser. Eventos `review_ask`,
+  `review_fail`, `review_store`. `npm run test:compra`: cenários `avaliacao*`. Plugins de compartilhar e
+  arquivos (`@capacitor/share`, `@capacitor/filesystem`) instalados junto, para o cartão da partida.
+  👤 Conferir no S23 (o cartão só aparece em app instalado pela Google Play; o Teste interno serve para conferir)
 - ⬜ Ao ligar a compra "Remover anúncios" ou o salvamento do Play Games: rever Segurança dos dados
   (login com conta externa) — a classificação já declara compras no jogo
 
