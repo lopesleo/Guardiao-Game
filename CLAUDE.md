@@ -192,7 +192,8 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
   Reinstalar com o comando de `tools/estudio/README.md`.
 
 **Repositórios**
-- `main` deste repo subiu para o `origin` em 20/10/2026, até a 1.0.18; a 1.0.19 ainda não (push só quando o Leonardo pedir). O Pages daqui serve a
+- `main` deste repo subiu para o `origin` em 22/10/2026, com a 1.0.19 e o trabalho de qualidade, som, desempenho,
+  sensação de jogo, chão na GPU e oferta do Sem anúncios (push só quando o Leonardo pedir). O Pages daqui serve a
   branch `pages` (jogo web fora do ar; política no endereço antigo). Página oficial: repo `lopesleo.github.io`,
   pasta `guardiao/` (deploy = push na `dev`), copiada para `komedygames.com/guardiao/` pelo repo `lopesleo/komedygames`
   (Cloudflare Pages; publicar de novo lá depois de mudar o site do Guardião).
