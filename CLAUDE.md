@@ -96,13 +96,15 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
   enche, cartas que saem do herói e voltam, evolução com tempo próprio, chefe que sobe de uma poça da Podridão
   (a luta começa ~1,6 s depois do 7:00), baú que chacoalha, minichefe sem clarão amarelo de tela cheia, golpe fatal
   que congela. 👤 Sentir no S23: o tremor novo, a vibração na evolução e na chegada do chefe, o clarão do
-  Despertar (agora com metade da força) e se faz falta o tremor no crítico comum (`FEEL.CRIT_TOUGH_ONLY`).
+  Despertar (agora com metade da força) e se faz falta o tremor no crítico comum (`FEEL.CRIT_TOUGH_ONLY`). E o
+  chão na GPU (22/10, `GROUND` no `config.js`): ~3.100 peças chatas do chão em 3 `SpriteGPULayer` (ordenação −43%,
+  quadro −12% no PC, plano B automático para as imagens) e cogumelos da mata que cintilam à noite. 👤 Ver os
+  cogumelos à noite e no chefe (fortes/fracos demais? lembram item?) e medir no S23 e num celular fraco.
   👤 Conferir no celular: o jogo a 60 fps sem
   tranco no S23 (antes rodava a 120), a borda da Podridão não esconder inimigo, o som (cartas, chefe, morte, vida
   baixa), o vento no bruxo/cogumelo (fraco) e o zoom 1,3 no chefe.
 - **Próximos de qualidade/desempenho** (estudo de 21/10 com as skills do Phaser 4, `audio-design` e
-  `performance-optimization`): chão num `SpriteGPULayer` (ordenação −43%, cogumelos que cintilam à noite); música da
-  partida em camadas pela intensidade; ambiência da Clareira pela hora; gerar o áudio num Worker (1,4 s de carga
+  `performance-optimization`): música da partida em camadas pela intensidade; ambiência da Clareira pela hora; gerar o áudio num Worker (1,4 s de carga
   travada no PC); qualidade automática contínua; evento `perf_run` no Analytics (conferir a Segurança dos dados) e
   medir num celular fraco de verdade.
 - **1.0.19 (código 20) no Teste interno e no Teste fechado/Alpha (20/10, em revisão no Alpha por cima da 1.0.18).**
