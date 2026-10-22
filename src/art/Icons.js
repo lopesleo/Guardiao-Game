@@ -199,6 +199,23 @@ const MAPS = {
     ".kkYnnnYkk.",
     "...kkkkk...",
   ],
+  // Compartilhar (o cartão da partida): os três nós ligados, como o ícone do Android
+  share: [
+    ".........kkk..",
+    "........klllk.",
+    ".......klwlllk",
+    ".......klllalk",
+    "..kkkkklllaak.",
+    ".klllllkkkkk..",
+    "klwlllk.......",
+    "klllalk.......",
+    ".klaallkkkkk..",
+    "..kkkkklllllk.",
+    ".......klwlllk",
+    ".......klllalk",
+    "........klaak.",
+    ".........kkk..",
+  ],
   // Clareira Ancestral (Pacote Fundador): o jequitibá, copa verde com folhas de cobre
   ancestral: [
     "...kkkkk...",

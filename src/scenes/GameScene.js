@@ -2233,6 +2233,7 @@ export class GameScene extends Phaser.Scene {
         biomeId: this.biomeId,
         character: this.character.id, // a tela de resultado mostra o guardião da partida
         reactions,
+        reactionsByType: byType, // o cartão da partida mostra as que mais saíram
         dmgShare: this._dmgShare(),
         endlessS,
         endlessRecord,
