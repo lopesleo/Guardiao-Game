@@ -334,6 +334,10 @@ export function makeMushrooms(seed) {
     [PAL.org1, PAL.org2, PAL.org3],
     [PAL.pur1, PAL.pur2, PAL.pur3],
   ][Math.floor(r() * 3)];
+  // centro dos chapéus (para o brilho noturno: ForestWorld → Lighting)
+  let gx = 0,
+    gy = 0,
+    gn = 0;
   const shroom = (x, y, s) => {
     for (let k = 0; k < s + 1; k++) p.set(x, y + k, k === s ? PAL.n4 : PAL.cream); // pé
     for (let dx = -s; dx <= s; dx++)
@@ -341,6 +345,9 @@ export function makeMushrooms(seed) {
         const e = (dx / (s + 0.5)) ** 2 + (dy / (s * 0.7 + 0.5)) ** 2;
         if (e > 1) continue;
         p.set(x + dx, y + dy - 1, dx < 0 && dy < -s * 0.3 ? caps[2] : dy === 0 ? caps[0] : caps[1]);
+        gx += x + dx + 0.5;
+        gy += y + dy - 0.5;
+        gn++;
       }
     p.set(x - 1, y - 2, PAL.white);
     if (s > 2) p.set(x + 1, y - 3, PAL.white);
@@ -348,6 +355,8 @@ export function makeMushrooms(seed) {
   shroom(4, 7, 3);
   if (r() < 0.8) shroom(10, 9, 2);
   p.outline(PAL.ink);
+  // Brilho noturno: o tom claro do chapéu, a partir do pé no meio da base (px de arte)
+  p.glow = { color: caps[2], dx: gx / gn - p.w / 2, dy: gy / gn - p.h };
   return p;
 }
 
@@ -399,12 +408,14 @@ export function makeLog(seed) {
 // centenas de árvores/pedras (batching no celular). Retorna os nomes de frame
 // por categoria. O chão fica como textura própria (tileSprite repete).
 export function registerEnvironment(scene) {
-  const keys = { atlas: "env", ground: "env_ground", trees: [], pines: [], bushes: [], rocks: [], flowers: [], tufts: [], shrooms: [], stumps: [], logs: [], patches: { dark: [], dirt: [], moss: [] } };
+  // glow: quadro → { color, dx, dy } dos cogumelos que brilham à noite (ForestWorld/Lighting)
+  const keys = { atlas: "env", ground: "env_ground", trees: [], pines: [], bushes: [], rocks: [], flowers: [], tufts: [], shrooms: [], stumps: [], logs: [], patches: { dark: [], dirt: [], moss: [] }, glow: {} };
   makeGroundTile().register(scene, "env_ground");
   const items = [];
   const add = (list, name, pix) => {
     items.push({ name, pix });
     list.push(name);
+    if (pix.glow) keys.glow[name] = pix.glow;
   };
   for (let i = 0; i < 4; i++) add(keys.trees, `tree${i}`, makeTree(100 + i * 17, { fruit: i === 3 ? PAL.yel3 : null }));
   add(keys.trees, "tree_big", makeTree(777, { w: 58, h: 72, trunkW: 8 }));

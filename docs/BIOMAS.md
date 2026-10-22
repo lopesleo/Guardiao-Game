@@ -129,6 +129,9 @@ pantanal: {
    mesmas categorias de `registerEnvironment` (`trees, pines, bushes, rocks, flowers,
    tufts, shrooms, stumps, logs, patches{dark,dirt,moss}` + `atlas` e `ground`). Registre
    na `PreloadScene` com `this.registry.set("envKeys<Bioma>", …)`. O `ForestWorld` lê.
+   Manchas, tufos, flores e "cogumelos" vão sozinhos para a camada de GPU do chão (são chatos);
+   o resto tem ordem por y. Opcional: `glow: { <quadro>: { color, dx, dy } }` faz aquele quadro
+   cintilar à noite (como os cogumelos da mata; ver `makeMushrooms` e `GROUND.GLOW`).
 2. **Bichos:** arte em `src/art/Monsters<Bioma>.js` (tiras `mon_<id>` + `<id>_move`),
    registrada na `PreloadScene`; a entrada em `LOOK` (`Enemies.js`); o mapa em `looks`.
 3. **Chefe:** arquivo `src/entities/Boss<Nome>.js` com um `Brain` (golpes como os do

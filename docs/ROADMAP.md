@@ -416,6 +416,20 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   força. Sons novos por código: carta pousando, carta absorvida, evolução. Teste de carga (Pesadelo, 60 s,
   `main` × branch): quadro 4,77 → 4,62 ms, p99 9,8 → 9,0 (dentro do ruído; nada piorou).
   👤 ver e sentir no aparelho (tremor mais limpo, vibração na evolução e na chegada do chefe)
+- ✅ **Chão na GPU e cogumelos que cintilam** (22/10/2026, `src/world/ForestWorld.js`, `GROUND` no config):
+  as ~3.100 peças chatas do chão (manchas, sombras no pé das árvores, tufos, flores, cogumelos) viraram 3
+  `SpriteGPULayer` (1 objeto e 1 desenho cada, buffer enviado uma vez); árvores, arbustos e pedras seguem
+  imagens (têm ordem por y). Teste de carga no Pesadelo (4 repetições): **ordenação 0,68 → 0,39 ms por quadro
+  (−43%)**, quadro 5,04 → 4,44 ms (p95 7,4 → 6,6), lixo 44 → 38 MB/s, objetos na cena 5.580 → 2.440; com a CPU
+  4× mais lenta, quadro 46,6 → 40,2 ms e ordenação 5,1 → 3,0 ms. Os cogumelos custam ~0,03 ms por quadro à
+  noite; as 4 camadas ocupam ~0,6 MB na GPU. Desenho igual ao de antes (mesma semente, 2 biomas, luz ligada e
+  desligada, zoom 1 e 1,3, tremor: 0 pixel diferente fora de empates de meio pixel com a câmera parada na
+  borda). **Cogumelos da mata
+  cintilam à noite**: uma luz fraca por cogumelo no mapa de luz, no tom do chapéu puxado para o creme,
+  respirando devagar com fase própria (4–7 s), animada na GPU; acende com o anoitecer e fica inteira no chefe.
+  Plano B automático (sem textura no vertex shader, erro no desenho da camada, `GROUND.GPU = false`;
+  testes: `?debug=1&chao=img` e `&chao=falha`): as imagens de antes, pixel a pixel. 👤 ver no aparelho
+  (cogumelos à noite e no chefe, se lembram gema/item; quadro e tranco no S23)
 
 ### M5 — Monetização e medição reais 👤
 - ✅ AdMob: app Android criado e **7 blocos premiados** em uso (revive, extra_card, build_speed,

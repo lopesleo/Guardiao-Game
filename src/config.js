@@ -34,6 +34,28 @@ export const PERF = {
   GEM_CAP_CHECK_MS: 250,
 };
 
+// Chão da partida (src/world/ForestWorld.js)
+export const GROUND = {
+  // Manchas, sombras no pé das árvores e tufos/flores/cogumelos numa SpriteGPULayer por tipo (3 objetos
+  // em vez de ~3.100 imagens; a ordenação de todo quadro fica bem mais leve). false = as imagens de
+  // sempre — o plano B, que também entra sozinho sem WebGL/textura no vertex shader ou com ?debug=1&chao=img
+  GPU: true,
+  // Cogumelos que cintilam à noite (só onde há cogumelo: a mata). Cada um é uma luz fraca no mapa de luz
+  // (src/world/Lighting.js), no tom claro do próprio chapéu puxado para o creme, respirando devagar com fase
+  // e ritmo próprios — animados na GPU (uma SpriteGPULayer desenhada no mapa de luz: nada por cogumelo na
+  // CPU). Precisa da Iluminação ligada e da camada de GPU (no plano B ficam como sempre foram, apagados).
+  // Parada, fraca e lenta de propósito: não pode parecer gema, item, tiro nem disputar atenção com a horda.
+  GLOW: {
+    ON: true,
+    R: 38, // raio da luz em px do mundo (para comparar: gema 46, inimigo 58, lanterna 190)
+    ALPHA: [0.22, 0.65], // força da luz: mínimo → máximo da respiração
+    PERIOD_MS: [4200, 7000], // um ciclo inteiro (acende e volta), sorteado por cogumelo
+    BREATH: 0.07, // o raio respira junto (±7%)
+    PASTEL: 0.35, // quanto o tom do chapéu puxa para o creme (0 = a cor pura)
+    NIGHT: [0.3, 0.75], // anoitecer da partida (0 = fim de tarde, 1 = noite) em que começa a acender → fica inteiro
+  },
+};
+
 // Níveis de dificuldade ("Perigo") — ver docs/META_LOOP.md (Fase 1).
 // Multiplicadores GLOBAIS aplicados sobre as fórmulas paramétricas (D16):
 //   HP/dano de inimigo, taxa de spawn e recompensa em moedas.

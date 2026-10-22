@@ -86,8 +86,9 @@ src/
   audio/     sintetizador: efeitos sonoros e 3 músicas (chiptune)
   ui/        kit de UI (Theme: fonte, molduras, botões, barras) + Widgets
              (modal, lista rolável, slider, toggle) + HUD + cartas
-  world/     ForestWorld: chão, decoração, muralha de árvores, atmosfera, culling;
-             Lighting (mapa de luz); Podridao (a borda da tela que avança com a partida)
+  world/     ForestWorld: chão (o que é chato numa SpriteGPULayer), decoração, muralha de
+             árvores, atmosfera, culling; Lighting (mapa de luz, cogumelos que cintilam à noite);
+             Podridao (a borda da tela que avança com a partida)
   scenes/    Boot → Preload → Menu → Game (+ LevelUp, Pause) → GameOver
   entities/  Player, inimigos/chefes, armas/evoluções, pickups, baús
   systems/   reações elementais, spawn, eventos da partida, cartas,

@@ -3,16 +3,62 @@
 // borda da tela moram em Podridao.js). Extraído da GameScene pra ela cuidar só de
 // gameplay. O BIOMA (BIOMES em config.js) escolhe o atlas do cenário, o chão, a cor
 // de fundo e a atmosfera.
-import { GAME, BIOMES } from "../config.js";
+//
+// CHÃO NA GPU (Phaser 4, SpriteGPULayer): o que é CHATO no chão e nunca passa na frente de
+// ninguém — manchas (-90), sombras no pé das árvores (-85) e tufos/flores/cogumelos (-50) — vira
+// UMA camada por tipo em vez de ~3.100 imagens soltas. Cada camada é um objeto só na lista de
+// exibição (a ordenação por profundidade de todo quadro deixa de passar por elas) e um desenho só
+// (instanciado), com os dados num buffer estático enviado uma vez: nada por quadro na CPU, nem o
+// culling. O que precisa de ordem por y (árvores, arbustos, pedras, tocos) continua imagem.
+// Plano B: sem WebGL, sem textura no vertex shader (a camada lê os quadros de uma textura de dados
+// lá; WebGL 1 permite GPU sem isso, como celulares bem antigos), com GROUND.GPU desligado ou com
+// ?debug=1&chao=img, as mesmas coisas viram as imagens de antes — o mesmo desenho. E se o desenho da
+// camada der erro no aparelho, ela vira essas imagens na hora (guardGPULayer; teste: ?debug=1&chao=falha).
+import { GAME, BIOMES, GROUND } from "../config.js";
 import { PAL } from "../art/Palette.js";
 import { rng } from "../art/PixelArt.js";
 import { vw, vh } from "../ui/Theme.js";
+import { DEBUG } from "../systems/Platform.js";
 import { PodridaoEdge } from "./Podridao.js";
 
 const S = GAME.PIXEL_SCALE;
 const D_PATCH = -90;
+const D_SHADOW = D_PATCH + 5; // sombra no pé das árvores (entre as manchas e as sombras projetadas, -80)
 const D_FLAT = -50; // flores/tufos (sempre embaixo de tudo)
 const Y_SORT = 10000; // mesmo offset do player/inimigos
+const SHADOW_RESERVE = 32; // sombras que nascem depois do mundo pronto (árvores da trilha de entrada)
+
+// A camada de GPU funciona neste aparelho? (o resto do jogo já exige WebGL com instâncias e VAO; a
+// camada ainda lê uma textura no vertex shader e usa 15 atributos por vértice)
+export function groundGPU(scene) {
+  if (!GROUND.GPU || (DEBUG && /[?&]chao=img\b/.test(location.search))) return false;
+  const r = scene.sys.game.renderer;
+  if (r?.type !== Phaser.WEBGL || !Phaser.GameObjects.SpriteGPULayer) return false;
+  try {
+    const gl = r.gl;
+    return gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) > 0 && gl.getParameter(gl.MAX_VERTEX_ATTRIBS) >= 16;
+  } catch {
+    return false;
+  }
+}
+
+// Teste do plano B no navegador: ?debug=1&chao=falha faz a camada "falhar" no 1º desenho
+const FAIL_TEST = DEBUG && /[?&]chao=falha\b/.test(location.search);
+
+// Se o desenho de uma camada de GPU der erro no aparelho (shader que não compila, por ex.), o erro não
+// pode escapar: dentro do laço de desenho ele congelaria o jogo. Chama onFail e segue o quadro
+export function guardGPULayer(layer, onFail) {
+  const sub = layer.submitterNode;
+  const run = sub.run;
+  sub.run = function (ctx) {
+    try {
+      if (FAIL_TEST) throw new Error("teste do plano B (?chao=falha)");
+      return run.call(this, ctx);
+    } catch (e) {
+      onFail(e);
+    }
+  };
+}
 
 export class ForestWorld {
   constructor(scene, opts = {}) {
@@ -25,11 +71,18 @@ export class ForestWorld {
     // Entrada da floresta na borda sul: { half } = meia-largura da brecha
     this.entrance = opts.entrance ?? null;
     this.trees = [];
-    this.statics = []; // toda decoração fixa — culling por câmera em update()
+    this.statics = []; // decoração fixa em imagem (o que tem ordem por y, ou tudo no plano B) — culling em update()
+    this.layers = []; // camadas de GPU do chão (vazio no plano B)
+    // membros das camadas chatas, juntados durante a geração e montados de uma vez em _buildFlat
+    this._flat = { patch: [], shadow: [], low: [] };
+    // Cogumelos que cintilam à noite: { x, y, color, seed } no centro dos chapéus (o Lighting desenha)
+    this._glowOf = GROUND.GLOW.ON ? this.keys.glow : null;
+    this.glowSpots = [];
     this._cullAt = 0;
     this._buildGround();
     this._scatter();
     this._border();
+    this._buildFlat();
     if (opts.atmosphere !== false) this._atmosphere();
   }
 
@@ -64,14 +117,100 @@ export class ForestWorld {
     return im;
   }
 
+  // Peça CHATA do chão (sem ordem por y): vira membro de uma camada de GPU ou, no plano B, a imagem
+  // de sempre. Mesma posição, origem e espelho da imagem (espelho = escala negativa: com a origem
+  // no meio do quadro, a camada espelha igual ao flipX/flipY da imagem)
+  _flatAdd(kind, x, y, frame, originY, flipX, flipY = false) {
+    const m = { x: Math.round(x), y: Math.round(y), frame, originX: 0.5, originY, scaleX: flipX ? -S : S, scaleY: flipY ? -S : S, alpha: 1 };
+    if (this._flat) this._flat[kind].push(m);
+    else this._flatPut(kind, m); // depois do mundo pronto (árvores da trilha de entrada)
+    const g = this._glowOf?.[frame];
+    if (g) {
+      const gx = m.x + g.dx * m.scaleX,
+        gy = m.y + g.dy * S;
+      // semente pela posição (não mexe na sequência do this.r(): o mundo continua o mesmo)
+      const seed = (Math.imul(gx | 0, 73856093) ^ Math.imul(gy | 0, 19349663)) >>> 0;
+      this.glowSpots.push({ x: gx, y: gy, color: g.color, seed });
+    }
+  }
+
   // Sombra pixelada no pé de objetos altos
   _shadow(x, y, w) {
-    const sh = this.scene.add
-      .image(Math.round(x), Math.round(y), "px_shadow")
-      .setScale((w / 14) * 0.9, S)
-      .setAlpha(0.8)
-      .setDepth(D_PATCH + 5);
-    this.statics.push(sh);
+    const m = { x: Math.round(x), y: Math.round(y), originX: 0.5, originY: 0.5, scaleX: (w / 14) * 0.9, scaleY: S, alpha: 0.8 };
+    if (this._flat) this._flat.shadow.push(m);
+    else this._flatPut("shadow", m);
+  }
+
+  // Monta as camadas chatas (uma vez, no fim da geração): GPU ou imagens, na ordem em que nasceram
+  _buildFlat() {
+    const F = this._flat;
+    this._flat = null;
+    const kinds = [
+      ["patch", this.atlas, D_PATCH, F.patch, 0],
+      ["shadow", "px_shadow", D_SHADOW, F.shadow, SHADOW_RESERVE],
+      ["low", this.atlas, D_FLAT, F.low, 0],
+    ];
+    this._layerOf = {};
+    if (groundGPU(this.scene)) {
+      try {
+        for (const [kind, tex, depth, list, reserve] of kinds) {
+          const L = this.scene.add.spriteGPULayer(tex, list.length + reserve).setDepth(depth);
+          for (let i = 0; i < list.length; i++) L.addMember(list[i]);
+          guardGPULayer(L, (e) => this._gpuFail(e));
+          this.layers.push(L);
+          this._layerOf[kind] = L;
+        }
+      } catch (e) {
+        // a camada não montou neste aparelho: desfaz e cai nas imagens (o jogo segue igual)
+        console.warn("chão na GPU indisponível:", e?.message ?? e);
+        for (const L of this.layers) L.destroy();
+        this.layers.length = 0;
+        this._layerOf = {};
+      }
+    }
+    if (this.layers.length) return;
+    for (const [kind, , , list] of kinds) for (let i = 0; i < list.length; i++) this._flatPut(kind, list[i]);
+  }
+
+  // A camada falhou no desenho: some neste mesmo quadro e, no próximo update (fora do desenho), vira as
+  // imagens de antes, lidas de volta da própria camada
+  _gpuFail(e) {
+    if (this._gpuDead) return;
+    this._gpuDead = true;
+    console.warn("chão na GPU falhou; voltando às imagens:", e?.message ?? e);
+    for (const L of this.layers) L.setVisible(false);
+  }
+
+  _gpuToImages() {
+    const layers = Object.entries(this._layerOf);
+    this._layerOf = {};
+    for (const [kind, L] of layers) {
+      for (let i = 0; i < L.memberCount; i++) {
+        const m = L.getMember(i);
+        this._flatPut(kind, { x: m.x, y: m.y, frame: m.frame, originX: m.originX, originY: m.originY, scaleX: m.scaleX, scaleY: m.scaleY, alpha: m.alpha });
+      }
+      L.destroy();
+    }
+    this.layers.length = 0;
+    this._cullAt = 0;
+  }
+
+  // Um membro a mais depois de montado: na camada (se couber) ou como imagem
+  _flatPut(kind, m) {
+    const L = this._layerOf?.[kind];
+    if (L && L.memberCount < L.size) {
+      L.addMember(m);
+      return;
+    }
+    const sh = kind === "shadow";
+    const im = this.scene.add
+      .image(m.x, m.y, sh ? "px_shadow" : this.atlas, m.frame)
+      .setOrigin(m.originX, m.originY)
+      .setScale(Math.abs(m.scaleX), Math.abs(m.scaleY))
+      .setFlip(m.scaleX < 0, m.scaleY < 0)
+      .setAlpha(m.alpha)
+      .setDepth(kind === "patch" ? D_PATCH : sh ? D_SHADOW : D_FLAT);
+    this.statics.push(im);
   }
 
   _scatter() {
@@ -84,12 +223,15 @@ export class ForestWorld {
       for (let cy = -R; cy < R; cy += cell)
         for (let cx = -R; cx < R; cx += cell) fn(cx + this.r() * cell, cy + this.r() * cell);
     };
+    // (a ordem das chamadas a this.r() é a de sempre: a mesma semente dá o mesmo mundo)
 
     // Decalques grandes no chão (quebram a repetição do tile)
     grid(380, (x, y) => {
       const roll = this.r();
       const list = roll < 0.5 ? k.patches.dark : roll < 0.75 ? k.patches.moss : k.patches.dirt;
-      this._img(x, y, this._pick(list), D_PATCH, 0.5).setFlipY(this.r() < 0.5);
+      const f = this._pick(list);
+      const fx = this.r() < 0.5;
+      this._flatAdd("patch", x, y, f, 0.5, fx, this.r() < 0.5);
     });
 
     // Detalhes rasteiros (sem y-sort)
@@ -97,9 +239,9 @@ export class ForestWorld {
       if (this.r() > 0.7) return;
       const roll = this.r();
       const f = roll < 0.45 ? this._pick(k.tufts) : roll < 0.8 ? this._pick(k.flowers) : this._pick(k.shrooms);
-      this._img(x, y, f, D_FLAT);
+      this._flatAdd("low", x, y, f, 1, this.r() < 0.5);
       // Tufos em grupinhos
-      if (roll < 0.45 && this.r() < 0.6) this._img(x + 18 + this.r() * 12, y + 6, this._pick(k.tufts), D_FLAT);
+      if (roll < 0.45 && this.r() < 0.6) this._flatAdd("low", x + 18 + this.r() * 12, y + 6, this._pick(k.tufts), 1, this.r() < 0.5);
     });
 
     // Obstáculos visuais médios (y-sort)
@@ -244,6 +386,7 @@ export class ForestWorld {
 
   update(time, dt, player) {
     const cam = this.scene.cameras.main;
+    if (this._gpuDead && this.layers.length) this._gpuToImages();
     if (time >= this._cullAt) {
       this._cullAt = time + 150;
       this._cull();
