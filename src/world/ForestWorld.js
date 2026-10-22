@@ -54,6 +54,9 @@ export class ForestWorld {
     this.layers = []; // camadas de GPU do chão (vazio no plano B)
     // membros das camadas chatas, juntados durante a geração e montados de uma vez em _buildFlat
     this._flat = { patch: [], shadow: [], low: [] };
+    // Cogumelos que cintilam à noite: { x, y, color, seed } no centro dos chapéus (o Lighting desenha)
+    this._glowOf = GROUND.GLOW.ON ? this.keys.glow : null;
+    this.glowSpots = [];
     this._cullAt = 0;
     this._buildGround();
     this._scatter();
@@ -100,6 +103,14 @@ export class ForestWorld {
     const m = { x: Math.round(x), y: Math.round(y), frame, originX: 0.5, originY, scaleX: flipX ? -S : S, scaleY: flipY ? -S : S, alpha: 1 };
     if (this._flat) this._flat[kind].push(m);
     else this._flatPut(kind, m); // depois do mundo pronto (árvores da trilha de entrada)
+    const g = this._glowOf?.[frame];
+    if (g) {
+      const gx = m.x + g.dx * m.scaleX,
+        gy = m.y + g.dy * S;
+      // semente pela posição (não mexe na sequência do this.r(): o mundo continua o mesmo)
+      const seed = (Math.imul(gx | 0, 73856093) ^ Math.imul(gy | 0, 19349663)) >>> 0;
+      this.glowSpots.push({ x: gx, y: gy, color: g.color, seed });
+    }
   }
 
   // Sombra pixelada no pé de objetos altos

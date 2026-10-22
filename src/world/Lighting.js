@@ -7,9 +7,15 @@
 //  2) SOMBRAS DINÂMICAS: árvores perto do herói projetam sombras alongadas na
 //     direção OPOSTA à luz dele — giram e esticam enquanto você anda.
 // HUD, números de dano e avisos ficam acima (profundidade maior) e não escurecem.
-import { GAME, PODRIDAO, STATUS_LOOK } from "../config.js";
+//  3) COGUMELOS QUE CINTILAM À NOITE (GROUND.GLOW): uma SpriteGPULayer com uma luz fraca por
+//     cogumelo, animada na GPU (respiração com fase própria), desenhada DENTRO do mapa de luz por uma
+//     câmera que leva o mundo para a escala do mapa. Nada por cogumelo na CPU; só acende com a noite.
+import { GAME, PODRIDAO, STATUS_LOOK, GROUND } from "../config.js";
+import { PAL } from "../art/Palette.js";
+import { rng } from "../art/PixelArt.js";
 import { Settings } from "../systems/Settings.js";
 import { vw, vh } from "../ui/Theme.js";
+import { groundGPU } from "./ForestWorld.js";
 
 const D_LIGHTMAP = 48500;
 const RES = 4; // mapa de luz em 1/4 da resolução (luz é suave) → 16× menos pixels
@@ -26,6 +32,9 @@ const AMB_BOSS = [0x3e, 0x34, 0x5e];
 const lerp = (a, b, t) => a + (b - a) * t;
 const mix = (c1, c2, t) => (Math.round(lerp(c1[0], c2[0], t)) << 16) | (Math.round(lerp(c1[1], c2[1], t)) << 8) | Math.round(lerp(c1[2], c2[2], t));
 const mixArr = (c1, c2, t) => [lerp(c1[0], c2[0], t), lerp(c1[1], c2[1], t), lerp(c1[2], c2[2], t)];
+const rgbArr = (c) => [(c >> 16) & 255, (c >> 8) & 255, c & 255];
+const mixColor = (a, b, t) => mix(rgbArr(a), rgbArr(b), t);
+const clamp01 = (v) => (v < 0 ? 0 : v > 1 ? 1 : v);
 
 function ensureTextures(scene) {
   if (!scene.textures.exists("fx_light")) {
@@ -228,10 +237,73 @@ export class Lighting {
       list.length = 0;
       for (let i = 0; i < this._n; i++) list.push(this.stamps[i]);
       this.rt.draw(list);
+      // Cogumelos que cintilam: acendem com o anoitecer (e inteiros com o chefe). Vem logo depois dos
+      // carimbos de propósito: o contexto do mapa já está em ADD, e a captura com câmera própria herda
+      // esse modo (num modo diferente o Phaser trocaria o contexto e perderia a câmera)
+      const G = GROUND.GLOW;
+      const nightK = Math.max(clamp01((base - G.NIGHT[0]) / (G.NIGHT[1] - G.NIGHT[0])), kB);
+      const glow = nightK > 0.01 ? this._glowLayer() : null;
+      if (glow) {
+        glow.alpha = nightK * nightK * (3 - 2 * nightK);
+        this.rt.capture(glow, { camera: this._glowCamera() });
+      }
     }
     // Phaser 4: no modo padrão a RenderTexture só EXIBE o que já tem; sem render()
     // o fill/draw acima ficava na fila e o mapa de luz nunca aparecia (desde a migração)
     this.rt.render();
+  }
+
+  // Camada das luzes dos cogumelos (montada uma vez, na 1ª noite). Fora da lista de exibição: só existe
+  // dentro do mapa de luz. null = não há cogumelo que brilhe aqui ou a camada de GPU não serve (plano B)
+  _glowLayer() {
+    if (this._glow !== undefined) return this._glow;
+    this._glow = null;
+    const spots = this.world?.glowSpots;
+    if (!GROUND.GLOW.ON || !spots?.length || !groundGPU(this.scene)) return null;
+    const G = GROUND.GLOW;
+    const sc = this.scene;
+    try {
+      const L = new Phaser.GameObjects.SpriteGPULayer(sc, "fx_light", spots.length).setBlendMode(Phaser.BlendModes.ADD);
+      const k = G.R / 64; // fx_light: 128 px de lado (raio 64)
+      const ease = "Sine.easeInOut";
+      for (const s of spots) {
+        const r = rng(s.seed);
+        const half = (G.PERIOD_MS[0] + r() * (G.PERIOD_MS[1] - G.PERIOD_MS[0])) / 2;
+        const delay = r() * half * 2; // fase: qualquer ponto do ciclo
+        const sz = { base: k * (1 - G.BREATH), amplitude: 2 * k * G.BREATH, duration: half, ease, yoyo: true, delay };
+        const c = mixColor(s.color, PAL.cream, G.PASTEL);
+        L.addMember({
+          x: s.x,
+          y: s.y,
+          scaleX: sz,
+          scaleY: sz,
+          alpha: { base: G.ALPHA[0], amplitude: G.ALPHA[1] - G.ALPHA[0], duration: half, ease, yoyo: true, delay },
+          tintTopLeft: c,
+          tintTopRight: c,
+          tintBottomLeft: c,
+          tintBottomRight: c,
+          tintBlend: 1,
+        });
+      }
+      sc.sys.updateList.add(L); // o relógio das animações anda com a cena (e para junto na pausa)
+      sc.events.once("shutdown", () => L.destroy());
+      this._glow = L;
+    } catch (e) {
+      console.warn("cogumelos que brilham indisponíveis:", e?.message ?? e);
+    }
+    return this._glow;
+  }
+
+  // Câmera que leva o mundo para o mapa de luz: mesma conta do _light (tela = (mundo − worldView)·zoom,
+  // e o mapa tem 1/RES da tela)
+  _glowCamera() {
+    const cam = this.scene.cameras.main;
+    const c = (this._gcam ||= new Phaser.Cameras.Scene2D.Camera(0, 0, 1, 1).setScene(this.scene, false).setOrigin(0, 0));
+    c.setSize(this.rt.width, this.rt.height);
+    c.setZoom(cam.zoom / RES);
+    c.setScroll(cam.worldView.x, cam.worldView.y);
+    c.preRender();
+    return c;
   }
 
   // Sombras projetadas pelas árvores a partir da luz do herói
