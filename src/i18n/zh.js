@@ -954,6 +954,8 @@ export default {
   "Compostos e sintetizados por código para este jogo": "为本游戏用代码作曲与合成",
   "Motor": "引擎",
   "Phaser 4 (MIT) · nipplejs (MIT)": "Phaser 4 (MIT) · nipplejs (MIT)",
+  "AVALIAR NO GOOGLE PLAY": "在 Google Play 上评分",
+  "Sua nota ajuda o jogo a chegar a mais gente.": "你的评分能让更多人发现这款游戏。",
   "Quem vai proteger a floresta hoje?": "今天由谁来守护森林？",
   "Começa com {0}. {1}": "初始武器：{0}。{1}",
   "\nFeito: {0} ({1}/{2})": "\n功绩：{0}（{1}/{2}）",

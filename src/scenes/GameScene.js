@@ -81,6 +81,7 @@ import { CSS, PAL, hex } from "../art/Palette.js";
 import { DEBUG } from "../systems/Platform.js";
 import { Settings } from "../systems/Settings.js";
 import { Analytics } from "../systems/Analytics.js";
+import { Review } from "../systems/Review.js";
 import { AdService } from "../systems/AdService.js";
 import { QualityWatchdog } from "../systems/QualityWatchdog.js";
 import { LanternSystem } from "../systems/LanternSystem.js";
@@ -2109,6 +2110,7 @@ export class GameScene extends Phaser.Scene {
       endlessRecord = this.meta.registerEndless(endlessS);
       Analytics.track("endless_end", { s: Math.floor(endlessS), bonus, record: endlessRecord });
     }
+    Review.noteRun(won); // pedido de avaliação: só na volta de uma vitória (Review.js)
     // Recompensa final escalada pela dificuldade (HUD mostrou a contagem-base ao vivo)
     const runCoinsBase = Math.round(this._coinsGainedThisRun * this.diff.rewardMult);
     // Bônus de descanso (primeiras partidas do dia, depois que o Mural apareceu).

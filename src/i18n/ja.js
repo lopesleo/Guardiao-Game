@@ -954,6 +954,8 @@ export default {
   "Compostos e sintetizados por código para este jogo": "このゲームのためにコードで作曲・合成",
   "Motor": "エンジン",
   "Phaser 4 (MIT) · nipplejs (MIT)": "Phaser 4 (MIT) · nipplejs (MIT)",
+  "AVALIAR NO GOOGLE PLAY": "Google Playで評価する",
+  "Sua nota ajuda o jogo a chegar a mais gente.": "あなたの評価が、このゲームをもっと多くの人に届けます。",
   "Quem vai proteger a floresta hoje?": "今日は誰が森を守る？",
   "Começa com {0}. {1}": "{0}を持って始める。{1}",
   "\nFeito: {0} ({1}/{2})": "\n功績：{0}（{1}/{2}）",
