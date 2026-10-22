@@ -11,6 +11,27 @@ textos da semana, e nunca publica sem o OK.
 
 ---
 
+## 0. Em que fase o jogo está (ler antes de postar)
+
+**Hoje: ainda não está na Google Play.** Só joga quem pede o convite: a pessoa manda o e-mail pela página oficial
+(botão "Quero testar") e o Leonardo cadastra na lista de testadores. Então toda chamada diz o que a pessoa ganha e
+o que fazer, sem jargão: **"Jogue antes do lançamento: peça seu convite (Android, grátis)"**. Nunca "baixe",
+"disponível", "já na Play Store", nem "teste fechado aberto".
+
+As fases mudam por acontecimento, não por data:
+
+| Fase | Começa quando | A chamada |
+|---|---|---|
+| **Convite (agora)** | já | "Jogue antes do lançamento: peça seu convite pelo link" |
+| **Pré-registro** | a Google libera a produção (pedido por volta de 28/10; a análise leva até ~7 dias, sem data garantida) e o pré-registro é ligado | "Pré-registre-se na Google Play" |
+| **Na loja** | o dia do lançamento, **planejado** para 03/12 | "Baixe grátis na Google Play" |
+
+**A data de lançamento só vai a público depois que a produção for liberada e o pré-registro estiver no ar.**
+Até lá, "em breve na Google Play". Se a produção atrasar, o calendário inteiro anda junto (seção 5); os assuntos
+da semana continuam, só a chamada espera.
+
+---
+
 ## 1. O essencial em uma tela
 
 - **Tempo:** ~4 h por semana. 1h30 no domingo para preparar a semana e 15–20 min por dia para postar e responder.
@@ -119,21 +140,24 @@ geradas por código" é verdadeiro e é o que vale usar.
 
 ## 5. O calendário até o lançamento e depois
 
+As datas de pré-registro e lançamento são o **plano**: elas esperam a Google (seção 0). Os assuntos de cada semana
+não dependem disso.
+
 | Semana | Tema | Datas e marcos |
 |---|---|---|
-| **23/10–01/11** | Testadores e aquecimento | **Sáb. 31/10: Dia do Saci** (reel do Saci com o Redemoinho, post no X e no Instagram; chamada da última leva de testadores). Começar a participar no Reddit (karma) |
-| **02/11–08/11** | Pré-registro | Assim que a produção for liberada (~05/11): trocar a bio e o fixado por "Pré-registre-se", reel de anúncio, post no Discord |
-| **09/11–15/11** | Bastidores | 10/11: kit de imprensa sai (`MARKETING.md` §6.3). Semana do "jogo feito em código" no X, Reddit (r/IndieDev) e LinkedIn |
-| **16/11–22/11** | Chefes | Reels dos chefes avisando o golpe; r/roguelites |
-| **23/11–29/11** | Lendas e Clareira | Carrossel "As lendas e de onde vêm"; adesivo de contagem regressiva nos stories a partir de 25/11; r/playmygame |
-| **30/11–02/12** | Contagem regressiva | "Faltam 3", "faltam 2", "amanhã" nos stories; e-mail lembrando a imprensa |
-| **Qui. 03/12** | **Lançamento** | Roteiro hora a hora na seção 6 |
-| **04/12–31/01** | Férias escolares | Cartões de partida dos jogadores, recordes do ranking, a 1ª atualização (~2 semanas depois), o kit de Natal. Ritmo de 3 vídeos por semana continua |
+| **23/10–01/11** | Convites e aquecimento | **Sáb. 31/10: Dia do Saci** (reel do Saci, post no X e no Instagram, convite para jogar antes do lançamento). Começar a participar no Reddit (karma) |
+| **02/11–08/11** | Bastidores, ou o pré-registro se a Google liberar | **Quando a produção for liberada:** trocar a bio e o fixado por "Pré-registre-se", reel de anúncio, aviso no Discord. Sem a liberação, a semana fica com os bastidores e o convite continua |
+| **09/11–15/11** | Chefes | Reels dos chefes avisando o golpe. Imprensa (`MARKETING.md` §6.3) **só depois da produção liberada**, com a data confirmada |
+| **16/11–22/11** | Lendas | Carrossel "As lendas e de onde vêm"; r/IndieDev com o bastidor do código |
+| **23/11–29/11** | Clareira | Reels da Clareira; r/roguelites; contagem regressiva nos stories **só com a data confirmada** |
+| **30/11–02/12** | Véspera (se a data estiver confirmada) | "Faltam 3", "faltam 2", "amanhã" nos stories; e-mail lembrando a imprensa |
+| **Qui. 03/12 (planejado)** | **Lançamento** | Roteiro hora a hora na seção 6 |
+| **Depois do lançamento → 31/01** | Férias escolares | Cartões de partida dos jogadores, recordes do ranking, a 1ª atualização (~2 semanas depois), o kit de Natal. Ritmo de 3 vídeos por semana continua |
 | **2027** | Datas | 28/04 Dia da Caatinga, 22/08 Dia do Folclore, 05/09 Dia da Amazônia, 31/10 Dia do Saci |
 
 ---
 
-## 6. O dia do lançamento (qui. 03/12)
+## 6. O dia do lançamento (planejado: qui. 03/12, só com a data confirmada)
 
 | Hora | O quê |
 |---|---|
@@ -184,7 +208,7 @@ Mesmo agendando, esteja por perto na primeira hora para responder.
 
 Regras de escrita (da skill `social`): a primeira frase já entrega o assunto; nada de travessão nos posts; nada de
 "não é X, é Y"; nada de emoji no começo de cada linha; nada de "Concorda?" no fim. Fato específico vale mais que
-adjetivo.
+adjetivo. E a fase (seção 0): até a loja abrir, a chamada é sempre o convite.
 
 ### X
 
@@ -194,18 +218,18 @@ Fogo + Gelo vira Vapor. Gelo + Raio vira Cristal. Fogo + Raio vira Sobrecarga.
 
 Guardião da Floresta é um roguelite brasileiro: você só se move, as armas atacam sozinhas e as lendas do folclore lutam do seu lado contra a Podridão.
 
-Android, grátis, sem energia e sem gacha.
+Em breve na Google Play. Grátis, sem energia e sem gacha.
 ```
-1ª resposta: `Teste fechado aberto, entra quem quiser: https://komedygames.com/guardiao/?utm_source=x&utm_medium=social`
+1ª resposta: `Quer jogar antes do lançamento? Peça seu convite (Android, grátis): https://komedygames.com/guardiao/?utm_source=x&utm_medium=social`
 
-**Bastidor (com o vídeo `art-preview` ou uma captura do herói sendo desenhado):**
+**Bastidor (com o vídeo do herói sendo desenhado por código, reel 8):**
 ```
 Toda a arte do Guardião da Floresta sai de código: heróis, criaturas, cenário, ícones e efeitos. Nenhuma imagem foi desenhada à mão nem comprada.
 
 A música também: cada trilha é composta e sintetizada por código dentro do próprio jogo.
 ```
 
-**Lenda do dia (com o clipe do chefe):**
+**Lenda do dia (com o clipe do chefe, reel 6):**
 ```
 O Mapinguari, das histórias da Amazônia, tem um olho só e uma boca na barriga.
 
@@ -222,44 +246,55 @@ Opções: `Curupira` · `Saci` · `Iara` · `Caipora`
 ```
 Every boss attack in Guardião da Floresta is telegraphed on the ground first, so you can dodge just by walking.
 
-A Brazilian folklore roguelite for Android, with all the pixel art and music generated in code.
+A Brazilian folklore roguelite coming to Android, with all the pixel art and music generated in code.
 
 #screenshotsaturday #indiedev
 ```
 
-**Dia do Saci (sáb. 31/10, com o clipe do Redemoinho):**
+**Dia do Saci (sáb. 31/10, com o reel 5):**
 ```
 Hoje é Dia do Saci. No Guardião da Floresta ele é guardião: o redemoinho dele persegue o bando e puxa todo mundo para o centro.
 
 Viva o folclore brasileiro.
 ```
+1ª resposta: o mesmo convite do fixado.
 
-### Instagram (reels novos; os 4 primeiros já estão em `REDES_SOCIAIS.md`)
+### Instagram (reels novos; os 4 primeiros estão em `REDES_SOCIAIS.md`)
 
-**Reel 5: desvie andando** (clipe do chefe avisando o golpe e o herói passando ileso)
+Os vídeos estão em `videos/promo/entrega/reels/`, cada um em duas versões de cartão final: `_teste` ("Jogue antes
+do lançamento · peça seu convite na bio", a de agora) e `_prereg` (só depois que a Google liberar o pré-registro).
+
+**Reel 5: Dia do Saci** (sáb. 31/10, 11h)
+```
+Hoje é Dia do Saci. No Guardião da Floresta ele é guardião: o redemoinho dele persegue o bando e puxa todo mundo para o centro.
+
+Roguelite brasileiro com as lendas do folclore. Jogue antes do lançamento: peça seu convite pelo link na bio.
+
+#diadosaci #folclorebrasileiro #jogobrasileiro #indiegame #pixelart
+```
+
+**Reel 6: desvie andando** (o chão avisa o golpe do chefe e o herói passa ileso)
 ```
 O chão mostra onde o golpe vai cair. Dá pra sair andando.
 
 No Guardião da Floresta todo ataque de chefe avisa antes. Quem morre aprende o desenho do golpe na próxima.
 
-Roguelite brasileiro com as lendas do folclore. Android, link na bio.
+Roguelite brasileiro com as lendas do folclore. Jogue antes do lançamento: peça seu convite pelo link na bio.
 
 #jogobrasileiro #roguelite #indiegame #folclorebrasileiro #pixelart
 ```
 
-**Reel 6: a evolução** (arma evoluindo e limpando a tela)
+**Reel 7: a evolução** (arma evoluindo e limpando a tela)
 ```
-Nível 1: um cajado. Nível 20: a tela inteira pegando fogo.
-
 Juntando as cartas certas, a arma evolui e o bando vira cinza.
 Qual arma você evoluiria primeiro?
 
-Guardião da Floresta · Android · link na bio.
+Guardião da Floresta · Android · peça seu convite pelo link na bio.
 
 #jogobrasileiro #roguelite #indiegame #jogosmobile #pixelart
 ```
 
-**Reel 7: do código à tela** (bastidor)
+**Reel 8: do código à tela** (bastidor)
 ```
 Esse Curupira foi desenhado por código, pixel por pixel. A floresta, os monstros e a música também.
 
@@ -268,16 +303,14 @@ Um jogo brasileiro inteiro feito assim, sem banco de imagens nem música comprad
 #gamedev #indiedev #jogobrasileiro #pixelart #folclorebrasileiro
 ```
 
-**Carrossel: "As lendas e de onde vêm"** (1080×1350, uma lenda por imagem, salvo e compartilhado)
-- Capa: "7 lendas brasileiras e de onde elas vêm"
-- 1 imagem por lenda: o retrato do jogo + 2 linhas sobre a origem (bestiário do jogo, aba do Mural) + 1 linha
-  sobre o que ela faz no jogo
-- Última: "Qual delas você conhecia? No Guardião da Floresta todas são guardiãs. Link na bio."
-- Legenda: `Folclore brasileiro em 7 lendas, com a origem de cada uma. Salve para mostrar para alguém.`
+**Carrossel: "As lendas e de onde vêm"** (1080×1350, `videos/promo/entrega/social/lendas_*.png`)
+- Capa, uma imagem por guardiã (retrato do jogo, origem em 2 linhas a partir do bestiário do jogo, o que ela faz
+  no jogo) e a imagem final com o convite.
+- Legenda: `Folclore brasileiro em 7 lendas, com a origem de cada uma. Salve para mostrar para alguém. No Guardião da Floresta todas são guardiãs. Jogue antes do lançamento: convite no link da bio.`
 
 ### Reddit
 
-**r/IndieDev (EN, bastidor):**
+**r/IndieDev (EN, bastidor; serve em qualquer fase):**
 
 Título: `I generated every sprite, sound and song of my Brazilian folklore roguelite in code. Here's the hero being drawn`
 
@@ -294,9 +327,9 @@ Happy to answer how any part works. If you've done procedural pixel art, what tr
 ```
 Flair sugerida: `Devlog` ou equivalente. **Verifique as regras antes de postar.**
 
-**r/roguelites (EN, perto do lançamento):**
+**r/roguelites (EN, antes da loja):**
 
-Título: `Guardião da Floresta: a free survivor-like with Brazilian folklore legends, out on Android Dec 3`
+Título: `I'm making a survivor-like with Brazilian folklore legends as the heroes. Looking for players before launch`
 
 ```
 It plays like a survivor-like: you only move, weapons fire on their own, and every level-up is a card choice. A few things I tried to do differently:
@@ -307,13 +340,14 @@ It plays like a survivor-like: you only move, weapons fire on their own, and eve
 
 It's Brazilian folklore: the legends are the heroes and a rot is the villain.
 
-I'd love feedback from people who play a lot of these. What makes a run feel fair to you?
+It isn't on the Play Store yet. If you have an Android phone and want to play before launch, you can ask for an invite on the game's page. I'd love feedback from people who play a lot of these: what makes a run feel fair to you?
 ```
-Link no texto ou num comentário, conforme a regra da comunidade. **Verifique as regras e a flair.**
+Link no texto ou num comentário, conforme a regra da comunidade. **Verifique as regras e a flair.** No
+lançamento, troque o título por `Guardião da Floresta, a free survivor-like with Brazilian folklore legends, is out on Android`.
 
-**r/jogatina (PT, lançamento):**
+**r/jogatina (PT, só no dia seguinte ao lançamento):**
 
-Título: `Fiz um roguelite com as lendas do folclore brasileiro e ele saiu hoje na Play Store`
+Título: `Fiz um roguelite com as lendas do folclore brasileiro e ele saiu na Play Store`
 
 ```
 Oi, gente! Sou o Leonardo, de Nova Friburgo, e passei os últimos meses fazendo o Guardião da Floresta.
@@ -333,5 +367,5 @@ Se jogar, me conta o que achou, inclusive o que não gostou. Respondo todo mundo
 - Postar o mesmo link em várias comunidades do Reddit no mesmo dia (vira spam e derruba a conta).
 - Comprar seguidores ou trocar "sigo de volta": o algoritmo passa a mostrar os posts para quem não se importa.
 - Sorteio com prêmio sem ler as regras de promoção de cada rede.
-- Prometer data, recurso ou plataforma que ainda não existe.
+- Prometer data, recurso ou plataforma que ainda não existe. Antes da produção liberada: nada de "baixe" nem a data.
 - Discutir em comentário. Agradecer a crítica, responder o que der e corrigir no jogo quando fizer sentido.

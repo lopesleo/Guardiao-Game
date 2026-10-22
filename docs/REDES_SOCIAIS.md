@@ -35,7 +35,7 @@ keycombination 113 50` (Ctrl+V) no campo; o `input text` do adb não digita acen
 Roguelite com as lendas do folclore brasileiro.
 Você só se move. Fogo + Gelo = Vapor.
 Grátis de verdade · Android
-Teste fechado aberto 👇
+Jogue antes do lançamento 👇
 ```
 
 Depois do lançamento (03/12), trocar a última linha por `Baixe grátis na Google Play 👇`.
@@ -57,7 +57,7 @@ Você só se move. As armas atacam sozinhas. Fogo + Gelo = Vapor.
 As lendas do folclore são as heroínas, e o vilão é a Podridão.
 
 Grátis de verdade: sem energia, sem gacha, anúncio só se você quiser.
-Estamos em teste fechado: link na bio para entrar.
+Ainda não está na loja. Quer jogar antes do lançamento? Peça seu convite pelo link na bio.
 
 #jogobrasileiro #indiegame #folclorebrasileiro #roguelite #pixelart #gamedev #jogosmobile
 ```
@@ -78,7 +78,7 @@ Guardião da Floresta é um roguelite brasileiro para Android: você só se move
 🏡 Entre as partidas, a Clareira: plantar, pescar e cozinhar
 
 Grátis de verdade: sem energia, sem gacha, anúncio só se você quiser.
-Em breve na Google Play. Quer jogar antes? O teste fechado está aberto, link na bio.
+Em breve na Google Play. Quer jogar antes do lançamento? Peça seu convite pelo link na bio.
 
 Qual lenda você escolheria? 👇
 
@@ -87,7 +87,7 @@ Qual lenda você escolheria? 👇
 
 No TikTok, trocar a linha de hashtags por
 `#jogobrasileiro #folclorebrasileiro #indiegame #roguelite #pixelart #gamedev #jogosmobile #curupira`.
-Comentário para fixar: "Quer testar antes de todo mundo? O link está na bio: é grátis e leva 2 minutos."
+Comentário para fixar: "Quer jogar antes de todo mundo? Peça seu convite pelo link na bio. É grátis."
 
 ### Os 4 primeiros reels
 
@@ -113,7 +113,7 @@ Fogo + Gelo = ? 🔥❄️
 No Guardião da Floresta você só se move: as armas atacam sozinhas e os elementos se misturam.
 São 6 reações para descobrir. Qual você testa primeiro?
 
-Roguelite brasileiro com as lendas do folclore, para Android. Teste fechado aberto: link na bio.
+Roguelite brasileiro com as lendas do folclore, para Android. Jogue antes do lançamento: peça seu convite pelo link na bio.
 
 #jogobrasileiro #indiegame #gamedev #roguelite #folclorebrasileiro #jogosmobile #pixelart
 ```
@@ -125,7 +125,7 @@ Curupira, Caipora, Iara, Saci, Comadre Fulozinha, Mãe-do-Ouro e Anhangá.
 Aqui as lendas não são monstros: são as guardiãs da mata. O vilão é a Podridão.
 Qual delas você escolheria?
 
-Guardião da Floresta · Android · teste fechado no link da bio.
+Guardião da Floresta · Android · peça seu convite pelo link na bio.
 
 #folclorebrasileiro #curupira #saci #iara #jogobrasileiro #indiegame #pixelart
 ```
@@ -154,7 +154,7 @@ Guardião da Floresta · Android · link na bio.
 ```
 
 **Respostas e rotina:** responder todo comentário no mesmo dia (o alcance do reel depende das
-primeiras horas); fixar o comentário "Quer testar? Link na bio, é grátis e leva 2 minutos"; repostar nos
+primeiras horas); fixar o comentário "Quer jogar antes do lançamento? Peça seu convite pelo link na bio. É grátis."; repostar nos
 stories com a enquete "Qual reação?".
 
 ---
