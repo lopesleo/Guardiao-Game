@@ -75,7 +75,8 @@ npm run check            # conteúdo e idiomas (sem navegador)
 npm i --no-save playwright-core   # 1 vez; os testes abaixo usam o Edge instalado, headless
 npm run test:toque       # joystick com toques simulados: volta depois de carta, pausa, reviver, Jogar de novo
 npm run test:compra      # compras (Sem anúncios, kits, pacotes) com loja falsa: reconhecer, pendente, estorno com aviso
-npm test                 # os dois (~5 min) — obrigatório antes de cada versão da loja
+npm run test:qualidade   # qualidade automática (desce, sobe, não oscila, escolha manual) e o evento perf_run
+npm test                 # todos (~10 min) — obrigatório antes de cada versão da loja
 node tools/audio-lab.mjs # som sem navegador: LUFS/pico por camada, emendas, estalos nas trocas, ambiência por hora
                          # (--wav=pasta --png=pasta: para ouvir e ver os espectrogramas)
 ```
@@ -95,7 +96,8 @@ src/
   scenes/    Boot → Preload → Menu → Game (+ LevelUp, Pause) → GameOver
   entities/  Player, inimigos/chefes, armas/evoluções, pickups, baús
   systems/   reações elementais, spawn, eventos da partida, cartas,
-             meta-progressão, configurações, plataforma (Android)
+             meta-progressão, configurações, qualidade gráfica automática (Quality),
+             plataforma (Android)
   config.js  todo o balanceamento centralizado
 ```
 

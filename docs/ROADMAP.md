@@ -483,6 +483,36 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Clareira. **`npm run test:clareira`** (no `npm test`). 👤 Ver no S23 e num celular fraco (a arte é gerada na
   1ª entrada, ~40–80 ms no PC); 👤 a ficha da loja diz "32 conquistas" (agora 33) nos idiomas; 👤 se as conquistas
   do Play Games forem criadas, `mandacaru_flor` é a chave
+- ✅ **Qualidade automática contínua e evento `perf_run`** (23/10/2026, `src/systems/Quality.js`, `QUALITY` no
+  config, `npm run test:qualidade`): um sistema só no lugar do QualityWatchdog (que desligava a luz uma vez por
+  aparelho) e da opção "Iluminação dinâmica". **Três degraus, só do visual**: Alta (tudo); Média (sem as sombras
+  das árvores nem os cogumelos que cintilam, 40 luzes redesenhadas a 20 Hz, 70% das partículas, 60% do ar);
+  Baixa (sem mapa de luz, Podridão só no degradê, metade das partículas, 40% do ar — o visual da antiga
+  "Iluminação dinâmica" desligada, que migra para cá). Dano, hitbox, inimigos, números de dano e avisos de golpe
+  dos chefes não leem a qualidade. **Automático**: janelas de 2 s (sem os 10% quadros mais longos: tranco isolado
+  não decide); desce com 3 janelas abaixo de 85% do teto de 60 fps ou 2 abaixo de 60%; sobe com 20 s de janelas
+  boas (≥ 90%) **e** folga prevista (trabalho do quadro × custo medido na descida ≤ 70% do quadro); subida que erra
+  volta na hora e dobra a espera; descida que não rende com o quadro do jogo leve (tela presa em 30 Hz, outro app)
+  volta e vira o piso da partida. Aprende o degrau do aparelho para a próxima partida. Trocas sem salto: a noite
+  clareia ou escurece em 1,2 s, sombras/cogumelos/ar somem devagar, a Podridão cruza os dois desenhos.
+  **Opções → Áudio e tela → Qualidade gráfica** (Automática/Alta/Média/Baixa; pela Pausa vale na hora e a dica
+  diz o degrau de agora), nos 6 idiomas. **Custo de cada degrau** (Pesadelo carregado, noite, CPU 4× mais lenta,
+  3 × 120 s com os degraus intercalados na mesma partida): quadro 15,55 ms na Alta → 15,15 na Média (−2,6%) →
+  14,27 na Baixa (−8,2%); p95 21,9 → 21,5 → 20,2. O ganho na CPU é pequeno porque o grosso do quadro é
+  jogabilidade (inimigos, tiros, física, desenho dos sprites); a outra parte da economia é na GPU do celular (mapa
+  de luz em tela cheia, ruído e filtro da Podridão), que o navegador do teste não mede. Sombras dos inimigos e
+  brilho dos tiros fora da Baixa renderiam ~2% cada: ficaram (o visual perde mais do que o quadro ganha).
+  **Prova num aparelho fraco simulado** (`PROVA=1`: a mesma partida carregada em tempo real, CPU pelo CDP): com a
+  CPU 6× mais lenta desce Alta → Média aos 10 s e Média → Baixa aos 17 s (47,6 → 43,5 → 40,5 fps, com a horda
+  crescendo: nenhum degrau visual salva uma CPU 6× mais lenta); de volta a 1×, sobe Baixa → Média ~20 s depois de o
+  quadro ficar bom e Média → Alta 26 s depois; a 3×, 90 s na Alta (56,4 fps, trabalho 12,6 ms) sem nenhuma troca.
+  Nos casos do teste: um tranco de 400 ms ou uma rajada curta não descem; subida que não aguenta volta numa janela
+  e a espera dobra (4 → 8 → 16 s no teste); com os quadros lentos por fora do jogo (tela em 30 Hz) desce uma vez,
+  volta e fica; escolha fixa nunca muda.
+  **`perf_run`** no fim de cada partida (campos e o que registrar no Google Analytics:
+  [`ARMAS_E_COMBOS.md`](ARMAS_E_COMBOS.md#desempenho-perf_run-23102026)); cabe no "Diagnóstico" já declarado na
+  Segurança dos dados, e a política ganhou uma frase (`PRIVACY.md`). 👤 Registrar as definições no GA4; copiar a
+  política para o site; ver no aparelho fraco se a troca de degrau aparece (e se incomoda)
 
 ### M5 — Monetização e medição reais 👤
 - ✅ AdMob: app Android criado e **7 blocos premiados** em uso (revive, extra_card, build_speed,
