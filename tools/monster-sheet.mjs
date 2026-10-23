@@ -21,9 +21,11 @@ import { registerSprites } from "../src/art/Sprites.js";
 import { registerCamp } from "../src/art/Camp.js";
 import { registerCosmeticFX } from "../src/art/CosmeticFX.js";
 import { registerCampDecor } from "../src/art/CampDecor.js";
+import { registerCampSertao } from "../src/art/CampSertao.js";
 
 const [out = "monster-sheet.png", keysArg = "mon_alpha,mon_elder,mon_boss", scaleArg = "5"] = process.argv.slice(2);
 const S = Number(scaleArg);
+const BG = process.env.BG ? process.env.BG.split(",").map(Number) : null; // fundo (r,g,b) no lugar da noite
 const wanted = keysArg.split(",");
 
 // Cena falsa: cada createCanvas vira um buffer RGBA; tex.add guarda o recorte do quadro
@@ -73,6 +75,7 @@ registerCosmeticFX(scene); // cos_* e fx_awaken_aura_<peça> (cosméticos, docs/
 try {
   registerCampDecor(scene); // camp_kapok, camp_jequitiba (Clareira Ancestral), camp_plaque…
 } catch {} // a vinheta usa gradiente de canvas, que a cena falsa não tem
+registerCampSertao(scene); // camp_sertao_* (Clareira da Caatinga), pond_sertao_*, garden_sertao_*
 // campo da Aura no raio-base (40 = 120/3) e do Coração do Inverno (43): fx_frost_rim_40_0 etc.
 frostRimTexture(scene, 40, false);
 frostRimTexture(scene, 43, true);
@@ -104,7 +107,8 @@ for (const r of rows) {
     for (let x = 0; x < W; x++) {
       const ground = y > (ch - PAD) * S;
       const edge = x % (cellW * S) === 0 || y === 0;
-      put(x, oy + y, edge ? 70 : ground ? 30 : 22, edge ? 90 : ground ? 52 : 36, edge ? 100 : ground ? 44 : 58);
+      if (BG) put(x, oy + y, edge ? 70 : BG[0], edge ? 90 : BG[1], edge ? 100 : BG[2]);
+      else put(x, oy + y, edge ? 70 : ground ? 30 : 22, edge ? 90 : ground ? 52 : 36, edge ? 100 : ground ? 44 : 58);
     }
   r.frames.forEach((f, i) => {
     const ox = i * cellW * S + PAD * S;

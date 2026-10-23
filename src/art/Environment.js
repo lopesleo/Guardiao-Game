@@ -18,7 +18,7 @@ const LX = -0.55,
 // Sombreia uma forma feita de "bolhas" (copas, arbustos, pedras).
 // Cada pixel pertence à bolha da FRENTE (maior índice) que o contém; a normal
 // da bolha dá o tom. Contato entre bolhas escurece → leitura de "cachos".
-function shadeBlobs(p, blobs, ramp, r, jitter = 0.22) {
+export function shadeBlobs(p, blobs, ramp, r, jitter = 0.22) {
   const owner = new Int16Array(p.w * p.h).fill(-1);
   blobs.forEach((b, i) => {
     for (let y = Math.floor(b.cy - b.ry); y <= Math.ceil(b.cy + b.ry); y++)

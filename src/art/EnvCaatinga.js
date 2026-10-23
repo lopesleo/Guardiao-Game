@@ -8,12 +8,13 @@ import { Pix, rng, bayer, tileNoise } from "./PixelArt.js";
 import { makeTree, makeRock } from "./Environment.js";
 
 // Rampas do sertão (escuro → claro)
+// (exportadas: a Clareira da Caatinga, src/art/CampSertao.js, usa as mesmas)
 const EARTH = [0x7c5a38, 0x8c6a42, 0x9c7a4e, 0xac8858];
-const CACTUS = [0x173d33, 0x235a45, 0x357a55, 0x5a9c66, 0x8cc07a];
-const DRYWOOD = [0x4a4038, 0x6a5e52, 0x8c8072, 0xb0a594];
-const JUAZEIRO = [PAL.t1, PAL.t2, PAL.g3, PAL.g4, PAL.g5];
-const STRAW = [PAL.straw0, PAL.straw1, PAL.straw2, PAL.straw3];
-const LAJEDO = [0x5e5a58, 0x7c7672, 0x9c958e, 0xbab2a8, 0xd8d0c4];
+export const CACTUS = [0x173d33, 0x235a45, 0x357a55, 0x5a9c66, 0x8cc07a];
+export const DRYWOOD = [0x4a4038, 0x6a5e52, 0x8c8072, 0xb0a594];
+export const JUAZEIRO = [PAL.t1, PAL.t2, PAL.g3, PAL.g4, PAL.g5];
+export const STRAW = [PAL.straw0, PAL.straw1, PAL.straw2, PAL.straw3];
+export const LAJEDO = [0x5e5a58, 0x7c7672, 0x9c958e, 0xbab2a8, 0xd8d0c4];
 
 // Chão: terra seca com rachaduras e capim queimado
 export function makeGroundCaatinga(seed = 11) {
