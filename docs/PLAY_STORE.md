@@ -239,9 +239,88 @@ Arquivos e como refazer: `videos/promo/store/out/LEIA-ME.txt` (fora do git); ver
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.21 (código 22) — 23/10/2026
+
+AAB: `dist/guardiao-v1.0.21-22-anuncios-reais.aab`. Substitui a 1.0.20, que ficou só como rascunho e nunca chegou aos
+testadores. Leva tudo dela e mais os 3 avisos do Play Console sobre a 1.0.19:
+- **Tela de ponta a ponta:** `EdgeToEdge.enable()` no `MainActivity`.
+- **APIs de janela descontinuadas:** saiu o plugin `@capacitor/status-bar`, que as chamava e era redundante (o
+  `MainActivity` já esconde as barras).
+- **Orientação em tela grande:** `android:appCategory="game"` no manifesto. No Android 16+, jogos ficam fora da regra
+  que ignora a orientação travada em tablets; o jogo continua só deitado.
+
+As notas repetem as da 1.0.20, porque é a primeira vez que os testadores recebem essas novidades.
+
+```
+<pt-BR>
+• Correção: o jogo não trava mais quando a evolução Inferno queima o chão.
+• Som remixado: a música do chefe entra no compasso e o coração bate quando a vida está baixa.
+• Golpes com mais peso, efeitos dos elementos mais fáceis de ver e o chefe que surge de uma poça da Podridão.
+• A mata ganhou cogumelos que brilham à noite, e o jogo ficou mais leve.
+• Compartilhe o cartão da sua partida e chame amigos para jogar.
+• Tela cheia ajustada para o Android 15.
+</pt-BR>
+<en-US>
+• Fix: the game no longer freezes when the Inferno evolution burns the ground.
+• Remixed sound: the boss music comes in on the beat, and a heartbeat warns you when health is low.
+• Heavier hits, clearer elemental effects, and the boss now rises from a pool of the Rot.
+• The forest has mushrooms that glow at night, and the game runs lighter.
+• Share your run card and invite friends to play.
+• Full-screen display adjusted for Android 15.
+</en-US>
+<es-419>
+• Corrección: el juego ya no se congela cuando la evolución Infierno quema el suelo.
+• Sonido remezclado: la música del jefe entra a compás y un latido avisa cuando tienes poca vida.
+• Golpes con más peso, efectos de los elementos más claros y el jefe que surge de un charco de la Podredumbre.
+• El bosque tiene hongos que brillan de noche, y el juego va más ligero.
+• Comparte la tarjeta de tu partida e invita a tus amigos a jugar.
+• Pantalla completa ajustada para Android 15.
+</es-419>
+<es-ES>
+• Corrección: el juego ya no se congela cuando la evolución Infierno quema el suelo.
+• Sonido remezclado: la música del jefe entra a compás y un latido avisa cuando tienes poca vida.
+• Golpes con más peso, efectos de los elementos más claros y el jefe que surge de un charco de la Podredumbre.
+• El bosque tiene setas que brillan de noche, y el juego va más ligero.
+• Comparte la tarjeta de tu partida e invita a tus amigos a jugar.
+• Pantalla completa ajustada para Android 15.
+</es-ES>
+<ja-JP>
+• 修正：進化武器「業火」が地面を焼くとゲームが止まる不具合を直しました。
+• サウンドを再ミックス：ボスの曲は小節の頭で切り替わり、体力が少ないと心音が鳴ります。
+• 攻撃の手応えを強化し、属性の効果も見やすく。ボスは腐敗の沼からせり上がって現れます。
+• 夜の森に光るキノコが登場し、動作も軽くなりました。
+• リザルトカードをシェアして、友だちを誘えます。
+• Android 15 の全画面表示に対応しました。
+</ja-JP>
+<zh-CN>
+• 修复：进化武器“炼狱”灼烧地面时游戏卡住的问题。
+• 音效重新混音：头目音乐踩着节拍切入，生命值低时会响起心跳声。
+• 打击更有分量，元素效果更清楚，头目会从腐朽的泥潭中升起。
+• 森林里多了夜晚会发光的蘑菇，游戏也更流畅。
+• 分享本局战绩卡，邀请朋友一起玩。
+• 适配 Android 15 的全屏显示。
+</zh-CN>
+<zh-TW>
+• 修復：進化武器「煉獄」灼燒地面時遊戲卡住的問題。
+• 音效重新混音：頭目音樂踩著節拍切入，生命值低時會響起心跳聲。
+• 打擊更有分量，元素效果更清楚，頭目會從腐朽的泥潭中升起。
+• 森林裡多了夜晚會發光的蘑菇，遊戲也更流暢。
+• 分享本局戰績卡，邀請朋友一起玩。
+• 適配 Android 15 的全螢幕顯示。
+</zh-TW>
+<zh-HK>
+• 修復：進化武器「煉獄」灼燒地面時遊戲卡住的問題。
+• 音效重新混音：頭目音樂踩著節拍切入，生命值低時會響起心跳聲。
+• 打擊更有分量，元素效果更清楚，頭目會從腐朽的泥潭中升起。
+• 森林裡多了夜晚會發光的蘑菇，遊戲也更流暢。
+• 分享本局戰績卡，邀請朋友一起玩。
+• 適配 Android 15 的全螢幕顯示。
+</zh-HK>
+```
+
 ### 1.0.20 (código 21) — 23/10/2026
 
-AAB: `dist/guardiao-v1.0.20-21-anuncios-reais.aab`. O motivo principal é o **conserto do travamento da 1.0.19**:
+**Não publicada:** ficou como rascunho e foi substituída pela 1.0.21. AAB: `dist/guardiao-v1.0.20-21-anuncios-reais.aab`. O motivo principal é o **conserto do travamento da 1.0.19**:
 desde 09/10, o jogo congelava quando a evolução INFERNO queimava o chão (`fix/inferno-trava`).
 
 Também entra tudo o que ficou na `main` de 21 a 23/10 (detalhes no ROADMAP, fim do M4.5):
