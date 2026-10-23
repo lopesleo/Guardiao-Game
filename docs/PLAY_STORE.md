@@ -1254,6 +1254,15 @@ Refazer quando o app mudar (compra "Remover anúncios", login do Play Games, nov
   | Diagnóstico | sim | sim | sim | análise, publicidade, fraudes |
   | IDs do dispositivo | sim | sim | sim | análise, publicidade, fraudes |
 
+  **Desempenho da partida (evento `perf_run`, 23/10/2026):** fps p50/p5, trabalho do quadro, degrau de qualidade
+  gráfica, memória (`deviceMemory`) e núcleos (`hardwareConcurrency`) do aparelho, Hz da tela, duração e bioma.
+  Cabe em **Informações e desempenho do app → Diagnóstico**, que já está declarado (coleta e compartilha, para
+  análise): a definição do próprio formulário cita "taxa de quadros ou diagnósticos técnicos". Memória e núcleos
+  são características do aparelho, não identificadores (não entram em "IDs do dispositivo"). **Nada muda no
+  formulário.** Vai pelo `Analytics.track` como os outros eventos: só no app, e nada sai com "Dados de uso e
+  erros" desligado (ou sem o consentimento na Europa). A política (`PRIVACY.md`, 23/10/2026) passou a citar o
+  desempenho na seção do Firebase.
+
   Ao publicar a compra "Sem anúncios", acrescentar: **Informações financeiras → Histórico de compras** |
   coleta: sim | compartilha: não | **opcional** (Opções) | análise. O Firebase Analytics registra sozinho o
   evento `in_app_purchase` (produto, preço, moeda); o jogo nunca vê dados de pagamento.
