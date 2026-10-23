@@ -97,11 +97,14 @@ export const QUALITY = {
     UP_BUSY: 0.7,
     UP_WAIT_MS: [20000, 160000],
     RECENT_UP_MS: 40000,
-    // Depois de cada troca, PROBE_WINDOWS janelas dizem se ela serviu. Descida que não rendeu GAIN_FPS e não
-    // resolveu (a tela travada em 30 Hz pela economia de bateria, por ex.) volta e é o piso da partida; subida
-    // com qualquer janela ruim no teste volta na hora
+    // Depois de cada troca, PROBE_WINDOWS janelas dizem se ela serviu. Descida que não rendeu GAIN_FPS, não
+    // resolveu e com o trabalho do quadro abaixo de CPU_BOUND do intervalo (não é o nosso quadro que segura: a
+    // tela travada em 30 Hz pela economia de bateria, por ex.) volta e é o piso da partida. Com o quadro do jogo
+    // como gargalo, segue descendo (cada degrau rende pouco na CPU; somados, rendem). Subida com qualquer janela
+    // ruim no teste volta na hora
     PROBE_WINDOWS: 2,
     GAIN_FPS: 2,
+    CPU_BOUND: 0.6,
     // Custo do degrau de cima sobre o de baixo (trabalho do quadro), enquanto a partida ainda não mediu o dela:
     // Alta ÷ Média e Média ÷ Baixa, do teste de carga com a CPU 4× mais lenta (tools/test-qualidade.mjs)
     COST: [1.15, 1.25],

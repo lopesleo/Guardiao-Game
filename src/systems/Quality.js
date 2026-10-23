@@ -279,9 +279,12 @@ export class QualityAuto {
         const fps = mean(pr.wins, (x) => x.fps);
         const busy = mean(pr.wins, (x) => x.busy);
         const still = fps < this.target * A.DOWN;
-        if (still && fps - pr.fps < A.GAIN_FPS) {
-          // descer não rendeu (tela presa em 30 Hz pela economia de bateria, gargalo fora do visual): o visual
-          // volta e este degrau vira o piso da partida
+        // quanto do intervalo entre quadros é trabalho nosso: perto de 1 = o quadro do jogo é o gargalo (descer
+        // pouco ainda soma, segue descendo); bem abaixo = a tela, a GPU ou outro app seguram os quadros
+        const share = (busy * fps) / 1000;
+        if (still && fps - pr.fps < A.GAIN_FPS && share < A.CPU_BOUND) {
+          // descer não rendeu e não é o nosso quadro que pesa (tela presa em 30 Hz pela economia de bateria,
+          // outro app): o visual volta e este degrau vira o piso da partida
           this.maxTier = pr.from;
           this._change(pr.from, "descida sem ganho", now, w);
           return;
