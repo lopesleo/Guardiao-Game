@@ -239,6 +239,77 @@ Arquivos e como refazer: `videos/promo/store/out/LEIA-ME.txt` (fora do git); ver
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.22 (código 23) — 23/10/2026
+
+AAB: `dist/guardiao-v1.0.22-23-anuncios-reais.aab`. Junta o que entrou na `main` depois da 1.0.21 (detalhes no ROADMAP):
+- **Som** (`feat/audio-camadas`): síntese em Web Workers, sem travar a carga; música da partida em 4 camadas pela
+  intensidade; ambiência da Clareira pela hora.
+- **Clareira da Caatinga** (`feat/clareira-caatinga`): visual do sertão, grátis no Perigo Pesadelo na Caatinga, com
+  a conquista Mandacaru em Flor (33 conquistas).
+- **Qualidade automática e `perf_run`** (`feat/qualidade-automatica`): três degraus visuais e a opção "Qualidade
+  gráfica"; o evento cabe em "Diagnóstico".
+- **Correção do som duplo:** um toque toca um som só (`fix/som-duplo-botoes`).
+- **"Levar um prato?" na trilha** (`feat/prato-na-trilha`).
+
+```
+<pt-BR>
+• Nova Clareira da Caatinga: vença no Perigo Pesadelo na Caatinga e leve o sertão para o acampamento.
+• Música da partida que cresce com a luta e sons da mata na Clareira conforme a hora do dia.
+• O jogo abre mais rápido e ajusta a qualidade gráfica sozinho quando o celular pesa (Opções › Qualidade gráfica).
+• Na saída da Clareira, a trilha lembra de levar um prato da cozinha.
+• Correção: os botões não tocam mais dois sons de uma vez.
+</pt-BR>
+<en-US>
+• New Caatinga Clearing: win on Nightmare Danger in the Caatinga and bring the backlands to your camp.
+• Run music that builds with the fight, and forest sounds in the Clearing that follow the time of day.
+• The game opens faster and adjusts graphics quality on its own when your phone struggles (Options › Graphics quality).
+• On your way out of the Clearing, the trail reminds you to bring a dish from the kitchen.
+• Fix: buttons no longer play two sounds at once.
+</en-US>
+<es-419>
+• Nuevo Claro de la Caatinga: gana en Peligro Pesadilla en la Caatinga y lleva el sertón a tu campamento.
+• Música de partida que crece con la pelea y sonidos del bosque en el Claro según la hora del día.
+• El juego abre más rápido y ajusta la calidad gráfica solo cuando el teléfono no da más (Opciones › Calidad gráfica).
+• Al salir del Claro, el sendero te recuerda llevar un plato de la cocina.
+• Corrección: los botones ya no suenan dos veces a la vez.
+</es-419>
+<es-ES>
+• Nuevo Claro de la Caatinga: gana en Peligro Pesadilla en la Caatinga y lleva el sertón a tu campamento.
+• Música de partida que crece con la pelea y sonidos del bosque en el Claro según la hora del día.
+• El juego abre más rápido y ajusta la calidad gráfica solo cuando el móvil no da más (Opciones › Calidad gráfica).
+• Al salir del Claro, el sendero te recuerda llevar un plato de la cocina.
+• Corrección: los botones ya no suenan dos veces a la vez.
+</es-ES>
+<ja-JP>
+• 新しい「カアチンガの広場」：カアチンガで危険度・悪夢をクリアすると、キャンプが乾燥地帯の姿に。
+• 戦いの激しさで盛り上がるプレイ中の音楽と、時間帯で変わる広場の森の音。
+• 起動が速くなり、端末が重いときは画質を自動で調整（オプション › 画質）。
+• 広場を出る小道で、台所の料理を持っていくよう声をかけます。
+• 修正：ボタンの音が二重に鳴らなくなりました。
+</ja-JP>
+<zh-CN>
+• 全新卡廷加空地：在卡廷加以梦魇危险度获胜，把干旱腹地带进营地。
+• 随战斗激烈程度增强的局内音乐，以及随时间变化的空地森林音效。
+• 游戏启动更快，手机吃力时会自动调整画质（选项 › 画质）。
+• 离开空地时，小路会提醒你带上一道厨房的菜。
+• 修复：按钮不再同时发出两次声音。
+</zh-CN>
+<zh-TW>
+• 全新卡廷加空地：在卡廷加以夢魘危險度獲勝，把乾旱腹地帶進營地。
+• 隨戰鬥激烈程度增強的局內音樂，以及隨時間變化的空地森林音效。
+• 遊戲啟動更快，手機吃力時會自動調整畫質（選項 › 畫質）。
+• 離開空地時，小路會提醒你帶上一道廚房的菜。
+• 修復：按鈕不再同時發出兩次聲音。
+</zh-TW>
+<zh-HK>
+• 全新卡廷加空地：在卡廷加以夢魘危險度獲勝，把乾旱腹地帶進營地。
+• 隨戰鬥激烈程度增強的局內音樂，以及隨時間變化的空地森林音效。
+• 遊戲啟動更快，手機吃力時會自動調整畫質（選項 › 畫質）。
+• 離開空地時，小路會提醒你帶上一道廚房的菜。
+• 修復：按鈕不再同時發出兩次聲音。
+</zh-HK>
+```
+
 ### 1.0.21 (código 22) — 23/10/2026
 
 AAB: `dist/guardiao-v1.0.21-22-anuncios-reais.aab`. Substitui a 1.0.20, que ficou só como rascunho e nunca chegou aos
