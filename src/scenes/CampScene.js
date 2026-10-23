@@ -91,6 +91,7 @@ export class CampScene extends Phaser.Scene {
     // ser zerado aqui, senão sobra da vez anterior (ex.: herói preso andando).
     this._leaving = false;
     this._exiting = false;
+    this._mealAsked = false; // "Levar um prato?" na trilha: uma vez por visita
     this._target = null;
     this._bubbleUntil = 0;
     this._nextBuildTick = 0;
@@ -732,8 +733,12 @@ export class CampScene extends Phaser.Scene {
     if (this.inputMgr.consumeInteract() && !busy) this._interact();
     if (!busy) this._gardenWalk(p.x, p.y + 20); // colher andando
 
-    // Saída: passou entre as tochas da trilha ao norte
-    if (!busy && p.y < TOP + 130 && Math.abs(p.x) < TRAIL_HALF) this._play();
+    // Saída: passou entre as tochas da trilha ao norte. Sem prato ativo e com o que comer, pergunta antes (uma vez
+    // por visita); o herói volta um passo para que fechar a janela não valha como partir
+    if (!busy && p.y < TOP + 130 && Math.abs(p.x) < TRAIL_HALF) {
+      if (this._mealPrompt()) p.body.reset(p.x, TOP + 190);
+      else this._play();
+    }
 
     // Luzes tremulando e vaga-lumes
     const k = this._lightK ?? 1; // luzes acesas conforme escurece (hora real)

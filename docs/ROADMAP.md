@@ -469,6 +469,15 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
     começo da partida e com a horda/elite/minichefe (a base sozinha não ficou fraca demais?), a volta à base
     quando a luta acalma, e a Clareira em horas diferentes (`node tools/audio-lab.mjs --wav=pasta` gera os
     sons para ouvir no PC).
+- ✅ **"Levar um prato?" na trilha** (23/10/2026, `CampKitchen._mealPrompt`, cenário `pratoNaTrilha` do
+  `test:clareira`). O Leonardo nunca tinha comido um prato, e por isso o Lago não aparecia: o "!" da cozinha
+  sozinho passava batido.
+  - Agora, ao atravessar a trilha sem prato ativo, a janela oferece os pratos prontos ("COMER E PARTIR") ou, sem
+    prato pronto, o que dá para cozinhar (abre a cozinha).
+  - "PARTIR SEM COMER" fica sempre à mão e guarda o prato.
+  - Pergunta uma vez por visita e nunca com prato ativo. O herói volta um passo, para que fechar a janela não
+    conte como partir.
+  - Eventos `meal_prompt`, `meal_prompt_skip` e `meal_eat` com `from: "trail"`.
 - ✅ **Clareira da Caatinga** (23/10/2026, branch `feat/clareira-caatinga`; ver `COSMETICOS.md`): o visual do sertão
   para o acampamento inteiro, **grátis**, para quem vence no **Perigo Pesadelo na Caatinga** — conquista nova
   **Mandacaru em Flor** (33 conquistas). Terra vermelha com barro rachado, juazeiro com a copa em onda, mandacarus

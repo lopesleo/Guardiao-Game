@@ -364,6 +364,107 @@ const SCENARIOS = {
     await closeModals();
     await page.evaluate(async () => (await import("/src/systems/Cosmetics.js")).Wardrobe.equip("camp", "caatinga"));
   },
+
+  // "Levar um prato?" na boca da trilha (23/10/2026): o "!" da cozinha sozinho passava batido, e sem comer o Lago
+  // nunca aparecia. Pergunta uma vez por visita, só sem prato ativo e com algo para comer ou cozinhar
+  async pratoNaTrilha() {
+    // A Clareira mede 1100 de altura centrada em 0: a trilha começa em y < -550 + 130, |x| < 70
+    const toTrail = () => page.evaluate(() => void window.game.scene.getScene("CampScene").player.body.reset(0, -440));
+    const prompt = async () => {
+      await elapse((await page.evaluate(() => window.game.scene.getScene("CampScene").__el)) + 600);
+      return page.evaluate(() => {
+        const c = window.game.scene.getScene("CampScene");
+        return { open: c._modals.at(-1)?.titleText?.text ?? null, rows: c._modals.at(-1)?.list?.rows.length ?? 0, y: Math.round(c.player.y), leaving: !!c._leaving };
+      });
+    };
+    const tapRow = (i) => page.evaluate((i) => { const rows = window.game.scene.getScene("CampScene")._modals.at(-1).list.rows; void rows.at(i).onTap(); }, i);
+    // Save pronto para o teste: cozinha aberta, presente do dia já aberto hoje e as novidades pendentes já vistas
+    // (a janela do presente e as cenas da Anciã vêm antes da do prato; comer um prato revela o Lago na volta)
+    const save = (dishes, meal = null) =>
+      page.evaluate(
+        async ({ dishes, meal }) => {
+          const { MetaProgression } = await import("/src/systems/MetaProgression.js");
+          const { dayKey } = await import("/src/systems/Daily.js");
+          const { pendingReveals } = await import("/src/systems/Reveal.js");
+          const m = new MetaProgression();
+          const d = m.data;
+          d.runsPlayed = Math.max(d.runsPlayed || 0, 4);
+          d.campIntroSeen = true;
+          d.firstDefeatSeen = true;
+          d.stats ||= {};
+          d.stats.harvests = Math.max(d.stats.harvests || 0, 1);
+          d.streak = { last: dayKey(), count: 1 };
+          d.dishes = dishes;
+          d.meal = meal;
+          d.pantry = {};
+          d.revealed ||= [];
+          for (const r of pendingReveals(d)) d.revealed.push(r.id);
+          m._save();
+        },
+        { dishes, meal },
+      );
+    await page.evaluate(async () => (await import("/src/systems/Cosmetics.js")).Wardrobe.equip("camp", null));
+
+    // 1) prato pronto e nada comido: a janela abre na trilha e o herói volta um passo
+    await save({ roast_carrot: [0, 1, 0] });
+    await camp({ fromRun: false });
+    await toTrail();
+    let p = await prompt();
+    check(p.open === "LEVAR UM PRATO?" && p.rows === 2 && !p.leaving, "com prato pronto, a trilha pergunta antes de partir (o prato e PARTIR SEM COMER)", JSON.stringify(p));
+    check(p.y > -420, "o herói volta um passo: fechar a janela não vale como partir", `y=${p.y}`);
+    await shot("prato_na_trilha");
+    // fechar e voltar à trilha: não pergunta de novo nesta visita, parte direto
+    await closeModals();
+    await toTrail();
+    p = await prompt();
+    check(p.open === null && p.leaving, "fechou a janela: na 2ª vez nesta visita parte sem perguntar", JSON.stringify(p));
+
+    // 2) COMER E PARTIR: come o prato e a partida começa com ele
+    await save({ roast_carrot: [0, 1, 0] });
+    await camp({ fromRun: false });
+    await toTrail();
+    await prompt();
+    await tapRow(0);
+    await page.waitForFunction(() => window.game.scene.isActive("GameScene"), null, { timeout: 60000 });
+    const eaten = await meta("return { meal: d.meal, eaten: d.stats.mealsEaten || 0, left: d.dishes.roast_carrot };");
+    check(eaten.meal === null && eaten.eaten >= 1 && eaten.left[1] === 0, "COMER E PARTIR: o prato é comido na entrada da partida (conta para o Lago)", JSON.stringify(eaten));
+
+    // 3) PARTIR SEM COMER: parte e guarda o prato
+    await save({ roast_carrot: [0, 1, 0] });
+    await camp({ fromRun: false });
+    await toTrail();
+    await prompt();
+    await tapRow(-1);
+    await page.waitForFunction(() => window.game.scene.isActive("GameScene"), null, { timeout: 60000 });
+    const kept = await meta("return d.dishes.roast_carrot;");
+    check(kept[1] === 1, "PARTIR SEM COMER: parte e o prato fica guardado", JSON.stringify(kept));
+
+    // 4) já comeu, ou sem nada para comer nem cozinhar: parte sem perguntar
+    for (const [what, dishes, meal] of [
+      ["com prato ativo", { roast_carrot: [0, 1, 0] }, { id: "pamonha", q: 1 }],
+      ["sem prato e sem ingrediente", {}, null],
+    ]) {
+      await save(dishes, meal);
+      await camp({ fromRun: false });
+      await toTrail();
+      p = await prompt();
+      check(p.open === null && p.leaving, `${what}: a trilha parte sem perguntar`, JSON.stringify(p));
+    }
+
+    // 5) sem prato pronto, mas com o que cozinhar: oferece a cozinha
+    await save({});
+    await meta("d.pantry = { carrot: [0, 2, 0] };");
+    await camp({ fromRun: false });
+    await toTrail();
+    p = await prompt();
+    const tx = await modalTexts();
+    check(p.open === "LEVAR UM PRATO?" && tx.includes("COZINHAR") && tx.includes("PARTIR SEM COMER"), "sem prato pronto mas com ingrediente: oferece cozinhar", tx.filter((t) => /COZINHAR|PARTIR|Cenoura/.test(t)).join(" | "));
+    await tapRow(0);
+    await elapse((await page.evaluate(() => window.game.scene.getScene("CampScene").__el)) + 400);
+    const kitchen = await page.evaluate(() => window.game.scene.getScene("CampScene")._modals.at(-1)?.titleText?.text ?? null);
+    check(kitchen === "COZINHA", "COZINHAR abre a cozinha", String(kitchen));
+    await closeModals();
+  },
 };
 
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
