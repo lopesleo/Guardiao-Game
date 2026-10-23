@@ -65,9 +65,12 @@ function fakeStore(cfg) {
           const brl = (v) => "R$ " + v.toFixed(2).replace(".", ",");
           return { products: (o.productIdentifiers || []).filter((id) => (S.kits ?? []).includes(id)).map((id) => ({ identifier: id, priceString: brl(PRICE[id] ?? 4.9), price: PRICE[id] ?? 4.9, currencyCode: "BRL" })) };
         },
+        // "query" ao perguntar; "query:fim" ao responder (o jogo confere a resposta na mesma tarefa: quem espera
+        // o resultado de uma consulta espera o "query:fim", não o "query" — esse vem 40 ms ANTES da resposta)
         getPurchases: async () => {
           S.calls.push("query");
           await wait(40);
+          S.calls.push("query:fim");
           if (S.queryFail > 0) {
             S.queryFail--;
             throw Object.assign(new Error("Failed to query purchases"), { code: "QUERY_PURCHASES_FAILED" });
@@ -192,7 +195,7 @@ const SCENARIOS = {
   // Estorno: tira o que a loja deu e AVISA
   async estorno(t) {
     await t.boot({ local: OWNED, store: { list: [] } });
-    await t.page.waitForFunction(() => window.__store.calls.filter((c) => c === "query").length >= 2, null, { timeout: 20000 }).catch(() => {});
+    await t.page.waitForFunction(() => window.__store.calls.filter((c) => c === "query:fim").length >= 2, null, { timeout: 20000 }).catch(() => {});
     const s = await t.state();
     check(!s.noAds && !s.saved.owned, "compra sumiu da loja → sem anúncios desligado", JSON.stringify(s.saved));
     check(s.calls.filter((c) => c === "query").length >= 2, "confere 2 vezes antes de tirar");
@@ -215,7 +218,7 @@ const SCENARIOS = {
       Date.now = () => real() + 5 * 60000;
       document.dispatchEvent(new Event("visibilitychange"));
     });
-    await t.page.waitForFunction(() => window.__store.calls.filter((c) => c === "query").length >= 3, null, { timeout: 15000 }).catch(() => {});
+    await t.page.waitForFunction(() => window.__store.calls.filter((c) => c === "query:fim").length >= 3, null, { timeout: 15000 }).catch(() => {});
     await t.page.waitForTimeout(500);
     s = await t.state();
     check(!s.noAds && !s.saved.owned, "a volta ao app percebe o estorno e tira o sem anúncios", s.calls.join(" "));
@@ -267,7 +270,7 @@ const SCENARIOS = {
   // Estorno de KIT (o caso de 18/10, agora num kit): tira só o kit, avisa, e o Sem anúncios continua
   async kitEstorno(t) {
     await t.boot({ local: { ...OWNED, guardiao_store_v1: { owned: true, acked: true, grantedAt: OLD, kits: { kit_ipe: { owned: true, acked: true, grantedAt: OLD } } } }, store: { list: [PAID], kits: ["kit_ipe"] } });
-    await t.page.waitForFunction(() => window.__store.calls.filter((c) => c === "query").length >= 2, null, { timeout: 20000 }).catch(() => {});
+    await t.page.waitForFunction(() => window.__store.calls.filter((c) => c === "query:fim").length >= 2, null, { timeout: 20000 }).catch(() => {});
     const s = await t.state();
     check(!s.kits.ipe.owns && !s.kits.ipe.piece, "kit sumiu da loja → as peças dele saem do Guarda-roupa", JSON.stringify(s.saved.kits));
     check(s.noAds && s.saved.owned, "o Sem anúncios (ainda pago) continua");
@@ -308,7 +311,7 @@ const SCENARIOS = {
   // Estorno do pacote: tira tudo o que ele deu e avisa
   async pacoteEstorno(t) {
     await t.boot({ local: { guardiao_ads_v1: { noAds: true }, guardiao_store_v1: { kits: PACK_OWNED } }, store: { list: [], kits: ALL } });
-    await t.page.waitForFunction(() => window.__store.calls.filter((c) => c === "query").length >= 2, null, { timeout: 20000 }).catch(() => {});
+    await t.page.waitForFunction(() => window.__store.calls.filter((c) => c === "query:fim").length >= 2, null, { timeout: 20000 }).catch(() => {});
     const s = await t.state();
     check(!s.noAds && !s.pack.founder && !s.pack.anyKit, "pacote sumiu da loja → saem o Sem anúncios, os kits e o Fundador", JSON.stringify(s.saved));
     await t.noticeShown(/COMPRA ESTORNADA/, "pacote_estorno");
@@ -316,7 +319,7 @@ const SCENARIOS = {
   // Estorno do pacote de quem TAMBÉM pagou o Sem anúncios avulso: esse continua
   async pacoteEstornoSemAnuncios(t) {
     await t.boot({ local: { guardiao_ads_v1: { noAds: true }, guardiao_store_v1: { owned: true, acked: true, grantedAt: OLD, kits: PACK_OWNED } }, store: { list: [PAID], kits: ALL } });
-    await t.page.waitForFunction(() => window.__store.calls.filter((c) => c === "query").length >= 2, null, { timeout: 20000 }).catch(() => {});
+    await t.page.waitForFunction(() => window.__store.calls.filter((c) => c === "query:fim").length >= 2, null, { timeout: 20000 }).catch(() => {});
     const s = await t.state();
     check(s.noAds && s.saved.owned && !s.pack.founder && !s.pack.anyKit, "só o pacote sai; o Sem anúncios pago à parte continua", JSON.stringify(s.saved));
     await t.noticeShown(/COMPRA ESTORNADA/, "pacote_estorno_sem_anuncios");
