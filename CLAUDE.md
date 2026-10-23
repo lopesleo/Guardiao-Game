@@ -127,9 +127,23 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
   - a memória num aparelho fraco (o áudio foi de ~19 para ~35 MB).
 
   Para ouvir no PC: `node tools/audio-lab.mjs --wav=<pasta>`.
-- **Próximos de qualidade/desempenho** (estudo de 21/10 com as skills do Phaser 4, `audio-design` e
-  `performance-optimization`): qualidade automática contínua e evento `perf_run` no Analytics, com um agente fazendo
-  em 23/10; medir num celular fraco de verdade.
+- **Qualidade automática e `perf_run` na `main` (23/10, ainda sem versão; detalhes no ROADMAP e em
+  `docs/ARMAS_E_COMBOS.md`, "Desempenho"):** um sistema só (`src/systems/Quality.js`, bloco `QUALITY`) com três
+  degraus visuais (Alta, Média e Baixa) que mudam sozinhos pela taxa de quadros, sem oscilar.
+  - Substitui o `QualityWatchdog` e a opção "Iluminação dinâmica"; nas Opções agora é "Qualidade gráfica".
+  - Ganho na CPU: Média −2,6%, Baixa −8,2%. Parte da economia está na GPU do celular, que o teste não mede.
+  - O evento `perf_run` sai uma vez por partida e cabe em "Diagnóstico" na Segurança dos dados (nada muda no
+    Console).
+
+  👤 No GA4, registrar as dimensões `q_mode`, `q_start`, `q_end`, `q_min`, `dev_mem`, `cpu_cores`, `hz` e
+  `ground_gpu`, e as métricas `fps_p50`, `fps_p5`, `busy_p50`, `busy_p95`, `slow_pct`, `q_min_s`, `q_high_s`,
+  `q_med_s`, `q_low_s`, `q_changes` e `frames`.
+  👤 Copiar a frase nova do `docs/PRIVACY.md` (desempenho, na seção do Firebase) para `guardiao/privacy/` no
+  repositório `lopesleo.github.io` e publicar de novo o komedygames.
+  👤 Conferir no S23 e num celular fraco se a troca de degrau aparece no meio da partida.
+  👤 Decidir, com os números reais do `perf_run`:
+  - se vale um degrau "Economia" com teto de 30 fps;
+  - se a Média deve cortar mais.
 - **1.0.19 (código 20) no Teste interno e no Teste fechado/Alpha (20/10; em 23/10 o script mostrou que ela foi
   aprovada e está publicada nas duas faixas).**
   `dist/guardiao-v1.0.19-20-anuncios-reais.aab`. Nova nela: a **tela de fim de partida redesenhada** (cena na Clareira:
