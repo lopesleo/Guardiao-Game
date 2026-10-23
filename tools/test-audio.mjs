@@ -615,10 +615,12 @@ try {
       DAY = ["cigarra", "bemtevi", "sabia"];
     await camp(() => (window.game.scene.getScene("CampScene").ambience.rateMul = 30)); // cantos 30× mais frequentes
     await setHour(23);
-    await waitAudio(6);
+    // A Clareira abre na hora real: de dia, a cama do dia some em curva (como a da noite no 12h30 abaixo), então
+    // espera o cruzamento inteiro e aceita o resto da curva
+    await waitAudio(AUDIO.AMBIENCE.XFADE_S * 1.3);
     let a = await amb();
     const sp = (p) => Object.keys(p).filter((k) => p[k] > 0);
-    check(a.weights.night === 1 && a.beds.night > 0.3 && !a.beds.day, "23h: a cama da noite (grilos) toca, a do dia não", JSON.stringify(a.beds));
+    check(a.weights.night === 1 && a.beds.night > 0.3 && (a.beds.day ?? 0) < 0.03, "23h: a cama da noite (grilos) toca, a do dia não", JSON.stringify(a.beds));
     check(sp(a.played).length >= 3 && sp(a.played).every((k) => NIGHT.includes(k)), "23h: só bichos da noite cantam", JSON.stringify(a.played));
     // só a ambiência (Música 0): ela segue a barra de Efeitos
     await vol("music", 0);
