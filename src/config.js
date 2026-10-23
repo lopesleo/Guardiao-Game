@@ -89,11 +89,12 @@ export const QUALITY = {
     DOWN_WINDOWS: 3,
     DOWN_FAST: 0.6,
     DOWN_FAST_WINDOWS: 2,
-    // Subir: janelas boas (≥ UP × o alvo, 57 fps) por UP_WAIT_MS seguidos E o trabalho do quadro previsto no
-    // degrau de cima (o de agora × o custo medido na descida, ou COST) até UP_BUSY do orçamento do quadro.
+    // Subir: janelas boas (≥ UP × o alvo, 54 fps: com folga, a tela às vezes entrega só 55–58) por UP_WAIT_MS
+    // seguidos E o trabalho do quadro previsto no degrau de cima (o de agora × o custo medido na descida, ou
+    // COST) até UP_BUSY do orçamento do quadro.
     // Subida que errou (não aguentou o teste, ou desceu de novo até RECENT_UP_MS depois) dobra a espera até o
     // teto: no máximo umas poucas tentativas por partida, nunca um vaivém
-    UP: 0.95,
+    UP: 0.9,
     UP_BUSY: 0.7,
     UP_WAIT_MS: [20000, 160000],
     RECENT_UP_MS: 40000,
