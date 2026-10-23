@@ -221,10 +221,10 @@ export class Button extends Phaser.GameObjects.Container {
     this.setSize(w, h);
     this.setInteractive({ useHandCursor: true });
     this._down = false;
-    this.on("pointerover", () => {
+    this.on("pointerover", (p) => {
       if (!this.enabled) return;
       this._draw(true, this._down);
-      scene.sound.play("sfx_ui_hover", { volume: 0.18 });
+      if (!fromTouch(p)) uiSfx(scene, "sfx_ui_hover", { volume: 0.18 });
     });
     this.on("pointerout", () => {
       this._down = false;
@@ -239,7 +239,7 @@ export class Button extends Phaser.GameObjects.Container {
       if (!this.enabled || !this._down) return;
       this._down = false;
       this._draw(true, false);
-      scene.sound.play("sfx_ui_click", { volume: 0.4 });
+      uiSfx(scene, "sfx_ui_click", { volume: 0.4 });
       haptic(12);
       this.onClick?.();
     });
@@ -423,6 +423,21 @@ export class Bar {
     this.g.destroy();
   }
 }
+
+// Som da interface sem eco: o mesmo som pedido de novo em menos de UI_SFX_GAP ms toca uma vez só. Um toque
+// num botão que abre uma janela pedia o clique duas ou três vezes (o botão, a janela, o Guarda-roupa)
+const UI_SFX_GAP = 120;
+const uiSfxAt = new Map();
+export function uiSfx(scene, key, cfg) {
+  const now = performance.now();
+  if (now - (uiSfxAt.get(key) ?? -Infinity) < UI_SFX_GAP) return;
+  uiSfxAt.set(key, now);
+  scene.sound.play(key, cfg);
+}
+
+// O "passar por cima" que vem de um toque (no celular o pointerover chega junto com o toque): sem o som de
+// hover, senão ele sai colado no clique
+export const fromTouch = (p) => !!(p?.wasTouch || p?.event?.pointerType === "touch" || p?.event?.type?.startsWith?.("touch"));
 
 // Vibração curta (Android). Respeita a opção do jogador.
 export function haptic(ms = 20) {
