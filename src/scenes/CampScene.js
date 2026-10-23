@@ -40,6 +40,7 @@ import { CampPond } from "./CampPond.js";
 import { CampDecor, decorFree } from "./CampDecor.js";
 import { CampDaily } from "./CampDaily.js";
 import { tr, fmt, isCJK } from "../i18n/i18n.js";
+import { Ambience } from "../audio/Ambience.js";
 
 const S = GAME.PIXEL_SCALE;
 const CAMP_W = 1500,
@@ -136,12 +137,18 @@ export class CampScene extends Phaser.Scene {
       if (!this.sound.locked) start();
       else this.sound.once("unlocked", start);
     }
+    // A mata em volta, pela hora (a mesma do céu: _applyTimeOfDay acerta a hora dela). ?debug=1&hora=21
+    if (DEBUG && new URLSearchParams(location.search).has("hora")) this._hourOverride = Number(new URLSearchParams(location.search).get("hora")) || 0;
+    this.ambience = new Ambience(this);
+    this._ambHour = false;
     this.events.once("shutdown", () => {
       this.joystick?.destroy();
       this.joystick = null;
       this.music?.stop();
       this.music?.destroy();
       this.music = null;
+      this.ambience?.destroy();
+      this.ambience = null;
     });
     this.input.keyboard.on("keydown-ESC", () => {
       if (!closeTopModal(this)) this._showSettings();
@@ -1056,6 +1063,7 @@ export class CampScene extends Phaser.Scene {
 
   _go(key) {
     this._leaving = true;
+    this.ambience?.fadeOut((key === "GameScene" ? 650 : 350) / 1000); // a mata some junto com a tela
     this.cameras.main.fadeOut(key === "GameScene" ? 650 : 350, 5, 8, 6);
     this.cameras.main.once("camerafadeoutcomplete", () => this.scene.start(key));
   }

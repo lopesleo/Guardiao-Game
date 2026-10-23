@@ -344,6 +344,9 @@ export const CampDecor = {
     const now = Clock.date();
     const hour = this._hourOverride ?? now.getHours() + now.getMinutes() / 60;
     const sky = skyAt(hour);
+    // A mata acompanha a hora (src/audio/Ambience.js): a 1ª vez direto (a ambiência entra com fade), depois cruza
+    this.ambience?.setHour(hour, !this._ambHour);
+    this._ambHour = true;
     // Clareira Ancestral: o fim de tarde dourado nunca acaba (de dia puxa para o dourado; à noite, um
     // pouco mais quente) e as luzes ficam sempre um pouco acesas
     if (this._ancestral) {

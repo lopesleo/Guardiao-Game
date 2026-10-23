@@ -2112,6 +2112,33 @@ export const AUDIO = {
     LOOKAHEAD_S: 0.12, // mudança nunca é marcada mais perto que isto (o relógio do áudio já andou)
     STEM_DB: { bed: 0, perc: 0, bass: 0, lead: 0 },
   },
+  // Ambiência da Clareira pela hora (src/audio/Ambience.js; sons em src/audio/Nature.js), no canal dos
+  // Efeitos, bem por baixo da música. HOURS: onde cada parte do dia é inteira; entre dois pontos de partes
+  // diferentes, uma vira a outra devagar (o céu segue a mesma hora: CampDecor.skyAt). BED_DB: a cama
+  // contínua de cada hora. SPECIES: quem canta quando (peso por hora), de quanto em quanto tempo
+  // (EVERY_S [mín, máx], sorteado) e o volume (dB). Troca de hora em XFADE_S; entrada em FADE_IN_S
+  AMBIENCE: {
+    DB: -15,
+    FADE_IN_S: 3,
+    FADE_OUT_S: 0.6,
+    XFADE_S: 6,
+    HOURS: [[0, "night"], [4.3, "night"], [5.3, "dawn"], [7.2, "dawn"], [8.2, "day"], [16.3, "day"], [17.2, "dusk"], [19, "dusk"], [20, "night"], [24, "night"]],
+    BED_DB: { dawn: -2, day: -3, dusk: -3, night: -4 },
+    SPECIES: {
+      sabia: { at: { dawn: 1, day: 0.25, dusk: 0.6 }, EVERY_S: [4, 11], DB: -5 },
+      bemtevi: { at: { dawn: 0.7, day: 1, dusk: 0.35 }, EVERY_S: [12, 28], DB: -8 },
+      cigarra: { at: { day: 1, dusk: 0.3 }, EVERY_S: [18, 40], DB: -12 },
+      fogo: { at: { dusk: 1, dawn: 0.35 }, EVERY_S: [12, 26], DB: -6 },
+      grilo: { at: { night: 1, dusk: 0.35, dawn: 0.2 }, EVERY_S: [7, 16], DB: -13 },
+      ferreiro: { at: { night: 1 }, EVERY_S: [8, 19], DB: -10 },
+      cururu: { at: { night: 1 }, EVERY_S: [16, 36], DB: -13 },
+      urutau: { at: { night: 1 }, EVERY_S: [40, 85], DB: -7 },
+      coruja: { at: { night: 0.8 }, EVERY_S: [35, 75], DB: -9 },
+    },
+    MAX_VOICES: 24,
+    LOOKAHEAD_S: 1.2,
+    TICK_MS: 200,
+  },
 };
 
 // Sensação de jogo: o que faz cada momento "pesar" (src/systems/GameFeel.js, Shake.js, ui/HUD.js,

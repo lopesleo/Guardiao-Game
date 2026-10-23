@@ -1,9 +1,11 @@
-// Áudio 100% próprio: efeitos e músicas SINTETIZADOS no carregamento (estilo
+// Áudio 100% próprio: efeitos, músicas e a ambiência da Clareira SINTETIZADOS no carregamento (estilo
 // chiptune), gravados como AudioBuffer no cache de áudio do Phaser. O resto do jogo usa as mesmas
 // chaves de sempre ("sfx_hit", "music_menu"...).
 // Este arquivo é só matemática (nada do navegador): roda num Web Worker (src/audio/SynthWorker.js), na
 // thread principal em fatias (o plano B do src/audio/AudioBank.js) e no Node (tools/audio-lab.mjs).
 // Cada som é uma TAREFA (audioJobs) que pode parar no meio (gerador): quem roda decide o ritmo.
+import { natureJobs } from "./Nature.js";
+
 export const SR = 22050; // taxa de amostragem (chiptune não precisa de mais)
 const TAU = Math.PI * 2;
 const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
@@ -848,6 +850,7 @@ export function audioJobs() {
         return { outputs: r.outputs.map((o) => ({ key: o.stem ? stemKey(key, o.stem) : key, data: o.data })), info: { key, ...r.info, stems } };
       },
     });
+  jobs.push(...natureJobs(SR));
   return jobs;
 }
 
