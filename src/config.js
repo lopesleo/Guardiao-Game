@@ -2005,6 +2005,9 @@ export const ACHIEVEMENTS = [
   // — Biomas —
   { id: "win_caatinga", name: "Cabra da Peste", desc: "Liberte o Caboclo d'Água na Caatinga", check: (c) => (c.winsByBiome?.caatinga || 0) > 0 },
   { id: "carrancas_10", name: "Mestre Carranqueiro", desc: "Espante o Caboclo d'Água com carrancas 10 vezes", check: (c) => (c.stats?.carrancas || 0) >= 10 },
+  // Libera a Clareira da Caatinga no Guarda-roupa (COSM_CAMP em systems/Cosmetics.js). O mandacaru que floresce na
+  // seca é, no sertão, sinal de que a chuva vem. bestDiffByBiome = maior Perigo vencido em cada mapa
+  { id: "mandacaru_flor", name: "Mandacaru em Flor", desc: "Vença no Perigo Pesadelo na Caatinga", check: (c) => (c.bestDiffByBiome?.caatinga ?? -1) >= DIFFICULTY.length - 1 },
   // — Armas —
   { id: "wmax_staff", name: "Cajado Ancestral", desc: "Leve o Cajado ao nível 5", check: weaponMax("STAFF") },
   { id: "wmax_boomer", name: "Retorno Perfeito", desc: "Leve a Vara Encantada ao nível 5", check: weaponMax("BOOMER") },
