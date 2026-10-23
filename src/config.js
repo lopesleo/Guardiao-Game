@@ -2082,6 +2082,9 @@ export const AUDIO = {
   // Morte: a fita para (rate 1 → RATE) com a música fechando no passa-baixa e sumindo em S segundos
   // (dentro da câmera lenta de 0,9 s); os efeitos abafam um pouco junto
   DEATH: { RATE: 0.5, LP_HZ: 450, SFX_LP_HZ: 1500, SFX_DB: -4, S: 0.85 },
+  // Carga (src/audio/AudioBank.js): a síntese roda em Web Workers; sem eles, na thread principal em fatias
+  // de SLICE_MS. Worker sem dar notícia por WATCHDOG_MS = plano B para o que faltar
+  LOAD: { SLICE_MS: 8, WATCHDOG_MS: 15000 },
 };
 
 // Sensação de jogo: o que faz cada momento "pesar" (src/systems/GameFeel.js, Shake.js, ui/HUD.js,

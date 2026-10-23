@@ -1,7 +1,8 @@
 // Áudio 100% próprio: efeitos e músicas SINTETIZADOS no carregamento (estilo
 // chiptune), gravados como AudioBuffer no cache de áudio do Phaser. O resto do jogo usa as mesmas
 // chaves de sempre ("sfx_hit", "music_menu"...).
-// Este arquivo é só matemática (nada do navegador): roda em qualquer thread, e no Node.
+// Este arquivo é só matemática (nada do navegador): roda num Web Worker (src/audio/SynthWorker.js), na
+// thread principal em fatias (o plano B do src/audio/AudioBank.js) e no Node (tools/audio-lab.mjs).
 // Cada som é uma TAREFA (audioJobs) que pode parar no meio (gerador): quem roda decide o ritmo.
 export const SR = 22050; // taxa de amostragem (chiptune não precisa de mais)
 const TAU = Math.PI * 2;
@@ -839,20 +840,4 @@ export function runJob(job) {
   let r;
   while (!(r = it.next()).done);
   return r.value;
-}
-
-// Registro no cache de áudio do Phaser, tudo de uma vez (só WebAudio — todo Android moderno)
-export function registerAudio(game) {
-  const ctx = game.sound.context;
-  if (!ctx || !game.cache?.audio) return false;
-  for (const job of audioJobs()) {
-    const r = runJob(job);
-    for (const o of r.outputs) {
-      const b = ctx.createBuffer(1, o.data.length, SR);
-      b.getChannelData(0).set(o.data);
-      game.cache.audio.add(o.key, b);
-    }
-    if (r.info) MUSIC_INFO[r.info.key] = r.info;
-  }
-  return true;
 }
