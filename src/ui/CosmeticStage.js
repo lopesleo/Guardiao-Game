@@ -13,7 +13,7 @@ import { registerCosmeticFX } from "../art/CosmeticFX.js";
 import { Cosmetics } from "../systems/Cosmetics.js";
 import { AWAKEN_GOLD } from "../entities/Player.js";
 import { morphoFlight } from "../art/CampAncestral.js";
-import { ensureCampSertao, MANDACARU_TIPS, CALANGO, BIRD_DIRS, ASA_FLAP } from "../art/CampSertao.js";
+import { ensureCampSertao, MANDACARU_TIPS, BIRD_DIRS, ASA_FLAP } from "../art/CampSertao.js";
 
 const PX = 3;
 const PHASE_MS = { trail: 3000, kill: 3300, awaken: 4000 }; // duração de cada momento no modo kit
@@ -127,7 +127,6 @@ export class CosmeticStage {
     const seq = [0, 2, 3, 2, 3, 2, 3, 0, 0, 1, 0, 1, 8, 8, 0, 0];
     let li = 0;
     this._timers.push(s.time.addEvent({ delay: 140, loop: true, callback: () => liz.active && liz.setFrame(seq[(li = (li + 1) % seq.length)]) }));
-    void CALANGO;
     // o herói descansando na sombra
     this.heroS.setPosition(W * 0.66, H * 0.64);
     this.shadow.setPosition(this.heroS.x, this.heroS.y + 30);

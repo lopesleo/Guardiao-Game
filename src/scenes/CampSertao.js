@@ -262,8 +262,9 @@ export const CampSertao = {
         const u = (hour - 5.2) / 3.2;
         sun = { x: 420 - u * 140, y: HORIZON + 30 - u * 190, tint: mixColor(0xff8a4a, 0xfff3cc, u) };
       } else if (hour >= 15.8 && hour <= 19) {
+        // o poente: o disco desce devagar e só some atrás da serra no fim (lá pelas 18h40)
         const u = (hour - 15.8) / 3.2;
-        sun = { x: -260 - u * 160, y: HORIZON - 160 + u * 190, tint: mixColor(0xfff3cc, 0xff6a3a, u) };
+        sun = { x: -260 - u * 160, y: HORIZON - 200 + u * 185, tint: mixColor(0xfff3cc, 0xff6a3a, u) };
       }
       b.sun.setVisible(!!sun);
       b.sunHalo.forEach((g) => g.setVisible(!!sun));
@@ -365,7 +366,6 @@ export const CampSertao = {
 
   // Tudo o que é planta e coisa do sertão em volta dos lugares (as posições das helicônias e das pedras de sempre)
   _sertaoPlants() {
-    const env = this.registry.get("envKeysCaatinga");
     this._sertaoMandacaru(-360, -50, 0); // ao lado do Santuário
     this._sertaoMandacaru(575, -40, 1); // entre a Forja e o açude
     this._sertaoMandacaru(-560, 300, 2); // perto do Mural
@@ -380,7 +380,6 @@ export const CampSertao = {
       if (f === "frade") this.add.image(x, y, "camp_sertao_frade", i % 2).setOrigin(0.5, 1).setScale(S).setDepth(y);
       else this.add.image(x, y, "env_caatinga", f).setOrigin(0.5, 1).setScale(S).setDepth(y);
     });
-    void env;
   },
 
   // ---------------------------------------------------------------------------

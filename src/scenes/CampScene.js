@@ -652,7 +652,7 @@ export class CampScene extends Phaser.Scene {
 
   // Cena da conquista "Mandacaru em Flor": o botão do mandacaru da trilha abre em flor (quadro a quadro), as pétalas
   // e o pólen sobem e a luz da flor acende
-  _bloomReveal(b) {
+  _bloomReveal() {
     const fl = this._trailFlower(0);
     const glow = this.add.image(fl.x, fl.y - 18, "fx_glow").setScale(0.4).setTint(PAL.cream).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0).setDepth(D_HUD - 8);
     this.sound.play("sfx_pickup", { volume: 0.4, rate: 0.7 });
@@ -666,7 +666,6 @@ export class CampScene extends Phaser.Scene {
         this.tweens.add({ targets: d, x: d.x + Math.cos(a) * r, y: d.y + Math.sin(a) * r * 0.7 - 20, alpha: 0, duration: 1100 + Math.random() * 600, ease: "Cubic.easeOut", onComplete: () => d.destroy() });
       }
     });
-    void b;
   }
 
   // Trocou de guardião na Fogueira: o avatar muda na hora (com fumacinha)
@@ -778,7 +777,7 @@ export class CampScene extends Phaser.Scene {
     this.time.delayedCall(800, () => {
       // Cipós da Podridão se desfazendo (novidade num lugar já aberto: gotas d'água; a flor do mandacaru tem cena própria)
       const tint = r.at ? [0x4aa2b0, 0x86d0d4] : [0x8a3fa0, 0xff7eb6];
-      if (r.fx === "bloom") this._bloomReveal(b);
+      if (r.fx === "bloom") this._bloomReveal();
       else for (let i = 0; i < 30; i++) {
         const p = this.add.image(b.x + (Math.random() - 0.5) * 110, b.y - Math.random() * 90, "px_dot2").setScale(3).setTint(i % 3 ? tint[0] : tint[1]).setDepth(D_HUD - 7);
         this.tweens.add({ targets: p, y: p.y - 40 - Math.random() * 50, alpha: 0, duration: 900 + Math.random() * 500, onComplete: () => p.destroy() });
