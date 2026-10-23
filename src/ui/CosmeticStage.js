@@ -13,6 +13,7 @@ import { registerCosmeticFX } from "../art/CosmeticFX.js";
 import { Cosmetics } from "../systems/Cosmetics.js";
 import { AWAKEN_GOLD } from "../entities/Player.js";
 import { morphoFlight } from "../art/CampAncestral.js";
+import { ensureCampSertao, MANDACARU_TIPS, CALANGO, BIRD_DIRS, ASA_FLAP } from "../art/CampSertao.js";
 
 const PX = 3;
 const PHASE_MS = { trail: 3000, kill: 3300, awaken: 4000 }; // duração de cada momento no modo kit
@@ -42,6 +43,7 @@ export class CosmeticStage {
   // Skin da Clareira (null = a de sempre): a árvore-marco ao lado do herói, a luz e as folhas caindo
   showCamp(skin) {
     this._build({}, ["camp"], null);
+    if (skin === "caatinga") return this._sertao();
     const s = this.scene;
     const anc = skin === "ancestral";
     const tree = s.add.image(this.w * 0.3, this.h + 40, anc ? "camp_jequitiba" : "camp_kapok").setOrigin(0.5, 1).setScale(anc ? 1.9 : 2.1);
@@ -86,6 +88,79 @@ export class CosmeticStage {
     }
     this._leafTints = anc ? [0xc88a5a, 0xc7922b, 0xe3c37e, 0x9ccf62] : [0x9ccf62, 0xc7922b, 0x6aab4a];
     this._leafRate = anc ? 260 : 520;
+    this._leafWind = false;
+  }
+
+  // Clareira da Caatinga: um pedaço do terreiro do sertão — chão vermelho rachado, o juazeiro com a copa ao vento, o
+  // mandacaru com as flores abertas, um calango fazendo flexões no lajedo, asas-brancas cruzando com a sombra no
+  // chão, folhas secas rolando e a luz quente do sertão
+  _sertao() {
+    const s = this.scene,
+      W = this.w,
+      H = this.h;
+    ensureCampSertao(s);
+    // chão: terra vermelha (o ladrilho do sertão) com uma placa de barro rachado
+    this.bg.add(s.add.tileSprite(0, 0, W / 2 + 2, H / 2 + 2, "camp_sertao_ground").setOrigin(0).setScale(2));
+    this.ground.add(s.add.image(W * 0.62, H * 0.86, "camp_sertao_crack", 1).setScale(2));
+    this.ground.add(s.add.image(W * 0.12, H * 0.92, "camp_sertao_sand", 0).setScale(2));
+    // juazeiro (a copa em onda) e o mandacaru florido
+    const tree = s.add.sprite(W * 0.24, H + 34, "camp_sertao_juazeiro", 0).setOrigin(0.5, 1).setScale(2);
+    this.back.add(tree);
+    let tf = 0;
+    this._timers.push(s.time.addEvent({ delay: 130, loop: true, callback: () => tree.active && tree.setFrame((tf = (tf + 1) % 8)) }));
+    const mx = W * 0.9,
+      my = H + 6;
+    const mand = s.add.image(mx, my, "camp_sertao_mandacaru1").setOrigin(0.5, 1).setScale(2);
+    this.back.add(mand);
+    const src = s.textures.get("camp_sertao_mandacaru1").getSourceImage();
+    (MANDACARU_TIPS[1] ?? []).forEach((t, i) => {
+      const fl = s.add.sprite(mx + (t.x + 0.5 - src.width / 2) * 2, my - (src.height - t.y) * 2 + 2, "camp_sertao_flower", 4).setOrigin(0.5, 1).setScale(2);
+      this.back.add(fl);
+      let k = i;
+      this._timers.push(s.time.addEvent({ delay: 520, loop: true, callback: () => fl.active && fl.setFrame([4, 5, 4, 6][(k = (k + 1) % 4)]) }));
+    });
+    this.back.add(s.add.image(W * 0.62, H - 4, "camp_sertao_frade", 0).setOrigin(0.5, 1).setScale(2));
+    // calango no lajedo: flexões, olhar e uma corridinha para o outro lado
+    this.ground.add(s.add.image(W * 0.47, H * 0.92, "env_caatinga", "lajedo2").setScale(2));
+    const liz = s.add.sprite(W * 0.47, H * 0.92 - 8, "camp_sertao_calango", 0).setScale(2);
+    this.back.add(liz);
+    const seq = [0, 2, 3, 2, 3, 2, 3, 0, 0, 1, 0, 1, 8, 8, 0, 0];
+    let li = 0;
+    this._timers.push(s.time.addEvent({ delay: 140, loop: true, callback: () => liz.active && liz.setFrame(seq[(li = (li + 1) % seq.length)]) }));
+    void CALANGO;
+    // o herói descansando na sombra
+    this.heroS.setPosition(W * 0.66, H * 0.64);
+    this.shadow.setPosition(this.heroS.x, this.heroS.y + 30);
+    // duas asas-brancas cruzando em curva, com a sombra no chão
+    for (let b = 0; b < 2; b++) {
+      const sh = s.add.sprite(0, 0, "camp_sertao_asa_sombra", 0).setScale(2).setAlpha(0.22);
+      this.ground.add(sh);
+      const bird = s.add.sprite(0, 0, "camp_sertao_asa", 0).setScale(2);
+      this.air.add(bird);
+      const t0 = s.time.now + b * 520;
+      let last = null;
+      this._timers.push(
+        s.time.addEvent({
+          delay: 16,
+          loop: true,
+          callback: () => {
+            if (!bird.active) return;
+            const u = (((s.time.now - t0) / 5200) % 1 + 1) % 1;
+            const x = -30 + u * (W + 60),
+              y = H * 0.32 + Math.sin(u * Math.PI * 2) * 22 + b * 18;
+            const dir = last ? ((Math.round(Math.atan2((y - last.y) / 0.8, x - last.x) / ((Math.PI * 2) / BIRD_DIRS)) % BIRD_DIRS) + BIRD_DIRS) % BIRD_DIRS : 0;
+            last = { x, y };
+            bird.setFrame(dir * 8 + ASA_FLAP[Math.floor((s.time.now + b * 90) / 55) % 8]).setPosition(Math.round(x), Math.round(y));
+            sh.setFrame(dir).setPosition(x + 30, y + 70);
+          },
+        }),
+      );
+    }
+    // luz quente do sertão por cima
+    this.over.add(s.add.rectangle(0, 0, W, H, 0xffd9a0, 0.1).setOrigin(0));
+    this._leafTints = [PAL.straw1, PAL.straw2, PAL.n3, PAL.straw3];
+    this._leafRate = 700;
+    this._leafWind = true;
   }
 
   _build(eq, phases, onPhase) {
@@ -247,10 +322,19 @@ export class CosmeticStage {
     if (this.slot === "camp" && time >= this._next) {
       // folhas caindo da copa (cobre na Ancestral)
       this._next = time + this._leafRate;
-      const leaf = s.add.image(Math.random() * this.w, -8, "px_leaf").setScale(PX).setTint(this._leafTints[(Math.random() * this._leafTints.length) | 0]);
-      this.air.add(leaf);
-      s.tweens.add({ targets: leaf, y: this.h + 10, x: leaf.x + (Math.random() - 0.5) * 120, duration: 4200 + Math.random() * 1800, ease: "Sine.easeIn", onComplete: () => leaf.active && leaf.destroy() });
-      s.tweens.add({ targets: leaf, angle: { from: -40, to: 40 }, duration: 900, yoyo: true, repeat: 6, ease: "Sine.easeInOut" });
+      if (this._leafWind) {
+        // sertão: folha seca rolando no chão, levada pelo vento de oeste para leste
+        const y = this.h * (0.7 + Math.random() * 0.28);
+        const leaf = s.add.sprite(-10, y, "px_leaf_tumble", (Math.random() * 4) | 0).setScale(PX).setTint(this._leafTints[(Math.random() * this._leafTints.length) | 0]).play("leaf_tumble");
+        this.air.add(leaf);
+        s.tweens.add({ targets: leaf, x: this.w + 20, duration: 3600 + Math.random() * 1400, ease: "Sine.easeInOut", onComplete: () => leaf.active && leaf.destroy() });
+        s.tweens.add({ targets: leaf, y: y - 14, duration: 520, yoyo: true, repeat: 3, ease: "Quad.easeOut" });
+      } else {
+        const leaf = s.add.image(Math.random() * this.w, -8, "px_leaf").setScale(PX).setTint(this._leafTints[(Math.random() * this._leafTints.length) | 0]);
+        this.air.add(leaf);
+        s.tweens.add({ targets: leaf, y: this.h + 10, x: leaf.x + (Math.random() - 0.5) * 120, duration: 4200 + Math.random() * 1800, ease: "Sine.easeIn", onComplete: () => leaf.active && leaf.destroy() });
+        s.tweens.add({ targets: leaf, angle: { from: -40, to: 40 }, duration: 900, yoyo: true, repeat: 6, ease: "Sine.easeInOut" });
+      }
     }
     if (this._awakeOn && time >= this._awakeUntil) {
       this._awakeOn = false;

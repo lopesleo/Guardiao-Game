@@ -1,7 +1,8 @@
 // Guarda-roupa (docs/COSMETICOS.md): onde o jogador escolhe e compra os cosméticos. Abre pela camiseta
 // no menu de cima da Clareira. Estrutura (revista em 19/10/2026, regras de UX em COSMETICOS.md):
 //   abas  Libertação · Rastro · Despertar (equipar, uma parte por vez) · Clareira (skin do acampamento;
-//         a Ancestral é exclusiva do Pacote Fundador) · Kits (comprar; 1 kit = 3 peças)
+//         a Ancestral é exclusiva do Pacote Fundador; a da Caatinga é grátis, da conquista "Mandacaru em Flor" — trancada,
+//         mostra o que fazer e o quanto falta) · Kits (comprar; 1 kit = 3 peças)
 //   esquerda  PRÉVIA AO VIVO do que está selecionado — também do que o jogador ainda não tem; na aba Kits
 //             o kit inteiro toca em sequência (Rastro → Libertação → Despertar)
 //   direita   cartões. Três sinais diferentes, nunca só cor: moldura dourada = o que está na prévia;
@@ -19,7 +20,9 @@ import { COSM_SLOTS, COSM_KITS, COSM_PIECES, COSM_AMOUNTS, COSM_CAMP, Wardrobe, 
 import { openShop, shopOn } from "./ShopModal.js";
 import { registerCosmeticFX } from "../art/CosmeticFX.js";
 import { registerAuraFX } from "../art/AuraFX.js";
-import { COSMETICS } from "../config.js";
+import { COSMETICS, ACHIEVEMENTS, DIFFICULTY, BUILDINGS } from "../config.js";
+import { MetaProgression } from "../systems/MetaProgression.js";
+import { ensureCampSertao } from "../art/CampSertao.js";
 import { DEBUG } from "../systems/Platform.js";
 import { Analytics } from "../systems/Analytics.js";
 import { Billing } from "../systems/Billing.js";
@@ -47,9 +50,24 @@ function iconInBox(scene, key, frame, maxW, maxH, tint) {
   return img;
 }
 
+// Arte do cartão de cada Clareira (a árvore-marco; na Caatinga, o mandacaru em flor)
+const CAMP_ART = { ancestral: "camp_jequitiba", caatinga: "camp_sertao_card" };
+
+// Quanto falta para a Clareira grátis (earn): a Trilha do Sertão, o melhor Perigo vencido na Caatinga
+function earnProgress(skin) {
+  if (skin.earn !== "mandacaru_flor") return null;
+  const meta = new MetaProgression();
+  if (!meta.biomeOpen("caatinga")) return tr("Primeiro, abra a {0} com o João-de-barro.", BUILDINGS.trail.name);
+  const best = meta.data.bestDiffByBiome?.caatinga;
+  if (best != null) return tr("Seu melhor na Caatinga: Perigo {0}", DIFFICULTY[best].name);
+  const wins = meta.biomeWins().caatinga || 0;
+  return wins ? tr("Vitórias na Caatinga: {0}", wins) : tr("Você ainda não venceu na Caatinga.");
+}
+
 export function openWardrobe(scene, o = {}) {
   registerCosmeticFX(scene);
   registerAuraFX(scene);
+  ensureCampSertao(scene); // cartão e prévia da Clareira da Caatinga
   if (!o.again) Analytics.track("wardrobe_view", { from: o.from ?? "?" });
   const tab = o.tab ?? "kill";
   const isKits = tab === "kits";
@@ -156,7 +174,17 @@ export function openWardrobe(scene, o = {}) {
     const skin = sel ? COSM_CAMP[sel] : null;
     const owned = !skin || Wardrobe.ownsCamp(sel);
     addLine(campName(sel), 22, CSS.goldHi, 4, 0);
-    if (skin) addLine(skin.founder ? tr("Exclusiva do Pacote Fundador") : tr("Peça grátis"), 15, owned ? CSS.muted : CSS.goldHi, 6, SW, owned ? "ico_fundador" : "ico_lock");
+    if (skin?.founder) addLine(tr("Exclusiva do Pacote Fundador"), 15, owned ? CSS.muted : CSS.goldHi, 6, SW, owned ? "ico_fundador" : "ico_lock");
+    else if (skin?.earn) {
+      // grátis: a conquista libera; trancada, diz o que fazer e o quanto falta
+      const ach = ACHIEVEMENTS.find((a) => a.id === skin.earn);
+      if (owned) addLine(tr("Grátis · conquista {0}", ach?.name ?? ""), 15, CSS.muted, 6, SW, "ico_trophy");
+      else {
+        addLine(tr("Grátis: {0}", skin.how), 15, CSS.goldHi, 4, SW, "ico_lock");
+        const prog = earnProgress(skin);
+        if (prog) addLine(prog, 14, CSS.muted, 6, SW);
+      }
+    } else if (skin) addLine(tr("Peça grátis"), 15, CSS.muted, 6, SW);
     addLine(skin ? skin.desc : tr("A samaúma, a mata e o céu pela hora do dia."), 16, CSS.txt, 12);
     if (owned && sel === inUse) action = new Button(scene, BX, y + 28, BW, 56, tr("EM USO"), () => {}, { size: 20, style: "dark", color: CSS.goldHi, enabled: false });
     else if (owned)
@@ -166,6 +194,7 @@ export function openWardrobe(scene, o = {}) {
         equipFx();
         reopen({ pop: sel ?? "none" });
       }, { size: 22, style: "primary", color: CSS.goldHi });
+    else if (skin?.earn) action = new Button(scene, BX, y + 28, BW, 56, tr("BLOQUEADA"), () => {}, { size: 20, style: "dark", enabled: false });
     else if (shopOn()) action = new Button(scene, BX, y + 28, BW, 56, tr("VER PACOTE FUNDADOR"), () => {
       reopening = true;
       stage.destroy();
@@ -234,9 +263,10 @@ export function openWardrobe(scene, o = {}) {
       gy += 56;
     }
   } else if (isCamp) {
-    const CW = Math.floor((GW - 12) / 2),
+    const ids = [null, ...Object.keys(COSM_CAMP)];
+    const CW = Math.floor((GW - 12 * (ids.length - 1)) / ids.length),
       CH = 170;
-    [null, ...Object.keys(COSM_CAMP)].forEach((id, i) => {
+    ids.forEach((id, i) => {
       const skin = id ? COSM_CAMP[id] : null;
       const cx = GX + i * (CW + 12) + CW / 2,
         cy = top + CH / 2;
@@ -251,13 +281,14 @@ export function openWardrobe(scene, o = {}) {
       }, { style: id === sel ? "gold" : "dark" });
       // de baixo para cima (o texto cresce com o idioma e o tamanho): etiqueta, nome e a árvore no que sobra;
       // a etiqueta reserva a mesma altura nos dois cartões para os nomes ficarem alinhados
-      const tagStr = id === inUse ? tr("EM USO") : !skin ? "" : mine ? tr("COMPRADA") : tr("EXCLUSIVA");
+      const tagStr = id === inUse ? tr("EM USO") : !skin ? "" : skin.earn ? (mine ? tr("CONQUISTADA") : tr("GRÁTIS")) : mine ? tr("COMPRADA") : tr("EXCLUSIVA");
       const tag = text(scene, 0, CH / 2 - 10, tr("EM USO"), { size: 13, color: id === inUse || !mine ? CSS.goldHi : CSS.muted, origin: [0.5, 1] });
-      const nm = fitTo(text(scene, 0, tag.y - tag.displayHeight - 2, campName(id), { size: 15, origin: [0.5, 1] }), CW - 16);
+      // nome em até duas linhas (três cartões lado a lado; em japonês e chinês o nome é curto)
+      const nm = fitTo(text(scene, 0, tag.y - tag.displayHeight - 2, campName(id), { size: 15, origin: [0.5, 1], align: "center", wrap: CW - 16 }), CW - 12);
       tag.setText(tagStr);
       const foot = nm.y - nm.displayHeight - 6;
-      const tree = scene.add.image(0, foot, id ? "camp_jequitiba" : "camp_kapok").setOrigin(0.5, 1);
-      tree.setScale(Math.min(id ? 0.75 : 0.85, (foot + CH / 2 - 10) / tree.height));
+      const tree = scene.add.image(0, foot, CAMP_ART[id] ?? "camp_kapok").setOrigin(0.5, 1);
+      tree.setScale(Math.min(id === "caatinga" ? 1.35 : id ? 0.75 : 0.85, (foot + CH / 2 - 10) / tree.height));
       if (!mine) tree.setAlpha(0.8);
       card.add([tree, nm, tag]);
       const badge = id === inUse ? "ico_check" : skin && !mine ? "ico_lock" : null;
