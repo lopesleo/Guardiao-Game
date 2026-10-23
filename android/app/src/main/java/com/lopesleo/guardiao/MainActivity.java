@@ -3,6 +3,7 @@ package com.lopesleo.guardiao;
 import android.os.Bundle;
 import android.view.WindowManager;
 
+import androidx.activity.EdgeToEdge;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -10,7 +11,9 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
 
 // Jogo em tela cheia imersiva (sem barra de status/navegação) e com a tela
-// sempre ligada enquanto o app está aberto.
+// sempre ligada enquanto o app está aberto. De ponta a ponta em todas as versões do
+// Android (o 15+ obriga; EdgeToEdge.enable faz o mesmo nas anteriores): o cenário vai
+// até a borda, por baixo do furo da câmera, e a interface já fica longe das bordas.
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -21,6 +24,7 @@ public class MainActivity extends BridgeActivity {
         // Plugin local: abrir as configurações de notificação do jogo no Android
         registerPlugin(NotificationSettingsPlugin.class);
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         hideSystemBars();
     }
