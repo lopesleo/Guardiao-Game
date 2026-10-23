@@ -1490,6 +1490,43 @@ massa", impostos incluídos) e o Brasil fica com o valor exato do catálogo. `--
    Floresta → **Gerenciar presença na loja** (inclui "Editar preços, produtos no app") → Convidar.
 4. `npm run play:produtos -- listar`. Se responder 403, a permissão ainda não chegou (pode levar algumas horas).
 
+## Mediação do AdMob
+
+Na mediação, outras redes de anúncio disputam cada anúncio premiado com o Google em lances em tempo real. Ganha
+quem paga mais, o que costuma render 10–40% a mais. Por enquanto vale pouco: só os testadores veem anúncios. O que
+pesa é o lançamento.
+
+**No app (23/10/2026):** os adaptadores estão na branch `feat/mediacao-admob`, que **não foi juntada à main**. São
+AppLovin `13.6.4.2`, Unity Ads `4.21.0.0`, Liftoff Monetize (`vungle`) `7.7.9.0` e Meta Audience Network
+(`facebook`) `6.22.0.1`, no `android/app/build.gradle`. Compila, e o AAB passa de 14 para 20 MB.
+
+O adaptador só entra em ação quando a rede está num grupo de mediação; os IDs ficam no console do AdMob, não no app.
+Mesmo assim, a branch só deve ser juntada quando as contas existirem: alguns SDKs, como o da Meta, inicializam
+sozinhos ao abrir o app.
+
+**👤 O que só o Leonardo faz** (criar conta em serviço de terceiros):
+1. **Criar as contas** (grátis) e, em cada uma, o app Android `com.lopesleo.guardiao` com uma unidade de anúncio
+   **premiado**. Anotar os IDs de cada rede:
+
+   | Rede | Onde criar | IDs que o AdMob pede |
+   |---|---|---|
+   | AppLovin | dash.applovin.com | chave do SDK |
+   | Unity Ads | cloud.unity.com → Monetização | Game ID + Placement ID |
+   | Liftoff Monetize | liftoff.io (Monetize) | App ID + Placement Reference ID |
+   | Meta Audience Network | Meta Business → Monetization Manager | Placement ID |
+
+   A Meta só aprova com o app publicado na loja, então ela fica para depois da produção.
+2. **Grupo de mediação:** AdMob → Mediação → Criar grupo de mediação → formato **Premiado**, Android → incluir as
+   unidades do jogo → em "Lances", adicionar cada rede com os IDs.
+3. **Consentimento da Europa:** AdMob → Privacidade e mensagens → GDPR → incluir as redes na lista de parceiros de
+   anúncios.
+4. **`app-ads.txt`:** acrescentar as linhas que cada rede mostra no painel ao arquivo que já está em
+   `komedygames.com/app-ads.txt`.
+5. **Política de privacidade:** listar as redes em `docs/PRIVACY.md` e no site.
+6. **Testar:** AdMob → Configurações → Dispositivos de teste → o S23 com o **gesto do Ad Inspector**. No app,
+   abrir o Ad Inspector pelo gesto e conferir que cada rede responde.
+7. Juntar a `feat/mediacao-admob` à main e gerar uma versão.
+
 ## Versão nova pelo script
 
 `npm run android:aab` gera o AAB; `npm run play:versao -- subir` o envia e cria a versão na faixa como

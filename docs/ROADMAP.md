@@ -565,9 +565,16 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Agora as chaves conferem a permissão e os canais, sem ela o aparelho sai do tópico, quem perdeu vê o pedido do baú
   de novo e, bloqueado de vez, ligar abre as configurações do jogo no Android (plugin `NotificationSettings`).
   6 cenários novos no `test:avisos`; Teste interno e Alpha (20/10)
-- 🔄 **1.0.20 (código 21)** (23/10/2026): está como rascunho no Teste interno e no Alpha e falta publicar no
-  Console. O motivo principal é o **conserto do travamento da 1.0.19**: o jogo congelava quando a evolução INFERNO
-  queimava o chão. Leva também o resto do M4.5 de 21 a 23/10:
+- ✅ **1.0.21 (código 22)** (23/10/2026): publicada no Teste interno e no Alpha pelo script, com o Alpha em
+  revisão. Leva tudo da 1.0.20 e mais os 3 avisos do Play Console sobre a 1.0.19:
+  - **tela de ponta a ponta:** `EdgeToEdge.enable()` no `MainActivity`;
+  - **APIs de janela descontinuadas:** saiu o `@capacitor/status-bar`, que era redundante (o `MainActivity` já
+    esconde as barras);
+  - **orientação em tela grande:** `appCategory="game"`, que no Android 16 isenta jogos da regra que ignora a
+    orientação travada.
+- ⏭️ **1.0.20 (código 21)** (23/10/2026): não publicada; ficou só como rascunho e foi substituída pela 1.0.21. O
+  motivo principal era o **conserto do travamento da 1.0.19**: o jogo congelava quando a evolução INFERNO queimava o
+  chão. Levava também o resto do M4.5 de 21 a 23/10:
   - mixagem do som;
   - Podridão na borda da tela e status elementais legíveis;
   - desempenho: teto de 60 fps e chão na GPU;

@@ -82,12 +82,18 @@ Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um 
 marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
 
 **Agora**
-- **1.0.20 (código 21) gerada em 23/10 e enviada como rascunho para o Teste interno e o Teste fechado/Alpha.** O
-  arquivo é `dist/guardiao-v1.0.20-21-anuncios-reais.aab`, com as notas nos 8 idiomas. Ela leva tudo o que foi feito
-  de 21 a 23/10 em qualidade gráfica, som e desempenho (detalhes no ROADMAP, fim do M4.5). Leva também o conserto do
-  travamento da 1.0.19: o jogo congelava quando a evolução INFERNO queimava o chão. A publicação pelo script foi
-  barrada pela permissão automática.
-  👤 No Console: abrir cada rascunho → Avançar → Salvar e publicar → mandar o Alpha para revisão.
+- **1.0.21 (código 22) publicada em 23/10 no Teste interno e no Teste fechado/Alpha.** O Alpha está em revisão do
+  Google. O arquivo é `dist/guardiao-v1.0.21-22-anuncios-reais.aab`. A 1.0.20 nunca saiu do rascunho e foi
+  substituída.
+  - O motivo principal é o **conserto do travamento da 1.0.19**: o jogo congelava quando a evolução INFERNO queimava
+    o chão.
+  - Leva tudo o que foi feito de 21 a 23/10 em qualidade gráfica, som e desempenho (detalhes no ROADMAP, fim do
+    M4.5).
+  - Leva também os 3 avisos do Play Console sobre a 1.0.19: `EdgeToEdge.enable()`, a saída do plugin
+    `@capacitor/status-bar` (APIs descontinuadas) e `appCategory="game"` (orientação em tela grande).
+
+  👤 Conferir no S23 que a tela continua igual (cenário por baixo do furo da câmera, interface longe das bordas) e
+  ver no Console se os 3 avisos somem na 1.0.21.
   Entrou também: mixagem do som (barramentos, limitador, limite
   de vozes, abafar na pausa/cartas, troca de trilha do chefe no compasso, fita na morte, coração com vida baixa);
   Podridão na borda da tela; Grito do Mapinguari por shader; status elementais legíveis (OVERLAY; no chefe, metade);
@@ -152,6 +158,17 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
   assistência (como ler: `docs/ARMAS_E_COMBOS.md`, "Como medir").
 
 **Decisões pendentes**
+- **Mediação do AdMob** (23/10; passo a passo em `docs/PLAY_STORE.md`, "Mediação do AdMob"): os adaptadores de
+  AppLovin, Unity Ads, Liftoff e Meta compilam na branch `feat/mediacao-admob`, ainda não juntada (+6 MB no app).
+  👤 Criar as contas nas redes (a Meta só depois da produção). Depois disso: grupo de mediação no AdMob, parceiros
+  do GDPR, `app-ads.txt` e política; então juntar a branch e gerar uma versão.
+- **CrazyGames** (estudo de 23/10). Recomendação: entrar depois do lançamento na Play, com um "modo portal" que
+  desliga Play Games, Loja, convite, avaliação e links e usa o SDK deles para anúncios, conta e progresso.
+  - Primeiro o Basic Launch, sem anúncios, para medir; o Full Launch só se os números forem bons.
+  - Regras que pesam: nada de link para loja de app dentro do jogo; anúncio só pelo SDK deles; compra só por
+    convite, via Xsolla; o jogador cai na partida em até 1 clique; inglês obrigatório; PEGI 12.
+
+  👤 Decidir.
 - **Cosméticos e Loja** (`docs/COSMETICOS.md`, "Estratégia de preços", com pesquisa): prontos no código (19/10), desligados no build da loja (`COSMETICS.ENABLED`/`SHOP` em `config.js`). 16 peças (4 grátis + 4 kits de 3 peças), Guarda-roupa com prévia ao vivo e a **Loja** (★ da Clareira e LOJA do título) em três degraus: kit **R$ 4,90** (era 9,90) · Sem anúncios R$ 14,90 · **Pacote Fundador R$ 19,90** em destaque (Sem anúncios + 4 kits, 42% de economia, + exclusivos **Clareira Ancestral** e **insígnia de Fundador**; versão sem o Sem anúncios a R$ 9,90; janela até 31/01/2027, depois Pacote Apoiador R$ 24,90). 16 cenários no `test:compra`. Produtos no Play Console: os 4 kits e os 2 pacotes do Fundador **criados e ativos** (19/10; `npm run play:produtos`, catálogo em `tools/play/produtos.json`, credencial em `~/chaves-android/play-api.json`). **Ligado no app na 1.0.6** (`COSMETICS.ENABLED`/`SHOP`). Versões sobem por `npm run play:versao` (rascunho; `--publicar` só quando o Leonardo pedir). 👤 Em 31/01/2027: desativar os 2 do Fundador e ativar `pacote_apoiador`.
 - **Desafio do dia** (`docs/DESAFIO_DO_DIA.md`, 22/10): projeto sem código. Recomendação: não fazer o diário agora; depois do lançamento, testar um "Desafio da semana" (custo P) e decidir o diário pelos números (§7 do documento). 👤 Decidir.
 - Descrição curta em espanhol: "leyendas de Brasil" → "del folclore brasileño"? (a captura 07 já foi refeita).
