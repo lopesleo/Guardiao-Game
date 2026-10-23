@@ -325,7 +325,8 @@ export class CosmeticStage {
       if (this._leafWind) {
         // sertão: folha seca rolando no chão, levada pelo vento de oeste para leste
         const y = this.h * (0.7 + Math.random() * 0.28);
-        const leaf = s.add.sprite(-10, y, "px_leaf_tumble", (Math.random() * 4) | 0).setScale(PX).setTint(this._leafTints[(Math.random() * this._leafTints.length) | 0]).play("leaf_tumble");
+        const kind = Math.random() < 0.5 ? "camp_sertao_folha" : "camp_sertao_folha2";
+        const leaf = s.add.sprite(-10, y, kind, (Math.random() * 4) | 0).setScale(2).play(kind);
         this.air.add(leaf);
         s.tweens.add({ targets: leaf, x: this.w + 20, duration: 3600 + Math.random() * 1400, ease: "Sine.easeInOut", onComplete: () => leaf.active && leaf.destroy() });
         s.tweens.add({ targets: leaf, y: y - 14, duration: 520, yoyo: true, repeat: 3, ease: "Quad.easeOut" });

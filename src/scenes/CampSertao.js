@@ -182,6 +182,12 @@ export const CampSertao = {
     if (!b) return;
     const nw = this._nightW ?? 0;
     for (const st of b.stars) st.s.setAlpha(nw * st.base * (0.55 + 0.45 * Math.sin(time / st.sp + st.ph)));
+    // flores abertas "respiram" à noite (as pontas das pétalas mexem), cada uma no seu tempo
+    for (const fl of this._flowers ?? []) {
+      if (!fl.open || fl.busy || !fl.s.active) continue;
+      fl.s.setFrame(FLOWER_BREATH[Math.floor(time / 640 + fl.ph * 4) % FLOWER_BREATH.length]);
+      fl.glow.setAlpha(0.3 + Math.sin(time / 900 + fl.ph) * 0.06);
+    }
     for (const cl of b.clouds) {
       cl.c.x += (cl.v * dt) / 1000;
       if (cl.c.x > b.bw / 2 + 200) cl.c.x = -b.bw / 2 - 200;
@@ -244,7 +250,7 @@ export const CampSertao = {
       // lua: nasce a leste no fim da tarde, cruza a noite e se põe a oeste; grande e dourada perto do horizonte
       const mu = ((hour - 18 + 24) % 24) / 12.4;
       const moonUp = mu >= 0 && mu <= 1;
-      const mx = 720 - mu * 1440,
+      const mx = 600 - mu * 1200,
         my = HORIZON - 18 - Math.sin(mu * Math.PI) * 150;
       const low = Math.min(1, Math.sin(mu * Math.PI) * 2.2);
       const mt = mixColor(0xffc27a, 0xffffff, Math.max(0, low));
@@ -254,10 +260,10 @@ export const CampSertao = {
       let sun = null;
       if (hour >= 5.2 && hour <= 8.4) {
         const u = (hour - 5.2) / 3.2;
-        sun = { x: 640 - u * 160, y: HORIZON + 30 - u * 190, tint: mixColor(0xff8a4a, 0xfff3cc, u) };
+        sun = { x: 420 - u * 140, y: HORIZON + 30 - u * 190, tint: mixColor(0xff8a4a, 0xfff3cc, u) };
       } else if (hour >= 15.8 && hour <= 19) {
         const u = (hour - 15.8) / 3.2;
-        sun = { x: -500 - u * 180, y: HORIZON - 160 + u * 190, tint: mixColor(0xfff3cc, 0xff6a3a, u) };
+        sun = { x: -260 - u * 160, y: HORIZON - 160 + u * 190, tint: mixColor(0xfff3cc, 0xff6a3a, u) };
       }
       b.sun.setVisible(!!sun);
       b.sunHalo.forEach((g) => g.setVisible(!!sun));
@@ -300,7 +306,9 @@ export const CampSertao = {
         if (Math.random() < 0.5) return;
         const x = kx + (Math.random() - 0.5) * 240,
           y = ky - 200 + Math.random() * 60;
-        const leaf = this.add.sprite(x, y, "px_leaf_tumble", 0).setScale(S).setTint(Math.random() < 0.3 ? PAL.yel2 : PAL.g4).setDepth(ky + 40).play("leaf_tumble");
+        // folha verde do juazeiro (às vezes uma seca, de palha)
+        const dry = Math.random() < 0.35;
+        const leaf = this.add.sprite(x, y, dry ? "camp_sertao_folha2" : "px_leaf_tumble", 0).setScale(S).setDepth(ky + 40).play(dry ? "camp_sertao_folha2" : "leaf_tumble");
         this.tweens.add({ targets: leaf, y: ky - 10 + Math.random() * 50, x: x + 30 + Math.random() * 40, duration: 2600, ease: "Sine.easeIn", onComplete: () => this.tweens.add({ targets: leaf, alpha: 0, delay: 1200, duration: 600, onComplete: () => leaf.destroy() }) });
       },
     });
@@ -364,7 +372,7 @@ export const CampSertao = {
     this._sertaoMandacaru(130, -250, 2); // na subida da trilha
     // lajedo grande com xique-xique (no lugar das pedras com samambaia) — o calango mora aqui
     this.add.image(230, -300, "env_caatinga", "lajedo3").setOrigin(0.5, 1).setScale(S).setDepth(-300);
-    this.add.image(262, -296, "env_caatinga", "xique0").setOrigin(0.5, 1).setScale(S).setDepth(-296);
+    this.add.image(290, -288, "env_caatinga", "xique0").setOrigin(0.5, 1).setScale(S).setDepth(-288);
     this._solid(225, -310, 70, 20);
     // coroas-de-frade, xique-xiques e macambiras perto das construções
     const spots = [[-500, -150, "frade"], [520, -60, "xique1"], [360, -150, "macambira1"], [-330, 330, "frade"], [200, 470, "xique0"], [-175, 530, "macambira0"], [560, 250, "frade"], [-650, 220, "xique1"], [120, -250, "macambira2"], [-640, -60, "lajedo1"], [640, 380, "lajedo2"]];
@@ -380,8 +388,11 @@ export const CampSertao = {
   // ---------------------------------------------------------------------------
   _sertaoLife() {
     this._lizards = [];
-    for (const [x, y, home] of [[226, -322, [[180, -280], [300, -260], [226, -322]]], [-120, 300, [[-170, 300], [-60, 330], [-140, 360]]], [-470, 40, [[-420, 0], [-520, 70], [-470, 40]]]])
-      this._lizards.push(this._calango(x, y, home));
+    // [x, y, cantos onde ele corre]; um canto com z = em cima de uma pedra (desenhado na frente dela): o calango do
+    // lajedo toma sol lá em cima
+    const top = { x: 222, y: -328, z: -298 };
+    for (const [x, y, home] of [[top.x, top.y, [[180, -270], [300, -262], [top.x, top.y, top.z], [top.x + 14, top.y - 2, top.z]]], [-120, 300, [[-170, 300], [-60, 330], [-140, 360]]], [-470, 40, [[-420, 0], [-520, 70], [-470, 40]]]])
+      this._lizards.push(this._calango(x, y, home, home.find((h) => h[0] === x && h[1] === y)?.[2]));
     this._flock = null;
     this._nextFlock = 5000 + Math.random() * 6000;
     this._carcara = this._makeCarcara();
@@ -412,10 +423,10 @@ export const CampSertao = {
   },
 
   // Calango: mora em volta de uma pedra, faz flexões, olha em volta, corre para outro canto e foge do herói
-  _calango(x, y, spots) {
+  _calango(x, y, spots, z = null) {
     const shadow = this.add.image(x, y + 2, "px_shadow").setScale(2.6, 1.2).setAlpha(0.45);
     const s = this.add.sprite(x, y, "camp_sertao_calango", 0).setOrigin(0.5, 1).setScale(S);
-    const L = { s, shadow, spots, state: "idle", until: 0, target: null, f: 0, ft: 0, seq: null, flip: Math.random() < 0.5 };
+    const L = { s, shadow, spots, z, state: "idle", until: 0, target: null, f: 0, ft: 0, seq: null, flip: Math.random() < 0.5 };
     s.setFlipX(L.flip);
     return L;
   },
@@ -429,6 +440,7 @@ export const CampSertao = {
       const a = Math.atan2(s.y - p.y, s.x - p.x) + (Math.random() - 0.5) * 0.8;
       L.target = { x: s.x + Math.cos(a) * 150, y: s.y + Math.sin(a) * 90 };
       L.state = "run";
+      L.z = null;
     }
     if (L.state === "run") {
       const dx = L.target.x - s.x,
@@ -437,6 +449,7 @@ export const CampSertao = {
       const sp = 300 * (dt / 1000);
       if (d <= sp) {
         s.setPosition(L.target.x, L.target.y);
+        L.z = L.target.z ?? null; // chegou em cima da pedra
         L.state = "idle";
         L.until = time + 600 + Math.random() * 900;
         s.setFrame(0);
@@ -478,8 +491,9 @@ export const CampSertao = {
       else if (r < 0.75) L.seq = [[1, 500], [0, 500], [1, 500], [0, 200]];
       else {
         const t = L.spots[Math.floor(Math.random() * L.spots.length)];
-        L.target = { x: t[0] + (Math.random() - 0.5) * 30, y: t[1] + (Math.random() - 0.5) * 20 };
+        L.target = t[2] != null ? { x: t[0], y: t[1], z: t[2] } : { x: t[0] + (Math.random() - 0.5) * 30, y: t[1] + (Math.random() - 0.5) * 20 };
         L.state = "run";
+        L.z = null;
         L.f = 0;
       }
       if (L.seq) {
@@ -487,8 +501,10 @@ export const CampSertao = {
         s.setFrame(L.seq[0][0]);
       }
     }
-    s.setDepth(s.y);
-    L.shadow.setPosition(s.x + (s.flipX ? 4 : -4), s.y + 2).setDepth(s.y - 1);
+    // correndo para a pedra (ou saindo dela) fica por cima dela; no chão, a ordem é a do y
+    const onRock = L.z != null || (L.state === "run" && L.target?.z != null);
+    s.setDepth(onRock ? (L.z ?? L.target.z) + 1 : s.y);
+    L.shadow.setPosition(s.x + (s.flipX ? 4 : -4), s.y + 2).setDepth(s.depth - 0.5);
   },
 
   // Asas-brancas: um bando atravessa a Clareira em curva (sombras no chão); às vezes pousa no terreiro e cisca até o
@@ -514,7 +530,7 @@ export const CampSertao = {
     for (let i = 0; i < n; i++) {
       const shadow = this.add.sprite(0, 0, "camp_sertao_asa_sombra", 0).setScale(S).setAlpha(0.22).setDepth(D_GROUNDFX);
       const s = this.add.sprite(0, 0, "camp_sertao_asa", 0).setScale(S).setDepth(D_AIR);
-      birds.push({ s, shadow, off: { x: (i % 2 ? -1 : 1) * (18 + i * 14) + Math.random() * 10, y: i * 22 + Math.random() * 10 }, ph: Math.random() * 8, flapT: Math.random() * 400, f: 0, alt: 70, mode: "fly", walkT: 0, x: sx, y: sy, vx: 0, vy: 0 });
+      birds.push({ s, shadow, off: { x: (i - (n - 1) / 2) * 46 + (Math.random() - 0.5) * 12, y: (i % 2) * 24 + Math.random() * 10 }, ph: Math.random() * 8, flapT: Math.random() * 400, f: 0, alt: 70, mode: "fly", walkT: 0, x: sx, y: sy, vx: 0, vy: 0 });
     }
     this._flock = { birds, t: 0, sx, sy, ex, ey, cx: (sx + ex) / 2 + (Math.random() - 0.5) * 200, cy: Math.min(sy, ey) - 80 - Math.random() * 120, spot, phase: spot ? "in" : "pass", dur: 7000 + Math.random() * 2500, groundUntil: 0 };
   },
@@ -534,8 +550,8 @@ export const CampSertao = {
       if (F.phase === "in" || F.phase === "pass") {
         const end = F.phase === "in" ? F.spot : { x: F.ex, y: F.ey };
         const u = Math.min(1, F.t / (F.phase === "in" ? 4200 : F.dur));
-        tx = bez(F.sx, F.cx, end.x, u) + B.off.x * (1 - (F.phase === "in" ? u : 0) * 0.6);
-        ty = bez(F.sy, F.cy, end.y, u) + B.off.y * (1 - (F.phase === "in" ? u : 0) * 0.6);
+        tx = bez(F.sx, F.cx, end.x, u) + B.off.x;
+        ty = bez(F.sy, F.cy, end.y, u) + B.off.y;
         B.alt = F.phase === "in" ? Math.max(0, 70 * (1 - u * u)) : 70 + Math.sin(F.t / 900 + B.ph) * 8;
       } else if (F.phase === "out") {
         const u = Math.min(1, (F.t - F.outAt) / 3600);
@@ -657,11 +673,11 @@ export const CampSertao = {
     const y = Math.max(HORIZON + 120, cam.y + cam.height * (0.25 + Math.random() * 0.5));
     const motes = [];
     for (let i = 0; i < 22; i++) {
-      const im = this.add.image(0, 0, i % 5 ? "px_puff" : "px_dot2").setTint([PAL.batida2, PAL.batida1, PAL.terra4][i % 3]).setAlpha(0);
+      const im = this.add.image(0, 0, i % 5 ? "px_puff" : "px_dot2").setTint([PAL.batida3, PAL.straw3, PAL.batida2][i % 3]).setAlpha(0);
       motes.push({ im, h: (i % 11) / 10, ph: Math.random() * TAU, skirt: i >= 18 });
     }
     const leaves = [];
-    for (let i = 0; i < 3; i++) leaves.push({ im: this.add.sprite(0, 0, "px_leaf_tumble", i).setScale(S).setTint(i % 2 ? PAL.straw2 : PAL.straw1).play("leaf_tumble"), ph: Math.random() * TAU, h: 0.3 + i * 0.25 });
+    for (let i = 0; i < 3; i++) leaves.push({ im: this.add.sprite(0, 0, i % 2 ? "camp_sertao_folha" : "camp_sertao_folha2", i).setScale(S).play(i % 2 ? "camp_sertao_folha" : "camp_sertao_folha2"), ph: Math.random() * TAU, h: 0.3 + i * 0.25 });
     const shadow = this.add.image(0, 0, "px_shadow").setScale(4, 2).setAlpha(0).setDepth(D_GROUNDFX);
     this._devils.push({ x: fromLeft ? cam.x - 60 : cam.x + cam.width + 60, y, vx: (fromLeft ? 1 : -1) * (70 + Math.random() * 30), age: 0, life: (cam.width + 120) / 85 * 1000, motes, leaves, shadow });
   },
@@ -679,7 +695,7 @@ export const CampSertao = {
       const x = d.x + Math.cos(ang) * rad,
         y = (m.skirt ? d.y - 3 : d.y - m.h * H) + Math.sin(ang) * rad * (m.skirt ? 0.35 : 0.28);
       const front = Math.sin(ang) > 0;
-      m.im.setPosition(x, y).setScale(S * (m.skirt ? 1 : 0.7 + m.h * 0.8)).setAlpha((front ? 0.7 : 0.4) * life).setDepth(front ? d.y + 12 : d.y - 12);
+      m.im.setPosition(x, y).setScale(S * (m.skirt ? 1.1 : 0.8 + m.h * 0.9)).setAlpha((front ? 0.9 : 0.55) * life).setDepth(front ? d.y + 12 : d.y - 12);
     }
     for (const l of d.leaves) {
       const ang = time / 160 + l.ph;

@@ -221,7 +221,8 @@ export class CampScene extends Phaser.Scene {
         y = rnd.between(TOP + 80, CAMP_H / 2 - 40);
       if (Math.hypot(x, y - 70) < 200 || this.groundPaint.onPath(x, y, 12) || !decorFree(x, y)) continue;
       if (sertao && y < HORIZON + 40) continue;
-      const list = i % 4 === 0 ? env.flowers : i % 4 === 1 ? env.shrooms : env.tufts;
+      // no sertão as pedrinhas são poucas (de longe pareciam bichinhos cinzentos)
+      const list = i % 4 === 0 ? env.flowers : i % 4 === 1 && (!sertao || i % 8 === 1) ? env.shrooms : env.tufts;
       this.add.image(x, y, atlas, rnd.pick(list)).setOrigin(0.5, 1).setScale(S).setDepth(y);
     }
     if (sertao) this._sertaoGround(); // placas de barro rachado e terra clara

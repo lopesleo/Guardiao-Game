@@ -358,6 +358,33 @@ function makeFrade(seed) {
   return p.outline(K);
 }
 
+// Folha seca rolando no vento (4 quadros: de frente, virando, de lado, o verso), palha e barro, nervura escura
+export const FOLHA_ROLA = [0, 1, 2, 3];
+function makeDryLeaf(f, tone) {
+  const p = new Pix(9, 9);
+  const w = [1, 0.55, 0.12, 0.55][f];
+  const back = f === 3;
+  const L = tone ? (back ? [PAL.n3, PAL.n4, PAL.n2] : [PAL.straw3, PAL.straw2, PAL.n3]) : back ? [PAL.straw1, PAL.straw2, PAL.straw0] : [PAL.clay3, PAL.clay2, PAL.clay1];
+  for (let i = 0; i <= 10; i++) {
+    const t = i / 10;
+    const cx = 1.5 + t * 6,
+      cy = 7.5 - t * 6;
+    const half = Math.sin(t * Math.PI) * 2.6 * w;
+    for (let k = -3; k <= 3; k++) {
+      const off = k * 0.5;
+      if (Math.abs(off) > half + 0.2) continue;
+      // a borda da folha seca é recortada (comida pelo sol): falta um pixel aqui e ali
+      if (Math.abs(off) > half - 0.4 && (i + k) % 4 === 0) continue;
+      const x = Math.round(cx - off * 0.7),
+        y = Math.round(cy - off * 0.7);
+      p.set(x, y, Math.abs(off) < 0.3 ? L[2] : off < 0 ? L[0] : L[1]);
+    }
+  }
+  p.set(0, 8, PAL.n2);
+  p.set(1, 8, PAL.n2);
+  return p.outline(PAL.n1);
+}
+
 // ---------------------------------------------------------------------------
 // HORTA DO SERTÃO: cerca de varas (ladrilho de 40, período 40), o mourão de forquilha das laterais, a porteira de
 // forquilha com a travessa, a placa do broto e o chocalho (peças à parte, balançam no vento) e o canteiro fechado
@@ -819,11 +846,13 @@ function makeAsaBranca(dir, f) {
     }
     // cauda (leque curto com a barra escura na ponta)
     if (u < -3 && u > -6.6 && av <= 1 + (-3 - u) * 0.28) return u < -5.6 ? PAL.s0 : PAL.s2;
-    // asas: borda de ataque varrida para trás, a mão afina na ponta
+    // asas: a linha do meio curva para trás (asa varrida, de pomba), larga junto ao corpo e afinando até a ponta
     if (av > 0.9 && av <= span) {
       const t = (av - 0.9) / (span - 0.9);
-      const front = 1.3 - t * 1.4,
-        back = -1.8 + t * 0.9;
+      const mid = 0.1 - 1.6 * t - 1.4 * t * t,
+        chord = 3.6 * (1 - Math.pow(t, 1.5)) + 0.5;
+      const front = mid + chord / 2,
+        back = mid - chord / 2;
       if (u <= front && u >= back) {
         if (t > 0.72) return lit > 0 ? PAL.s1 : PAL.s0; // ponta escura
         if (u > front - 0.9 && t > 0.15 && t < 0.68) return PAL.white; // a faixa branca
@@ -1227,6 +1256,10 @@ export function registerCampSertao(scene) {
   registerStrip(scene, "camp_sertao_scarecrow", [0, 1, 2, 3, 4, 5].map(makeScarecrow));
   registerStrip(scene, "camp_sertao_hammock", [0, 1, 2, 3, 4, 5].map(makeHammock));
   makeLog().register(scene, "camp_sertao_log");
+  registerStrip(scene, "camp_sertao_folha", [0, 1, 2, 3].map((f) => makeDryLeaf(f, 0)));
+  registerStrip(scene, "camp_sertao_folha2", [0, 1, 2, 3].map((f) => makeDryLeaf(f, 1)));
+  for (const k of ["camp_sertao_folha", "camp_sertao_folha2"])
+    if (!scene.anims.exists(k)) scene.anims.create({ key: k, frames: scene.anims.generateFrameNumbers(k, { frames: FOLHA_ROLA }), frameRate: 10, repeat: -1 });
   makePote().register(scene, "camp_sertao_pote");
   registerStrip(scene, "camp_sertao_calango", [0, 1, 2, 3, 4, 5, 6, 7, 8].map(makeCalango));
   const asa = [];

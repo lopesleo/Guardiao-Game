@@ -69,7 +69,7 @@ export const CampPond = {
     const streaks = this.add.graphics().setBlendMode(Phaser.BlendModes.ADD).setDepth(D_NIGHT + 1);
     lights.push([streaks, 0.8]);
     // Sertão: a lua grande do horizonte refletida inteira no açude, tremendo na água (só de noite)
-    const moonDisc = sert ? this.add.image(deep.x, deep.y - 4, "camp_sertao_lua").setScale(S * 0.62, S * 0.42).setTint(0xcfe6ff).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0).setDepth(D_NIGHT + 1) : null;
+    const moonDisc = sert ? this.add.image(deep.x, deep.y - 4, "camp_sertao_lua").setScale(S * 0.7, S * 0.2).setTint(0x9fc4ff).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0).setDepth(D_NIGHT + 1) : null;
     if (moonDisc) moonDisc._ownAlpha = true;
 
     // Bica d'água nas pedras do nordeste + espuma
@@ -270,7 +270,8 @@ export const CampPond = {
       if (moonDisc) {
         // o reflexo da lua: só com a lua no céu; a água o corta em faixas que tremem
         const up = !!this.band?.moon.visible;
-        moonDisc.setAlpha(up ? (0.3 + Math.sin(t * 1.1) * 0.05) * (this._nightW ?? k) : 0).setScale(S * (0.62 + Math.sin(t * 2.3) * 0.02), S * (0.42 + Math.sin(t * 1.7) * 0.015));
+        // a lua do céu, achatada e partida pelas marolas (faixas que tremem), bem mais fraca que a de verdade
+        moonDisc.setAlpha(up ? (0.13 + Math.sin(t * 1.1) * 0.03) * (this._nightW ?? k) : 0).setScale(S * (0.7 + Math.sin(t * 2.3) * 0.04), S * (0.2 + Math.sin(t * 1.7) * 0.02));
         moonDisc.x = deep.x + Math.round(Math.sin(t * 0.9) * 1.5) * 3;
       }
     };

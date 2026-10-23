@@ -496,7 +496,8 @@ export const CampDecor = {
             const wv = cam.worldView;
             const x = wv.x - 20,
               y = Math.max(HORIZON + 40, wv.y + Math.random() * wv.height);
-            const leaf = this.add.sprite(x, y, "px_leaf_tumble", Math.floor(Math.random() * 4)).setScale(S).setTint([PAL.straw1, PAL.straw2, PAL.n3, PAL.straw3][Math.floor(Math.random() * 4)]).setDepth(y + 30).play("leaf_tumble");
+            const kind = Math.random() < 0.5 ? "camp_sertao_folha" : "camp_sertao_folha2";
+            const leaf = this.add.sprite(x, y, kind, Math.floor(Math.random() * 4)).setScale(S).setDepth(y + 30).play(kind);
             this.tweens.add({ targets: leaf, x: x + wv.width * (0.6 + Math.random() * 0.5), duration: 5200 + Math.random() * 2600, ease: "Sine.easeInOut", onComplete: () => leaf.destroy() });
             this.tweens.add({ targets: leaf, y: y - 18, duration: 600 + Math.random() * 300, yoyo: true, repeat: 4, ease: "Quad.easeOut" }); // quiques
             this.tweens.add({ targets: leaf, alpha: 0, delay: 4400, duration: 900 });
