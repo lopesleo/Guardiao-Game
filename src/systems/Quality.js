@@ -289,7 +289,9 @@ export class QualityAuto {
           this._change(pr.from, "descida sem ganho", now, w);
           return;
         }
-        if (busy > 0 && pr.busy > 0) this.cost[pr.from] = Math.min(3, Math.max(1, pr.busy / busy));
+        // custo do degrau de cima, para prever a folga de subir: o medido na descida, com COST de piso (a horda
+        // que cresce durante a descida esconde o ganho — medir 1,0 deixaria subir cedo demais)
+        if (busy > 0 && pr.busy > 0) this.cost[pr.from] = Math.min(3, Math.max(A.COST[pr.from] ?? 1, pr.busy / busy));
         // as janelas do teste contam para a próxima decisão
         this.badRun = 0;
         for (const x of pr.wins) this.badRun = x.fps < this.target * A.DOWN ? this.badRun + 1 : 0;

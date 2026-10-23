@@ -106,8 +106,9 @@ export const QUALITY = {
     PROBE_WINDOWS: 2,
     GAIN_FPS: 2,
     CPU_BOUND: 0.6,
-    // Custo do degrau de cima sobre o de baixo (trabalho do quadro), enquanto a partida ainda não mediu o dela:
-    // Alta ÷ Média e Média ÷ Baixa, do teste de carga com a CPU 4× mais lenta (tools/test-qualidade.mjs)
+    // Custo do degrau de cima sobre o de baixo (trabalho do quadro: Alta ÷ Média, Média ÷ Baixa), o piso da
+    // previsão para subir; o medido na descida só aumenta. Na CPU, com ela 4× mais lenta, sai 1,03 e 1,06
+    // (MEDIR=1 em tools/test-qualidade.mjs); a folga a mais cobre a GPU do celular, que o teste não mede
     COST: [1.15, 1.25],
   },
 };
