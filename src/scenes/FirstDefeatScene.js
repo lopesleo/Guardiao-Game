@@ -11,6 +11,7 @@ import { formatTime } from "../utils.js";
 import { Analytics } from "../systems/Analytics.js";
 import { MetaProgression } from "../systems/MetaProgression.js";
 import { Settings } from "../systems/Settings.js";
+import { Quality } from "../systems/Quality.js";
 import { RIG_W, RIG_H, GROUND, RIG_KEYS } from "../art/HeroRig.js";
 import { tr } from "../i18n/i18n.js";
 
@@ -138,7 +139,7 @@ export class FirstDefeatScene extends Phaser.Scene {
   // Efeitos de pós-processamento (só WebGL; o resto da cena funciona sem eles)
   _initFx() {
     const cam = this.cameras.main;
-    if (!cam.filters || this.sys.game.renderer.type !== Phaser.WEBGL || Settings.get("lighting") === false) return;
+    if (!cam.filters || this.sys.game.renderer.type !== Phaser.WEBGL || Quality.get("light") === false) return; // qualidade Baixa (src/systems/Quality.js): sem filtros
     // Phaser 4: efeitos de câmera são filtros (camera.filters.external). Todos criados AGORA e
     // mantidos até o fim: ligar/desligar efeito no meio da cena troca o modo de renderização.
     const ext = cam.filters.external;

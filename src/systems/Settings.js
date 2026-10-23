@@ -14,7 +14,11 @@ const DEFAULTS = {
   shake: true,
   softFlash: false, // clarões suaves (fotossensibilidade): flash de tela e luzes passageiras bem mais fracos
   dmgNumbers: true,
-  lighting: true,
+  // Qualidade gráfica (systems/Quality.js): "auto" | "high" | "medium" | "low". qualityAuto = o degrau que o
+  // automático aprendeu neste aparelho (a próxima partida começa nele). A chave antiga "lighting" (Iluminação
+  // dinâmica, desligada à mão ou pelo QualityWatchdog) vira "low" uma vez, no carregamento: é o mesmo visual
+  quality: "auto",
+  qualityAuto: null,
   font: "pixel", // fonte do jogo (ver FONTS em ui/Theme.js)
   textSize: 0, // índice em TEXT_SIZES (Normal/Grande/Muito grande)
   zoom: 0, // índice em ZOOMS (ui/Zoom.js): aproxima o mundo, a interface fica do mesmo tamanho
@@ -44,6 +48,9 @@ export const Settings = {
       if (saved) {
         Object.assign(cache, saved);
         linearVolumes = saved.volCurve !== VOL_CURVE;
+        if (saved.quality === undefined && saved.lighting === false) cache.quality = "low";
+        delete cache.lighting;
+        delete cache.qualityChecked;
       } else {
         // Migra o volume único antigo (slider do menu) pros dois canais
         const old = parseFloat(localStorage.getItem("guardiao_volume_v1"));

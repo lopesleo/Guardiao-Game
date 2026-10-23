@@ -58,7 +58,7 @@ Legenda — **Esforço:** P (horas) · M (1–2 dias) · G (3+ dias) ·
 | # | Item | Esforço | Quem |
 |---|---|---|---|
 | 4.1 | **Teste em aparelhos reais** — 1 top (S23) e 1 fraco (2–3 GB RAM, Android 9/10): FPS, toque, som, voltar, minimizar, rotação | M | 👤 (eu preparo o roteiro) |
-| 4.2 | **Qualidade gráfica automática** (Alta/Baixa): em aparelho fraco desliga iluminação e reduz partículas | P | 🤖 |
+| 4.2 | ✅ **Qualidade gráfica automática** (23/10/2026: Automática/Alta/Média/Baixa, contínua na partida, `src/systems/Quality.js`; desempenho de cada partida no evento `perf_run`) | P | 🤖 |
 | 4.3 | Música pausa quando o app vai pro fundo | P | 🤖 |
 | 4.4 | **Versão do save** + migração (proteger progresso nas atualizações) | P | 🤖 |
 | 4.5 | **Playtest com 5–10 pessoas** (anotar onde travaram / enjoaram) | — | 👤 |

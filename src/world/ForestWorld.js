@@ -14,11 +14,12 @@
 // lá; WebGL 1 permite GPU sem isso, como celulares bem antigos), com GROUND.GPU desligado ou com
 // ?debug=1&chao=img, as mesmas coisas viram as imagens de antes — o mesmo desenho. E se o desenho da
 // camada der erro no aparelho, ela vira essas imagens na hora (guardGPULayer; teste: ?debug=1&chao=falha).
-import { GAME, BIOMES, GROUND } from "../config.js";
+import { GAME, BIOMES, GROUND, QUALITY } from "../config.js";
 import { PAL } from "../art/Palette.js";
 import { rng } from "../art/PixelArt.js";
 import { vw, vh } from "../ui/Theme.js";
 import { DEBUG } from "../systems/Platform.js";
+import { Quality } from "../systems/Quality.js";
 import { PodridaoEdge } from "./Podridao.js";
 
 const S = GAME.PIXEL_SCALE;
@@ -330,33 +331,48 @@ export class ForestWorld {
       this.shafts.push(s);
     }
 
-    // Vaga-lumes e folhas em espaço de MUNDO (renascem ao sair da tela)
+    // Vaga-lumes e folhas em espaço de MUNDO (renascem ao sair da tela). Quantos ficam no ar segue o degrau
+    // de qualidade (QUALITY.TIERS[].ambient): cada um tem um lugar na fila do seu tipo (rank, 0..1) e some ou
+    // volta devagar (k) quando a fração muda — nada pisca
     this.ambient = [];
-    for (let i = 0; i < (A.fireflies ?? 14); i++) {
+    const nFF = A.fireflies ?? 14,
+      nLeaf = A.leaves ?? 9,
+      nDust = A.dust ?? 0;
+    const frac = Quality.get("ambient");
+    const on = (rank) => (rank < frac ? 1 : 0);
+    for (let i = 0; i < nFF; i++) {
       const glow = sc.add.image(0, 0, "fx_glow").setScale(0.35).setTint(0xfff5b8).setBlendMode(Phaser.BlendModes.ADD).setDepth(20000);
       const core = sc.add.image(0, 0, "px_dot2").setScale(S * 0.7).setTint(0xfff5b8).setDepth(20001);
-      const p = { kind: "ff", glow, core, x: 0, y: 0, phase: this.r() * 7 };
+      const p = { kind: "ff", glow, core, x: 0, y: 0, phase: this.r() * 7, rank: i / nFF, k: on(i / nFF), a: 1 };
       this._respawn(p, true);
       this.ambient.push(p);
     }
-    for (let i = 0; i < (A.leaves ?? 9); i++) {
+    for (let i = 0; i < nLeaf; i++) {
       const leaf = sc.add.image(0, 0, "px_leaf").setScale(S).setDepth(20000);
       if (i % 3 === 0 || A.dust) leaf.setTint(A.leafTint ?? 0xe0a050);
-      const p = { kind: "leaf", core: leaf, x: 0, y: 0, phase: this.r() * 7, vy: 18 + this.r() * 14, vx: (this.r() - 0.5) * 26 };
+      const p = { kind: "leaf", core: leaf, x: 0, y: 0, phase: this.r() * 7, vy: 18 + this.r() * 14, vx: (this.r() - 0.5) * 26, rank: i / nLeaf, k: on(i / nLeaf), a: 1 };
       this._respawn(p, true);
       this.ambient.push(p);
     }
 
     // Poeira do sertão: grãos claros que o vento arrasta na horizontal
-    for (let i = 0; i < (A.dust ?? 0); i++) {
+    for (let i = 0; i < nDust; i++) {
       const g = sc.add.image(0, 0, "px_dot2").setScale(S * (0.5 + this.r() * 0.5)).setTint(i % 3 ? 0xe8d0a0 : 0xc8a878).setAlpha(0.55).setDepth(20000);
-      const p = { kind: "dust", core: g, x: 0, y: 0, phase: this.r() * 7, vx: 60 + this.r() * 70, vy: (this.r() - 0.5) * 10 };
+      const p = { kind: "dust", core: g, x: 0, y: 0, phase: this.r() * 7, vx: 60 + this.r() * 70, vy: (this.r() - 0.5) * 10, rank: i / nDust, k: on(i / nDust), a: 0.55 };
       this._respawn(p, true);
       this.ambient.push(p);
     }
+    for (const p of this.ambient) if (!p.k) this._park(p);
 
     // Vinheta + Podridão avançando pelas bordas + pulso da vida baixa: UMA camada (ver Podridao.js)
     this.podridao = new PodridaoEdge(sc);
+  }
+
+  // Fora do ar (degrau de qualidade): invisível e fora das contas do quadro
+  _park(p) {
+    p.core.setVisible(false);
+    p.glow?.setVisible(false);
+    p.parked = true;
   }
 
   _respawn(p, anywhere = false) {
@@ -414,21 +430,41 @@ export class ForestWorld {
     if (!this.ambient) return;
     for (const s of this.shafts) s.setAlpha(0.035 + Math.sin(time / 2600 + s._phase) * 0.02);
     const M = 40;
+    const frac = Quality.get("ambient");
+    const step = Math.min(1, (dt ?? 16) / QUALITY.FADE_MS);
     for (const p of this.ambient) {
+      // entra ou sai do ar devagar quando o degrau muda
+      const want = p.rank < frac ? 1 : 0;
+      if (p.k !== want) {
+        if (p.parked) {
+          p.parked = false;
+          this._respawn(p, true);
+          p.core.setVisible(true);
+          p.glow?.setVisible(true);
+        }
+        p.k += Math.max(-step, Math.min(step, want - p.k));
+        if (p.k <= 0) {
+          p.k = 0;
+          this._park(p);
+        }
+      }
+      if (p.parked) continue;
       if (p.kind === "ff") {
         p.x += Math.sin(time / 900 + p.phase) * 0.35;
         p.y += Math.cos(time / 1100 + p.phase) * 0.3 - 0.08;
-        const a = 0.25 + Math.abs(Math.sin(time / 400 + p.phase)) * 0.6;
+        const a = (0.25 + Math.abs(Math.sin(time / 400 + p.phase)) * 0.6) * p.k;
         p.core.setPosition(p.x, p.y).setAlpha(a);
         p.glow.setPosition(p.x, p.y).setAlpha(a * 0.5);
       } else if (p.kind === "dust") {
         p.x += p.vx * (dt / 1000);
         p.y += (p.vy + Math.sin(time / 300 + p.phase) * 12) * (dt / 1000);
         p.core.setPosition(p.x, p.y);
+        if (p.core.alpha !== p.a * p.k) p.core.setAlpha(p.a * p.k);
       } else {
         p.x += (p.vx + Math.sin(time / 600 + p.phase) * 14) * (dt / 1000);
         p.y += p.vy * (dt / 1000);
         p.core.setPosition(p.x, p.y).setRotation(Math.sin(time / 300 + p.phase) * 0.8);
+        if (p.core.alpha !== p.a * p.k) p.core.setAlpha(p.a * p.k);
       }
       if (p.x < cam.scrollX - M || p.x > cam.scrollX + cam.width + M || p.y < cam.scrollY - M || p.y > cam.scrollY + cam.height + M)
         this._respawn(p);

@@ -215,3 +215,34 @@ aplicou (`_hitSrc`); a reação junta as duas armas do par e divide o dano dela 
 (a reação continua contando na linha dela; a assistência é crédito a mais, para arma de suporte não
 parecer fraca). **Arma nova que bate direto** (sem `_hit`) precisa
 chamar `this._src()` antes do `takeDamage`; senão o dano cai em `dmg_other` (que deve ficar perto de 0).
+
+### Desempenho (`perf_run`, 23/10/2026)
+
+Um evento por partida, no fim (vitória, derrota ou desistência), montado pela qualidade automática
+(`src/systems/Quality.js`, `QUALITY` no config). Mede só com a partida andando (sem a entrada pela trilha, os
+primeiros 4 s, as pausas e cartas):
+
+| Parâmetro | O que é |
+|---|---|
+| `fps_p50`, `fps_p5` | quadros por segundo: o típico e o dos 5% piores quadros |
+| `busy_p50`, `busy_p95` | trabalho do quadro na CPU (ms, do começo do passo ao fim do desenho); folga = 16,7 − isto |
+| `slow_pct` | % de quadros que se notam (> 25 ms) |
+| `q_mode` | escolha nas Opções: `auto`, `high`, `medium`, `low` |
+| `q_start`, `q_end`, `q_min` | degrau no começo, no fim e o mais leve a que a partida chegou |
+| `q_min_s`, `q_high_s`, `q_med_s`, `q_low_s` | segundos no degrau mais leve e em cada degrau |
+| `q_changes` | trocas de degrau do automático |
+| `ground_gpu` | 1 = chão na `SpriteGPULayer`; 0 = plano B (imagens) |
+| `hz`, `fps_cap` | Hz da tela (estimado pelos quadros mais curtos) e o teto de quadros (`GAME.FPS_LIMIT`) |
+| `dev_mem`, `cpu_cores` | memória (GB, arredondada pelo navegador) e núcleos do aparelho |
+| `t`, `biome`, `difficulty`, `run_n`, `frames` | duração, bioma, Perigo, nº da partida e quadros medidos |
+
+**Registrar no Google Analytics** (Administrador → Definições personalizadas; não vale para trás). Dimensões do
+evento: `q_mode`, `q_start`, `q_end`, `q_min`, `dev_mem`, `cpu_cores`, `hz`, `ground_gpu` (memória, núcleos e Hz
+como dimensão: o uso é agrupar por classe de aparelho). Métricas: `fps_p50`, `fps_p5`, `busy_p50`, `busy_p95`,
+`slow_pct`, `q_min_s`, `q_high_s`, `q_med_s`, `q_low_s`, `q_changes`, `frames`. `t`, `biome` e `difficulty` já
+estão registrados. O modelo do aparelho o Firebase já manda sozinho.
+
+**Como ler:** `fps_p5` baixo com `busy_p95` perto de 16,7 = o jogo pesa no aparelho (a qualidade automática
+devia descer); `fps_p5` baixo com `busy_p95` baixo = a tela ou outro app seguram os quadros (economia de bateria,
+30 Hz). Muito tempo em `q_low_s` num modelo = candidato a teste no aparelho. Aparelhos com `ground_gpu = 0` são os
+do plano B.

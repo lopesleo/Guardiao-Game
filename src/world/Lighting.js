@@ -10,10 +10,14 @@
 //  3) COGUMELOS QUE CINTILAM À NOITE (GROUND.GLOW): uma SpriteGPULayer com uma luz fraca por
 //     cogumelo, animada na GPU (respiração com fase própria), desenhada DENTRO do mapa de luz por uma
 //     câmera que leva o mundo para a escala do mapa. Nada por cogumelo na CPU; só acende com a noite.
-import { GAME, PODRIDAO, STATUS_LOOK, GROUND } from "../config.js";
+// Qualidade (QUALITY em config.js, src/systems/Quality.js): o degrau diz se há mapa de luz, sombras e
+// cogumelos, o teto de luzes e o ritmo de redesenho. Trocar de degrau nunca é um salto: a noite clareia
+// até sumir (ou volta escurecendo), sombras e cogumelos somem e voltam devagar (QUALITY.FADE_MS).
+import { GAME, PODRIDAO, STATUS_LOOK, GROUND, QUALITY } from "../config.js";
 import { PAL } from "../art/Palette.js";
 import { rng } from "../art/PixelArt.js";
 import { Settings } from "../systems/Settings.js";
+import { Quality } from "../systems/Quality.js";
 import { vw, vh } from "../ui/Theme.js";
 import { groundGPU, guardGPULayer } from "./ForestWorld.js";
 
@@ -72,8 +76,10 @@ function ensureTextures(scene) {
   }
 }
 
-const MAX_LIGHTS = 72; // teto por frame (o resto é descartado)
-const REFRESH_MS = 33; // mapa de luz redesenhado a ~30 Hz (luz não precisa de 60)
+// Teto de luzes por desenho do mapa (o resto é descartado: as menos importantes vêm por último) e o ritmo de
+// redesenho (~30 Hz na Alta: luz não precisa de 60) vêm do degrau de qualidade (lights, lightMs)
+const WHITE = [255, 255, 255];
+const ease = (k) => k * k * (3 - 2 * k);
 
 export class Lighting {
   constructor(scene, world) {
@@ -84,7 +90,14 @@ export class Lighting {
     this.stamps = []; // pool de "carimbos" de luz — TODOS desenhados numa chamada só
     this._nextDraw = 0;
     this.rt = null;
-    this.setEnabled(Settings.get("lighting") !== false);
+    const Q = Quality.spec;
+    this._want = Q.light; // o degrau quer luz?
+    this._k = Q.light ? 1 : 0; // força do mapa de luz (0 = dia pleno; anda até _want em QUALITY.FADE_MS)
+    this._shK = Q.shadows ? 1 : 0; // força das sombras projetadas
+    this._gK = Q.glow ? 1 : 0; // força dos cogumelos
+    this._max = Q.lights;
+    this._lastT = null;
+    this.setEnabled(Q.light);
     // a camada dos cogumelos (fora da lista de exibição) sai junto com a cena. Ouvinte posto AQUI, e não
     // quando a camada nasce: a contagem de ouvintes da cena fica a mesma em toda partida (npm test)
     scene.events.once("shutdown", () => {
@@ -131,7 +144,7 @@ export class Lighting {
 
   // Enfileira uma luz (em coordenadas do mapa de luz, 1/RES da tela)
   _light(x, y, r, color, alpha = 1) {
-    if (this._n >= MAX_LIGHTS || alpha <= 0.02) return;
+    if (this._n >= this._max || alpha <= 0.02) return;
     // posição NA TELA: o mapa de luz é preso à tela e sem zoom, o mundo pode ter zoom
     // (acessibilidade) — com zoom 1 dá exatamente x - scrollX
     const cam = this.scene.cameras.main;
@@ -156,10 +169,30 @@ export class Lighting {
   }
 
   update(time) {
+    const Q = Quality.spec;
+    const fk = this._lastT == null ? 1 : Math.min(1, Math.max(0, time - this._lastT) / QUALITY.FADE_MS);
+    this._lastT = time;
+    if (Q.light !== this._want) {
+      this._want = Q.light;
+      if (Q.light && !this.enabled) {
+        this._k = 0; // volta do dia pleno, escurecendo
+        this.setEnabled(true);
+        this._nextDraw = 0;
+      }
+    }
     if (!this.enabled) return;
+    this._k += Math.max(-fk, Math.min(fk, (this._want ? 1 : 0) - this._k));
+    if (this._k <= 0 && !this._want) {
+      this._k = 0;
+      this.setEnabled(false); // clareou até o fim: o mapa sai de cena (Baixa)
+      return;
+    }
+    this._shK += Math.max(-fk, Math.min(fk, (Q.shadows ? 1 : 0) - this._shK));
+    this._gK += Math.max(-fk, Math.min(fk, (Q.glow ? 1 : 0) - this._gK));
     this._treeShadows(this.scene.player);
     if (time < this._nextDraw) return;
-    this._nextDraw = time + REFRESH_MS;
+    this._nextDraw = time + Q.lightMs;
+    this._max = Q.lights;
     const s = this.scene;
     const p = s.player;
     this._n = 0;
@@ -219,7 +252,7 @@ export class Lighting {
     s.xpPool?.forEachActive((g) => {
       if (gems++ < 16) this._light(g.x, g.y, 46, 0x7fe07a, 0.5);
     });
-    for (const f of this.world?.ambient ?? []) if (f.kind === "ff") this._light(f.x, f.y, 44, 0xfff2b0, f.core.alpha * 0.8);
+    for (const f of this.world?.ambient ?? []) if (f.kind === "ff" && !f.parked) this._light(f.x, f.y, 44, 0xfff2b0, f.core.alpha * 0.8);
 
     // Ambiente + todas as luzes numa ÚNICA passada no mapa de luz.
     // (Antes: 1 draw por luz = ~100 trocas de framebuffer/frame → travava celular.)
@@ -236,8 +269,11 @@ export class Lighting {
     this._bossK = this._bossK == null ? bossOn : this._bossK + Math.max(-step, Math.min(step, bossOn - this._bossK));
     const kB = this._bossK * this._bossK * (3 - 2 * this._bossK); // suave nas duas pontas
     const base = Math.pow(tRun, 1.3);
-    const amb = kB > 0 ? mix(mixArr(dusk, night, base), bossAmb, kB) : mix(dusk, night, base);
-    this.rt.fill(amb);
+    let ambA = kB > 0 ? mixArr(mixArr(dusk, night, base), bossAmb, kB) : mixArr(dusk, night, base);
+    // troca de degrau: a noite clareia até o branco (o mapa em MULTIPLY deixa de escurecer) ou volta dele
+    const kL = ease(this._k);
+    if (kL < 1) ambA = mixArr(WHITE, ambA, kL);
+    this.rt.fill((Math.round(ambA[0]) << 16) | (Math.round(ambA[1]) << 8) | Math.round(ambA[2]));
     if (this._n) {
       const list = (this._drawList ||= []);
       list.length = 0;
@@ -251,8 +287,9 @@ export class Lighting {
       const G = GROUND.GLOW;
       const nightK = Math.max(clamp01((base - G.NIGHT[0]) / (G.NIGHT[1] - G.NIGHT[0])), kB);
       const glow = this._glowLayer();
-      if (glow && (nightK > 0.01 || !this._glowWarm)) {
-        glow.alpha = Math.max(1e-4, nightK * nightK * (3 - 2 * nightK));
+      const gK = ease(this._gK) * kL;
+      if (glow && ((nightK > 0.01 && gK > 0.01) || !this._glowWarm)) {
+        glow.alpha = Math.max(1e-4, nightK * nightK * (3 - 2 * nightK) * gK);
         this.rt.capture(glow, { camera: this._glowCamera() });
         this._glowWarm = true;
       }
@@ -331,7 +368,8 @@ export class Lighting {
   // Sombras projetadas pelas árvores a partir da luz do herói
   _treeShadows(p) {
     let used = 0;
-    if (p?.active && this.world) {
+    const kS = ease(this._shK) * ease(this._k);
+    if (p?.active && this.world && kS > 0.01) {
       const R = 460;
       const trees = this.world.trees;
       for (let i = 0, n = trees.length; i < n; i++) {
@@ -354,7 +392,7 @@ export class Lighting {
           .setPosition(t.x, t.y - 4)
           .setRotation(Math.atan2(dy, dx))
           .setScale(len / 128, (t.displayWidth * 0.45) / 32)
-          .setAlpha(0.15 + k * 0.45);
+          .setAlpha((0.15 + k * 0.45) * kS);
       }
     }
     for (let i = used; i < this.shadowPool.length; i++) this.shadowPool[i].setVisible(false);
