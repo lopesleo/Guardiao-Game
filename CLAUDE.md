@@ -158,6 +158,11 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
 - Lançamento planejado: **quinta, 03/12/2026** (calendário completo em `docs/MARKETING.md`).
 
 **Marketing e loja** (`docs/MARKETING.md`)
+- **Agendamento pelo Buffer** (22/10, `docs/PLANO_DE_CONTEUDO.md`): Instagram e TikTok `@guardiaodaflorestaofc` e X
+  **`@guardiao_game`** conectados; o Claude cria os posts pelo MCP do Buffer como rascunho com dia e hora, e as mídias
+  ficam públicas em `https://midia.komedygames.com/` (R2 `guardiao-midia`). Em 22/10: apresentação no X e a evolução
+  no TikTok publicadas; a semana até o Dia do Saci (31/10) em 12 rascunhos. 👤 Aprovar os rascunhos no Buffer
+  (Rascunhos → Agendar); fixar à mão o comentário do convite no Instagram (recurso pago no Buffer).
 - Redes (`docs/REDES_SOCIAIS.md`): Instagram **`@guardiaodaflorestaofc`** no ar (20/10: conta profissional, categoria
   Publisher de jogos, nome, bio e link para o site; 1º vídeo postado pelo Leonardo). 👤 Postar os 4 reels + carrossel
   (`videos/promo/entrega/`); legenda do vídeo promocional no documento. Discord no ar (https://discord.gg/TTYnNtQAes), configurado por `tools/discord/`;
