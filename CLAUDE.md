@@ -157,7 +157,14 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
   sem a permissão do sistema). **Consertado na 1.0.18.** 👤 Liberar em Configurações › Apps › Guardião da Floresta ›
   Notificações (ou, com a 1.0.18, pela chave em Opções) e testar de novo. A "Segurança dos dados" já declara (20/10) os IDs do dispositivo com Funcionalidade do app e Mensagens do
   desenvolvedor. A política com novidades e Play Games **já está no ar** (`komedygames.com/guardiao/privacidade/`).
-- **Próximo: Clareira da Caatinga** (grátis): liberar quem vencer no Perigo máximo na Caatinga + uma conquista.
+- **Clareira da Caatinga na `main` (23/10, ainda sem versão; detalhes no ROADMAP e em `docs/COSMETICOS.md`):** o
+  visual do sertão para o acampamento, grátis para quem vence no Perigo Pesadelo na Caatinga, com a conquista
+  **Mandacaru em Flor** (agora são 33). O aviso vem em três passos: faixa na tela do fim, cena da Anciã com a flor
+  do mandacaru e selo "!" no Guarda-roupa. Teste em `npm run test:clareira`.
+  👤 Ver no S23 e num celular fraco: o horizonte, a lua, os pássaros e o calango (o carcará parece baixo demais?).
+  👤 Decidir o nome da conquista ("Mandacaru em Flor" ou "Antes de Tudo, um Forte").
+  👤 Trocar "32 conquistas" por 33 na ficha da loja, nos idiomas (o texto novo já está no `PLAY_STORE.md`).
+  Vitórias no Pesadelo da Caatinga antes desta versão não contam: o save não guardava o mapa.
 - **Teste fechado:** o Painel mostrou em 15/10 **12 testadores participando há 1 dia** — os 14 dias contam desde
   ~14/10 (pedido de produção possível por volta de **28/10**). 👤 Manter os 12 ativos (ninguém sair da lista).
   A lista do Alpha ("Testadores Guardião") tem 22 e-mails; lobits1real@gmail.com entrou em 19/10 e
