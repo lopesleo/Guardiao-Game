@@ -13,6 +13,15 @@ vídeo novo aparece sozinho. `npm run redes -- --celular` abre a mesma página n
 salvar o vídeo e postar pelo app. Os textos da página (`tools/redes/pagina.html`) espelham a seção 9: mudou aqui,
 mude lá.
 
+**Agendamento pelo Buffer (desde 22/10/2026).** O Buffer (plano grátis: 3 canais, 10 posts agendados) tem as contas
+do **Instagram** e do **TikTok** (`@guardiaodaflorestaofc`) e do **X** (`@guardiao_game`), e o Claude opera pelo MCP
+do Buffer (`https://mcp.buffer.com/mcp`, login por OAuth; `claude mcp add --transport http -s user buffer …`). Os posts
+entram como **rascunho com dia e hora**; o Leonardo aprova no app do Buffer (Rascunhos → Agendar). O Buffer só aceita
+vídeo e imagem por **endereço público**: os arquivos ficam no R2 da Cloudflare, armazenamento `guardiao-midia`,
+servido em `https://midia.komedygames.com/` (mesmas pastas de `videos/promo/entrega/`: `reels/…`, `social/…`). Para
+subir um arquivo novo: `npx wrangler@4 r2 object put guardiao-midia/reels/<nome>.mp4 --file <arquivo> --content-type
+video/mp4 --remote`. O "primeiro comentário" do Instagram é recurso pago: fixar à mão.
+
 **Quem faz o quê:** o Leonardo posta e responde (as contas são dele). O Claude prepara os vídeos, as imagens e os
 textos da semana, e nunca publica sem o OK.
 
@@ -225,8 +234,9 @@ Fogo + Gelo vira Vapor. Gelo + Raio vira Cristal. Fogo + Raio vira Sobrecarga.
 
 Guardião da Floresta é um roguelite brasileiro: você só se move, as armas atacam sozinhas e as lendas do folclore lutam do seu lado contra a Podridão.
 
-Em breve na Google Play. Grátis, sem energia e sem gacha.
+Em breve na Google Play. Grátis e sem gacha.
 ```
+(Cabe nos 280 caracteres do X grátis; com "sem energia" passava. Publicado em 22/10/2026 com o reel da evolução.)
 1ª resposta: `Quer jogar antes do lançamento? Peça seu convite (Android, grátis): https://komedygames.com/guardiao/?utm_source=x&utm_medium=social`
 
 **Bastidor (com o vídeo do herói sendo desenhado por código, reel 8):**
