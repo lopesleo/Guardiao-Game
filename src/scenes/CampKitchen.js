@@ -153,4 +153,80 @@ export const CampKitchen = {
       );
     }
   },
+
+  // Na boca da trilha, sem prato ativo: "Levar um prato?". Com prato pronto, um toque come e parte; sem prato
+  // pronto mas com o que cozinhar, leva à cozinha. Uma vez por visita à Clareira e nunca com prato ativo (o "!" da
+  // cozinha sozinho passava batido). Devolve true se abriu a janela (a partida espera a escolha)
+  _mealPrompt() {
+    const d = this.meta.data;
+    const k = this.kitchen;
+    if (this._mealAsked || d.meal || !k || !this.buildings.kitchen?.shown) return false;
+    const ready = [];
+    for (const [id, row] of Object.entries(d.dishes || {})) row.forEach((n, q) => n > 0 && recipe(id) && ready.push({ id, q, n }));
+    const cookable = ready.length ? [] : k.known().filter((r) => k.canCook(r));
+    if (!ready.length && !cookable.length) return false;
+    this._mealAsked = true;
+    Analytics.track("meal_prompt", { ready: ready.length, cookable: cookable.length });
+    const m = new Modal(this, {
+      title: tr("LEVAR UM PRATO?"),
+      subtitle: ready.length ? tr("O bônus do prato vale só nesta partida") : tr("Dá para cozinhar antes de partir: o bônus vale só nesta partida"),
+      w: 820,
+      h: 560,
+    });
+    const list = this._modalList(m);
+    if (ready.length) {
+      for (const { id, q, n } of ready.sort((a, b) => b.q - a.q).slice(0, 4)) {
+        const r = recipe(id);
+        list.addRow(
+          this._shopRow({
+            icon: dishIconKey(id),
+            name: `${r.name} · ${GARDEN.QUALITY[q]}  ×${n}`,
+            desc: bonusText(r, q),
+            right: tr("COMER E PARTIR"),
+            rightColor: CSS.goldHi,
+            style: "button",
+            onTap: () => {
+              if (!k.eat(id, q)) return;
+              this.sound.play("sfx_pickup", { volume: 0.5, rate: 0.9 });
+              haptic(20);
+              Analytics.track("meal_eat", { id, q, from: "trail" });
+              m.close();
+              this._play();
+            },
+          }),
+        );
+      }
+    } else {
+      for (const r of cookable.slice(0, 3))
+        list.addRow(
+          this._shopRow({
+            icon: dishIconKey(r.id),
+            name: r.name,
+            desc: bonusText(r),
+            right: tr("COZINHAR"),
+            rightColor: CSS.goldHi,
+            style: "gold",
+            onTap: () => {
+              m.close();
+              this._showKitchen();
+            },
+          }),
+        );
+    }
+    list.addRow(
+      this._shopRow({
+        name: tr("PARTIR SEM COMER"),
+        nameColor: CSS.muted,
+        desc: ready.length ? tr("O prato fica guardado para outra partida") : tr("Os ingredientes ficam no celeiro"),
+        style: "dark",
+        onTap: () => {
+          Analytics.track("meal_prompt_skip", { ready: ready.length });
+          m.close();
+          this._play();
+        },
+      }),
+    );
+    m.fitToList();
+    return true;
+  },
 };
