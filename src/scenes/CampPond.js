@@ -53,7 +53,8 @@ export const CampPond = {
     const sh = pondShape();
     const show = []; // aparecem na cena de revelação
     const lights = []; // luzes (ADD) — só depois de revelado
-    const base = this.add.image(X0, Y0, "pond_base").setOrigin(0).setScale(S).setDepth(FLAT);
+    const sert = this._sertao; // o açude do sertão (mesmo formato: a pesca é a mesma)
+    const base = this.add.image(X0, Y0, sert ? "pond_sertao_base" : "pond_base").setOrigin(0).setScale(S).setDepth(FLAT);
     show.push(base);
 
     // Brilho da lua correndo na água (acima da noite, somando luz)
@@ -67,6 +68,9 @@ export const CampPond = {
     lights.push([moon, 0.22]);
     const streaks = this.add.graphics().setBlendMode(Phaser.BlendModes.ADD).setDepth(D_NIGHT + 1);
     lights.push([streaks, 0.8]);
+    // Sertão: a lua grande do horizonte refletida inteira no açude, tremendo na água (só de noite)
+    const moonDisc = sert ? this.add.image(deep.x, deep.y - 4, "camp_sertao_lua").setScale(S * 0.62, S * 0.42).setTint(0xcfe6ff).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0).setDepth(D_NIGHT + 1) : null;
+    if (moonDisc) moonDisc._ownAlpha = true;
 
     // Bica d'água nas pedras do nordeste + espuma
     const fallX = wx(90),
@@ -86,19 +90,22 @@ export const CampPond = {
       this.tweens.add({ targets: o, y: o.y + 2, angle: { from: -1.5, to: 1.5 }, duration: 2200 + Math.random() * 1400, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: Math.random() * 1500 });
       return o;
     };
-    put("pond_victoria", 74, 52);
-    put("pond_victoria", 90, 30);
-    for (const [ax, ay] of [[64, 58], [82, 57], [96, 38], [100, 28], [58, 22], [70, 18], [84, 44]]) put("pond_pad", ax, ay);
-    // Flor da vitória-régia brilha de leve
-    const bloom = this.add.image(wx(77), wy(51), "fx_glow").setScale(0.5).setTint(PAL.pink).setBlendMode(Phaser.BlendModes.ADD).setDepth(D_NIGHT + 1);
-    lights.push([bloom, 0.35]);
+    put(sert ? "pond_sertao_aguape" : "pond_victoria", 74, 52);
+    put(sert ? "pond_sertao_aguape" : "pond_victoria", 90, 30);
+    for (const [ax, ay] of [[64, 58], [82, 57], [96, 38], [100, 28], [58, 22], [70, 18], [84, 44]]) put(sert ? "pond_sertao_aguape_s" : "pond_pad", ax, ay);
+    // Flor da vitória-régia brilha de leve (no açude, a espiga lilás do aguapé)
+    const bloom = this.add.image(wx(sert ? 74 : 77), wy(sert ? 48 : 51), "fx_glow").setScale(0.5).setTint(sert ? PAL.pur3 : PAL.pink).setBlendMode(Phaser.BlendModes.ADD).setDepth(D_NIGHT + 1);
+    lights.push([bloom, sert ? 0.25 : 0.35]);
 
     // Açaizeiro em pé na ilhota (balança devagar com o vento) + luar em volta
-    const palm = this.add.image(wx(ISLE.x - 1), wy(ISLE.y + 1), "pond_palm").setOrigin(18 / 40, 1).setScale(S).setDepth(wy(ISLE.y + 1));
+    // (no açude do sertão, a carnaúba)
+    const palmKey = sert ? "pond_sertao_palm" : "pond_palm",
+      palmOx = sert ? 22.5 / 46 : 18 / 40;
+    const palm = this.add.image(wx(ISLE.x - 1), wy(ISLE.y + 1), palmKey).setOrigin(palmOx, 1).setScale(S).setDepth(wy(ISLE.y + 1));
     show.push(palm);
     this.tweens.add({ targets: palm, angle: { from: -1.2, to: 1.2 }, duration: 3400, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
     // Reflexo do açaizeiro na água (de ponta-cabeça, escuro, tremendo)
-    const palmRef = this.add.image(palm.x, wy(ISLE.y + ISLE.ry) - 2, "pond_palm").setOrigin(18 / 40, 1).setScale(S, -S * 0.8).setTint(0x2a5a6a).setAlpha(0.35).setDepth(FLAT + 1);
+    const palmRef = this.add.image(palm.x, wy(ISLE.y + ISLE.ry) - 2, palmKey).setOrigin(palmOx, 1).setScale(S, -S * 0.8).setTint(0x2a5a6a).setAlpha(0.35).setDepth(FLAT + 1);
     show.push(palmRef);
     this.tweens.add({ targets: palmRef, scaleX: { from: S * 0.97, to: S * 1.03 }, duration: 900, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
     const isleGlow = this.add.image(wx(ISLE.x), wy(ISLE.y) - 30, "fx_glow").setScale(2.2, 1.6).setTint(0x9fd8ff).setBlendMode(Phaser.BlendModes.ADD).setDepth(D_NIGHT + 1);
@@ -228,8 +235,9 @@ export const CampPond = {
         }
       },
     });
-    // Animação contínua: lua tremendo, vaga-lumes, reflexos
-    this.events.on("update", (time) => {
+    // Animação contínua: lua tremendo, vaga-lumes, reflexos. A cena é reaproveitada: o ouvinte sai no shutdown (antes
+    // somava um por visita, mexendo em objetos de visitas passadas)
+    const pondTick = (time) => {
       if (!this.buildings.pond?.shown) return;
       const t = time / 1000;
       const k = this._lightK ?? 1;
@@ -259,7 +267,15 @@ export const CampPond = {
         f.c.setPosition(x, y).setAlpha(a * k);
         f.ref.setPosition(x, f.oy + 30 + (30 - (y - f.oy)) * 0.4 + 18).setAlpha(a * 0.35 * k);
       }
-    });
+      if (moonDisc) {
+        // o reflexo da lua: só com a lua no céu; a água o corta em faixas que tremem
+        const up = !!this.band?.moon.visible;
+        moonDisc.setAlpha(up ? (0.3 + Math.sin(t * 1.1) * 0.05) * (this._nightW ?? k) : 0).setScale(S * (0.62 + Math.sin(t * 2.3) * 0.02), S * (0.42 + Math.sin(t * 1.7) * 0.015));
+        moonDisc.x = deep.x + Math.round(Math.sin(t * 0.9) * 1.5) * 3;
+      }
+    };
+    this.events.on("update", pondTick);
+    this.events.once("shutdown", () => this.events.off("update", pondTick));
   },
 
   // Ondinha de pixel se abrindo na água

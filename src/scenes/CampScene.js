@@ -39,6 +39,8 @@ import { CampKitchen } from "./CampKitchen.js";
 import { CampPond } from "./CampPond.js";
 import { CampDecor, decorFree } from "./CampDecor.js";
 import { CampDaily } from "./CampDaily.js";
+import { CampSertao, HORIZON } from "./CampSertao.js";
+import { ensureCampSertao, ensureSertaoFlower, FLOWER_OPEN } from "../art/CampSertao.js";
 import { tr, fmt, isCJK } from "../i18n/i18n.js";
 
 const S = GAME.PIXEL_SCALE;
@@ -105,8 +107,16 @@ export class CampScene extends Phaser.Scene {
     this.glows = [];
     this.buildings = {}; // a trilha (placa) também é construção e vem antes das outras
 
-    // Clareira Ancestral (skin do Pacote Fundador): decidida antes de montar o mundo, porque a horta também troca
-    this._ancestral = cosmeticsOn() && Wardrobe.activeCamp() === "ancestral";
+    // Skin da Clareira (Guarda-roupa, aba Clareira): decidida antes de montar o mundo, porque a horta, o lago e o chão
+    // também trocam. Ancestral = do Pacote Fundador; Caatinga = grátis, da conquista "Mandacaru em Flor"
+    this._skin = cosmeticsOn() ? Wardrobe.activeCamp() : null;
+    this._ancestral = this._skin === "ancestral";
+    this._sertao = this._skin === "caatinga";
+    this._flowers = [];
+    this._skyline = [];
+    this._lizards = this._flock = this._carcara = this.band = null;
+    this._devils = [];
+    if (this._sertao) ensureCampSertao(this);
     this._ground();
     this._forestWall();
     this._trail();
@@ -125,7 +135,9 @@ export class CampScene extends Phaser.Scene {
     this.joystick = new VirtualJoystick(this.inputMgr);
 
     const cam = this.cameras.main;
-    cam.setBounds(-CAMP_W / 2 - 160, TOP - 260, CAMP_W + 320, CAMP_H + 380);
+    // no sertão a câmera sobe mais ao norte: o céu do horizonte aparece inteiro quando o herói chega à trilha
+    const camTop = this._sertao ? HORIZON - 320 : TOP - 260;
+    cam.setBounds(-CAMP_W / 2 - 160, camTop, CAMP_W + 320, TOP - 260 + CAMP_H + 380 - camTop);
     cam.startFollow(this.player, true, 0.14, 0.14);
     this._zoom = null; // a cena é reaproveitada: a câmera da interface da visita anterior já se foi
     applyZoom(this, D_HUD); // acessibilidade: mundo maior, interface (60000+) do mesmo tamanho
@@ -191,13 +203,15 @@ export class CampScene extends Phaser.Scene {
   // MUNDO
   // =========================================================================
   _ground() {
-    this.cameras.main.setBackgroundColor(0x1d3926);
+    const sertao = this._sertao;
+    this.cameras.main.setBackgroundColor(sertao ? 0x3a1e14 : 0x1d3926);
     this.add
-      .tileSprite(-CAMP_W / 2 - 300, TOP - 400, CAMP_W + 600, CAMP_H + 700, "env_ground")
+      .tileSprite(-CAMP_W / 2 - 300, TOP - 400, CAMP_W + 600, CAMP_H + 700, sertao ? "camp_sertao_ground" : "env_ground")
       .setOrigin(0)
       .setTileScale(S)
       .setDepth(-1e6);
-    const env = this.registry.get("envKeys");
+    const env = this.registry.get(sertao ? "envKeysCaatinga" : "envKeys");
+    const atlas = sertao ? "env_caatinga" : "env";
     const rnd = new Phaser.Math.RandomDataGenerator(["clareira"]);
     // Terreiro de terra batida + trilhas até cada lugar (uma textura só)
     this.groundPaint = this._paintPaths({ x0: -CAMP_W / 2, top: TOP, w: CAMP_W, h: CAMP_H });
@@ -206,13 +220,16 @@ export class CampScene extends Phaser.Scene {
       const x = rnd.between(-CAMP_W / 2 + 60, CAMP_W / 2 - 60),
         y = rnd.between(TOP + 80, CAMP_H / 2 - 40);
       if (Math.hypot(x, y - 70) < 200 || this.groundPaint.onPath(x, y, 12) || !decorFree(x, y)) continue;
+      if (sertao && y < HORIZON + 40) continue;
       const list = i % 4 === 0 ? env.flowers : i % 4 === 1 ? env.shrooms : env.tufts;
-      this.add.image(x, y, "env", rnd.pick(list)).setOrigin(0.5, 1).setScale(S).setDepth(y);
+      this.add.image(x, y, atlas, rnd.pick(list)).setOrigin(0.5, 1).setScale(S).setDepth(y);
     }
+    if (sertao) this._sertaoGround(); // placas de barro rachado e terra clara
   }
 
   // Mata fechada em volta (a borda do mundo), com a abertura da trilha ao norte
   _forestWall() {
+    if (this._sertao) return this._sertaoBorder(); // caatinga em volta, aberta ao norte para o horizonte
     const env = this.registry.get("envKeys");
     const rnd = new Phaser.Math.RandomDataGenerator(["mata"]);
     const trees = [...env.trees, ...env.pines];
@@ -255,13 +272,15 @@ export class CampScene extends Phaser.Scene {
     };
     if (trailShown) sertao();
     this.buildings.trail = { x: sx, y: sy, img: sign, shown: trailShown, reveal: sertao, dot: this._notifyDot(sx + 20, sy - sign.displayHeight).setDepth(D_HUD - 10).setVisible(false) };
+    // "Mandacaru em Flor" (Pesadelo na Caatinga): depois da cena da Anciã, o mandacaru da trilha fica florido
+    if (trailShown && this.meta.data.revealed.includes("sertao")) this._trailFlower(4);
     // Letreiro sempre visível sobre a placa: o Perigo atual (tocar também abre)
     this.signLabel = this.add.container(sx, sy - sign.displayHeight - 26).setDepth(D_HUD - 8);
     this.signLabelG = this.add.graphics();
     this.signLabelT = text(this, 0, 0, "", { size: 15, color: CSS.goldHi, origin: 0.5, stroke: true });
     this.signLabel.add([this.signLabelG, this.signLabelT]);
-    // Faixa escura no fim da trilha: "a mata começa aqui"
-    this.add.image(0, TOP - 40, "fx_glow").setScale(6, 3).setTint(0x000000).setAlpha(0.55).setDepth(TOP + 30);
+    // Faixa escura no fim da trilha: "a mata começa aqui" (no sertão a trilha some no horizonte)
+    if (!this._sertao) this.add.image(0, TOP - 40, "fx_glow").setScale(6, 3).setTint(0x000000).setAlpha(0.55).setDepth(TOP + 30);
   }
 
   _torch(x, y) {
@@ -386,9 +405,11 @@ export class CampScene extends Phaser.Scene {
   // segue a câmera, o zoom e qualquer tamanho de tela sem nada a refazer. A cor vem de skyAt(hora)
   _night() {
     const fire = this.buildings.fire ?? { x: 0, y: 70 };
-    this.sky = new SkyGlow(this, { x: fire.x, y: fire.y, R: 1400, depth: D_NIGHT }).setVisible(false);
-    // Vaga-lumes (a lista é zerada no create: a samaúma também põe os seus)
-    for (let i = 0; i < 26; i++) {
+    // no sertão a camada da noite para na linha do horizonte (o céu de cima tem as cores dele); centro na fogueira
+    const sh = this._sertao ? { w: 2300, h: 2 * (fire.y - HORIZON) } : {};
+    this.sky = new SkyGlow(this, { x: fire.x, y: fire.y, R: 1400, depth: D_NIGHT, ...sh }).setVisible(false);
+    // Vaga-lumes (a lista é zerada no create: a samaúma também põe os seus); no sertão, poucos
+    for (let i = 0; i < (this._sertao ? 8 : 26); i++) {
       const x = Phaser.Math.Between(-CAMP_W / 2, CAMP_W / 2),
         y = Phaser.Math.Between(TOP, CAMP_H / 2);
       const g = this.add.image(x, y, "fx_glow").setScale(0.3).setTint(0xfff5b8).setBlendMode(Phaser.BlendModes.ADD).setDepth(D_NIGHT + 1);
@@ -463,11 +484,20 @@ export class CampScene extends Phaser.Scene {
         this._openStore("camp");
       }, { icon: "ico_star", style: "dark", iconScale: 2.5 }));
     // Guarda-roupa (cosméticos, docs/COSMETICOS.md): na fileira de cima; a loja dos kits abre lá dentro
-    if (cosmeticsOn())
+    if (cosmeticsOn()) {
       this.wardrobeBtn = fix(new Button(this, W - 424, 40, 52, 52, null, () => {
         if (this._modals.length || this._cutscene || this._leaving) return;
-        openWardrobe(this, { from: "camp", onClose: () => this._afterStore() });
+        // Clareira nova (a da Caatinga) ainda não vista: abre direto nela, na aba Clareira
+        const fresh = this._newCampSkin();
+        if (fresh) {
+          (this.meta.data.campSeen ||= []).push(fresh);
+          this.meta._save();
+          this.wardrobeDot?.setVisible(false);
+        }
+        openWardrobe(this, { from: "camp", onClose: () => this._afterStore(), ...(fresh ? { tab: "camp", sel: fresh } : {}) });
       }, { icon: "ico_wardrobe", style: "dark", iconScale: 2.5 }));
+      this.wardrobeDot = fix(this._notifyDot(W - 402, 18)).setScale(0.8).setVisible(false);
+    }
     // Ranking (Play Games): só com o ID do Play Games e os rankings criados
     if (Leaderboards.available())
       this.rankBtn = fix(new Button(this, W - 484, 40, 52, 52, null, () => {
@@ -525,6 +555,8 @@ export class CampScene extends Phaser.Scene {
       if (this.noAdsBtn.visible) [this.noAdsBtn.x, x] = [x, x - 60];
     }
     if (this.wardrobeBtn) [this.wardrobeBtn.x, x] = [x, x - 60];
+    // o selo do Guarda-roupa acompanha o botão (canto de cima à direita); a animação de pulo mexe só no y
+    if (this.wardrobeDot) this.wardrobeDot.x = this.wardrobeBtn.x + 22;
     if (this.rankBtn) [this.rankBtn.x, x] = [x, x - 60];
     if (this.inviteBtn) [this.inviteBtn.x, x] = [x, x - 60];
     const left = x + 60; // o botão mais à esquerda (ou as Opções, se não houver nenhum)
@@ -549,8 +581,8 @@ export class CampScene extends Phaser.Scene {
   // Recomeça a cena para trocar a samaúma pelo jequitibá (e vice-versa); senão só atualiza o quadro
   _afterStore() {
     if (!this.sys.isActive()) return;
-    const skin = cosmeticsOn() && Wardrobe.activeCamp() === "ancestral";
-    if (skin !== !!this._ancestral || (cosmeticsOn() && Wardrobe.isFounder()) !== !!this.founderIcon) {
+    const skin = cosmeticsOn() ? Wardrobe.activeCamp() : null;
+    if (skin !== (this._skin ?? null) || (cosmeticsOn() && Wardrobe.isFounder()) !== !!this.founderIcon) {
       this.cameras.main.fadeOut(220, 5, 8, 6);
       this.cameras.main.once("camerafadeoutcomplete", () => this.scene.restart());
       return;
@@ -596,6 +628,44 @@ export class CampScene extends Phaser.Scene {
     this._refreshKitchenDot();
     this._refreshPondDot();
     this._refreshDailyDots();
+    this.wardrobeDot?.setVisible(!!this._newCampSkin());
+  }
+
+  // Clareira grátis liberada por conquista, já apresentada pela Anciã e ainda não vista no Guarda-roupa (ou null)
+  _newCampSkin() {
+    if (!cosmeticsOn()) return null;
+    const d = this.meta.data;
+    if (!(d.revealed || []).includes("sertao") || (d.campSeen || []).includes("caatinga")) return null;
+    return Wardrobe.ownsCamp("caatinga") ? "caatinga" : null;
+  }
+
+  // Flor no alto do mandacaru da trilha (fr = quadro; 4 = aberta)
+  _trailFlower(fr) {
+    ensureSertaoFlower(this);
+    const b = { x: TRAIL_HALF + 90, y: TOP + 190 };
+    const tex = this.textures.get("env_caatinga").get("mandacaru1");
+    const x = b.x + 62,
+      y = b.y + 8 - tex.height * S + 3 * S;
+    return this.add.sprite(x, y, "camp_sertao_flower", fr).setOrigin(0.5, 1).setScale(S).setDepth(b.y + 9);
+  }
+
+  // Cena da conquista "Mandacaru em Flor": o botão do mandacaru da trilha abre em flor (quadro a quadro), as pétalas
+  // e o pólen sobem e a luz da flor acende
+  _bloomReveal(b) {
+    const fl = this._trailFlower(0);
+    const glow = this.add.image(fl.x, fl.y - 18, "fx_glow").setScale(0.4).setTint(PAL.cream).setBlendMode(Phaser.BlendModes.ADD).setAlpha(0).setDepth(D_HUD - 8);
+    this.sound.play("sfx_pickup", { volume: 0.4, rate: 0.7 });
+    FLOWER_OPEN.forEach((f, i) => this.time.delayedCall(180 + i * 230, () => fl.active && fl.setFrame(f)));
+    this.time.delayedCall(180 + FLOWER_OPEN.length * 230, () => {
+      this.tweens.add({ targets: glow, alpha: 0.75, scale: 2.4, duration: 420, yoyo: true, hold: 300, ease: "Sine.easeOut", onComplete: () => glow.destroy() });
+      for (let i = 0; i < 22; i++) {
+        const a = -Math.PI / 2 + (Math.random() - 0.5) * 2.6;
+        const d = this.add.image(fl.x, fl.y - 18, i % 3 ? "px_dot2" : "px_dot1").setScale(3).setTint(i % 4 ? PAL.cream : PAL.yel3).setDepth(D_HUD - 7);
+        const r = 40 + Math.random() * 70;
+        this.tweens.add({ targets: d, x: d.x + Math.cos(a) * r, y: d.y + Math.sin(a) * r * 0.7 - 20, alpha: 0, duration: 1100 + Math.random() * 600, ease: "Cubic.easeOut", onComplete: () => d.destroy() });
+      }
+    });
+    void b;
   }
 
   // Trocou de guardião na Fogueira: o avatar muda na hora (com fumacinha)
@@ -705,9 +775,10 @@ export class CampScene extends Phaser.Scene {
     cam.stopFollow();
     cam.pan(b.x, b.y - 80, 700, "Sine.easeInOut");
     this.time.delayedCall(800, () => {
-      // Cipós da Podridão se desfazendo (novidade num lugar já aberto: gotas d'água)
+      // Cipós da Podridão se desfazendo (novidade num lugar já aberto: gotas d'água; a flor do mandacaru tem cena própria)
       const tint = r.at ? [0x4aa2b0, 0x86d0d4] : [0x8a3fa0, 0xff7eb6];
-      for (let i = 0; i < 30; i++) {
+      if (r.fx === "bloom") this._bloomReveal(b);
+      else for (let i = 0; i < 30; i++) {
         const p = this.add.image(b.x + (Math.random() - 0.5) * 110, b.y - Math.random() * 90, "px_dot2").setScale(3).setTint(i % 3 ? tint[0] : tint[1]).setDepth(D_HUD - 7);
         this.tweens.add({ targets: p, y: p.y - 40 - Math.random() * 50, alpha: 0, duration: 900 + Math.random() * 500, onComplete: () => p.destroy() });
       }
@@ -1061,4 +1132,4 @@ export class CampScene extends Phaser.Scene {
   }
 }
 
-Object.assign(CampScene.prototype, MetaPanels, CampGarden, CampKitchen, CampPond, CampDecor, CampDaily);
+Object.assign(CampScene.prototype, MetaPanels, CampGarden, CampKitchen, CampPond, CampDecor, CampDaily, CampSertao);

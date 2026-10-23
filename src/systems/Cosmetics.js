@@ -14,6 +14,7 @@ import { registerCosmeticFX } from "../art/CosmeticFX.js";
 import { PIECE_FX } from "./CosmeticPieces.js";
 import { Billing } from "./Billing.js";
 import { AdService } from "./AdService.js";
+import { MetaProgression } from "./MetaProgression.js";
 import { tr } from "../i18n/i18n.js";
 
 // ---------------------------------------------------------------- catálogo
@@ -58,9 +59,16 @@ export const COSM_PIECES = {
 for (const [id, p] of Object.entries(COSM_PIECES)) p.id = id;
 export const piecesOf = (slot) => Object.values(COSM_PIECES).filter((p) => p.slot === slot);
 export const kitPieces = (kit) => Object.values(COSM_PIECES).filter((p) => p.kit === kit);
-// Skins da Clareira (aba "Clareira" do Guarda-roupa). founder = exclusiva do Pacote Fundador, nunca vendida
+// Skins da Clareira (aba "Clareira" do Guarda-roupa). founder = exclusiva do Pacote Fundador, nunca vendida.
+// earn = grátis, liberada por uma conquista (o id em ACHIEVEMENTS; how = o que fazer); nunca entra na Loja
 export const COSM_CAMP = {
   ancestral: { name: tr("Clareira Ancestral"), desc: tr("O jequitibá ancestral, lamparinas de cabaça, um tucano e borboletas-azuis na luz do fim de tarde."), icon: "ico_fundador", founder: true },
+  caatinga: {
+    name: tr("Clareira da Caatinga"),
+    desc: tr("O sertão em casa: terra vermelha, juazeiro, mandacarus que florescem à noite, calangos e asas-brancas sob o céu do sertão."),
+    earn: "mandacaru_flor",
+    how: tr("Vença no Perigo Pesadelo na Caatinga"),
+  },
 };
 for (const [id, c] of Object.entries(COSM_CAMP)) c.id = id;
 export const COSM_AMOUNTS = [
@@ -148,8 +156,14 @@ export const Wardrobe = {
     load();
     return Billing.ownsPack(pack) || (DEBUG && devOwned.has("pack:" + pack));
   },
+  // Skin da Clareira do jogador: a Ancestral com o Pacote Fundador; as grátis (earn) com a conquista, que mora no
+  // save do jogo (e vai junto no progresso na nuvem)
   ownsCamp(id) {
-    return !!COSM_CAMP[id] && (!COSM_CAMP[id].founder || this.isFounder());
+    const c = COSM_CAMP[id];
+    if (!c) return false;
+    if (c.founder) return this.isFounder();
+    if (c.earn) return new MetaProgression().hasAchievement(c.earn);
+    return true;
   },
   // Skin da Clareira em uso (só se for do jogador)
   activeCamp() {

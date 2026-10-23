@@ -8,6 +8,8 @@ import { PAL } from "../art/Palette.js";
 import { ScreenVignette, mixColor } from "../art/Gradients.js";
 import { paintGround, FLAG_COUNT } from "../art/CampDecor.js";
 import { morphoFlight } from "../art/CampAncestral.js";
+import { SERTAO_PATH } from "../art/CampSertao.js";
+import { sertaoSkyAt, HORIZON } from "./CampSertao.js";
 import { Clock } from "../systems/Clock.js";
 import { tr } from "../i18n/i18n.js";
 import { Wardrobe, cosmeticsOn } from "../systems/Cosmetics.js";
@@ -72,7 +74,8 @@ export const CampDecor = {
       E_ = { x: 290, y: 40 },
       S_ = { x: 10, y: 285 };
     const paths = [
-      { x: 0, y: bounds.top - 260, w: 66, bend: 0.12, taper: false }, // a trilha da floresta (norte)
+      // a trilha da floresta (norte); no sertão ela afina até sumir na linha do horizonte
+      this._sertao ? { x: 0, y: HORIZON + 4, w: 66, bend: 0.12 } : { x: 0, y: bounds.top - 260, w: 66, bend: 0.12, taper: false },
       { ...W_, w: 40, bend: 0.25 }, // tronco oeste
       { from: W_, x: -430, y: -110, w: 30, bend: -0.3 }, // Santuário
       { from: W_, x: -420, y: 300, w: 28, bend: 0.3 }, // Mural
@@ -93,6 +96,7 @@ export const CampDecor = {
       scale: S,
       hub: HUB,
       paths,
+      colors: this._sertao ? SERTAO_PATH : undefined, // terra batida clara sobre o chão vermelho
     });
     this.add.image(bounds.x0, bounds.top - 300, "camp_ground_paint").setOrigin(0).setScale(S).setDepth(-9.5e5);
     return ground;
@@ -108,11 +112,16 @@ export const CampDecor = {
     // entalhados do terreiro levam cordões de lamparinas de cabaça
     if ((this._seasonOverride ?? currentSeason()?.id) === "junina") this._bunting();
     else if (this._ancestral) this._lampStrings();
-    // Rede listrada perto da mata, a oeste (na Ancestral, rede de varanda com franja)
+    // Rede listrada perto da mata, a oeste (na Ancestral, rede de varanda com franja; no sertão, a rede de varanda
+    // colorida balançando no vento)
     const hx = -600,
       hy = 90;
     this.add.image(hx, hy + 4, "px_shadow").setScale(9, 3).setAlpha(0.45).setDepth(hy - 1);
-    this.add.image(hx, hy, this._ancestral ? "camp_anc_hammock" : "camp_hammock").setOrigin(0.5, 1).setScale(S).setDepth(hy);
+    if (this._sertao) {
+      const rede = this.add.sprite(hx, hy, "camp_sertao_hammock", 0).setOrigin(0.5, 1).setScale(S).setDepth(hy);
+      let rf = 0;
+      this.time.delayedCall(this._wind(hx) % 700, () => this.time.addEvent({ delay: 350, loop: true, callback: () => rede.active && rede.setFrame((rf = (rf + 1) % 6)) }));
+    } else this.add.image(hx, hy, this._ancestral ? "camp_anc_hammock" : "camp_hammock").setOrigin(0.5, 1).setScale(S).setDepth(hy);
     this._solid(hx - 60, hy - 6, 14, 12);
     this._solid(hx + 60, hy - 6, 14, 12);
     // (o espantalho e o regador pertencem à horta: ver CampGarden, aparecem junto com ela)
@@ -121,10 +130,13 @@ export const CampDecor = {
     const kx = -250,
       ky = -250;
     const big = this._ancestral;
-    this.add.image(kx, ky + 6, "px_shadow").setScale(big ? 26 : 18, big ? 8 : 6).setAlpha(0.5).setDepth(ky - 1);
-    const kapok = this.add.image(kx, ky, big ? "camp_jequitiba" : "camp_kapok").setOrigin(0.5, 1).setScale(S).setDepth(ky);
-    this._solid(kx, ky - 16, big ? 130 : 90, 28);
-    this.tweens.add({ targets: kapok, scaleX: { from: S, to: S * 1.01 }, duration: 3000, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    if (this._sertao) this._sertaoTree(kx, ky); // o juazeiro, o verde que resiste à seca
+    else {
+      this.add.image(kx, ky + 6, "px_shadow").setScale(big ? 26 : 18, big ? 8 : 6).setAlpha(0.5).setDepth(ky - 1);
+      const kapok = this.add.image(kx, ky, big ? "camp_jequitiba" : "camp_kapok").setOrigin(0.5, 1).setScale(S).setDepth(ky);
+      this._solid(kx, ky - 16, big ? 130 : 90, 28);
+      this.tweens.add({ targets: kapok, scaleX: { from: S, to: S * 1.01 }, duration: 3000, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
+    }
     if (big) {
       this.add.image(kx + 150, ky + 34, "px_shadow").setScale(5, 2).setAlpha(0.4).setDepth(ky + 33);
       this.add.image(kx + 150, ky + 36, "camp_plaque").setOrigin(0.5, 1).setScale(S).setDepth(ky + 36);
@@ -132,22 +144,30 @@ export const CampDecor = {
       this._ancestralExtras(kx, ky);
     }
     // Vaga-lumes rondando a copa (entram no mesmo balé dos outros) — dourados e mais no jequitibá
-    for (let k = 0; k < (big ? 18 : 9); k++) {
+    for (let k = 0; k < (big ? 18 : this._sertao ? 4 : 9); k++) {
       const x = kx + (Math.random() - 0.5) * (big ? 320 : 200),
         y = ky - (big ? 330 : 220) + Math.random() * (big ? 170 : 120);
       const g = this.add.image(x, y, "fx_glow").setScale(0.3).setTint(big ? 0xffd98a : 0xd8ffb0).setBlendMode(Phaser.BlendModes.ADD).setDepth(D_NIGHT + 1);
       const c = this.add.image(x, y, "px_dot2").setScale(2).setTint(big ? 0xffe9b0 : 0xe8ffc8).setDepth(D_NIGHT + 1);
       this.flies.push({ g, c, ph: Math.random() * 7, ox: x, oy: y });
     }
-    // Pedras com samambaia (nordeste) e helicônias perto das construções
-    this.add.image(230, -300, "camp_rocks").setOrigin(0.5, 1).setScale(S).setDepth(-300);
-    this._solid(215, -318, 70, 24);
-    for (const [x, y, t] of [[-360, -60, 0], [-500, -150, 1], [520, -60, 0], [360, -150, 1], [-330, 330, 1], [200, 470, 0], [-175, 530, 1], [560, 250, 0], [-650, 220, 0], [120, -250, 1]]) {
-      const h = this.add.image(x, y, `camp_heliconia${t}`).setOrigin(0.5, 1).setScale(S).setDepth(y);
-      this.tweens.add({ targets: h, angle: { from: -3, to: 3 }, duration: 2000 + Math.random() * 800, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: Math.random() * 1000 });
+    // Pedras com samambaia (nordeste) e helicônias perto das construções (no sertão: lajedo com xique-xique,
+    // mandacarus com flor, coroas-de-frade e macambiras)
+    if (this._sertao) this._sertaoPlants();
+    else {
+      this.add.image(230, -300, "camp_rocks").setOrigin(0.5, 1).setScale(S).setDepth(-300);
+      this._solid(215, -318, 70, 24);
+      for (const [x, y, t] of [[-360, -60, 0], [-500, -150, 1], [520, -60, 0], [360, -150, 1], [-330, 330, 1], [200, 470, 0], [-175, 530, 1], [560, 250, 0], [-650, 220, 0], [120, -250, 1]]) {
+        const h = this.add.image(x, y, `camp_heliconia${t}`).setOrigin(0.5, 1).setScale(S).setDepth(y);
+        this.tweens.add({ targets: h, angle: { from: -3, to: 3 }, duration: 2000 + Math.random() * 800, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: Math.random() * 1000 });
+      }
     }
     this._grassSway();
     this._ambientLife();
+    if (this._sertao) {
+      this._sertaoSky(); // o horizonte do sertão ao norte
+      this._sertaoLife(); // calangos, asas-brancas, carcará, poeira
+    }
     // Vinheta: foca o olhar no meio da tela (elipse no formato da tela; a força segue a hora)
     this.vignette = new ScreenVignette(this, { geom: () => ({ r0: 0.55, r1: 1.42 }), ellipse: true, color: PAL.night0, alpha: 0.55, depth: D_NIGHT + 3 });
     // Céu pela hora real (dia, entardecer, noite, amanhecer)
@@ -343,7 +363,7 @@ export const CampDecor = {
   _applyTimeOfDay() {
     const now = Clock.date();
     const hour = this._hourOverride ?? now.getHours() + now.getMinutes() / 60;
-    const sky = skyAt(hour);
+    const sky = this._sertao ? sertaoSkyAt(hour) : skyAt(hour);
     // Clareira Ancestral: o fim de tarde dourado nunca acaba (de dia puxa para o dourado; à noite, um
     // pouco mais quente) e as luzes ficam sempre um pouco acesas
     if (this._ancestral) {
@@ -357,9 +377,10 @@ export const CampDecor = {
       cold = mixColor(sky.color, PAL.night1, 0.42 * sky.k);
     this.sky.setColors(warm, sky.color, cold).setVisible(sky.color !== 0xffffff);
     this.vignette?.setAlpha(0.3 + 0.28 * sky.k);
-    // Luzes paradas (ADD por cima da noite): guardam o alpha original
+    if (this._sertao) this._sertaoTime(hour, sky, cold); // horizonte, lua, sol, flores do mandacaru
+    // Luzes paradas (ADD por cima da noite): guardam o alpha original (as que têm o próprio controle ficam de fora)
     for (const o of this.children.list) {
-      if (o.blendMode !== Phaser.BlendModes.ADD || o.depth < D_NIGHT || o.depth > D_NIGHT + 5) continue;
+      if (o.blendMode !== Phaser.BlendModes.ADD || o.depth < D_NIGHT || o.depth > D_NIGHT + 5 || o._ownAlpha) continue;
       if (o._baseA == null) o._baseA = o.alpha;
       o.setAlpha(o._baseA * Math.max(sky.k, o._dayMin ?? 0));
     }
@@ -373,7 +394,7 @@ export const CampDecor = {
       [92, -8, true],
     ]) {
       this.add.image(x, y + 4, "px_shadow").setScale(6, 2).setAlpha(0.5).setDepth(y - 1);
-      this.add.image(x, y, this._ancestral ? "camp_anc_bench" : "camp_logseat").setOrigin(0.5, 1).setScale(S).setFlipX(flip).setDepth(y);
+      this.add.image(x, y, this._ancestral ? "camp_anc_bench" : this._sertao ? "camp_sertao_log" : "camp_logseat").setOrigin(0.5, 1).setScale(S).setFlipX(flip).setDepth(y);
       this._solid(x, y - 10, 72, 14);
     }
   },
@@ -439,7 +460,8 @@ export const CampDecor = {
 
   // Touceiras de capim alto que balançam com o vento
   _grassSway() {
-    const env = this.registry.get("envKeys");
+    const env = this.registry.get(this._sertao ? "envKeysCaatinga" : "envKeys");
+    const atlas = this._sertao ? "env_caatinga" : "env";
     const rnd = new Phaser.Math.RandomDataGenerator(["capim"]);
     const spots = [
       [-640, -200], [-560, 300], [-300, 120], [-330, -300], [250, 200], [620, -300], [640, 330], [180, -330], [-120, -250], [-640, 460], [600, 470], [-450, 440],
@@ -449,11 +471,13 @@ export const CampDecor = {
         const x = cx + rnd.between(-40, 40),
           y = cy + rnd.between(-22, 22);
         if (this.groundPaint?.onPath(x, y, 10) || !decorFree(x, y)) continue;
-        const t = this.add.image(x, y, "env", rnd.pick(env.tufts)).setOrigin(0.5, 1).setScale(S).setDepth(y);
-        this.tweens.add({ targets: t, angle: { from: -4, to: 5 }, duration: 1400 + rnd.between(0, 900), yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: rnd.between(0, 1200) });
+        const t = this.add.image(x, y, atlas, rnd.pick(env.tufts)).setOrigin(0.5, 1).setScale(S).setDepth(y);
+        // no sertão o capim seco deita para leste e balança na mesma onda do vento da Clareira
+        if (this._sertao) this.tweens.add({ targets: t, angle: { from: -2, to: 9 }, duration: 1050, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: this._wind(x) % 2100 });
+        else this.tweens.add({ targets: t, angle: { from: -4, to: 5 }, duration: 1400 + rnd.between(0, 900), yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: rnd.between(0, 1200) });
       }
       if (rnd.frac() < 0.7) {
-        const f = this.add.image(cx + rnd.between(-20, 20), cy + 10, "env", rnd.pick(env.flowers)).setOrigin(0.5, 1).setScale(S).setDepth(cy + 10);
+        const f = this.add.image(cx + rnd.between(-20, 20), cy + 10, atlas, rnd.pick(env.flowers)).setOrigin(0.5, 1).setScale(S).setDepth(cy + 10);
         this.tweens.add({ targets: f, angle: { from: -3, to: 3 }, duration: 1800, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
       }
     }
@@ -466,7 +490,18 @@ export const CampDecor = {
       loop: true,
       callback: () => {
         const cam = this.cameras.main;
-        if (Math.random() < (this._ancestral ? 0.8 : 0.55)) {
+        if (this._sertao) {
+          // folhas secas e fiapos de capim levados pelo vento (de oeste para leste, rente ao chão, rolando)
+          if (Math.random() < 0.5) {
+            const wv = cam.worldView;
+            const x = wv.x - 20,
+              y = Math.max(HORIZON + 40, wv.y + Math.random() * wv.height);
+            const leaf = this.add.sprite(x, y, "px_leaf_tumble", Math.floor(Math.random() * 4)).setScale(S).setTint([PAL.straw1, PAL.straw2, PAL.n3, PAL.straw3][Math.floor(Math.random() * 4)]).setDepth(y + 30).play("leaf_tumble");
+            this.tweens.add({ targets: leaf, x: x + wv.width * (0.6 + Math.random() * 0.5), duration: 5200 + Math.random() * 2600, ease: "Sine.easeInOut", onComplete: () => leaf.destroy() });
+            this.tweens.add({ targets: leaf, y: y - 18, duration: 600 + Math.random() * 300, yoyo: true, repeat: 4, ease: "Quad.easeOut" }); // quiques
+            this.tweens.add({ targets: leaf, alpha: 0, delay: 4400, duration: 900 });
+          }
+        } else if (Math.random() < (this._ancestral ? 0.8 : 0.55)) {
           const wv = cam.worldView; // o que está na tela (menor com o zoom de acessibilidade)
           const x = wv.x + Math.random() * wv.width,
             y = wv.y - 20;
