@@ -243,13 +243,21 @@ Regras de escrita (da skill `social`): a primeira frase já entrega o assunto; n
 "não é X, é Y"; nada de emoji no começo de cada linha; nada de "Concorda?" no fim. Fato específico vale mais que
 adjetivo. E a fase (seção 0): até a loja abrir, a chamada é sempre o convite.
 
+**Não usar nos posts para jogadores** (decisão do Leonardo, 23/10/2026):
+- "você só se move", "só ande" e "as armas atacam sozinhas": soam como um jogo que se joga sozinho e afastam o
+  público;
+- "toda a arte e a música foram feitas em código" como argumento de venda.
+
+Venda o que a pessoa vê e sente: as lendas, a Podridão, as reações dos elementos, os chefes que avisam o golpe e as
+evoluções. Para quem conhece o gênero, "survivor-like" basta.
+
 ### X
 
 **Fixado (com o vídeo das reações, 9:16):**
 ```
 Fogo + Gelo vira Vapor. Gelo + Raio vira Cristal. Fogo + Raio vira Sobrecarga.
 
-Guardião da Floresta é um roguelite brasileiro: você só se move, as armas atacam sozinhas e as lendas do folclore lutam do seu lado contra a Podridão.
+Guardião da Floresta é um roguelite brasileiro em que as lendas do folclore lutam do seu lado contra a Podridão.
 
 Em breve na Google Play. Grátis e sem gacha.
 ```
@@ -281,7 +289,7 @@ Opções: `Curupira` · `Saci` · `Iara` · `Caipora`
 ```
 Every boss attack in Guardião da Floresta is telegraphed on the ground first, so you can dodge just by walking.
 
-A Brazilian folklore roguelite coming to Android, with all the pixel art and music generated in code.
+A Brazilian folklore roguelite coming to Android.
 
 #screenshotsaturday #indiedev
 ```
@@ -367,7 +375,7 @@ Flair sugerida: `Devlog` ou equivalente. **Verifique as regras antes de postar.*
 Título: `I'm making a survivor-like with Brazilian folklore legends as the heroes. Looking for players before launch`
 
 ```
-It plays like a survivor-like: you only move, weapons fire on their own, and every level-up is a card choice. A few things I tried to do differently:
+It plays like a survivor-like, and every level-up is a card choice. A few things I tried to do differently:
 
 - Elemental reactions: fire + ice makes steam, ice + lightning makes crystal, fire + lightning makes overload.
 - Bosses telegraph every attack on the ground, so a good run is about reading and walking.
@@ -387,7 +395,7 @@ Título: `Fiz um roguelite com as lendas do folclore brasileiro e ele saiu na Pl
 ```
 Oi, gente! Sou o Leonardo, de Nova Friburgo, e passei os últimos meses fazendo o Guardião da Floresta.
 
-É um roguelite em que você só anda e as armas atacam sozinhas. Curupira, Saci, Iara, Caipora e outras lendas são os heróis, e o vilão é a Podridão que toma a mata. Fogo + Gelo vira Vapor, e os chefes (Mapinguari, Mula sem Cabeça, Caboclo d'Água) avisam cada golpe antes.
+É um roguelite com as lendas do folclore: Curupira, Saci, Iara, Caipora e outras são os heróis, e o vilão é a Podridão que toma a mata. Fogo + Gelo vira Vapor, e os chefes (Mapinguari, Mula sem Cabeça, Caboclo d'Água) avisam cada golpe antes.
 
 É grátis de verdade: sem energia, sem gacha, e anúncio só se você quiser, nunca no meio da partida.
 
