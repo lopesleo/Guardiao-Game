@@ -1,7 +1,7 @@
 // Componentes compostos do kit de UI: Modal, ScrollList (arrastar pra rolar,
 // estilo celular), Slider, Toggle. Tudo desenhado com drawFrame/Theme.
 import { PAL, CSS } from "../art/Palette.js";
-import { text, drawFrame, dim, Button, P, vw, vh, haptic } from "./Theme.js";
+import { text, drawFrame, dim, Button, P, vw, vh, haptic, uiSfx } from "./Theme.js";
 import { tr } from "../i18n/i18n.js";
 
 const D_MODAL = 70000;
@@ -57,7 +57,7 @@ export class Modal {
     // Entrada
     this.root.setScale(0.9).setAlpha(0);
     scene.tweens.add({ targets: this.root, scale: 1, alpha: 1, duration: 160, ease: "Back.easeOut" });
-    scene.sound.play("sfx_ui_click", { volume: 0.3, rate: 1.2 });
+    uiSfx(scene, "sfx_ui_click", { volume: 0.3, rate: 1.2 });
   }
   add(obj) {
     this.body.add(obj);
@@ -356,7 +356,7 @@ export class Toggle extends Phaser.GameObjects.Container {
     this.setInteractive({ useHandCursor: true });
     this.on("pointerup", () => {
       this.on_ = !this.on_;
-      scene.sound.play("sfx_ui_click", { volume: 0.4 });
+      uiSfx(scene, "sfx_ui_click", { volume: 0.4 });
       haptic(12);
       this._draw();
       onChange?.(this.on_);

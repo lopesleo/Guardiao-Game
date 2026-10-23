@@ -13,7 +13,7 @@ import { PAL, CSS, hex } from "../art/Palette.js";
 import { cropIcon } from "../art/Garden.js";
 import { ARCH_ANC, SCARECROW_ANC } from "../art/CampAncestral.js";
 import { ARCH_SERTAO } from "../art/CampSertao.js";
-import { text, drawFrame, haptic } from "../ui/Theme.js";
+import { text, drawFrame, haptic, uiSfx } from "../ui/Theme.js";
 import { Modal } from "../ui/Widgets.js";
 import { tr } from "../i18n/i18n.js";
 
@@ -425,7 +425,7 @@ export const CampGarden = {
     const zone = this.add.zone(0, 0, 52, 52).setInteractive({ useHandCursor: true });
     zone.on("pointerup", () => {
       if (this._modals.length || this._cutscene) return;
-      this.sound.play("sfx_ui_click", { volume: 0.4 });
+      uiSfx(this, "sfx_ui_click", { volume: 0.4 });
       haptic(12);
       this._showBarn();
     });

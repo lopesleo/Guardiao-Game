@@ -2,7 +2,7 @@
 // elemento, linha de efeito em destaque, descrição e pips de nível.
 import { PAL, CSS, hex, ELEMENT_COLOR } from "../art/Palette.js";
 import { MAX_WEAPON_LEVEL } from "../config.js";
-import { text, drawFrame, P, haptic } from "./Theme.js";
+import { text, drawFrame, P, haptic, uiSfx, fromTouch } from "./Theme.js";
 import { tr } from "../i18n/i18n.js";
 
 const TYPE = {
@@ -159,9 +159,9 @@ export function createCard(scene, x, y, w, h, card, onClick, index, showKey = tr
   const hit = scene.add.zone(0, 0, w, h).setInteractive({ useHandCursor: true });
   c.add(hit);
   let down = false;
-  hit.on("pointerover", () => {
+  hit.on("pointerover", (p) => {
     scene.tweens.add({ targets: inner, y: -10, duration: 120, ease: "Quad.easeOut" });
-    scene.sound.play("sfx_ui_hover", { volume: 0.2 });
+    if (!fromTouch(p)) uiSfx(scene, "sfx_ui_hover", { volume: 0.2 });
   });
   hit.on("pointerout", () => {
     down = false;

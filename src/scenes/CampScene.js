@@ -30,7 +30,7 @@ import { inviteFriend } from "../ui/InviteUI.js";
 import { Analytics } from "../systems/Analytics.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { SkyGlow } from "../art/Gradients.js";
-import { text, setLabel, drawFrame, Button, vw, vh, haptic, fitCamera } from "../ui/Theme.js";
+import { text, setLabel, drawFrame, Button, vw, vh, haptic, fitCamera, uiSfx } from "../ui/Theme.js";
 import { Modal, closeTopModal } from "../ui/Widgets.js";
 import { MetaPanels } from "../ui/MetaPanels.js";
 import { applyZoom } from "../ui/Zoom.js";
@@ -1001,7 +1001,7 @@ export class CampScene extends Phaser.Scene {
     const it = this._target;
     if (!it || this._modals.length || this._leaving) return;
     haptic(12);
-    this.sound.play("sfx_ui_click", { volume: 0.4 });
+    uiSfx(this, "sfx_ui_click", { volume: 0.4 });
     it.action();
   }
 

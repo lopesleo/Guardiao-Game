@@ -12,7 +12,7 @@
 // Tocar no cartão já selecionado usa a peça (atalho). Compra pela Play Store (Billing.buyKit) com
 // COSMETICS.SHOP ligado no app; no modo de teste sem a loja de verdade, uma loja simulada (nada é cobrado).
 import { CSS } from "../art/Palette.js";
-import { text, Button, vw, vh, drawFrame, haptic } from "./Theme.js";
+import { text, Button, vw, vh, drawFrame, haptic, uiSfx } from "./Theme.js";
 import { Modal, fitTo } from "./Widgets.js";
 import { cloudToast } from "./CloudSaveUI.js";
 import { CosmeticStage } from "./CosmeticStage.js";
@@ -86,7 +86,7 @@ export function openWardrobe(scene, o = {}) {
     openWardrobe(scene, { ...o, tab, sel: isKits ? undefined : sel, kit: isKits ? sel : o.kit, pop: null, ...patch, again: true });
   };
   const equipFx = () => {
-    scene.sound.play("sfx_ui_click", { volume: 0.5, rate: 1.25 });
+    uiSfx(scene, "sfx_ui_click", { volume: 0.5, rate: 1.25 });
     haptic(15);
   };
 

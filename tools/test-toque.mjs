@@ -233,6 +233,32 @@ async function runCombo(mode, side) {
       await until(() => window.game.scene.getScene("CampScene")._modals.length === 0, null, 10000);
       await page.waitForTimeout(300);
     } else check(false, "o botão do topo do lado do joystick continua tocável", "(não achei o botão)");
+    // Um toque num botão do topo que abre janela toca UM som. Antes saíam dois ou três juntos: o "hover"
+    // que o toque dispara, o clique do botão e o clique da janela abrindo (23/10/2026)
+    const gear = await page.evaluate(() => {
+      const c = window.game.scene.getScene("CampScene"),
+        r = window.game.canvas.getBoundingClientRect(),
+        k = r.width / window.game.scale.width;
+      const b = c.children.list.find((o) => o.ico?.texture?.key === "ico_gear")?.getBounds();
+      const sm = window.game.sound;
+      if (!sm.__espia) {
+        const play = sm.play.bind(sm);
+        sm.play = (key, cfg) => (/^sfx_ui_/.test(key) && window.__sonsUi?.push(key), play(key, cfg));
+        sm.__espia = true;
+      }
+      window.__sonsUi = [];
+      return b && { x: r.left + (b.x + b.width / 2) * k, y: r.top + (b.y + b.height / 2) * k };
+    });
+    if (gear) {
+      await tap(gear);
+      await until(() => window.game.scene.getScene("CampScene")._modals.length > 0, null, 5000).catch(() => {});
+      await page.waitForTimeout(400);
+      const sons = await page.evaluate(() => window.__sonsUi.splice(0));
+      check(sons.length === 1 && sons[0] === "sfx_ui_click", "um toque no botão do topo toca um som só", sons.join(", ") || "(nenhum)");
+      await page.evaluate(() => void window.game.scene.getScene("CampScene")._modals.at(-1)?.close());
+      await until(() => window.game.scene.getScene("CampScene")._modals.length === 0, null, 10000);
+      await page.waitForTimeout(300);
+    } else check(false, "um toque no botão do topo toca um som só", "(não achei a engrenagem)");
     await page.evaluate(() => void window.game.scene.getScene("CampScene")._showSettings());
     await until(() => window.game.scene.getScene("CampScene")._modals.length > 0);
     await page.waitForTimeout(300);

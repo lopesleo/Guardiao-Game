@@ -6,7 +6,7 @@
 // dali até os lugares delas; a escolhida volta voando para o herói e a partida acende um anel nele
 // (GameFeel.cardLanded). Antecipação → impacto → continuação, ligando o mundo à escolha (FEEL.LEVEL).
 import { createCard } from "../ui/Cards.js";
-import { text, dim, Button, vw, vh, fitCamera, drawFrame } from "../ui/Theme.js";
+import { text, dim, Button, vw, vh, fitCamera, drawFrame, uiSfx } from "../ui/Theme.js";
 import { CSS, PAL } from "../art/Palette.js";
 import { Pix, bayer } from "../art/PixelArt.js";
 import { FEEL } from "../config.js";
@@ -354,7 +354,7 @@ export class LevelUpScene extends Phaser.Scene {
     if (this._banishAd) return this._adBanish();
     if (this._locked || (!this._banishMode && this.gameScene.upgrades.banishLeft <= 0)) return;
     this._banishMode = !this._banishMode;
-    this.sound.play("sfx_ui_click", { volume: 0.4 });
+    uiSfx(this, "sfx_ui_click", { volume: 0.4 });
     this._wobble(this._banishMode);
     this._refreshBanish();
   }
@@ -383,7 +383,7 @@ export class LevelUpScene extends Phaser.Scene {
       const y = obj.y;
       obj.setScale(0.7).setAlpha(0).setY(y + 30);
       this.tweens.add({ targets: obj, scale: 1, alpha: 1, y, delay: 200, duration: 320, ease: "Back.easeOut" });
-      this.time.delayedCall(200, () => this.sound.play("sfx_ui_click", { volume: 0.5, rate: 1.3 }));
+      this.time.delayedCall(200, () => uiSfx(this, "sfx_ui_click", { volume: 0.5, rate: 1.3 }));
       this._cardObjs[i] = obj;
     }
     this._refreshBanish();
@@ -419,7 +419,7 @@ export class LevelUpScene extends Phaser.Scene {
     if (this._locked) return;
     if (this._banishMode) return this._banish(card, cont);
     this._locked = true;
-    this.sound.play("sfx_ui_click", { volume: 0.5 });
+    uiSfx(this, "sfx_ui_click", { volume: 0.5 });
     // Balanceamento: o que foi escolhido e o que estava na mesa (carta ignorada = fraca ou sem graça)
     const up = this.gameScene.upgrades;
     Analytics.track("card_pick", {
