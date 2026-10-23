@@ -239,6 +239,87 @@ Arquivos e como refazer: `videos/promo/store/out/LEIA-ME.txt` (fora do git); ver
 Colar no Play Console (Versão → Notas da versão) como está; limite de 500 caracteres por idioma.
 O chinês tradicional vale para `zh-TW` e `zh-HK`.
 
+### 1.0.20 (código 21) — 23/10/2026
+
+AAB: `dist/guardiao-v1.0.20-21-anuncios-reais.aab`. O motivo principal é o **conserto do travamento da 1.0.19**:
+desde 09/10, o jogo congelava quando a evolução INFERNO queimava o chão (`fix/inferno-trava`).
+
+Também entra tudo o que ficou na `main` de 21 a 23/10 (detalhes no ROADMAP, fim do M4.5):
+- **Som:** mixagem com barramentos, limitador e limite de vozes; abafa na pausa e nas cartas; a trilha do chefe
+  troca no compasso; fita na morte; coração com vida baixa.
+- **Gráfico:** Podridão na borda da tela; Grito do Mapinguari por shader; status elementais legíveis; céu da Clareira
+  em degradê.
+- **Desempenho:** teto de 60 fps; teto de 150 gemas; chão em 3 `SpriteGPULayer`; cogumelos que cintilam à noite.
+- **Sensação de jogo** (bloco `FEEL`): tremor em camadas; cartas que saem do herói; chefe que sobe de uma poça;
+  golpe fatal que congela.
+- **Monetização:** oferta do Sem anúncios depois de 8 e de 25 anúncios assistidos; baú do dia que avisa que o
+  segundo é com anúncio.
+- **Divulgação:** pedido de avaliação da Play depois da 3ª partida (`Review.js`); cartão da partida para
+  compartilhar (`ShareCard.js`); Chame um amigo com origem em UTM (`Invite.js`).
+- **Plugins nativos novos:** in-app-review, share e filesystem.
+
+Os dados coletados não mudam: o convite só leva a origem no link, e os eventos novos entram no Analytics, que já
+está declarado.
+
+```
+<pt-BR>
+• Correção: o jogo não trava mais quando a evolução Inferno queima o chão.
+• Som remixado: a música do chefe entra no compasso e o coração bate quando a vida está baixa.
+• Golpes com mais peso, efeitos dos elementos mais fáceis de ver e o chefe que surge de uma poça da Podridão.
+• A mata ganhou cogumelos que brilham à noite, e o jogo ficou mais leve.
+• Compartilhe o cartão da sua partida e chame amigos para jogar.
+</pt-BR>
+<en-US>
+• Fix: the game no longer freezes when the Inferno evolution burns the ground.
+• Remixed sound: the boss music comes in on the beat, and a heartbeat warns you when health is low.
+• Heavier hits, clearer elemental effects, and the boss now rises from a pool of the Rot.
+• The forest has mushrooms that glow at night, and the game runs lighter.
+• Share your run card and invite friends to play.
+</en-US>
+<es-419>
+• Corrección: el juego ya no se congela cuando la evolución Infierno quema el suelo.
+• Sonido remezclado: la música del jefe entra a compás y un latido avisa cuando tienes poca vida.
+• Golpes con más peso, efectos de los elementos más claros y el jefe que surge de un charco de la Podredumbre.
+• El bosque tiene hongos que brillan de noche, y el juego va más ligero.
+• Comparte la tarjeta de tu partida e invita a tus amigos a jugar.
+</es-419>
+<es-ES>
+• Corrección: el juego ya no se congela cuando la evolución Infierno quema el suelo.
+• Sonido remezclado: la música del jefe entra a compás y un latido avisa cuando tienes poca vida.
+• Golpes con más peso, efectos de los elementos más claros y el jefe que surge de un charco de la Podredumbre.
+• El bosque tiene setas que brillan de noche, y el juego va más ligero.
+• Comparte la tarjeta de tu partida e invita a tus amigos a jugar.
+</es-ES>
+<ja-JP>
+• 修正：進化武器「業火」が地面を焼くとゲームが止まる不具合を直しました。
+• サウンドを再ミックス：ボスの曲は小節の頭で切り替わり、体力が少ないと心音が鳴ります。
+• 攻撃の手応えを強化し、属性の効果も見やすく。ボスは腐敗の沼からせり上がって現れます。
+• 夜の森に光るキノコが登場し、動作も軽くなりました。
+• リザルトカードをシェアして、友だちを誘えます。
+</ja-JP>
+<zh-CN>
+• 修复：进化武器“炼狱”灼烧地面时游戏卡住的问题。
+• 音效重新混音：头目音乐踩着节拍切入，生命值低时会响起心跳声。
+• 打击更有分量，元素效果更清楚，头目会从腐朽的泥潭中升起。
+• 森林里多了夜晚会发光的蘑菇，游戏也更流畅。
+• 分享本局战绩卡，邀请朋友一起玩。
+</zh-CN>
+<zh-TW>
+• 修復：進化武器「煉獄」灼燒地面時遊戲卡住的問題。
+• 音效重新混音：頭目音樂踩著節拍切入，生命值低時會響起心跳聲。
+• 打擊更有分量，元素效果更清楚，頭目會從腐朽的泥潭中升起。
+• 森林裡多了夜晚會發光的蘑菇，遊戲也更流暢。
+• 分享本局戰績卡，邀請朋友一起玩。
+</zh-TW>
+<zh-HK>
+• 修復：進化武器「煉獄」灼燒地面時遊戲卡住的問題。
+• 音效重新混音：頭目音樂踩著節拍切入，生命值低時會響起心跳聲。
+• 打擊更有分量，元素效果更清楚，頭目會從腐朽的泥潭中升起。
+• 森林裡多了夜晚會發光的蘑菇，遊戲也更流暢。
+• 分享本局戰績卡，邀請朋友一起玩。
+</zh-HK>
+```
+
 ### 1.0.19 (código 20) — 20/10/2026
 
 AAB: `dist/guardiao-v1.0.19-20-anuncios-reais.aab`. **Tela de fim de partida redesenhada** (`src/scenes/GameOverScene.js`,
