@@ -85,7 +85,7 @@ const check = (ok, what, extra = "") => {
   console.log(`  ${ok ? "ok   " : "FALHA"} ${what}${extra ? "  " + extra : ""}`);
   return ok;
 };
-const SET = (o = {}) => ({ guardiao_settings_v1: { music: 0, sfx: 0, qualityChecked: true, ...o } });
+const SET = (o = {}) => ({ guardiao_settings_v1: { music: 0, sfx: 0, quality: "high", ...o } });
 
 // Partida de verdade até a tela do resultado (pula a cena da 1ª queda: o save já viu)
 async function toGameOver(t, { won = true, kills = 845 } = {}) {

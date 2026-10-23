@@ -75,7 +75,7 @@ const check = (ok, what, extra = "") => {
   console.log(`  ${ok ? "ok   " : "FALHA"} ${what}${extra ? "  " + extra : ""}`);
   return ok;
 };
-const SET = { guardiao_settings_v1: { music: 0, sfx: 0, textSize: TS, qualityChecked: true } };
+const SET = { guardiao_settings_v1: { music: 0, sfx: 0, textSize: TS, quality: "high" } };
 const EMOJI = /\p{Extended_Pictographic}/u;
 const params = (u) => Object.fromEntries(new globalThis.URL(u).searchParams);
 
