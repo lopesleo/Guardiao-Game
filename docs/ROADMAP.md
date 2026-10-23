@@ -565,6 +565,18 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Agora as chaves conferem a permissão e os canais, sem ela o aparelho sai do tópico, quem perdeu vê o pedido do baú
   de novo e, bloqueado de vez, ligar abre as configurações do jogo no Android (plugin `NotificationSettings`).
   6 cenários novos no `test:avisos`; Teste interno e Alpha (20/10)
+- 🔄 **1.0.20 (código 21)** (23/10/2026): está como rascunho no Teste interno e no Alpha e falta publicar no
+  Console. O motivo principal é o **conserto do travamento da 1.0.19**: o jogo congelava quando a evolução INFERNO
+  queimava o chão. Leva também o resto do M4.5 de 21 a 23/10:
+  - mixagem do som;
+  - Podridão na borda da tela e status elementais legíveis;
+  - desempenho: teto de 60 fps e chão na GPU;
+  - sensação de jogo (bloco `FEEL`);
+  - oferta do Sem anúncios;
+  - pedido de avaliação, cartão da partida e Chame um amigo.
+
+  Plugins nativos novos: in-app-review, share e filesystem, sem permissão nova no manifesto. Notas nos 8 idiomas em
+  `PLAY_STORE.md`.
 - ✅ **1.0.19 (código 20)** (20/10/2026): **tela de fim de partida redesenhada** no padrão da tela inicial
   (`GameOverScene.js` + `src/art/ResultArt.js`): cena na Clareira à esquerda — vitória ao amanhecer com a lenda
   libertada em paz e o guardião de cajado erguido; derrota com o guardião de volta à fogueira (o lugar seguro do
