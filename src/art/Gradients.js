@@ -74,12 +74,14 @@ export class ScreenVignette {
 
 // Luz do céu em volta de um ponto do MUNDO (a fogueira da Clareira): um quad quadrado de raio R, em MULTIPLY.
 // Perto do centro a cor "quente", no meio a do céu, na borda a "fria". As três cores mudam com a hora (setColors)
+// w/h (opcional) trocam o quadrado de lado 2R por um retângulo: o degradê vira uma elipse (a Clareira da Caatinga
+// usa para a camada da noite parar na linha do horizonte e deixar o céu com as cores dele)
 export class SkyGlow {
-  constructor(scene, { x, y, R, depth, stops = [0.06, 0.3] }) {
+  constructor(scene, { x, y, R, depth, stops = [0.06, 0.3], w = 2 * R, h = 2 * R }) {
     Object.assign(this, { scene, stops });
     this.obj = radial(scene, [{ start: 0, end: 1, colorStart: rgba(0xffffff) }], depth)
       .setPosition(x, y)
-      .setSize(2 * R, 2 * R)
+      .setSize(w, h)
       .setOrigin(0.5)
       .setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.setColors(0xffffff, 0xffffff, 0xffffff); // já nasce com as 3 faixas

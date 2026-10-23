@@ -12,6 +12,7 @@ import { Clock } from "../systems/Clock.js";
 import { PAL, CSS, hex } from "../art/Palette.js";
 import { cropIcon } from "../art/Garden.js";
 import { ARCH_ANC, SCARECROW_ANC } from "../art/CampAncestral.js";
+import { ARCH_SERTAO } from "../art/CampSertao.js";
 import { text, drawFrame, haptic } from "../ui/Theme.js";
 import { Modal } from "../ui/Widgets.js";
 import { tr } from "../i18n/i18n.js";
@@ -42,8 +43,9 @@ export const CampGarden = {
     const g = (this.gardenGfx = { plots: [] });
     const fade = []; // o que aparece na cena de revelação
     const lamps = []; // lamparinas da Ancestral: o brilho só nasce com a horta à vista
-    const anc = this._ancestral;
-    const tex = (k) => (anc ? "garden_anc_" : "garden_") + k;
+    const anc = this._ancestral,
+      sert = this._sertao;
+    const tex = (k) => (anc ? "garden_anc_" : sert ? "garden_sertao_" : "garden_") + k;
     // Cerca de taquara atrás, com o portal de bambu no meio (onde a trilha
     // chega), e mourões de bambu nas laterais. Na Clareira Ancestral: estacas
     // entalhadas com trançado de palha e o portal de esteios com ponteira de cobre
@@ -72,6 +74,15 @@ export const CampGarden = {
         lamps.push(l);
       });
     }
+    if (sert) {
+      // porteira do sertão: a placa do broto pendurada no meio da travessa e o chocalho na ponta, no vento da Clareira
+      const top = fy + 2 - ARCH_SERTAO.h * S;
+      const sign = this.add.image(GX, top + ARCH_SERTAO.signY * S, "garden_sertao_sign").setOrigin(0.5, 0).setScale(S).setDepth(fy + 3);
+      this.tweens.add({ targets: sign, angle: { from: -3, to: 3 }, duration: 2100, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: this._wind(GX) + 180 });
+      const bell = this.add.image(GX + (ARCH_SERTAO.bell.x + 0.5 - ARCH_SERTAO.w / 2) * S, top + ARCH_SERTAO.bell.y * S, "camp_sertao_bell").setOrigin(0.5, 0).setScale(S).setDepth(fy + 3);
+      this.tweens.add({ targets: bell, angle: { from: -9, to: 9 }, duration: 1050, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: this._wind(GX + 40) % 1050 });
+      fade.push(sign, bell);
+    }
     for (const x of [x0 - 2, x1 - 16])
       for (let y = y0 + 40; y <= y1; y += 46) {
         const post = this.add.image(x, y, tex("fence_post")).setOrigin(0, 1).setScale(S).setDepth(y);
@@ -83,7 +94,7 @@ export const CampGarden = {
     // Canteiros: terra arada (aberto) ou mato (fechado) + planta + aviso
     for (let i = 0; i < 9; i++) {
       const { x, y } = plotPos(i);
-      const bed = this.add.image(x, y, "garden_locked").setScale(S).setDepth(y - 40);
+      const bed = this.add.image(x, y, sert ? "garden_sertao_locked" : "garden_locked").setScale(S).setDepth(y - 40);
       const plant = this.add.sprite(x, y + 16, "crop_carrot", 0).setOrigin(0.5, 1).setScale(S).setDepth(y + 16).setVisible(false);
       const bubble = this.add.container(x + 26, y - 46).setDepth(this.D_HUD - 12).setVisible(false);
       const bg = this.add.graphics();
@@ -108,7 +119,7 @@ export const CampGarden = {
     const scx = -175,
       scy = 350;
     const crowShadow = this.add.image(scx, scy + 4, "px_shadow").setScale(4, 2).setAlpha(0.5).setDepth(scy - 1);
-    const crow = (anc ? this.add.sprite(scx, scy, "camp_anc_scarecrow", 0) : this.add.image(scx, scy, "camp_scarecrow")).setOrigin(0.5, 1).setScale(S).setDepth(scy);
+    const crow = (anc ? this.add.sprite(scx, scy, "camp_anc_scarecrow", 0) : sert ? this.add.sprite(scx, scy, "camp_sertao_scarecrow", 0) : this.add.image(scx, scy, "camp_scarecrow")).setOrigin(0.5, 1).setScale(S).setDepth(scy);
     if (anc) {
       // espantalho de poncho: balança no vento da Clareira, a franja e a pena correm em onda (6 quadros) e a
       // lamparina pendurada no braço acompanha o balanço
@@ -126,6 +137,11 @@ export const CampGarden = {
       this.time.addEvent({ delay: 120, loop: true, callback: () => crow.setFrame((cf = (cf + 1) % 6)) });
       fade.push(l.lamp);
       lamps.push(l);
+    } else if (sert) {
+      // espantalho sertanejo: balança no vento da Clareira; o lenço, a franja do gibão e a cabaça correm em onda
+      this.tweens.add({ targets: crow, angle: { from: -2, to: 2 }, duration: 2100, yoyo: true, repeat: -1, ease: "Sine.easeInOut", delay: this._wind(scx) });
+      let cf = 0;
+      this.time.addEvent({ delay: 130, loop: true, callback: () => crow.active && crow.setFrame((cf = (cf + 1) % 6)) });
     } else this.tweens.add({ targets: crow, angle: { from: -2, to: 2 }, duration: 2600, yoyo: true, repeat: -1, ease: "Sine.easeInOut" });
     this._solid(scx, scy - 4, 12, 10);
     const can = this.add.image(158, 344, "camp_can").setOrigin(0.5, 1).setScale(S).setDepth(344);
@@ -165,7 +181,7 @@ export const CampGarden = {
     const now = Clock.now();
     g.plots.forEach((v, i) => {
       const open = i < gd.open;
-      v.bed.setTexture(open ? "garden_plot" : "garden_locked");
+      v.bed.setTexture(open ? "garden_plot" : this._sertao ? "garden_sertao_locked" : "garden_locked");
       const p = open ? gd.plots[i] : null;
       const st = open ? gd.state(i, now) : "locked";
       v.plant.setVisible(shown && !!p);

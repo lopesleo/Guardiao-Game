@@ -88,7 +88,7 @@ import { QualityWatchdog } from "../systems/QualityWatchdog.js";
 import { LanternSystem } from "../systems/LanternSystem.js";
 import { Builds } from "../systems/Builds.js";
 import { VirtualJoystick, joyRight } from "../ui/VirtualJoystick.js";
-import { Cosmetics } from "../systems/Cosmetics.js";
+import { Cosmetics, COSM_CAMP } from "../systems/Cosmetics.js";
 import { tr } from "../i18n/i18n.js";
 
 const BOSS_TEX = { mapinguari: "mon_boss", caboclo: "mon_caboclo" };
@@ -2196,7 +2196,12 @@ export class GameScene extends Phaser.Scene {
     for (const k of this._deedsOpen || []) if (this.meta.deedDone(k)) this._newUnlocksThisRun.push(tr("Feito cumprido: {0} na Forja", WEAPONS[k].name));
     for (const c of this._charDeedsOpen || []) if (this.meta.characterDeed(c.id)?.done) this._newUnlocksThisRun.push(tr("Feito cumprido: {0} na Fogueira", c.name));
     const newAchievements = this._checkAchievements(won, true);
-    this._newUnlocksThisRun.push(...newAchievements.map((a) => a.name));
+    for (const a of newAchievements) {
+      this._newUnlocksThisRun.push(a.name);
+      // conquista que libera uma Clareira (a da Caatinga): é o prêmio que se vê, vai no topo da lista (a tela do
+      // resultado mostra só as 3 primeiras faixas)
+      for (const c of Object.values(COSM_CAMP)) if (c.earn === a.id) this._newUnlocksThisRun.unshift(tr("Nova Clareira no Guarda-roupa: {0}", c.name));
+    }
     // Reações DESTA partida, por tipo (missões do dia e medição de balanceamento)
     const nowReactions = this.meta.data.stats.reactions || {};
     const byType = {};

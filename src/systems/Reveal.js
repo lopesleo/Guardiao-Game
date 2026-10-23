@@ -61,6 +61,15 @@ export const REVEALS = [
     when: (d) => (d.wins || 0) > 0,
     line: tr("O vento trouxe areia do sertão… O João-de-barro pode abrir uma trilha até a Caatinga."),
   },
+  {
+    // Clareira da Caatinga (docs/COSMETICOS.md): a conquista "Mandacaru em Flor" (Pesadelo na Caatinga) faz o
+    // mandacaru da trilha florir e a Anciã aponta o Guarda-roupa (fx: a cena da flor abrindo, no lugar das gotas)
+    id: "sertao",
+    at: "trail",
+    fx: "bloom",
+    when: (d) => (d.achievements || []).includes("mandacaru_flor"),
+    line: tr("O mandacaru floriu na seca: é sinal de chuva! O sertão também pode morar aqui. Veja no Guarda-roupa."),
+  },
 ];
 
 export function isRevealed(id, data) {

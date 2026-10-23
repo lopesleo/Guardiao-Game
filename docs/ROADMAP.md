@@ -469,6 +469,20 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
     começo da partida e com a horda/elite/minichefe (a base sozinha não ficou fraca demais?), a volta à base
     quando a luta acalma, e a Clareira em horas diferentes (`node tools/audio-lab.mjs --wav=pasta` gera os
     sons para ouvir no PC).
+- ✅ **Clareira da Caatinga** (23/10/2026, branch `feat/clareira-caatinga`; ver `COSMETICOS.md`): o visual do sertão
+  para o acampamento inteiro, **grátis**, para quem vence no **Perigo Pesadelo na Caatinga** — conquista nova
+  **Mandacaru em Flor** (33 conquistas). Terra vermelha com barro rachado, juazeiro com a copa em onda, mandacarus
+  com a flor que abre à noite, coroa-de-frade, cerca de varas e porteira com chocalho, espantalho de chapéu de couro,
+  rede de varanda, açude com carnaúba e aguapés, horizonte aberto ao norte com o céu pela hora (amanhecer, mormaço,
+  poente, noite de lua), a lua grande e o sol atrás da serra; calangos (flexões, corrida, fogem do herói),
+  asas-brancas (bando que pousa e cisca), carcará planando com a sombra, poeira e redemoinho. Tudo funcionando
+  igual (horta, obras, pesca, cozinha, fogueira). Aviso no padrão: faixa na tela do fim, cena da Anciã com a flor
+  do mandacaru abrindo e selo "!" no Guarda-roupa (abre direto nela). Aba Clareira com três cartões; trancada,
+  diz como liberar e o quanto falta. Save guarda o maior Perigo vencido por mapa (`bestDiffByBiome`); o desbloqueio
+  vai na nuvem com o save. 6 idiomas. Conserto junto: o Lago somava um ouvinte de `update` a cada visita à
+  Clareira. **`npm run test:clareira`** (no `npm test`). 👤 Ver no S23 e num celular fraco (a arte é gerada na
+  1ª entrada, ~40–80 ms no PC); 👤 a ficha da loja diz "32 conquistas" (agora 33) nos idiomas; 👤 se as conquistas
+  do Play Games forem criadas, `mandacaru_flor` é a chave
 
 ### M5 — Monetização e medição reais 👤
 - ✅ AdMob: app Android criado e **7 blocos premiados** em uso (revive, extra_card, build_speed,

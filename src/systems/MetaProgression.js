@@ -244,6 +244,7 @@ export class MetaProgression {
       wins: this.data.wins || 0,
       winsByDifficulty: this.data.winsByDifficulty || {},
       winsByBiome: this.biomeWins(),
+      bestDiffByBiome: this.data.bestDiffByBiome || {},
       maxDifficultyCleared: this.data.maxDifficultyCleared || 0,
       reactions: s.reactions || {},
       totalKills: s.totalKills || 0,
@@ -292,6 +293,10 @@ export class MetaProgression {
       this.data.winsByDifficulty[k] = (this.data.winsByDifficulty[k] || 0) + 1;
       const wb = (this.data.winsByBiome ||= {});
       wb[biome] = (wb[biome] || 0) + 1;
+      // maior Perigo vencido em cada mapa (a Clareira da Caatinga pede o Pesadelo na Caatinga). Vitórias de antes
+      // deste registro (23/10/2026) não sabem o Perigo de cada mapa: contam a partir da próxima
+      const bd = (this.data.bestDiffByBiome ||= {});
+      bd[biome] = Math.max(bd[biome] ?? -1, difficulty);
       if (difficulty > this.data.maxDifficultyCleared) {
         this.data.maxDifficultyCleared = difficulty;
       }

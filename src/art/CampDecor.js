@@ -7,15 +7,21 @@ import { Pix, bayer, rng } from "./PixelArt.js";
 import { registerCampAncestral } from "./CampAncestral.js";
 
 const K = PAL.ink;
-const DIRT = [PAL.n0, PAL.n1, PAL.n2, PAL.n3];
+const DIRT_MATA = [PAL.n0, PAL.n1, PAL.n2, PAL.n3];
 
 // ---------------------------------------------------------------------------
 // CHÃO: trilhas curvas da fogueira até cada lugar + terreiro irregular.
 // spec = { x0, y0, w, h (mundo), scale, hub:{x,y,r}, paths:[{x,y,w}] }
 // Devolve { onPath(x, y) } para a cena não semear flores em cima da trilha.
 // ---------------------------------------------------------------------------
+// spec.colors (opcional, a Clareira da Caatinga): { dirt: [escuro, borda, meio, claro], fringe, stones: [3], grass: [2] }
 export function paintGround(scene, key, spec) {
   const S = spec.scale;
+  const C = spec.colors ?? {};
+  const DIRT = C.dirt ?? DIRT_MATA;
+  const FRINGE = C.fringe ?? PAL.n1;
+  const [ST0, ST1, ST2] = C.stones ?? [PAL.s2, PAL.s3, PAL.s1];
+  const [GR0, GR1] = C.grass ?? [PAL.g3, PAL.g4];
   const W = Math.ceil(spec.w / S),
     H = Math.ceil(spec.h / S);
   const p = new Pix(W, H);
@@ -34,7 +40,7 @@ export function paintGround(scene, key, spec) {
         const i = y * W + x;
         if (d > edge) {
           // franja: terra salpicada no capim
-          if (!mask[i] && bayer(x, y) < 0.3) p.set(x, y, PAL.n1);
+          if (!mask[i] && bayer(x, y) < 0.3) p.set(x, y, FRINGE);
           continue;
         }
         mask[i] = 1;
@@ -52,7 +58,7 @@ export function paintGround(scene, key, spec) {
       const rr = hr * (1 + 0.1 * Math.sin(3 * a + 1) + 0.06 * Math.sin(7 * a)) + Math.sin(x * 0.9 + y * 0.4) * 0.8;
       const d = Math.hypot(dx, dy);
       if (d <= rr) mask[y * W + x] = 1;
-      else if (d <= rr + 1.5 && bayer(x, y) < 0.3) p.set(x, y, PAL.n1);
+      else if (d <= rr + 1.5 && bayer(x, y) < 0.3) p.set(x, y, FRINGE);
     }
   // Trilhas: curvas em S (Bézier cúbica) com a largura mudando devagar.
   // Cada trilha sai do terreiro ou de um ponto de outra trilha (ramos).
@@ -101,13 +107,13 @@ export function paintGround(scene, key, spec) {
       y = Math.floor(r() * H);
     if (!mask[y * W + x]) continue;
     const q = r();
-    if (q < 0.45) p.set(x, y, PAL.s2);
+    if (q < 0.45) p.set(x, y, ST0);
     else if (q < 0.6) {
-      p.set(x, y, PAL.s3);
-      p.set(x + 1, y, PAL.s1);
+      p.set(x, y, ST1);
+      p.set(x + 1, y, ST2);
     } else if (q < 0.8) {
-      p.set(x, y, PAL.g3); // capim teimoso
-      p.set(x, y - 1, PAL.g4);
+      p.set(x, y, GR0); // capim teimoso
+      p.set(x, y - 1, GR1);
     } else p.set(x, y, DIRT[0]);
   }
   p.register(scene, key);

@@ -122,6 +122,34 @@ export const PAL = {
   sun0: 0xffd88a,
   sun1: 0xfff3cc,
 
+  // Sertão (Clareira da Caatinga, src/art/CampSertao.js): terra vermelha do chão (escuro → claro, terra0 é a
+  // rachadura), a terra batida clara das trilhas, o céu do dia (zênite → horizonte de mormaço), o poente de fogo e a
+  // noite de lua (alto → horizonte)
+  terra0: 0x4a2216,
+  terra1: 0x6c3420,
+  terra2: 0x87442a,
+  terra3: 0x9c5432,
+  terra4: 0xb3683e,
+  batida0: 0x8a5636,
+  batida1: 0xa46a46,
+  batida2: 0xbb8158,
+  batida3: 0xcf9a6e,
+  dia0: 0x3f7fc0,
+  dia1: 0x6ea8d8,
+  dia2: 0xa8d0e8,
+  dia3: 0xeae4cc,
+  poente0: 0x23214a,
+  poente1: 0x5a2e5e,
+  poente2: 0xa8405a,
+  poente3: 0xe0603e,
+  poente4: 0xffa04a,
+  poente5: 0xffd27a,
+  luar0: 0x070b18,
+  luar1: 0x0e1832,
+  luar2: 0x18264c,
+  luar3: 0x263864,
+  luar4: 0x3a4a78,
+
   // UI
   uiBg: 0x0f1a16,
   uiPanel: 0x16241f,
