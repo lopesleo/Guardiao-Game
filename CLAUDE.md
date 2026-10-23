@@ -169,7 +169,8 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
   rascunho do X.
   👤 Publicar esse rascunho e fixar o post novo. 👤 Apagar o trailer antigo no X. 👤 No TikTok, editar a legenda do
   trailer pelo app; se não der, apagar e repostar. 👤 Tirar "Você só se move;" da bio do X (o Chrome estava na conta
-  pessoal). 👤 Decidir o que fazer com os 3 rascunhos do reel do código.
+  pessoal). O reel do código continua nos rascunhos, mas com legenda sem "código" (decisão de 23/10: o vídeo pode
+  mostrar o código; escrito na legenda, dá a entender que o jogo foi feito no improviso).
   👤 Aprovar os rascunhos no Buffer (Rascunhos → Agendar). 👤 Fixar à mão o comentário do convite no Instagram
   (recurso pago no Buffer). 👤 Confirmar o apelido e a descrição do TikTok ("Definir apelido?" → Confirmar).
 - Redes (`docs/REDES_SOCIAIS.md`): Instagram **`@guardiaodaflorestaofc`** no ar (20/10: conta profissional, categoria

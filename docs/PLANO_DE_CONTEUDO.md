@@ -83,12 +83,13 @@ da semana continuam, só a chamada espera.
 |---|---|---|---|
 | **Jogo que se entende sem som** | 40% | Reações (Fogo + Gelo = Vapor), evoluções limpando a tela, chefe avisando o golpe e o herói desviando andando | É o gancho do jogo; prende nos 2 primeiros segundos |
 | **Folclore com orgulho** | 25% | Uma lenda por post: quem é, de onde vem, o que faz no jogo | Assunto que brasileiro compartilha; datas prontas (Saci, Folclore, Amazônia, Caatinga) |
-| **Bastidores: um jogo inteiro feito em código** | 20% | Arte, música e efeitos gerados por código; antes e depois; o robô que aprende a jogar | Comunidade de gamedev (X, Reddit, Bluesky) ama processo |
+| **Bastidores** | 20% | Como o jogo é feito: o herói desenhado pixel por pixel, antes e depois, o robô que aprende a jogar. O vídeo pode mostrar o processo; a legenda não diz "feito em código" | Comunidade de gamedev (X, Reddit, Bluesky) ama processo |
 | **Comunidade** | 10% | Cartões de partida dos jogadores, recordes do ranking, enquetes, respostas a perguntas | Quem aparece compartilha; quem vê quer aparecer |
 | **Chamada** | 5–10% | Teste, pré-registro, lançamento, atualização | Pouco e no momento certo; no Reddit, no máximo 1 em cada 6 posts |
 
-**Cuidado com o "feito com IA":** entre jogadores, isso costuma virar briga nos comentários. O texto "arte e música
-geradas por código" é verdadeiro e é o que vale usar.
+**Cuidado com o "feito com IA":** entre jogadores, isso costuma virar briga nos comentários. Pela mesma razão, a
+legenda também não diz "feito em código" nem "gerado por código". Decisão de 23/10/2026: escrito, isso dá a entender
+que o jogo foi feito no improviso. O processo pode aparecer no vídeo; o texto fala das lendas, da arte e da animação.
 
 ---
 
@@ -246,7 +247,9 @@ adjetivo. E a fase (seção 0): até a loja abrir, a chamada é sempre o convite
 **Não usar nos posts para jogadores** (decisão do Leonardo, 23/10/2026):
 - "você só se move", "só ande" e "as armas atacam sozinhas": soam como um jogo que se joga sozinho e afastam o
   público;
-- "toda a arte e a música foram feitas em código" como argumento de venda.
+- "feito em código" ou "gerado por código" na legenda ou no texto do post: escrito, dá a entender que o jogo
+  foi feito no improviso ("vibecoded"). O reel 8 pode mostrar o código na tela; a legenda fala do Curupira e da
+  animação.
 
 Venda o que a pessoa vê e sente: as lendas, a Podridão, as reações dos elementos, os chefes que avisam o golpe e as
 evoluções. Para quem conhece o gênero, "survivor-like" basta.
@@ -265,11 +268,11 @@ Em breve na Google Play. Grátis e sem gacha.
 foi apagado por defeito. Hoje o fixado é o trailer.)
 1ª resposta: `Quer jogar antes do lançamento? Peça seu convite (Android, grátis): https://komedygames.com/guardiao/?utm_source=x&utm_medium=social`
 
-**Bastidor (com o vídeo do herói sendo desenhado por código, reel 8):**
+**Bastidor (com o reel 8, o herói sendo desenhado; a legenda não fala em código):**
 ```
-Toda a arte do Guardião da Floresta sai de código: heróis, criaturas, cenário, ícones e efeitos. Nenhuma imagem foi desenhada à mão nem comprada.
+O Curupira, guardião da mata, pixel por pixel: 15 quadros de animação, cada um numa pose, até ele sair andando pela floresta.
 
-A música também: cada trilha é composta e sintetizada por código dentro do próprio jogo.
+No Guardião da Floresta as lendas do folclore lutam do seu lado contra a Podridão.
 ```
 
 **Lenda do dia (com o clipe do chefe, reel 6):**
@@ -337,13 +340,13 @@ Guardião da Floresta · Android · peça seu convite pelo link na bio.
 #jogobrasileiro #roguelite #indiegame #jogosmobile #pixelart
 ```
 
-**Reel 8: do código à tela** (bastidor)
+**Reel 8: o Curupira pixel por pixel** (o vídeo mostra o código; a legenda não fala nele)
 ```
-Esse Curupira foi desenhado por código, pixel por pixel. A floresta, os monstros e a música também.
+O Curupira, guardião da mata, pixel por pixel: 15 quadros de animação, cada um numa pose, até ele sair andando pela floresta.
 
-Um jogo brasileiro inteiro feito assim, sem banco de imagens nem música comprada.
+No Guardião da Floresta as lendas do folclore lutam do seu lado contra a Podridão. Jogue antes do lançamento: peça seu convite pelo link na bio.
 
-#gamedev #indiedev #jogobrasileiro #pixelart #folclorebrasileiro
+#pixelart #jogobrasileiro #folclorebrasileiro #indiegame #curupira
 ```
 
 **Carrossel: "As lendas e de onde vêm"** (1080×1350, `videos/promo/entrega/social/lendas_*.png`)
@@ -354,6 +357,8 @@ Um jogo brasileiro inteiro feito assim, sem banco de imagens nem música comprad
 ### Reddit
 
 **r/IndieDev (EN, bastidor; serve em qualquer fase):**
+
+Antes de postar, rever com o Leonardo: o título e o texto falam em "gerado por código" (ver a regra da seção 9).
 
 Título: `I generated every sprite, sound and song of my Brazilian folklore roguelite in code. Here's the hero being drawn`
 
