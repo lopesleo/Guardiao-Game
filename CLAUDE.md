@@ -82,9 +82,13 @@ Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um 
 marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
 
 **Agora**
-- **Na `main`, ainda sem versão (21–22/10): qualidade gráfica, som e desempenho** (detalhes no ROADMAP, fim do M4.5).
-  **A 1.0.19 tem um bug que congela o jogo** quando a evolução INFERNO queima o chão (desde 09/10, consertado na
-  `main`) → 👤 gerar a **1.0.20** logo (`/versao-loja`). Entrou também: mixagem do som (barramentos, limitador, limite
+- **1.0.20 (código 21) gerada em 23/10 e enviada como rascunho para o Teste interno e o Teste fechado/Alpha.** O
+  arquivo é `dist/guardiao-v1.0.20-21-anuncios-reais.aab`, com as notas nos 8 idiomas. Ela leva tudo o que foi feito
+  de 21 a 23/10 em qualidade gráfica, som e desempenho (detalhes no ROADMAP, fim do M4.5). Leva também o conserto do
+  travamento da 1.0.19: o jogo congelava quando a evolução INFERNO queimava o chão. A publicação pelo script foi
+  barrada pela permissão automática.
+  👤 No Console: abrir cada rascunho → Avançar → Salvar e publicar → mandar o Alpha para revisão.
+  Entrou também: mixagem do som (barramentos, limitador, limite
   de vozes, abafar na pausa/cartas, troca de trilha do chefe no compasso, fita na morte, coração com vida baixa);
   Podridão na borda da tela; Grito do Mapinguari por shader; status elementais legíveis (OVERLAY; no chefe, metade);
   zoom que escurecia os avisos dos chefes; libertação do chefe nova; céu da Clareira em degradê; desempenho (teste de
@@ -107,7 +111,8 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
   `performance-optimization`): música da partida em camadas pela intensidade; ambiência da Clareira pela hora; gerar o áudio num Worker (1,4 s de carga
   travada no PC); qualidade automática contínua; evento `perf_run` no Analytics (conferir a Segurança dos dados) e
   medir num celular fraco de verdade.
-- **1.0.19 (código 20) no Teste interno e no Teste fechado/Alpha (20/10, em revisão no Alpha por cima da 1.0.18).**
+- **1.0.19 (código 20) no Teste interno e no Teste fechado/Alpha (20/10; em 23/10 o script mostrou que ela foi
+  aprovada e está publicada nas duas faixas).**
   `dist/guardiao-v1.0.19-20-anuncios-reais.aab`. Nova nela: a **tela de fim de partida redesenhada** (cena na Clareira:
   amanhecer com a lenda libertada na vitória; na derrota o guardião volta à fogueira e se levanta, a Podridão só no
   horizonte — decisão do Leonardo em 20/10: a Clareira é o lugar seguro) e o **ranking com pódio**. A 1.0.18 trouxe
