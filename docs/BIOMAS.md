@@ -94,9 +94,13 @@ usar em campanha*. Festa Junina (junho) casa com a Caatinga/Nordeste.
   - **Cozinha:** **Umbuzada** (vida/s), **Cajuína** (XP; a bebida clarificada de caju do
     Piauí, sem álcool), **Curimatã Assada** (vida), **Piau Frito** (velocidade) e
     **Surubim com Caju** (crítico). Dentro dos limites do `npm run balance`.
+  - **Clareira da Caatinga** (23/10/2026): vencer no **Perigo Pesadelo na Caatinga** dá a conquista
+    **Mandacaru em Flor** e libera, de graça, o visual do sertão para o acampamento inteiro (terra vermelha,
+    juazeiro, mandacarus que florescem à noite, açude com carnaúba, horizonte com a lua grande, calangos,
+    asas-brancas e carcará). Ver `COSMETICOS.md`, "Clareira da Caatinga".
 - **Ainda dá para crescer:** um 2º minichefe do sertão no lugar do Corpo-Seco, bicho da
-  Caatinga resgatável para a Clareira (quando os bichos entrarem), carnaúba/mandacaru
-  como decoração da Clareira.
+  Caatinga resgatável para a Clareira (quando os bichos entrarem). Bioma novo pode seguir o mesmo caminho: uma
+  Clareira do bioma, grátis, pelo Perigo máximo vencido nele (`bestDiffByBiome` no save, `COSM_CAMP` com `earn`).
 
 ## Como adicionar um bioma (o framework)
 

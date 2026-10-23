@@ -92,6 +92,59 @@ O Leonardo pediu para repensar ("talvez vender algo mais barato dê mais retorno
 [f8]: https://android-developers.googleblog.com/2015/11/minimum-purchase-price-for-apps-and-in.html?hl=pt_BR
 [f9]: https://unity.com/resources/in-app-purchases-guide
 
+## Clareira da Caatinga (grátis, por conquista — 23/10/2026)
+
+A segunda skin do acampamento, e a primeira **grátis**: o sertão em casa, para quem domina a Caatinga. Não entra na
+Loja nem em pacote; a Ancestral continua exclusiva do Pacote Fundador (regras dela iguais).
+
+- **Como libera:** vencer no **Perigo Pesadelo na Caatinga** dá a conquista **Mandacaru em Flor** (no sertão, o
+  mandacaru que floresce na seca é sinal de chuva) e a Clareira. O save passou a guardar o maior Perigo vencido em
+  cada mapa (`bestDiffByBiome`); vitórias de antes desse registro (23/10/2026) não contam: vale a próxima.
+  A conquista mora no save do jogo, então o **progresso na nuvem** (Play Games) leva o desbloqueio junto; a escolha
+  no Guarda-roupa fica no aparelho, como as outras peças.
+- **Aviso (uma novidade por vez):** a tela do fim mostra "Nova Clareira no Guarda-roupa: Clareira da Caatinga" no
+  topo dos desbloqueios. Na volta à Clareira, a revelação `sertao` (`Reveal.js`): a câmera vai à placa da trilha, o
+  botão do mandacaru abre em flor quadro a quadro (pétalas e luz) e a Anciã diz "O mandacaru floriu na seca: é sinal
+  de chuva! O sertão também pode morar aqui. Veja no Guarda-roupa." Depois, o Guarda-roupa ganha o selo "!" até ser
+  aberto (abre direto na aba Clareira, com a Caatinga na prévia). O mandacaru da trilha fica florido para sempre.
+- **Guarda-roupa, aba Clareira:** três cartões (de sempre · Ancestral · Caatinga, com o mandacaru em flor). Trancada,
+  mostra "Grátis: Vença no Perigo Pesadelo na Caatinga", o quanto falta (a trilha a abrir, "Você ainda não venceu
+  na Caatinga" ou "Seu melhor na Caatinga: Perigo Veterano") e o botão BLOQUEADA. A prévia mostra o pedaço de sertão
+  (juazeiro ao vento, mandacaru florido, calango fazendo flexões no lajedo, asas-brancas cruzando com a sombra, folhas
+  secas rolando). Selecionar é igual à Ancestral: USAR → ao fechar, a cena recomeça no sertão.
+- **O visual** (mesmo mapa, tudo no lugar e funcionando — horta, obras, lago, cozinha, fogueira, Mural, baú):
+  - chão de **terra vermelha** com placas de **barro rachado** e manchas de terra clara; trilhas e terreiro de terra
+    batida clara (a trilha da floresta afina até sumir no horizonte);
+  - o **juazeiro** no lugar da samaúma (copa em 8 quadros: os cachos mexem em onda, de oeste para leste), com o
+    **pote de barro** na sombra; **mandacarus** com a flor branca que **abre à noite** e fecha de manhã (cada flor no
+    seu tempo, quadro a quadro, e "respira" aberta), **coroa-de-frade**, xique-xique, macambira, lajedos e capim
+    seco deitando na mesma onda do vento;
+  - horta com **cerca de varas**, mourões de forquilha e a **porteira** com a placa do broto e o **chocalho**
+    balançando; **espantalho de chapéu de couro** (aba virada em meia-lua, estrela), gibão e lenço vermelho ao vento,
+    cabaça no braço; canteiros fechados de mato seco;
+  - **rede de varanda** colorida balançando; toras secas de sentar;
+  - o **açude**: margem de barro rachado, lajedos, **aguapés** com a flor lilás e a **carnaúba** na ilhota; à noite,
+    o reflexo da lua tremendo na água;
+  - **horizonte aberto ao norte** (a caatinga é baixa): céu pela hora em 4 fases misturadas (amanhecer, dia de
+    mormaço, poente de fogo, noite de lua com a Via Láctea), serra e caatinga em silhueta, **lua grande** que nasce
+    dourada a leste e cruza a noite, **sol** nascendo e se pondo atrás da serra, nuvens finas, estrelas cintilando,
+    estrela cadente, bandos de pássaros ao longe e a **cerca de varas na linha do horizonte**. A camada da noite para
+    na linha do horizonte (`SkyGlow` com retângulo) e o que fica por cima dela é tingido pela mesma cor;
+  - bichos: **calangos** (respiram, fazem flexões, olham para trás, correm levantando poeira, sobem no lajedo e fogem
+    do herói), **asas-brancas** (bando em curva, vistas de cima em 16 rumos × 8 quadros de batida com a sombra no
+    chão; às vezes pousam, ciscam e saem quando o herói chega), **carcará** planando em círculos com a sombra
+    correndo no chão (16 rumos, desenhado em cada rumo, nunca girado); **poeira** levantando e, de vez em quando,
+    um **redemoinho** atravessando; folhas secas rolando com o vento.
+  - Céu pela hora próprio (`SKY_SERTAO`): manhã quente, sol a pino, poente vermelho e roxo, noite de lua azul.
+- **Código:** arte em `src/art/CampSertao.js` (registrada só quando precisa: `ensureCampSertao`), mundo e bichos
+  em `src/scenes/CampSertao.js` (mixin da `CampScene`), ganchos com `this._sertao` em `CampScene`, `CampDecor`,
+  `CampGarden` e `CampPond`; catálogo em `COSM_CAMP.caatinga` (`earn`/`how`, `Cosmetics.js`); cores novas no
+  bloco "Sertão" da `Palette.js`. Teste: **`npm run test:clareira`** (no `npm test`).
+- **Conferido** (23/10/2026): capturas em 4 horas, 915×412 e 1280×720, pt/ja/zht; tiras dos quadros e do movimento
+  (calango, juazeiro, asas-brancas, carcará, redemoinho, espantalho, rede, flor abrindo, horizonte do dia inteiro).
+  Custo: registrar a arte leva ~40–80 ms no PC (uma vez por sessão); a cena tem o mesmo número de objetos da de
+  sempre (~925) e o mesmo tempo de quadro. 👤 Ver no S23 e num celular fraco.
+
 ## Por que não só trocar a paleta
 
 O herói é pequeno, visto de cima, no meio de centenas de inimigos: cor nova quase não aparece. O que se vê,
@@ -199,6 +252,8 @@ cada passo" (cai enquanto anda); "varal na cabeça" (é sobre); "Loja de teste (
    do título), Pacote Fundador / sem o Sem anúncios / Apoiador (`STORE.PACKS`, `Billing.buyPack`), Clareira
    Ancestral (`COSM_CAMP`, aba Clareira do Guarda-roupa, `src/scenes/CampDecor.js`), insígnia na Clareira,
    chamada do pacote na aba Kits. `npm run test:compra` com 16 cenários (4 de pacote).
+   - ✅ **Clareira da Caatinga (23/10/2026):** a primeira skin grátis, pela conquista Mandacaru em Flor (ver a seção
+     acima). `npm run test:clareira`.
 4. **Depois:** gorjeta (consumível), kits sazonais, trajes regionais, entrada/vitória, acessório do bicho,
    insígnia no placar.
 

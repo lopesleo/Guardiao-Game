@@ -316,6 +316,20 @@ juntas, porque a pesca completa a cozinha (moqueca, peixe na folha, espetinho) e
 dá uma atividade ativa além de plantar e esperar. F3 (bichos) e F4 como
 atualizações — cada uma vira um motivo para o jogador voltar ("chegaram os bichos!").
 
+## 10.1 Visuais do acampamento (skins)
+
+O mapa é um só (horta, obras, lago, cozinha, fogueira, Mural e Anciã sempre no mesmo lugar e funcionando); o que
+muda é o visual, escolhido no Guarda-roupa, aba **Clareira** (detalhes em [`COSMETICOS.md`](COSMETICOS.md)):
+
+| Clareira | Como se consegue | O que muda |
+|---|---|---|
+| **de sempre** | desde o começo | a mata, a samaúma, o céu pela hora |
+| **Ancestral** | Pacote Fundador (pago) | jequitibá, lamparinas, tucano, borboletas-azuis, luz de fim de tarde |
+| **da Caatinga** | grátis: vencer no Perigo Pesadelo na Caatinga (conquista Mandacaru em Flor) | o sertão: terra vermelha rachada, juazeiro, mandacarus que florescem à noite, cerca de varas, açude com carnaúba, horizonte aberto com a lua grande, calangos, asas-brancas e carcará |
+
+A skin é decidida antes de montar o mundo (`CampScene.create`: `_ancestral`, `_sertao`); trocar no Guarda-roupa
+recomeça a cena com um fade.
+
 ## 11. Notas técnicas
 
 - Tempo real via `Date.now()` salvo no progresso; diferença negativa (relógio
