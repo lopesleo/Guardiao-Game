@@ -46,6 +46,5 @@ export function setupPlatform(game) {
       if (!back()) App.exitApp?.();
     });
   }
-  // App nativo: tela cheia imersiva e sem barra de status
-  window.Capacitor?.Plugins?.StatusBar?.hide?.().catch?.(() => {});
+  // A tela cheia imersiva (sem barra de status e de navegação) fica no MainActivity.java
 }
