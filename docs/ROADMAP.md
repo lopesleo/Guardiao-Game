@@ -657,6 +657,10 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Agora as chaves conferem a permissão e os canais, sem ela o aparelho sai do tópico, quem perdeu vê o pedido do baú
   de novo e, bloqueado de vez, ligar abre as configurações do jogo no Android (plugin `NotificationSettings`).
   6 cenários novos no `test:avisos`; Teste interno e Alpha (20/10)
+- ✅ **1.0.22 (código 23)** (23/10/2026): publicada no Teste interno e no Alpha pelo script, com o Alpha em revisão.
+  Traz o som (Workers, música em camadas, ambiência da Clareira), a Clareira da Caatinga, a qualidade automática
+  com o `perf_run`, o conserto do som duplo nos botões e o "Levar um prato?" na trilha. As 9 suítes do
+  `npm test` passaram; notas nos 8 idiomas em `PLAY_STORE.md`.
 - ✅ **1.0.21 (código 22)** (23/10/2026): publicada no Teste interno e no Alpha pelo script, com o Alpha em
   revisão. Leva tudo da 1.0.20 e mais os 3 avisos do Play Console sobre a 1.0.19:
   - **tela de ponta a ponta:** `EdgeToEdge.enable()` no `MainActivity`;
