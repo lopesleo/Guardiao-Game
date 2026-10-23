@@ -4,7 +4,7 @@
 //   npm i --no-save playwright-core        (usa o Edge instalado, headless)
 //   npm run test:clareira                  (ou: node tools/test-clareira.mjs)
 //
-// Variáveis: ONLY=nome,nome (só esses cenários)  LAB_URL=… (servidor já rodando)  SHOTS=pasta  LOC=ja-JP
+// Variáveis: ONLY=nome,nome (só esses cenários)  LAB_URL=… (servidor já rodando)  SHOTS=pasta (os textos conferidos são os do português)
 // Cobre: bloqueada no começo (e o Guarda-roupa diz como liberar) · só o Pesadelo NA Caatinga libera · uma partida de
 // verdade vencida no Pesadelo na Caatinga dá a conquista "Mandacaru em Flor" e a Clareira nova na tela do fim · a
 // cena da Anciã com a flor do mandacaru e o selo "!" do Guarda-roupa (abre direto na Clareira nova) · USAR troca o
@@ -20,7 +20,7 @@ import { startLabServer } from "./lab-server.mjs";
 
 const ONLY = process.env.ONLY ? process.env.ONLY.split(",") : null;
 const SHOTS = process.env.SHOTS || "";
-const LOC = process.env.LOC || "pt-BR";
+const LOC = "pt-BR";
 const server = process.env.LAB_URL ? null : await startLabServer();
 const URL = process.env.LAB_URL || server.url;
 const browser = await chromium.launch({
