@@ -160,9 +160,12 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
 **Marketing e loja** (`docs/MARKETING.md`)
 - **Agendamento pelo Buffer** (22/10, `docs/PLANO_DE_CONTEUDO.md`): Instagram e TikTok `@guardiaodaflorestaofc` e X
   **`@guardiao_game`** conectados; o Claude cria os posts pelo MCP do Buffer como rascunho com dia e hora, e as mídias
-  ficam públicas em `https://midia.komedygames.com/` (R2 `guardiao-midia`). Em 22/10: apresentação no X e a evolução
-  no TikTok publicadas; a semana até o Dia do Saci (31/10) em 12 rascunhos. 👤 Aprovar os rascunhos no Buffer
-  (Rascunhos → Agendar); fixar à mão o comentário do convite no Instagram (recurso pago no Buffer).
+  ficam públicas em `https://midia.komedygames.com/` (R2 `guardiao-midia`). Em 22/10 o trailer saiu no X (fixado) e
+  no TikTok. Os reels 5 a 8 foram refeitos em 23/10 como `_v2`, sem os defeitos e com 60 q/s em escala inteira. A
+  evolução corrigida está agendada no X (23/10, 12h) e no TikTok (25/10, 19h). A semana até o Dia do Saci (31/10)
+  está em 12 rascunhos, já com os `_v2`. Perfis ajustados pelo Chrome: bios, site e capa do X.
+  👤 Aprovar os rascunhos no Buffer (Rascunhos → Agendar). 👤 Fixar à mão o comentário do convite no Instagram
+  (recurso pago no Buffer). 👤 Confirmar o apelido e a descrição do TikTok ("Definir apelido?" → Confirmar).
 - Redes (`docs/REDES_SOCIAIS.md`): Instagram **`@guardiaodaflorestaofc`** no ar (20/10: conta profissional, categoria
   Publisher de jogos, nome, bio e link para o site; 1º vídeo postado pelo Leonardo). 👤 Postar os 4 reels + carrossel
   (`videos/promo/entrega/`); legenda do vídeo promocional no documento. Discord no ar (https://discord.gg/TTYnNtQAes), configurado por `tools/discord/`;

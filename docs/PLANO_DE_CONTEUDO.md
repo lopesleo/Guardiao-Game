@@ -22,6 +22,23 @@ servido em `https://midia.komedygames.com/` (mesmas pastas de `videos/promo/entr
 subir um arquivo novo: `npx wrangler@4 r2 object put guardiao-midia/reels/<nome>.mp4 --file <arquivo> --content-type
 video/mp4 --remote`. O "primeiro comentário" do Instagram é recurso pago: fixar à mão.
 
+**Vídeos das redes: os `_v2` (desde 23/10/2026).** Os reels 5 a 8 publicados primeiro tinham defeitos: a mesa de
+cartas cortada no formato em pé, clarões de tela cheia e uma transição em xadrez. Foram refeitos como
+`reel_0N_<nome>_{teste,prereg}_v2.mp4`, com a mesa de cartas montada para o formato em pé e transição por pixels finos.
+Na imagem: só escala inteira (o vídeo não aplica zoom), 60 q/s, H.264 High com CRF 15 e áudio em −14 LUFS. Os
+rascunhos do Buffer já apontam para os `_v2`. Para refazer: `videos/promo/build/reels2.py` →
+`tools/render_reels2_v2.sh` → `tools/finalize_reels2_v2.sh` → `tools/check_reels2_v2.sh`, todos fora do git.
+Antes de publicar qualquer vídeo, monte uma folha de quadros a cada 0,1 s em volta de cada transição. Confira também
+que nenhuma interface do jogo ficou cortada no formato em pé.
+
+**O que já saiu:**
+- 22/10: trailer no X (16:9, fixado no perfil, com o convite na resposta) e no TikTok (9:16). A evolução publicada
+  antes, ainda com defeito, foi apagada nas duas redes.
+- 23/10, 12h: a evolução corrigida no X, agendada.
+- 25/10, 19h: a evolução corrigida no TikTok, agendada.
+
+O perfil do X tem capa própria, gerada a partir da tela de título com `videos/promo/tools/xheader.mjs`, em 1500×500.
+
 **Quem faz o quê:** o Leonardo posta e responde (as contas são dele). O Claude prepara os vídeos, as imagens e os
 textos da semana, e nunca publica sem o OK.
 
@@ -236,7 +253,8 @@ Guardião da Floresta é um roguelite brasileiro: você só se move, as armas at
 
 Em breve na Google Play. Grátis e sem gacha.
 ```
-(Cabe nos 280 caracteres do X grátis; com "sem energia" passava. Publicado em 22/10/2026 com o reel da evolução.)
+(Cabe nos 280 caracteres do X grátis; com "sem energia" passava. Saiu em 22/10/2026 com o reel da evolução v1, que
+foi apagado por defeito. Hoje o fixado é o trailer.)
 1ª resposta: `Quer jogar antes do lançamento? Peça seu convite (Android, grátis): https://komedygames.com/guardiao/?utm_source=x&utm_medium=social`
 
 **Bastidor (com o vídeo do herói sendo desenhado por código, reel 8):**
