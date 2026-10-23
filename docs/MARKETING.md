@@ -48,8 +48,11 @@ Legenda — **Quem:** 🤖 dá pra eu fazer · 👤 depende de você (conta, ros
 ## 2. Posicionamento
 
 ### Frase de uma linha
-> **PT:** As lendas do folclore brasileiro contra a Podridão. Só ande: as armas atacam sozinhas.
-> **EN:** Legends of Brazilian folklore against the Rot. Just move — your weapons do the rest.
+> **PT:** As lendas do folclore brasileiro contra a Podridão. Combine os elementos e liberte a floresta.
+> **EN:** Legends of Brazilian folklore against the Rot. Combine the elements and free the forest.
+
+(Até 23/10/2026 a frase era "Só ande: as armas atacam sozinhas". O Leonardo achou que isso afasta o público. Ver a
+regra em `PLANO_DE_CONTEUDO.md`, seção 9.)
 
 Em comunidade e imprensa (nunca na ficha da loja, que proíbe citar outros apps), a comparação acelera o
 entendimento: *"um survivor no estilo Vampire Survivors, com o folclore brasileiro"*.

@@ -164,6 +164,12 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
   no TikTok. Os reels 5 a 8 foram refeitos em 23/10 como `_v2`, sem os defeitos e com 60 q/s em escala inteira. A
   evolução corrigida está agendada no X (23/10, 12h) e no TikTok (25/10, 19h). A semana até o Dia do Saci (31/10)
   está em 12 rascunhos, já com os `_v2`. Perfis ajustados pelo Chrome: bios, site e capa do X.
+  Em 23/10 o Leonardo vetou "você só se move / as armas atacam sozinhas / feito em código" nos posts para jogadores
+  (regra na seção 9 do `PLANO_DE_CONTEUDO.md`). A bio do Instagram já foi trocada. O trailer sem a frase está num
+  rascunho do X.
+  👤 Publicar esse rascunho e fixar o post novo. 👤 Apagar o trailer antigo no X. 👤 No TikTok, editar a legenda do
+  trailer pelo app; se não der, apagar e repostar. 👤 Tirar "Você só se move;" da bio do X (o Chrome estava na conta
+  pessoal). 👤 Decidir o que fazer com os 3 rascunhos do reel do código.
   👤 Aprovar os rascunhos no Buffer (Rascunhos → Agendar). 👤 Fixar à mão o comentário do convite no Instagram
   (recurso pago no Buffer). 👤 Confirmar o apelido e a descrição do TikTok ("Definir apelido?" → Confirmar).
 - Redes (`docs/REDES_SOCIAIS.md`): Instagram **`@guardiaodaflorestaofc`** no ar (20/10: conta profissional, categoria

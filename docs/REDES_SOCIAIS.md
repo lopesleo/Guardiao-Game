@@ -33,7 +33,7 @@ keycombination 113 50` (Ctrl+V) no campo; o `input text` do adb não digita acen
 
 ```
 Roguelite com as lendas do folclore brasileiro.
-Você só se move. Fogo + Gelo = Vapor.
+Fogo + Gelo = Vapor.
 Grátis de verdade · Android
 Jogue antes do lançamento 👇
 ```
@@ -53,7 +53,7 @@ Legenda do carrossel:
 ```
 Guardião da Floresta é um roguelite brasileiro para Android 🌳
 
-Você só se move. As armas atacam sozinhas. Fogo + Gelo = Vapor.
+Fogo + Gelo = Vapor.
 As lendas do folclore são as heroínas, e o vilão é a Podridão.
 
 Grátis de verdade: sem energia, sem gacha, anúncio só se você quiser.
@@ -69,7 +69,7 @@ Capa: o título sobre a horda (~0:10), `guardiao_promo_capa.jpg`. Áudio origina
 ```
 A Podridão tomou a mata. As lendas despertaram. 🌳🔥
 
-Guardião da Floresta é um roguelite brasileiro para Android: você só se move, as armas atacam sozinhas e cada nível traz uma escolha de carta.
+Guardião da Floresta é um roguelite brasileiro para Android em que cada nível traz uma escolha de carta.
 
 🌿 7 lendas do folclore: Curupira, Caipora, Iara, Saci, Comadre Fulozinha, Mãe-do-Ouro e Anhangá
 🔥 4 elementos e 6 reações (Fogo + Gelo = Vapor)
@@ -110,7 +110,7 @@ Ritmo depois: 3 por semana (seg., qua., sex.). Os mesmos arquivos servem para Ti
 ```
 Fogo + Gelo = ? 🔥❄️
 
-No Guardião da Floresta você só se move: as armas atacam sozinhas e os elementos se misturam.
+No Guardião da Floresta os elementos se misturam.
 São 6 reações para descobrir. Qual você testa primeiro?
 
 Roguelite brasileiro com as lendas do folclore, para Android. Jogue antes do lançamento: peça seu convite pelo link na bio.
