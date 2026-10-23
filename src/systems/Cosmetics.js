@@ -16,6 +16,7 @@ import { Billing } from "./Billing.js";
 import { AdService } from "./AdService.js";
 import { MetaProgression } from "./MetaProgression.js";
 import { tr } from "../i18n/i18n.js";
+import { Quality } from "./Quality.js";
 
 // ---------------------------------------------------------------- catálogo
 export const COSM_SLOTS = [
@@ -223,9 +224,9 @@ export class GameHost {
   light(x, y, r, color, ms, power) {
     this.scene.lighting?.flash(x, y, r, color, ms, power);
   }
-  // Aparelho fraco (iluminação desligada) → metade, como o WeaponFX
+  // Densidade do degrau de qualidade (src/systems/Quality.js), como o WeaponFX
   get q() {
-    return this.scene.lighting?.enabled === false ? 0.5 : 1;
+    return Quality.get("fx");
   }
   get now() {
     return this.scene.time.now;

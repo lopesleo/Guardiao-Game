@@ -7,13 +7,14 @@
 // mapa de luz — à noite brilha em vez de escurecer junto com o chão. Fumaça fica
 // abaixo (é matéria, recebe a luz da cena). Marcas no chão ficam no chão.
 //
-// Qualidade: com a iluminação desligada (aparelho fraco) tudo cai pela metade.
+// Qualidade: a densidade segue o degrau (src/systems/Quality.js): Média 70%, Baixa metade.
 // Hit-stop: GameFeel congela também as partículas (setTimeScale).
 import { PAL } from "../art/Palette.js";
 import { Pix, bayer, rng } from "../art/PixelArt.js";
 import { registerFireFX, WHIRL_H, IGNITE_H, JET_W, JET_X0, JET_LEN, JET_HALF, GFIRE_H } from "../art/FireFX.js";
 import { registerIceFX, SPIKE_H } from "../art/IceFX.js";
 import { registerReactionFX, STEAM_W } from "../art/ReactionFX.js";
+import { Quality } from "./Quality.js";
 
 const PX = 3; // escala dos quadros desenhados (= GAME.PIXEL_SCALE)
 const STEAM_ALPHA = 0.55; // nuvem de vapor: vê-se o que está atrás
@@ -261,8 +262,9 @@ export class WeaponFX {
     this.wisps = []; // línguas de fogo em voo
   }
 
+  // Densidade das partículas: a do degrau de qualidade (QUALITY.TIERS[].fx; a Baixa é a metade de sempre)
   get q() {
-    return this.scene.lighting?.enabled === false ? 0.5 : 1;
+    return Quality.get("fx");
   }
   _n(k) {
     return Math.max(1, Math.round(k * this.q));

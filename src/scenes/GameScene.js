@@ -84,7 +84,7 @@ import { Settings } from "../systems/Settings.js";
 import { Analytics } from "../systems/Analytics.js";
 import { Review } from "../systems/Review.js";
 import { AdService } from "../systems/AdService.js";
-import { QualityWatchdog } from "../systems/QualityWatchdog.js";
+import { Quality, QualityAuto } from "../systems/Quality.js";
 import { LanternSystem } from "../systems/LanternSystem.js";
 import { Builds } from "../systems/Builds.js";
 import { VirtualJoystick, joyRight } from "../ui/VirtualJoystick.js";
@@ -155,6 +155,9 @@ export class GameScene extends Phaser.Scene {
       this.shutdown();
     });
 
+    // Qualidade gráfica da partida (src/systems/Quality.js): a escolha das Opções, ou o degrau que o
+    // automático aprendeu neste aparelho — antes do mundo, que já nasce no degrau certo
+    Quality.begin();
     // Meta-progressão (carrega desbloqueios disponíveis)
     this.meta = new MetaProgression();
     // Bioma (mapa) escolhido na trilha da Clareira — ver BIOMES em config.js
@@ -273,11 +276,8 @@ export class GameScene extends Phaser.Scene {
     this.lighting = new Lighting(this, this.world);
     this.puffs = new Puffs(this); // pó da morte e faíscas (imagens reaproveitadas)
     this.feel = new GameFeel(this);
-    // Aparelho fraco: desliga a iluminação na 1ª partida (uma vez só)
-    this.quality = new QualityWatchdog(this, () => {
-      this.lighting.setEnabled(false);
-      this._hint("quality", tr("Iluminação desligada para o jogo rodar liso.\nDá pra religar em Opções."));
-    });
+    // Qualidade automática: mede o quadro e troca o degrau (só no modo Automática); resumo no perf_run
+    this.quality = new QualityAuto(this);
     AdService.newRun();
     // nº desta partida na vida do jogador: o funil da 1ª sessão (onde o novato desiste) sai daqui
     this._runN = (this.meta.data.runsPlayed || 0) + 1;
@@ -523,7 +523,7 @@ export class GameScene extends Phaser.Scene {
   // aguentar limpezas em massa (Sobrecarga/Vapor). Imagens reaproveitadas (Puffs.js):
   // criar e destruir 3 imagens por abate era o pico das matanças.
   _deathPoof(x, y) {
-    if (this.puffs.count.poof > 60) return;
+    if (this.puffs.count.poof > 60 * Quality.get("fx")) return; // teto pela densidade do degrau de qualidade
     for (let i = 0; i < 3; i++) {
       const ang = Math.random() * Math.PI * 2;
       const d = 14 + Math.random() * 16;
@@ -651,7 +651,6 @@ export class GameScene extends Phaser.Scene {
     this.hud.update(time, dt);
     this.world.update(time, dt, this.player);
     this.lighting.update(time);
-    this.quality.update(this.game.loop.delta);
     this._updateMusic(dt);
 
     // Baús: glow/prompt + interação E
@@ -928,7 +927,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   _onResume() {
-    this.quality.reset();
     this._levelUpOpen = false;
     this.hud.refreshWeapons();
     this.hud.levelSettle?.(); // a barra cheia e dourada esvazia até o XP que sobrou; o selo do nível pula

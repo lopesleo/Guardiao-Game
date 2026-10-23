@@ -11,13 +11,14 @@
 //   cor   = filtro GradientMap: campo → nada / fio aceso (hot) / carne escura (mid → dark);
 //   tudo numa DynamicTexture de 1/8 da tela, redesenhada a ~10 Hz e ampliada na tela (1 quad).
 //   (Um radial puro virava uma escotilha oval que comia os cantos: testado e descartado.)
-// Aparelho fraco (Iluminação desligada, à mão ou pelo QualityWatchdog): só os Gradients já
-// coloridos, sem ruído nem filtro, redesenhados só quando a borda anda. Sem WebGL ou sem `highp`
-// no fragmento (o shader do Gradient exige): o mesmo desenho em Canvas 2D, no mesmo tamanho pequeno.
-import { PODRIDAO as P } from "../config.js";
+// Qualidade Baixa (QUALITY em config.js, src/systems/Quality.js; era a "Iluminação dinâmica" desligada):
+// só os Gradients já coloridos, sem ruído nem filtro, redesenhados só quando a borda anda. A troca de
+// degrau no meio da partida cruza os dois desenhos (QUALITY.ROT_XFADE_MS), sem salto. Sem WebGL ou sem
+// `highp` no fragmento (o shader do Gradient exige): o mesmo desenho em Canvas 2D, no mesmo tamanho pequeno.
+import { PODRIDAO as P, QUALITY } from "../config.js";
 import { PAL } from "../art/Palette.js";
 import { ROT } from "../art/Monsters.js";
-import { Settings } from "../systems/Settings.js";
+import { Quality } from "../systems/Quality.js";
 import { vw, vh } from "../ui/Theme.js";
 
 // Acima do mapa de luz (48500: a Podridão não é "iluminada" nem apagada pela noite) e ABAIXO dos
@@ -116,7 +117,7 @@ export class PodridaoEdge {
 
   _wantMode() {
     if (!this.webgl) return "canvas";
-    return Settings.get("lighting") === false ? "lite" : "full";
+    return Quality.get("rot") === "lite" ? "lite" : "full";
   }
 
   _size() {
@@ -209,6 +210,37 @@ export class PodridaoEdge {
     this._next = 0;
   }
 
+  // Troca de degrau no meio da partida: a imagem antiga fica parada por cima (a borda anda devagar: não se
+  // nota) e some enquanto a nova já desenha por baixo; só então as texturas antigas saem
+  _crossTo(mode, time) {
+    this._endCross();
+    const old = this.img;
+    this.img = null;
+    this._setMode(mode);
+    if (old) {
+      old.setDepth(D_PODRIDAO + 0.5);
+      this._xf = { img: old, t0: time, keep: this._old };
+      this._old = null;
+    }
+    this._next = 0;
+    this._tint = null;
+  }
+
+  _crossStep(time) {
+    const xf = this._xf;
+    const u = Math.min(1, (time - xf.t0) / QUALITY.ROT_XFADE_MS);
+    xf.img.setAlpha(1 - u * u * (3 - 2 * u));
+    if (u >= 1) this._endCross();
+  }
+
+  _endCross() {
+    const xf = this._xf;
+    if (!xf) return;
+    this._xf = null;
+    xf.img.destroy();
+    for (const t of xf.keep || []) t.destroy();
+  }
+
   _teardown() {
     for (const k of ["vig", "ex", "ey", "noise", "fieldImg", "redImg"]) {
       this[k]?.destroy();
@@ -276,7 +308,8 @@ export class PodridaoEdge {
     if (tint !== this._tint) this.img.setTint((this._tint = tint));
 
     const want = this._wantMode();
-    if (this.mode !== want) this._setMode(want);
+    if (this.mode !== want) this._crossTo(want, time);
+    else if (this._xf) this._crossStep(time);
     else this._dropOld();
     if (time < this._next) return;
     this._next = time + 1000 / (low > 0 ? P.HZ_PULSE : P.HZ);
@@ -368,6 +401,7 @@ export class PodridaoEdge {
 
   destroy() {
     this.scene.scale.off("resize", this._onResize);
+    this._endCross();
     this._teardown();
     this._dropOld();
     this.img?.destroy();

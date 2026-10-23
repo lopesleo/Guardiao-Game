@@ -2,6 +2,7 @@
 // celular sem nada sobrepor: Áudio e tela · Jogo · Privacidade. A aba aberta é lembrada na
 // sessão (trocar fonte/tamanho reinicia a cena e reabre na mesma aba).
 import { Settings } from "../systems/Settings.js";
+import { Quality } from "../systems/Quality.js";
 import { Notify } from "../systems/Notify.js";
 import { News } from "../systems/News.js";
 import { NotifyAccess } from "../systems/NotifyAccess.js";
@@ -74,6 +75,7 @@ export function openSettings(scene, o = {}) {
     widget.setPosition(m.w / 2 - 56 - half, cy);
     m.add(widget);
     rowTop += step;
+    return hn;
   };
 
   // Fonte / tamanho: textos já criados não mudam sozinhos — na Clareira/Título a cena
@@ -117,14 +119,13 @@ export function openSettings(scene, o = {}) {
       o.onZoom?.();
     }, { size: 20, style: "button" });
     row(tr("Zoom"), zb, tr("Mundo maior; vê menos ao redor"));
-    row(
-      tr("Iluminação dinâmica"),
-      new Toggle(scene, 0, 0, Settings.get("lighting"), (v) => {
-        Settings.set("lighting", v);
-        o.onLighting?.(v); // aplica na partida em andamento (vindo da Pausa)
-      }),
-      tr("Desligue se o celular esquentar ou travar"),
-    );
+    // Qualidade gráfica (src/systems/Quality.js): vale na hora, também pela Pausa (a partida troca o degrau
+    // com as mesmas transições suaves do automático). Na partida, a dica diz em que degrau o automático está
+    const qHint = () =>
+      !Quality.auto() ? tr("Baixa se o celular esquentar ou travar") : o.inRun ? tr("Ajusta sozinha · agora: {0}", Quality.tierLabel()) : tr("Ajusta sozinha para o jogo rodar liso");
+    let qh = null;
+    const qb = cycle((m) => Quality.label(m), Quality.MODES, () => Quality.mode(), (m) => Quality.setMode(m), () => qh?.setText(qHint()));
+    qh = row(tr("Qualidade gráfica"), qb, qHint());
   } else if (tab === "jogo") {
     row(tr("Idioma"), new Button(scene, 0, 0, 220, 44, LANGS.find((l) => l.id === lang).label, () => pickLanguage(scene), { size: 20, family: LANG_FONT }), "Language · Idioma");
     row(tr("Vibração"), new Toggle(scene, 0, 0, Settings.get("haptics"), (v) => Settings.set("haptics", v)));

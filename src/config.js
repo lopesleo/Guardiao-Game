@@ -16,7 +16,7 @@ export const GAME = {
   // Teto de quadros por segundo. Telas de 90/120 Hz (o S23 rodava a partida a 120) gastam o dobro de
   // CPU, GPU e bateria para um jogo de pixel-art que não ganha nada com isso; esquenta e o aparelho
   // baixa o clock. 0 = sem teto. O tempo de jogo não muda (src/systems/FrameLimit.js).
-  FPS_LIMIT: 60,
+  FPS_LIMIT: 60, // também o alvo da qualidade automática (QUALITY.AUTO)
 };
 
 // Desempenho em aparelho fraco: tetos e ritmos que não mudam o jogo, só o custo dele
@@ -53,6 +53,58 @@ export const GROUND = {
     BREATH: 0.07, // o raio respira junto (±7%)
     PASTEL: 0.35, // quanto o tom do chapéu puxa para o creme (0 = a cor pura)
     NIGHT: [0.3, 0.75], // anoitecer da partida (0 = fim de tarde, 1 = noite) em que começa a acender → fica inteiro
+  },
+};
+
+// Qualidade gráfica (src/systems/Quality.js; Opções → Áudio e tela → Qualidade gráfica). UM sistema só: os
+// degraus, o automático e o resumo de desempenho da partida (evento perf_run). Degraus SÓ do visual: nenhum
+// mexe em dano, hitbox, quantidade de inimigos, números de dano nem nos avisos de golpe dos chefes (Telegraph,
+// Grito do Mapinguari, poça do chefe: ficam acima do mapa de luz e não dependem de nada daqui).
+// "Automática" (o padrão) mede o quadro na partida e troca um degrau por vez; Alta/Média/Baixa fixam o degrau
+// e o automático só mede. O teto de quadros (GAME.FPS_LIMIT) é o alvo; o plano B do chão (GROUND) segue sozinho.
+export const QUALITY = {
+  // Do mais bonito ao mais leve. light: mapa de luz (anoitecer, luzes coloridas); shadows: sombras das árvores
+  // projetadas pela luz do herói; lights: teto de luzes por desenho do mapa; lightMs: intervalo de redesenho
+  // do mapa; glow: cogumelos que cintilam à noite; rot: Podridão da borda ("full" = tentáculos com ruído e
+  // fio aceso; "lite" = só o degradê, redesenhado quando a borda anda); fx: densidade das partículas das armas
+  // e dos cosméticos (1 = todas); ambient: fração dos vaga-lumes, folhas e poeira no ar.
+  // Baixa = o que o jogo já fazia com a "Iluminação dinâmica" desligada (opção antiga, migrada para cá).
+  TIERS: [
+    { id: "high", light: true, shadows: true, glow: true, lights: 72, lightMs: 33, rot: "full", fx: 1, ambient: 1 },
+    { id: "medium", light: true, shadows: false, glow: false, lights: 40, lightMs: 50, rot: "full", fx: 0.7, ambient: 0.6 },
+    { id: "low", light: false, shadows: false, glow: false, lights: 0, lightMs: 50, rot: "lite", fx: 0.5, ambient: 0.4 },
+  ],
+  // Troca de degrau sem salto: a noite clareia/escurece, as sombras e os cogumelos somem ou voltam devagar e a
+  // Podridão troca de desenho por um cruzamento (ms)
+  FADE_MS: 1200,
+  ROT_XFADE_MS: 700,
+  AUTO: {
+    WARMUP_MS: 4000, // depois da entrada pela trilha: não mede (shaders compilando, coleta de lixo)
+    SETTLE_MS: 1500, // depois de cada pausa (cartas, menu, Reviver) e de cada troca de degrau: não mede
+    WINDOW_MS: 2000, // janela de medição (tempo real com a partida andando)
+    TRIM: 0.1, // tira os 10% quadros mais longos da janela: tranco isolado (lixo, shader) não decide nada
+    // Janela ruim: abaixo de DOWN × o alvo (60 → 51 fps); DOWN_WINDOWS seguidas descem um degrau (6 s).
+    // Muito ruim (abaixo de DOWN_FAST × o alvo, 36 fps): bastam DOWN_FAST_WINDOWS (4 s)
+    DOWN: 0.85,
+    DOWN_WINDOWS: 3,
+    DOWN_FAST: 0.6,
+    DOWN_FAST_WINDOWS: 2,
+    // Subir: janelas boas (≥ UP × o alvo, 57 fps) por UP_WAIT_MS seguidos E o trabalho do quadro previsto no
+    // degrau de cima (o de agora × o custo medido na descida, ou COST) até UP_BUSY do orçamento do quadro.
+    // Subida que errou (não aguentou o teste, ou desceu de novo até RECENT_UP_MS depois) dobra a espera até o
+    // teto: no máximo umas poucas tentativas por partida, nunca um vaivém
+    UP: 0.95,
+    UP_BUSY: 0.7,
+    UP_WAIT_MS: [20000, 160000],
+    RECENT_UP_MS: 40000,
+    // Depois de cada troca, PROBE_WINDOWS janelas dizem se ela serviu. Descida que não rendeu GAIN_FPS e não
+    // resolveu (a tela travada em 30 Hz pela economia de bateria, por ex.) volta e é o piso da partida; subida
+    // com qualquer janela ruim no teste volta na hora
+    PROBE_WINDOWS: 2,
+    GAIN_FPS: 2,
+    // Custo do degrau de cima sobre o de baixo (trabalho do quadro), enquanto a partida ainda não mediu o dela:
+    // Alta ÷ Média e Média ÷ Baixa, do teste de carga com a CPU 4× mais lenta (tools/test-qualidade.mjs)
+    COST: [1.15, 1.25],
   },
 };
 
