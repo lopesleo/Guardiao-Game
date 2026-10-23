@@ -74,7 +74,7 @@ Nesse caminho os anúncios seguem o `ADS.TESTING` do `config.js` (de teste).
 ## Ficha da loja (6 idiomas)
 
 Números conferidos com o `config.js` em 03/10/2026 (18 armas, 18 evoluções, 7 guardiões,
-12 lendas, 2 mapas, 5 Perigos, 32 conquistas). Limites da Play: nome 30, descrição curta 80,
+12 lendas, 2 mapas, 5 Perigos, 33 conquistas). Limites da Play: nome 30, descrição curta 80,
 completa 4000 caracteres. No Play Console: **Presença na loja → Traduções** (pt-BR padrão;
 chinês tradicional = `zh-TW` e `zh-HK`, a mesma ficha nos dois).
 
@@ -97,7 +97,7 @@ chinês tradicional = `zh-TW` e `zh-HK`, a mesma ficha nos dois).
 > • 18 armas, 18 evoluções e laços entre armas que combinam
 > • 7 guardiões: Curupira, Caipora, Iara, Saci e outras lendas
 > • Chefes que avisam cada golpe: desvie andando ou com o dash (Mapinguari, Caboclo d'Água…)
-> • 2 mapas (Amazônia e Caatinga), 5 níveis de Perigo e 32 conquistas
+> • 2 mapas (Amazônia e Caatinga), 5 níveis de Perigo e 33 conquistas
 > • A Clareira: horta, pesca, cozinha e obras entre uma partida e outra
 > • Partidas de ~7 minutos, feitas para o celular · joga offline
 > • Grátis: anúncios só se você quiser, nunca durante a ação
@@ -121,7 +121,7 @@ chinês tradicional = `zh-TW` e `zh-HK`, a mesma ficha nos dois).
 > • 18 weapons, 18 evolutions and links between weapons that combine
 > • 7 guardians: Curupira, Caipora, Iara, Saci and other legends
 > • Bosses that telegraph every attack: dodge by moving or dashing (Mapinguari, Caboclo d'Água…)
-> • 2 maps (Amazon and Caatinga), 5 Danger levels and 32 achievements
+> • 2 maps (Amazon and Caatinga), 5 Danger levels and 33 achievements
 > • The Clearing: gardening, fishing, cooking and building between runs
 > • ~7-minute runs made for mobile · plays offline
 > • Free: ads only if you want them, never during the action
@@ -145,7 +145,7 @@ chinês tradicional = `zh-TW` e `zh-HK`, a mesma ficha nos dois).
 > • 18 armas, 18 evoluciones y vínculos entre armas que combinan
 > • 7 guardianes: Curupira, Caipora, Iara, Saci y otras leyendas
 > • Jefes que avisan cada golpe: esquívalos moviéndote o con el impulso (Mapinguari, Caboclo d'Água…)
-> • 2 mapas (Amazonía y Caatinga), 5 niveles de Peligro y 32 logros
+> • 2 mapas (Amazonía y Caatinga), 5 niveles de Peligro y 33 logros
 > • El Claro: huerto, pesca, cocina y obras entre partida y partida
 > • Partidas de ~7 minutos, pensadas para el móvil · juega sin conexión
 > • Gratis: anuncios solo si tú quieres, nunca durante la acción
@@ -168,7 +168,7 @@ chinês tradicional = `zh-TW` e `zh-HK`, a mesma ficha nos dois).
 > • 18種の武器、18種の進化、相性のいい武器同士の「絆」
 > • 7人の守護者：クルピラ、カイポラ、イアラ、サシなどの伝説たち
 > • すべての大技に予告があるボス：移動かダッシュでかわせる（マピングアリ、カボクロ・ダグア…）
-> • 2つのマップ（アマゾンとカアチンガ）、5段階の危険度、32の実績
+> • 2つのマップ（アマゾンとカアチンガ）、5段階の危険度、33の実績
 > • 広場：プレイの合間に畑、釣り、料理、建設
 > • スマホ向けの1プレイ約7分・オフラインで遊べる
 > • 基本無料：広告は見たいときだけ。プレイ中には出ません
@@ -191,7 +191,7 @@ chinês tradicional = `zh-TW` e `zh-HK`, a mesma ficha nos dois).
 > • 18种武器、18种进化，以及相配武器之间的羁绊
 > • 7位守护者：库鲁皮拉、凯波拉、伊亚拉、萨西等传说人物
 > • 每次大招都有预警的头目：移动或冲刺都能躲开（马品瓜里、卡博克洛水灵……）
-> • 2张地图（亚马孙与卡廷加）、5级危险度、32项成就
+> • 2张地图（亚马孙与卡廷加）、5级危险度、33项成就
 > • 空地：局与局之间种菜、钓鱼、烹饪和建造
 > • 每局约7分钟，专为手机设计 · 可离线游玩
 > • 免费：广告只在你想看时出现，战斗中绝不打扰
@@ -214,7 +214,7 @@ chinês tradicional = `zh-TW` e `zh-HK`, a mesma ficha nos dois).
 > • 18種武器、18種進化，以及相配武器之間的羈絆
 > • 7位守護者：庫魯皮拉、凱波拉、伊亞拉、薩西等傳說人物
 > • 每次大招都有預警的頭目：移動或衝刺都能躲開（馬品瓜里、卡博克洛水靈……）
-> • 2張地圖（亞馬孫與卡廷加）、5級危險度、32項成就
+> • 2張地圖（亞馬孫與卡廷加）、5級危險度、33項成就
 > • 空地：局與局之間種菜、釣魚、烹飪和建造
 > • 每局約7分鐘，專為手機設計 · 可離線遊玩
 > • 免費：廣告只在你想看時出現，戰鬥中絕不打擾
