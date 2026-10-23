@@ -2085,6 +2085,33 @@ export const AUDIO = {
   // Carga (src/audio/AudioBank.js): a síntese roda em Web Workers; sem eles, na thread principal em fatias
   // de SLICE_MS. Worker sem dar notícia por WATCHDOG_MS = plano B para o que faltar
   LOAD: { SLICE_MS: 8, WATCHDOG_MS: 15000 },
+  // Música da partida em CAMADAS (src/audio/MusicLayers.js): base (sempre) → bateria → baixo → melodia,
+  // pela INTENSIDADE da luta (0..1) = soma (pesos W) de: alguém perto (BASE), inimigos perto do herói
+  // (NEAR_R px, em raiz: os primeiros contam mais; DENSE_N enche), elites perto, minichefe vivo, vida
+  // baixa (o mesmo perigo do coração) e o relógio da partida. Na entrada pela trilha, só a base.
+  // A intensidade é suavizada (sobe em RISE_S, desce em FALL_S) e vira NÍVEL com histerese: sobe ao
+  // passar UP[n], só desce abaixo de DOWN[n] e, depois de mudar, segura HOLD_DOWN_MS antes de descer
+  // (HOLD_UP_MS antes de subir de novo). Cada camada entra e sai na grade da trilha: bateria e baixo no
+  // compasso (QUANT 4 tempos), melodia na frase (8). Entra num crescendo de ENTER_BEATS tempos que
+  // termina NO tempo forte; sai a partir dele, sumindo em EXIT_BEATS
+  LAYERS: {
+    TICK_MS: 250,
+    NEAR_R: 300,
+    DENSE_N: 28,
+    ELITE_N: 1,
+    W: { BASE: 0.05, DENSITY: 0.6, ELITE: 0.2, MINI: 0.3, DANGER: 0.25, TIME: 0.35 },
+    RISE_S: 1,
+    FALL_S: 4,
+    UP: [0.1, 0.3, 0.52],
+    DOWN: [0.04, 0.2, 0.4],
+    HOLD_UP_MS: 1500,
+    HOLD_DOWN_MS: 8000,
+    QUANT: { perc: 4, bass: 4, lead: 8 },
+    ENTER_BEATS: { perc: 0.5, bass: 0.5, lead: 0.25 },
+    EXIT_BEATS: 4,
+    LOOKAHEAD_S: 0.12, // mudança nunca é marcada mais perto que isto (o relógio do áudio já andou)
+    STEM_DB: { bed: 0, perc: 0, bass: 0, lead: 0 },
+  },
 };
 
 // Sensação de jogo: o que faz cada momento "pesar" (src/systems/GameFeel.js, Shake.js, ui/HUD.js,

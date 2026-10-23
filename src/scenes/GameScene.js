@@ -31,6 +31,7 @@ import {
 import { Pix, bayer, rng } from "../art/PixelArt.js";
 import { shockwave } from "../art/Telegraph.js";
 import { setMoment, resetMix, tapeStop, switchTrack } from "../audio/Mixer.js";
+import { createMusic, MusicIntensity, intensityOf } from "../audio/MusicLayers.js";
 import { randomRareSeed } from "../systems/Garden.js";
 import { recipe, mealMods, bonusText } from "../systems/Kitchen.js";
 import { Daily, dailyUnlocked } from "../systems/Daily.js";
@@ -393,9 +394,12 @@ export class GameScene extends Phaser.Scene {
     // conquistas de arma (Lv máximo / arsenal completo)
     this.events.on("resume", this._onResume, this);
 
-    // Música
+    // Música: a trilha do bioma em camadas, que entram e saem pela intensidade da luta (_updateMusic;
+    // AUDIO.LAYERS). Começa só com a base: a entrada pela trilha é a mata quieta
+    this.musicDir = new MusicIntensity();
+    this._musicAcc = 0;
     if (!this.bgMusic) {
-      this.bgMusic = this.sound.add(this.biome.music ?? "music_gameplay", {
+      this.bgMusic = createMusic(this.sound, this.biome.music ?? "music_gameplay", {
         loop: true,
         volume: 0.35,
       });
@@ -648,6 +652,7 @@ export class GameScene extends Phaser.Scene {
     this.world.update(time, dt, this.player);
     this.lighting.update(time);
     this.quality.update(this.game.loop.delta);
+    this._updateMusic(dt);
 
     // Baús: glow/prompt + interação E
     let chestPressed = this.inputMgr.consumeInteract();
@@ -1421,6 +1426,39 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  // Música em camadas: 4×/s lê a luta, suaviza e decide quantas camadas tocam (MusicLayers.js). Só com a
+  // trilha da partida (no chefe a trilha é outra) e só com a partida andando (pausa e cartas congelam)
+  _updateMusic(dt) {
+    this._musicAcc += dt;
+    if (this._musicAcc < AUDIO.LAYERS.TICK_MS) return;
+    const step = this._musicAcc;
+    this._musicAcc = 0;
+    const m = this.bgMusic;
+    if (!m?.layered || m.pendingRemove) return;
+    m.setLevel(this.musicDir.update(intensityOf(this._musicInputs()), step));
+  }
+
+  // O que conta para a intensidade: inimigos perto do herói (elites à parte), minichefe vivo, vida baixa
+  // (a mesma do coração: GameFeel) e o relógio da partida
+  _musicInputs() {
+    const p = this.player,
+      R2 = AUDIO.LAYERS.NEAR_R ** 2;
+    let near = 0,
+      elites = 0,
+      mini = false;
+    for (const e of this.enemyPool.inUse) {
+      if (!e.active) continue;
+      if (e.miniBoss) mini = true;
+      const dx = e.x - p.x,
+        dy = e.y - p.y;
+      if (dx * dx + dy * dy < R2) {
+        near++;
+        if (e._elite) elites++;
+      }
+    }
+    return { near, elites, mini, danger: !!this.feel?._danger, time: this.endless ? 1 : this.elapsedMs / (this.runDurationS * 1000) };
+  }
+
   // CHEGADA DO CHEFE (FEEL.BOSS_ENTRY): 1) a Podridão borbulha no chão num ponto À VISTA, perto do herói
   // (a música da partida afunda, o chão ronca, esporos sobem) — o jogador lê de onde ele vem; 2) o chefe
   // SOBE da poça como silhueta da Podridão que ganha cor, com rugido, estouro e tremor, e a barra dele
@@ -1825,8 +1863,9 @@ export class GameScene extends Phaser.Scene {
     this.endless = true;
     this._endlessStartMs = this.elapsedMs;
     this.boss = null;
-    // a trilha do chefe some até a barra e a da noite (mais lenta) entra no tempo forte
-    this.bgMusic = switchTrack(this.sound, this.bgMusic, "music_gameplay", { loop: true, volume: 0.35, rate: 0.92 });
+    // a trilha do chefe some até a barra e a da noite (mais lenta, em camadas: começa no nível de antes do
+    // chefe) entra no tempo forte
+    this.bgMusic = switchTrack(this.sound, this.bgMusic, "music_gameplay", { loop: true, volume: 0.35, rate: 0.92, layers: this.musicDir.level });
     this.hud.showBossBanner(tr("A NOITE ETERNA COMEÇA"), "#e8ccff");
     this.cameras.main.flash(400, 60, 30, 90);
     Analytics.track("endless_start", { level: this.player.level, t: Math.floor(this.elapsedMs / 1000) });

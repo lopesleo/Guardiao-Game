@@ -15,6 +15,7 @@ import { AUDIO } from "../config.js";
 import { Settings } from "../systems/Settings.js";
 import { VoiceGate } from "./Voices.js";
 import { MUSIC_INFO } from "./Synth.js";
+import { createMusic } from "./MusicLayers.js";
 
 export const dbToGain = (db) => Math.pow(10, db / 20);
 // Barra 0..1 → ganho: escala em dB (cada pedaço da barra muda o volume na mesma proporção); 0 = mudo
@@ -324,7 +325,8 @@ export function tapeStop(snd) {
   if (!bus || !snd?.source || !snd.volumeNode) return;
   const X = AUDIO.DEATH;
   const t = ctx.currentTime;
-  for (const src of [snd.source, snd.loopSource]) {
+  // trilha em camadas (MusicLayers.js): todas desaceleram juntas
+  for (const src of snd.sources ?? [snd.source, snd.loopSource]) {
     if (!src) continue;
     const p = src.playbackRate;
     glide(p, p.value * X.RATE, t, X.S);
@@ -341,9 +343,10 @@ export function tapeStop(snd) {
 
 // Troca de trilha NO COMPASSO. A atual afunda na hora (o rugido do chefe fica sozinho) e some até a
 // próxima barra; a nova entra num tempo forte da mesma grade, depois de enterAfterS. Devolve a nova.
-// Sem WebAudio (ou sem saber o andamento): o corte de antes, só que sem deixar a velha no gerenciador
+// Sem WebAudio (ou sem saber o andamento): o corte de antes, só que sem deixar a velha no gerenciador.
+// A velha ou a nova podem ser trilhas em camadas (createMusic, MusicLayers.js)
 export function switchTrack(sound, old, key, cfg = {}, { enterAfterS = 0 } = {}) {
-  const next = sound.add(key, cfg);
+  const next = createMusic(sound, key, cfg);
   const info = old && MUSIC_INFO[old.key];
   if (!bus || !info || !old.isPlaying || !old.volumeNode) {
     if (old && !old.pendingRemove) old.destroy();
