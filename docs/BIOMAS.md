@@ -140,7 +140,11 @@ pantanal: {
    Bestiário em `LEGENDS` (quadro 4 da tira = libertado). Rode o **robô justo**.
 4. **Perigo do terreno:** sistema pequeno em `src/world/` chamado pela `GameScene`
    (exemplo: `DustDevils`). Regra: avisa, dá para escapar andando, some no chefe.
-5. **Música:** `song<Bioma>()` e `songBoss<Bioma>()` em `Synth.js` + `cache.audio.add`.
+5. **Música:** `song<Bioma>()` e `songBoss<Bioma>()` em `Synth.js`, com a chave entre aspas em `SONGS`.
+   A trilha da partida é **em camadas** (`stems: STEMS`, cada evento com `stem: "bed" | "perc" | "bass" |
+   "lead"`): a base sozinha tem de soar como música (harmonia e pulso); bateria, baixo e melodia entram pela
+   intensidade da luta (`src/audio/MusicLayers.js`, `AUDIO.LAYERS`). Confira volume e emendas com
+   `node tools/audio-lab.mjs`.
 6. **Desbloqueio:** suba `BUILDINGS.trail.max` e acrescente o custo em
    `BUILDINGS.trail.steps[nível-1]`. O texto da obra e a placa se montam sozinhos.
 7. `npm run check` confere: cenário registrado, músicas existem, chefe no bestiário e

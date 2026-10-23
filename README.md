@@ -76,6 +76,8 @@ npm i --no-save playwright-core   # 1 vez; os testes abaixo usam o Edge instalad
 npm run test:toque       # joystick com toques simulados: volta depois de carta, pausa, reviver, Jogar de novo
 npm run test:compra      # compras (Sem anúncios, kits, pacotes) com loja falsa: reconhecer, pendente, estorno com aviso
 npm test                 # os dois (~5 min) — obrigatório antes de cada versão da loja
+node tools/audio-lab.mjs # som sem navegador: LUFS/pico por camada, emendas, estalos nas trocas, ambiência por hora
+                         # (--wav=pasta --png=pasta: para ouvir e ver os espectrogramas)
 ```
 
 ## Arquitetura
@@ -83,7 +85,8 @@ npm test                 # os dois (~5 min) — obrigatório antes de cada vers�
 ```
 src/
   art/       paleta única + pixel-art procedural (heróis, bestiário, cenário, ícones, FX)
-  audio/     sintetizador: efeitos sonoros e 3 músicas (chiptune)
+  audio/     sintetizador (efeitos, músicas, ambiência da Clareira) rodando em Web Workers,
+             mixagem por barramentos, música da partida em camadas pela intensidade
   ui/        kit de UI (Theme: fonte, molduras, botões, barras) + Widgets
              (modal, lista rolável, slider, toggle) + HUD + cartas
   world/     ForestWorld: chão (o que é chato numa SpriteGPULayer), decoração, muralha de
@@ -98,8 +101,9 @@ src/
 
 A identidade visual é **uma paleta só** (`src/art/Palette.js`): heróis,
 criaturas, cenário, ícones, efeitos e interface são desenhados por código com
-ela. Músicas e efeitos sonoros são sintetizados no carregamento
-(`src/audio/Synth.js`). O jogo não usa nenhum asset de terceiros além das fontes.
+ela. Músicas, efeitos sonoros e a ambiência são sintetizados no carregamento, fora da thread
+principal (`src/audio/Synth.js`, `AudioBank.js`; medidas em `node tools/audio-lab.mjs`). O jogo não
+usa nenhum asset de terceiros além das fontes.
 
 ## Créditos
 

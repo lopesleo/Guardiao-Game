@@ -430,6 +430,45 @@ Tudo depois que o Mural aparece (uma novidade por vez). "Dia" = data local do ap
   Plano B automático (sem textura no vertex shader, erro no desenho da camada, `GROUND.GPU = false`;
   testes: `?debug=1&chao=img` e `&chao=falha`): as imagens de antes, pixel a pixel. 👤 ver no aparelho
   (cogumelos à noite e no chefe, se lembram gema/item; quadro e tranco no S23)
+- ✅ **Som: carga sem travar, música em camadas e a mata da Clareira** (23/10/2026, `src/audio/`; medidas
+  em `node tools/audio-lab.mjs`, testes em `npm run test:audio`):
+  - **Síntese em Web Workers** (`AudioBank.js`, `SynthWorker.js`): antes, uma tarefa só de ~0,8 s (PC,
+    Edge headless) congelava a tela de carga. Agora a síntese roda em até 3 Workers (uma fila: cada um pega
+    a próxima tarefa, as pesadas primeiro), em paralelo com a arte; a thread principal só cria os
+    AudioBuffers. Medido (3 cargas cada): **maior tarefa de áudio na thread principal 775–804 ms → 5–8 ms**
+    (total 12–16 ms), tempo bloqueado (TBT) da carga 775–996 → 41–315 ms (o resto é a arte), **título em
+    1,5–1,8 → 0,9–1,3 s**, mesmo sintetizando 60% a mais (camadas e ambiência: 101 sons, 34,8 MB; eram
+    19 MB). **Plano B** sem Worker, com Worker quebrado ou mudo por 15 s: as mesmas tarefas na thread
+    principal em fatias de 8 ms (~160 fatias, a maior 14–21 ms; título em ~2 s). `?debug=1&audio=main`
+    força o plano B. Conserto de quebra: o fade de 200 amostras no fim das trilhas em laço criava um
+    estalo na emenda (o fim emenda no começo).
+  - **Música da partida em camadas** (`MusicLayers.js`, `AUDIO.LAYERS`): "Horda" e "Baião do Sertão" saem
+    em 4 camadas — base (pad + pedal + chimbal; no baião, triângulo e sanfona) → bateria → baixo → melodia —
+    travadas na mesma grade (laços nativos de amostra exata). A **intensidade** soma inimigos perto do herói
+    (em raiz: os primeiros contam mais), elites, minichefe, vida baixa e o relógio da partida; suavizada
+    (sobe em 1 s, desce em 4 s) e com histerese (limiares de subida e descida separados, 8 s segurando antes
+    de descer). Cada camada entra no tempo forte (bateria e baixo no compasso, melodia na frase de 8 tempos)
+    num crescendo que chega inteiro nele, e sai sumindo em 1 compasso. Numa partida de verdade (Perigo
+    Guardião, 150 s): só a base na entrada pela trilha, bateria aos ~5 s, baixo aos ~45 s, melodia aos ~75 s
+    com a horda engrossando; 3 trocas em 150 s, nenhuma piscada. Na luta acalmando, sai a melodia, depois o
+    baixo, depois a bateria (~16 s do primeiro ao último). Volume (LUFS, no volume do jogo): Horda −32,5 / −27,9 / −26,1 /
+    −25,2 (a trilha inteira de antes: −25,6; mesmo espectro); Baião −33,8 / −27,5 / −26,0 / −25,3. Picos
+    ≤ −9,5 dBFS (limitador em −6). Trocas sem estalo (0,65–0,96× o passo normal do sinal), emendas ≤ 0,16.
+    O chefe continua trocando de trilha no compasso (a de camadas afunda sob o rugido); a Noite Eterna volta
+    em camadas no nível de antes do chefe; pausa, cartas, vida baixa, fita na morte e o volume das Opções
+    valem para todas as camadas.
+  - **Ambiência da Clareira pela hora** (`Ambience.js`, `Nature.js`, `AUDIO.AMBIENCE`; `docs/CLAREIRA.md`):
+    madrugada/amanhecer (sabiá-laranjeira afinado na pentatônica da música, bem-te-vi, coro de passarinhos
+    ao longe), dia (coro de cigarras e uma que canta perto, vento nas folhas), fim de tarde (fogo-apagou,
+    sabiá, cigarras indo embora, primeiros grilos) e noite (coro de grilos, sapo-ferreiro, sapo-cururu,
+    corujinha-do-mato, urutau). Camas em laço sem emenda tocadas duas vezes (lados e velocidades diferentes:
+    a soma nunca se repete); cantos montados na hora com sílabas, tom, pausa e lado sorteados; as horas se
+    cruzam em ~6 s. Canal dos Efeitos, ~10–11 LU abaixo da música (cantos no máximo 7–8,5 LU abaixo);
+    com a música, pico −12 a −13 dBFS. `?debug=1&hora=21` para ouvir outra hora.
+  - 👤 Ouvir no S23 e num celular fraco: a carga (barra andando sem engasgo), a entrada das camadas no
+    começo da partida e com a horda/elite/minichefe (a base sozinha não ficou fraca demais?), a volta à base
+    quando a luta acalma, e a Clareira em horas diferentes (`node tools/audio-lab.mjs --wav=pasta` gera os
+    sons para ouvir no PC).
 
 ### M5 — Monetização e medição reais 👤
 - ✅ AdMob: app Android criado e **7 blocos premiados** em uso (revive, extra_card, build_speed,
