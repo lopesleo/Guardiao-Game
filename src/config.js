@@ -2082,6 +2082,63 @@ export const AUDIO = {
   // Morte: a fita para (rate 1 → RATE) com a música fechando no passa-baixa e sumindo em S segundos
   // (dentro da câmera lenta de 0,9 s); os efeitos abafam um pouco junto
   DEATH: { RATE: 0.5, LP_HZ: 450, SFX_LP_HZ: 1500, SFX_DB: -4, S: 0.85 },
+  // Carga (src/audio/AudioBank.js): a síntese roda em Web Workers; sem eles, na thread principal em fatias
+  // de SLICE_MS. Worker sem dar notícia por WATCHDOG_MS = plano B para o que faltar
+  LOAD: { SLICE_MS: 8, WATCHDOG_MS: 15000 },
+  // Música da partida em CAMADAS (src/audio/MusicLayers.js): base (sempre) → bateria → baixo → melodia,
+  // pela INTENSIDADE da luta (0..1) = soma (pesos W) de: alguém perto (BASE), inimigos perto do herói
+  // (NEAR_R px, em raiz: os primeiros contam mais; DENSE_N enche), elites perto, minichefe vivo, vida
+  // baixa (o mesmo perigo do coração) e o relógio da partida. Na entrada pela trilha, só a base.
+  // A intensidade é suavizada (sobe em RISE_S, desce em FALL_S) e vira NÍVEL com histerese: sobe ao
+  // passar UP[n], só desce abaixo de DOWN[n] e, depois de mudar, segura HOLD_DOWN_MS antes de descer
+  // (HOLD_UP_MS antes de subir de novo). Cada camada entra e sai na grade da trilha: bateria e baixo no
+  // compasso (QUANT 4 tempos), melodia na frase (8). Entra num crescendo de ENTER_BEATS tempos que
+  // termina NO tempo forte; sai a partir dele, sumindo em EXIT_BEATS
+  LAYERS: {
+    TICK_MS: 250,
+    NEAR_R: 300,
+    DENSE_N: 28,
+    ELITE_N: 1,
+    W: { BASE: 0.05, DENSITY: 0.6, ELITE: 0.2, MINI: 0.3, DANGER: 0.25, TIME: 0.35 },
+    RISE_S: 1,
+    FALL_S: 4,
+    UP: [0.1, 0.3, 0.52],
+    DOWN: [0.04, 0.2, 0.4],
+    HOLD_UP_MS: 1500,
+    HOLD_DOWN_MS: 8000,
+    QUANT: { perc: 4, bass: 4, lead: 8 },
+    ENTER_BEATS: { perc: 0.5, bass: 0.5, lead: 0.25 },
+    EXIT_BEATS: 4,
+    LOOKAHEAD_S: 0.12, // mudança nunca é marcada mais perto que isto (o relógio do áudio já andou)
+    STEM_DB: { bed: 0, perc: 0, bass: 0, lead: 0 },
+  },
+  // Ambiência da Clareira pela hora (src/audio/Ambience.js; sons em src/audio/Nature.js), no canal dos
+  // Efeitos, bem por baixo da música. HOURS: onde cada parte do dia é inteira; entre dois pontos de partes
+  // diferentes, uma vira a outra devagar (o céu segue a mesma hora: CampDecor.skyAt). BED_DB: a cama
+  // contínua de cada hora. SPECIES: quem canta quando (peso por hora), de quanto em quanto tempo
+  // (EVERY_S [mín, máx], sorteado) e o volume (dB). Troca de hora em XFADE_S; entrada em FADE_IN_S
+  AMBIENCE: {
+    DB: -15,
+    FADE_IN_S: 3,
+    FADE_OUT_S: 0.6,
+    XFADE_S: 6,
+    HOURS: [[0, "night"], [4.3, "night"], [5.3, "dawn"], [7.2, "dawn"], [8.2, "day"], [16.3, "day"], [17.2, "dusk"], [19, "dusk"], [20, "night"], [24, "night"]],
+    BED_DB: { dawn: -2, day: -3, dusk: -3, night: -4 },
+    SPECIES: {
+      sabia: { at: { dawn: 1, day: 0.25, dusk: 0.6 }, EVERY_S: [4, 11], DB: -5 },
+      bemtevi: { at: { dawn: 0.7, day: 1, dusk: 0.35 }, EVERY_S: [12, 28], DB: -8 },
+      cigarra: { at: { day: 1, dusk: 0.3 }, EVERY_S: [18, 40], DB: -12 },
+      fogo: { at: { dusk: 1, dawn: 0.35 }, EVERY_S: [12, 26], DB: -6 },
+      grilo: { at: { night: 1, dusk: 0.35, dawn: 0.2 }, EVERY_S: [7, 16], DB: -13 },
+      ferreiro: { at: { night: 1 }, EVERY_S: [8, 19], DB: -10 },
+      cururu: { at: { night: 1 }, EVERY_S: [16, 36], DB: -13 },
+      urutau: { at: { night: 1 }, EVERY_S: [40, 85], DB: -7 },
+      coruja: { at: { night: 0.8 }, EVERY_S: [35, 75], DB: -9 },
+    },
+    MAX_VOICES: 24,
+    LOOKAHEAD_S: 1.2,
+    TICK_MS: 200,
+  },
 };
 
 // Sensação de jogo: o que faz cada momento "pesar" (src/systems/GameFeel.js, Shake.js, ui/HUD.js,

@@ -1,6 +1,7 @@
 // Preload: NADA é baixado — arte e áudio são gerados por código (src/art/,
-// src/audio/). As etapas rodam uma por frame pra barra de progresso andar em
-// vez de a tela congelar enquanto sintetiza as músicas.
+// src/audio/). As etapas da arte rodam uma por frame pra barra de progresso andar.
+// O áudio é sintetizado em Web Workers desde o boot (src/audio/AudioBank.js), em
+// paralelo com a arte: a última etapa só espera o que faltar, sem travar a tela.
 import { registerEnvironment } from "../art/Environment.js";
 import { registerCaatinga } from "../art/EnvCaatinga.js";
 import { registerCaatingaMonsters } from "../art/MonstersCaatinga.js";
@@ -18,7 +19,7 @@ import { registerGarden } from "../art/Garden.js";
 import { registerKitchen } from "../art/Kitchen.js";
 import { registerPond } from "../art/Pond.js";
 import { registerCampDecor } from "../art/CampDecor.js";
-import { registerAudio } from "../audio/Synth.js";
+import { AudioBank } from "../audio/AudioBank.js";
 import { text, Bar, PAL, vw, vh, fitCamera } from "../ui/Theme.js";
 import { tr } from "../i18n/i18n.js";
 
@@ -28,6 +29,7 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   create() {
+    AudioBank.start(); // (main.js já começou; aqui é só garantia)
     fitCamera(this);
     const cx = vw(this) / 2,
       cy = vh(this) / 2;
@@ -53,7 +55,7 @@ export class PreloadScene extends Phaser.Scene {
       [tr("Acendendo o fogão…"), () => registerKitchen(this)],
       [tr("Enchendo o lago…"), () => registerPond(this)],
       [tr("Pendurando as bandeirinhas…"), () => registerCampDecor(this)],
-      [tr("Afinando a floresta…"), () => registerAudio(this.game)],
+      [tr("Afinando a floresta…"), () => AudioBank.register(this.game)],
     ];
     let i = 0;
     const next = () => {
@@ -63,12 +65,16 @@ export class PreloadScene extends Phaser.Scene {
       }
       const [msg, fn] = steps[i];
       label.setText(msg);
-      // 1 frame pra desenhar o texto antes da etapa pesada
+      // 1 frame pra desenhar o texto antes da etapa pesada; etapa que devolve promessa (o áudio) é esperada
       this.time.delayedCall(16, () => {
-        fn();
-        i++;
-        bar.set(i / steps.length, true);
-        next();
+        const done = () => {
+          i++;
+          bar.set(i / steps.length, true);
+          next();
+        };
+        const r = fn();
+        if (r && typeof r.then === "function") r.then(done, (err) => (console.error(err), done()));
+        else done();
       });
     };
     next();

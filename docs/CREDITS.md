@@ -25,9 +25,10 @@ usado (os packs Kenney/Tiny Creatures e a bola de fogo de Revon foram removidos)
 
 ## Áudio
 
-**100% próprio.** Os ~21 efeitos sonoros e as 3 músicas ("Clareira", "Horda" e
-"O Ancião") são sintetizados por código no carregamento do jogo
-(`src/audio/Synth.js`) — não há arquivos de áudio de terceiros.
+**100% próprio.** Os efeitos sonoros, as músicas ("Clareira", "Horda" e "Baião do Sertão" em
+camadas, as dos chefes e as vinhetas) e a ambiência da Clareira (vento, cigarras, grilos, sapos, sabiá,
+bem-te-vi, fogo-apagou, corujinha e urutau) são sintetizados por código no carregamento do jogo
+(`src/audio/Synth.js`, `src/audio/Nature.js`) — não há arquivos de áudio de terceiros.
 
 ---
 

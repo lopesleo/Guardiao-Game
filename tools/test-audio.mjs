@@ -9,17 +9,29 @@
 //   · vida baixa bate o coração (com intervalo) e desliga ao curar;
 //   · o chefe troca a trilha no compasso (a nova entra num tempo forte, depois do rugido);
 //   · a morte para a fita (a música desacelera e fecha) e a cena seguinte começa limpa;
-//   · os nós de áudio não crescem sem parar numa partida longa (SOAK_S segundos, padrão 40).
+//   · os nós de áudio não crescem sem parar numa partida longa (SOAK_S segundos, padrão 40);
+//   · CARGA: a síntese roda em Web Workers e a thread principal não gasta mais que LOAD_MAX_MS seguidos
+//     com áudio; sem Worker (plano B, em fatias) e com o Worker quebrado também carrega tudo, sem travar;
+//   · CAMADAS (no Node e no jogo): a música da partida sobe e desce de camada com a intensidade, cada
+//     camada entra no tempo forte da grade dela, chega inteira e sai; intensidade em volta de um limite
+//     não faz a música piscar (histerese);
+//   · AMBIÊNCIA da Clareira: muda com a hora (noite ≠ dia, bichos da hora), a troca é suave, segue a
+//     barra de Efeitos (muda com Efeitos 0) e não deixa nós de áudio para trás entre visitas.
 //
 //   npm i --no-save playwright-core        (usa o Edge instalado, headless)
 //   npm run test:audio                     (ou: node tools/test-audio.mjs)
 //
 // Variáveis: SOAK_S=120 (partida longa)  LAB_URL=… (servidor já rodando)
 // Armadilhas: page.evaluate não devolve objetos do Phaser (estoura a memória ao serializar); o renderizador
-// headless roda a poucos quadros por segundo (esperar por condição, não por tempo); o AudioParam.value só
-// atualiza a cada bloco do áudio (ler depois de esperar um pouco).
+// headless roda a poucos quadros por segundo (esperar por condição, não por tempo: o relógio do JOGO anda
+// mais devagar que o do áudio); o AudioParam.value só atualiza a cada bloco do áudio (ler depois de
+// esperar um pouco); scene.start(key) sem dados mantém os dados antigos.
 import { chromium } from "playwright-core";
 import { startLabServer } from "./lab-server.mjs";
+import { MusicIntensity, intensityOf } from "../src/audio/MusicLayers.js";
+import { AUDIO } from "../src/config.js";
+
+const LOAD_MAX_MS = 50; // o maior pedaço de trabalho de áudio na thread principal (uma "long task" começa em 50)
 
 const SOAK_S = Number(process.env.SOAK_S || 40);
 const server = process.env.LAB_URL ? null : await startLabServer();
@@ -38,9 +50,16 @@ const check = (ok, what, extra = "") => {
 };
 const dB = (x) => (x > 0 ? `${(20 * Math.log10(x)).toFixed(1)} dBFS` : "silêncio");
 
-// Roda no navegador antes do jogo: o grampo na saída e a contagem de nós
+// Roda no navegador antes do jogo: o grampo na saída, a contagem de nós e as tarefas longas (> 50 ms)
 function tap() {
-  const A = (window.__aud = { peak: 0, blocks: [], live: new Set(), plays: {} });
+  const A = (window.__aud = { peak: 0, blocks: [], live: new Set(), plays: {}, lt: [] });
+  try {
+    new PerformanceObserver((l) => {
+      for (const e of l.getEntries()) A.lt.push([Math.round(e.startTime), Math.round(e.duration)]);
+    }).observe({ type: "longtask", buffered: true });
+  } catch {
+    // sem a API: o teste da carga usa só o que o AudioBank mede
+  }
   const P = BaseAudioContext.prototype;
   for (const m of ["createGain", "createBufferSource", "createPanner", "createStereoPanner", "createBiquadFilter", "createDynamicsCompressor"]) {
     const f = P[m];
@@ -90,13 +109,14 @@ function tap() {
   };
 }
 
-async function open(settings) {
+async function open(settings, init = null) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 600 }, locale: "pt-BR", serviceWorkers: "block" });
   const page = await ctx.newPage();
   const errs = [];
   page.on("pageerror", (e) => errs.push(e.message));
   page.on("console", (m) => m.type() === "error" && errs.push(m.text()));
   await page.addInitScript(tap);
+  if (init) await page.addInitScript(init);
   await page.addInitScript((s) => localStorage.setItem("guardiao_settings_v1", JSON.stringify(s)), settings);
   await page.goto(URL);
   const until = (fn, arg, ms = 60000) => page.waitForFunction(fn, arg, { timeout: ms });
@@ -146,6 +166,72 @@ async function open(settings) {
 
 try {
   // ----------------------------------------------------------------------------------------------
+  console.log("\n== Camadas: intensidade → nível (lógica, no Node) ==");
+  {
+    const C = AUDIO.LAYERS;
+    const run = (d, raw, s, tick = C.TICK_MS) => {
+      let n = 0;
+      for (let t = 0; t < s * 1000; t += tick) n = d.update(typeof raw === "function" ? raw(t) : raw, tick);
+      return n;
+    };
+    const calm = intensityOf({ near: 0, elites: 0, mini: false, danger: false, time: 0 });
+    const horde = intensityOf({ near: 30, elites: 1, mini: false, danger: false, time: 0.6 });
+    check(calm < C.UP[0] && horde >= C.UP[2], "sem ninguém perto = calmo; horda com elite no meio da partida = intensidade máxima", `${calm.toFixed(2)} · ${horde.toFixed(2)}`);
+    const one = intensityOf({ near: 1, elites: 0, mini: false, danger: false, time: 0.02 });
+    check(one >= C.UP[0] && one < C.UP[1], "o primeiro bicho chegando já traz a bateria (e só ela)", one.toFixed(2));
+    const late = intensityOf({ near: 0, elites: 0, mini: false, danger: false, time: 1 });
+    check(late >= C.UP[1] && late < C.UP[2], "fim da partida sem ninguém perto: bateria e baixo, sem a melodia", late.toFixed(2));
+    const d = new MusicIntensity();
+    const up = run(d, horde, 2);
+    check(up === C.UP.length, "a horda chega: todas as camadas em menos de 2 s", `nível ${up}`);
+    const early = run(d, 0, (C.HOLD_DOWN_MS - d.sinceMs - 300) / 1000); // até pouco antes de vencer a espera
+    check(early === up, `a luta acaba: segura o nível por ${C.HOLD_DOWN_MS / 1000} s antes de descer`, `nível ${early}`);
+    const down = run(d, 0, 30);
+    check(down === 0, "e depois volta à base", `nível ${down}`);
+    // intensidade passeando em volta do limite de cada nível (ruído de ±0,05)
+    let r = 7;
+    const noise = () => ((r = (r * 1103515245 + 12345) >>> 0) / 4294967296 - 0.5) * 0.1;
+    for (let k = 0; k < C.UP.length; k++) {
+      const e = new MusicIntensity();
+      run(e, C.UP[k] + 0.03, 10); // chega no nível
+      const c0 = e.changes;
+      run(e, () => C.UP[k] + noise(), 60);
+      check(e.changes - c0 <= 1, `em volta do limite ${C.UP[k]} por 60 s: a música não pisca`, `${e.changes - c0} troca(s)`);
+    }
+  }
+
+  // ----------------------------------------------------------------------------------------------
+  console.log("\n== Carga: o som é feito fora da thread principal ==");
+  const loadRun = async (label, init, want) => {
+    const L = await open({ music: 0.92, sfx: 0.95, volCurve: 1 }, init);
+    const st = await L.page.evaluate(async () => {
+      const { AudioBank } = await import("/src/audio/AudioBank.js");
+      return { ...AudioBank.stats, lt: window.__aud.lt, title: Math.round(performance.now()), stems: !!window.game.cache.audio.exists("music_gameplay@lead"), amb: !!window.game.cache.audio.exists("amb_bed_night") };
+    });
+    const maxLT = Math.max(0, ...st.lt.map(([, d]) => d));
+    check(want(st.mode) && st.installed === st.jobs && st.stems && st.amb, `${label}: todos os ${st.jobs} sons no cache`, `modo ${st.mode}${st.reason ? ` (${st.reason})` : ""}, ${st.workers} worker(s), título em ${(st.title / 1000).toFixed(1)} s`);
+    check(st.maxTaskMs <= LOAD_MAX_MS, `${label}: a thread principal nunca gasta mais de ${LOAD_MAX_MS} ms seguidos com áudio`, `maior pedaço ${st.maxTaskMs.toFixed(1)} ms, total ${st.mainMs.toFixed(0)} ms em ${st.slices || "—"} fatia(s); maior tarefa longa da carga (arte inclusa) ${maxLT} ms`);
+    const errs = L.errs.filter((e) => !/nao-existe|404/.test(e)); // o Worker quebrado de propósito avisa no console
+    check(!errs.length, `${label}: sem erro no console`, errs.slice(0, 2).join(" | "));
+    await L.ctx.close();
+  };
+  await loadRun("com Worker", null, (m) => m === "worker");
+  await loadRun("sem Worker (plano B)", () => (window.Worker = undefined), (m) => m === "main");
+  // Worker que não carrega (arquivo inexistente): cai no plano B para o que faltou
+  await loadRun(
+    "Worker quebrado",
+    () => {
+      const W = window.Worker;
+      window.Worker = class extends W {
+        constructor(u, o) {
+          super(new URL("/src/audio/nao-existe.js", location.href), o);
+        }
+      };
+    },
+    (m) => m === "worker+main" || m === "main",
+  );
+
+  // ----------------------------------------------------------------------------------------------
   console.log("\n== Música 0 e Efeitos 0: silêncio em tudo ==");
   {
     const T = await open({ music: 0, sfx: 0, volCurve: 1 });
@@ -171,6 +257,14 @@ try {
       const r = await T.meter(a, await T.now());
       check(r.pk === 0, `fim de partida (${won ? "vitória" : "derrota"}) fica mudo`, dB(r.pk));
     }
+    // a Clareira: a música e a ambiência da hora (canal dos Efeitos) também
+    await T.page.evaluate(() => void window.game.scene.getScenes(true)[0].scene.start("CampScene"));
+    await T.until(() => window.game.scene.isActive("CampScene") && !!window.game.scene.getScene("CampScene").ambience);
+    const c0 = await T.now();
+    await T.waitAudio(5);
+    const cm = await T.meter(c0, await T.now());
+    const amb = await T.page.evaluate(() => window.game.scene.getScene("CampScene").ambience.state);
+    check(cm.pk === 0 && amb.ok, "a Clareira (música e ambiência) fica muda", `${dB(cm.pk)} · ambiência ligada, hora ${amb.hour?.toFixed(1)}`);
     check(!T.errs.length, "sem erro no console", T.errs.slice(0, 3).join(" | "));
     await T.ctx.close();
   }
@@ -321,6 +415,78 @@ try {
   m = await mix();
   check(!m.danger && m.mLP > m.open * 0.9, "curou: o perigo desliga e a música abre", `${m.mLP.toFixed(0)} Hz`);
 
+  // Camadas da música da partida: a luta (entradas fingidas no lugar de _musicInputs) sobe e desce a trilha
+  {
+    const lay = () =>
+      page.evaluate(() => {
+        const g = window.game.scene.getScene("GameScene");
+        const m = g.bgMusic;
+        return {
+          layered: !!m?.layered,
+          level: m?.level,
+          dir: g.musicDir.level,
+          gains: m?.stems?.map((s) => +s.gain.gain.value.toFixed(3)),
+          changes: m?.changes ?? [],
+          now: m?.ctx.currentTime,
+          start: m?.startTime,
+          beatS: m?.info.beatS,
+          rate: m?.rate,
+        };
+      });
+    const feed = (inp) =>
+      page.evaluate((inp) => {
+        const g = window.game.scene.getScene("GameScene");
+        g._musicInputs = () => inp;
+      }, inp);
+    await feed({ near: 0, elites: 0, mini: false, danger: false, time: 0 });
+    // o que estava tocando sai no próximo tempo forte e some em EXIT_BEATS: espera o fim do que foi marcado
+    const fadeEnd = await page.evaluate(async () => {
+      const { AUDIO } = await import("/src/config.js");
+      const g = window.game.scene.getScene("GameScene");
+      g.musicDir.reset();
+      g.bgMusic.setLevel(0);
+      const m = g.bgMusic;
+      const last = Math.max(m.ctx.currentTime, ...m.changes.map((c) => c.at));
+      return last + (AUDIO.LAYERS.EXIT_BEATS * m.info.beatS) / m.rate + 0.3;
+    });
+    await until((t) => window.game.sound.context.currentTime > t, fadeEnd, 60000);
+    const sfxVol = (v) =>
+      page.evaluate(async (v) => {
+        const { Settings } = await import("/src/systems/Settings.js");
+        Settings.set("sfx", v);
+      }, v);
+    await sfxVol(0); // só a música na medida (as armas continuam atirando)
+    let s = await lay();
+    check(s.layered && s.level === 0 && s.gains[0] > 0.9 && s.gains.slice(1).every((v) => v < 0.01), "partida calma: só a base da trilha", `ganhos ${s.gains.join(" ")}`);
+    const quiet = await brightNow(2);
+    const ask = (await lay()).now;
+    await feed({ near: 30, elites: 1, mini: true, danger: false, time: 0.5 });
+    await until(() => window.game.scene.getScene("GameScene").bgMusic.level === 3, null, 60000);
+    s = await lay();
+    const ons = s.changes.filter((c) => c.on && c.at >= ask);
+    const lastAt = Math.max(...ons.map((c) => c.at));
+    await until((t) => window.game.sound.context.currentTime > t, lastAt + 0.3, 60000);
+    s = await lay();
+    const C = AUDIO.LAYERS;
+    const onGrid = ons.every((c) => Math.abs(c.beat / (C.QUANT[c.stem] ?? 4) - Math.round(c.beat / (C.QUANT[c.stem] ?? 4))) < 1e-9 && Math.abs(c.at - (s.start + (c.beat * s.beatS) / s.rate)) < 1e-6);
+    const loud = await brightNow(2);
+    await sfxVol(0.95);
+    check(ons.length === 3 && s.gains.every((v) => v > 0.95), "a horda chega: bateria, baixo e melodia entram e chegam inteiras", `${ons.map((c) => `${c.stem}@${c.beat}`).join(" ")} · ganhos ${s.gains.join(" ")}`);
+    check(onGrid, "cada camada entra no tempo forte da grade dela (compasso; a melodia na frase)", ons.map((c) => `${c.stem}: tempo ${c.beat} (${(c.beat / (C.QUANT[c.stem] ?? 4)).toFixed(0)}ª ${C.QUANT[c.stem] === 8 ? "frase" : "barra"}) em ${(c.at - ask).toFixed(2)} s`).join(" · "));
+    check(loud.ss > quiet.ss * 2, "e a saída fica mais cheia", `energia ×${(loud.ss / Math.max(1e-9, quiet.ss)).toFixed(1)}`);
+    // a luta acaba: segura e depois sai camada por camada, sumindo (não corta)
+    const calmAt = (await lay()).now;
+    await feed({ near: 0, elites: 0, mini: false, danger: false, time: 0 });
+    await until(() => window.game.scene.getScene("GameScene").bgMusic.level === 0, null, 120000);
+    s = await lay();
+    const offs = s.changes.filter((c) => !c.on && c.at >= calmAt);
+    const firstOff = Math.min(...offs.map((c) => c.at));
+    await until((t) => window.game.sound.context.currentTime > t, Math.max(...offs.map((c) => c.at)) + (C.EXIT_BEATS * s.beatS) / s.rate + 0.3, 60000);
+    s = await lay();
+    check(firstOff - calmAt > 3 && offs.length === 3 && s.gains.slice(1).every((v) => v < 0.01) && s.gains[0] > 0.9, "a luta acaba: a trilha segura um tempo e volta à base, camada por camada", `1ª saída ${(firstOff - calmAt).toFixed(1)} s depois · ${offs.map((c) => `${c.stem}@${c.beat}`).join(" ")} · ganhos ${s.gains.join(" ")}`);
+    await page.evaluate(() => delete window.game.scene.getScene("GameScene")._musicInputs); // volta a ler a luta de verdade
+  }
+
   // Chefe: troca de trilha no compasso
   const sw = await page.evaluate(async () => {
     const { MUSIC_INFO } = await import("/src/audio/Synth.js");
@@ -423,6 +589,75 @@ try {
     // teto de fps, o quadro seguinte pode demorar); o que importa é não sobrar som vivo
     const left = await page.evaluate((END) => window.game.sound.sounds.filter((s) => END.includes(s.key) && !s.pendingRemove).length, END);
     check(left === 0, "saindo da tela de fim, vinheta e fogueira são destruídas", `${left} sobrando`);
+  }
+
+  // Ambiência da Clareira pela hora (a tela de fim deixou o jogo na Clareira)
+  {
+    const camp = (fn, arg) => page.evaluate(fn, arg);
+    const amb = () => camp(() => window.game.scene.getScene("CampScene").ambience.state);
+    const setHour = (h) =>
+      camp((h) => {
+        const c = window.game.scene.getScene("CampScene");
+        c._hourOverride = h;
+        c._applyTimeOfDay();
+        c.ambience.played = {};
+      }, h);
+    const vol = (k, v) =>
+      camp(
+        async ([k, v]) => {
+          const { Settings } = await import("/src/systems/Settings.js");
+          Settings.set(k, v);
+        },
+        [k, v],
+      );
+    await until(() => window.game.scene.getScene("CampScene")?.ambience?.state.hour != null, null, 30000);
+    const NIGHT = ["grilo", "ferreiro", "cururu", "urutau", "coruja"],
+      DAY = ["cigarra", "bemtevi", "sabia"];
+    await camp(() => (window.game.scene.getScene("CampScene").ambience.rateMul = 30)); // cantos 30× mais frequentes
+    await setHour(23);
+    await waitAudio(6);
+    let a = await amb();
+    const sp = (p) => Object.keys(p).filter((k) => p[k] > 0);
+    check(a.weights.night === 1 && a.beds.night > 0.3 && !a.beds.day, "23h: a cama da noite (grilos) toca, a do dia não", JSON.stringify(a.beds));
+    check(sp(a.played).length >= 3 && sp(a.played).every((k) => NIGHT.includes(k)), "23h: só bichos da noite cantam", JSON.stringify(a.played));
+    // só a ambiência (Música 0): ela segue a barra de Efeitos
+    await vol("music", 0);
+    await waitAudio(0.5);
+    let t = await now();
+    await waitAudio(2);
+    const only = await meter(t, await now());
+    await vol("sfx", 0);
+    await waitAudio(0.5);
+    t = await now();
+    await waitAudio(1.5);
+    const mute = await meter(t, await now());
+    check(only.pk > 0 && only.pk < 0.5 && mute.pk === 0, "a mata toca no canal dos Efeitos: com Música 0 ela segue; Efeitos 0 cala", `${dB(only.pk)} → ${dB(mute.pk)}`);
+    await vol("sfx", 0.95);
+    await vol("music", 0.92);
+    // a hora vira: troca suave (as camas se cruzam em AMBIENCE.XFADE_S) e os bichos mudam
+    await setHour(12.5);
+    await waitAudio(0.6);
+    const mid = await amb();
+    await waitAudio(AUDIO.AMBIENCE.XFADE_S * 1.3);
+    a = await amb();
+    check(mid.beds.night > 0.15 && mid.beds.day < a.beds.day * 0.8, "12h30: a noite não corta na hora — as camas se cruzam", `0,6 s depois: noite ${mid.beds.night}, dia ${mid.beds.day}`);
+    check(a.weights.day === 1 && a.beds.day > 0.3 && (a.beds.night ?? 0) < 0.03, "e termina no dia", JSON.stringify(a.beds));
+    await waitAudio(4);
+    a = await amb();
+    check(sp(a.played).length >= 2 && sp(a.played).every((k) => DAY.includes(k)), "12h30: cigarras, bem-te-vi e sabiá (nada da noite)", JSON.stringify(a.played));
+    // entrar e sair da Clareira não deixa nós de áudio para trás
+    const visit = async (to) => {
+      await camp((to) => void window.game.scene.getScenes(true)[0].scene.start(to), to);
+      await until((to) => window.game.scene.isActive(to), to, 30000);
+      await waitAudio(2.5);
+      return camp(() => window.__aud.live.size);
+    };
+    const n1 = await visit("TitleScene");
+    await visit("CampScene");
+    await visit("TitleScene");
+    await visit("CampScene");
+    const n2 = await visit("TitleScene");
+    check(n2 <= n1 + 4, "entrar e sair da Clareira duas vezes não acumula nós de áudio", `${n1} → ${n2} nós vivos no título`);
   }
   check(!T.errs.length, "sem erro no console", T.errs.slice(0, 3).join(" | "));
 } catch (e) {

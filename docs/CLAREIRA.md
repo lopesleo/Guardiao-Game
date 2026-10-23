@@ -99,6 +99,12 @@ pegar os presentinhos dos bichos e reabastecer a tigela. **Sessão longa:** isso
   presente de bicho, refeição cozida) — convida a tocar.
 - A Clareira **cresce visualmente** com as melhorias (barracas, tochas, bandeiras,
   cerca, jardim) — progresso que se vê.
+- **A mata soa pela hora real** (feito em 23/10/2026, `src/audio/Ambience.js` e `Nature.js`,
+  `AUDIO.AMBIENCE`), a mesma hora do céu: madrugada/amanhecer com sabiá-laranjeira e bem-te-vi; dia
+  com cigarras e vento nas folhas; fim de tarde com fogo-apagou, sabiá e os primeiros grilos; noite
+  com grilos, sapo-ferreiro, sapo-cururu, corujinha-do-mato e o urutau (mãe-da-lua). Tudo gerado por
+  código, sutil (~10 LU abaixo da música), no canal dos Efeitos; cantos montados na hora (nenhuma
+  frase igual), as horas se cruzam devagar. Teste no navegador: `?debug=1&hora=21`.
 
 ---
 

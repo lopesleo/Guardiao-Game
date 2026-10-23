@@ -1,7 +1,12 @@
-// Áudio 100% próprio: efeitos e músicas SINTETIZADOS no carregamento (estilo
-// chiptune), gravados como AudioBuffer no cache de áudio do Phaser. O resto do
-// jogo usa as mesmas chaves de sempre ("sfx_hit", "music_gameplay"...).
-const SR = 22050; // taxa de amostragem (chiptune não precisa de mais)
+// Áudio 100% próprio: efeitos, músicas e a ambiência da Clareira SINTETIZADOS no carregamento (estilo
+// chiptune), gravados como AudioBuffer no cache de áudio do Phaser. O resto do jogo usa as mesmas
+// chaves de sempre ("sfx_hit", "music_menu"...).
+// Este arquivo é só matemática (nada do navegador): roda num Web Worker (src/audio/SynthWorker.js), na
+// thread principal em fatias (o plano B do src/audio/AudioBank.js) e no Node (tools/audio-lab.mjs).
+// Cada som é uma TAREFA (audioJobs) que pode parar no meio (gerador): quem roda decide o ritmo.
+import { natureJobs } from "./Nature.js";
+
+export const SR = 22050; // taxa de amostragem (chiptune não precisa de mais)
 const TAU = Math.PI * 2;
 const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
 
@@ -29,11 +34,13 @@ function renderSfx(dur, gen, gain = 0.8) {
   return normalize(out, gain);
 }
 
-function normalize(buf, peak) {
+// Pico em `peak` com saturação suave. O micro fade no fim (evita estalo) é só de som que toca uma vez:
+// num laço, o fim emenda no começo (as caudas já deram a volta) e o fade criaria o estalo na emenda
+function normalize(buf, peak, loop = false) {
   let m = 0;
   for (let i = 0; i < buf.length; i++) m = Math.max(m, Math.abs(buf[i]));
   if (m > 0) for (let i = 0; i < buf.length; i++) buf[i] = Math.tanh((buf[i] / m) * 1.2) * peak;
-  // micro fade no fim (evita estalo)
+  if (loop) return buf;
   const f = Math.min(200, buf.length);
   for (let i = 0; i < f; i++) buf[buf.length - 1 - i] *= i / f;
   return buf;
@@ -426,42 +433,112 @@ const INST = {
   pad: (ph) => saw(ph) * 0.5 + saw(ph * 1.006) * 0.5,
 };
 
-function renderSong(song) {
+const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+
+// Música → buffers. Sem `stems`: um buffer só (a mixagem de sempre). Com `stems` (as trilhas da partida,
+// em camadas: src/audio/MusicLayers.js) cada camada vira um buffer próprio, todos na MESMA grade de
+// amostras: a camada de `beats` menor (32 de 64) é um laço que dá duas voltas por volta da trilha, sem
+// sair de sincronia (comprimento exato em amostras). Cada nota tem a cauda "dando a volta" no laço.
+// Gerador: para a cada ~40 mil amostras feitas (o plano B fatia a carga por aqui)
+function* renderSong(song) {
   const spb = 60 / song.bpm;
-  const total = Math.floor(song.beats * spb * SR);
-  const out = new Float32Array(total);
-  const add = (start, s) => {
-    let idx = (start % total + total) % total; // cauda "dá a volta" (loop sem emenda)
-    out[idx] += s;
-  };
+  const stems = song.stems ?? { main: { beats: song.beats } };
+  const names = Object.keys(stems);
+  const unitBeats = names.reduce((g, n) => gcd(g, stems[n].beats ?? song.beats), 0);
+  const unitLen = Math.round(unitBeats * spb * SR);
+  const perBeat = unitLen / unitBeats; // amostras por tempo (a mesma grade para todas as camadas)
+  const bufs = {};
+  for (const n of names) bufs[n] = new Float32Array(((stems[n].beats ?? song.beats) / unitBeats) * unitLen);
+  let work = 0; // amostras feitas desde a última parada
   for (const e of song.events) {
-    const s0 = Math.floor(e.beat * spb * SR);
-    const lenS = Math.floor(e.len * spb * SR);
-    const rel = e.rel ?? 0.06;
-    const n = lenS + Math.floor(rel * SR);
-    if (e.drum) {
-      renderDrum(e.drum, s0, e.vol, add);
-      continue;
+    const out = bufs[e.stem ?? "main"];
+    const total = out.length;
+    const add = (start, s) => {
+      out[(start % total + total) % total] += s; // cauda "dá a volta" (loop sem emenda)
+    };
+    const s0 = Math.floor(e.beat * perBeat);
+    if (e.drum) renderDrum(e.drum, s0, e.vol, add);
+    else {
+      const lenS = Math.floor(e.len * perBeat);
+      const rel = e.rel ?? 0.06;
+      const n = lenS + Math.floor(rel * SR);
+      work += n;
+      const f = mtof(e.midi);
+      const inst = INST[e.inst];
+      let ph = 0,
+        lpv = 0;
+      const atk = e.atk ?? 0.005;
+      const cut = e.cut ?? 1; // passa-baixa (0..1) — pad fica macio
+      for (let i = 0; i < n; i++) {
+        const t = i / SR;
+        const vib = e.vib ? 1 + Math.sin(t * 34) * 0.006 * Math.min(1, t * 3) : 1;
+        ph += (f * vib) / SR;
+        let a = t < atk ? t / atk : 1;
+        if (i > lenS) a *= Math.max(0, 1 - (i - lenS) / (rel * SR));
+        else if (e.decay) a *= Math.exp(-t / e.decay) * 0.7 + 0.3;
+        let x = inst(ph, t, f) * a;
+        lpv += cut * (x - lpv);
+        add(s0 + i, lpv * e.vol);
+      }
     }
-    const f = mtof(e.midi);
-    const inst = INST[e.inst];
-    let ph = 0,
-      lpv = 0;
-    const atk = e.atk ?? 0.005;
-    const cut = e.cut ?? 1; // passa-baixa (0..1) — pad fica macio
-    for (let i = 0; i < n; i++) {
-      const t = i / SR;
-      const vib = e.vib ? 1 + Math.sin(t * 34) * 0.006 * Math.min(1, t * 3) : 1;
-      ph += (f * vib) / SR;
-      let a = t < atk ? t / atk : 1;
-      if (i > lenS) a *= Math.max(0, 1 - (i - lenS) / (rel * SR));
-      else if (e.decay) a *= Math.exp(-t / e.decay) * 0.7 + 0.3;
-      let x = inst(ph, t, f) * a;
-      lpv += cut * (x - lpv);
-      add(s0 + i, lpv * e.vol);
+    if ((work += 600) > 40000) {
+      work = 0;
+      yield;
     }
   }
-  return normalize(out, 0.85);
+  const info = { bpm: song.bpm, beats: song.beats, beatS: perBeat / SR, loop: !!song.loop };
+  yield;
+  if (!song.stems) return { outputs: [{ data: yield* normalizeSteps(bufs.main, 0.85, song.loop) }], info };
+  return { outputs: yield* normalizeStems(bufs, song.beats / unitBeats, unitLen), info };
+}
+
+// normalize() em pedaços (para entre um e outro): a trilha do menu tem 1 milhão de amostras
+const CHUNK = 1 << 17;
+function* normalizeSteps(buf, peak, loop) {
+  let m = 0;
+  for (let i = 0; i < buf.length; i++) {
+    m = Math.max(m, Math.abs(buf[i]));
+    if ((i & (CHUNK - 1)) === CHUNK - 1) yield;
+  }
+  if (m > 0)
+    for (let i = 0; i < buf.length; i++) {
+      buf[i] = Math.tanh((buf[i] / m) * 1.2) * peak;
+      if ((i & (CHUNK - 1)) === CHUNK - 1) yield;
+    }
+  if (loop) return buf;
+  const f = Math.min(200, buf.length);
+  for (let i = 0; i < f; i++) buf[buf.length - 1 - i] *= i / f;
+  return buf;
+}
+
+// Camadas: um ganho LINEAR igual para todas (a soma tem de ser a mixagem: saturar cada camada sozinha
+// mudaria o som quando elas se juntam), escolhido para a trilha inteira ter o mesmo volume (RMS) que
+// teria com a saturação suave de normalize() — a partida não fica mais alta nem mais baixa que antes
+function* normalizeStems(bufs, units, unitLen) {
+  const total = units * unitLen;
+  const mix = new Float32Array(total);
+  for (const b of Object.values(bufs)) {
+    for (let i = 0; i < total; i++) mix[i] += b[i % b.length];
+    yield;
+  }
+  let m = 0;
+  for (let i = 0; i < total; i++) m = Math.max(m, Math.abs(mix[i]));
+  let sLin = 0,
+    sSat = 0;
+  for (let i = 0; i < total; i++) {
+    const u = (mix[i] / m) * 1.2;
+    sLin += u * u;
+    sSat += Math.tanh(u) ** 2;
+    if ((i & (CHUNK - 1)) === CHUNK - 1) yield;
+  }
+  const g = m > 0 ? ((0.85 * 1.2) / m) * Math.sqrt(sSat / sLin) : 1;
+  const out = [];
+  for (const [stem, b] of Object.entries(bufs)) {
+    for (let i = 0; i < b.length; i++) b[i] *= g;
+    out.push({ stem, data: b });
+    yield;
+  }
+  return out;
 }
 
 function renderDrum(kind, s0, vol, add) {
@@ -542,7 +619,7 @@ function songMenu() {
       { rel: 0.15 },
     ),
   );
-  return { bpm: 84, beats: 64, events: ev };
+  return { bpm: 84, beats: 64, loop: true, events: ev };
 }
 
 // Vinhetas da tela de resultado (tocam uma vez; o fim tem folga para a cauda não "dar a volta" no começo)
@@ -575,11 +652,34 @@ function songDefeat() {
   return { bpm: 70, beats: 11.5, events: ev };
 }
 
+// As trilhas da partida saem em CAMADAS que entram e saem pela intensidade da luta (MusicLayers.js):
+//   bed  — a base, sempre tocando: harmonia e pulso (sozinha = a mata quieta, tensa)
+//   perc — a bateria          bass — o baixo          lead — a melodia (e o arpejo)
+// bed, perc e bass repetem a cada 8 compassos: são laços de 32 tempos (metade da memória)
+const STEMS = { bed: { beats: 32 }, perc: { beats: 32 }, bass: { beats: 32 }, lead: { beats: 64 } };
+const inStem = (stem, list) => list.map((e) => ({ ...e, stem }));
+
 // Partida — "Horda" (Ré menor, 132 BPM): bateria, baixo pulsante, melodia;
-// segunda volta com arpejo em 16avos e melodia uma oitava acima.
+// segunda volta com arpejo em 16avos e melodia uma oitava acima. A base é um pad escuro (os acordes
+// uma oitava acima, longe do baixo) com o chimbal no contratempo
 function songGame() {
   const prog = ["Dm", "Bb", "C3", "Am3", "Dm", "Bb", "Gm", "A"];
   const ev = [];
+  for (let bar = 0; bar < 8; bar++) {
+    const ch = CH[prog[bar]];
+    const b0 = bar * 4;
+    const root = ch[0] - 12;
+    ch.forEach((m) => ev.push({ stem: "bed", beat: b0, len: 4, midi: m + 12, inst: "pad", vol: 0.1, atk: 0.25, rel: 0.45, cut: 0.15 }));
+    ev.push({ stem: "bed", beat: b0, len: 3.9, midi: ch[0], inst: "tri", vol: 0.16, atk: 0.04, rel: 0.3 }); // nota pedal (uma oitava acima do baixo)
+    for (let q = 0; q < 4; q++) ev.push({ stem: "bed", beat: b0 + q + 0.5, drum: "hat", vol: 0.24 });
+    for (let q = 0; q < 4; q++) {
+      ev.push({ stem: "perc", beat: b0 + q, drum: q % 2 ? "snare" : "kick", vol: q % 2 ? 0.5 : 0.9 });
+      ev.push({ stem: "perc", beat: b0 + q, drum: "hat", vol: 0.2 });
+      ev.push({ stem: "perc", beat: b0 + q + 0.5, drum: "hat", vol: 0.2 });
+    }
+    if (bar === 7) ev.push({ stem: "perc", beat: b0 + 3.5, drum: "kick", vol: 0.7 });
+    [0, 0, 12, 0, 0, 7, 12, 0].forEach((iv, i) => ev.push({ stem: "bass", beat: b0 + i * 0.5, len: 0.4, midi: root + iv, inst: "bass", vol: 0.26, cut: 0.35 }));
+  }
   const lead = [
     [74, 0.5], [77, 0.5], [81, 1], [79, 0.5], [77, 0.5], [76, 1],
     [77, 1], [74, 1], [70, 1], [74, 1],
@@ -592,23 +692,14 @@ function songGame() {
   ];
   for (let pass = 0; pass < 2; pass++) {
     const P = pass * 32;
-    for (let bar = 0; bar < 8; bar++) {
-      const ch = CH[prog[bar]];
-      const b0 = P + bar * 4;
-      const root = ch[0] - 12;
-      [0, 0, 12, 0, 0, 7, 12, 0].forEach((iv, i) => ev.push({ beat: b0 + i * 0.5, len: 0.4, midi: root + iv, inst: "bass", vol: 0.26, cut: 0.35 }));
-      for (let q = 0; q < 4; q++) {
-        ev.push({ beat: b0 + q, drum: q % 2 ? "snare" : "kick", vol: q % 2 ? 0.5 : 0.9 });
-        ev.push({ beat: b0 + q + 0.5, drum: "hat", vol: 0.35 });
-        ev.push({ beat: b0 + q, drum: "hat", vol: 0.2 });
+    if (pass === 1)
+      for (let bar = 0; bar < 8; bar++) {
+        const ch = CH[prog[bar]];
+        for (let i = 0; i < 16; i++) ev.push({ stem: "lead", beat: P + bar * 4 + i * 0.25, len: 0.2, midi: ch[i % 3] + 24, inst: "lead", vol: 0.05, decay: 0.08 });
       }
-      if (bar === 7) ev.push({ beat: b0 + 3.5, drum: "kick", vol: 0.7 });
-      if (pass === 1)
-        for (let i = 0; i < 16; i++) ev.push({ beat: b0 + i * 0.25, len: 0.2, midi: ch[i % 3] + 24, inst: "lead", vol: 0.05, decay: 0.08 });
-    }
-    ev.push(...melody(lead, P, pass ? "lead2" : "lead", 0.12)); // 2ª volta: timbre mais cheio
+    ev.push(...inStem("lead", melody(lead, P, pass ? "lead2" : "lead", 0.12))); // 2ª volta: timbre mais cheio
   }
-  return { bpm: 132, beats: 64, events: ev };
+  return { bpm: 132, beats: 64, loop: true, stems: STEMS, events: ev };
 }
 
 // Chefe — "Mapinguari" (Mi menor, 150 BPM): baixo em 16avos, bumbo em 4, tons
@@ -635,32 +726,35 @@ function songBoss() {
   ];
   ev.push(...melody(riff, 16, "lead2", 0.11));
   ev.push(...melody(riff.map(([m, l]) => [m + 12, l]), 48, "lead2", 0.1));
-  return { bpm: 150, beats: 64, events: ev };
+  return { bpm: 150, beats: 64, loop: true, events: ev };
 }
 
 // Caatinga — "Baião do Sertão" (Sol mixolídio, 116 BPM): zabumba (grave no 1 e no
 // "e-meio", bacalhau no contratempo), triângulo em semicolcheias, sanfona na melodia.
+// Camadas: a base é o triângulo com a sanfona no contratempo; depois zabumba, baixo e a melodia
 function songCaatinga() {
   const prog = ["G", "G", "F", "F", "C", "C", "D", "D"]; // I – bVII – IV – V (mixolídio)
   const tri3 = { G: [43, 47, 50], F: [41, 45, 48], C: [36, 40, 43], D: [38, 42, 45] };
   const ev = [];
-  for (let bar = 0; bar < 16; bar++) {
-    const ch = tri3[prog[bar % 8]];
+  for (let bar = 0; bar < 8; bar++) {
+    const ch = tri3[prog[bar]];
     const b0 = bar * 4;
     // zabumba: tum(0) . . tum(0,75) tum(1) | bacalhau no 1,5 e 3,5
     for (const h of [0, 2]) {
-      ev.push({ beat: b0 + h, drum: "kick", vol: 0.85 });
-      ev.push({ beat: b0 + h + 0.75, drum: "kick", vol: 0.55 });
-      ev.push({ beat: b0 + h + 1, drum: "tom", vol: 0.45 });
-      ev.push({ beat: b0 + h + 1.5, drum: "snare", vol: 0.28 });
+      ev.push({ stem: "perc", beat: b0 + h, drum: "kick", vol: 0.85 });
+      ev.push({ stem: "perc", beat: b0 + h + 0.75, drum: "kick", vol: 0.55 });
+      ev.push({ stem: "perc", beat: b0 + h + 1, drum: "tom", vol: 0.45 });
+      ev.push({ stem: "perc", beat: b0 + h + 1.5, drum: "snare", vol: 0.28 });
     }
     // triângulo: abre no contratempo
-    for (let i = 0; i < 16; i++) ev.push({ beat: b0 + i * 0.25, drum: "hat", vol: i % 2 ? 0.32 : 0.14 });
+    for (let i = 0; i < 16; i++) ev.push({ stem: "bed", beat: b0 + i * 0.25, drum: "hat", vol: i % 2 ? 0.32 : 0.14 });
     // baixo do baião (fundamental e quinta, mesma célula da zabumba)
     [[0, 0], [0.75, 7], [1, 12], [2, 0], [2.75, 7], [3, 10]].forEach(([o, iv]) =>
-      ev.push({ beat: b0 + o, len: 0.5, midi: ch[0] - 12 + iv, inst: "bass", vol: 0.25, cut: 0.3 }));
+      ev.push({ stem: "bass", beat: b0 + o, len: 0.5, midi: ch[0] - 12 + iv, inst: "bass", vol: 0.25, cut: 0.3 }));
     // sanfona: acordes curtos no contratempo
-    for (const o of [0.5, 1.5, 2.5, 3.5]) ch.forEach((m) => ev.push({ beat: b0 + o, len: 0.3, midi: m + 12, inst: "lead2", vol: 0.035, cut: 0.25 }));
+    for (const o of [0.5, 1.5, 2.5, 3.5]) ch.forEach((m) => ev.push({ stem: "bed", beat: b0 + o, len: 0.3, midi: m + 12, inst: "lead2", vol: 0.05, cut: 0.25 }));
+    // fole da sanfona segurando o acorde por baixo (só a base sozinha já é baião)
+    ch.forEach((m) => ev.push({ stem: "bed", beat: b0, len: 4, midi: m + 12, inst: "pad", vol: 0.05, atk: 0.2, rel: 0.4, cut: 0.12 }));
   }
   // melodia em Sol mixolídio (Fá natural) com a 4ª aumentada de passagem (Dó#): cara de sertão
   const tune = [
@@ -673,9 +767,9 @@ function songCaatinga() {
     [64, 0.5], [67, 0.5], [72, 1], [71, 0.5], [69, 0.5], [67, 1],
     [66, 1], [69, 1], [67, 2],
   ];
-  ev.push(...melody(tune, 0, "lead2", 0.1, { rel: 0.08 }));
-  ev.push(...melody(tune.map(([m, l]) => [m == null ? null : m + 12, l]), 32, "lead", 0.08, { rel: 0.08 }));
-  return { bpm: 116, beats: 64, events: ev };
+  ev.push(...inStem("lead", melody(tune, 0, "lead2", 0.1, { rel: 0.08 })));
+  ev.push(...inStem("lead", melody(tune.map(([m, l]) => [m == null ? null : m + 12, l]), 32, "lead", 0.08, { rel: 0.08 })));
+  return { bpm: 116, beats: 64, loop: true, stems: STEMS, events: ev };
 }
 
 // Chefe da Caatinga — "Cheia" (Mi frígio-dominante, 152 BPM): xaxado acelerado,
@@ -705,41 +799,65 @@ function songBossCaatinga() {
   ];
   ev.push(...melody(riff, 16, "lead2", 0.11));
   ev.push(...melody(riff.map(([m, l]) => [m == null ? null : m + 12, l]), 48, "lead2", 0.1));
-  return { bpm: 152, beats: 64, events: ev };
+  return { bpm: 152, beats: 64, loop: true, events: ev };
 }
 
 // ---------------------------------------------------------------------------
-// Registro no cache de áudio do Phaser (só WebAudio — todo Android moderno)
+// TAREFAS: o que AudioBank (navegador) e audio-lab (Node) rodam
 // ---------------------------------------------------------------------------
-// Andamento de cada trilha (o Mixer troca de música no compasso: src/audio/Mixer.js)
+// Andamento (e camadas) de cada trilha, preenchido por quem registra os sons (AudioBank): o Mixer troca de
+// música no compasso e as camadas entram no compasso (src/audio/Mixer.js, MusicLayers.js)
 export const MUSIC_INFO = {};
 
-export function registerAudio(game) {
-  const ctx = game.sound.context;
-  if (!ctx || !game.cache?.audio) return false;
-  const toBuffer = (data) => {
-    const b = ctx.createBuffer(1, data.length, SR);
-    b.getChannelData(0).set(data);
-    return b;
-  };
-  for (const [key, [dur, gen]] of Object.entries(SFX)) {
-    seed = key.length * 7919; // ruído determinístico por som
-    game.cache.audio.add(key, toBuffer(renderSfx(dur, gen)));
-  }
-  // chaves entre aspas: o npm run check procura "music_…" aqui para conferir as músicas dos biomas
-  const songs = {
-    "music_menu": songMenu,
-    "music_gameplay": songGame,
-    "music_boss": songBoss,
-    "music_caatinga": songCaatinga,
-    "music_boss_caatinga": songBossCaatinga,
-    "music_victory": songVictory,
-    "music_defeat": songDefeat,
-  };
-  for (const [key, make] of Object.entries(songs)) {
-    const song = make();
-    MUSIC_INFO[key] = { bpm: song.bpm, beats: song.beats };
-    game.cache.audio.add(key, toBuffer(renderSong(song)));
-  }
-  return true;
+// chaves entre aspas: o npm run check procura "music_…" aqui para conferir as músicas dos biomas
+const SONGS = {
+  "music_menu": songMenu,
+  "music_gameplay": songGame,
+  "music_boss": songBoss,
+  "music_caatinga": songCaatinga,
+  "music_boss_caatinga": songBossCaatinga,
+  "music_victory": songVictory,
+  "music_defeat": songDefeat,
+};
+
+// Uma camada da trilha no cache de áudio: "music_gameplay@perc"
+export const stemKey = (key, stem) => `${key}@${stem}`;
+const hashKey = (k) => {
+  let h = 2166136261;
+  for (let i = 0; i < k.length; i++) h = Math.imul(h ^ k.charCodeAt(i), 16777619);
+  return h >>> 0;
+};
+
+// Uma tarefa por som (na ordem em que o jogo precisa: efeitos e a música do título primeiro). run() é um
+// gerador que devolve { outputs: [{ key, data: Float32Array }], info? } e pode parar no meio (yield)
+export function audioJobs() {
+  const jobs = [];
+  for (const [key, [dur, gen]] of Object.entries(SFX))
+    jobs.push({
+      key,
+      *run() {
+        seed = key.length * 7919; // ruído determinístico por som
+        return { outputs: [{ key, data: renderSfx(dur, gen) }] };
+      },
+    });
+  for (const [key, make] of Object.entries(SONGS))
+    jobs.push({
+      key,
+      *run() {
+        seed = hashKey(key);
+        const r = yield* renderSong(make());
+        const stems = r.outputs[0].stem ? r.outputs.map((o) => o.stem) : null;
+        return { outputs: r.outputs.map((o) => ({ key: o.stem ? stemKey(key, o.stem) : key, data: o.data })), info: { key, ...r.info, stems } };
+      },
+    });
+  jobs.push(...natureJobs(SR));
+  return jobs;
+}
+
+// Roda uma tarefa até o fim, sem parar (Worker e Node)
+export function runJob(job) {
+  const it = job.run();
+  let r;
+  while (!(r = it.next()).done);
+  return r.value;
 }

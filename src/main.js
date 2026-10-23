@@ -26,6 +26,7 @@ import { Clock } from './systems/Clock.js';
 import { CloudSave } from './systems/CloudSave.js';
 import { installCloudSaveUI } from './ui/CloudSaveUI.js';
 import { installFrameLimitFix } from './systems/FrameLimit.js';
+import { AudioBank } from './audio/AudioBank.js';
 
 // Antes de criar o jogo: o teto de quadros do Phaser 4.2.1 aceleraria o tempo de jogo (FrameLimit.js)
 installFrameLimitFix();
@@ -76,6 +77,8 @@ const config = {
 };
 
 window.addEventListener('load', () => {
+  // Som: a síntese começa já, em Web Workers, em paralelo com a carga da arte (src/audio/AudioBank.js)
+  AudioBank.start();
   // Relógio confiável antes de qualquer sistema com tempo real (horta, obras…)
   Clock.init();
   // Expõe a instância (útil pra testes automatizados e depuração no console)
