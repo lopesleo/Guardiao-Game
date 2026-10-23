@@ -82,9 +82,14 @@ Lista viva do que está aberto. Detalhes nos documentos citados; ao concluir um 
 marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
 
 **Agora**
-- **1.0.21 (código 22) publicada em 23/10 no Teste interno e no Teste fechado/Alpha.** O Alpha está em revisão do
-  Google. O arquivo é `dist/guardiao-v1.0.21-22-anuncios-reais.aab`. A 1.0.20 nunca saiu do rascunho e foi
-  substituída.
+- **1.0.22 (código 23) publicada em 23/10 à tarde no Teste interno e no Teste fechado/Alpha**, com o Alpha em
+  revisão do Google. O arquivo é `dist/guardiao-v1.0.22-23-anuncios-reais.aab`, com notas nos 8 idiomas.
+  - O que traz: o som em camadas e os sons da Clareira pela hora, a Clareira da Caatinga, a qualidade automática,
+    o conserto do som duplo nos botões e o "Levar um prato?" na trilha.
+  - O "Levar um prato?" existe porque o Leonardo nunca tinha comido um prato, e por isso o Lago não aparecia: o
+    "!" da cozinha passava batido.
+- **1.0.21 (código 22) publicada em 23/10 de manhã no Teste interno e no Teste fechado/Alpha.** A 1.0.20 nunca saiu
+  do rascunho e foi substituída.
   - O motivo principal é o **conserto do travamento da 1.0.19**: o jogo congelava quando a evolução INFERNO queimava
     o chão.
   - Leva tudo o que foi feito de 21 a 23/10 em qualidade gráfica, som e desempenho (detalhes no ROADMAP, fim do
@@ -113,7 +118,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
   👤 Conferir no celular: o jogo a 60 fps sem
   tranco no S23 (antes rodava a 120), a borda da Podridão não esconder inimigo, o som (cartas, chefe, morte, vida
   baixa), o vento no bruxo/cogumelo (fraco) e o zoom 1,3 no chefe.
-- **Som novo na `main` (23/10, ainda sem versão; detalhes no ROADMAP):**
+- **Som novo na 1.0.22 (23/10; detalhes no ROADMAP):**
   - **Síntese em Web Workers:** a carga não trava mais; a maior tarefa de áudio na thread caiu de ~800 ms para
     ~8 ms, e o título aparece em ~1 s.
   - **Música da partida em 4 camadas** pela intensidade da luta (Horda e Baião), entrando no compasso.
@@ -127,7 +132,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
   - a memória num aparelho fraco (o áudio foi de ~19 para ~35 MB).
 
   Para ouvir no PC: `node tools/audio-lab.mjs --wav=<pasta>`.
-- **Qualidade automática e `perf_run` na `main` (23/10, ainda sem versão; detalhes no ROADMAP e em
+- **Qualidade automática e `perf_run` na 1.0.22 (23/10; detalhes no ROADMAP e em
   `docs/ARMAS_E_COMBOS.md`, "Desempenho"):** um sistema só (`src/systems/Quality.js`, bloco `QUALITY`) com três
   degraus visuais (Alta, Média e Baixa) que mudam sozinhos pela taxa de quadros, sem oscilar.
   - Substitui o `QualityWatchdog` e a opção "Iluminação dinâmica"; nas Opções agora é "Qualidade gráfica".
@@ -171,7 +176,7 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
   sem a permissão do sistema). **Consertado na 1.0.18.** 👤 Liberar em Configurações › Apps › Guardião da Floresta ›
   Notificações (ou, com a 1.0.18, pela chave em Opções) e testar de novo. A "Segurança dos dados" já declara (20/10) os IDs do dispositivo com Funcionalidade do app e Mensagens do
   desenvolvedor. A política com novidades e Play Games **já está no ar** (`komedygames.com/guardiao/privacidade/`).
-- **Clareira da Caatinga na `main` (23/10, ainda sem versão; detalhes no ROADMAP e em `docs/COSMETICOS.md`):** o
+- **Clareira da Caatinga na 1.0.22 (23/10; detalhes no ROADMAP e em `docs/COSMETICOS.md`):** o
   visual do sertão para o acampamento, grátis para quem vence no Perigo Pesadelo na Caatinga, com a conquista
   **Mandacaru em Flor** (agora são 33). O aviso vem em três passos: faixa na tela do fim, cena da Anciã com a flor
   do mandacaru e selo "!" no Guarda-roupa. Teste em `npm run test:clareira`.
