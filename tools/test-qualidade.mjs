@@ -11,7 +11,9 @@
 // Casos: desce (queda sustentada desce um degrau, guarda o aprendido e não volta a subir sem folga) · pico (um
 // tranco isolado e uma rajada curta não descem) · sobe (folga sustentada sobe um degrau por vez, com histerese)
 // · vaivem (se a previsão de folga erra, cada tentativa de subir que falha volta na hora e a espera dobra) ·
-// semganho (descer sem render volta e vira o piso) · manual (Alta/Média/Baixa fixas: o automático só mede;
+// cpu (o quadro do jogo é o gargalo e a Média rende pouco: segue até a Baixa) · semganho (os quadros demoram
+// por fora do jogo — carga num outro retorno do requestAnimationFrame, como a tela presa em 30 Hz: descer
+// não rende, volta e vira o piso) · manual (Alta/Média/Baixa fixas: o automático só mede;
 // trocar nas Opções da Pausa vale na hora) · perf (perf_run uma vez por partida, campos e tipos, o que chega ao
 // Firebase e nada com "Dados de uso" desligado) · ouvintes que não somam ao jogar de novo · sem erros no console.
 //
@@ -78,6 +80,19 @@ async function openPage({ viewport = { width: 1280, height: 600 } } = {}) {
         while (performance.now() - t < ms);
       }
     });
+    // carga FORA do quadro do jogo (outro retorno de requestAnimationFrame): os quadros demoram e o trabalho do
+    // jogo não — como a tela presa em 30 Hz pela economia de bateria, ou outro app pesando
+    window.__ext = [0, 0, 0];
+    const ext = () => {
+      const gs = window.game.scene.getScene("GameScene");
+      const ms = gs?.sys.isActive() && !gs._intro ? window.__ext[Quality.current()] : 0;
+      if (ms > 0) {
+        const t = performance.now();
+        while (performance.now() - t < ms);
+      }
+      requestAnimationFrame(ext);
+    };
+    requestAnimationFrame(ext);
     const { QUALITY } = await import("/src/config.js");
     window.__autoBase = JSON.parse(JSON.stringify(QUALITY.AUTO));
   });
@@ -85,26 +100,37 @@ async function openPage({ viewport = { width: 1280, height: 600 } } = {}) {
   // ouvintes do laço do jogo com uma partida andando (o automático escuta prestep/postrender, que sobrevivem às cenas)
   const listeners = () => page.evaluate(() => ["prestep", "postrender"].map((k) => `${k}:${window.game.events.listenerCount(k)}`).join(" "));
   const counts = [];
+  const env = { fps: 60 }; // ritmo de quadros deste navegador sem carga (calibra o alvo: ver casos())
   // Partida nova: escolha de qualidade, degrau aprendido e parâmetros do automático (o resto, os de config.js)
-  const startRun = async ({ quality = "auto", learned = null, auto = {}, load = [0, 0, 0] } = {}) => {
+  const startRun = async ({ quality = "auto", learned = null, auto = {}, load = [0, 0, 0], ext = [0, 0, 0] } = {}) => {
     await page.evaluate(
-      async ({ quality, learned, auto, load }) => {
+      async ({ quality, learned, auto, load, ext }) => {
         const { Settings } = await import("/src/systems/Settings.js");
         Settings.set("quality", quality);
         Settings.set("qualityAuto", learned);
         const { QUALITY } = await import("/src/config.js");
         Object.assign(QUALITY.AUTO, JSON.parse(JSON.stringify(window.__autoBase)), auto);
         window.__load = load;
+        window.__ext = ext;
         window.__spikes = [];
         const g = window.game;
         for (const s of g.scene.getScenes(true)) if (s.scene.key !== "GameScene") g.scene.stop(s.scene.key);
         g.scene.start("GameScene");
       },
-      { quality, learned, auto, load },
+      { quality, learned, auto, load, ext },
     );
     await until(() => { const g = window.game.scene.getScene("GameScene"); return g?.sys.isActive() && g.player && !g._intro && g.quality && g.elapsedMs > 0; });
     // partida previsível: herói imune, sem cartas (XP) e sem baú (o dourado dá carta extra)
-    await page.evaluate(() => { const g = window.game.scene.getScene("GameScene"); g._god = true; g.player.gainXp = () => {}; g._openChest = () => {}; });
+    // alvo = o ritmo que este navegador entrega sem carga (no celular é o teto de 60; no headless de uma máquina
+    // ocupada sai 55–58 e "boa" (≥ 95% de 60) nunca chegaria): só a régua muda, a lógica é a mesma
+    await page.evaluate((fps) => {
+      const g = window.game.scene.getScene("GameScene");
+      g._god = true;
+      g.player.gainXp = () => {};
+      g._openChest = () => {};
+      g.quality.target = fps;
+      g.quality.budget = 1000 / fps;
+    }, env.fps);
     counts.push(await listeners());
   };
   const setLoad = (load) => page.evaluate((l) => (window.__load = l), load);
@@ -130,13 +156,21 @@ async function openPage({ viewport = { width: 1280, height: 600 } } = {}) {
       };
     });
   const tl = (s) => s.windows.map((w) => `${w.t.toFixed(0)}s ${w.fps.toFixed(0)}fps ${w.busy.toFixed(1)}ms ${IDS[w.tier][0].toUpperCase()}`).join(" | ");
-  return { ctx, page, errs, until, startRun, setLoad, q, counts, tl };
+  return { ctx, page, errs, until, startRun, setLoad, q, counts, tl, env };
 }
 
 // ---------------------------------------------------------------- casos
 async function casos() {
   const T = await openPage();
   const { page, until, startRun, setLoad, q, tl } = T;
+  // Calibração: o ritmo deste navegador sem carga nenhuma (mediana de 3 janelas), até 60
+  await startRun({ quality: "high", load: [0, 0, 0] });
+  await until(() => window.game.scene.getScene("GameScene").quality.windows.length >= 3, null, 40000);
+  const idle = (await q()).windows.map((w) => w.fps).sort((a, b) => a - b)[1];
+  T.env.fps = Math.min(60, idle);
+  console.log(`
+(calibração: ${idle.toFixed(1)} fps sem carga neste navegador → alvo ${T.env.fps.toFixed(1)})`);
+  check(idle > 40, "o navegador do teste entrega quadros suficientes para medir", `${idle.toFixed(1)} fps`);
 
   if (want("desce")) {
     console.log("\n== queda sustentada: desce um degrau e fica ==");
@@ -147,7 +181,7 @@ async function casos() {
     await until(() => window.game.scene.getScene("GameScene").quality.changes >= 1, null, 40000);
     s = await q();
     const first = s.log[0];
-    const badBefore = s.windows.filter((w) => w.tier === 0 && w.fps < 51).length;
+    const badBefore = s.windows.filter((w) => w.tier === 0 && w.fps < T.env.fps * 0.85).length;
     check(first.from === 0 && first.to === 1, "desce da Alta para a Média", `${first.why}, ${first.fps} fps`);
     check(badBefore >= 2, "só depois de janelas ruins seguidas (não na 1ª)", `janelas ruins antes=${badBefore}`);
     // o teste depois da troca (2 janelas) aceita: rendeu e resolveu
@@ -178,7 +212,7 @@ async function casos() {
     }
     const s = await q();
     check(s.changes === 0 && s.tier === 0, "trancos isolados e uma rajada curta não descem", `trocas=${s.changes} janelas=${s.windows.length}`);
-    check(s.windows.every((w) => w.fps >= 51), "nenhuma janela vira 'ruim' por um tranco (tira os 10% mais longos)", tl(s));
+    check(s.windows.every((w) => w.fps >= T.env.fps * 0.85), "nenhuma janela vira 'ruim' por um tranco (tira os 10% mais longos)", tl(s));
   }
 
   if (want("sobe")) {
@@ -190,7 +224,7 @@ async function casos() {
     await until(() => window.game.scene.getScene("GameScene").quality.changes >= 1, null, 40000);
     s = await q();
     const up = s.log[0];
-    const goodBefore = s.windows.filter((w) => w.tier === 2 && w.fps >= 57).length;
+    const goodBefore = s.windows.filter((w) => w.tier === 2 && w.fps >= T.env.fps * 0.95).length;
     check(up.from === 2 && up.to === 1 && up.why === "folga", "sobe da Baixa para a Média", up.why);
     check(goodBefore >= 4, "só depois de 8 s de janelas boas seguidas (histerese)", `janelas boas antes=${goodBefore}`);
     await until(() => window.game.scene.getScene("GameScene").quality.changes >= 2, null, 40000);
@@ -227,14 +261,25 @@ async function casos() {
     check(gaps.length >= 1 && gaps.every((g, i) => g >= waits[i] && g <= waits[i] + 6), "a próxima tentativa só vem depois da espera dobrada", gaps.map((g, i) => `${g.toFixed(0)} s (espera ${waits[i]} s)`).join(" → "));
   }
 
+  if (want("cpu")) {
+    console.log("\n== o quadro do jogo é o gargalo e a Média rende pouco: segue descendo até a Baixa ==");
+    // como na CPU de um celular fraco (MEDIR: a Média rende ~3%, a Baixa ~8%): Alta e Média quase iguais
+    await startRun({ quality: "auto", load: [34, 32, 8] });
+    await until(() => window.game.scene.getScene("GameScene").quality.tier === 2, null, 50000).catch(() => {});
+    await page.waitForTimeout(6000);
+    const s = await q();
+    check(s.tier === 2 && !s.log.some((l) => l.why === "descida sem ganho"), "a descida pequena não volta: chega à Baixa e fica", s.log.map((l) => `${l.t.toFixed(0)}s ${IDS[l.from][0]}→${IDS[l.to][0]} ${l.why}`).join(" · "));
+    check(s.windows.slice(-2).every((w) => w.tier === 2 && w.fps >= T.env.fps * 0.85), "e lá o quadro volta a ficar bom", tl({ windows: s.windows.slice(-3) }));
+  }
+
   if (want("semganho")) {
-    console.log("\n== descer sem render (tela presa em 30 Hz): volta e vira o piso ==");
-    await startRun({ quality: "auto", load: [30, 30, 30] });
+    console.log("\n== os quadros demoram mas não pelo jogo (tela presa em 30 Hz): descer não rende, volta e vira o piso ==");
+    await startRun({ quality: "auto", ext: [30, 30, 30] });
     await until(() => window.game.scene.getScene("GameScene").quality.changes >= 2, null, 40000).catch(() => {});
     await page.waitForTimeout(8000);
     const s = await q();
     check(s.log[0]?.to === 1 && s.log[1]?.why === "descida sem ganho" && s.log[1]?.to === 0, "desce, vê que não rendeu e volta à Alta", s.log.map((l) => `${IDS[l.from][0]}→${IDS[l.to][0]} ${l.why}`).join(" · "));
-    check(s.changes === 2 && s.tier === 0 && s.maxTier === 0, "a Alta vira o piso da partida: não tenta descer de novo", `trocas=${s.changes} piso=${IDS[s.maxTier]}`);
+    check(s.changes === 2 && s.tier === 0 && s.maxTier === 0, "a Alta vira o piso da partida: não tenta descer de novo", `trocas=${s.changes} piso=${IDS[s.maxTier]} · ${tl({ windows: s.windows.slice(-2) })}`);
   }
 
   if (want("manual")) {
@@ -245,7 +290,7 @@ async function casos() {
     await page.waitForTimeout(12000);
     s = await q();
     check(s.changes === 0 && s.tier === 1, "com o quadro muito ruim, a Média fixa não muda", `trocas=${s.changes}`);
-    check(s.windows.length >= 3 && s.windows.every((w) => w.fps < 36), "mas mede (para o perf_run)", tl(s));
+    check(s.windows.length >= 3 && s.windows.every((w) => w.fps < T.env.fps * 0.6), "mas mede (para o perf_run)", tl(s));
     // Opções pela Pausa, tocando como o jogador: trocar vale na hora
     await setLoad([0, 0, 0]);
     await page.evaluate(() => void window.game.scene.getScene("GameScene").pauseGame());
