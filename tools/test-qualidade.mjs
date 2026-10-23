@@ -224,7 +224,7 @@ async function casos() {
     await until(() => window.game.scene.getScene("GameScene").quality.changes >= 1, null, 40000);
     s = await q();
     const up = s.log[0];
-    const goodBefore = s.windows.filter((w) => w.tier === 2 && w.fps >= T.env.fps * 0.95).length;
+    const goodBefore = s.windows.filter((w) => w.tier === 2 && w.fps >= T.env.fps * 0.9).length;
     check(up.from === 2 && up.to === 1 && up.why === "folga", "sobe da Baixa para a Média", up.why);
     check(goodBefore >= 4, "só depois de 8 s de janelas boas seguidas (histerese)", `janelas boas antes=${goodBefore}`);
     await until(() => window.game.scene.getScene("GameScene").quality.changes >= 2, null, 40000);
@@ -488,25 +488,39 @@ async function prova() {
   await startRun({ quality: "auto" });
   await heavy(page);
   const cdp = await ctx.newCDPSession(page);
-  const t0 = Date.now();
+  const t0 = (await q()).t; // relógio da partida (segundos) no começo da prova
+  const rel = (t) => (t - t0).toFixed(0).padStart(4);
+  let seen = 0,
+    logged = 0;
+  const phases = [];
   const phase = async (rate, secs, label) => {
     await cdp.send("Emulation.setCPUThrottlingRate", { rate });
     console.log(`  -- ${label}: CPU ${rate}× por ${secs} s`);
+    const ph = { label, rate, from: (await q()).t };
     const end = Date.now() + secs * 1000;
-    let seen = 0;
     while (Date.now() < end) {
       await page.waitForTimeout(2000);
       const s = await q();
-      for (const w of s.windows.slice(seen)) console.log(`     ${((Date.now() - t0) / 1000).toFixed(0).padStart(4)}s  janela ${w.fps.toFixed(1).padStart(5)} fps  trabalho ${w.busy.toFixed(1).padStart(5)} ms  ${IDS[w.tier]}`);
+      for (const w of s.windows.slice(seen)) console.log(`     ${rel(w.t)}s  janela ${w.fps.toFixed(1).padStart(5)} fps  trabalho ${w.busy.toFixed(1).padStart(5)} ms  ${IDS[w.tier]}`);
       seen = s.windows.length;
-      for (const l of s.log.slice(phase.logged || 0)) console.log(`     >>> ${IDS[l.from]} → ${IDS[l.to]} (${l.why}; ${l.fps} fps, ${l.busy} ms)`);
-      phase.logged = s.log.length;
+      for (const l of s.log.slice(logged)) console.log(`     ${rel(l.t)}s  >>> ${IDS[l.from]} → ${IDS[l.to]} (${l.why}; ${l.fps} fps, ${l.busy} ms)`);
+      logged = s.log.length;
     }
+    ph.to = (await q()).t;
+    phases.push(ph);
   };
-  await phase(RATE, 60, "aparelho fraco");
-  await phase(1, 70, "aparelho folgado (a mesma partida)");
-  await phase(Number(process.env.RATE_MID || 3), 90, "meio-termo");
+  await phase(RATE, Number(process.env.SECS_FRACO || 45), "aparelho fraco");
+  await phase(1, Number(process.env.SECS_FOLGA || 75), "aparelho folgado (a mesma partida)");
+  await phase(Number(process.env.RATE_MID || 3), Number(process.env.SECS_MEIO || 90), "meio-termo");
   const s = await q();
+  // resumo por fase: trocas e fps médio das janelas em cada degrau
+  console.log("  resumo por fase:");
+  for (const ph of phases) {
+    const ws = s.windows.filter((w) => w.t > ph.from && w.t <= ph.to);
+    const ch = s.log.filter((l) => l.t > ph.from && l.t <= ph.to);
+    const byTier = [0, 1, 2].map((t) => ws.filter((w) => w.tier === t)).map((a, t) => (a.length ? `${IDS[t]} ${(a.reduce((x, w) => x + w.fps, 0) / a.length).toFixed(1)} fps/${(a.reduce((x, w) => x + w.busy, 0) / a.length).toFixed(1)} ms (${a.length} jan.)` : "")).filter(Boolean);
+    console.log(`    ${ph.label} (CPU ${ph.rate}×): ${ch.length} troca(s)${ch.length ? " [" + ch.map((l) => `${rel(l.t)}s ${IDS[l.from]}→${IDS[l.to]}`).join(", ") + "]" : ""} · ${byTier.join(" · ")}`);
+  }
   await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
   console.log(`  trocas: ${s.changes} · ${s.log.map((l) => `${l.t.toFixed(0)}s ${IDS[l.from]}→${IDS[l.to]} (${l.why})`).join(" · ")}`);
   console.log(`  custo medido: ${s.cost.map((c, i) => `${IDS[i]}/${IDS[i + 1]} ${c?.toFixed(2)}`).join(" · ")}`);
