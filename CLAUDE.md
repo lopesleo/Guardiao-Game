@@ -113,10 +113,23 @@ marcar no `docs/ROADMAP.md`. Última revisão: **22/10/2026**.
   👤 Conferir no celular: o jogo a 60 fps sem
   tranco no S23 (antes rodava a 120), a borda da Podridão não esconder inimigo, o som (cartas, chefe, morte, vida
   baixa), o vento no bruxo/cogumelo (fraco) e o zoom 1,3 no chefe.
+- **Som novo na `main` (23/10, ainda sem versão; detalhes no ROADMAP):**
+  - **Síntese em Web Workers:** a carga não trava mais; a maior tarefa de áudio na thread caiu de ~800 ms para
+    ~8 ms, e o título aparece em ~1 s.
+  - **Música da partida em 4 camadas** pela intensidade da luta (Horda e Baião), entrando no compasso.
+  - **Ambiência da Clareira pela hora:** sabiá, bem-te-vi, cigarra, grilos, sapos, corujinha e urutau.
+  - `tools/audio-lab.mjs` mede o som sem navegador.
+
+  👤 Ouvir no celular:
+  - se a base sozinha no começo da partida ficou fraca;
+  - quando a melodia entra;
+  - se a mata da Clareira está sutil e nenhum bicho soa caricato;
+  - a memória num aparelho fraco (o áudio foi de ~19 para ~35 MB).
+
+  Para ouvir no PC: `node tools/audio-lab.mjs --wav=<pasta>`.
 - **Próximos de qualidade/desempenho** (estudo de 21/10 com as skills do Phaser 4, `audio-design` e
-  `performance-optimization`): música da partida em camadas pela intensidade; ambiência da Clareira pela hora; gerar o áudio num Worker (1,4 s de carga
-  travada no PC); qualidade automática contínua; evento `perf_run` no Analytics (conferir a Segurança dos dados) e
-  medir num celular fraco de verdade.
+  `performance-optimization`): qualidade automática contínua e evento `perf_run` no Analytics, com um agente fazendo
+  em 23/10; medir num celular fraco de verdade.
 - **1.0.19 (código 20) no Teste interno e no Teste fechado/Alpha (20/10; em 23/10 o script mostrou que ela foi
   aprovada e está publicada nas duas faixas).**
   `dist/guardiao-v1.0.19-20-anuncios-reais.aab`. Nova nela: a **tela de fim de partida redesenhada** (cena na Clareira:
