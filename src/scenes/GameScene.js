@@ -2236,6 +2236,11 @@ export class GameScene extends Phaser.Scene {
       dmg_total: Math.round(this._dmgTotal()),
     });
     this._trackBuild(won, quit, byType);
+    // Desempenho da partida (uma vez por partida): fps, trabalho do quadro, degraus de qualidade, aparelho
+    if (!this.quality.sent) {
+      this.quality.sent = true;
+      Analytics.track("perf_run", this.quality.summary());
+    }
     // Morte: o golpe fatal congela um instante (herói em branco, a HUD sai: FEEL.DEATH) e então vem a
     // câmera lenta dramática antes do fade
     if (!won && !quit) {
